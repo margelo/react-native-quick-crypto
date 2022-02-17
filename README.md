@@ -1,22 +1,42 @@
 # react-native-fast-crypto
 
-A fast implementation of Node's `crypto` module written in C/C++ JSI
+A fast implementation of Node's `crypto` module written in C/C++ JSI.
 
 ## Installation
 
+### React Native
+
 ```sh
-npm install react-native-fast-crypto
+yarn add react-native-mmkv
+cd ios && pod install
+```
+
+### Expo
+
+```sh
+expo install react-native-mmkv
+expo prebuild
 ```
 
 ## Usage
 
+TODO: Show how to replace `crypto` module with `react-native-fast-crypto` in every file (babel/metro module resolver?)
+
 ```js
-import { multiply } from "react-native-fast-crypto";
-
-// ...
-
-const result = await multiply(3, 7);
+import "react-native-fast-crypto/shim"
 ```
+
+## Sponsors
+
+- TODO: List sponsors here
+
+## Limitations
+
+As the library uses JSI for synchronous native methods access, remote debugging (e.g. with Chrome) is no longer possible. Instead, you should use [Flipper](https://fbflipper.com).
+
+## Adopting at scale
+
+react-native-fast-crypto was built at Margelo, an elite app development agency. For enterprise support or other business inquiries, contact us at <a href="mailto:hello@margelo.io?subject=Adopting react-native-fast-crypto at scale">hello@margelo.io</a>!
 
 ## Contributing
 
