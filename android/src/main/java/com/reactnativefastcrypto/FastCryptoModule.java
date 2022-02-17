@@ -44,5 +44,5 @@ public class FastCryptoModule extends ReactContextBaseJavaModule {
     }
   }
 
-  private static native void nativeInstall(long jsiPtr, String path);
+  private static native void nativeInstall(long jsiPtr);
 }
