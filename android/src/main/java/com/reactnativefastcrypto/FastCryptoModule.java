@@ -34,7 +34,7 @@ public class FastCryptoModule extends ReactContextBaseJavaModule {
       JavaScriptContextHolder jsContext = getReactApplicationContext().getJavaScriptContextHolder();
 
       Log.i(NAME, "Installing JSI Bindings for react-native-fast-crypto...");
-      nativeInstall(jsContext.get(), rootDirectory);
+      nativeInstall(jsContext.get());
       Log.i(NAME, "Successfully installed JSI Bindings for react-native-fast-crypto!");
 
       return true;
