@@ -3,8 +3,6 @@ cmake_minimum_required(VERSION 3.9.0)
 set (PACKAGE_NAME "react-native-fast-crypto")
 set (BUILD_DIR ${CMAKE_SOURCE_DIR}/build)
 
-add_subdirectory(../cpp cpp)
-
 include_directories(
         ../cpp
         "${NODE_MODULES_DIR}/react-native/React"
