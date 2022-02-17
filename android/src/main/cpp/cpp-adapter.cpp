@@ -12,7 +12,7 @@ void install(jsi::Runtime& jsiRuntime) {
 
 extern "C"
 JNIEXPORT void JNICALL
-Java_com_reactnativefastcrypto_FastCryptoModule_nativeInstall(JNIEnv *env, jobject clazz, jlong jsiPtr, jstring path) {
+Java_com_reactnativefastcrypto_FastCryptoModule_nativeInstall(JNIEnv *env, jobject clazz, jlong jsiPtr) {
     auto runtime = reinterpret_cast<jsi::Runtime*>(jsiPtr);
     if (runtime) {
         install(*runtime);
