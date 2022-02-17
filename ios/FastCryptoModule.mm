@@ -4,7 +4,7 @@
 #import <React/RCTUtils.h>
 #import <jsi/jsi.h>
 
-#import "FastCryptoHostObject.h"
+#import "../cpp/FastCryptoHostObject.h"
 
 @implementation FastCryptoModule
 
