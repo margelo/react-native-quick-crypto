@@ -1,18 +1,17 @@
 import * as React from 'react';
 
 import { StyleSheet, View, Text } from 'react-native';
-import { multiply } from 'react-native-fast-crypto';
+
+// Uncomment to run benchmark
+// import { benchmarkAgainstOldCrypto } from './Benchmarks';
+// setTimeout(async () => {
+//   await benchmarkAgainstOldCrypto();
+// }, 5000);
 
 export default function App() {
-  const [result, setResult] = React.useState<number | undefined>();
-
-  React.useEffect(() => {
-    multiply(3, 7).then(setResult);
-  }, []);
-
   return (
     <View style={styles.container}>
-      <Text>Result: {result}</Text>
+      <Text>Hello!</Text>
     </View>
   );
 }
@@ -22,10 +21,27 @@ const styles = StyleSheet.create({
     flex: 1,
     alignItems: 'center',
     justifyContent: 'center',
+    paddingHorizontal: 20,
   },
-  box: {
-    width: 60,
-    height: 60,
+  keys: {
+    fontSize: 14,
+    color: 'grey',
+  },
+  title: {
+    fontSize: 16,
+    color: 'black',
+    marginRight: 10,
+  },
+  row: {
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
+  textInput: {
+    flex: 1,
     marginVertical: 20,
+    borderWidth: StyleSheet.hairlineWidth,
+    borderColor: 'black',
+    borderRadius: 5,
+    padding: 10,
   },
 });

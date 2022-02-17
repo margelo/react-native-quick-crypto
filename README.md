@@ -7,14 +7,14 @@ A fast implementation of Node's `crypto` module written in C/C++ JSI.
 ### React Native
 
 ```sh
-yarn add react-native-mmkv
+yarn add react-native-fast-crypto
 cd ios && pod install
 ```
 
 ### Expo
 
 ```sh
-expo install react-native-mmkv
+expo install react-native-fast-crypto
 expo prebuild
 ```
 
