@@ -59,7 +59,6 @@ endif()
 
 target_link_libraries(
         reactnativefastcrypto
-        core
         ${log-lib}
         ${JSI_LIB}
         ${REACT_NATIVE_JNI_LIB}
