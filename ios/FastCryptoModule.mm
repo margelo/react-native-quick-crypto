@@ -27,7 +27,7 @@ RCT_EXPORT_BLOCKING_SYNCHRONOUS_METHOD(install)
     }
     auto& runtime = *jsiRuntime;
 
-    auto hostObject = std::make_shared<FastCryptoHostObject>();
+    auto hostObject = std::make_shared<margelo::FastCryptoHostObject>();
     auto object = jsi::Object::createFromHostObject(runtime, hostObject);
     runtime.global().setProperty(runtime, "__FastCryptoProxy", std::move(object));
 
