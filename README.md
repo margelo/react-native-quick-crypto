@@ -2,6 +2,8 @@
 
 A fast implementation of Node's `crypto` module written in C/C++ JSI.
 
+FastCrypto can be used as a drop-in replacement for your Web3/Crypto apps to speed up all cryptography functions.
+
 ## Installation
 
 ### React Native
@@ -20,10 +22,26 @@ expo prebuild
 
 ## Usage
 
-TODO: Show how to replace `crypto` module with `react-native-fast-crypto` in every file (babel/metro module resolver?)
+In your `metro.config.js`, add a module resolver to replace `crypto` with `react-native-fast-crypto`:
 
-```js
-import "react-native-fast-crypto/shim"
+```diff
++ const path = require('path');
+
+  module.exports = {
++   resolver: {
++     extraNodeModules: {
++       crypto: path.resolve(__dirname, './node_modules/react-native-fast-crypto'),
++     },
++   },
+    transformer: {
+      getTransformOptions: async () => ({
+        transform: {
+          experimentalImportSupport: true,
+          inlineRequires: true,
+        },
+      }),
+    },
+  };
 ```
 
 ## Sponsors
