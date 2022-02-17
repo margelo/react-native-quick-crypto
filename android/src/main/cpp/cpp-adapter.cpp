@@ -4,7 +4,7 @@
 
 using namespace facebook;
 
-void install(jsi::Runtime& jsiRuntime) {
+void install(jsi::Runtime& runtime) {
     auto hostObject = std::make_shared<margelo::FastCryptoHostObject>();
     auto object = jsi::Object::createFromHostObject(runtime, hostObject);
     runtime.global().setProperty(runtime, "__FastCryptoProxy", std::move(object));
