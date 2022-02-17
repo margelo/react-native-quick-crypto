@@ -2,7 +2,7 @@
   "compilerOptions": {
     "baseUrl": ".",
     "paths": {
-      "react-native-mmkv": ["./src/index"]
+      "react-native-fast-crypto": ["./src/index"]
     },
     "allowUnreachableCode": false,
     "allowUnusedLabels": false,

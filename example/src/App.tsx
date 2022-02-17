@@ -1,6 +1,7 @@
 import * as React from 'react';
 
 import { StyleSheet, View, Text } from 'react-native';
+import { FastCrypto } from 'react-native-fast-crypto';
 
 // Uncomment to run benchmark
 // import { benchmarkAgainstOldCrypto } from './Benchmarks';
@@ -11,7 +12,12 @@ import { StyleSheet, View, Text } from 'react-native';
 export default function App() {
   return (
     <View style={styles.container}>
-      <Text>Hello!</Text>
+      <Text>
+        Hello!{' '}
+        {FastCrypto == null
+          ? 'FastCrypto is null :('
+          : 'FastCrypto is installed!'}
+      </Text>
     </View>
   );
 }
