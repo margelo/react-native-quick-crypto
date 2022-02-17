@@ -7,10 +7,7 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
-
-		5E46D8CD2428F78900513E24 /* example.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 5E46D8CB2428F78900513E24 /* example.cpp */; };
-		5E555C0D2413F4C50049A1A2 /* FastCrypto.mm in Sources */ = {isa = PBXBuildFile; fileRef = B3E7B5891CC2AC0600A0062D /* FastCrypto.mm */; };
-
+		B85F94A127BE4A550046C221 /* FastCryptoModule.mm in Sources */ = {isa = PBXBuildFile; fileRef = B85F94A027BE4A550046C221 /* FastCryptoModule.mm */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXCopyFilesBuildPhase section */
@@ -27,11 +24,9 @@
 
 /* Begin PBXFileReference section */
 		134814201AA4EA6300B7C361 /* libFastCrypto.a */ = {isa = PBXFileReference; explicitFileType = archive.ar; includeInIndex = 0; path = libFastCrypto.a; sourceTree = BUILT_PRODUCTS_DIR; };
-
-		5E46D8CB2428F78900513E24 /* example.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = example.cpp; path = ../cpp/example.cpp; sourceTree = "<group>"; };
-		5E46D8CC2428F78900513E24 /* example.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = example.h; path = ../cpp/example.h; sourceTree = "<group>"; };
-		B3E7B5891CC2AC0600A0062D /* FastCrypto.mm */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.objcpp; path = FastCrypto.mm; sourceTree = "<group>"; };
-
+		B85F949F27BE4A550046C221 /* FastCryptoModule.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = FastCryptoModule.h; sourceTree = "<group>"; };
+		B85F94A027BE4A550046C221 /* FastCryptoModule.mm */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.objcpp; path = FastCryptoModule.mm; sourceTree = "<group>"; };
+		B85F94A227BE4A5E0046C221 /* cpp */ = {isa = PBXFileReference; lastKnownFileType = folder; name = cpp; path = ../cpp; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -56,11 +51,9 @@
 		58B511D21A9E6C8500147676 = {
 			isa = PBXGroup;
 			children = (
-
-				5E46D8CB2428F78900513E24 /* example.cpp */,
-				5E46D8CC2428F78900513E24 /* example.h */,
-				B3E7B5891CC2AC0600A0062D /* FastCrypto.mm */,
-
+				B85F949F27BE4A550046C221 /* FastCryptoModule.h */,
+				B85F94A027BE4A550046C221 /* FastCryptoModule.mm */,
+				B85F94A227BE4A5E0046C221 /* cpp */,
 				134814211AA4EA7D00B7C361 /* Products */,
 			);
 			sourceTree = "<group>";
@@ -122,10 +115,7 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-
-				5E46D8CD2428F78900513E24 /* example.cpp in Sources */,
-				5E555C0D2413F4C50049A1A2 /* FastCrypto.mm in Sources */,
-
+				B85F94A127BE4A550046C221 /* FastCryptoModule.mm in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -238,7 +228,6 @@
 				OTHER_LDFLAGS = "-ObjC";
 				PRODUCT_NAME = FastCrypto;
 				SKIP_INSTALL = YES;
-
 			};
 			name = Debug;
 		};
@@ -255,7 +244,6 @@
 				OTHER_LDFLAGS = "-ObjC";
 				PRODUCT_NAME = FastCrypto;
 				SKIP_INSTALL = YES;
-
 			};
 			name = Release;
 		};
