@@ -1,5 +1,5 @@
-#ifndef FASTCRYPTOHOSTOBJECT_H
-#define FASTCRYPTOHOSTOBJECT_H
+#ifndef JSICRYPTOHOSTOBJECT_H
+#define JSICRYPTOHOSTOBJECT_H
 
 #include <jsi/jsi.h>
 
@@ -7,9 +7,9 @@ namespace margelo {
 
 using namespace facebook;
 
-class JSI_EXPORT FastCryptoHostObject: public jsi::HostObject {
+class JSI_EXPORT JSICryptoHostObject: public jsi::HostObject {
 public:
-  explicit FastCryptoHostObject() {}
+  explicit JSICryptoHostObject() {}
 
 public:
   jsi::Value get(jsi::Runtime&, const jsi::PropNameID& name) override;
@@ -18,4 +18,4 @@ public:
 
 } // namespace margelo
 
-#endif /* FASTCRYPTOHOSTOBJECT_H */
+#endif /* JSICRYPTOHOSTOBJECT_H */

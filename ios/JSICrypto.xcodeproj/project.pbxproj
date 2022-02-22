@@ -7,7 +7,7 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
-		B85F94A127BE4A550046C221 /* FastCryptoModule.mm in Sources */ = {isa = PBXBuildFile; fileRef = B85F94A027BE4A550046C221 /* FastCryptoModule.mm */; };
+		B85F94A127BE4A550046C221 /* JSICryptoModule.mm in Sources */ = {isa = PBXBuildFile; fileRef = B85F94A027BE4A550046C221 /* JSICryptoModule.mm */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXCopyFilesBuildPhase section */
@@ -23,9 +23,9 @@
 /* End PBXCopyFilesBuildPhase section */
 
 /* Begin PBXFileReference section */
-		134814201AA4EA6300B7C361 /* libFastCrypto.a */ = {isa = PBXFileReference; explicitFileType = archive.ar; includeInIndex = 0; path = libFastCrypto.a; sourceTree = BUILT_PRODUCTS_DIR; };
-		B85F949F27BE4A550046C221 /* FastCryptoModule.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = FastCryptoModule.h; sourceTree = "<group>"; };
-		B85F94A027BE4A550046C221 /* FastCryptoModule.mm */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.objcpp; path = FastCryptoModule.mm; sourceTree = "<group>"; };
+		134814201AA4EA6300B7C361 /* libJSICrypto.a */ = {isa = PBXFileReference; explicitFileType = archive.ar; includeInIndex = 0; path = libJSICrypto.a; sourceTree = BUILT_PRODUCTS_DIR; };
+		B85F949F27BE4A550046C221 /* JSICryptoModule.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = JSICryptoModule.h; sourceTree = "<group>"; };
+		B85F94A027BE4A550046C221 /* JSICryptoModule.mm */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.objcpp; path = JSICryptoModule.mm; sourceTree = "<group>"; };
 		B85F94A227BE4A5E0046C221 /* cpp */ = {isa = PBXFileReference; lastKnownFileType = folder; name = cpp; path = ../cpp; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
@@ -43,7 +43,7 @@
 		134814211AA4EA7D00B7C361 /* Products */ = {
 			isa = PBXGroup;
 			children = (
-				134814201AA4EA6300B7C361 /* libFastCrypto.a */,
+				134814201AA4EA6300B7C361 /* libJSICrypto.a */,
 			);
 			name = Products;
 			sourceTree = "<group>";
@@ -51,8 +51,8 @@
 		58B511D21A9E6C8500147676 = {
 			isa = PBXGroup;
 			children = (
-				B85F949F27BE4A550046C221 /* FastCryptoModule.h */,
-				B85F94A027BE4A550046C221 /* FastCryptoModule.mm */,
+				B85F949F27BE4A550046C221 /* JSICryptoModule.h */,
+				B85F94A027BE4A550046C221 /* JSICryptoModule.mm */,
 				B85F94A227BE4A5E0046C221 /* cpp */,
 				134814211AA4EA7D00B7C361 /* Products */,
 			);
@@ -61,9 +61,9 @@
 /* End PBXGroup section */
 
 /* Begin PBXNativeTarget section */
-		58B511DA1A9E6C8500147676 /* FastCrypto */ = {
+		58B511DA1A9E6C8500147676 /* JSICrypto */ = {
 			isa = PBXNativeTarget;
-			buildConfigurationList = 58B511EF1A9E6C8500147676 /* Build configuration list for PBXNativeTarget "FastCrypto" */;
+			buildConfigurationList = 58B511EF1A9E6C8500147676 /* Build configuration list for PBXNativeTarget "JSICrypto" */;
 			buildPhases = (
 				58B511D71A9E6C8500147676 /* Sources */,
 				58B511D81A9E6C8500147676 /* Frameworks */,
@@ -73,9 +73,9 @@
 			);
 			dependencies = (
 			);
-			name = FastCrypto;
+			name = JSICrypto;
 			productName = RCTDataManager;
-			productReference = 134814201AA4EA6300B7C361 /* libFastCrypto.a */;
+			productReference = 134814201AA4EA6300B7C361 /* libJSICrypto.a */;
 			productType = "com.apple.product-type.library.static";
 		};
 /* End PBXNativeTarget section */
@@ -92,7 +92,7 @@
 					};
 				};
 			};
-			buildConfigurationList = 58B511D61A9E6C8500147676 /* Build configuration list for PBXProject "FastCrypto" */;
+			buildConfigurationList = 58B511D61A9E6C8500147676 /* Build configuration list for PBXProject "JSICrypto" */;
 			compatibilityVersion = "Xcode 3.2";
 			developmentRegion = English;
 			hasScannedForEncodings = 0;
@@ -105,7 +105,7 @@
 			projectDirPath = "";
 			projectRoot = "";
 			targets = (
-				58B511DA1A9E6C8500147676 /* FastCrypto */,
+				58B511DA1A9E6C8500147676 /* JSICrypto */,
 			);
 		};
 /* End PBXProject section */
@@ -115,7 +115,7 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				B85F94A127BE4A550046C221 /* FastCryptoModule.mm in Sources */,
+				B85F94A127BE4A550046C221 /* JSICryptoModule.mm in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -226,7 +226,7 @@
 				);
 				LIBRARY_SEARCH_PATHS = "$(inherited)";
 				OTHER_LDFLAGS = "-ObjC";
-				PRODUCT_NAME = FastCrypto;
+				PRODUCT_NAME = JSICrypto;
 				SKIP_INSTALL = YES;
 			};
 			name = Debug;
@@ -242,7 +242,7 @@
 				);
 				LIBRARY_SEARCH_PATHS = "$(inherited)";
 				OTHER_LDFLAGS = "-ObjC";
-				PRODUCT_NAME = FastCrypto;
+				PRODUCT_NAME = JSICrypto;
 				SKIP_INSTALL = YES;
 			};
 			name = Release;
@@ -250,7 +250,7 @@
 /* End XCBuildConfiguration section */
 
 /* Begin XCConfigurationList section */
-		58B511D61A9E6C8500147676 /* Build configuration list for PBXProject "FastCrypto" */ = {
+		58B511D61A9E6C8500147676 /* Build configuration list for PBXProject "JSICrypto" */ = {
 			isa = XCConfigurationList;
 			buildConfigurations = (
 				58B511ED1A9E6C8500147676 /* Debug */,
@@ -259,7 +259,7 @@
 			defaultConfigurationIsVisible = 0;
 			defaultConfigurationName = Release;
 		};
-		58B511EF1A9E6C8500147676 /* Build configuration list for PBXNativeTarget "FastCrypto" */ = {
+		58B511EF1A9E6C8500147676 /* Build configuration list for PBXNativeTarget "JSICrypto" */ = {
 			isa = XCConfigurationList;
 			buildConfigurations = (
 				58B511F01A9E6C8500147676 /* Debug */,

@@ -1,6 +1,6 @@
 cmake_minimum_required(VERSION 3.9.0)
 
-set (PACKAGE_NAME "react-native-fast-crypto")
+set (PACKAGE_NAME "react-native-jsi-crypto")
 set (BUILD_DIR ${CMAKE_SOURCE_DIR}/build)
 
 include_directories(
@@ -17,16 +17,16 @@ if(${REACT_NATIVE_VERSION} LESS 66)
         )
 endif()
 
-add_library(reactnativefastcrypto  # <-- Library name
+add_library(reactnativejsicrypto  # <-- Library name
         SHARED
         "src/main/cpp/cpp-adapter.cpp"
-        "../cpp/FastCryptoHostObject.cpp"
+        "../cpp/JSICryptoHostObject.cpp"
         "../cpp/JSI Utils/TypedArray.cpp"
         ${INCLUDE_JSI_CPP} # only on older RN versions
 )
 
 set_target_properties(
-        reactnativefastcrypto PROPERTIES
+        reactnativejsicrypto PROPERTIES
         CXX_STANDARD 17
         CXX_EXTENSIONS OFF
         POSITION_INDEPENDENT_CODE ON
@@ -58,7 +58,7 @@ else()
 endif()
 
 target_link_libraries(
-        reactnativefastcrypto
+        reactnativejsicrypto
         ${log-lib}
         ${JSI_LIB}
         ${REACT_NATIVE_JNI_LIB}

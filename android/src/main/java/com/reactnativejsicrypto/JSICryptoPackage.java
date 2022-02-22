@@ -1,4 +1,4 @@
-package com.reactnativefastcrypto;
+package com.reactnativejsicrypto;
 
 import androidx.annotation.NonNull;
 
@@ -11,11 +11,11 @@ import java.util.Collections;
 import java.util.List;
 
 
-public class FastCryptoPackage implements ReactPackage {
+public class JSICryptoPackage implements ReactPackage {
   @NonNull
   @Override
   public List<NativeModule> createNativeModules(@NonNull ReactApplicationContext reactContext) {
-    return Collections.singletonList(new FastCryptoModule(reactContext));
+    return Collections.singletonList(new JSICryptoModule(reactContext));
   }
 
   @NonNull

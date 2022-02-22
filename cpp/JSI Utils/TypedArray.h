@@ -1,6 +1,6 @@
 //
 //  TypedArray.h
-//  react-native-fast-crypto
+//  react-native-jsi-crypto
 //
 //  Created by Marc Rousavy on 31.10.21.
 //  Originally created by Expo (expo-gl)

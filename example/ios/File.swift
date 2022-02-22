@@ -1,6 +1,6 @@
 //
 //  File.swift
-//  FastCryptoExample
+//  JSICryptoExample
 //
 
 import Foundation

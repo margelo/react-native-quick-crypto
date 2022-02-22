@@ -1,6 +1,6 @@
 {
-  "name": "react-native-fast-crypto-example",
-  "description": "Example app for react-native-fast-crypto",
+  "name": "react-native-jsi-crypto-example",
+  "description": "Example app for react-native-jsi-crypto",
   "version": "0.0.1",
   "private": true,
   "scripts": {

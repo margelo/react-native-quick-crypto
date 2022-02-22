@@ -209,7 +209,7 @@ PODS:
   - React-jsinspector (0.66.0)
   - React-logger (0.66.0):
     - glog
-  - react-native-fast-crypto (0.1.0):
+  - react-native-jsi-crypto (0.1.0):
     - React-Core
   - React-perflogger (0.66.0)
   - React-RCTActionSheet (0.66.0):
@@ -298,7 +298,7 @@ DEPENDENCIES:
   - React-jsiexecutor (from `../node_modules/react-native/ReactCommon/jsiexecutor`)
   - React-jsinspector (from `../node_modules/react-native/ReactCommon/jsinspector`)
   - React-logger (from `../node_modules/react-native/ReactCommon/logger`)
-  - react-native-fast-crypto (from `../..`)
+  - react-native-jsi-crypto (from `../..`)
   - React-perflogger (from `../node_modules/react-native/ReactCommon/reactperflogger`)
   - React-RCTActionSheet (from `../node_modules/react-native/Libraries/ActionSheetIOS`)
   - React-RCTAnimation (from `../node_modules/react-native/Libraries/NativeAnimation`)
@@ -352,7 +352,7 @@ EXTERNAL SOURCES:
     :path: "../node_modules/react-native/ReactCommon/jsinspector"
   React-logger:
     :path: "../node_modules/react-native/ReactCommon/logger"
-  react-native-fast-crypto:
+  react-native-jsi-crypto:
     :path: "../.."
   React-perflogger:
     :path: "../node_modules/react-native/ReactCommon/reactperflogger"
@@ -400,7 +400,7 @@ SPEC CHECKSUMS:
   React-jsiexecutor: 6a05173dc0142abc582bd4edd2d23146b8cc218a
   React-jsinspector: be95ad424ba9f7b817aff22732eb9b1b810a000a
   React-logger: 9a9cd87d4ea681ae929b32ef580638ff1b50fb24
-  react-native-fast-crypto: e65e786f9a74abc5375ff58ca860f3714185edf4
+  react-native-jsi-crypto: 801060da8d69f193ebc7c0b81484a818094884b8
   React-perflogger: 1f554c2b684e2f484f9edcdfdaeedab039fbaca8
   React-RCTActionSheet: 610d5a5d71ab4808734782c8bca6a12ec3563672
   React-RCTAnimation: ec6ed97370ace32724c253f29f0586cafcab8126
@@ -415,6 +415,6 @@ SPEC CHECKSUMS:
   ReactCommon: eb059748e842a1a86025ebbd4ac9d99e74492f88
   Yoga: c11abbf5809216c91fcd62f5571078b83d9b6720
 
-PODFILE CHECKSUM: d6c030e63c6805ddb655bef1f4b4e3d210be1899
+PODFILE CHECKSUM: b5c569c4abfb20349f8410b5ff8418a060b156d8
 
-COCOAPODS: 1.10.2
+COCOAPODS: 1.11.2
