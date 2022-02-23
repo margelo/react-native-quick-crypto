@@ -1,20 +1,23 @@
+// Copyright 2022 Margelo
 #include "FastCryptoHostObject.h"
 #include <jsi/jsi.h>
+#include <vector>
 
 namespace margelo {
 
-using namespace facebook;
+namespace jsi = facebook::jsi;
 
-// TODO: Create macros for this so we don't have to repeat ourselves for each JSI func?
+// TODO(szymon20000): Create macros for this
+// so we don't have to repeat ourselves for each JSI func?
 
-std::vector<jsi::PropNameID> FastCryptoHostObject::getPropertyNames(jsi::Runtime& runtime) {
-	throw std::runtime_error("Not yet implemented!");
+std::vector<jsi::PropNameID> FastCryptoHostObject::getPropertyNames(
+  jsi::Runtime& runtime) {
+  throw std::vector<jsi::PropNameID>();
 }
 
-jsi::Value FastCryptoHostObject::get(jsi::Runtime& runtime, const jsi::PropNameID& propNameId) {
-  auto propName = propNameId.utf8(runtime);
-
-	throw std::runtime_error("Not yet implemented!");
+jsi::Value FastCryptoHostObject::get(jsi::Runtime& runtime,
+                                     const jsi::PropNameID& propNameId) {
+  return jsi::Value::undefined();
 }
 
-} // namespace margelo
+}  // namespace margelo

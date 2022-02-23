@@ -22,6 +22,7 @@
     "!**/__mocks__"
   ],
   "scripts": {
+    "preinstall": "pre-commit install",
     "typescript": "tsc --noEmit",
     "lint": "eslint \"**/*.{js,ts,tsx}\"",
     "prepare": "bob build",
@@ -39,7 +40,7 @@
     "web3"
   ],
   "repository": "https://github.com/margelo/react-native-fast-crypto",
-  "author": "Marc Rousavy <me@mrousavy.com> (https://github.com/mrousavy)",
+  "authors": "Szymon Kapała (szymon20000@gmail.com) & Marc Rousavy <me@mrousavy.com> (https://github.com/mrousavy)",
   "license": "MIT",
   "bugs": {
     "url": "https://github.com/margelo/react-native-fast-crypto/issues"

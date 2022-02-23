@@ -8,7 +8,7 @@ Pod::Spec.new do |s|
   s.summary      = package["description"]
   s.homepage     = package["homepage"]
   s.license      = package["license"]
-  s.authors      = package["author"]
+  s.authors      = package["authors"]
 
   s.platforms    = { :ios => "11.0", :tvos => "12.0", :osx => "10.14" }
   s.source       = { :git => "https://github.com/mrousavy/react-native-fast-crypto.git", :tag => "#{s.version}" }
