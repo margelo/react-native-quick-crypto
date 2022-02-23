@@ -44,7 +44,7 @@ public boolean install() {
     System.loadLibrary("reactnativefastcrypto");
 
     JavaScriptContextHolder jsContext = getReactApplicationContext().getJavaScriptContextHolder();
-    CallInvokerHolderImpl jsCallInvokerHolder = (CallInvokerHolderImpl) getReactApplicationContext()
+    CallInvokerHolderImpl jsCallInvokerHolder = (CallInvokerHolderImpl)getReactApplicationContext()
                                                 .getCatalystInstance()
                                                 .getJSCallInvokerHolder();
 
