@@ -2,6 +2,7 @@
 
 #import <React/RCTBridge+Private.h>
 #import <React/RCTUtils.h>
+#import <ReactCommon/RCTTurboModule.h>
 #import <jsi/jsi.h>
 
 #import "../cpp/FastCryptoHostObject.h"
@@ -26,8 +27,9 @@ RCT_EXPORT_BLOCKING_SYNCHRONOUS_METHOD(install)
         return @false;
     }
     auto& runtime = *jsiRuntime;
+    auto callInvoker = bridge.jsCallInvoker;
 
-    auto hostObject = std::make_shared<margelo::FastCryptoHostObject>();
+    auto hostObject = std::make_shared<margelo::FastCryptoHostObject>(callInvoker);
     auto object = jsi::Object::createFromHostObject(runtime, hostObject);
     runtime.global().setProperty(runtime, "__FastCryptoProxy", std::move(object));
 

@@ -2,7 +2,7 @@
 #define FASTCRYPTOHOSTOBJECT_H
 
 #include <jsi/jsi.h>
-#include <ReactCommon/CallInvokerHolder.h>
+#import <ReactCommon/CallInvoker.h>
 #include "Utils/DispatchQueue.h"
 
 namespace margelo {
