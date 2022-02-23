@@ -10,5 +10,6 @@ repos:
       - id: uncrustify
         args: ["--replace", "--no-backup"]
       - id: cppcheck
+        args: ["--language=c++"]
       - id: cpplint
 #      - id: include-what-you-use
