@@ -19,7 +19,8 @@ explicit CryptoCppAdapter() {
 }
 
 void install(jsi::Runtime& runtime, std::shared_ptr<facebook::react::CallInvoker> jsCallInvoker) {
-  auto hostObject = std::make_shared<margelo::FastCryptoHostObject>(jsCallInvoker);
+  auto workerQueue = std::make_shared<margelo::DispatchQueue::dispatch_queue>("margelo crypto worker thread");
+  auto hostObject = std::make_shared<margelo::FastCryptoHostObject>(jsCallInvoker, workerQueue);
   auto object = jsi::Object::createFromHostObject(runtime, hostObject);
   runtime.global().setProperty(runtime, "__FastCryptoProxy", std::move(object));
 }

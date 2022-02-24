@@ -4,28 +4,24 @@
 #include <jsi/jsi.h>
 #import <ReactCommon/CallInvoker.h>
 #include "Utils/DispatchQueue.h"
+#include "JSI Utils/SmartHostObject.h"
 
 namespace margelo {
 
 namespace jsi = facebook::jsi;
 namespace react = facebook::react;
 
-class JSI_EXPORT FastCryptoHostObject : public jsi::HostObject {
+class JSI_EXPORT FastCryptoHostObject : public SmartHostObject {
 public:
-explicit FastCryptoHostObject(std::shared_ptr<react::CallInvoker> jsCallInvoker) :
-  weakJsCallInvoker(jsCallInvoker), dispatchQueue("crypto dispatcher", 1)
-{
-}
+explicit FastCryptoHostObject(std::shared_ptr<react::CallInvoker> jsCallInvoker, std::shared_ptr<DispatchQueue::dispatch_queue> workerQueue);
 
 jsi::Value get(jsi::Runtime&, const jsi::PropNameID& name) override;
 std::vector<jsi::PropNameID> getPropertyNames(jsi::Runtime& rt) override;
 
-void runOnWorkerThread(std::function<void(void)> && job);
-void runOnJSThread(std::function<void(void)> && job);
+virtual void install(std::vector<std::pair<std::string, JSIValueBuilder> > & fields) override;
 
-private:
-std::weak_ptr<react::CallInvoker> weakJsCallInvoker;
-DispatchQueue::dispatch_queue dispatchQueue;
+virtual ~FastCryptoHostObject() {
+}
 };
 
 } // namespace margelo

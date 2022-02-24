@@ -6,7 +6,6 @@ file (GLOB LIBFBJNI_INCLUDES "${BUILD_DIR}/fbjni-*-headers.jar/")
 file (GLOB LIBRN_SO "${BUILD_DIR}/react-native-0*/jni/${ANDROID_ABI}")
 set (CMAKE_CXX_STANDARD 17)
 
-
 include_directories(
         ../cpp
         "${NODE_MODULES_DIR}/react-native/React"
@@ -34,6 +33,8 @@ add_library(reactnativefastcrypto  # <-- Library name
         "../cpp/FastCryptoHostObject.cpp"
         "../cpp/JSI Utils/TypedArray.cpp"
         "../cpp/Utils/DispatchQueue.cpp"
+        "../cpp/JSI Utils/ThreadAwareHostObject.cpp"
+        "../cpp/JSI Utils/SmartHostObject.cpp"
         ${INCLUDE_JSI_CPP} # only on older RN versions
 )
 
@@ -88,6 +89,8 @@ else()
         )
 endif()
 
+find_package(openssl REQUIRED CONFIG)
+
 target_link_libraries(
         reactnativefastcrypto
         ${TURBOMODULES_LIB}
@@ -97,4 +100,5 @@ target_link_libraries(
         ${REACT_NATIVE_JNI_LIB}
         ${REACT_LIB}
         android
+        openssl::crypto
 )
