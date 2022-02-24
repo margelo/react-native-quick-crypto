@@ -17,19 +17,19 @@ FastCryptoHostObject::FastCryptoHostObject(std::shared_ptr<react::CallInvoker> j
 }
 
 void FastCryptoHostObject::install(std::vector<std::pair<std::string, JSIValueBuilder> > & fields) {
-  /*fields.push_back(HOST_LAMBDA("runAsync", {
-       return react::createPromiseAsJSIValue(runtime, [this](jsi::Runtime &runtime,
-       std::shared_ptr<react::Promise> promise) {
-           this->runOnWorkerThread([this, promise]() {
-               this->runOnJSThread([=]() {
-                   promise->resolve(5);
-               });
-           });
-       });
-     }));*/
-  /* fields.push_back(JSI_VALUE("x", {
-       return jsi::Value(runtime, 5);
-     }));*/
+  fields.push_back(HOST_LAMBDA("runAsync", {
+      return react::createPromiseAsJSIValue(runtime, [this](jsi::Runtime &runtime,
+                                                            std::shared_ptr<react::Promise> promise) {
+	this->runOnWorkerThread([this, promise]() {
+	  this->runOnJSThread([=]() {
+	    promise->resolve(5);
+	  });
+	});
+      });
+    }));
+  fields.push_back(JSI_VALUE("x", {
+      return jsi::Value(runtime, 5);
+    }));
 }
 
 }  // namespace margelo
