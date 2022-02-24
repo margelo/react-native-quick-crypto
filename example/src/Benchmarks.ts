@@ -6,7 +6,7 @@ export const benchmarkAgainstOldCrypto = async () => {
   // TODO: Benchmar here!
 
   FastCrypto.runAsync().then((num) => {
-    console.log("num", num);
+    console.log('num', num);
   });
 
   console.log(`Benchmarks finished.`);
