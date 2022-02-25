@@ -9,7 +9,7 @@ namespace margelo {
 namespace jsi = facebook::jsi;
 
 void ThreadAwareHostObject::runOnWorkerThread(std::function<void()> &&job) {
-  this->dispatchQueue->dispatch(std::move(job));
+  this->dispatchQueue->dispatch(job);
 }
 
 void ThreadAwareHostObject::runOnJSThread(std::function<void()> &&job) {

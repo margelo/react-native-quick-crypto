@@ -12,15 +12,15 @@ import java.util.List;
 
 
 public class FastCryptoPackage implements ReactPackage {
-  @NonNull
-  @Override
-  public List<NativeModule> createNativeModules(@NonNull ReactApplicationContext reactContext) {
-    return Collections.singletonList(new FastCryptoModule(reactContext));
-  }
+@NonNull
+@Override
+public List<NativeModule> createNativeModules(@NonNull ReactApplicationContext reactContext) {
+  return Collections.singletonList(new FastCryptoModule(reactContext));
+}
 
-  @NonNull
-  @Override
-  public List<ViewManager> createViewManagers(@NonNull ReactApplicationContext reactContext) {
-    return Collections.emptyList();
-  }
+@NonNull
+@Override
+public List<ViewManager> createViewManagers(@NonNull ReactApplicationContext reactContext) {
+  return Collections.emptyList();
+}
 }
