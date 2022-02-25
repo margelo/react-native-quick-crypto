@@ -1,5 +1,7 @@
 import { FastCrypto } from 'react-native-fast-crypto';
 
+// TODO use jasmine and write proper unit tests
+
 export const benchmarkAgainstOldCrypto = async () => {
   console.log('Starting benchmark...');
 
