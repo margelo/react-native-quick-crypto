@@ -4,13 +4,12 @@
 #include <jsi/jsi.h>
 #include <vector>
 #include <memory>
+#include "HMAC/HmacInstaller.h"
+#include "fastpbkdf2/Pbkdf2HostObject.h"
 
 namespace margelo {
 
 namespace jsi = facebook::jsi;
-
-// TODO(szymon20000): Create macros for this
-// so we don't have to repeat ourselves for each JSI func?
 
 FastCryptoHostObject::FastCryptoHostObject(std::shared_ptr<react::CallInvoker> jsCallInvoker,
                                            std::shared_ptr<DispatchQueue::dispatch_queue> workerQueue) :
@@ -25,8 +24,11 @@ FastCryptoHostObject::FastCryptoHostObject(std::shared_ptr<react::CallInvoker> j
 	});
       });
     }));
-  this->fields.push_back(JSI_VALUE("x", {
-      return jsi::Value(runtime, 5);
+  this->fields.push_back(getHmacFieldDefinition(jsCallInvoker, workerQueue));
+  this->fields.push_back(JSI_VALUE("pbkdf2", {
+      auto hostObject = std::make_shared<Pbkdf2HostObject>(jsCallInvoker,
+                                                           workerQueue);
+      return jsi::Object::createFromHostObject(runtime, hostObject);
     }));
 }
 

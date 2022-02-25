@@ -11,26 +11,25 @@
 #include <jsi/jsi.h>
 #include <string>
 #include <openssl/hmac.h>
+#include "JSI Utils/SmartHostObject.h"
 
-namespace fastHMAC {
+namespace margelo {
 
 using namespace facebook;
 
-class HmacHostObject : public jsi::HostObject {
+class HmacHostObject : public SmartHostObject {
 
 public:
-explicit HmacHostObject(const std::string& hashAlgorithm, const std::string& key);
-~HmacHostObject();
-
-public:
-jsi::Value get(jsi::Runtime&, const jsi::PropNameID& name) override;
-std::vector<jsi::PropNameID> getPropertyNames(jsi::Runtime& rt) override;
+explicit HmacHostObject(const std::string& hashAlgorithm,
+                        const std::string& key,
+                        std::shared_ptr<react::CallInvoker> jsCallInvoker,
+                        std::shared_ptr<DispatchQueue::dispatch_queue> workerQueue);
+virtual ~HmacHostObject();
 
 private:
 HMAC_CTX* context;
 
 };
-
 }
 
 #endif /* HmacHostObject_h */

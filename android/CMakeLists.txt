@@ -35,6 +35,10 @@ add_library(reactnativefastcrypto  # <-- Library name
         "../cpp/Utils/DispatchQueue.cpp"
         "../cpp/JSI Utils/ThreadAwareHostObject.cpp"
         "../cpp/JSI Utils/SmartHostObject.cpp"
+        "../cpp/HMAC/HmacInstaller.cpp"
+        "../cpp/HMAC/HmacHostObject.cpp"
+        "../cpp/fastpbkdf2/Pbkdf2HostObject.cpp"
+        "../cpp/fastpbkdf2/fastpbkdf2.c"
         ${INCLUDE_JSI_CPP} # only on older RN versions
 )
 

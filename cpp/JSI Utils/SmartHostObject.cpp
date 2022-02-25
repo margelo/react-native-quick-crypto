@@ -18,6 +18,7 @@ std::vector <jsi::PropNameID> SmartHostObject::getPropertyNames(
   return propertyNames;
 }
 
+// TODO(Szymon) maybe add memoization here
 jsi::Value SmartHostObject::get(jsi::Runtime &runtime,
                                 const jsi::PropNameID &propNameId) {
   auto name = propNameId.utf8(runtime);

@@ -1,5 +1,11 @@
 import { NativeModules, Platform } from 'react-native';
 
+interface NativeFastCryptoSpec {
+  runAsync: () => Promise<number>;
+  createHmac: any;
+  pbkdf2: any;
+}
+
 // global func declaration for JSI functions
 declare global {
   function nativeCallSyncHook(): unknown;
@@ -59,10 +65,6 @@ if (global.__FastCryptoProxy == null) {
     throw new Error(
       'Failed to install react-native-fast-crypto, the native initializer function does not exist. Are you trying to use FastCrypto from different JS Runtimes?'
     );
-}
-
-interface NativeFastCryptoSpec {
-  runAsync: () => Promise<number>;
 }
 
 const proxy = global.__FastCryptoProxy;
