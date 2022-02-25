@@ -9,7 +9,12 @@
 
 #include <jsi/jsi.h>
 #import <ReactCommon/CallInvoker.h>
+
+#ifdef ONANDROID
 #include "Utils/DispatchQueue.h"
+#else
+#include "../Utils/DispatchQueue.h"
+#endif
 
 namespace margelo {
 
