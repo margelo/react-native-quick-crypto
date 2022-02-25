@@ -15,7 +15,7 @@ namespace react = facebook::react;
 
 typedef std::function<jsi::Value (jsi::Runtime & runtime)> JSIValueBuilder;
 
-class SmartHostObject : public ThreadAwareHostObject {
+class JSI_EXPORT SmartHostObject : public ThreadAwareHostObject {
 public:
 SmartHostObject(std::shared_ptr<react::CallInvoker> jsCallInvoker,
                 std::shared_ptr<DispatchQueue::dispatch_queue> workerQueue)
@@ -29,9 +29,6 @@ std::vector<jsi::PropNameID> getPropertyNames(jsi::Runtime &runtime);
 
 jsi::Value get(jsi::Runtime &runtime, const jsi::PropNameID &propNameId);
 
-virtual void install(std::vector<std::pair<std::string, JSIValueBuilder> >
-                     & fields) {
-};
 std::vector<std::pair<std::string, JSIValueBuilder> > fields;
 };
 
