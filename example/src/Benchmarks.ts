@@ -18,13 +18,7 @@ export const benchmarkAgainstOldCrypto = async () => {
 
   const key = await FastCrypto.pbkdf2('secret', 'salt', 100000, 64, 'sha512');
 
-  const key2 = await FastCrypto.pbkdf2Sync(
-    'secret',
-    'salt',
-    100000,
-    64,
-    'sha512'
-  );
+  const key2 = FastCrypto.pbkdf2Sync('secret', 'salt', 100000, 64, 'sha512');
 
   console.log('key1', key); // '3745e48...aa39b34'
   console.log('key2', key2); // '3745e48...aa39b34'
