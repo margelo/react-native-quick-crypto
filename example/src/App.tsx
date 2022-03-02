@@ -4,10 +4,10 @@ import { StyleSheet, View, Text } from 'react-native';
 import { FastCrypto } from 'react-native-fast-crypto';
 
 // Uncomment to run benchmark
-// import { benchmarkAgainstOldCrypto } from './Benchmarks';
-// setTimeout(async () => {
-//   await benchmarkAgainstOldCrypto();
-// }, 5000);
+import { benchmarkAgainstOldCrypto } from './Benchmarks';
+setTimeout(async () => {
+  await benchmarkAgainstOldCrypto();
+}, 5000);
 
 export default function App() {
   return (

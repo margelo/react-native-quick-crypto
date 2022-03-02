@@ -138,6 +138,10 @@ android {
     extractHeaders
     extractJNI
   }
+
+  buildFeatures {
+    prefab true
+  }
 }
 
 repositories {
@@ -151,6 +155,8 @@ repositories {
 }
 
 dependencies {
+  // https://mvnrepository.com/artifact/com.android.ndk.thirdparty/openssl
+  implementation 'com.android.ndk.thirdparty:openssl:1.1.1l-beta-1'
   // noinspection GradleDynamicVersion
   implementation 'com.facebook.react:react-native:+'
 
@@ -167,8 +173,6 @@ dependencies {
 
 // third-party-ndk deps headers
 // mostly a copy of https://github.com/software-mansion/react-native-reanimated/blob/master/android/build.gradle#L115
-
-
 
 def downloadsDir = new File("$buildDir/downloads")
 def thirdPartyNdkDir = new File("$buildDir/third-party-ndk")

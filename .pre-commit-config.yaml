@@ -10,5 +10,7 @@ repos:
       - id: uncrustify
         args: ["--replace", "--no-backup"]
       - id: cppcheck
+        args: ["--language=c++"]
       - id: cpplint
+        args: ["--linelength=120", "--filter=-whitespace/tab"]
 #      - id: include-what-you-use
