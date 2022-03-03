@@ -153,5 +153,9 @@
         }
       ]
     ]
+  },
+  "dependencies": {
+    "@craftzdog/react-native-buffer": "^6.0.4",
+    "react-native-quick-base64": "^2.0.2"
   }
 }

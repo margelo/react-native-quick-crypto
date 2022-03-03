@@ -3,7 +3,6 @@ package com.reactnativefastcrypto;
 import android.util.Log;
 
 import androidx.annotation.NonNull;
-import androidx.annotation.Nullable;
 
 import com.facebook.jni.HybridData;
 import com.facebook.proguard.annotations.DoNotStrip;
@@ -13,7 +12,6 @@ import com.facebook.react.bridge.ReactApplicationContext;
 import com.facebook.react.bridge.ReactMethod;
 import com.facebook.react.module.annotations.ReactModule;
 import com.facebook.react.turbomodule.core.CallInvokerHolderImpl;
-import com.facebook.react.turbomodule.core.interfaces.CallInvokerHolder;
 
 @ReactModule(name = FastCryptoModule.NAME)
 public class FastCryptoModule extends ReactContextBaseJavaModule {

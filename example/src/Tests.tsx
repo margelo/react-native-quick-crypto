@@ -2,6 +2,7 @@ import React, { useEffect, useState, useCallback, useRef } from 'react';
 import { View, ScrollView, StyleSheet, Text } from 'react-native';
 import type { TestResult } from './TestResult';
 import { testLib } from './MochaSetup';
+import { useMemo } from 'react';
 
 function useTestResults(): [TestResult[], (newResult: TestResult) => void] {
   const [results, setResults] = useState<TestResult[]>([]);
@@ -31,13 +32,15 @@ function useTestResults(): [TestResult[], (newResult: TestResult) => void] {
 }
 
 function Item({ result }: { result: TestResult }): React.ReactElement {
+  const text = useMemo(() => {
+    let emoji = result.status === 'correct' ? '😎' : '😬';
+    const fullText =
+      emoji + ' [' + result.name + '] -----> ' + result?.errorMsg + ' ';
+    return fullText;
+  }, [result]);
   return (
     <View style={styles.itemContainer}>
-      <Text> {result.name} </Text>
-      <Text style={styles.text}>
-        {result.status === 'correct' && '😎'}
-        {result.status === 'incorrect' && ' -> ' + result!.errorMsg + ' 😬'}
-      </Text>
+      <Text style={[styles.text]}>{text}</Text>
     </View>
   );
 }
@@ -50,7 +53,7 @@ export function Tests(): React.ReactElement {
   }, [addResult]);
 
   return (
-    <ScrollView>
+    <ScrollView style={styles.scroll}>
       {results.map((it: TestResult) => {
         return <Item result={it} key={it.key} />;
       })}
@@ -59,14 +62,15 @@ export function Tests(): React.ReactElement {
 }
 
 const styles = StyleSheet.create({
+  scroll: {
+    flex: 1,
+  },
   itemContainer: {
-    flexDirection: 'row',
-    width: '80%',
     borderWidth: 1,
     margin: 10,
+    flexDirection: 'column',
   },
   text: {
-    flexWrap: 'wrap',
     flexShrink: 1,
   },
 });

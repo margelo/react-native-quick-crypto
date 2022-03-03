@@ -13,12 +13,14 @@
     "bootstrap": "yarn && cd ios && bundle install && bundle exec pod install"
   },
   "dependencies": {
+    "@craftzdog/react-native-buffer": "^6.0.4",
     "Buffer": "^0.0.0",
     "chai": "^4.3.6",
     "events": "^3.3.0",
     "mocha": "^9.2.1",
     "react": "^17.0.2",
     "react-native": "^0.66.0",
+    "react-native-quick-base64": "^2.0.2",
     "stream-browserify": "^3.0.0",
     "util": "^0.12.4"
   },

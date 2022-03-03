@@ -19,7 +19,9 @@ export async function testLib(addTestResult: (testResult: TestResult) => void) {
   var runner = new Mocha.Runner(rootSuite) as MochaTypes.Runner;
 
   let indents = 0;
+  let id = 0;
   const indent = () => Array(indents).join('  ');
+  runner.removeAllListeners();
   runner
     .once(EVENT_RUN_BEGIN, () => {})
     .on(EVENT_SUITE_BEGIN, () => {
@@ -30,22 +32,24 @@ export async function testLib(addTestResult: (testResult: TestResult) => void) {
     })
     .on(EVENT_TEST_PASS, (test: MochaTypes.Runnable) => {
       addTestResult({
-        name: test.fullTitle(),
+        name: `${id} ${test.fullTitle()}`,
         key: Math.random().toString(),
         status: 'correct',
       });
-      console.log(`${indent()}pass: ${test.fullTitle()}`);
+      console.log(`${indent()} ${id} pass: ${test.fullTitle()}`);
+      id++;
     })
     .on(EVENT_TEST_FAIL, (test: MochaTypes.Runnable, err: Error) => {
       addTestResult({
-        name: test.fullTitle(),
+        name: `${id} ${test.fullTitle()}`,
         key: Math.random().toString(),
         status: 'incorrect',
         errorMsg: err.message,
       });
       console.log(
-        `${indent()}fail: ${test.fullTitle()} - error: ${err.message}`
+        `${indent()}  ${id} fail: ${test.fullTitle()} - error: ${err.message}`
       );
+      id++;
     })
     .once(EVENT_RUN_END, () => {});
 
