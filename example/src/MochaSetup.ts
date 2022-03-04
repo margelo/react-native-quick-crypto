@@ -59,8 +59,8 @@ export async function testLib(addTestResult: (testResult: TestResult) => void) {
         end: ${stats.passes}/${stats.passes + stats.failures} ok`);
     });
 
-  pbkdf2RegisterTests();
-  //HmacTests.add();
+  //pbkdf2RegisterTests();
+  HmacTests.add();
 
   runner.run();
 }

@@ -4,6 +4,7 @@ interface NativeFastCryptoSpec {
   runAsync: () => Promise<number>;
   createHmac: any;
   pbkdf2: any;
+  random: any;
 }
 
 // global func declaration for JSI functions

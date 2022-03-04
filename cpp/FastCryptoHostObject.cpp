@@ -6,6 +6,7 @@
 #include <memory>
 #include "HMAC/HmacInstaller.h"
 #include "fastpbkdf2/Pbkdf2HostObject.h"
+#include "Random/RandomHostObject.h"
 
 namespace margelo {
 
@@ -30,6 +31,11 @@ FastCryptoHostObject::FastCryptoHostObject(std::shared_ptr<react::CallInvoker> j
                                                            workerQueue);
       return jsi::Object::createFromHostObject(runtime, hostObject);
     }));
+  this->fields.push_back(JSI_VALUE("random", {
+      auto hostObject = std::make_shared<RandomHostObject>(jsCallInvoker,
+                                                           workerQueue);
+      return jsi::Object::createFromHostObject(runtime, hostObject);
+  }));
 }
 
 }  // namespace margelo
