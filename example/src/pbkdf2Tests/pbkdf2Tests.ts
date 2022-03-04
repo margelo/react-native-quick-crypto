@@ -116,7 +116,7 @@ export const pbkdf2RegisterTests = () => {
       );
     });
 
-   /* it('should throw if no callback is provided', function () {
+    it('should throw if no callback is provided', function () {
       chai
         .expect(FastCrypto.pbkdf2('password', 'salt', 1, 32, 'sha1'))
         .to.throw(/No callback provided to pbkdf2/);
@@ -136,9 +136,9 @@ export const pbkdf2RegisterTests = () => {
         .to.throw(
           /Salt must be a string, a Buffer, a typed array or a DataView/
         );
-    });*/
+    });
 
-    /*var algos = ['sha1', 'sha224', 'sha256', 'sha384', 'sha512', 'ripemd160'];
+    var algos = ['sha1', 'sha224', 'sha256', 'sha384', 'sha512', 'ripemd160'];
     algos.forEach(function (algorithm) {
       fixtures.valid.forEach(function (f) {
         var key, keyType, salt, saltType;
@@ -198,7 +198,8 @@ export const pbkdf2RegisterTests = () => {
             f.dkLen,
             algorithm,
             function (err, result) {
-              chai.expect(result.toString('hex')).to.equal(expected);
+              chai.expect(error).to.eql(null);
+              chai.expect(ab2str(result)).to.equal(expected);
             }
           );
         });
@@ -211,7 +212,7 @@ export const pbkdf2RegisterTests = () => {
             f.dkLen,
             algorithm
           );
-          chai.expect(result.toString('hex')).to.equal(expected);
+          chai.expect(ab2str(result)).to.equal(expected);
         });
       });
 
@@ -247,7 +248,7 @@ export const pbkdf2RegisterTests = () => {
             )
             .to.throw(new RegExp(f.exception));
         });
-      }); 
-    });*/
+      }); */
+    });
   });
 };

@@ -4,6 +4,13 @@
 
 #include <JSI Utils/TypedArray.h>
 #include "Pbkdf2HostObject.h"
+#include <openssl/err.h>
+#include <openssl/evp.h>
+#include <openssl/ec.h>
+#include <openssl/kdf.h>
+#include <openssl/rsa.h>
+#include <openssl/dsa.h>
+#include <openssl/ssl.h>
 
 namespace margelo {
 namespace jsi = facebook::jsi;
@@ -56,6 +63,24 @@ Pbkdf2HostObject::Pbkdf2HostObject(std::shared_ptr<react::CallInvoker> jsCallInv
 	                           saltData, saltSize,
 	                           static_cast<uint32_t>(iterations),
 	                           resultData, resultSize);
+	  } else {
+          auto * digest = EVP_get_digestbyname(hashAlgorithm.c_str());
+          if (digest == nullptr) {
+              this->runOnJSThread([=]() {
+                  promise->reject("Invalid hash-algorithm!");
+                  auto preventGC = passwordPreventGC;
+                  auto preventGC2 = saltPreventGC;
+              });
+          }
+          char * passAsCharA = reinterpret_cast<char *>(passwordData);
+          const unsigned char * saltAsCharA = reinterpret_cast<const unsigned char *>(saltData);
+          unsigned char * resultAsCharA = reinterpret_cast<unsigned char *>(resultData);
+          PKCS5_PBKDF2_HMAC(passAsCharA, passwordSize,
+                            saltAsCharA, saltSize,
+                            static_cast<uint32_t>(iterations),
+                            digest,
+                            resultSize,
+                            resultAsCharA);
 	  }
 	  this->runOnJSThread([=]() {
 	    promise->resolve(jsi::ArrayBuffer(std::move(*resultPreventGC)));
@@ -64,8 +89,6 @@ Pbkdf2HostObject::Pbkdf2HostObject(std::shared_ptr<react::CallInvoker> jsCallInv
 	  });
 	});
       });
-
-
 
       return resultArray;
     }));
@@ -100,7 +123,20 @@ Pbkdf2HostObject::Pbkdf2HostObject(std::shared_ptr<react::CallInvoker> jsCallInv
 	                       static_cast<uint32_t>(iterations),
 	                       result.data(runtime), result.size(runtime));
       } else {
-	throw jsi::JSError(runtime, "Invalid hash-algorithm!");
+          auto * digest = EVP_get_digestbyname(hashAlgorithm.c_str());
+          if (digest == nullptr) {
+              throw jsi::JSError(runtime, "Invalid hash-algorithm!");
+          }
+          char * passAsCharA = reinterpret_cast<char *>(password.data(
+                  runtime));
+          const unsigned char * saltAsCharA = reinterpret_cast<const unsigned char *>(salt.data(runtime));
+          unsigned char * resultAsCharA = reinterpret_cast<unsigned char *>(result.data(runtime));
+          PKCS5_PBKDF2_HMAC(passAsCharA, password.size(runtime),
+                            saltAsCharA, salt.size(runtime),
+                            static_cast<uint32_t>(iterations),
+                            digest,
+                            result.size(runtime),
+                            resultAsCharA);
       }
 
       return resultArray;

@@ -6,41 +6,54 @@ async function runAsync(): Promise<number> {
   return NativeFastCrypto.runAsync();
 }
 
+function sanitizeInput(input, output) {
+  if (output == null) {
+    output = input;
+  }
+
+  const messages = [
+    'Password must be a string, a Buffer, a typed array or a DataView',
+    `Salt must be a string, a Buffer, a typed array or a DataView`,
+  ];
+
+  [0, 1].forEach((key: number) => {
+    if (typeof input[key] === 'string') {
+      const buffer = Buffer.from(input[key], 'utf-8');
+      output[key] = buffer.buffer.slice(
+        buffer.byteOffset,
+        buffer.byteOffset + buffer.byteLength
+      );
+    }
+
+    if (isBuffer(input[key])) {
+      output[key] = toArrayBuffer(input[key]);
+    }
+
+    if (!(output[key] instanceof ArrayBuffer)) {
+      try {
+        const buffer = Buffer.from(input[key]);
+        output[key] = buffer.buffer.slice(
+          buffer.byteOffset,
+          buffer.byteOffset + buffer.byteLength
+        );
+      } catch {
+        throw messages[key];
+      }
+    }
+  });
+}
+
 const nativePbkdf2 = NativeFastCrypto.pbkdf2;
 function pbkdf2(...args) {
   const callback = args[args.length - 1];
   const rest = args.slice(0, -1);
 
   if (typeof callback !== 'function') {
-    throw 'No callback provided to pbkdf2';
+    throw new Error('No callback provided to pbkdf2');
   }
 
-  if (typeof args[0] === 'string') {
-    const buffer = Buffer.from(args[0]);
-    rest[0] = buffer.buffer.slice(
-      buffer.byteOffset,
-      buffer.byteOffset + buffer.byteLength
-    );
-  }
-  if (typeof args[1] === 'string') {
-    const buffer = Buffer.from(args[1]);
-    rest[1] = buffer.buffer.slice(
-      buffer.byteOffset,
-      buffer.byteOffset + buffer.byteLength
-    );
-  }
-  if (isBuffer(args[0])) {
-    rest[0] = toArrayBuffer(args[0]);
-  }
-  if (isBuffer(args[1])) {
-    rest[1] = toArrayBuffer(args[1]);
-  }
-  if (!(rest[1] instanceof ArrayBuffer)) {
-    throw `Salt must be a string, a Buffer, a typed array or a DataView`;
-  }
-  if (!(rest[0] instanceof ArrayBuffer)) {
-    throw 'Password must be a string, a Buffer, a typed array or a DataView';
-  }
+  sanitizeInput(args, rest);
+
   if (rest.length === 4) {
     rest.push('sha1');
   }
@@ -56,37 +69,14 @@ function pbkdf2(...args) {
 }
 
 function pbkdf2Sync(...args) {
-  if (typeof args[0] === 'string') {
-    const buffer = Buffer.from(args[0]);
-    args[0] = buffer.buffer.slice(
-      buffer.byteOffset,
-      buffer.byteOffset + buffer.byteLength
-    );
-  }
-  if (typeof args[1] === 'string') {
-    const buffer = Buffer.from(args[1]);
-    args[1] = buffer.buffer.slice(
-      buffer.byteOffset,
-      buffer.byteOffset + buffer.byteLength
-    );
-  }
-  if (isBuffer(args[0])) {
-    args[0] = toArrayBuffer(args[0]);
-  }
-  if (isBuffer(args[1])) {
-    args[1] = toArrayBuffer(args[1]);
-  }
-  if (!(args[1] instanceof ArrayBuffer)) {
-    throw 'Salt must be a string, a Buffer, a typed array or a DataView';
-  }
-  if (!(args[0] instanceof ArrayBuffer)) {
-    throw 'Password must be a string, a Buffer, a typed array or a DataView';
-  }
-  if (args.length === 4) {
-    args.push('sha1');
+  const argsOutput = args;
+  sanitizeInput(args, argsOutput);
+
+  if (argsOutput.length === 4) {
+    argsOutput.push('sha1');
   }
 
-  return nativePbkdf2.pbkdf2Sync(...args);
+  return nativePbkdf2.pbkdf2Sync(...argsOutput);
 }
 
 export const FastCrypto = {

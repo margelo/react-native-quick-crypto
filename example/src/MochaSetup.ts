@@ -22,6 +22,7 @@ export async function testLib(addTestResult: (testResult: TestResult) => void) {
   let id = 0;
   const indent = () => Array(indents).join('  ');
   runner.removeAllListeners();
+  const stats = { passes: 0, failures: 0 };
   runner
     .once(EVENT_RUN_BEGIN, () => {})
     .on(EVENT_SUITE_BEGIN, () => {
@@ -38,6 +39,7 @@ export async function testLib(addTestResult: (testResult: TestResult) => void) {
       });
       console.log(`${indent()} ${id} pass: ${test.fullTitle()}`);
       id++;
+      stats.passes++;
     })
     .on(EVENT_TEST_FAIL, (test: MochaTypes.Runnable, err: Error) => {
       addTestResult({
@@ -50,8 +52,12 @@ export async function testLib(addTestResult: (testResult: TestResult) => void) {
         `${indent()}  ${id} fail: ${test.fullTitle()} - error: ${err.message}`
       );
       id++;
+      stats.failures++;
     })
-    .once(EVENT_RUN_END, () => {});
+    .once(EVENT_RUN_END, () => {
+      console.log(` 
+        end: ${stats.passes}/${stats.passes + stats.failures} ok`);
+    });
 
   pbkdf2RegisterTests();
   //HmacTests.add();
