@@ -1,10 +1,13 @@
-import { NativeFastCrypto } from './NativeFastCrypto/NativeFastCrypto';
 import * as pbkdf2 from './pbkdf2';
 import * as random from './random';
+import { createHmac } from './Hmac';
+import { createHash } from './Hash';
 
 export const FastCrypto = {
-  createHmac: NativeFastCrypto.createHmac,
-  createHash: NativeFastCrypto.createHash,
+  createHmac,
+  Hmac: createHmac,
+  Hash: createHash,
+  createHash,
   ...pbkdf2,
   ...random,
 };

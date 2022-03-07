@@ -16,7 +16,7 @@ export function createHash(algorithm: string, options?: HashOptions) {
   return new Hash(algorithm, options);
 }
 
-export class Hash extends Stream.Transform {
+class Hash extends Stream.Transform {
   private internalHash: InternalHash;
   private options?: Stream.TransformOptions;
 

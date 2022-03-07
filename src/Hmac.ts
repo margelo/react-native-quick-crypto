@@ -21,7 +21,7 @@ export function createHmac(
   return new Hmac(algorithm, key, options);
 }
 
-export class Hmac extends Stream.Transform {
+class Hmac extends Stream.Transform {
   private internalHmac: InternalHmac;
   private options?: Stream.TransformOptions;
 
