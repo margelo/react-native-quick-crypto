@@ -39,7 +39,9 @@ add_library(reactnativefastcrypto  # <-- Library name
         "../cpp/HMAC/HmacHostObject.cpp"
         "../cpp/fastpbkdf2/Pbkdf2HostObject.cpp"
         "../cpp/fastpbkdf2/fastpbkdf2.c"
-        "../cpp/Random/RandomHostObject.cpp
+        "../cpp/Random/RandomHostObject.cpp"
+        "../cpp/Hash/HashInstaller.cpp"
+        "../cpp/Hash/HashHostObject.cpp"
         ${INCLUDE_JSI_CPP} # only on older RN versions
 )
 

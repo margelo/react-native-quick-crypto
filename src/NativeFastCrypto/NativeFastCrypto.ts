@@ -5,6 +5,7 @@ interface NativeFastCryptoSpec {
   createHmac: any;
   pbkdf2: any;
   random: any;
+  createHash: any;
 }
 
 // global func declaration for JSI functions

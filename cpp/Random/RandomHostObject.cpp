@@ -27,18 +27,17 @@ RandomHostObject::RandomHostObject(std::shared_ptr<react::CallInvoker> jsCallInv
       }
 
       auto result = arguments[0].asObject(runtime).getArrayBuffer(runtime);
-      auto resultSize = password.size(runtime);
-      auto * resultData = password.data(runtime);
-      auto resultPreventGC = std::make_shared<jsi::ArrayBuffer>(std::move(password));
+      auto resultSize = result.size(runtime);
+      auto * resultData = result.data(runtime);
+      auto resultPreventGC = std::make_shared<jsi::ArrayBuffer>(std::move(result));
 
-      auto offset = arguments[1].asNumber();
+      auto offset = (int) arguments[1].asNumber();
       auto size = arguments[2].asNumber();
 
       return react::createPromiseAsJSIValue(runtime, [=](jsi::Runtime &runtime,
                                                          std::shared_ptr<react::Promise> promise) {
         // TODO(Szymon) implement check prime once we have bignums
         this->runOnWorkerThread([=]() {
-            CheckEntropy();  // Ensure that OpenSSL's PRNG is properly seeded.
             if (RAND_bytes(resultData + offset, size) != 0) {
                 this->runOnJSThread([=]() {
                     promise->reject("Sth went wrong with RAND_bytes");
@@ -49,8 +48,6 @@ RandomHostObject::RandomHostObject(std::shared_ptr<react::CallInvoker> jsCallInv
           });
         });
       });
-
-      return resultArray;
     }));
 
   this->fields.push_back(HOST_LAMBDA("randomFillSync", {
@@ -59,10 +56,11 @@ RandomHostObject::RandomHostObject(std::shared_ptr<react::CallInvoker> jsCallInv
       }
 
       auto result = arguments[0].asObject(runtime).getArrayBuffer(runtime);
-      auto resultSize = password.size(runtime);
-      auto * resultData = password.data(runtime);
+      auto resultSize = result.size(runtime);
+      auto * resultData = result.data(runtime);
+      auto offset = (int) arguments[1].asNumber();
+      auto size = arguments[2].asNumber();
 
-      CheckEntropy();  // Ensure that OpenSSL's PRNG is properly seeded.
       if (RAND_bytes(resultData + offset, size) != 0) {
           throw jsi::JSError(runtime, "Sth went wrong with RAND_bytes");
       }

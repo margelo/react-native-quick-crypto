@@ -8,8 +8,14 @@
 
 #include <jsi/jsi.h>
 #include <string>
-#include <openssl/hmac.h>
 #include "JSI Utils/SmartHostObject.h"
+#include <openssl/err.h>
+#include <openssl/evp.h>
+#include <openssl/ec.h>
+#include <openssl/kdf.h>
+#include <openssl/rsa.h>
+#include <openssl/dsa.h>
+#include <openssl/ssl.h>
 
 namespace margelo {
 
@@ -23,9 +29,9 @@ explicit HashHostObject(std::string hashAlgorithm,
                         std::shared_ptr<react::CallInvoker> jsCallInvoker,
                         std::shared_ptr<DispatchQueue::dispatch_queue> workerQueue);
 virtual ~HashHostObject();
-    EVPMDPointer mdctx_ {};
+    EVP_MD_CTX* mdctx_ = nullptr;
     unsigned int md_len_ = 0;
-    unsigned char * digest_ = nullptr;
+    char * digest_ = nullptr;
 private:
 
 
