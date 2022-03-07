@@ -1,74 +1,87 @@
 import { NativeFastCrypto } from './NativeFastCrypto/NativeFastCrypto';
 import { Buffer } from '@craftzdog/react-native-buffer';
-import { isBuffer, toArrayBuffer } from './Utils';
+import { isBuffer, toArrayBuffer, BinaryLike } from './Utils';
 
-function sanitizeInput(input, output) {
-  if (output == null) {
-    output = input;
+const WRONG_PASS =
+  'Password must be a string, a Buffer, a typed array or a DataView';
+const WRON_SALT = `Salt must be a string, a Buffer, a typed array or a DataView`;
+
+type Password = BinaryLike;
+type Salt = BinaryLike;
+
+function sanitizeInput(input: BinaryLike, errorMsg: string): ArrayBuffer {
+  if (typeof input === 'string') {
+    const buffer = Buffer.from(input, 'utf-8');
+    return buffer.buffer.slice(
+      buffer.byteOffset,
+      buffer.byteOffset + buffer.byteLength
+    );
   }
 
-  const messages = [
-    'Password must be a string, a Buffer, a typed array or a DataView',
-    `Salt must be a string, a Buffer, a typed array or a DataView`,
-  ];
+  if (isBuffer(input)) {
+    return toArrayBuffer(input);
+  }
 
-  [0, 1].forEach((key: number) => {
-    if (typeof input[key] === 'string') {
-      const buffer = Buffer.from(input[key], 'utf-8');
-      output[key] = buffer.buffer.slice(
+  if (!(input instanceof ArrayBuffer)) {
+    try {
+      const buffer = Buffer.from(input);
+      return buffer.buffer.slice(
         buffer.byteOffset,
         buffer.byteOffset + buffer.byteLength
       );
+    } catch {
+      throw errorMsg;
     }
-
-    if (isBuffer(input[key])) {
-      output[key] = toArrayBuffer(input[key]);
-    }
-
-    if (!(output[key] instanceof ArrayBuffer)) {
-      try {
-        const buffer = Buffer.from(input[key]);
-        output[key] = buffer.buffer.slice(
-          buffer.byteOffset,
-          buffer.byteOffset + buffer.byteLength
-        );
-      } catch {
-        throw messages[key];
-      }
-    }
-  });
+  }
+  return input;
 }
-const nativePbkdf2 = NativeFastCrypto.pbkdf2;
-export function pbkdf2(...args) {
-  const callback = args[args.length - 1];
-  const rest = args.slice(0, -1);
 
+const nativePbkdf2 = NativeFastCrypto.pbkdf2;
+
+export function pbkdf2(
+  password: Password,
+  salt: Salt,
+  iterations: number,
+  keylen: number,
+  digest: string,
+  callback: (err: Error | null, derivedKey?: Buffer) => void
+) {
   if (typeof callback !== 'function') {
     throw new Error('No callback provided to pbkdf2');
   }
 
-  sanitizeInput(args, rest);
+  const sanitizedPassword = sanitizeInput(password, WRONG_PASS);
+  const sanitizedSalt = sanitizeInput(salt, WRON_SALT);
 
-  if (rest.length === 4) {
-    rest.push('sha1');
-  }
-
-  nativePbkdf2.pbkdf2(...rest).then(
-    (res) => {
-      callback(undefined, res);
-    },
-    (e) => {
-      callback(e);
-    }
-  );
+  nativePbkdf2
+    .pbkdf2(sanitizedPassword, sanitizedSalt, iterations, keylen, digest)
+    .then(
+      (res: ArrayBuffer) => {
+        callback(null, Buffer.from(res));
+      },
+      (e: Error) => {
+        callback(e);
+      }
+    );
 }
-export function pbkdf2Sync(...args) {
-  const argsOutput = args;
-  sanitizeInput(args, argsOutput);
+export function pbkdf2Sync(
+  password: Password,
+  salt: Salt,
+  iterations: number,
+  keylen: number,
+  digest?: string
+): Buffer {
+  const sanitizedPassword = sanitizeInput(password, WRONG_PASS);
+  const sanitizedSalt = sanitizeInput(salt, WRON_SALT);
 
-  if (argsOutput.length === 4) {
-    argsOutput.push('sha1');
-  }
+  const algo = digest ? digest : 'sha1';
+  let result: ArrayBuffer = nativePbkdf2.pbkdf2Sync(
+    sanitizedPassword,
+    sanitizedSalt,
+    iterations,
+    keylen,
+    algo
+  );
 
-  return nativePbkdf2.pbkdf2Sync(...argsOutput);
+  return Buffer.from(result);
 }

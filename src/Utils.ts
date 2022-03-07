@@ -1,10 +1,12 @@
-import type { Buffer } from "@craftzdog/react-native-buffer";
+import { Buffer } from "@craftzdog/react-native-buffer";
 
-export function isBuffer(buf: Buffer) {
+export type BinaryLike = string | ArrayBuffer | Buffer;
+
+export function isBuffer(buf: any) {
   return buf instanceof Buffer || buf?.constructor?.name === 'Buffer';
 }
 
-export function toArrayBuffer(buf: Buffer) {
+export function toArrayBuffer(buf: BinaryLike): ArrayBuffer {
   if (buf?.buffer?.slice) {
     return buf.buffer.slice(buf.byteOffset, buf.byteOffset + buf.byteLength);
   }
