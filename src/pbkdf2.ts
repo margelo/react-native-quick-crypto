@@ -1,6 +1,6 @@
 import { NativeFastCrypto } from './NativeFastCrypto/NativeFastCrypto';
 import { Buffer } from '@craftzdog/react-native-buffer';
-import { isBuffer, toArrayBuffer, BinaryLike } from './Utils';
+import { BinaryLike, binaryLikeToArrayBuffer } from './Utils';
 
 const WRONG_PASS =
   'Password must be a string, a Buffer, a typed array or a DataView';
@@ -10,30 +10,11 @@ type Password = BinaryLike;
 type Salt = BinaryLike;
 
 function sanitizeInput(input: BinaryLike, errorMsg: string): ArrayBuffer {
-  if (typeof input === 'string') {
-    const buffer = Buffer.from(input, 'utf-8');
-    return buffer.buffer.slice(
-      buffer.byteOffset,
-      buffer.byteOffset + buffer.byteLength
-    );
+  try {
+    return binaryLikeToArrayBuffer(input);
+  } catch (e: any) {
+    throw errorMsg;
   }
-
-  if (isBuffer(input)) {
-    return toArrayBuffer(input as Buffer);
-  }
-
-  if (!(input instanceof ArrayBuffer)) {
-    try {
-      const buffer = Buffer.from(input);
-      return buffer.buffer.slice(
-        buffer.byteOffset,
-        buffer.byteOffset + buffer.byteLength
-      );
-    } catch {
-      throw errorMsg;
-    }
-  }
-  return input;
 }
 
 const nativePbkdf2 = NativeFastCrypto.pbkdf2;

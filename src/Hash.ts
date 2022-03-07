@@ -69,11 +69,13 @@ export class Hash extends Stream.Transform {
    */
   digest(): Buffer;
   digest(encoding: BinaryToTextEncoding): string;
-  digest(encoding?: BinaryToTextEncoding): Buffer | string {
+
+  digest(encoding?: BinaryToTextEncoding): string | Buffer {
     const result: ArrayBuffer = this.internalHash.digest();
     if (encoding) {
       return Buffer.from(result).toString(encoding);
     }
     return Buffer.from(result);
   }
+
 }

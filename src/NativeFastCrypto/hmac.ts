@@ -1,4 +1,4 @@
-type InternalHmac = {
+export type InternalHmac = {
   update: (data: ArrayBuffer) => InternalHmac;
   digest: () => ArrayBuffer;
 };

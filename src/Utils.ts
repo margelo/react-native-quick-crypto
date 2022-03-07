@@ -25,3 +25,34 @@ export function toArrayBuffer(buf: Buffer): ArrayBuffer {
   }
   return ab;
 }
+
+export function binaryLikeToArrayBuffer(input: BinaryLike): ArrayBuffer {
+  if (typeof input === 'string') {
+    const buffer = Buffer.from(input, 'utf-8');
+    return buffer.buffer.slice(
+      buffer.byteOffset,
+      buffer.byteOffset + buffer.byteLength
+    );
+  }
+
+  if (isBuffer(input)) {
+    return toArrayBuffer(input as Buffer);
+  }
+
+  if (!(input instanceof ArrayBuffer)) {
+    try {
+      const buffer = Buffer.from(input);
+      return buffer.buffer.slice(
+        buffer.byteOffset,
+        buffer.byteOffset + buffer.byteLength
+      );
+    } catch {
+      throw 'error';
+    }
+  }
+  return input;
+}
+
+export function ab2str(buf: ArrayBuffer) {
+  return Buffer.from(buf).toString('hex');
+}
