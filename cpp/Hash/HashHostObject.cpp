@@ -24,6 +24,18 @@ const EVP_MD* parseHashAlgorithmForHashObject(const std::string& hashAlgorithm) 
   throw std::runtime_error("Invalid Hash Algorithm!");
 }
 
+HashHostObject::HashHostObject(HashHostObject * other,
+                                        std::shared_ptr<react::CallInvoker> jsCallInvoker,
+                                        std::shared_ptr<DispatchQueue::dispatch_queue> workerQueue) :
+        SmartHostObject(jsCallInvoker, workerQueue)
+{
+    const EVP_MD* md = EVP_MD_CTX_md(other->mdctx_);
+    EVP_MD_CTX_copy(this->mdctx_, other->mdctx_);
+    md_len_ = EVP_MD_size(md);
+
+    installMethods();
+}
+
 HashHostObject::HashHostObject(std::string hashAlgorithm,
                                unsigned int md_len,
                                std::shared_ptr<react::CallInvoker> jsCallInvoker,
@@ -40,56 +52,66 @@ HashHostObject::HashHostObject(std::string hashAlgorithm,
         md_len_ = md_len;
     }
 
-  this->fields.push_back(HOST_LAMBDA("update", {
-      if (!arguments[0].isString()) throw jsi::JSError(runtime, "HmacHostObject::update: First argument ('message') has to be of type string!");
+    installMethods();
+}
 
-      auto messageBuffer = arguments[0].getObject(runtime).getArrayBuffer(runtime);
+void HashHostObject::installMethods() {
+    this->fields.push_back(HOST_LAMBDA("update", {
+        if (!arguments[0].isString()) throw jsi::JSError(runtime, "HmacHostObject::update: First argument ('message') has to be of type string!");
 
-      const unsigned char* data = reinterpret_cast<const unsigned char*>(messageBuffer.data(runtime));
-      int size = arguments[1].asNumber();
+        auto messageBuffer = arguments[0].getObject(runtime).getArrayBuffer(runtime);
 
-      EVP_DigestUpdate(mdctx_, data, size);
+        const unsigned char* data = reinterpret_cast<const unsigned char*>(messageBuffer.data(runtime));
+        int size = arguments[1].asNumber();
 
-      return jsi::Value::undefined();
+        EVP_DigestUpdate(mdctx_, data, size);
+
+        return jsi::Value::undefined();
     }));
 
-  this->fields.push_back(HOST_LAMBDA("digest", {
-      unsigned int len = md_len_;
+    this->fields.push_back(HOST_LAMBDA("copy", {
 
-      if (digest_ == nullptr && len > 0) {
-          // Some hash algorithms such as SHA3 do not support calling
-          // EVP_DigestFinal_ex more than once, however, Hash._flush
-          // and Hash.digest can both be used to retrieve the digest,
-          // so we need to cache it.
-          // See https://github.com/nodejs/node/issues/28245.
+        std::shared_ptr<HashHostObject> copy = make_shared<HashHostObject>(this, this->weakJsCallInvoker.lock(), this->dispatchQueue);
+        return jsi::Object::createFromHostObject(runtime, copy);
+    }));
 
-          char* md_value = new char[len];
+    this->fields.push_back(HOST_LAMBDA("digest", {
+        unsigned int len = md_len_;
 
-          size_t default_len = EVP_MD_CTX_size(mdctx_);
-          int ret;
-          if (len == default_len) {
-              ret = EVP_DigestFinal_ex(
-                      mdctx_,
-                      reinterpret_cast<unsigned char*>(md_value),
-                      &len);
-          } else {
-              ret = EVP_DigestFinalXOF(
-                      mdctx_,
-                      reinterpret_cast<unsigned char*>(md_value),
-                      len);
-          }
+        if (digest_ == nullptr && len > 0) {
+            // Some hash algorithms such as SHA3 do not support calling
+            // EVP_DigestFinal_ex more than once, however, Hash._flush
+            // and Hash.digest can both be used to retrieve the digest,
+            // so we need to cache it.
+            // See https://github.com/nodejs/node/issues/28245.
 
-          if (ret != 1) {
-              throw jsi::JSError(runtime, "openSSL error:" + ERR_get_error());
-          }
+            char* md_value = new char[len];
 
-          digest_ = md_value;
-      }
+            size_t default_len = EVP_MD_CTX_size(mdctx_);
+            int ret;
+            if (len == default_len) {
+                ret = EVP_DigestFinal_ex(
+                        mdctx_,
+                        reinterpret_cast<unsigned char*>(md_value),
+                        &len);
+            } else {
+                ret = EVP_DigestFinalXOF(
+                        mdctx_,
+                        reinterpret_cast<unsigned char*>(md_value),
+                        len);
+            }
 
-      TypedArray<TypedArrayKind::Uint8Array> typedArray(runtime, len);
-      std::vector<unsigned char> vec(digest_, digest_ + len);
-      typedArray.update(runtime, vec);
-      return typedArray;
+            if (ret != 1) {
+                throw jsi::JSError(runtime, "openSSL error:" + ERR_get_error());
+            }
+
+            digest_ = md_value;
+        }
+
+        TypedArray<TypedArrayKind::Uint8Array> typedArray(runtime, len);
+        std::vector<unsigned char> vec(digest_, digest_ + len);
+        typedArray.update(runtime, vec);
+        return typedArray;
     }));
 }
 

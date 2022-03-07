@@ -28,12 +28,18 @@ explicit HashHostObject(std::string hashAlgorithm,
                         unsigned int md_len,
                         std::shared_ptr<react::CallInvoker> jsCallInvoker,
                         std::shared_ptr<DispatchQueue::dispatch_queue> workerQueue);
+
+explicit HashHostObject(HashHostObject * other,
+                        std::shared_ptr<react::CallInvoker> jsCallInvoker,
+                        std::shared_ptr<DispatchQueue::dispatch_queue> workerQueue);
+void installMethods();
+
 virtual ~HashHostObject();
+
+private:
     EVP_MD_CTX* mdctx_ = nullptr;
     unsigned int md_len_ = 0;
     char * digest_ = nullptr;
-private:
-
 
 };
 }

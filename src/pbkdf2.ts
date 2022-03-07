@@ -19,7 +19,7 @@ function sanitizeInput(input: BinaryLike, errorMsg: string): ArrayBuffer {
   }
 
   if (isBuffer(input)) {
-    return toArrayBuffer(input);
+    return toArrayBuffer(input as Buffer);
   }
 
   if (!(input instanceof ArrayBuffer)) {
