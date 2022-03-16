@@ -106,7 +106,7 @@ export function registerRandomTests() {
   });
 
   it('simple test (do sth) 4 - random Fill Sync AB', () => {
-    [new ArrayBuffer(10), new SharedArrayBuffer(10)].forEach((buf) => {
+    [new ArrayBuffer(10), new ArrayBuffer(10)].forEach((buf) => {
       const before = Buffer.from(buf).toString('hex');
       crypto.randomFillSync(buf);
       const after = Buffer.from(buf).toString('hex');
