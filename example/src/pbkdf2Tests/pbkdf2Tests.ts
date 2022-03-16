@@ -2,6 +2,7 @@ import { describe, it } from '../MochaRNAdapter';
 import chai from 'chai';
 import { FastCrypto } from 'react-native-fast-crypto';
 import { Buffer } from '@craftzdog/react-native-buffer';
+import type { Done, Context } from 'mocha';
 
 function ab2str(buf: ArrayBuffer) {
   return Buffer.from(buf).toString('hex');
@@ -93,7 +94,7 @@ export const pbkdf2RegisterTests = () => {
   });
 
   describe('pbkdf2 tests', () => {
-    it(' defaults to sha1 and handles buffers', function () {
+    it(' defaults to sha1 and handles buffers', (done: Done) => {
       var resultSync = FastCrypto.pbkdf2Sync('password', 'salt', 1, 32);
       chai
         .expect(ab2str(resultSync))
@@ -112,8 +113,10 @@ export const pbkdf2RegisterTests = () => {
             .to.eql(
               '0c60c80f961f0e71f3a9b524af6012062fe037a6e0f0eb94fe8fc46bdc637164'
             );
+          done();
         }
       );
+
     });
 
     it('should throw if no callback is provided', function () {
@@ -190,7 +193,7 @@ export const pbkdf2RegisterTests = () => {
           ' to ' +
           expected;
 
-        it(' async w/ ' + description, function () {
+        it(' async w/ ' + description, (done: Done) => {
           FastCrypto.pbkdf2(
             key,
             salt,
@@ -200,6 +203,7 @@ export const pbkdf2RegisterTests = () => {
             function (err, result) {
               chai.expect(error).to.eql(null);
               chai.expect(ab2str(result)).to.equal(expected);
+              done();
             }
           );
         });

@@ -1,4 +1,5 @@
-import { FastCrypto as crypto } from 'react-native-fact-crypto';
+// copied from https://github.com/nodejs/node/blob/master/test/parallel/test-crypto-hmac.js
+import { FastCrypto as crypto } from 'react-native-fast-crypto';
 import { Buffer } from '@craftzdog/react-native-buffer';
 import { describe, it } from '../MochaRNAdapter';
 import chai, { expect } from 'chai';

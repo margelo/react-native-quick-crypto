@@ -1,3 +1,4 @@
+// copied from https://github.com/nodejs/node/blob/master/test/parallel/test-crypto-hash.js
 import { FastCrypto as crypto } from 'react-native-fast-crypto';
 import { describe, it } from '../MochaRNAdapter';
 import chai from 'chai';
