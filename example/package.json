@@ -14,6 +14,9 @@
   },
   "dependencies": {
     "@craftzdog/react-native-buffer": "^6.0.4",
+    "@react-native-community/checkbox": "^0.5.12",
+    "@react-navigation/native": "^6.0.8",
+    "@react-navigation/native-stack": "^6.5.2",
     "Buffer": "^0.0.0",
     "chai": "^4.3.6",
     "events": "^3.3.0",
@@ -21,6 +24,8 @@
     "react": "^17.0.2",
     "react-native": "^0.66.0",
     "react-native-quick-base64": "^2.0.2",
+    "react-native-safe-area-context": "^4.2.4",
+    "react-native-screens": "^3.13.1",
     "stream-browserify": "^3.0.0",
     "util": "^0.12.4"
   },

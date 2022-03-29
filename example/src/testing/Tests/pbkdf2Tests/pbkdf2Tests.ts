@@ -1,4 +1,4 @@
-import { describe, it } from '../MochaRNAdapter';
+import { describe, it } from '../../MochaRNAdapter';
 import chai from 'chai';
 import { FastCrypto } from 'react-native-fast-crypto';
 import { Buffer } from '@craftzdog/react-native-buffer';

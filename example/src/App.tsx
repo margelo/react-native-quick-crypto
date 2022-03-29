@@ -1,27 +1,10 @@
 import * as React from 'react';
 
 import { StyleSheet, View, Text } from 'react-native';
-import { FastCrypto } from 'react-native-fast-crypto';
-import { Tests } from './Tests';
-
-// Uncomment to run benchmark
-/*import { benchmarkAgainstOldCrypto } from './Benchmarks';
-setTimeout(async () => {
-  await benchmarkAgainstOldCrypto();
-}, 5000);*/
+import { Root } from './navigators/Root';
 
 export default function App() {
-  return (
-    <View style={styles.container}>
-      <Text>
-        Hello!{' '}
-        {FastCrypto == null
-          ? 'FastCrypto is null :('
-          : 'FastCrypto is installed!'}
-      </Text>
-      <Tests />
-    </View>
-  );
+  return <Root />;
 }
 
 const styles = StyleSheet.create({
