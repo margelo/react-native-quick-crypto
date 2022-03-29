@@ -1,9 +1,14 @@
 import { NativeModules, Platform } from 'react-native';
+import type { CreateHmacMethod } from './hmac';
+import type { CreateHashMethod } from './hash';
+import type { Pbkdf2Object } from './pbkdf2';
+import type { RandomObject } from './random';
 
 interface NativeFastCryptoSpec {
-  runAsync: () => Promise<number>;
-  createHmac: any;
-  pbkdf2: any;
+  createHmac: CreateHmacMethod;
+  pbkdf2: Pbkdf2Object;
+  random: RandomObject;
+  createHash: CreateHashMethod;
 }
 
 // global func declaration for JSI functions

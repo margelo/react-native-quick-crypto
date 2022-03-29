@@ -1,6 +1,5 @@
 //
 //  HmacHostObject.h
-//  PinkPanda
 //
 //  Created by Marc Rousavy on 22.02.22.
 //

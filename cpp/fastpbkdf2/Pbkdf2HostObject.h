@@ -5,8 +5,8 @@
 #ifndef FASTCRYPTOEXAMPLE_PBKDF2HOSTOBJECT_H
 #define FASTCRYPTOEXAMPLE_PBKDF2HOSTOBJECT_H
 
-#import "JSI Utils/SmartHostObject.h"
-#import "fastpbkdf2/fastpbkdf2.h"
+#include "JSI Utils/SmartHostObject.h"
+#include "fastpbkdf2/fastpbkdf2.h"
 
 namespace margelo {
 namespace jsi = facebook::jsi;

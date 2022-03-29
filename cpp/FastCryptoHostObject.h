@@ -3,7 +3,7 @@
 #define CPP_FASTCRYPTOHOSTOBJECT_H_
 
 #include <jsi/jsi.h>
-#import <ReactCommon/CallInvoker.h>
+#include <ReactCommon/CallInvoker.h>
 #include <memory>
 #include "Utils/DispatchQueue.h"
 #include "JSI Utils/SmartHostObject.h"

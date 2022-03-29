@@ -15,9 +15,11 @@ namespace jsi = facebook::jsi;
 namespace react = facebook::react;
 
 typedef std::function<jsi::Value (jsi::Runtime & runtime)> JSIValueBuilder;
+
 typedef std::pair<std::string, JSIValueBuilder> FieldDefinition;
 
 class JSI_EXPORT SmartHostObject : public ThreadAwareHostObject {
+
 public:
 SmartHostObject(std::shared_ptr<react::CallInvoker> jsCallInvoker,
                 std::shared_ptr<DispatchQueue::dispatch_queue> workerQueue)

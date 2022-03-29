@@ -8,7 +8,7 @@
 
 
 #include <jsi/jsi.h>
-#import <ReactCommon/CallInvoker.h>
+#include <ReactCommon/CallInvoker.h>
 
 #ifdef ONANDROID
 #include "Utils/DispatchQueue.h"
