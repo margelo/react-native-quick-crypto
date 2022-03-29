@@ -2,7 +2,7 @@ import { describe, it } from '../../MochaRNAdapter';
 import chai from 'chai';
 import { FastCrypto } from 'react-native-fast-crypto';
 import { Buffer } from '@craftzdog/react-native-buffer';
-import type { Done, Context } from 'mocha';
+import type { Done } from 'mocha';
 
 function ab2str(buf: ArrayBuffer) {
   return Buffer.from(buf).toString('hex');

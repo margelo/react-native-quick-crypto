@@ -156,6 +156,9 @@
   },
   "dependencies": {
     "@craftzdog/react-native-buffer": "^6.0.4",
-    "react-native-quick-base64": "^2.0.2"
+    "events": "^3.3.0",
+    "react-native-quick-base64": "^2.0.2",
+    "stream": "^0.0.2",
+    "stream-browserify": "^3.0.0"
   }
 }
