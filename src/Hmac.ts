@@ -31,21 +31,25 @@ class Hmac extends Stream.Transform {
     options?: Stream.TransformOptions
   ) {
     super();
-    let keyAsString: string = '';
+    let keyAsString: ArrayBuffer | undefined;
 
     if (typeof key === 'string') {
-      keyAsString = key;
+      keyAsString = Buffer.from(key).buffer;
     }
 
     if (key instanceof ArrayBuffer) {
-      keyAsString = ab2str(key);
+      keyAsString = key;
     }
 
-    if (keyAsString === '') {
+    if (key.buffer != undefined) {
+      keyAsString = key.buffer;
+    }
+
+    if (keyAsString === undefined) {
       throw 'Wrong key type';
     }
 
-    this.internalHmac = createInternalHmac(algorithm, keyAsString);
+    this.internalHmac = createInternalHmac(algorithm, keyAsString as ArrayBuffer);
     this.options = options;
   }
 

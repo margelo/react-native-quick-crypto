@@ -25,9 +25,10 @@ FieldDefinition getHmacFieldDefinition(std::shared_ptr<react::CallInvoker> jsCal
       }
 
       auto hashAlgorithm = arguments[0].asString(runtime).utf8(runtime);
-      auto key = arguments[1].asString(runtime).utf8(runtime);
+      auto key = arguments[1].getObject(runtime).getArrayBuffer(runtime);
 
       auto hostObject = std::make_shared<HmacHostObject>(hashAlgorithm,
+                                                         runtime,
                                                          key,
                                                          jsCallInvoker,
                                                          workerQueue);

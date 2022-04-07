@@ -24,31 +24,36 @@ const EVP_MD* parseHashAlgorithm(const std::string& hashAlgorithm) {
   if (hashAlgorithm == "sha512") {
     return EVP_sha512();
   }
-  throw std::runtime_error("Invalid Hash Algorithm!");
+    const EVP_MD* res = EVP_get_digestbyname(hashAlgorithm.c_str());
+    if (res != nullptr) {
+        return res;
+    }
+    throw std::runtime_error("Invalid Hash Algorithm!");
 }
 
 HmacHostObject::HmacHostObject(const std::string& hashAlgorithm,
-                               const std::string& key,
+                               jsi::Runtime & runtime,
+                               jsi::ArrayBuffer & key,
                                std::shared_ptr<react::CallInvoker> jsCallInvoker,
                                std::shared_ptr<DispatchQueue::dispatch_queue> workerQueue) :
   SmartHostObject(jsCallInvoker, workerQueue) {
   this->context = HMAC_CTX_new();
   HMAC_Init_ex(this->context,
-               key.data(),
-               static_cast<int>(key.size()),
+               key.data(runtime),
+               static_cast<int>(key.size(runtime)),
                parseHashAlgorithm(hashAlgorithm),
                nullptr);
 
   this->fields.push_back(HOST_LAMBDA("update", {
-      if (!arguments[0].isString()) throw jsi::JSError(runtime, "HmacHostObject::update: First argument ('message') has to be of type string!");
+      if (!arguments[0].isObject() || !arguments[0].getObject(runtime).isArrayBuffer(runtime)) {
+          throw jsi::JSError(runtime, "HmacHostObject::update: First argument ('message') has to be of type string!");
+      }
 
-      auto message = arguments[0].getString(runtime).utf8(runtime);
-
-      const unsigned char* data = reinterpret_cast<const unsigned char*>(message.c_str());
+      auto message = arguments[0].getObject(runtime).getArrayBuffer(runtime);
 
       HMAC_Update(this->context,
-                  data,
-                  message.size());
+                  message.data(runtime),
+                  message.size(runtime));
 
       return jsi::Value::undefined();
     }));

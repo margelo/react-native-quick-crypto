@@ -5,5 +5,5 @@ export type InternalHmac = {
 
 export type CreateHmacMethod = (
   algorithm: string,
-  key?: string
+  key?: ArrayBuffer
 ) => InternalHmac;

@@ -20,7 +20,8 @@ class HmacHostObject : public SmartHostObject {
 
 public:
 explicit HmacHostObject(const std::string& hashAlgorithm,
-                        const std::string& key,
+                        jsi::Runtime & runtime,
+                        jsi::ArrayBuffer & key,
                         std::shared_ptr<react::CallInvoker> jsCallInvoker,
                         std::shared_ptr<DispatchQueue::dispatch_queue> workerQueue);
 virtual ~HmacHostObject();
