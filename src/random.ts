@@ -3,25 +3,40 @@ import { Buffer } from '@craftzdog/react-native-buffer';
 
 const random = NativeFastCrypto.random;
 
-export function randomFill(
-  buffer: ArrayBuffer,
-  callback: (err: Error | null, buf?: ArrayBuffer) => void
+type TypedArray =
+  | Uint8Array
+  | Uint8ClampedArray
+  | Uint16Array
+  | Uint32Array
+  | Int8Array
+  | Int16Array
+  | Int32Array
+  | Float32Array
+  | Float64Array;
+type ArrayBufferView = TypedArray | DataView;
+
+export function randomFill<T extends ArrayBufferView>(
+  buffer: T,
+  callback: (err: Error | null, buf?: ArrayBuffer) => T
 ): void;
 
-export function randomFill(
-  buffer: ArrayBuffer,
+export function randomFill<T extends ArrayBufferView>(
+  buffer: T,
   offset: number,
-  callback: (err: Error | null, buf?: ArrayBuffer) => void
+  callback: (err: Error | null, buf?: ArrayBuffer) => T
 ): void;
 
-export function randomFill(
-  buffer: ArrayBuffer,
+export function randomFill<T extends ArrayBufferView>(
+  buffer: T,
   offset: number,
   size: number,
-  callback: (err: Error | null, buf?: ArrayBuffer) => void
+  callback: (err: Error | null, buf?: ArrayBuffer) => T
 ): void;
 
-export function randomFill(buffer: ArrayBuffer, ...rest: any[]): void {
+export function randomFill<T extends ArrayBufferView>(
+  buffer: T,
+  ...rest: any[]
+): void {
   if (typeof rest[rest.length - 1] !== 'function') {
     throw new Error('No callback provided to randomDill');
   }
@@ -43,7 +58,7 @@ export function randomFill(buffer: ArrayBuffer, ...rest: any[]): void {
     offset = rest[0];
   }
 
-  random.randomFill(buffer, offset, size).then(
+  random.randomFill(buffer.buffer ? buffer.buffer : buffer, offset, size).then(
     () => {
       callback(null, buffer);
     },
@@ -53,12 +68,16 @@ export function randomFill(buffer: ArrayBuffer, ...rest: any[]): void {
   );
 }
 
-export function randomFillSync(
-  buffer: ArrayBuffer,
+export function randomFillSync<T extends ArrayBufferView>(
+  buffer: T,
   offset: number = 0,
   size?: number
 ) {
-  random.randomFillSync(buffer, offset, size ?? buffer.byteLength);
+  random.randomFillSync(
+    buffer.buffer ? buffer.buffer : buffer,
+    offset,
+    size ?? buffer.byteLength
+  );
   return buffer;
 }
 
@@ -167,7 +186,7 @@ export function randomInt(
       `<= ${RAND_MAX}`,
       range
     );*/
-    throw 'ERR_OUT_OF_RANGE'
+    throw 'ERR_OUT_OF_RANGE';
   }
 
   // For (x % range) to produce an unbiased value greater than or equal to 0 and

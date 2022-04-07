@@ -1,6 +1,7 @@
 import type { TestItemType } from '../navigators/children/Entry/TestItemType';
 import { describe, it } from './MochaRNAdapter';
 import { pbkdf2RegisterTests } from './Tests/pbkdf2Tests/pbkdf2Tests';
+import { registerRandomTests } from './Tests/RandomTests/random';
 import chai from 'chai';
 
 export const TEST_LIST: Array<TestItemType> = [
@@ -23,5 +24,10 @@ export const TEST_LIST: Array<TestItemType> = [
     description: 'PBKDF2',
     value: false,
     registrator: pbkdf2RegisterTests,
+  },
+  {
+    description: 'Random',
+    value: false,
+    registrator: registerRandomTests,
   },
 ];

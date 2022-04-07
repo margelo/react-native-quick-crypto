@@ -22,7 +22,7 @@
 
 // Flags: --pending-deprecation
 import { FastCrypto as crypto } from 'react-native-fast-crypto';
-import { describe, it } from '../MochaRNAdapter';
+import { describe, it, itOnly } from '../../MochaRNAdapter';
 import { Buffer, kMaxLength } from '@craftzdog/react-native-buffer';
 import chai from 'chai';
 import type { Done } from 'mocha';
@@ -117,7 +117,7 @@ export function registerRandomTests() {
   it('simple test (do sth) 5- random Fill ', (done: Done) => {
     const buf = Buffer.alloc(10);
     const before = buf.toString('hex');
-    crypto.randomFill(buf, (buf) => {
+    crypto.randomFill(buf, (err, buf) => {
       const after = buf?.toString('hex');
       assert.notStrictEqual(before, after);
       done();
@@ -127,14 +127,19 @@ export function registerRandomTests() {
   it('simple test (do sth) 6 ', (done: Done) => {
     const buf = new Uint8Array(new Array(10).fill(0));
     const before = Buffer.from(buf).toString('hex');
-    crypto.randomFill(buf, (buf) => {
-      const after = Buffer.from(buf).toString('hex');
-      assert.notStrictEqual(before, after);
-      done();
+    crypto.randomFill(buf, (err, buf) => {
+      try {
+        const after = Buffer.from(buf).toString('hex');
+        assert.notStrictEqual(before, after);
+        done();
+      } catch (e) {
+        done(e);
+      }
     });
   });
 
   it('simple test (do sth) 7', (done: Done) => {
+    let ctr = 0;
     [
       new Uint16Array(10),
       new Uint32Array(10),
@@ -143,21 +148,36 @@ export function registerRandomTests() {
       new DataView(new ArrayBuffer(10)),
     ].forEach((buf) => {
       const before = Buffer.from(buf.buffer).toString('hex');
-      crypto.randomFill(buf, (buf) => {
-        const after = Buffer.from(buf.buffer).toString('hex');
-        assert.notStrictEqual(before, after);
-        done();
+      crypto.randomFill(buf, (_err, buf) => {
+        try {
+          const after = Buffer.from(buf.buffer).toString('hex');
+          assert.notStrictEqual(before, after);
+        } catch (e) {
+          done(e);
+        }
+        ctr++;
+        if (ctr === 5) {
+          done();
+        }
       });
     });
   });
 
   it('simple test (do sth) 8', (done: Done) => {
+    let ctr = 0;
     [new ArrayBuffer(10), new SharedArrayBuffer(10)].forEach((buf) => {
       const before = Buffer.from(buf).toString('hex');
-      crypto.randomFill(buf, (buf) => {
-        const after = Buffer.from(buf).toString('hex');
-        assert.notStrictEqual(before, after);
-        done();
+      crypto.randomFill(buf, (_err, buf) => {
+        try {
+          const after = Buffer.from(buf).toString('hex');
+          assert.notStrictEqual(before, after);
+        } catch (e) {
+          done(e);
+        }
+        ctr++;
+        if (ctr === 2) {
+          done();
+        }
       });
     });
   });
@@ -192,7 +212,7 @@ export function registerRandomTests() {
   it('randomFill - deepStringEqual - Buffer', (done: Done) => {
     const buf = Buffer.alloc(10);
     const before = buf.toString('hex');
-    crypto.randomFill(buf, 5, 5, (buf) => {
+    crypto.randomFill(buf, 5, 5, (_err, buf) => {
       const after = buf.toString('hex');
       assert.notStrictEqual(before, after);
       assert.deepStrictEqual(before.slice(0, 5), after.slice(0, 5));
@@ -203,7 +223,7 @@ export function registerRandomTests() {
   it('randomFill - deepStringEqual - Uint8Array', (done: Done) => {
     const buf = new Uint8Array(new Array(10).fill(0));
     const before = Buffer.from(buf).toString('hex');
-    crypto.randomFill(buf, 5, 5, (buf) => {
+    crypto.randomFill(buf, 5, 5, (_err, buf) => {
       const after = Buffer.from(buf).toString('hex');
       assert.notStrictEqual(before, after);
       assert.deepStrictEqual(before.slice(0, 5), after.slice(0, 5));

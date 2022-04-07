@@ -21,7 +21,7 @@ namespace react = facebook::react;
 RandomHostObject::RandomHostObject(std::shared_ptr<react::CallInvoker> jsCallInvoker,
                                    std::shared_ptr<DispatchQueue::dispatch_queue> workerQueue) :
   SmartHostObject(jsCallInvoker, workerQueue) {
-  this->fields.push_back(HOST_LAMBDA("randomFill", {
+  this->fields.push_back(buildPair("randomFill", JSIF([=]){
       if (count != 3) {
 	    throw jsi::JSError(runtime, "randomFill(..) expects exactly 4 arguments!");
       }
@@ -38,7 +38,7 @@ RandomHostObject::RandomHostObject(std::shared_ptr<react::CallInvoker> jsCallInv
                                                          std::shared_ptr<react::Promise> promise) {
         // TODO(Szymon) implement check prime once we have bignums
         this->runOnWorkerThread([=]() {
-            if (RAND_bytes(resultData + offset, size) != 0) {
+            if (RAND_bytes(resultData + offset, size) != 1) {
                 this->runOnJSThread([=]() {
                     promise->reject("Sth went wrong with RAND_bytes");
                 });
@@ -50,7 +50,7 @@ RandomHostObject::RandomHostObject(std::shared_ptr<react::CallInvoker> jsCallInv
       });
     }));
 
-  this->fields.push_back(HOST_LAMBDA("randomFillSync", {
+  this->fields.push_back(buildPair("randomFillSync", JSIF([=]){
       if (count != 3) {
           throw jsi::JSError(runtime, "randomFillSync(..) expects exactly 4 arguments!");
       }
@@ -61,8 +61,8 @@ RandomHostObject::RandomHostObject(std::shared_ptr<react::CallInvoker> jsCallInv
       auto offset = (int) arguments[1].asNumber();
       auto size = arguments[2].asNumber();
 
-      if (RAND_bytes(resultData + offset, size) != 0) {
-          throw jsi::JSError(runtime, "Sth went wrong with RAND_bytes");
+      if (RAND_bytes(resultData + offset, size) != 1) {
+          throw jsi::JSError(runtime, "Sth went wrong with RAND_bytes" + std::to_string(ERR_get_error()));
       }
 
       return result;
