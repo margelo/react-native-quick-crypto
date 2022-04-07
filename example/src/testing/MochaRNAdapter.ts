@@ -13,13 +13,19 @@ export const clearTests = () => {
   only = false;
 };
 
-export const it = (name: string, f: () => void): void => {
+export const it = (
+  name: string,
+  f: MochaTypes.Func | MochaTypes.AsyncFunc
+): void => {
   if (!only) {
     mochaContext.addTest(new Mocha.Test(name, f) as MochaTypes.Test);
   }
 };
 
-export const itOnly = (name: string, f: () => void): void => {
+export const itOnly = (
+  name: string,
+  f: MochaTypes.Func | MochaTypes.AsyncFunc
+): void => {
   clearTests();
   mochaContext.addTest(new Mocha.Test(name, f) as MochaTypes.Test);
   only = true;

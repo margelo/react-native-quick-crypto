@@ -19,7 +19,7 @@ namespace react = facebook::react;
 Pbkdf2HostObject::Pbkdf2HostObject(std::shared_ptr<react::CallInvoker> jsCallInvoker,
                                    std::shared_ptr<DispatchQueue::dispatch_queue> workerQueue) :
   SmartHostObject(jsCallInvoker, workerQueue) {
-  this->fields.push_back(HOST_LAMBDA("pbkdf2", {
+  this->fields.push_back(buildPair("pbkdf2", JSIF([this]) {
       if (count != 5) {
 	throw jsi::JSError(runtime, "fastpbkdf2(..) expects exactly 5 arguments!");
       }

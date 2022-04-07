@@ -18,6 +18,8 @@ typedef std::function<jsi::Value (jsi::Runtime & runtime)> JSIValueBuilder;
 
 typedef std::pair<std::string, JSIValueBuilder> FieldDefinition;
 
+FieldDefinition buildPair(std::string name, jsi::HostFunctionType && f);
+
 class JSI_EXPORT SmartHostObject : public ThreadAwareHostObject {
 
 public:

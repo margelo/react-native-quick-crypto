@@ -71,7 +71,7 @@ void HashHostObject::installMethods() {
 
     this->fields.push_back(HOST_LAMBDA("copy", {
 
-        std::shared_ptr<HashHostObject> copy = make_shared<HashHostObject>(this, this->weakJsCallInvoker.lock(), this->dispatchQueue);
+        std::shared_ptr<HashHostObject> copy = std::make_shared<HashHostObject>(this, this->weakJsCallInvoker.lock(), this->dispatchQueue);
         return jsi::Object::createFromHostObject(runtime, copy);
     }));
 
@@ -102,7 +102,7 @@ void HashHostObject::installMethods() {
             }
 
             if (ret != 1) {
-                throw jsi::JSError(runtime, "openSSL error:" + ERR_get_error());
+                throw jsi::JSError(runtime, "openSSL error:" + std::to_string(ERR_get_error()));
             }
 
             digest_ = md_value;

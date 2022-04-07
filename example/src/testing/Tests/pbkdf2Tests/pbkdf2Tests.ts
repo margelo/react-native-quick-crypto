@@ -1,4 +1,4 @@
-import { describe, it } from '../../MochaRNAdapter';
+import { describe, it, itOnly } from '../../MochaRNAdapter';
 import chai from 'chai';
 import { FastCrypto } from 'react-native-fast-crypto';
 import { Buffer } from '@craftzdog/react-native-buffer';
@@ -116,7 +116,6 @@ export const pbkdf2RegisterTests = () => {
           done();
         }
       );
-
     });
 
     it('should throw if no callback is provided', function () {
@@ -201,9 +200,14 @@ export const pbkdf2RegisterTests = () => {
             f.dkLen,
             algorithm,
             function (err, result) {
-              chai.expect(error).to.eql(null);
-              chai.expect(ab2str(result)).to.equal(expected);
-              done();
+              try {
+                chai.expect(err).to.eql(null);
+                chai.expect(result).to.not.eql(null);
+                chai.expect(ab2str(result as ArrayBuffer)).to.equal(expected);
+                done();
+              } catch (e) {
+                done(e);
+              }
             }
           );
         });
@@ -220,7 +224,7 @@ export const pbkdf2RegisterTests = () => {
         });
       });
 
-    /*fixtures.invalid.forEach(function (f) {
+      /*fixtures.invalid.forEach(function (f) {
         var description = algorithm + ' should throw ' + f.exception;
 
         it(' async w/ ' + description, function () {

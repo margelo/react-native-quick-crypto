@@ -8,6 +8,7 @@ const WRON_SALT = `Salt must be a string, a Buffer, a typed array or a DataView`
 
 type Password = BinaryLike;
 type Salt = BinaryLike;
+type Pbkdf2Callback = (err: Error | null, derivedKey?: Buffer) => void;
 
 function sanitizeInput(input: BinaryLike, errorMsg: string): ArrayBuffer {
   try {
@@ -25,9 +26,36 @@ export function pbkdf2(
   iterations: number,
   keylen: number,
   digest: string,
-  callback: (err: Error | null, derivedKey?: Buffer) => void
-) {
-  if (typeof callback !== 'function') {
+  callback: Pbkdf2Callback
+): void;
+export function pbkdf2(
+  password: Password,
+  salt: Salt,
+  iterations: number,
+  keylen: number,
+  callback: Pbkdf2Callback
+): void;
+export function pbkdf2(
+  password: Password,
+  salt: Salt,
+  iterations: number,
+  keylen: number,
+  arg0?: unknown,
+  arg1?: unknown
+): void {
+  let digest = 'sha1';
+  let callback: undefined | Pbkdf2Callback;
+  if (typeof arg0 === 'string') {
+    digest = arg0;
+    if (typeof arg1 === 'function') {
+      callback = arg1 as Pbkdf2Callback;
+    }
+  } else {
+    if (typeof arg0 === 'function') {
+      callback = arg0 as Pbkdf2Callback;
+    }
+  }
+  if (callback === undefined) {
     throw new Error('No callback provided to pbkdf2');
   }
 
@@ -38,10 +66,10 @@ export function pbkdf2(
     .pbkdf2(sanitizedPassword, sanitizedSalt, iterations, keylen, digest)
     .then(
       (res: ArrayBuffer) => {
-        callback(null, Buffer.from(res));
+        callback!(null, Buffer.from(res));
       },
       (e: Error) => {
-        callback(e);
+        callback!(e);
       }
     );
 }

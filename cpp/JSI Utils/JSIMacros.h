@@ -23,4 +23,7 @@
                                                           body \
                                                           )
 
+#define JSIF(capture) capture(jsi::Runtime &runtime, const jsi::Value &thisValue, \
+                              const jsi::Value *arguments, size_t count)->jsi::Value
+
 #endif //FASTCRYPTOEXAMPLE_JSIMACROS_H
