@@ -1,3 +1,4 @@
+import 'react-native';
 import { NativeFastCrypto } from './NativeFastCrypto/NativeFastCrypto';
 import type { InternalHash } from './NativeFastCrypto/hash';
 import { BinaryToTextEncoding, Encoding, toArrayBuffer } from './Utils';
@@ -6,6 +7,8 @@ import { Buffer } from '@craftzdog/react-native-buffer';
 interface HashOptions extends Stream.TransformOptions {
   outputLength?: number | undefined;
 }
+
+global.process.nextTick = setImmediate;
 
 const createInternalHash = NativeFastCrypto.createHash;
 
@@ -91,5 +94,3 @@ class Hash extends Stream.Transform {
   }
 
 }
-
-console.log('prop', new Hash('sha512').end('df'));
