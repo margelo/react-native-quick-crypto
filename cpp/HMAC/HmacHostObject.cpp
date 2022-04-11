@@ -46,7 +46,7 @@ HmacHostObject::HmacHostObject(const std::string& hashAlgorithm,
 
   this->fields.push_back(HOST_LAMBDA("update", {
       if (!arguments[0].isObject() || !arguments[0].getObject(runtime).isArrayBuffer(runtime)) {
-          throw jsi::JSError(runtime, "HmacHostObject::update: First argument ('message') has to be of type string!");
+          throw jsi::JSError(runtime, "HmacHostObject::update: First argument ('message') has to be of type ArrayBuffer!");
       }
 
       auto message = arguments[0].getObject(runtime).getArrayBuffer(runtime);

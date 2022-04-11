@@ -39,6 +39,10 @@ export function binaryLikeToArrayBuffer(input: BinaryLike): ArrayBuffer {
     return toArrayBuffer(input as Buffer);
   }
 
+  if (input.buffer) {
+    return input.buffer;
+  }
+
   if (!(input instanceof ArrayBuffer)) {
     try {
       const buffer = Buffer.from(input);

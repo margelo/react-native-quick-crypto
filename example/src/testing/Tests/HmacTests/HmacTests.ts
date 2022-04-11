@@ -24,7 +24,7 @@ export function registerHmacTests() {
   });
 
   function testHmac(algo, key, data, expected) {
-    it(`testHmac ${algo} ${key} ${data}`, () => {
+    itOnly(`testHmac ${algo} ${key} ${data}`, () => {
       if (!Array.isArray(data)) data = [data];
 
       // If the key is a Buffer, test Hmac with a key object as well.
@@ -363,8 +363,8 @@ export function registerHmacTests() {
     },
   ];
 
-  for (const { key, data, hmac } of rfc2202_md5)
-    testHmac('md5', key, data, hmac);
+  //for (const { key, data, hmac } of rfc2202_md5)
+    //testHmac('md5', key, data, hmac);
 
   const rfc2202_sha1 = [
     {
@@ -431,8 +431,8 @@ export function registerHmacTests() {
     },
   ];
 
-  for (const { key, data, hmac } of rfc2202_sha1)
-    testHmac('sha1', key, data, hmac);
+  //for (const { key, data, hmac } of rfc2202_sha1)
+    //testHmac('sha1', key, data, hmac);
 
   it('digest encoding', () => {
     chai
