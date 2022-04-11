@@ -1,7 +1,7 @@
 export type InternalHash = {
   update: (data: ArrayBuffer) => InternalHash;
   digest: () => ArrayBuffer;
-  copy: () => InternalHash;
+  copy: (len?: number) => InternalHash;
 };
 
 export type CreateHashMethod = (

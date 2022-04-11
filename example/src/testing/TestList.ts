@@ -3,6 +3,7 @@ import { describe, it } from './MochaRNAdapter';
 import { pbkdf2RegisterTests } from './Tests/pbkdf2Tests/pbkdf2Tests';
 import { registerRandomTests } from './Tests/RandomTests/random';
 import { registerHmacTests } from './Tests/HmacTests/HmacTests';
+import { registerHashTests } from './Tests/HashTests/HashTests';
 import chai from 'chai';
 
 export const TEST_LIST: Array<TestItemType> = [
@@ -35,5 +36,10 @@ export const TEST_LIST: Array<TestItemType> = [
     description: 'Hmac',
     value: false,
     registrator: registerHmacTests,
+  },
+  {
+    description: 'Hash',
+    value: false,
+    registrator: registerHashTests,
   },
 ];

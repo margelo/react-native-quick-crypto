@@ -3,7 +3,6 @@ import type { InternalHash } from './NativeFastCrypto/hash';
 import { BinaryToTextEncoding, Encoding, toArrayBuffer } from './Utils';
 import Stream from 'stream';
 import { Buffer } from '@craftzdog/react-native-buffer';
-
 interface HashOptions extends Stream.TransformOptions {
   outputLength?: number | undefined;
 }
@@ -20,12 +19,12 @@ class Hash extends Stream.Transform {
   private internalHash: InternalHash;
   private options?: Stream.TransformOptions;
 
-  constructor(other: Hash);
+  constructor(other: Hash, options?: HashOptions);
   constructor(algorithm: string, options?: HashOptions);
   constructor(arg: string | Hash, options?: HashOptions) {
-    super();
+    super(options);
     if (arg instanceof Hash) {
-      this.internalHash = arg.internalHash.copy();
+      this.internalHash = arg.internalHash.copy(options?.outputLength);
     } else {
       this.internalHash = createInternalHash(arg, options?.outputLength);
     }
@@ -33,7 +32,7 @@ class Hash extends Stream.Transform {
   }
 
   copy(options?: Stream.TransformOptions): Hash {
-    const copy = new Hash(this);
+    const copy = new Hash(this, options);
     copy.options = options;
     return copy;
   }
@@ -57,6 +56,20 @@ class Hash extends Stream.Transform {
     return this;
   }
 
+  _transform(
+    chunk: string | BinaryLike,
+    encoding: Encoding,
+    callback: () => void
+  ) {
+    this.update(chunk, encoding);
+    callback();
+  }
+
+  _flush(callback: () => void) {
+    this.push(this.digest());
+    callback();
+  }
+
   /**
    * Calculates the digest of all of the data passed to be hashed (using the `hash.update()` method).
    * If `encoding` is provided a string will be returned; otherwise
@@ -69,13 +82,14 @@ class Hash extends Stream.Transform {
    */
   digest(): Buffer;
   digest(encoding: BinaryToTextEncoding): string;
-
-  digest(encoding?: BinaryToTextEncoding): string | Buffer {
+  digest(encoding: BinaryToTextEncoding | undefined): string | Buffer {
     const result: ArrayBuffer = this.internalHash.digest();
-    if (encoding) {
+    if (encoding && encoding !== 'buffer') {
       return Buffer.from(result).toString(encoding);
     }
     return Buffer.from(result);
   }
 
 }
+
+console.log('prop', new Hash('sha512').end('df'));

@@ -29,7 +29,8 @@ HashHostObject::HashHostObject(HashHostObject * other,
                                         std::shared_ptr<DispatchQueue::dispatch_queue> workerQueue) :
         SmartHostObject(jsCallInvoker, workerQueue)
 {
-    const EVP_MD* md = EVP_MD_CTX_md(other->mdctx_);
+    const EVP_MD * md = EVP_MD_CTX_md(other->mdctx_);
+    this->mdctx_ = EVP_MD_CTX_new();
     EVP_MD_CTX_copy(this->mdctx_, other->mdctx_);
     md_len_ = EVP_MD_size(md);
 
@@ -57,25 +58,33 @@ HashHostObject::HashHostObject(std::string hashAlgorithm,
 
 void HashHostObject::installMethods() {
     this->fields.push_back(HOST_LAMBDA("update", {
-        if (!arguments[0].isString()) throw jsi::JSError(runtime, "HmacHostObject::update: First argument ('message') has to be of type string!");
-
+        if (!arguments[0].isObject() || !arguments[0].getObject(runtime).isArrayBuffer(runtime)) {
+            throw jsi::JSError(runtime,
+                               "HmacHostObject::update: First argument ('message') has to be of type ArrayBuffer!");
+        }
         auto messageBuffer = arguments[0].getObject(runtime).getArrayBuffer(runtime);
 
         const unsigned char* data = reinterpret_cast<const unsigned char*>(messageBuffer.data(runtime));
-        int size = arguments[1].asNumber();
+        int size = messageBuffer.size(runtime);
 
         EVP_DigestUpdate(mdctx_, data, size);
 
         return jsi::Value::undefined();
     }));
 
-    this->fields.push_back(HOST_LAMBDA("copy", {
-
+    this->fields.push_back(buildPair("copy", JSIF([this]){
+        int md_len = -1;
+        if (!arguments[0].isUndefined()) {
+            md_len = (int) arguments[0].asNumber();
+        }
         std::shared_ptr<HashHostObject> copy = std::make_shared<HashHostObject>(this, this->weakJsCallInvoker.lock(), this->dispatchQueue);
+        if (md_len != -1) {
+            copy->md_len_ = md_len;
+        }
         return jsi::Object::createFromHostObject(runtime, copy);
     }));
 
-    this->fields.push_back(HOST_LAMBDA("digest", {
+    this->fields.push_back(buildPair("digest", JSIF([this]){
         unsigned int len = md_len_;
 
         if (digest_ == nullptr && len > 0) {

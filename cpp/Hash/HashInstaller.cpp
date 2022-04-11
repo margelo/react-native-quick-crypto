@@ -24,9 +24,9 @@ FieldDefinition getHashFieldDefinition(std::shared_ptr<react::CallInvoker> jsCal
       }
 
       auto hashAlgorithm = arguments[0].asString(runtime).utf8(runtime);
-      unsigned int md_len = -1;
+      int md_len = -1;
       if (!arguments[1].isUndefined()) {
-          md_len = (unsigned int) arguments[1].asNumber();
+          md_len = (int) arguments[1].asNumber();
       }
 
 
