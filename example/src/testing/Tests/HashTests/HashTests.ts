@@ -12,7 +12,7 @@ export function registerHashTests() {
   let cryptoType;
   let digest;
 
-  itOnly('Test hashing', () => {
+  it('Test hashing', () => {
     const a1 = crypto.createHash('sha1').update('Test123').digest('hex');
     const a2 = crypto.createHash('sha256').update('Test123').digest('base64');
     const a3 = crypto.createHash('sha512').update('Test123').digest(); // buffer
@@ -21,9 +21,9 @@ export function registerHashTests() {
     // stream interface
     let a5 = crypto.createHash('sha512');
     a5.end('Test123');
-    //a5 = a5.read();
+    a5 = a5.read();
 
-    /*let a6 = crypto.createHash('sha512');
+    let a6 = crypto.createHash('sha512');
     a6.write('Te');
     a6.write('st');
     a6.write('123');
@@ -37,9 +37,9 @@ export function registerHashTests() {
     let a8 = crypto.createHash('sha512');
     a8.write('');
     a8.end();
-    a8 = a8.read();*/
+    a8 = a8.read();
 
-    /*cryptoType = 'md5';
+    cryptoType = 'md5';
     digest = 'latin1';
     const a0 = crypto.createHash(cryptoType).update('Test123').digest(digest);
     chai.assert.strictEqual(
@@ -88,7 +88,7 @@ export function registerHashTests() {
     assert.deepStrictEqual(a5, a3);
     assert.deepStrictEqual(a6, a3);
     assert.notStrictEqual(a7, undefined);
-    assert.notStrictEqual(a8, undefined); */
+    assert.notStrictEqual(a8, undefined);
   });
 
   it('Test multiple updates to same hash', () => {

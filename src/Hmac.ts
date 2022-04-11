@@ -78,6 +78,20 @@ class Hmac extends Stream.Transform {
     return this;
   }
 
+  _transform(
+    chunk: string | BinaryLike,
+    encoding: Encoding,
+    callback: () => void
+  ) {
+    this.update(chunk, encoding);
+    callback();
+  }
+
+  _flush(callback: () => void) {
+    this.push(this.digest());
+    callback();
+  }
+
   /**
    * Calculates the HMAC digest of all of the data passed using `hmac.update()`.
    * If `encoding` is
