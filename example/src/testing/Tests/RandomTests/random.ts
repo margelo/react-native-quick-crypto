@@ -376,7 +376,7 @@ export function registerRandomTests() {
           assert.ok(randomInts.includes(2));
           assert.ok(!randomInts.includes(3));
           ctr++;
-          if (ctr == 100) {
+          if (ctr === 100) {
             done();
           }
         }

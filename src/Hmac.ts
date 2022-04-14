@@ -24,6 +24,7 @@ export function createHmac(
 class Hmac extends Stream.Transform {
   private internalHmac: InternalHmac;
   private options?: Stream.TransformOptions;
+  private isFinalized: boolean = false;
 
   constructor(
     algorithm: string,
@@ -104,10 +105,10 @@ class Hmac extends Stream.Transform {
    */
   digest(): Buffer;
   digest(encoding: BinaryToTextEncoding): string;
-
   digest(encoding?: BinaryToTextEncoding): string | Buffer {
-    const result: ArrayBuffer = this.internalHmac.digest();
-    if (encoding) {
+    const result: ArrayBuffer = (this.isFinalized) ? new ArrayBuffer(0) : this.internalHmac.digest();
+    this.isFinalized = true;
+    if (encoding && encoding !== 'buffer') {
       return Buffer.from(result).toString(encoding);
     }
     return Buffer.from(result);
