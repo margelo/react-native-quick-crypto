@@ -38,11 +38,20 @@ HmacHostObject::HmacHostObject(const std::string& hashAlgorithm,
                                std::shared_ptr<DispatchQueue::dispatch_queue> workerQueue) :
   SmartHostObject(jsCallInvoker, workerQueue) {
   this->context = HMAC_CTX_new();
-  HMAC_Init_ex(this->context,
-               key.data(runtime),
-               static_cast<int>(key.size(runtime)),
-               parseHashAlgorithm(hashAlgorithm),
-               nullptr);
+  if (key.size(runtime) == 0) {
+      HMAC_Init_ex(this->context,
+                   "",
+                   0,
+                   parseHashAlgorithm(hashAlgorithm),
+                   nullptr);
+  } else {
+      HMAC_Init_ex(this->context,
+                   key.data(runtime),
+                   static_cast<int>(key.size(runtime)),
+                   parseHashAlgorithm(hashAlgorithm),
+                   nullptr);
+  }
+
 
   this->fields.push_back(HOST_LAMBDA("update", {
       if (!arguments[0].isObject() || !arguments[0].getObject(runtime).isArrayBuffer(runtime)) {
