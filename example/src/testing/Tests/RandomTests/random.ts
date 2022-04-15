@@ -65,9 +65,13 @@ export function registerRandomTests() {
         const funn = f;
         it('function ' + funn + ' & len ' + length, (done: Done) => {
           funn(length, (ex, buf) => {
-            assert.strictEqual(ex, null);
-            assert.strictEqual(buf.length, Math.floor(len));
-            assert.ok(Buffer.isBuffer(buf));
+            try {
+              assert.strictEqual(ex, null);
+              assert.strictEqual(buf.length, Math.floor(len));
+              assert.ok(Buffer.isBuffer(buf));
+            } catch (e) {
+              done(e);
+            }
             done();
           });
         });
@@ -118,8 +122,12 @@ export function registerRandomTests() {
     const buf = Buffer.alloc(10);
     const before = buf.toString('hex');
     crypto.randomFill(buf, (err, buf) => {
-      const after = buf?.toString('hex');
-      assert.notStrictEqual(before, after);
+      try {
+        const after = buf?.toString('hex');
+        assert.notStrictEqual(before, after);
+      } catch (e) {
+        done(e);
+      }
       done();
     });
   });
@@ -213,9 +221,13 @@ export function registerRandomTests() {
     const buf = Buffer.alloc(10);
     const before = buf.toString('hex');
     crypto.randomFill(buf, 5, 5, (_err, buf) => {
-      const after = buf.toString('hex');
-      assert.notStrictEqual(before, after);
-      assert.deepStrictEqual(before.slice(0, 5), after.slice(0, 5));
+      try {
+        const after = buf.toString('hex');
+        assert.notStrictEqual(before, after);
+        assert.deepStrictEqual(before.slice(0, 5), after.slice(0, 5));
+      } catch (e) {
+        done(e);
+      }
       done();
     });
   });
@@ -224,9 +236,13 @@ export function registerRandomTests() {
     const buf = new Uint8Array(new Array(10).fill(0));
     const before = Buffer.from(buf).toString('hex');
     crypto.randomFill(buf, 5, 5, (_err, buf) => {
-      const after = Buffer.from(buf).toString('hex');
-      assert.notStrictEqual(before, after);
-      assert.deepStrictEqual(before.slice(0, 5), after.slice(0, 5));
+      try {
+        const after = Buffer.from(buf).toString('hex');
+        assert.notStrictEqual(before, after);
+        assert.deepStrictEqual(before.slice(0, 5), after.slice(0, 5));
+      } catch (e) {
+        done(e);
+      }
       done();
     });
   });
@@ -363,21 +379,25 @@ export function registerRandomTests() {
 
   it('randomInt - Asyncynchronous API', (done: Done) => {
     const randomInts = [];
-    let ctr = 0;
+    let failed = false;
     for (let i = 0; i < 100; i++) {
       crypto.randomInt(3, (n) => {
-        assert.ok(n >= 0);
-        assert.ok(n < 3);
-        randomInts.push(n);
-        if (randomInts.length === 100) {
-          assert.ok(!randomInts.includes(-1));
-          assert.ok(randomInts.includes(0));
-          assert.ok(randomInts.includes(1));
-          assert.ok(randomInts.includes(2));
-          assert.ok(!randomInts.includes(3));
-          ctr++;
-          if (ctr === 100) {
+        try {
+          assert.ok(n >= 0);
+          assert.ok(n < 3);
+          randomInts.push(n);
+          if (randomInts.length === 100) {
+            assert.ok(!randomInts.includes(-1));
+            assert.ok(randomInts.includes(0));
+            assert.ok(randomInts.includes(1));
+            assert.ok(randomInts.includes(2));
+            assert.ok(!randomInts.includes(3));
             done();
+          }
+        } catch (e) {
+          if (!failed) {
+            done(e);
+            failed = true;
           }
         }
       });
@@ -402,20 +422,22 @@ export function registerRandomTests() {
 
   it('randomInt positive range', (done: Done) => {
     const randomInts = [];
-    let ctr = 0;
+    let failed = false;
     for (let i = 0; i < 100; i++) {
-      crypto.randomInt(1, 3, (n) => {
-        assert.ok(n >= 1);
-        assert.ok(n < 3);
-        randomInts.push(n);
-        if (randomInts.length === 100) {
-          assert.ok(!randomInts.includes(0));
-          assert.ok(randomInts.includes(1));
-          assert.ok(randomInts.includes(2));
-          assert.ok(!randomInts.includes(3));
-          ctr++;
-          if (ctr == 100) {
+      crypto.randomInt(1, 3, (er, n) => {
+        try {
+          assert.ok(n >= 1);
+          assert.ok(n < 3);
+          randomInts.push(n);
+          if (randomInts.length === 100) {
+            assert.ok(randomInts.includes(1));
+            assert.ok(randomInts.includes(2));
             done();
+          }
+        } catch (e) {
+          if (!failed) {
+            done(e);
+            failed = true;
           }
         }
       });
@@ -424,20 +446,24 @@ export function registerRandomTests() {
 
   it('randomInt negative range', (done: Done) => {
     const randomInts = [];
-    let ctr = 0;
+    let failed = false;
     for (let i = 0; i < 100; i++) {
-      crypto.randomInt(-10, -8, (n) => {
-        assert.ok(n >= -10);
-        assert.ok(n < -8);
-        randomInts.push(n);
-        if (randomInts.length === 100) {
-          assert.ok(!randomInts.includes(-11));
-          assert.ok(randomInts.includes(-10));
-          assert.ok(randomInts.includes(-9));
-          assert.ok(!randomInts.includes(-8));
-          ctr++;
-          if (ctr == 100) {
+      crypto.randomInt(-10, -8, (er, n) => {
+        try {
+          assert.ok(n >= -10);
+          assert.ok(n < -8);
+          randomInts.push(n);
+          if (randomInts.length === 100) {
+            assert.ok(!randomInts.includes(-11));
+            assert.ok(randomInts.includes(-10));
+            assert.ok(randomInts.includes(-9));
+            assert.ok(!randomInts.includes(-8));
             done();
+          }
+        } catch (e) {
+          if (!failed) {
+            done(e);
+            failed = true;
           }
         }
       });
