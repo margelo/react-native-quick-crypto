@@ -114,6 +114,8 @@ type Task = {
   callback: RandomIntCallback;
 };
 
+// The rest of the file is taken from https://github.com/nodejs/node/blob/master/lib/internal/crypto/random.js
+
 // Largest integer we can read from a buffer.
 // e.g.: Buffer.from("ff".repeat(6), "hex").readUIntBE(0, 6);
 const RAND_MAX = 0xffff_ffff_ffff;
@@ -125,7 +127,6 @@ let randomCacheOffset = randomCache.length;
 let asyncCacheFillInProgress = false;
 const asyncCachePendingTasks: Task[] = [];
 
-// taken from https://github.com/nodejs/node/blob/master/lib/internal/crypto/random.js
 // Generates an integer in [min, max) range where min is inclusive and max is
 // exclusive.
 
@@ -247,4 +248,24 @@ function asyncRefillRandomIntCache() {
     // This is the only call that might throw, and is therefore done at the end.
     if (errorReceiver) errorReceiver.callback(err);
   });
+}
+
+// Really just the Web Crypto API alternative
+// to require('crypto').randomFillSync() with an
+// additional limitation that the input buffer is
+// not allowed to exceed 65536 bytes, and can only
+// be an integer-type TypedArray.
+type DataType =
+  | Int8Array
+  | Int16Array
+  | Int32Array
+  | Uint8Array
+  | Uint16Array
+  | Uint32Array;
+export function getRandomValues(data: DataType) {
+  if (data.byteLength > 65536) {
+    throw new Error('The requested length exceeds 65,536 bytes');
+  }
+  randomFillSync(data, 0);
+  return data;
 }
