@@ -8,8 +8,8 @@ namespace margelo {
 
 namespace DispatchQueue {
 
-dispatch_queue::dispatch_queue(std::string name, size_t thread_cnt) :
-  name_{std::move(name)}, threads_(thread_cnt) {
+dispatch_queue::dispatch_queue(std::string name, size_t thread_cnt)
+    : name_{std::move(name)}, threads_(thread_cnt) {
   printf("Creating dispatch queue: %s\n", name_.c_str());
   printf("Dispatch threads: %zu\n", thread_cnt);
 
@@ -22,7 +22,7 @@ dispatch_queue::~dispatch_queue() {
   printf("Destructor: Destroying dispatch threads...\n");
 
   // Signal to dispatch threads that it's time to wrap up
-  std::unique_lock <std::mutex> lock(lock_);
+  std::unique_lock<std::mutex> lock(lock_);
   quit_ = true;
   cv_.notify_all();
   lock.unlock();
@@ -37,25 +37,23 @@ dispatch_queue::~dispatch_queue() {
 }
 
 void dispatch_queue::dispatch(const fp_t &op) {
-  std::unique_lock <std::mutex> lock(lock_);
+  std::unique_lock<std::mutex> lock(lock_);
   q_.push(op);
   cv_.notify_one();
 }
 
 void dispatch_queue::dispatch(fp_t &&op) {
-  std::unique_lock <std::mutex> lock(lock_);
+  std::unique_lock<std::mutex> lock(lock_);
   q_.push(std::move(op));
   cv_.notify_one();
 }
 
 void dispatch_queue::dispatch_thread_handler(void) {
-  std::unique_lock <std::mutex> lock(lock_);
+  std::unique_lock<std::mutex> lock(lock_);
 
   do {
     // Wait until we have data or a quit signal
-    cv_.wait(lock, [this] {
-	  return (q_.size() || quit_);
-	});
+    cv_.wait(lock, [this] { return (q_.size() || quit_); });
 
     // after wait, we own the lock
     if (!quit_ && q_.size()) {
@@ -71,5 +69,5 @@ void dispatch_queue::dispatch_thread_handler(void) {
     }
   } while (!quit_);
 }
-} // DispatchQueue namespace
-}  // margelo namespace
+}  // namespace DispatchQueue
+}  // namespace margelo

@@ -19,5 +19,4 @@ void ThreadAwareHostObject::runOnJSThread(std::function<void()> &&job) {
   }
 }
 
-} // namespace margelo
-
+}  // namespace margelo

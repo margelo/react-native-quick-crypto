@@ -69,7 +69,7 @@ struct typedArrayTypeMap<TypedArrayKind::Float64Array> {
 void invalidateJsiPropNameIDCache();
 
 class TypedArrayBase : public jsi::Object {
-public:
+ public:
   template <TypedArrayKind T>
   using ContentType = typename typedArrayTypeMap<T>::type;
 
@@ -98,7 +98,7 @@ public:
   std::vector<uint8_t> toVector(jsi::Runtime &runtime);
   jsi::ArrayBuffer getBuffer(jsi::Runtime &runtime) const;
 
-private:
+ private:
   template <TypedArrayKind>
   friend class TypedArray;
 };
@@ -106,16 +106,14 @@ private:
 bool isTypedArray(jsi::Runtime &runtime, const jsi::Object &jsObj);
 TypedArrayBase getTypedArray(jsi::Runtime &runtime, const jsi::Object &jsObj);
 
-std::vector<uint8_t> arrayBufferToVector(jsi::Runtime &runtime, jsi::Object &jsObj);
-void arrayBufferUpdate(
-                       jsi::Runtime &runtime,
-                       jsi::ArrayBuffer &buffer,
-                       std::vector<uint8_t> data,
-                       size_t offset);
+std::vector<uint8_t> arrayBufferToVector(jsi::Runtime &runtime,
+                                         jsi::Object &jsObj);
+void arrayBufferUpdate(jsi::Runtime &runtime, jsi::ArrayBuffer &buffer,
+                       std::vector<uint8_t> data, size_t offset);
 
 template <TypedArrayKind T>
 class TypedArray : public TypedArrayBase {
-public:
+ public:
   TypedArray(jsi::Runtime &runtime, size_t size);
   TypedArray(jsi::Runtime &runtime, std::vector<ContentType<T>> data);
   TypedArray(TypedArrayBase &&base);
@@ -129,14 +127,15 @@ public:
 template <TypedArrayKind T>
 TypedArray<T> TypedArrayBase::get(jsi::Runtime &runtime) const & {
   assert(getKind(runtime) == T);
-  (void)runtime; // when assert is disabled we need to mark this as used
-  return TypedArray<T>(jsi::Value(runtime, jsi::Value(runtime, *this).asObject(runtime)));
+  (void)runtime;  // when assert is disabled we need to mark this as used
+  return TypedArray<T>(
+      jsi::Value(runtime, jsi::Value(runtime, *this).asObject(runtime)));
 }
 
 template <TypedArrayKind T>
 TypedArray<T> TypedArrayBase::get(jsi::Runtime &runtime) && {
   assert(getKind(runtime) == T);
-  (void)runtime; // when assert is disabled we need to mark this as used
+  (void)runtime;  // when assert is disabled we need to mark this as used
   return TypedArray<T>(std::move(*this));
 }
 

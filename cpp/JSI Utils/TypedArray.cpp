@@ -14,42 +14,42 @@ template <TypedArrayKind T>
 using ContentType = typename typedArrayTypeMap<T>::type;
 
 enum class Prop {
-  Buffer, // "buffer"
-  Constructor, // "constructor"
-  Name, // "name"
-  Proto, // "__proto__"
-  Length, // "length"
-  ByteLength, // "byteLength"
-  ByteOffset, // "offset"
-  IsView, // "isView"
-  ArrayBuffer, // "ArrayBuffer"
-  Int8Array, // "Int8Array"
-  Int16Array, // "Int16Array"
-  Int32Array, // "Int32Array"
-  Uint8Array, // "Uint8Array"
-  Uint8ClampedArray, // "Uint8ClampedArray"
-  Uint16Array, // "Uint16Array"
-  Uint32Array, // "Uint32Array"
-  Float32Array, // "Float32Array"
-  Float64Array, // "Float64Array"
+  Buffer,             // "buffer"
+  Constructor,        // "constructor"
+  Name,               // "name"
+  Proto,              // "__proto__"
+  Length,             // "length"
+  ByteLength,         // "byteLength"
+  ByteOffset,         // "offset"
+  IsView,             // "isView"
+  ArrayBuffer,        // "ArrayBuffer"
+  Int8Array,          // "Int8Array"
+  Int16Array,         // "Int16Array"
+  Int32Array,         // "Int32Array"
+  Uint8Array,         // "Uint8Array"
+  Uint8ClampedArray,  // "Uint8ClampedArray"
+  Uint16Array,        // "Uint16Array"
+  Uint32Array,        // "Uint32Array"
+  Float32Array,       // "Float32Array"
+  Float64Array,       // "Float64Array"
 };
 
 class PropNameIDCache {
-public:
+ public:
   const jsi::PropNameID &get(jsi::Runtime &runtime, Prop prop) {
     if (!this->props[prop]) {
-      this->props[prop] = std::make_unique<jsi::PropNameID>(createProp(runtime, prop));
+      this->props[prop] =
+          std::make_unique<jsi::PropNameID>(createProp(runtime, prop));
     }
     return *(this->props[prop]);
   }
 
-  const jsi::PropNameID &getConstructorNameProp(jsi::Runtime &runtime, TypedArrayKind kind);
+  const jsi::PropNameID &getConstructorNameProp(jsi::Runtime &runtime,
+                                                TypedArrayKind kind);
 
-  void invalidate() {
-    props.erase(props.begin(), props.end());
-  }
+  void invalidate() { props.erase(props.begin(), props.end()); }
 
-private:
+ private:
   std::unordered_map<Prop, std::unique_ptr<jsi::PropNameID>> props;
 
   jsi::PropNameID createProp(jsi::Runtime &runtime, Prop prop);
@@ -57,64 +57,72 @@ private:
 
 PropNameIDCache propNameIDCache;
 
-void invalidateJsiPropNameIDCache() {
-  propNameIDCache.invalidate();
-}
+void invalidateJsiPropNameIDCache() { propNameIDCache.invalidate(); }
 
 TypedArrayKind getTypedArrayKindForName(const std::string &name);
 
-TypedArrayBase::TypedArrayBase(jsi::Runtime &runtime, size_t size, TypedArrayKind kind)
-: TypedArrayBase(
-                 runtime,
-                 runtime.global()
-                 .getProperty(runtime, propNameIDCache.getConstructorNameProp(runtime, kind))
-                 .asObject(runtime)
-                 .asFunction(runtime)
-                 .callAsConstructor(runtime, {static_cast<double>(size)})
-                 .asObject(runtime)) {}
+TypedArrayBase::TypedArrayBase(jsi::Runtime &runtime, size_t size,
+                               TypedArrayKind kind)
+    : TypedArrayBase(
+          runtime,
+          runtime.global()
+              .getProperty(runtime, propNameIDCache.getConstructorNameProp(
+                                        runtime, kind))
+              .asObject(runtime)
+              .asFunction(runtime)
+              .callAsConstructor(runtime, {static_cast<double>(size)})
+              .asObject(runtime)) {}
 
 TypedArrayBase::TypedArrayBase(jsi::Runtime &runtime, const jsi::Object &obj)
-: jsi::Object(jsi::Value(runtime, obj).asObject(runtime)) {}
+    : jsi::Object(jsi::Value(runtime, obj).asObject(runtime)) {}
 
 TypedArrayKind TypedArrayBase::getKind(jsi::Runtime &runtime) const {
-  auto constructorName = this->getProperty(runtime, propNameIDCache.get(runtime, Prop::Constructor))
-    .asObject(runtime)
-    .getProperty(runtime, propNameIDCache.get(runtime, Prop::Name))
-    .asString(runtime)
-    .utf8(runtime);
+  auto constructorName =
+      this->getProperty(runtime,
+                        propNameIDCache.get(runtime, Prop::Constructor))
+          .asObject(runtime)
+          .getProperty(runtime, propNameIDCache.get(runtime, Prop::Name))
+          .asString(runtime)
+          .utf8(runtime);
   return getTypedArrayKindForName(constructorName);
 };
 
 size_t TypedArrayBase::size(jsi::Runtime &runtime) const {
-  return getProperty(runtime, propNameIDCache.get(runtime, Prop::Length)).asNumber();
+  return getProperty(runtime, propNameIDCache.get(runtime, Prop::Length))
+      .asNumber();
 }
 
 size_t TypedArrayBase::length(jsi::Runtime &runtime) const {
-  return getProperty(runtime, propNameIDCache.get(runtime, Prop::Length)).asNumber();
+  return getProperty(runtime, propNameIDCache.get(runtime, Prop::Length))
+      .asNumber();
 }
 
 size_t TypedArrayBase::byteLength(jsi::Runtime &runtime) const {
-  return getProperty(runtime, propNameIDCache.get(runtime, Prop::ByteLength)).asNumber();
+  return getProperty(runtime, propNameIDCache.get(runtime, Prop::ByteLength))
+      .asNumber();
 }
 
 size_t TypedArrayBase::byteOffset(jsi::Runtime &runtime) const {
-  return getProperty(runtime, propNameIDCache.get(runtime, Prop::ByteOffset)).asNumber();
+  return getProperty(runtime, propNameIDCache.get(runtime, Prop::ByteOffset))
+      .asNumber();
 }
 
 bool TypedArrayBase::hasBuffer(jsi::Runtime &runtime) const {
-  auto buffer = getProperty(runtime, propNameIDCache.get(runtime, Prop::Buffer));
+  auto buffer =
+      getProperty(runtime, propNameIDCache.get(runtime, Prop::Buffer));
   return buffer.isObject() && buffer.asObject(runtime).isArrayBuffer(runtime);
 }
 
 std::vector<uint8_t> TypedArrayBase::toVector(jsi::Runtime &runtime) {
-  auto start =
-  reinterpret_cast<uint8_t *>(getBuffer(runtime).data(runtime) + byteOffset(runtime));
+  auto start = reinterpret_cast<uint8_t *>(getBuffer(runtime).data(runtime) +
+                                           byteOffset(runtime));
   auto end = start + byteLength(runtime);
   return std::vector<uint8_t>(start, end);
 }
 
 jsi::ArrayBuffer TypedArrayBase::getBuffer(jsi::Runtime &runtime) const {
-  auto buffer = getProperty(runtime, propNameIDCache.get(runtime, Prop::Buffer));
+  auto buffer =
+      getProperty(runtime, propNameIDCache.get(runtime, Prop::Buffer));
   if (buffer.isObject() && buffer.asObject(runtime).isArrayBuffer(runtime)) {
     return buffer.asObject(runtime).getArrayBuffer(runtime);
   } else {
@@ -123,13 +131,15 @@ jsi::ArrayBuffer TypedArrayBase::getBuffer(jsi::Runtime &runtime) const {
 }
 
 bool isTypedArray(jsi::Runtime &runtime, const jsi::Object &jsObj) {
-  auto jsVal = runtime.global()
-    .getProperty(runtime, propNameIDCache.get(runtime, Prop::ArrayBuffer))
-    .asObject(runtime)
-    .getProperty(runtime, propNameIDCache.get(runtime, Prop::IsView))
-    .asObject(runtime)
-    .asFunction(runtime)
-    .callWithThis(runtime, runtime.global(), {jsi::Value(runtime, jsObj)});
+  auto jsVal =
+      runtime.global()
+          .getProperty(runtime, propNameIDCache.get(runtime, Prop::ArrayBuffer))
+          .asObject(runtime)
+          .getProperty(runtime, propNameIDCache.get(runtime, Prop::IsView))
+          .asObject(runtime)
+          .asFunction(runtime)
+          .callWithThis(runtime, runtime.global(),
+                        {jsi::Value(runtime, jsObj)});
   if (jsVal.isBool()) {
     return jsVal.getBool();
   } else {
@@ -138,13 +148,15 @@ bool isTypedArray(jsi::Runtime &runtime, const jsi::Object &jsObj) {
 }
 
 TypedArrayBase getTypedArray(jsi::Runtime &runtime, const jsi::Object &jsObj) {
-  auto jsVal = runtime.global()
-    .getProperty(runtime, propNameIDCache.get(runtime, Prop::ArrayBuffer))
-    .asObject(runtime)
-    .getProperty(runtime, propNameIDCache.get(runtime, Prop::IsView))
-    .asObject(runtime)
-    .asFunction(runtime)
-    .callWithThis(runtime, runtime.global(), {jsi::Value(runtime, jsObj)});
+  auto jsVal =
+      runtime.global()
+          .getProperty(runtime, propNameIDCache.get(runtime, Prop::ArrayBuffer))
+          .asObject(runtime)
+          .getProperty(runtime, propNameIDCache.get(runtime, Prop::IsView))
+          .asObject(runtime)
+          .asFunction(runtime)
+          .callWithThis(runtime, runtime.global(),
+                        {jsi::Value(runtime, jsObj)});
   if (jsVal.isBool()) {
     return TypedArrayBase(runtime, jsObj);
   } else {
@@ -152,7 +164,8 @@ TypedArrayBase getTypedArray(jsi::Runtime &runtime, const jsi::Object &jsObj) {
   }
 }
 
-std::vector<uint8_t> arrayBufferToVector(jsi::Runtime &runtime, jsi::Object &jsObj) {
+std::vector<uint8_t> arrayBufferToVector(jsi::Runtime &runtime,
+                                         jsi::Object &jsObj) {
   if (!jsObj.isArrayBuffer(runtime)) {
     throw std::runtime_error("Object is not an ArrayBuffer");
   }
@@ -160,15 +173,14 @@ std::vector<uint8_t> arrayBufferToVector(jsi::Runtime &runtime, jsi::Object &jsO
 
   uint8_t *dataBlock = jsArrayBuffer.data(runtime);
   size_t blockSize =
-  jsArrayBuffer.getProperty(runtime, propNameIDCache.get(runtime, Prop::ByteLength)).asNumber();
+      jsArrayBuffer
+          .getProperty(runtime, propNameIDCache.get(runtime, Prop::ByteLength))
+          .asNumber();
   return std::vector<uint8_t>(dataBlock, dataBlock + blockSize);
 }
 
-void arrayBufferUpdate(
-                       jsi::Runtime &runtime,
-                       jsi::ArrayBuffer &buffer,
-                       std::vector<uint8_t> data,
-                       size_t offset) {
+void arrayBufferUpdate(jsi::Runtime &runtime, jsi::ArrayBuffer &buffer,
+                       std::vector<uint8_t> data, size_t offset) {
   uint8_t *dataBlock = buffer.data(runtime);
   size_t blockSize = buffer.size(runtime);
   if (data.size() > blockSize) {
@@ -178,37 +190,43 @@ void arrayBufferUpdate(
 }
 
 template <TypedArrayKind T>
-TypedArray<T>::TypedArray(jsi::Runtime &runtime, size_t size) : TypedArrayBase(runtime, size, T){};
+TypedArray<T>::TypedArray(jsi::Runtime &runtime, size_t size)
+    : TypedArrayBase(runtime, size, T){};
 
 template <TypedArrayKind T>
-TypedArray<T>::TypedArray(jsi::Runtime &runtime, std::vector<ContentType<T>> data)
-: TypedArrayBase(runtime, data.size(), T) {
+TypedArray<T>::TypedArray(jsi::Runtime &runtime,
+                          std::vector<ContentType<T>> data)
+    : TypedArrayBase(runtime, data.size(), T) {
   update(runtime, data);
 };
 
 template <TypedArrayKind T>
-TypedArray<T>::TypedArray(TypedArrayBase &&base) : TypedArrayBase(std::move(base)) {}
+TypedArray<T>::TypedArray(TypedArrayBase &&base)
+    : TypedArrayBase(std::move(base)) {}
 
 template <TypedArrayKind T>
 std::vector<ContentType<T>> TypedArray<T>::toVector(jsi::Runtime &runtime) {
-  auto start =
-  reinterpret_cast<ContentType<T> *>(getBuffer(runtime).data(runtime) + byteOffset(runtime));
+  auto start = reinterpret_cast<ContentType<T> *>(
+      getBuffer(runtime).data(runtime) + byteOffset(runtime));
   auto end = start + size(runtime);
   return std::vector<ContentType<T>>(start, end);
 }
 
 template <TypedArrayKind T>
-void TypedArray<T>::update(jsi::Runtime &runtime, const std::vector<ContentType<T>> &data) {
+void TypedArray<T>::update(jsi::Runtime &runtime,
+                           const std::vector<ContentType<T>> &data) {
   if (data.size() != size(runtime)) {
-    throw jsi::JSError(runtime, "TypedArray can only be updated with a vector of the same size");
+    throw jsi::JSError(
+        runtime,
+        "TypedArray can only be updated with a vector of the same size");
   }
   uint8_t *rawData = getBuffer(runtime).data(runtime) + byteOffset(runtime);
-  std::copy(data.begin(), data.end(), reinterpret_cast<ContentType<T> *>(rawData));
+  std::copy(data.begin(), data.end(),
+            reinterpret_cast<ContentType<T> *>(rawData));
 }
 
 const jsi::PropNameID &PropNameIDCache::getConstructorNameProp(
-                                                               jsi::Runtime &runtime,
-                                                               TypedArrayKind kind) {
+    jsi::Runtime &runtime, TypedArrayKind kind) {
   switch (kind) {
     case TypedArrayKind::Int8Array:
       return get(runtime, Prop::Int8Array);
@@ -276,15 +294,15 @@ jsi::PropNameID PropNameIDCache::createProp(jsi::Runtime &runtime, Prop prop) {
 }
 
 std::unordered_map<std::string, TypedArrayKind> nameToKindMap = {
-  {"Int8Array", TypedArrayKind::Int8Array},
-  {"Int16Array", TypedArrayKind::Int16Array},
-  {"Int32Array", TypedArrayKind::Int32Array},
-  {"Uint8Array", TypedArrayKind::Uint8Array},
-  {"Uint8ClampedArray", TypedArrayKind::Uint8ClampedArray},
-  {"Uint16Array", TypedArrayKind::Uint16Array},
-  {"Uint32Array", TypedArrayKind::Uint32Array},
-  {"Float32Array", TypedArrayKind::Float32Array},
-  {"Float64Array", TypedArrayKind::Float64Array},
+    {"Int8Array", TypedArrayKind::Int8Array},
+    {"Int16Array", TypedArrayKind::Int16Array},
+    {"Int32Array", TypedArrayKind::Int32Array},
+    {"Uint8Array", TypedArrayKind::Uint8Array},
+    {"Uint8ClampedArray", TypedArrayKind::Uint8ClampedArray},
+    {"Uint16Array", TypedArrayKind::Uint16Array},
+    {"Uint32Array", TypedArrayKind::Uint32Array},
+    {"Float32Array", TypedArrayKind::Float32Array},
+    {"Float64Array", TypedArrayKind::Float64Array},
 };
 
 TypedArrayKind getTypedArrayKindForName(const std::string &name) {
