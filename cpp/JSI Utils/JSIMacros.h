@@ -12,15 +12,15 @@
 
 #define HOST_LAMBDA_CAP(name, capture, body)                                 \
   std::make_pair(                                                            \
-      name, capture(jsi::Runtime &runtime) {                                 \
-        const auto func =                                                    \
-            capture(jsi::Runtime & runtime, const jsi::Value &thisValue,     \
-                    const jsi::Value *arguments, size_t count)               \
-                ->jsi::Value body;                                           \
-        auto propNameID = jsi::PropNameID::forAscii(runtime, name);          \
-        return jsi::Function::createFromHostFunction(runtime, propNameID, 0, \
-                                                     func);                  \
-      })
+    name, capture(jsi::Runtime &runtime) {                                 \
+    const auto func =                                                    \
+      capture(jsi::Runtime & runtime, const jsi::Value &thisValue,     \
+              const jsi::Value *arguments, size_t count)               \
+      ->jsi::Value body;                                           \
+    auto propNameID = jsi::PropNameID::forAscii(runtime, name);          \
+    return jsi::Function::createFromHostFunction(runtime, propNameID, 0, \
+                                                 func);                  \
+  })
 
 #define JSI_VALUE(name, body) JSI_VALUE_CAP(name, [=], body)
 
@@ -30,6 +30,6 @@
 #define JSIF(capture)                                         \
   capture(jsi::Runtime &runtime, const jsi::Value &thisValue, \
           const jsi::Value *arguments, size_t count)          \
-      ->jsi::Value
+  ->jsi::Value
 
 #endif  // FASTCRYPTOEXAMPLE_JSIMACROS_H

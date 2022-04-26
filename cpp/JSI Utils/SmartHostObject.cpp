@@ -11,15 +11,15 @@ namespace react = facebook::react;
 
 FieldDefinition buildPair(std::string name, jsi::HostFunctionType &&f) {
   auto valueBuilder = [f, name](jsi::Runtime &runtime) {
-    const auto func = f;
-    auto propNameID = jsi::PropNameID::forAscii(runtime, name);
-    return jsi::Function::createFromHostFunction(runtime, propNameID, 0, func);
-  };
+			const auto func = f;
+			auto propNameID = jsi::PropNameID::forAscii(runtime, name);
+			return jsi::Function::createFromHostFunction(runtime, propNameID, 0, func);
+		      };
   return std::make_pair(name, valueBuilder);
 }
 
 std::vector<jsi::PropNameID> SmartHostObject::getPropertyNames(
-    jsi::Runtime &runtime) {
+  jsi::Runtime &runtime) {
   std::vector<jsi::PropNameID> propertyNames;
   for (auto field : fields) {
     propertyNames.push_back(jsi::PropNameID::forAscii(runtime, field.first));

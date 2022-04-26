@@ -11,9 +11,9 @@ namespace margelo {
 namespace jsi = facebook::jsi;
 
 class RandomHostObject : public SmartHostObject {
- public:
-  RandomHostObject(std::shared_ptr<react::CallInvoker> jsCallInvoker,
-                   std::shared_ptr<DispatchQueue::dispatch_queue> workerQueue);
+public:
+RandomHostObject(std::shared_ptr<react::CallInvoker> jsCallInvoker,
+                 std::shared_ptr<DispatchQueue::dispatch_queue> workerQueue);
 };
 
 }  // namespace margelo

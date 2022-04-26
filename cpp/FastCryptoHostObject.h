@@ -16,12 +16,13 @@ namespace jsi = facebook::jsi;
 namespace react = facebook::react;
 
 class JSI_EXPORT FastCryptoHostObject : public SmartHostObject {
- public:
-  explicit FastCryptoHostObject(
-      std::shared_ptr<react::CallInvoker> jsCallInvoker,
-      std::shared_ptr<DispatchQueue::dispatch_queue> workerQueue);
+public:
+explicit FastCryptoHostObject(
+  std::shared_ptr<react::CallInvoker> jsCallInvoker,
+  std::shared_ptr<DispatchQueue::dispatch_queue> workerQueue);
 
-  virtual ~FastCryptoHostObject() {}
+virtual ~FastCryptoHostObject() {
+}
 };
 
 }  // namespace margelo

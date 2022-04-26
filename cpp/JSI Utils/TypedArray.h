@@ -69,38 +69,38 @@ struct typedArrayTypeMap<TypedArrayKind::Float64Array> {
 void invalidateJsiPropNameIDCache();
 
 class TypedArrayBase : public jsi::Object {
- public:
-  template <TypedArrayKind T>
-  using ContentType = typename typedArrayTypeMap<T>::type;
+public:
+template <TypedArrayKind T>
+using ContentType = typename typedArrayTypeMap<T>::type;
 
-  TypedArrayBase(jsi::Runtime &, size_t, TypedArrayKind);
-  TypedArrayBase(jsi::Runtime &, const jsi::Object &);
-  TypedArrayBase(TypedArrayBase &&) = default;
-  TypedArrayBase &operator=(TypedArrayBase &&) = default;
+TypedArrayBase(jsi::Runtime &, size_t, TypedArrayKind);
+TypedArrayBase(jsi::Runtime &, const jsi::Object &);
+TypedArrayBase(TypedArrayBase &&) = default;
+TypedArrayBase &operator=(TypedArrayBase &&) = default;
 
-  TypedArrayKind getKind(jsi::Runtime &runtime) const;
+TypedArrayKind getKind(jsi::Runtime &runtime) const;
 
-  template <TypedArrayKind T>
-  TypedArray<T> get(jsi::Runtime &runtime) const &;
-  template <TypedArrayKind T>
-  TypedArray<T> get(jsi::Runtime &runtime) &&;
-  template <TypedArrayKind T>
-  TypedArray<T> as(jsi::Runtime &runtime) const &;
-  template <TypedArrayKind T>
-  TypedArray<T> as(jsi::Runtime &runtime) &&;
+template <TypedArrayKind T>
+TypedArray<T> get(jsi::Runtime &runtime) const &;
+template <TypedArrayKind T>
+TypedArray<T> get(jsi::Runtime &runtime) &&;
+template <TypedArrayKind T>
+TypedArray<T> as(jsi::Runtime &runtime) const &;
+template <TypedArrayKind T>
+TypedArray<T> as(jsi::Runtime &runtime) &&;
 
-  size_t size(jsi::Runtime &runtime) const;
-  size_t length(jsi::Runtime &runtime) const;
-  size_t byteLength(jsi::Runtime &runtime) const;
-  size_t byteOffset(jsi::Runtime &runtime) const;
-  bool hasBuffer(jsi::Runtime &runtime) const;
+size_t size(jsi::Runtime &runtime) const;
+size_t length(jsi::Runtime &runtime) const;
+size_t byteLength(jsi::Runtime &runtime) const;
+size_t byteOffset(jsi::Runtime &runtime) const;
+bool hasBuffer(jsi::Runtime &runtime) const;
 
-  std::vector<uint8_t> toVector(jsi::Runtime &runtime);
-  jsi::ArrayBuffer getBuffer(jsi::Runtime &runtime) const;
+std::vector<uint8_t> toVector(jsi::Runtime &runtime);
+jsi::ArrayBuffer getBuffer(jsi::Runtime &runtime) const;
 
- private:
-  template <TypedArrayKind>
-  friend class TypedArray;
+private:
+template <TypedArrayKind>
+friend class TypedArray;
 };
 
 bool isTypedArray(jsi::Runtime &runtime, const jsi::Object &jsObj);
@@ -113,15 +113,15 @@ void arrayBufferUpdate(jsi::Runtime &runtime, jsi::ArrayBuffer &buffer,
 
 template <TypedArrayKind T>
 class TypedArray : public TypedArrayBase {
- public:
-  TypedArray(jsi::Runtime &runtime, size_t size);
-  TypedArray(jsi::Runtime &runtime, std::vector<ContentType<T>> data);
-  TypedArray(TypedArrayBase &&base);
-  TypedArray(TypedArray &&) = default;
-  TypedArray &operator=(TypedArray &&) = default;
+public:
+TypedArray(jsi::Runtime &runtime, size_t size);
+TypedArray(jsi::Runtime &runtime, std::vector<ContentType<T> > data);
+TypedArray(TypedArrayBase &&base);
+TypedArray(TypedArray &&) = default;
+TypedArray &operator=(TypedArray &&) = default;
 
-  std::vector<ContentType<T>> toVector(jsi::Runtime &runtime);
-  void update(jsi::Runtime &runtime, const std::vector<ContentType<T>> &data);
+std::vector<ContentType<T> > toVector(jsi::Runtime &runtime);
+void update(jsi::Runtime &runtime, const std::vector<ContentType<T> > &data);
 };
 
 template <TypedArrayKind T>
@@ -129,7 +129,7 @@ TypedArray<T> TypedArrayBase::get(jsi::Runtime &runtime) const & {
   assert(getKind(runtime) == T);
   (void)runtime;  // when assert is disabled we need to mark this as used
   return TypedArray<T>(
-      jsi::Value(runtime, jsi::Value(runtime, *this).asObject(runtime)));
+    jsi::Value(runtime, jsi::Value(runtime, *this).asObject(runtime)));
 }
 
 template <TypedArrayKind T>

@@ -72,13 +72,13 @@ static inline void md_pad(uint8_t *block, size_t blocksz, size_t used,
 }
 
 /* Internal function/type names for hash-specific things. */
-#define HMAC_CTX(_name) HMAC_##_name##_ctx
-#define HMAC_INIT(_name) HMAC_##_name##_init
-#define HMAC_UPDATE(_name) HMAC_##_name##_update
-#define HMAC_FINAL(_name) HMAC_##_name##_final
+#define HMAC_CTX(_name) HMAC_ ## _name ## _ctx
+#define HMAC_INIT(_name) HMAC_ ## _name ## _init
+#define HMAC_UPDATE(_name) HMAC_ ## _name ## _update
+#define HMAC_FINAL(_name) HMAC_ ## _name ## _final
 
-#define PBKDF2_F(_name) pbkdf2_f_##_name
-#define PBKDF2(_name) pbkdf2_##_name
+#define PBKDF2_F(_name) pbkdf2_f_ ## _name
+#define PBKDF2(_name) pbkdf2_ ## _name
 
 /* This macro expands to decls for the whole implementation for a given
  * hash function.  Arguments are:
@@ -164,8 +164,8 @@ static inline void md_pad(uint8_t *block, size_t blocksz, size_t used,
                                                                                \
   /* --- PBKDF2 --- */                                                         \
   static inline void PBKDF2_F(_name)(                                          \
-      const HMAC_CTX(_name) * startctx, uint32_t counter, const uint8_t *salt, \
-      size_t nsalt, uint32_t iterations, uint8_t *out) {                       \
+    const HMAC_CTX(_name) * startctx, uint32_t counter, const uint8_t *salt, \
+    size_t nsalt, uint32_t iterations, uint8_t *out) {                       \
     uint8_t countbuf[4];                                                       \
     write32_be(counter, countbuf);                                             \
                                                                                \
@@ -173,8 +173,8 @@ static inline void md_pad(uint8_t *block, size_t blocksz, size_t used,
     uint8_t Ublock[_blocksz];                                                  \
     md_pad(Ublock, _blocksz, _hashsz, _blocksz + _hashsz);                     \
                                                                                \
-    /* First iteration:                                                        \
-     *   U_1 = PRF(P, S || INT_32_BE(i))                                       \
+    /* First iteration: \
+     *   U_1 = PRF(P, S || INT_32_BE(i)) \
      */                                                                        \
     HMAC_CTX(_name) ctx = *startctx;                                           \
     HMAC_UPDATE(_name)(&ctx, salt, nsalt);                                     \
@@ -182,8 +182,8 @@ static inline void md_pad(uint8_t *block, size_t blocksz, size_t used,
     HMAC_FINAL(_name)(&ctx, Ublock);                                           \
     _ctx result = ctx.outer;                                                   \
                                                                                \
-    /* Subsequent iterations:                                                  \
-     *   U_c = PRF(P, U_{c-1})                                                 \
+    /* Subsequent iterations: \
+     *   U_c = PRF(P, U_{c-1}) \
      */                                                                        \
     for (uint32_t i = 1; i < iterations; i++) {                                \
       /* Complete inner hash with previous U */                                \
@@ -202,8 +202,8 @@ static inline void md_pad(uint8_t *block, size_t blocksz, size_t used,
   }                                                                            \
                                                                                \
   static inline void PBKDF2(_name)(                                            \
-      const uint8_t *pw, size_t npw, const uint8_t *salt, size_t nsalt,        \
-      uint32_t iterations, uint8_t *out, size_t nout) {                        \
+    const uint8_t *pw, size_t npw, const uint8_t *salt, size_t nsalt,        \
+    uint32_t iterations, uint8_t *out, size_t nout) {                        \
     assert(iterations);                                                        \
     assert(out &&nout);                                                        \
                                                                                \
