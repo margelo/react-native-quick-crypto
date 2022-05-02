@@ -5,8 +5,7 @@ import {
   Encoding,
   toArrayBuffer,
   BinaryLike,
-  binaryLikeToArrayBuffer,
-  ab2str,
+  binaryLikeToArrayBuffer
 } from './Utils';
 import Stream from 'stream';
 import { Buffer } from '@craftzdog/react-native-buffer';
@@ -105,7 +104,7 @@ class Hmac extends Stream.Transform {
    */
   digest(): Buffer;
   digest(encoding: BinaryToTextEncoding): string;
-  digest(encoding?: BinaryToTextEncoding): string | Buffer {
+  digest(encoding: BinaryToTextEncoding): string | Buffer {
     const result: ArrayBuffer = (this.isFinalized) ? new ArrayBuffer(0) : this.internalHmac.digest();
     this.isFinalized = true;
     if (encoding && encoding !== 'buffer') {
