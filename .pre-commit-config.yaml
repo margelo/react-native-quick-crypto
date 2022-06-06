@@ -3,14 +3,14 @@ repos:
   - repo: https://github.com/pocc/pre-commit-hooks
     rev: v1.3.5
     hooks:
-#      - id: clang-format
-#        args: ["--style=Google", "-i"]
-#      - id: clang-tidy
-#      - id: oclint
-      - id: uncrustify
-        args: ["--replace", "--no-backup"]
+      - id: clang-format
+        args: ['--style=Google', '-i']
+      #      - id: clang-tidy
+      #      - id: oclint
+      # - id: uncrustify
+      #   args: ["--replace", "--no-backup"]
       - id: cppcheck
-        args: ["--language=c++"]
+        args: ['--language=c++']
       - id: cpplint
-        args: ["--linelength=120", "--filter=-whitespace/tab"]
+        args: ['--linelength=120', '--filter=-whitespace/tab']
 #      - id: include-what-you-use
