@@ -1,17 +1,18 @@
 // copied from https://github.com/nodejs/node/blob/master/test/parallel/test-crypto-hash.js
-import { FastCrypto as crypto } from 'react-native-fast-crypto';
-import { describe, it, itOnly } from '../../MochaRNAdapter';
-import chai from 'chai';
 import { Buffer } from '@craftzdog/react-native-buffer';
+import chai from 'chai';
+import { FastCrypto as crypto } from 'react-native-fast-crypto';
+import { it } from '../../MochaRNAdapter';
 
 const assert = chai.assert;
 
-export function registerCipherFirstGroupOfTests() {
+export function registerCipherTests1() {
   'use strict';
-  function testCipher1(key) {
+  function testCipher1(key: Buffer | string) {
     it('testCipher1 + ' + key, () => {
       // Test encryption and decryption
-      const plaintext = 'Keep this a secret? No! Tell everyone about node.js!';
+      const plaintext =
+        'Keep this a secret? No! Tell everyone about fast-crypto!';
       const cipher = crypto.createCipher('aes192', key);
 
       // Encrypt plaintext which is in utf8 format
@@ -42,7 +43,7 @@ export function registerCipherFirstGroupOfTests() {
     });
   }
 
-  function testCipher2(key) {
+  function testCipher2(key: string | Buffer) {
     it('testCipher2 + ' + key, () => {
       // Encryption and decryption with Base64.
       // Reported in https://github.com/joyent/node/issues/738

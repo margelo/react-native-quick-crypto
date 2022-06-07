@@ -4,6 +4,7 @@ import { pbkdf2RegisterTests } from './Tests/pbkdf2Tests/pbkdf2Tests';
 import { registerRandomTests } from './Tests/RandomTests/random';
 import { registerHmacTests } from './Tests/HmacTests/HmacTests';
 import { registerHashTests } from './Tests/HashTests/HashTests';
+import { registerCipherTests1 } from './Tests/CipherTests/CipherFirst';
 import chai from 'chai';
 
 export const TEST_LIST: Array<TestItemType> = [
@@ -41,5 +42,10 @@ export const TEST_LIST: Array<TestItemType> = [
     description: 'Hash',
     value: false,
     registrator: registerHashTests,
+  },
+  {
+    description: 'Cipher 1',
+    value: false,
+    registrator: registerCipherTests1,
   },
 ];
