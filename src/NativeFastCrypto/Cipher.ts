@@ -1,14 +1,15 @@
-export type InternalCipher = {
+export type InternalHash = {
+  update: (data: ArrayBuffer) => InternalHash;
+  digest: () => ArrayBuffer;
+  copy: (len?: number) => InternalHash;
+};
+
+export type CipherObject = {
   update: (
     data: ArrayBuffer,
     inputEncoding: string,
     outputEncoding: string
-  ) => InternalCipher;
+  ) => CipherObject;
   final: () => ArrayBuffer;
   copy: (len?: number) => InternalHash;
 };
-
-export type createInternalCipher = (
-  cipher: string,
-  outputLength?: number
-) => InternalCipher;
