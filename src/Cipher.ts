@@ -2,6 +2,16 @@ import { NativeFastCrypto } from './NativeFastCrypto/NativeFastCrypto';
 import Stream from 'stream';
 import { Buffer } from '@craftzdog/react-native-buffer';
 import type { BinaryLike, Encoding } from './Utils';
+import type {
+  CipherCCMOptions,
+  CipherCCMTypes,
+  CipherGCMTypes,
+  CipherGCMOptions,
+  CipherKey,
+  // TODO @Szymon20000 This types seem to be missing? Where did you get this definitions from?
+  // CipherOCBTypes,
+  // CipherOCBOptions,
+} from 'crypto'; // Node crypto typings
 
 class CipherCommon extends Stream.Transform {
   _transform(
@@ -41,7 +51,7 @@ class CipherCommon extends Stream.Transform {
   final(arg: undefined | BufferEncoding): Buffer | string {}
 
   setAutoPadding(autoPadding?: boolean): this {
-    this.internalCipher.setAutoPadding(!!autoPadding);
+    NativeFastCrypto.cipher.setAutoPadding(!!autoPadding);
     return this;
   }
 
@@ -51,12 +61,12 @@ class CipherCommon extends Stream.Transform {
       plaintextLength: number;
     }
   ): this {
-    this.internalCipher.setAAD(buffer.buffer, options?.plaintextLength);
+    NativeFastCrypto.cipher.setAAD(buffer.buffer, options?.plaintextLength);
     return this;
   }
 
   protected getAuthTag(): Buffer {
-    return Buffer.from(this.internalCipher.getAuthTag());
+    return Buffer.from(NativeFastCrypto.cipher.getAuthTag());
   }
 }
 
@@ -92,20 +102,20 @@ class CipherGCM extends Cipher {
   }
 }
 
-class CipherOCB extends Cipher {
-  setAAD(
-    buffer: ArrayBufferView,
-    options: {
-      plaintextLength: number;
-    }
-  ): this {
-    super.setAAD(buffer, options);
-    return this;
-  }
-  getAuthTag(): Buffer {
-    return super.getAuthTag();
-  }
-}
+// class CipherOCB extends Cipher {
+//   setAAD(
+//     buffer: ArrayBufferView,
+//     options: {
+//       plaintextLength: number;
+//     }
+//   ): this {
+//     super.setAAD(buffer, options);
+//     return this;
+//   }
+//   getAuthTag(): Buffer {
+//     return super.getAuthTag();
+//   }
+// }
 
 class Decipher extends CipherCommon {}
 
@@ -139,20 +149,20 @@ class DecipherGCM extends Decipher {
   }
 }
 
-class DecipherOCB extends Decipher {
-  setAAD(
-    buffer: ArrayBufferView,
-    options: {
-      plaintextLength: number;
-    }
-  ): this {
-    super.setAAD(buffer, options);
-    return this;
-  }
-  getAuthTag(): Buffer {
-    return super.getAuthTag();
-  }
-}
+// class DecipherOCB extends Decipher {
+//   setAAD(
+//     buffer: ArrayBufferView,
+//     options: {
+//       plaintextLength: number;
+//     }
+//   ): this {
+//     super.setAAD(buffer, options);
+//     return this;
+//   }
+//   getAuthTag(): Buffer {
+//     return super.getAuthTag();
+//   }
+// }
 
 export function createDecipher(
   algorithm: CipherCCMTypes,
@@ -176,12 +186,12 @@ export function createDecipheriv(
   iv: BinaryLike,
   options: CipherCCMOptions
 ): DecipherCCM;
-export function createDecipheriv(
-  algorithm: CipherOCBTypes,
-  key: CipherKey,
-  iv: BinaryLike,
-  options: CipherOCBOptions
-): DecipherOCB;
+// export function createDecipheriv(
+//   algorithm: CipherOCBTypes,
+//   key: CipherKey,
+//   iv: BinaryLike,
+//   options: CipherOCBOptions
+// ): DecipherOCB;
 export function createDecipheriv(
   algorithm: CipherGCMTypes,
   key: CipherKey,
@@ -217,12 +227,12 @@ export function createCipheriv(
   iv: BinaryLike,
   options: CipherCCMOptions
 ): CipherCCM;
-export function createCipheriv(
-  algorithm: CipherOCBTypes,
-  key: CipherKey,
-  iv: BinaryLike,
-  options: CipherOCBOptions
-): CipherOCB;
+// export function createCipheriv(
+//   algorithm: CipherOCBTypes,
+//   key: CipherKey,
+//   iv: BinaryLike,
+//   options: CipherOCBOptions
+// ): CipherOCB;
 export function createCipheriv(
   algorithm: CipherGCMTypes,
   key: CipherKey,
