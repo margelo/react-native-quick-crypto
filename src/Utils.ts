@@ -1,4 +1,4 @@
-import { Buffer } from "@craftzdog/react-native-buffer";
+import { Buffer } from '@craftzdog/react-native-buffer';
 
 export type BinaryLike = string | ArrayBuffer | Buffer;
 
@@ -10,7 +10,7 @@ export type Encoding =
   | CharacterEncoding
   | LegacyCharacterEncoding;
 
-export function isBuffer(buf: any) {
+export function isBuffer(buf: any): buf is Buffer {
   return buf instanceof Buffer || buf?.constructor?.name === 'Buffer';
 }
 
@@ -36,11 +36,11 @@ export function binaryLikeToArrayBuffer(input: BinaryLike): ArrayBuffer {
   }
 
   if (isBuffer(input)) {
-    return toArrayBuffer(input as Buffer);
+    return toArrayBuffer(input);
   }
 
-  if (input.buffer) {
-    return input.buffer;
+  if ((input as any).buffer) {
+    return (input as any).buffer;
   }
 
   if (!(input instanceof ArrayBuffer)) {
