@@ -39,6 +39,7 @@ export function binaryLikeToArrayBuffer(input: BinaryLike): ArrayBuffer {
     return toArrayBuffer(input);
   }
 
+  // TODO add further binary types to BinaryLike, UInt8Array and so for have this array as property
   if ((input as any).buffer) {
     return (input as any).buffer;
   }
