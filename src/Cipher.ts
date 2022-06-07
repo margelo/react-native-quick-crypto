@@ -209,7 +209,7 @@ export function createCipher(
   algorithm: CipherCCMTypes,
   password: BinaryLike,
   options: CipherCCMOptions
-): CipherCCM;
+): CipherCCM {}
 export function createCipher(
   algorithm: CipherGCMTypes,
   password: BinaryLike,
