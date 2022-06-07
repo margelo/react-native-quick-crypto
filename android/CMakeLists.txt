@@ -42,6 +42,7 @@ add_library(reactnativefastcrypto  # <-- Library name
         "../cpp/Random/RandomHostObject.cpp"
         "../cpp/Hash/HashInstaller.cpp"
         "../cpp/Hash/HashHostObject.cpp"
+        "../cpp/Cipher/CipherHostObject.cpp"
         ${INCLUDE_JSI_CPP} # only on older RN versions
 )
 
