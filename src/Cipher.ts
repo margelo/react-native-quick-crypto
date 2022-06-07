@@ -177,7 +177,7 @@ export function createDecipher(
 export function createDecipher(
   algorithm: string,
   password: BinaryLike,
-  options?: stream.TransformOptions
+  options?: Stream.TransformOptions
 ): Decipher;
 
 export function createDecipheriv(
@@ -202,7 +202,7 @@ export function createDecipheriv(
   algorithm: string,
   key: CipherKey,
   iv: BinaryLike | null,
-  options?: stream.TransformOptions
+  options?: Stream.TransformOptions
 ): Decipher;
 
 export function createCipher(
@@ -218,7 +218,7 @@ export function createCipher(
 export function createCipher(
   algorithm: string,
   password: BinaryLike,
-  options?: stream.TransformOptions
+  options?: Stream.TransformOptions
 ): Cipher;
 
 export function createCipheriv(
@@ -243,5 +243,5 @@ export function createCipheriv(
   algorithm: string,
   key: CipherKey,
   iv: BinaryLike | null,
-  options?: stream.TransformOptions
+  options?: Stream.TransformOptions
 ): Cipher;
