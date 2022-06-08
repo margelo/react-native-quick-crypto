@@ -16,6 +16,17 @@ import type {
 
 const createInternalCipher = NativeFastCrypto.createCipher;
 
+function getUIntOption(options?: Record<string, any>, key: string) {
+  let value;
+  if (options && (value = options[key]) != null) {
+    // >>> Turns any type into a positive integer (also sets the sign bit to 0)
+    // eslint-disable-next-line no-bitwise
+    if (value >>> 0 !== value) throw new Error(`options.${key}`, value);
+    return value;
+  }
+  return -1;
+}
+
 class CipherCommon extends Stream.Transform {
   _transform(
     chunk: string | BinaryLike,
@@ -76,9 +87,15 @@ class CipherCommon extends Stream.Transform {
 class Cipher extends CipherCommon {
   private internal: InternalCipher;
   private options: any;
-  constructor(cipherType: string, cipherKey: string, options: any) {
+  constructor(
+    cipherType: string,
+    cipherKey: string,
+    options: Record<string, any> = {}
+  ) {
     super(options);
     const cipherKeyBuffer = binaryLikeToArrayBuffer(cipherKey);
+    // TODO(osp) This might not be smart, check again after release
+    options.authTagLength = getUIntOption(options, 'authTagLength');
     this.internal = createInternalCipher(cipherType, cipherKeyBuffer, options);
     this.options = options;
   }
