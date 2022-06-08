@@ -13,14 +13,29 @@ FieldDefinition getCipherFieldDefinition(
     std::shared_ptr<react::CallInvoker> jsCallInvoker,
     std::shared_ptr<DispatchQueue::dispatch_queue> workerQueue) {
   return HOST_LAMBDA("createCipher", {
-    // TODO(osp) Add arg validation
-    // if()
+    if (count < 2) {
+      throw jsi::JSError(
+          runtime, "createCipher: cipher type and cipher key are required");
+    }
 
-    auto algorithm = arguments[0].asString(runtime).utf8(runtime);
-    auto password = arguments[1].asString(runtime).utf8(runtime);
+    if (!arguments[0].isString()) {
+      throw jsi::JSError(runtime,
+                         "createCipher: First argument ('cipher type') needs "
+                         "to be a valid string");
+    }
+
+    if (!arguments[1].isObject() ||
+        !arguments[1].getObject(runtime).isArrayBuffer(runtime)) {
+      throw jsi::JSError(runtime,
+                         "createCipher: Second argument ('cipher key') "
+                         "has to be of type ArrayBuffer!");
+    }
+
+    auto cipher_type = arguments[0].asString(runtime).utf8(runtime);
+    auto cipher_key = arguments[1].getObject(runtime).getArrayBuffer(runtime);
 
     auto hostObject = std::make_shared<CipherHostObject>(
-        algorithm, password, true, jsCallInvoker, workerQueue);
+        cipher_type, cipher_key, true, jsCallInvoker, workerQueue);
 
     return jsi::Object::createFromHostObject(runtime, hostObject);
   });

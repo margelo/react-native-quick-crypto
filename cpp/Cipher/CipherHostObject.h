@@ -15,6 +15,8 @@
 
 namespace margelo {
 
+namespace jsi = facebook::jsi;
+
 class CipherHostObject : public SmartHostObject {
  public:
   // TODO(osp)  Why does an empty constructor need to be here and not on
@@ -29,7 +31,7 @@ class CipherHostObject : public SmartHostObject {
       std::shared_ptr<DispatchQueue::dispatch_queue> workerQueue);
 
   explicit CipherHostObject(
-      const std::string &cipher_type, const std::string &password,
+      const std::string &cipher_type, const jsi::ArrayBuffer &cipher_key,
       bool isCipher, std::shared_ptr<react::CallInvoker> jsCallInvoker,
       std::shared_ptr<DispatchQueue::dispatch_queue> workerQueue);
 

@@ -6,6 +6,6 @@ export type InternalCipher = {
 
 export type CreateCipherMethod = (
   cipher_type: string,
-  password: string,
+  password: ArrayBuffer,
   options: any
 ) => InternalCipher;

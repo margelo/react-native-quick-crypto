@@ -1,7 +1,7 @@
 import { NativeFastCrypto } from './NativeFastCrypto/NativeFastCrypto';
 import Stream from 'stream';
 import { Buffer } from '@craftzdog/react-native-buffer';
-import type { BinaryLike, Encoding } from './Utils';
+import { BinaryLike, binaryLikeToArrayBuffer, Encoding } from './Utils';
 import type { InternalCipher } from './NativeFastCrypto/cipher';
 import type {
   CipherCCMOptions,
@@ -76,11 +76,10 @@ class CipherCommon extends Stream.Transform {
 class Cipher extends CipherCommon {
   private internal: InternalCipher;
   private options: any;
-  constructor(algorithm: string, password: string, options: any) {
+  constructor(cipherType: string, cipherKey: string, options: any) {
     super(options);
-    console.warn('creating cipher js');
-
-    this.internal = createInternalCipher(algorithm, password, options);
+    const cipherKeyBuffer = binaryLikeToArrayBuffer(cipherKey);
+    this.internal = createInternalCipher(cipherType, cipherKeyBuffer, options);
     console.warn('internal cipher created!');
     this.options = options;
   }
