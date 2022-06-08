@@ -15,17 +15,22 @@
 
 namespace margelo {
 
-using namespace facebook;
-
 class CipherHostObject : public SmartHostObject {
  public:
+  // TODO(osp)  Why does an empty constructor need to be here and not on
+  // HashHostObject?
   explicit CipherHostObject(
-      const std::string &algorithm, const std::string &password, bool isCipher,
       std::shared_ptr<react::CallInvoker> jsCallInvoker,
       std::shared_ptr<DispatchQueue::dispatch_queue> workerQueue);
 
   explicit CipherHostObject(
+      CipherHostObject *other,
       std::shared_ptr<react::CallInvoker> jsCallInvoker,
+      std::shared_ptr<DispatchQueue::dispatch_queue> workerQueue);
+
+  explicit CipherHostObject(
+      const std::string &cipher_type, const std::string &password,
+      bool isCipher, std::shared_ptr<react::CallInvoker> jsCallInvoker,
       std::shared_ptr<DispatchQueue::dispatch_queue> workerQueue);
 
   void installMethods();
@@ -34,6 +39,7 @@ class CipherHostObject : public SmartHostObject {
 
  private:
   EVP_CIPHER_CTX *ctx_ = nullptr;
+  bool isCipher_;
 };
 
 }  // namespace margelo
