@@ -35,7 +35,7 @@ FieldDefinition getCipherFieldDefinition(
     auto cipher_key = arguments[1].getObject(runtime).getArrayBuffer(runtime);
 
     auto hostObject = std::make_shared<CipherHostObject>(
-        cipher_type, cipher_key, true, jsCallInvoker, workerQueue);
+        cipher_type, &cipher_key, true, runtime, jsCallInvoker, workerQueue);
 
     return jsi::Object::createFromHostObject(runtime, hostObject);
   });

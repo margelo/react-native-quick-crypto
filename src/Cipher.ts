@@ -80,7 +80,6 @@ class Cipher extends CipherCommon {
     super(options);
     const cipherKeyBuffer = binaryLikeToArrayBuffer(cipherKey);
     this.internal = createInternalCipher(cipherType, cipherKeyBuffer, options);
-    console.warn('internal cipher created!');
     this.options = options;
   }
 }

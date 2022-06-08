@@ -31,8 +31,8 @@ CipherHostObject::CipherHostObject(
 }
 
 CipherHostObject::CipherHostObject(
-    const std::string &cipher_type, const jsi::ArrayBuffer &cipher_key,
-    bool isCipher, std::shared_ptr<react::CallInvoker> jsCallInvoker,
+    const std::string &cipher_type, jsi::ArrayBuffer *cipher_key, bool isCipher,
+    jsi::Runtime &runtime, std::shared_ptr<react::CallInvoker> jsCallInvoker,
     std::shared_ptr<DispatchQueue::dispatch_queue> workerQueue)
     : SmartHostObject(jsCallInvoker, workerQueue), isCipher_(isCipher) {
   // TODO(osp) is this needed on the SSL version we are using?
@@ -53,15 +53,56 @@ CipherHostObject::CipherHostObject(
   unsigned char key[EVP_MAX_KEY_LENGTH];
   unsigned char iv[EVP_MAX_IV_LENGTH];
 
-  //  int key_len = EVP_BytesToKey(cipher,
-  //                               EVP_md5(),
-  //                               nullptr,
-  //                               key_buf.data(),
-  //                               key_buf.size(),
-  //                               1,
-  //                               key,
-  //                               iv);
+  //    int key_len = EVP_BytesToKey(cipher,
+  //                                 EVP_md5(),
+  //                                 nullptr,
+  //                                 cipher_key.data(runtime),
+  //                                 cipher_key.size(runtime),
+  //                                 1,
+  //                                 key,
+  //                                 iv);
+
+  // TODO(osp) this looks like a macro, check if necessary
+  // CHECK_NE(key_len, 0);
+
+  // TODO(osp) this seems like a runtime check
+  //  const int mode = EVP_CIPHER_mode(cipher);
+  //  if (isCipher && (mode == EVP_CIPH_CTR_MODE ||
+  //                           mode == EVP_CIPH_GCM_MODE ||
+  //                           mode == EVP_CIPH_CCM_MODE)) {
+  //    // Ignore the return value (i.e. possible exception) because we are
+  //    // not calling back into JS anyway.
+  //    ProcessEmitWarning(env(),
+  //                       "Use Cipheriv for counter mode of %s",
+  //                       cipher_type);
+  //  }
+
+  //  CommonInit(cipher_type, cipher, key, key_len, iv,
+  //             EVP_CIPHER_iv_length(cipher), auth_tag_len);
+
+  // TODO(osp) temp code only for committing only
+  commonInit(
+      cipher_type.c_str(), cipher, cipher_key->data(runtime),
+      cipher_key->size(runtime),
+      reinterpret_cast<const unsigned char *>(EVP_CIPHER_iv_length(cipher)), 9,
+      9);
   installMethods();
+}
+
+void CipherHostObject::commonInit(const char *cipher_type,
+                                  const EVP_CIPHER *cipher,
+                                  const unsigned char *key, int key_len,
+                                  const unsigned char *iv, int iv_len,
+                                  unsigned int auth_tag_len) {
+  // TODO(osp) check for this macro
+  //  CHECK(!ctx_);
+  if (ctx_ == nullptr) {
+    ctx_ = EVP_CIPHER_CTX_new();
+  }
+
+  const int mode = EVP_CIPHER_mode(cipher);
+  if (mode == EVP_CIPH_WRAP_MODE)
+    EVP_CIPHER_CTX_set_flags(ctx_, EVP_CIPHER_CTX_FLAG_WRAP_ALLOW);
 }
 
 void CipherHostObject::installMethods() {
