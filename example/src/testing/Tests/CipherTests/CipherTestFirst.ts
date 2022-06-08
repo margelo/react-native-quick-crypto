@@ -72,6 +72,16 @@ export function registerCipherTests1() {
   testCipher2('0123456789abcdef');
   testCipher2(Buffer.from('0123456789abcdef'));
 
+  it('#createCipher with invalid algorithm should throw', () => {
+    try {
+      // @ts-expect-error
+      crypto.createCipher('blah', 'secret');
+      assert.fail('createCipher with invalid algo did not throw');
+    } catch {
+      // Intentionally left blank
+    }
+  });
+
   it('Base64 padding regression test', () => {
     const c = crypto.createCipher('aes-256-cbc', 'secret');
     const s = c.update('test', 'utf8', 'base64') + c.final('base64');
