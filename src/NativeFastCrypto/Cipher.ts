@@ -4,8 +4,8 @@ export type InternalCipher = {
   copy: () => void;
 };
 
-export type CreateCipherMethod = (
-  cipher_type: string,
-  password: ArrayBuffer,
-  options: any
-) => InternalCipher;
+export type CreateCipherMethod = (params: {
+  cipher_type: string;
+  cipher_key: ArrayBuffer;
+  auth_tag_len: number;
+}) => InternalCipher;

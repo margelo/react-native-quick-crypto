@@ -76,14 +76,9 @@ CipherHostObject::CipherHostObject(
   unsigned char key[EVP_MAX_KEY_LENGTH];
   unsigned char iv[EVP_MAX_IV_LENGTH];
 
-  //    int key_len = EVP_BytesToKey(cipher,
-  //                                 EVP_md5(),
-  //                                 nullptr,
-  //                                 cipher_key.data(runtime),
-  //                                 cipher_key.size(runtime),
-  //                                 1,
-  //                                 key,
-  //                                 iv);
+  int key_len =
+      EVP_BytesToKey(cipher, EVP_md5(), nullptr, cipher_key->data(runtime),
+                     cipher_key->size(runtime), 1, key, iv);
 
   // TODO(osp) this looks like a macro, check if necessary
   // CHECK_NE(key_len, 0);
@@ -102,11 +97,8 @@ CipherHostObject::CipherHostObject(
 
   //  CommonInit(cipher_type, cipher, key, key_len, iv,
   //             EVP_CIPHER_iv_length(cipher), auth_tag_len);
-
-  // TODO(osp) temp code only for committing only
   commonInit(runtime, cipher_type.c_str(), cipher, cipher_key->data(runtime),
-             cipher_key->size(runtime), iv, EVP_CIPHER_iv_length(cipher),
-             auth_tag_len);
+             key_len, iv, EVP_CIPHER_iv_length(cipher), auth_tag_len);
   installMethods();
 }
 
@@ -151,7 +143,25 @@ void CipherHostObject::commonInit(jsi::Runtime &runtime,
 }
 
 void CipherHostObject::installMethods() {
-  // TODO(osp) implement
+  this->fields.push_back(HOST_LAMBDA("update", {
+    //    if (!arguments[0].isObject() ||
+    //        !arguments[0].getObject(runtime).isArrayBuffer(runtime)) {
+    //      throw jsi::JSError(runtime,
+    //                         "HmacHostObject::update: First argument
+    //                         ('message') " "has to be of type ArrayBuffer!");
+    //    }
+    //    auto messageBuffer =
+    //            arguments[0].getObject(runtime).getArrayBuffer(runtime);
+    //
+    //    const unsigned char *data =
+    //            reinterpret_cast<const unsigned char
+    //            *>(messageBuffer.data(runtime));
+    //    int size = messageBuffer.size(runtime);
+    //
+    //    EVP_DigestUpdate(mdctx_, data, size);
+
+    return jsi::Value::undefined();
+  }));
 }
 
 bool CipherHostObject::InitAuthenticated(const char *cipher_type, int iv_len,

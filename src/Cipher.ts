@@ -95,8 +95,13 @@ class Cipher extends CipherCommon {
     super(options);
     const cipherKeyBuffer = binaryLikeToArrayBuffer(cipherKey);
     // TODO(osp) This might not be smart, check again after release
-    options.authTagLength = getUIntOption(options, 'authTagLength');
-    this.internal = createInternalCipher(cipherType, cipherKeyBuffer, options);
+    const authTagLength = getUIntOption(options, 'authTagLength');
+    this.internal = createInternalCipher({
+      cipher_type: cipherType,
+      cipher_key: cipherKeyBuffer,
+      ...options,
+      auth_tag_len: authTagLength,
+    });
     this.options = options;
   }
 }
