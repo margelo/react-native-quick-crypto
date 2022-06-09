@@ -3,6 +3,7 @@
 //
 #include "CipherHostObject.h"
 
+#include <JSI Utils/TypedArray.h>
 #include <openssl/evp.h>
 
 #include <memory>
@@ -206,21 +207,31 @@ void CipherHostObject::installMethods() {
       return jsi::Value((int)kErrorState);
     }
 
-    {
-      NoArrayBufferZeroFillScope no_zero_fill_scope(env()->isolate_data());
-      *out = ArrayBuffer::NewBackingStore(env()->isolate(), buf_len);
-    }
+    //    {
+    //      NoArrayBufferZeroFillScope
+    //      no_zero_fill_scope(env()->isolate_data()); *out =
+    //      ArrayBuffer::NewBackingStore(env()->isolate(), buf_len);
+    //    }
 
+    unsigned char outbuf[buf_len];
+    //    TypedArray<TypedArrayKind::Uint8Array> out(runtime, buf_len);
+
+    // EVP_CipherUpdate needs an *out pointer, basically to just write the data
+    // it seems.... In the original Node implementation it uses a V8 ArrayBuffer
+    // for our version I think skipping it and allocating a chunk of memory
+    // should be fine
     int r = EVP_CipherUpdate(
-        ctx_, static_cast<unsigned char *>((*out)->Data()), &buf_len,
+        ctx_, outbuf, &buf_len,
         reinterpret_cast<const unsigned char *>(data.c_str()), len);
 
-    CHECK_LE(static_cast<size_t>(buf_len), (*out)->ByteLength());
-    if (buf_len == 0)
-      *out = ArrayBuffer::NewBackingStore(env()->isolate(), 0);
-    else
-      *out =
-          BackingStore::Reallocate(env()->isolate(), std::move(*out), buf_len);
+    //    CHECK_LE(static_cast<size_t>(buf_len), (*out)->ByteLength());
+    //    if (buf_len == 0) {
+    //      *out = ArrayBuffer::NewBackingStore(env()->isolate(), 0);
+    //    } else {
+    //      *out =
+    //          BackingStore::Reallocate(env()->isolate(), std::move(*out),
+    //          buf_len);
+    //    }
 
     // When in CCM mode, EVP_CipherUpdate will fail if the authentication tag is
     // invalid. In that case, remember the error and throw in final().
@@ -232,8 +243,63 @@ void CipherHostObject::installMethods() {
     return r == 1 ? jsi::Value((int)kSuccess) : jsi::Value((int)kErrorState);
   }));
 
-  this->fields.push_back(
-      HOST_LAMBDA("final", { return jsi::Value::undefined(); }));
+  this->fields.push_back(HOST_LAMBDA("final", {
+    if (!ctx_) return false;
+
+    const int mode = EVP_CIPHER_CTX_mode(ctx_);
+
+    int buf_len = EVP_CIPHER_CTX_block_size(ctx_);
+    unsigned char outbuf[buf_len];
+
+    //        {
+    //          NoArrayBufferZeroFillScope
+    //          no_zero_fill_scope(env()->isolate_data()); *out =
+    //          ArrayBuffer::NewBackingStore(env()->isolate(),
+    //                                              static_cast<size_t>(EVP_CIPHER_CTX_block_size(ctx_.get())));
+    //        }
+
+    if (!isCipher_ && IsSupportedAuthenticatedMode(ctx_))
+      MaybePassAuthTagToOpenSSL();
+
+    // In CCM mode, final() only checks whether authentication failed in
+    // update(). EVP_CipherFinal_ex must not be called and will fail.
+    bool ok;
+    if (!isCipher_ && mode == EVP_CIPH_CCM_MODE) {
+      ok = !pending_auth_failed_;
+      //          *out = ArrayBuffer::NewBackingStore(env()->isolate(), 0);
+    } else {
+      int out_len = buf_len;
+      //      int out_len = (*out)->ByteLength();
+      ok = EVP_CipherFinal_ex(ctx_, outbuf, &out_len) == 1;
+
+      //      CHECK_LE(static_cast<size_t>(out_len), (*out)->ByteLength());
+      //      if (out_len > 0) {
+      //        *out = BackingStore::Reallocate(env()->isolate(),
+      //        std::move(*out),
+      //                                        out_len);
+      //      } else {
+      //        *out = ArrayBuffer::NewBackingStore(env()->isolate(), 0);
+      //      }
+
+      if (ok && isCipher_ && IsAuthenticatedMode()) {
+        // In GCM mode, the authentication tag length can be specified in
+        // advance, but defaults to 16 bytes when encrypting. In CCM and OCB
+        // mode, it must always be given by the user.
+        if (auth_tag_len_ == kNoAuthTagLength) {
+          // TODO(osp) check
+          // CHECK(mode == EVP_CIPH_GCM_MODE);
+          auth_tag_len_ = sizeof(auth_tag_);
+        }
+        ok = (1 == EVP_CIPHER_CTX_ctrl(
+                       ctx_, EVP_CTRL_AEAD_GET_TAG, auth_tag_len_,
+                       reinterpret_cast<unsigned char *>(auth_tag_)));
+      }
+    }
+
+    EVP_CIPHER_CTX_free(ctx_);
+
+    return ok;
+  }));
 }
 
 bool CipherHostObject::MaybePassAuthTagToOpenSSL() {
@@ -351,4 +417,6 @@ bool CipherHostObject::CheckCCMMessageLength(int message_len) {
 
   return true;
 }
+
+// TODO(osp) implement destructor
 }  // namespace margelo

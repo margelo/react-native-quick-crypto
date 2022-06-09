@@ -1,4 +1,4 @@
-#include "CipherInstaller.h"
+#include "CreateDecipherInstaller.h"
 
 #include <memory>
 
@@ -9,10 +9,10 @@ using namespace facebook;
 
 namespace margelo {
 
-FieldDefinition getCipherFieldDefinition(
+FieldDefinition getCreateDecipherFieldDefinition(
     std::shared_ptr<react::CallInvoker> jsCallInvoker,
     std::shared_ptr<DispatchQueue::dispatch_queue> workerQueue) {
-  return HOST_LAMBDA("createCipher", {
+  return HOST_LAMBDA("createDecipher", {
     if (count < 1) {
       throw jsi::JSError(runtime, "Params object is required");
     }
@@ -47,7 +47,7 @@ FieldDefinition getCipherFieldDefinition(
         (int)params.getProperty(runtime, "auth_tag_len").getNumber();
 
     auto hostObject = std::make_shared<CipherHostObject>(
-        cipher_type, &cipher_key, true, auth_tag_len, runtime, jsCallInvoker,
+        cipher_type, &cipher_key, false, auth_tag_len, runtime, jsCallInvoker,
         workerQueue);
 
     return jsi::Object::createFromHostObject(runtime, hostObject);
