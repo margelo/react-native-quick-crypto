@@ -22,8 +22,9 @@ import type {
 } from 'crypto'; // Node crypto typings
 
 const createInternalCipher = NativeFastCrypto.createCipher;
+const createInternalDecipher = NativeFastCrypto.createDecipher;
 
-function getUIntOption(options?: Record<string, any>, key: string) {
+function getUIntOption(options: Record<string, any>, key: string) {
   let value;
   if (options && (value = options[key]) != null) {
     // >>> Turns any type into a positive integer (also sets the sign bit to 0)
@@ -37,21 +38,26 @@ function getUIntOption(options?: Record<string, any>, key: string) {
 class CipherCommon extends Stream.Transform {
   private internal: InternalCipher;
   private options: any;
+
   constructor(
     cipherType: string,
-    cipherKey: string,
+    cipherKey: BinaryLike,
+    isCipher: boolean,
     options: Record<string, any> = {}
   ) {
     super(options);
     const cipherKeyBuffer = binaryLikeToArrayBuffer(cipherKey);
     // TODO(osp) This might not be smart, check again after release
     const authTagLength = getUIntOption(options, 'authTagLength');
-    this.internal = createInternalCipher({
+    const args = {
       cipher_type: cipherType,
       cipher_key: cipherKeyBuffer,
       ...options,
       auth_tag_len: authTagLength,
-    });
+    };
+    this.internal = isCipher
+      ? createInternalCipher(args)
+      : createInternalDecipher(args);
     this.options = options;
   }
 
@@ -60,7 +66,7 @@ class CipherCommon extends Stream.Transform {
     encoding: Encoding,
     callback: () => void
   ) {
-    NativeFastCrypto.cipher.update(chunk, encoding);
+    this.internal.update(chunk, encoding);
     callback();
   }
 
@@ -97,6 +103,10 @@ class CipherCommon extends Stream.Transform {
     //   'data', ['string', 'Buffer', 'TypedArray', 'DataView'], data);
     // }
 
+    if (typeof data === 'string') {
+      data = binaryLikeToArrayBuffer(data);
+    }
+
     const ret = this.internal.update(data, inputEncoding);
 
     if (outputEncoding && outputEncoding !== 'buffer') {
@@ -107,12 +117,14 @@ class CipherCommon extends Stream.Transform {
     return ret;
   }
 
-  final(): Buffer;
+  final(): ArrayBuffer;
   final(outputEncoding: BufferEncoding): string;
-  final(arg: undefined | BufferEncoding): Buffer | string {}
+  final(arg: undefined | BufferEncoding): ArrayBuffer | string {
+    return this.internal.final(arg);
+  }
 
   setAutoPadding(autoPadding?: boolean): this {
-    NativeFastCrypto.cipher.setAutoPadding(!!autoPadding);
+    this.internal.setAutoPadding(!!autoPadding);
     return this;
   }
 
@@ -122,16 +134,24 @@ class CipherCommon extends Stream.Transform {
       plaintextLength: number;
     }
   ): this {
-    NativeFastCrypto.cipher.setAAD(buffer.buffer, options?.plaintextLength);
+    this.internal.setAAD(buffer.buffer, options?.plaintextLength);
     return this;
   }
 
   protected getAuthTag(): Buffer {
-    return Buffer.from(NativeFastCrypto.cipher.getAuthTag());
+    return Buffer.from(this.internal.getAuthTag());
   }
 }
 
-class Cipher extends CipherCommon {}
+class Cipher extends CipherCommon {
+  constructor(
+    cipherType: string,
+    cipherKey: BinaryLike,
+    options: Record<string, any> = {}
+  ) {
+    super(cipherType, cipherKey, true, options);
+  }
+}
 
 class CipherCCM extends Cipher {
   setAAD(
@@ -178,7 +198,15 @@ class CipherGCM extends Cipher {
 //   }
 // }
 
-class Decipher extends CipherCommon {}
+class Decipher extends CipherCommon {
+  constructor(
+    cipherType: string,
+    cipherKey: BinaryLike,
+    options: Record<string, any> = {}
+  ) {
+    super(cipherType, cipherKey, false, options);
+  }
+}
 
 class DecipherCCM extends Decipher {
   setAAD(
@@ -239,7 +267,9 @@ export function createDecipher(
   algorithm: string,
   password: BinaryLike,
   options?: Stream.TransformOptions
-): Decipher;
+): Decipher {
+  return new Decipher(algorithm, password, options);
+}
 
 export function createDecipheriv(
   algorithm: CipherCCMTypes,

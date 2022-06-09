@@ -9,6 +9,7 @@
 #include <vector>
 
 #include "Cipher/CreateCipherInstaller.h"
+#include "Cipher/CreateDecipherInstaller.h"
 #include "HMAC/HmacInstaller.h"
 #include "Random/RandomHostObject.h"
 #include "fastpbkdf2/Pbkdf2HostObject.h"
@@ -30,6 +31,10 @@ FastCryptoHostObject::FastCryptoHostObject(
   // CreateCipherInstaller
   this->fields.push_back(
       getCreateCipherFieldDefinition(jsCallInvoker, workerQueue));
+
+  // CreateDecipherInstaller
+  this->fields.push_back(
+      getCreateDecipherFieldDefinition(jsCallInvoker, workerQueue));
 
   // Pbkdf2HostObject
   this->fields.push_back(JSI_VALUE("pbkdf2", {

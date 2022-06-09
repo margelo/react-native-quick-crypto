@@ -158,23 +158,26 @@ void CipherHostObject::installMethods() {
                          "cipher.update requires at least 2 parameters");
     }
 
-    if (arguments[0].isUndefined() || arguments[0].isNull() ||
-        !arguments[0].isString()) {
+    if (!arguments[0].isObject() ||
+        !arguments[0].asObject(runtime).isArrayBuffer(runtime)) {
       throw jsi::JSError(
           runtime,
-          "cipher.update first argument ('data') needs to be a string");
+          "cipher.update first argument ('data') needs to be an ArrayBuffer");
     }
-    auto data = arguments[0].asString(runtime).utf8(runtime);
+
+    auto dataArrayBuffer =
+        arguments[0].asObject(runtime).getArrayBuffer(runtime);
 
     if (arguments[1].isUndefined() || arguments[1].isNull() ||
-        !arguments[0].isString()) {
+        !arguments[1].isString()) {
       throw jsi::JSError(runtime,
                          "cipher.update second argument "
                          "('inputEncoding') needs to be a string");
     }
     auto inputEncoding = arguments[1].asString(runtime).utf8(runtime);
 
-    auto len = data.length();
+    const unsigned char *data = dataArrayBuffer.data(runtime);
+    auto len = dataArrayBuffer.length(runtime);
 
     if (!ctx_ || len > INT_MAX) {
       // TODO(osp) can this call throw or does it need to return state?
@@ -202,7 +205,7 @@ void CipherHostObject::installMethods() {
     // EVP_CipherUpdate() with null output.
     if (isCipher_ && mode == EVP_CIPH_WRAP_MODE &&
         EVP_CipherUpdate(ctx_, nullptr, &buf_len,
-                         reinterpret_cast<const unsigned char *>(data.c_str()),
+                         reinterpret_cast<const unsigned char *>(data),
                          len) != 1) {
       return jsi::Value((int)kErrorState);
     }
@@ -213,16 +216,16 @@ void CipherHostObject::installMethods() {
     //      ArrayBuffer::NewBackingStore(env()->isolate(), buf_len);
     //    }
 
-    unsigned char outbuf[buf_len];
-    //    TypedArray<TypedArrayKind::Uint8Array> out(runtime, buf_len);
+    // Out buffer will be returned to JS context
+    TypedArray<TypedArrayKind::Uint8Array> out(runtime, buf_len);
 
     // EVP_CipherUpdate needs an *out pointer, basically to just write the data
     // it seems.... In the original Node implementation it uses a V8 ArrayBuffer
     // for our version I think skipping it and allocating a chunk of memory
     // should be fine
     int r = EVP_CipherUpdate(
-        ctx_, outbuf, &buf_len,
-        reinterpret_cast<const unsigned char *>(data.c_str()), len);
+        ctx_, out.getArrayBuffer(runtime).data(runtime), &buf_len,
+        reinterpret_cast<const unsigned char *>(data), len);
 
     //    CHECK_LE(static_cast<size_t>(buf_len), (*out)->ByteLength());
     //    if (buf_len == 0) {
@@ -240,7 +243,9 @@ void CipherHostObject::installMethods() {
       return jsi::Value((int)kSuccess);
     }
 
-    return r == 1 ? jsi::Value((int)kSuccess) : jsi::Value((int)kErrorState);
+    //    return r == 1 ? jsi::Value((int)kSuccess) :
+    //    jsi::Value((int)kErrorState);
+    return out;
   }));
 
   this->fields.push_back(HOST_LAMBDA("final", {
@@ -249,7 +254,7 @@ void CipherHostObject::installMethods() {
     const int mode = EVP_CIPHER_CTX_mode(ctx_);
 
     int buf_len = EVP_CIPHER_CTX_block_size(ctx_);
-    unsigned char outbuf[buf_len];
+    TypedArray<TypedArrayKind::Uint8Array> out(runtime, buf_len);
 
     //        {
     //          NoArrayBufferZeroFillScope
@@ -270,7 +275,8 @@ void CipherHostObject::installMethods() {
     } else {
       int out_len = buf_len;
       //      int out_len = (*out)->ByteLength();
-      ok = EVP_CipherFinal_ex(ctx_, outbuf, &out_len) == 1;
+      ok = EVP_CipherFinal_ex(ctx_, out.getArrayBuffer(runtime).data(runtime),
+                              &out_len) == 1;
 
       //      CHECK_LE(static_cast<size_t>(out_len), (*out)->ByteLength());
       //      if (out_len > 0) {
@@ -298,7 +304,7 @@ void CipherHostObject::installMethods() {
 
     EVP_CIPHER_CTX_free(ctx_);
 
-    return ok;
+    return out;
   }));
 }
 
@@ -416,6 +422,12 @@ bool CipherHostObject::CheckCCMMessageLength(int message_len) {
   }
 
   return true;
+}
+
+CipherHostObject::~CipherHostObject() {
+  if (this->ctx_ != nullptr) {
+    EVP_CIPHER_CTX_free(this->ctx_);
+  }
 }
 
 // TODO(osp) implement destructor

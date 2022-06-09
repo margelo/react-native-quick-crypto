@@ -1,5 +1,4 @@
 import { Buffer } from '@craftzdog/react-native-buffer';
-import type { Cipher } from 'crypto';
 
 export type BinaryLike = string | ArrayBuffer | Buffer;
 

@@ -57,7 +57,7 @@ class CipherHostObject : public SmartHostObject {
 
   bool MaybePassAuthTagToOpenSSL();
 
-  virtual ~CipherHostObject() {}
+  virtual ~CipherHostObject();
 
  private:
   // TODO(osp) this is the node version, DeleteFnPtr seems to be some custom
