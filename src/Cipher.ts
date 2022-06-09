@@ -104,6 +104,8 @@ class CipherCommon extends Stream.Transform {
     // }
 
     if (typeof data === 'string') {
+      console.warn('ROPO Transforming string to ArrayBuffer');
+
       data = binaryLikeToArrayBuffer(data);
     }
 
