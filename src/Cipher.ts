@@ -1,7 +1,14 @@
+/* eslint-disable no-dupe-class-members */
 import { NativeFastCrypto } from './NativeFastCrypto/NativeFastCrypto';
 import Stream from 'stream';
 import { Buffer } from '@craftzdog/react-native-buffer';
-import { BinaryLike, binaryLikeToArrayBuffer, Encoding } from './Utils';
+import {
+  BinaryLike,
+  binaryLikeToArrayBuffer,
+  CipherEncoding,
+  Encoding,
+  getDefaultEncoding,
+} from './Utils';
 import type { InternalCipher } from './NativeFastCrypto/cipher';
 import type {
   CipherCCMOptions,
@@ -28,6 +35,26 @@ function getUIntOption(options?: Record<string, any>, key: string) {
 }
 
 class CipherCommon extends Stream.Transform {
+  private internal: InternalCipher;
+  private options: any;
+  constructor(
+    cipherType: string,
+    cipherKey: string,
+    options: Record<string, any> = {}
+  ) {
+    super(options);
+    const cipherKeyBuffer = binaryLikeToArrayBuffer(cipherKey);
+    // TODO(osp) This might not be smart, check again after release
+    const authTagLength = getUIntOption(options, 'authTagLength');
+    this.internal = createInternalCipher({
+      cipher_type: cipherType,
+      cipher_key: cipherKeyBuffer,
+      ...options,
+      auth_tag_len: authTagLength,
+    });
+    this.options = options;
+  }
+
   _transform(
     chunk: string | BinaryLike,
     encoding: Encoding,
@@ -42,23 +69,43 @@ class CipherCommon extends Stream.Transform {
     callback();
   }
 
-  update(data: BinaryLike);
-  update(data: string, inputEncoding: Encoding): Buffer;
-  update(
-    data: ArrayBufferView,
-    inputEncoding: undefined,
-    outputEncoding: Encoding
-  ): string;
-  update(
-    data: string,
-    inputEncoding: Encoding | undefined,
-    outputEncoding: Encoding
-  ): string;
+  // TODO(osp) missing function
+  // function validateEncoding(data, encoding) {
+  //   const normalizedEncoding = normalizeEncoding(encoding);
+  //   const length = data.length;
+
+  //   if (normalizedEncoding === 'hex' && length % 2 !== 0) {
+  //     throw new ERR_INVALID_ARG_VALUE('encoding', encoding,
+  //                                     `is invalid for data of length ${length}`);
+  //   }
+  // }
+
   update(
     data: string | ArrayBufferView | BinaryLike,
-    inputEncoding?: Encoding,
-    outputEncoding?: Encoding
-  ) {}
+    inputEncoding?: CipherEncoding,
+    outputEncoding?: CipherEncoding
+  ) {
+    const defaultEncoding = getDefaultEncoding();
+    inputEncoding = inputEncoding ?? defaultEncoding;
+    outputEncoding = outputEncoding ?? defaultEncoding;
+
+    // TODO(osp) validation
+    // if (typeof data === 'string') {
+    // validateEncoding(data, inputEncoding);
+    // } else if (!isArrayBufferView(data)) {
+    // throw new ERR_INVALID_ARG_TYPE(
+    //   'data', ['string', 'Buffer', 'TypedArray', 'DataView'], data);
+    // }
+
+    const ret = this.internal.update(data, inputEncoding);
+
+    if (outputEncoding && outputEncoding !== 'buffer') {
+      // this._decoder = getDecoder(this._decoder, outputEncoding);
+      // return this._decoder.write(ret);
+    }
+
+    return ret;
+  }
 
   final(): Buffer;
   final(outputEncoding: BufferEncoding): string;
@@ -84,27 +131,7 @@ class CipherCommon extends Stream.Transform {
   }
 }
 
-class Cipher extends CipherCommon {
-  private internal: InternalCipher;
-  private options: any;
-  constructor(
-    cipherType: string,
-    cipherKey: string,
-    options: Record<string, any> = {}
-  ) {
-    super(options);
-    const cipherKeyBuffer = binaryLikeToArrayBuffer(cipherKey);
-    // TODO(osp) This might not be smart, check again after release
-    const authTagLength = getUIntOption(options, 'authTagLength');
-    this.internal = createInternalCipher({
-      cipher_type: cipherType,
-      cipher_key: cipherKeyBuffer,
-      ...options,
-      auth_tag_len: authTagLength,
-    });
-    this.options = options;
-  }
-}
+class Cipher extends CipherCommon {}
 
 class CipherCCM extends Cipher {
   setAAD(

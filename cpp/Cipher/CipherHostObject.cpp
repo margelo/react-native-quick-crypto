@@ -7,6 +7,7 @@
 
 #include <memory>
 #include <string>
+#include <utility>
 
 #define OUT
 
@@ -34,6 +35,11 @@ bool IsSupportedAuthenticatedMode(const EVP_CIPHER *cipher) {
   }
 }
 
+bool IsSupportedAuthenticatedMode(const EVP_CIPHER_CTX *ctx) {
+  const EVP_CIPHER *cipher = EVP_CIPHER_CTX_cipher(ctx);
+  return IsSupportedAuthenticatedMode(cipher);
+}
+
 bool IsValidGCMTagLength(unsigned int tag_len) {
   return tag_len == 4 || tag_len == 8 || (tag_len >= 12 && tag_len <= 16);
 }
@@ -57,7 +63,9 @@ CipherHostObject::CipherHostObject(
     unsigned int auth_tag_len, jsi::Runtime &runtime,
     std::shared_ptr<react::CallInvoker> jsCallInvoker,
     std::shared_ptr<DispatchQueue::dispatch_queue> workerQueue)
-    : SmartHostObject(jsCallInvoker, workerQueue), isCipher_(isCipher) {
+    : SmartHostObject(jsCallInvoker, workerQueue),
+      isCipher_(isCipher),
+      pending_auth_failed_(false) {
   // TODO(osp) is this needed on the SSL version we are using?
   // #if OPENSSL_VERSION_MAJOR >= 3
   //    if (EVP_default_properties_is_fips_enabled(nullptr)) {
@@ -144,24 +152,105 @@ void CipherHostObject::commonInit(jsi::Runtime &runtime,
 
 void CipherHostObject::installMethods() {
   this->fields.push_back(HOST_LAMBDA("update", {
-    //    if (!arguments[0].isObject() ||
-    //        !arguments[0].getObject(runtime).isArrayBuffer(runtime)) {
-    //      throw jsi::JSError(runtime,
-    //                         "HmacHostObject::update: First argument
-    //                         ('message') " "has to be of type ArrayBuffer!");
-    //    }
-    //    auto messageBuffer =
-    //            arguments[0].getObject(runtime).getArrayBuffer(runtime);
-    //
-    //    const unsigned char *data =
-    //            reinterpret_cast<const unsigned char
-    //            *>(messageBuffer.data(runtime));
-    //    int size = messageBuffer.size(runtime);
-    //
-    //    EVP_DigestUpdate(mdctx_, data, size);
+    if (count < 2) {
+      throw jsi::JSError(runtime,
+                         "cipher.update requires at least 2 parameters");
+    }
 
-    return jsi::Value::undefined();
+    if (arguments[0].isUndefined() || arguments[0].isNull() ||
+        !arguments[0].isString()) {
+      throw jsi::JSError(
+          runtime,
+          "cipher.update first argument ('data') needs to be a string");
+    }
+    auto data = arguments[0].asString(runtime).utf8(runtime);
+
+    if (arguments[1].isUndefined() || arguments[1].isNull() ||
+        !arguments[0].isString()) {
+      throw jsi::JSError(runtime,
+                         "cipher.update second argument "
+                         "('inputEncoding') needs to be a string");
+    }
+    auto inputEncoding = arguments[1].asString(runtime).utf8(runtime);
+
+    auto len = data.length();
+
+    if (!ctx_ || len > INT_MAX) {
+      // TODO(osp) can this call throw or does it need to return state?
+      return jsi::Value((int)kErrorState);
+    }
+
+    // TODO(osp) some v8 thing?
+    // MarkPopErrorOnReturn mark_pop_error_on_return;
+
+    const int mode = EVP_CIPHER_CTX_mode(ctx_);
+
+    if (mode == EVP_CIPH_CCM_MODE && !CheckCCMMessageLength(len))
+      // TODO(osp) check
+      return jsi::Value((int)kErrorMessageSize);
+
+    // Pass the authentication tag to OpenSSL if possible. This will only happen
+    // once, usually on the first update.
+    if (!isCipher_ && IsAuthenticatedMode()) {
+      // TODO(osp) check
+      MaybePassAuthTagToOpenSSL();
+    }
+
+    int buf_len = len + EVP_CIPHER_CTX_block_size(ctx_);
+    // For key wrapping algorithms, get output size by calling
+    // EVP_CipherUpdate() with null output.
+    if (isCipher_ && mode == EVP_CIPH_WRAP_MODE &&
+        EVP_CipherUpdate(ctx_, nullptr, &buf_len,
+                         reinterpret_cast<const unsigned char *>(data.c_str()),
+                         len) != 1) {
+      return jsi::Value((int)kErrorState);
+    }
+
+    {
+      NoArrayBufferZeroFillScope no_zero_fill_scope(env()->isolate_data());
+      *out = ArrayBuffer::NewBackingStore(env()->isolate(), buf_len);
+    }
+
+    int r = EVP_CipherUpdate(
+        ctx_, static_cast<unsigned char *>((*out)->Data()), &buf_len,
+        reinterpret_cast<const unsigned char *>(data.c_str()), len);
+
+    CHECK_LE(static_cast<size_t>(buf_len), (*out)->ByteLength());
+    if (buf_len == 0)
+      *out = ArrayBuffer::NewBackingStore(env()->isolate(), 0);
+    else
+      *out =
+          BackingStore::Reallocate(env()->isolate(), std::move(*out), buf_len);
+
+    // When in CCM mode, EVP_CipherUpdate will fail if the authentication tag is
+    // invalid. In that case, remember the error and throw in final().
+    if (!r && !isCipher_ && mode == EVP_CIPH_CCM_MODE) {
+      pending_auth_failed_ = true;
+      return jsi::Value((int)kSuccess);
+    }
+
+    return r == 1 ? jsi::Value((int)kSuccess) : jsi::Value((int)kErrorState);
   }));
+
+  this->fields.push_back(
+      HOST_LAMBDA("final", { return jsi::Value::undefined(); }));
+}
+
+bool CipherHostObject::MaybePassAuthTagToOpenSSL() {
+  if (auth_tag_state_ == kAuthTagKnown) {
+    if (!EVP_CIPHER_CTX_ctrl(ctx_, EVP_CTRL_AEAD_SET_TAG, auth_tag_len_,
+                             reinterpret_cast<unsigned char *>(auth_tag_))) {
+      return false;
+    }
+    auth_tag_state_ = kAuthTagPassedToOpenSSL;
+  }
+  return true;
+}
+
+bool CipherHostObject::IsAuthenticatedMode() const {
+  // Check if this cipher operates in an AEAD mode that we support.
+  //  CHECK(ctx_);
+  return IsSupportedAuthenticatedMode(ctx_);
 }
 
 bool CipherHostObject::InitAuthenticated(const char *cipher_type, int iv_len,

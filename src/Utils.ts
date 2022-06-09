@@ -1,4 +1,5 @@
 import { Buffer } from '@craftzdog/react-native-buffer';
+import type { Cipher } from 'crypto';
 
 export type BinaryLike = string | ArrayBuffer | Buffer;
 
@@ -9,6 +10,20 @@ export type Encoding =
   | BinaryToTextEncoding
   | CharacterEncoding
   | LegacyCharacterEncoding;
+
+// TODO(osp) should buffer be part of the Encoding type?
+export type CipherEncoding = Encoding | 'buffer';
+
+// Mimics node behavior for default global encoding
+let defaultEncoding: CipherEncoding = 'buffer';
+
+export function setDefaultEncoding(encoding: CipherEncoding) {
+  defaultEncoding = encoding;
+}
+
+export function getDefaultEncoding(): CipherEncoding {
+  return defaultEncoding;
+}
 
 export function isBuffer(buf: any): buf is Buffer {
   return buf instanceof Buffer || buf?.constructor?.name === 'Buffer';
