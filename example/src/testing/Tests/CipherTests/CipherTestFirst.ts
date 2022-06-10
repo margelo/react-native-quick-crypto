@@ -11,29 +11,19 @@ export function registerCipherTests1() {
   function testCipher1(key: Buffer | string) {
     it('testCipher1 + ' + key, () => {
       // Test encryption and decryption
-      console.warn('mk1');
-
       const plaintext =
         'Keep this a secret? No! Tell everyone about fast-crypto!';
-      console.warn('mk2');
       const cipher = crypto.createCipher('aes192', key);
 
       // Encrypt plaintext which is in utf8 format
       // to a ciphertext which will be in hex
-      console.warn('mk3');
       let ciph = cipher.update(plaintext, 'utf8', 'hex');
       // Only use binary or hex, not base64.
-      console.warn('mk4');
       ciph += cipher.final('hex');
 
-      console.warn('mk5');
-
       const decipher = crypto.createDecipher('aes192', key);
-      console.warn('mk6');
       let txt = decipher.update(ciph, 'hex', 'utf8');
-      console.warn('mk7');
       txt += decipher.final('utf8');
-      console.warn('mk8');
 
       assert.strictEqual(txt, plaintext);
 

@@ -166,12 +166,8 @@ void CipherHostObject::installMethods() {
           "cipher.update first argument ('data') needs to be an ArrayBuffer");
     }
 
-    LOGW("Passed isArrayBuffer Check");
-
     auto dataArrayBuffer =
         arguments[0].asObject(runtime).getArrayBuffer(runtime);
-
-    LOGW("Casted/got array buffer");
 
     if (arguments[1].isUndefined() || arguments[1].isNull() ||
         !arguments[1].isString()) {
@@ -181,9 +177,7 @@ void CipherHostObject::installMethods() {
     }
     auto inputEncoding = arguments[1].asString(runtime).utf8(runtime);
 
-    LOGW("Marker 3");
     const unsigned char *data = dataArrayBuffer.data(runtime);
-    LOGW("Marker 4");
     auto len = dataArrayBuffer.length(runtime);
 
     if (!ctx_ || len > INT_MAX) {
@@ -225,7 +219,6 @@ void CipherHostObject::installMethods() {
 
     // Out buffer will be returned to JS context
     TypedArray<TypedArrayKind::Uint8Array> out(runtime, buf_len);
-    LOGW("Marker 5");
 
     // EVP_CipherUpdate needs an *out pointer, basically to just write the data
     // it seems.... In the original Node implementation it uses a V8 ArrayBuffer
@@ -234,8 +227,6 @@ void CipherHostObject::installMethods() {
     int r =
         EVP_CipherUpdate(ctx_, out.getBuffer(runtime).data(runtime), &buf_len,
                          reinterpret_cast<const unsigned char *>(data), len);
-
-    LOGW("Marker 6");
 
     //    CHECK_LE(static_cast<size_t>(buf_len), (*out)->ByteLength());
     //    if (buf_len == 0) {
