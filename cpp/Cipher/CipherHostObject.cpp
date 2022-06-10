@@ -109,6 +109,7 @@ CipherHostObject::CipherHostObject(
   //             EVP_CIPHER_iv_length(cipher), auth_tag_len);
   commonInit(runtime, cipher_type.c_str(), cipher, cipher_key->data(runtime),
              key_len, iv, EVP_CIPHER_iv_length(cipher), auth_tag_len);
+
   installMethods();
 }
 
@@ -154,7 +155,7 @@ void CipherHostObject::commonInit(jsi::Runtime &runtime,
 
 void CipherHostObject::installMethods() {
   this->fields.push_back(HOST_LAMBDA("update", {
-    if (count < 2) {
+    if (count != 1) {
       throw jsi::JSError(runtime,
                          "cipher.update requires at least 2 parameters");
     }
@@ -168,14 +169,6 @@ void CipherHostObject::installMethods() {
 
     auto dataArrayBuffer =
         arguments[0].asObject(runtime).getArrayBuffer(runtime);
-
-    if (arguments[1].isUndefined() || arguments[1].isNull() ||
-        !arguments[1].isString()) {
-      throw jsi::JSError(runtime,
-                         "cipher.update second argument "
-                         "('inputEncoding') needs to be a string");
-    }
-    auto inputEncoding = arguments[1].asString(runtime).utf8(runtime);
 
     const unsigned char *data = dataArrayBuffer.data(runtime);
     auto len = dataArrayBuffer.length(runtime);

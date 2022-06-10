@@ -9,7 +9,6 @@ import {
   CipherEncoding,
   Encoding,
   getDefaultEncoding,
-  normalizeEncoding,
 } from './Utils';
 import type { InternalCipher } from './NativeFastCrypto/cipher';
 import type {
@@ -22,20 +21,9 @@ import type {
   // CipherOCBTypes,
   // CipherOCBOptions,
 } from 'crypto'; // Node crypto typings
-import { StringDecoder } from 'string_decoder';
 
 const createInternalCipher = NativeFastCrypto.createCipher;
 const createInternalDecipher = NativeFastCrypto.createDecipher;
-
-// eslint-disable-next-line no-undef
-function getDecoder(decoder?: StringDecoder, encoding?: BufferEncoding) {
-  encoding = normalizeEncoding(encoding);
-  console.warn('creating new string decoder', encoding);
-
-  decoder = decoder || new StringDecoder(encoding);
-  // assert(decoder.encoding === encoding, 'Cannot change encoding');
-  return decoder;
-}
 
 function getUIntOption(options: Record<string, any>, key: string) {
   let value;
@@ -51,7 +39,6 @@ function getUIntOption(options: Record<string, any>, key: string) {
 class CipherCommon extends Stream.Transform {
   private internal: InternalCipher;
   private options: any;
-  private _decoder: StringDecoder | undefined;
 
   constructor(
     cipherType: string,
@@ -118,10 +105,10 @@ class CipherCommon extends Stream.Transform {
     // }
 
     if (typeof data === 'string') {
-      data = binaryLikeToArrayBuffer(data);
+      data = binaryLikeToArrayBuffer(data, inputEncoding);
     }
 
-    const ret = this.internal.update(data, inputEncoding);
+    const ret = this.internal.update(data);
 
     if (outputEncoding && outputEncoding !== 'buffer') {
       return ab2str(ret, outputEncoding);
@@ -132,14 +119,13 @@ class CipherCommon extends Stream.Transform {
 
   final(): ArrayBuffer;
   final(outputEncoding: BufferEncoding | 'buffer'): string;
-  final(
-    outputEncoding: undefined | BufferEncoding | 'buffer'
-  ): ArrayBuffer | string {
+  final(outputEncoding?: BufferEncoding | 'buffer'): ArrayBuffer | string {
     const ret = this.internal.final(outputEncoding);
 
     if (outputEncoding && outputEncoding !== 'buffer') {
       return ab2str(ret, outputEncoding);
     }
+
     return ret;
   }
 

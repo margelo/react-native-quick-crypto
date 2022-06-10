@@ -1,10 +1,7 @@
-import type { BinaryLike, CipherEncoding } from 'src/Utils';
+import type { BinaryLike } from 'src/Utils';
 
 export type InternalCipher = {
-  update: (
-    data: BinaryLike | ArrayBufferView,
-    inputEncoding: CipherEncoding
-  ) => ArrayBuffer;
+  update: (data: BinaryLike | ArrayBufferView) => ArrayBuffer;
   final: (data: undefined | string) => ArrayBuffer;
   copy: () => void;
 };

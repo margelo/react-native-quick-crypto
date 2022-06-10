@@ -127,6 +127,9 @@
           "useTabs": false
         }
       ]
+    },
+    "globals": {
+      "BufferEncoding": true
     }
   },
   "eslintIgnore": [

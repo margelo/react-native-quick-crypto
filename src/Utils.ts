@@ -110,9 +110,13 @@ export function toArrayBuffer(buf: Buffer): ArrayBuffer {
   return ab;
 }
 
-export function binaryLikeToArrayBuffer(input: BinaryLike): ArrayBuffer {
+export function binaryLikeToArrayBuffer(
+  input: BinaryLike,
+  encoding: string = 'utf-8'
+): ArrayBuffer {
   if (typeof input === 'string') {
-    const buffer = Buffer.from(input, 'utf-8');
+    const buffer = Buffer.from(input, encoding);
+
     return buffer.buffer.slice(
       buffer.byteOffset,
       buffer.byteOffset + buffer.byteLength
