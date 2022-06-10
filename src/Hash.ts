@@ -1,3 +1,4 @@
+/* eslint-disable no-dupe-class-members */
 import 'react-native';
 import { NativeFastCrypto } from './NativeFastCrypto/NativeFastCrypto';
 import type { InternalHash } from './NativeFastCrypto/hash';
@@ -85,12 +86,13 @@ class Hash extends Stream.Transform {
    */
   digest(): Buffer;
   digest(encoding: BinaryToTextEncoding): string;
-  digest(encoding: BinaryToTextEncoding | undefined): string | Buffer {
+  digest(encoding?: BinaryToTextEncoding | 'buffer'): string | Buffer {
     const result: ArrayBuffer = this.internalHash.digest();
+
     if (encoding && encoding !== 'buffer') {
       return Buffer.from(result).toString(encoding);
     }
+
     return Buffer.from(result);
   }
-
 }

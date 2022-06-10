@@ -30,7 +30,7 @@ function getUIntOption(options: Record<string, any>, key: string) {
   if (options && (value = options[key]) != null) {
     // >>> Turns any type into a positive integer (also sets the sign bit to 0)
     // eslint-disable-next-line no-bitwise
-    if (value >>> 0 !== value) throw new Error(`options.${key}`, value);
+    if (value >>> 0 !== value) throw new Error(`options.${key}: ${value}`);
     return value;
   }
   return -1;
@@ -50,6 +50,7 @@ class CipherCommon extends Stream.Transform {
     const cipherKeyBuffer = binaryLikeToArrayBuffer(cipherKey);
     // TODO(osp) This might not be smart, check again after release
     const authTagLength = getUIntOption(options, 'authTagLength');
+    console.log('ROPO authTagLength', authTagLength);
     const args = {
       cipher_type: cipherType,
       cipher_key: cipherKeyBuffer,
@@ -67,7 +68,7 @@ class CipherCommon extends Stream.Transform {
     encoding: Encoding,
     callback: () => void
   ) {
-    this.internal.update(chunk, encoding);
+    this.internal.update(chunk);
     callback();
   }
 
@@ -91,7 +92,7 @@ class CipherCommon extends Stream.Transform {
     data: string | ArrayBufferView | BinaryLike,
     inputEncoding?: CipherEncoding,
     outputEncoding?: CipherEncoding
-  ) {
+  ): ArrayBuffer | string {
     const defaultEncoding = getDefaultEncoding();
     inputEncoding = inputEncoding ?? defaultEncoding;
     outputEncoding = outputEncoding ?? defaultEncoding;

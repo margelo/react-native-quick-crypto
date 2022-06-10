@@ -18,6 +18,7 @@ export function registerCipherTests1() {
       // Encrypt plaintext which is in utf8 format
       // to a ciphertext which will be in hex
       let ciph = cipher.update(plaintext, 'utf8', 'hex');
+      console.warn('ROPO intermediate ciph', ciph);
       // Only use binary or hex, not base64.
       ciph += cipher.final('hex');
 
