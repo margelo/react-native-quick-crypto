@@ -21,6 +21,8 @@ export function registerCipherTests1() {
       // Only use binary or hex, not base64.
       ciph += cipher.final('hex');
 
+      console.warn('ROPO generated ciph', ciph);
+
       const decipher = crypto.createDecipher('aes192', key);
       let txt = decipher.update(ciph, 'hex', 'utf8');
       txt += decipher.final('utf8');

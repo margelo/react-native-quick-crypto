@@ -121,13 +121,13 @@ void CipherHostObject::commonInit(jsi::Runtime &runtime,
                                   unsigned int auth_tag_len) {
   // TODO(osp) check for this macro
   //  CHECK(!ctx_);
-  if (ctx_ == nullptr) {
-    ctx_ = EVP_CIPHER_CTX_new();
-  }
+
+  ctx_ = EVP_CIPHER_CTX_new();
 
   const int mode = EVP_CIPHER_mode(cipher);
-  if (mode == EVP_CIPH_WRAP_MODE)
+  if (mode == EVP_CIPH_WRAP_MODE) {
     EVP_CIPHER_CTX_set_flags(ctx_, EVP_CIPHER_CTX_FLAG_WRAP_ALLOW);
+  }
 
   if (1 !=
       EVP_CipherInit_ex(ctx_, cipher, nullptr, nullptr, nullptr, isCipher_)) {
@@ -198,9 +198,7 @@ void CipherHostObject::installMethods() {
     // For key wrapping algorithms, get output size by calling
     // EVP_CipherUpdate() with null output.
     if (isCipher_ && mode == EVP_CIPH_WRAP_MODE &&
-        EVP_CipherUpdate(ctx_, nullptr, &buf_len,
-                         reinterpret_cast<const unsigned char *>(data),
-                         len) != 1) {
+        EVP_CipherUpdate(ctx_, nullptr, &buf_len, data, len) != 1) {
       return jsi::Value((int)kErrorState);
     }
 
@@ -257,18 +255,18 @@ void CipherHostObject::installMethods() {
     //                                              static_cast<size_t>(EVP_CIPHER_CTX_block_size(ctx_.get())));
     //        }
 
-    if (!isCipher_ && IsSupportedAuthenticatedMode(ctx_))
+    if (!isCipher_ && IsSupportedAuthenticatedMode(ctx_)) {
       MaybePassAuthTagToOpenSSL();
+    }
 
     // In CCM mode, final() only checks whether authentication failed in
     // update(). EVP_CipherFinal_ex must not be called and will fail.
     bool ok;
     if (!isCipher_ && mode == EVP_CIPH_CCM_MODE) {
       ok = !pending_auth_failed_;
-      //          *out = ArrayBuffer::NewBackingStore(env()->isolate(), 0);
+      TypedArray<TypedArrayKind::Uint8Array> out(runtime, 0);
     } else {
-      int out_len = buf_len;
-      //      int out_len = (*out)->ByteLength();
+      int out_len = out.byteLength(runtime);
       ok = EVP_CipherFinal_ex(ctx_, out.getBuffer(runtime).data(runtime),
                               &out_len) == 1;
 
