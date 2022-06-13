@@ -16,7 +16,8 @@ import type {
   CipherCCMTypes,
   CipherGCMTypes,
   CipherGCMOptions,
-  CipherKey,
+  // CipherKey,
+  // KeyObject,
   // TODO @Szymon20000 This types seem to be missing? Where did you get this definitions from?
   // CipherOCBTypes,
   // CipherOCBOptions,
@@ -44,16 +45,17 @@ class CipherCommon extends Stream.Transform {
     cipherType: string,
     cipherKey: BinaryLike,
     isCipher: boolean,
-    options: Record<string, any> = {}
+    options: Record<string, any> = {},
+    iv?: BinaryLike | null
   ) {
     super(options);
     const cipherKeyBuffer = binaryLikeToArrayBuffer(cipherKey);
     // TODO(osp) This might not be smart, check again after release
     const authTagLength = getUIntOption(options, 'authTagLength');
-    console.log('ROPO authTagLength', authTagLength);
     const args = {
       cipher_type: cipherType,
       cipher_key: cipherKeyBuffer,
+      iv,
       ...options,
       auth_tag_len: authTagLength,
     };
@@ -61,20 +63,6 @@ class CipherCommon extends Stream.Transform {
       ? createInternalCipher(args)
       : createInternalDecipher(args);
     this.options = options;
-  }
-
-  _transform(
-    chunk: string | BinaryLike,
-    encoding: Encoding,
-    callback: () => void
-  ) {
-    this.internal.update(chunk);
-    callback();
-  }
-
-  _flush(callback: () => void) {
-    this.push(this.final());
-    callback();
   }
 
   // TODO(osp) missing function
@@ -89,13 +77,16 @@ class CipherCommon extends Stream.Transform {
   // }
 
   update(
-    data: string | ArrayBufferView | BinaryLike,
+    data: BinaryLike | ArrayBufferView,
     inputEncoding?: CipherEncoding,
     outputEncoding?: CipherEncoding
   ): ArrayBuffer | string {
+    console.warn('mmk1');
+
     const defaultEncoding = getDefaultEncoding();
     inputEncoding = inputEncoding ?? defaultEncoding;
     outputEncoding = outputEncoding ?? defaultEncoding;
+    console.warn('mmk2');
 
     // TODO(osp) validation
     // if (typeof data === 'string') {
@@ -106,14 +97,18 @@ class CipherCommon extends Stream.Transform {
     // }
 
     if (typeof data === 'string') {
+      console.warn('mmk3');
       data = binaryLikeToArrayBuffer(data, inputEncoding);
     }
+    console.warn('mmk4');
 
     const ret = this.internal.update(data);
 
+    console.warn('mmk5');
     if (outputEncoding && outputEncoding !== 'buffer') {
       return ab2str(ret, outputEncoding);
     }
+    console.warn('mmk6');
 
     return ret;
   }
@@ -128,6 +123,16 @@ class CipherCommon extends Stream.Transform {
     }
 
     return ret;
+  }
+
+  _transform(chunk: BinaryLike, encoding: Encoding, callback: () => void) {
+    // this.update(chunk, encoding);
+    callback();
+  }
+
+  _flush(callback: () => void) {
+    this.push(this.final());
+    callback();
   }
 
   setAutoPadding(autoPadding?: boolean): this {
@@ -154,122 +159,41 @@ class Cipher extends CipherCommon {
   constructor(
     cipherType: string,
     cipherKey: BinaryLike,
-    options: Record<string, any> = {}
+    options: Record<string, any> = {},
+    iv?: BinaryLike | null
   ) {
-    super(cipherType, cipherKey, true, options);
-  }
-}
-
-class CipherCCM extends Cipher {
-  setAAD(
-    buffer: ArrayBufferView,
-    options: {
-      plaintextLength: number;
+    if (iv != null) {
+      iv = binaryLikeToArrayBuffer(iv);
     }
-  ): this {
-    super.setAAD(buffer, options);
-    return this;
-  }
-  getAuthTag(): Buffer {
-    return super.getAuthTag();
+    super(cipherType, cipherKey, true, options, iv);
   }
 }
-
-class CipherGCM extends Cipher {
-  setAAD(
-    buffer: ArrayBufferView,
-    options: {
-      plaintextLength: number;
-    }
-  ): this {
-    super.setAAD(buffer, options);
-    return this;
-  }
-  getAuthTag(): Buffer {
-    return super.getAuthTag();
-  }
-}
-
-// class CipherOCB extends Cipher {
-//   setAAD(
-//     buffer: ArrayBufferView,
-//     options: {
-//       plaintextLength: number;
-//     }
-//   ): this {
-//     super.setAAD(buffer, options);
-//     return this;
-//   }
-//   getAuthTag(): Buffer {
-//     return super.getAuthTag();
-//   }
-// }
 
 class Decipher extends CipherCommon {
   constructor(
     cipherType: string,
     cipherKey: BinaryLike,
-    options: Record<string, any> = {}
+    options: Record<string, any> = {},
+    iv?: BinaryLike | null
   ) {
-    super(cipherType, cipherKey, false, options);
-  }
-}
-
-class DecipherCCM extends Decipher {
-  setAAD(
-    buffer: ArrayBufferView,
-    options: {
-      plaintextLength: number;
+    if (iv != null) {
+      iv = binaryLikeToArrayBuffer(iv);
     }
-  ): this {
-    super.setAAD(buffer, options);
-    return this;
-  }
-  getAuthTag(): Buffer {
-    return super.getAuthTag();
+
+    super(cipherType, cipherKey, false, options, iv);
   }
 }
-
-class DecipherGCM extends Decipher {
-  setAAD(
-    buffer: ArrayBufferView,
-    options: {
-      plaintextLength: number;
-    }
-  ): this {
-    super.setAAD(buffer, options);
-    return this;
-  }
-  getAuthTag(): Buffer {
-    return super.getAuthTag();
-  }
-}
-
-// class DecipherOCB extends Decipher {
-//   setAAD(
-//     buffer: ArrayBufferView,
-//     options: {
-//       plaintextLength: number;
-//     }
-//   ): this {
-//     super.setAAD(buffer, options);
-//     return this;
-//   }
-//   getAuthTag(): Buffer {
-//     return super.getAuthTag();
-//   }
-// }
 
 export function createDecipher(
   algorithm: CipherCCMTypes,
   password: BinaryLike,
   options: CipherCCMOptions
-): DecipherCCM;
+): Decipher;
 export function createDecipher(
   algorithm: CipherGCMTypes,
   password: BinaryLike,
   options?: CipherGCMOptions
-): DecipherGCM;
+): Decipher;
 export function createDecipher(
   algorithm: string,
   password: BinaryLike,
@@ -280,39 +204,41 @@ export function createDecipher(
 
 export function createDecipheriv(
   algorithm: CipherCCMTypes,
-  key: CipherKey,
+  key: BinaryLike,
   iv: BinaryLike,
   options: CipherCCMOptions
-): DecipherCCM;
+): Decipher;
 // export function createDecipheriv(
 //   algorithm: CipherOCBTypes,
-//   key: CipherKey,
+//   key: BinaryLike,
 //   iv: BinaryLike,
 //   options: CipherOCBOptions
 // ): DecipherOCB;
 export function createDecipheriv(
   algorithm: CipherGCMTypes,
-  key: CipherKey,
+  key: BinaryLike,
   iv: BinaryLike,
   options?: CipherGCMOptions
-): DecipherGCM;
+): Decipher;
 export function createDecipheriv(
   algorithm: string,
-  key: CipherKey,
+  key: BinaryLike,
   iv: BinaryLike | null,
   options?: Stream.TransformOptions
-): Decipher;
+): Decipher {
+  return new Decipher(algorithm, key, options, iv);
+}
 
 export function createCipher(
   algorithm: CipherCCMTypes,
   password: BinaryLike,
   options: CipherCCMOptions
-): CipherCCM;
+): Cipher;
 export function createCipher(
   algorithm: CipherGCMTypes,
   password: BinaryLike,
   options?: CipherGCMOptions
-): CipherGCM;
+): Cipher;
 export function createCipher(
   algorithm: string,
   password: BinaryLike,
@@ -321,27 +247,32 @@ export function createCipher(
   return new Cipher(algorithm, password, options);
 }
 
+// TODO(osp) on all the createCipheriv methods, node seems to use a "KeyObject" is seems to be a thread safe
+// object that creates keys and what not. Not sure if we should support it.
+// Fow now I replaced all of them to BinaryLike
 export function createCipheriv(
   algorithm: CipherCCMTypes,
-  key: CipherKey,
+  key: BinaryLike,
   iv: BinaryLike,
   options: CipherCCMOptions
-): CipherCCM;
+): Cipher;
 // export function createCipheriv(
 //   algorithm: CipherOCBTypes,
-//   key: CipherKey,
+//   key: BinaryLike,
 //   iv: BinaryLike,
 //   options: CipherOCBOptions
 // ): CipherOCB;
 export function createCipheriv(
   algorithm: CipherGCMTypes,
-  key: CipherKey,
+  key: BinaryLike,
   iv: BinaryLike,
   options?: CipherGCMOptions
-): CipherGCM;
+): Cipher;
 export function createCipheriv(
   algorithm: string,
-  key: CipherKey,
+  key: BinaryLike,
   iv: BinaryLike | null,
   options?: Stream.TransformOptions
-): Cipher;
+): Cipher {
+  return new Cipher(algorithm, key, options, iv);
+}

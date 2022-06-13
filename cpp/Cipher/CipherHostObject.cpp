@@ -10,6 +10,7 @@
 #include <memory>
 #include <string>
 #include <utility>
+#include <vector>
 
 #define OUT
 
@@ -94,7 +95,6 @@ CipherHostObject::CipherHostObject(
 
   // TODO(osp) this looks like a macro, check if necessary
   // CHECK_NE(key_len, 0);
-  LOGW("ROPO key_len %i", key_len);
 
   // TODO(osp) this seems like a runtime check
   //  const int mode = EVP_CIPHER_mode(cipher);
@@ -110,6 +110,58 @@ CipherHostObject::CipherHostObject(
 
   commonInit(runtime, cipher_type.c_str(), cipher, key, key_len, iv,
              EVP_CIPHER_iv_length(cipher), auth_tag_len);
+
+  installMethods();
+}
+
+CipherHostObject::CipherHostObject(
+    const std::string &cipher_type, jsi::ArrayBuffer *cipher_key, bool isCipher,
+    unsigned int auth_tag_len, jsi::ArrayBuffer *iv, jsi::Runtime &runtime,
+    std::shared_ptr<react::CallInvoker> jsCallInvoker,
+    std::shared_ptr<DispatchQueue::dispatch_queue> workerQueue)
+    : SmartHostObject(jsCallInvoker, workerQueue),
+      isCipher_(isCipher),
+      pending_auth_failed_(false) {
+  // TODO(osp) is this needed on the SSL version we are using?
+  // #if OPENSSL_VERSION_MAJOR >= 3
+  //    if (EVP_default_properties_is_fips_enabled(nullptr)) {
+  // #else
+  //    if (FIPS_mode()) {
+  // #endif
+  //        return THROW_ERR_CRYPTO_UNSUPPORTED_OPERATION(env(),
+  //                                                      "crypto.createCipher()
+  //                                                      is not supported in
+  //                                                      FIPS mode.");
+  //    }
+
+  const EVP_CIPHER *const cipher = EVP_get_cipherbyname(cipher_type.c_str());
+  if (cipher == nullptr) {
+    throw jsi::JSError(runtime, "Invalid Cipher Algorithm!");
+  }
+
+  const int expected_iv_len = EVP_CIPHER_iv_length(cipher);
+  const int is_authenticated_mode = IsSupportedAuthenticatedMode(cipher);
+  const bool has_iv = iv->size(runtime) > 0;
+
+  // Throw if an IV was passed which does not match the cipher's fixed IV length
+  // static_cast<int> for the iv_buf.size() is safe because we've verified
+  // prior that the value is not larger than MAX_INT.
+  if (!is_authenticated_mode && has_iv &&
+      static_cast<int>(iv->size(runtime)) != expected_iv_len) {
+    throw jsi::JSError(runtime, "Invalid iv");
+  }
+
+  if (EVP_CIPHER_nid(cipher) == NID_chacha20_poly1305) {
+    //        CHECK(has_iv);
+    // Check for invalid IV lengths, since OpenSSL does not under some
+    // conditions:
+    //   https://www.openssl.org/news/secadv/20190306.txt.
+    if (iv->size(runtime) > 12) throw jsi::JSError(runtime, "Invalid iv");
+  }
+
+  commonInit(runtime, cipher_type.c_str(), cipher, cipher_key->data(runtime),
+             cipher_key->size(runtime), iv->data(runtime), iv->size(runtime),
+             auth_tag_len);
 
   installMethods();
 }
@@ -146,14 +198,12 @@ void CipherHostObject::commonInit(jsi::Runtime &runtime,
 
   if (!EVP_CIPHER_CTX_set_key_length(ctx_, key_len)) {
     EVP_CIPHER_CTX_free(ctx_);
-    //    return THROW_ERR_CRYPTO_INVALID_KEYLEN(env());
+    ctx_ = nullptr;
     throw std::runtime_error("Invalid Cipher key length!");
   }
 
   if (1 != EVP_CipherInit_ex(ctx_, nullptr, nullptr, key, iv, isCipher_)) {
     throw std::runtime_error("Failed to initialize cipher!");
-    //    return ThrowCryptoError(env(), ERR_get_error(),
-    //                            "Failed to initialize cipher");
   }
 }
 
@@ -171,29 +221,30 @@ void CipherHostObject::installMethods() {
           "cipher.update first argument ('data') needs to be an ArrayBuffer");
     }
 
+    LOGW("WHAT");
+
     auto dataArrayBuffer =
         arguments[0].asObject(runtime).getArrayBuffer(runtime);
+
+    LOGW("WHAT1");
 
     const unsigned char *data = dataArrayBuffer.data(runtime);
     auto len = dataArrayBuffer.length(runtime);
 
-    if (!ctx_ || len > INT_MAX) {
+    LOGW("WHAT2");
+
+    if (ctx_ == nullptr || len > INT_MAX) {
       // On the node version there are several layers of wrapping and errors are
       // not immediately surfaced
-      // TODO(osp) On our version we can simply throw an error as soon as
-      // something goes wrong
+      // On our version we can simply throw an error as soon as something goes
+      // wrong
       throw jsi::JSError(runtime, 'kErrorState');
     }
-
-    // TODO(osp) some v8 thing?
-    // MarkPopErrorOnReturn mark_pop_error_on_return;
 
     const int mode = EVP_CIPHER_CTX_mode(ctx_);
 
     if (mode == EVP_CIPH_CCM_MODE && !CheckCCMMessageLength(len)) {
-      // TODO(osp) check
-      //      return jsi::Value((int)kErrorMessageSize);
-      throw jsi::JSError(runtime, "Error message size");
+      throw jsi::JSError(runtime, "kErrorMessageSize");
     }
 
     // Pass the authentication tag to OpenSSL if possible. This will only happen
@@ -203,59 +254,61 @@ void CipherHostObject::installMethods() {
       MaybePassAuthTagToOpenSSL();
     }
 
+    LOGW("WHAT3");
+
     int buf_len = len + EVP_CIPHER_CTX_block_size(ctx_);
-    LOGW("ROPO buf_len before change %i", buf_len);
     // For key wrapping algorithms, get output size by calling
     // EVP_CipherUpdate() with null output.
     if (isCipher_ && mode == EVP_CIPH_WRAP_MODE &&
         EVP_CipherUpdate(ctx_, nullptr, &buf_len, data, len) != 1) {
-      //      return jsi::Value((int)kErrorState);
       throw jsi::JSError(runtime, "kErrorState");
     }
 
-    LOGW("ROPO buf_len after change %i", buf_len);
+    LOGW("WHAT4 %i", buf_len);
 
     TypedArray<TypedArrayKind::Uint8Array> out(runtime, buf_len);
 
+    LOGW("WHAT5");
+
+    // Important this function returns the real size of the data in buf_len
+    // Output needs to be truncated to not send extra 0s
     int r = EVP_CipherUpdate(ctx_, out.getBuffer(runtime).data(runtime),
                              &buf_len, data, len);
 
-    //    CHECK_LE(static_cast<size_t>(buf_len), (*out)->ByteLength());
-    //    if (buf_len == 0) {
-    //      *out = ArrayBuffer::NewBackingStore(env()->isolate(), 0);
-    //    } else {
-    //      *out =
-    //          BackingStore::Reallocate(env()->isolate(), std::move(*out),
-    //          buf_len);
-    //    }
+    LOGW("WHAT6");
+
+    // Trim exceeding bytes
+    TypedArray<TypedArrayKind::Uint8Array> ret(runtime, buf_len);
+    LOGW("WHAT7");
+    std::vector<unsigned char> vec(
+        out.getBuffer(runtime).data(runtime),
+        out.getBuffer(runtime).data(runtime) + buf_len);
+    LOGW("WHAT8");
+    ret.update(runtime, vec);
+
+    LOGW("WHAT9");
 
     // When in CCM mode, EVP_CipherUpdate will fail if the authentication tag is
     // invalid. In that case, remember the error and throw in final().
     if (!r && !isCipher_ && mode == EVP_CIPH_CCM_MODE) {
       pending_auth_failed_ = true;
-      LOGW("Early return CCM MODE");
-      return out;
+      return ret;
     }
 
     //    return r == 1 ? jsi::Value((int)kSuccess) :
     //    jsi::Value((int)kErrorState);
-    return out;
+    return ret;
   }));
 
   this->fields.push_back(HOST_LAMBDA("final", {
-    if (!ctx_) return false;
+    if (ctx_ == nullptr) {
+      throw jsi::JSError(runtime, "kErrorState");
+    }
 
     const int mode = EVP_CIPHER_CTX_mode(ctx_);
 
     int buf_len = EVP_CIPHER_CTX_block_size(ctx_);
     TypedArray<TypedArrayKind::Uint8Array> out(runtime, buf_len);
-
-    //        {
-    //          NoArrayBufferZeroFillScope
-    //          no_zero_fill_scope(env()->isolate_data()); *out =
-    //          ArrayBuffer::NewBackingStore(env()->isolate(),
-    //                                              static_cast<size_t>(EVP_CIPHER_CTX_block_size(ctx_.get())));
-    //        }
 
     if (!isCipher_ && IsSupportedAuthenticatedMode(ctx_)) {
       MaybePassAuthTagToOpenSSL();
@@ -264,22 +317,13 @@ void CipherHostObject::installMethods() {
     // In CCM mode, final() only checks whether authentication failed in
     // update(). EVP_CipherFinal_ex must not be called and will fail.
     bool ok;
+    int out_len = out.byteLength(runtime);
     if (!isCipher_ && mode == EVP_CIPH_CCM_MODE) {
       ok = !pending_auth_failed_;
       TypedArray<TypedArrayKind::Uint8Array> out(runtime, 0);
     } else {
-      int out_len = out.byteLength(runtime);
       ok = EVP_CipherFinal_ex(ctx_, out.getBuffer(runtime).data(runtime),
                               &out_len) == 1;
-
-      //      CHECK_LE(static_cast<size_t>(out_len), (*out)->ByteLength());
-      //      if (out_len > 0) {
-      //        *out = BackingStore::Reallocate(env()->isolate(),
-      //        std::move(*out),
-      //                                        out_len);
-      //      } else {
-      //        *out = ArrayBuffer::NewBackingStore(env()->isolate(), 0);
-      //      }
 
       if (ok && isCipher_ && IsAuthenticatedMode()) {
         // In GCM mode, the authentication tag length can be specified in
@@ -296,9 +340,16 @@ void CipherHostObject::installMethods() {
       }
     }
 
-    EVP_CIPHER_CTX_free(ctx_);
+    TypedArray<TypedArrayKind::Uint8Array> ret(runtime, out_len);
+    std::vector<unsigned char> vec(
+        out.getBuffer(runtime).data(runtime),
+        out.getBuffer(runtime).data(runtime) + out_len);
+    ret.update(runtime, vec);
 
-    return out;
+    EVP_CIPHER_CTX_free(ctx_);
+    ctx_ = nullptr;
+
+    return ret;
   }));
 }
 

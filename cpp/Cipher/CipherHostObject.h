@@ -35,10 +35,18 @@ class CipherHostObject : public SmartHostObject {
       std::shared_ptr<react::CallInvoker> jsCallInvoker,
       std::shared_ptr<DispatchQueue::dispatch_queue> workerQueue);
 
+  // Without iv
   explicit CipherHostObject(
       const std::string &cipher_type, jsi::ArrayBuffer *cipher_key,
       bool isCipher, unsigned int auth_tag_len, jsi::Runtime &runtime,
       std::shared_ptr<react::CallInvoker> jsCallInvoker,
+      std::shared_ptr<DispatchQueue::dispatch_queue> workerQueue);
+
+  // With iv
+  explicit CipherHostObject(
+      const std::string &cipher_type, jsi::ArrayBuffer *cipher_key,
+      bool isCipher, unsigned int auth_tag_len, jsi::ArrayBuffer *iv,
+      jsi::Runtime &runtime, std::shared_ptr<react::CallInvoker> jsCallInvoker,
       std::shared_ptr<DispatchQueue::dispatch_queue> workerQueue);
 
   void commonInit(jsi::Runtime &runtime, const char *cipher_type,
