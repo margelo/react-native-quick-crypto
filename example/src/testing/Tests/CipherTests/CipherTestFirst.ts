@@ -70,8 +70,8 @@ export function registerCipherTests1() {
     });
   }
 
-  // testCipher1('MySecretKey123');
-  // testCipher1(Buffer.from('MySecretKey123'));
+  testCipher1('MySecretKey123');
+  testCipher1(Buffer.from('MySecretKey123'));
 
   testCipher2('0123456789abcdef');
   testCipher2(Buffer.from('0123456789abcdef'));
