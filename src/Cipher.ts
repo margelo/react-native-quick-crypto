@@ -81,12 +81,9 @@ class CipherCommon extends Stream.Transform {
     inputEncoding?: CipherEncoding,
     outputEncoding?: CipherEncoding
   ): ArrayBuffer | string {
-    console.warn('mmk1');
-
     const defaultEncoding = getDefaultEncoding();
     inputEncoding = inputEncoding ?? defaultEncoding;
     outputEncoding = outputEncoding ?? defaultEncoding;
-    console.warn('mmk2');
 
     // TODO(osp) validation
     // if (typeof data === 'string') {
@@ -97,18 +94,16 @@ class CipherCommon extends Stream.Transform {
     // }
 
     if (typeof data === 'string') {
-      console.warn('mmk3');
+      console.warn('input encoding', inputEncoding, outputEncoding);
+
       data = binaryLikeToArrayBuffer(data, inputEncoding);
     }
-    console.warn('mmk4');
 
     const ret = this.internal.update(data);
 
-    console.warn('mmk5');
     if (outputEncoding && outputEncoding !== 'buffer') {
       return ab2str(ret, outputEncoding);
     }
-    console.warn('mmk6');
 
     return ret;
   }
@@ -116,7 +111,7 @@ class CipherCommon extends Stream.Transform {
   final(): ArrayBuffer;
   final(outputEncoding: BufferEncoding | 'buffer'): string;
   final(outputEncoding?: BufferEncoding | 'buffer'): ArrayBuffer | string {
-    const ret = this.internal.final(outputEncoding);
+    const ret = this.internal.final();
 
     if (outputEncoding && outputEncoding !== 'buffer') {
       return ab2str(ret, outputEncoding);

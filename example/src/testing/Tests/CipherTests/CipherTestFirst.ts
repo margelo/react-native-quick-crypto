@@ -13,28 +13,19 @@ export function registerCipherTests1() {
       // Test encryption and decryption
       const plaintext =
         'Keep this a secret? No! Tell everyone about fast-crypto!';
-      console.warn('mk1');
-
       const cipher = crypto.createCipher('aes192', key);
-      console.warn('mk2');
 
       // Encrypt plaintext which is in utf8 format
       // to a ciphertext which will be in hex
       let ciph = cipher.update(plaintext, 'utf-8', 'hex');
-      console.warn('mk3');
       // Only use binary or hex, not base64.
       ciph += cipher.final('hex');
-      console.warn('mk4');
 
       const decipher = crypto.createDecipher('aes192', key);
-      console.warn('mk5');
       let txt = decipher.update(ciph, 'hex', 'utf-8');
-      console.warn('mk6');
       txt += decipher.final('utf-8');
-      console.warn('mk7');
 
       assert.strictEqual(txt, plaintext);
-      console.warn('mk8');
 
       // Streaming cipher interface
       // NB: In real life, it's not guaranteed that you can get all of it
@@ -64,21 +55,26 @@ export function registerCipherTests1() {
       // Encrypt plaintext which is in utf8 format to a ciphertext which will be in
       // Base64.
       let ciph = cipher.update(plaintext, 'utf8', 'base64');
+      console.warn('ciph middle', ciph);
+
       ciph += cipher.final('base64');
+      console.warn('ciph final', ciph);
 
       const decipher = crypto.createDecipher('aes256', key);
       let txt = decipher.update(ciph, 'base64', 'utf8');
       txt += decipher.final('utf8');
 
+      console.warn('ROPO shuold match', txt, plaintext);
+
       assert.strictEqual(txt, plaintext);
     });
   }
 
-  testCipher1('MySecretKey123');
-  testCipher1(Buffer.from('MySecretKey123'));
+  // testCipher1('MySecretKey123');
+  // testCipher1(Buffer.from('MySecretKey123'));
 
-  // testCipher2('0123456789abcdef');
-  // testCipher2(Buffer.from('0123456789abcdef'));
+  testCipher2('0123456789abcdef');
+  testCipher2(Buffer.from('0123456789abcdef'));
 
   it('#createCipher with invalid algorithm should throw', () => {
     try {
@@ -90,46 +86,46 @@ export function registerCipherTests1() {
     }
   });
 
-  // it('Base64 padding regression test', () => {
-  //   const c = crypto.createCipher('aes-256-cbc', 'secret');
-  //   const s = c.update('test', 'utf8', 'base64') + c.final('base64');
-  //   assert.strictEqual(s, '375oxUQCIocvxmC5At+rvA==');
-  // });
+  it('Base64 padding regression test', () => {
+    const c = crypto.createCipher('aes-256-cbc', 'secret');
+    const s = c.update('test', 'utf8', 'base64') + c.final('base64');
+    assert.strictEqual(s, '375oxUQCIocvxmC5At+rvA==');
+  });
 
-  // it('Calling Cipher.final() or Decipher.final() twice should error', () => {
-  //   const c = crypto.createCipher('aes-256-cbc', 'secret');
-  //   try {
-  //     c.final('xxx');
-  //   } catch {
-  //     /* Ignore. */
-  //   }
-  //   try {
-  //     c.final('xxx');
-  //   } catch {
-  //     /* Ignore. */
-  //   }
-  //   try {
-  //     c.final('xxx');
-  //   } catch {
-  //     /* Ignore. */
-  //   }
-  //   const d = crypto.createDecipher('aes-256-cbc', 'secret');
-  //   try {
-  //     d.final('xxx');
-  //   } catch {
-  //     /* Ignore. */
-  //   }
-  //   try {
-  //     d.final('xxx');
-  //   } catch {
-  //     /* Ignore. */
-  //   }
-  //   try {
-  //     d.final('xxx');
-  //   } catch {
-  //     /* Ignore. */
-  //   }
-  // });
+  it('Calling Cipher.final() or Decipher.final() twice should error', () => {
+    const c = crypto.createCipher('aes-256-cbc', 'secret');
+    try {
+      c.final('xxx');
+    } catch {
+      /* Ignore. */
+    }
+    try {
+      c.final('xxx');
+    } catch {
+      /* Ignore. */
+    }
+    try {
+      c.final('xxx');
+    } catch {
+      /* Ignore. */
+    }
+    const d = crypto.createDecipher('aes-256-cbc', 'secret');
+    try {
+      d.final('xxx');
+    } catch {
+      /* Ignore. */
+    }
+    try {
+      d.final('xxx');
+    } catch {
+      /* Ignore. */
+    }
+    try {
+      d.final('xxx');
+    } catch {
+      /* Ignore. */
+    }
+  });
 
   // it('string to Cipher#update() should not assert.', () => {
   //   const c = crypto.createCipher('aes192', '0123456789abcdef');

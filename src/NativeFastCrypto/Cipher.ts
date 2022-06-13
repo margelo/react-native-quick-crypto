@@ -2,7 +2,7 @@ import type { BinaryLike } from 'src/Utils';
 
 export type InternalCipher = {
   update: (data: BinaryLike | ArrayBufferView) => ArrayBuffer;
-  final: (data: undefined | string) => ArrayBuffer;
+  final: () => ArrayBuffer;
   copy: () => void;
 };
 
