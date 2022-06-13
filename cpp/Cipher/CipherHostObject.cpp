@@ -208,97 +208,98 @@ void CipherHostObject::commonInit(jsi::Runtime &runtime,
 }
 
 void CipherHostObject::installMethods() {
-  this->fields.push_back(HOST_LAMBDA("update", {
-    if (count != 1) {
-      throw jsi::JSError(runtime,
-                         "cipher.update requires at least 2 parameters");
-    }
+  this->fields.push_back(buildPair(
+      "update", JSIF([this]) {
+        if (count != 1) {
+          throw jsi::JSError(runtime,
+                             "cipher.update requires at least 2 parameters");
+        }
 
-    if (!arguments[0].isObject() ||
-        !arguments[0].asObject(runtime).isArrayBuffer(runtime)) {
-      throw jsi::JSError(
-          runtime,
-          "cipher.update first argument ('data') needs to be an ArrayBuffer");
-    }
+        if (!arguments[0].isObject() ||
+            !arguments[0].asObject(runtime).isArrayBuffer(runtime)) {
+          throw jsi::JSError(runtime,
+                             "cipher.update first argument ('data') needs to "
+                             "be an ArrayBuffer");
+        }
 
-    LOGW("WHAT");
+        LOGW("WHAT");
 
-    auto dataArrayBuffer =
-        arguments[0].asObject(runtime).getArrayBuffer(runtime);
+        auto dataArrayBuffer =
+            arguments[0].asObject(runtime).getArrayBuffer(runtime);
 
-    LOGW("WHAT1");
+        LOGW("WHAT1");
 
-    const unsigned char *data = dataArrayBuffer.data(runtime);
-    auto len = dataArrayBuffer.length(runtime);
+        const unsigned char *data = dataArrayBuffer.data(runtime);
+        auto len = dataArrayBuffer.length(runtime);
 
-    LOGW("WHAT2");
+        LOGW("WHAT2");
 
-    if (ctx_ == nullptr || len > INT_MAX) {
-      // On the node version there are several layers of wrapping and errors are
-      // not immediately surfaced
-      // On our version we can simply throw an error as soon as something goes
-      // wrong
-      throw jsi::JSError(runtime, 'kErrorState');
-    }
+        if (ctx_ == nullptr || len > INT_MAX) {
+          // On the node version there are several layers of wrapping and errors
+          // are not immediately surfaced On our version we can simply throw an
+          // error as soon as something goes wrong
+          throw jsi::JSError(runtime, 'kErrorState');
+        }
 
-    const int mode = EVP_CIPHER_CTX_mode(ctx_);
+        const int mode = EVP_CIPHER_CTX_mode(ctx_);
 
-    if (mode == EVP_CIPH_CCM_MODE && !CheckCCMMessageLength(len)) {
-      throw jsi::JSError(runtime, "kErrorMessageSize");
-    }
+        if (mode == EVP_CIPH_CCM_MODE && !CheckCCMMessageLength(len)) {
+          throw jsi::JSError(runtime, "kErrorMessageSize");
+        }
 
-    // Pass the authentication tag to OpenSSL if possible. This will only happen
-    // once, usually on the first update.
-    if (!isCipher_ && IsAuthenticatedMode()) {
-      // TODO(osp) check
-      MaybePassAuthTagToOpenSSL();
-    }
+        // Pass the authentication tag to OpenSSL if possible. This will only
+        // happen once, usually on the first update.
+        if (!isCipher_ && IsAuthenticatedMode()) {
+          // TODO(osp) check
+          MaybePassAuthTagToOpenSSL();
+        }
 
-    LOGW("WHAT3");
+        LOGW("WHAT3");
 
-    int buf_len = len + EVP_CIPHER_CTX_block_size(ctx_);
-    // For key wrapping algorithms, get output size by calling
-    // EVP_CipherUpdate() with null output.
-    if (isCipher_ && mode == EVP_CIPH_WRAP_MODE &&
-        EVP_CipherUpdate(ctx_, nullptr, &buf_len, data, len) != 1) {
-      throw jsi::JSError(runtime, "kErrorState");
-    }
+        int buf_len = len + EVP_CIPHER_CTX_block_size(ctx_);
+        // For key wrapping algorithms, get output size by calling
+        // EVP_CipherUpdate() with null output.
+        if (isCipher_ && mode == EVP_CIPH_WRAP_MODE &&
+            EVP_CipherUpdate(ctx_, nullptr, &buf_len, data, len) != 1) {
+          throw jsi::JSError(runtime, "kErrorState");
+        }
 
-    LOGW("WHAT4 %i", buf_len);
+        LOGW("WHAT4 %i", buf_len);
 
-    TypedArray<TypedArrayKind::Uint8Array> out(runtime, buf_len);
+        TypedArray<TypedArrayKind::Uint8Array> out(runtime, buf_len);
 
-    LOGW("WHAT5");
+        LOGW("WHAT5");
 
-    // Important this function returns the real size of the data in buf_len
-    // Output needs to be truncated to not send extra 0s
-    int r = EVP_CipherUpdate(ctx_, out.getBuffer(runtime).data(runtime),
-                             &buf_len, data, len);
+        // Important this function returns the real size of the data in buf_len
+        // Output needs to be truncated to not send extra 0s
+        int r = EVP_CipherUpdate(ctx_, out.getBuffer(runtime).data(runtime),
+                                 &buf_len, data, len);
 
-    LOGW("WHAT6");
+        LOGW("WHAT6");
 
-    // Trim exceeding bytes
-    TypedArray<TypedArrayKind::Uint8Array> ret(runtime, buf_len);
-    LOGW("WHAT7");
-    std::vector<unsigned char> vec(
-        out.getBuffer(runtime).data(runtime),
-        out.getBuffer(runtime).data(runtime) + buf_len);
-    LOGW("WHAT8");
-    ret.update(runtime, vec);
+        // Trim exceeding bytes
+        TypedArray<TypedArrayKind::Uint8Array> ret(runtime, buf_len);
+        LOGW("WHAT7");
+        std::vector<unsigned char> vec(
+            out.getBuffer(runtime).data(runtime),
+            out.getBuffer(runtime).data(runtime) + buf_len);
+        LOGW("WHAT8");
+        ret.update(runtime, vec);
 
-    LOGW("WHAT9");
+        LOGW("WHAT9");
 
-    // When in CCM mode, EVP_CipherUpdate will fail if the authentication tag is
-    // invalid. In that case, remember the error and throw in final().
-    if (!r && !isCipher_ && mode == EVP_CIPH_CCM_MODE) {
-      pending_auth_failed_ = true;
-      return ret;
-    }
+        // When in CCM mode, EVP_CipherUpdate will fail if the authentication
+        // tag is invalid. In that case, remember the error and throw in
+        // final().
+        if (!r && !isCipher_ && mode == EVP_CIPH_CCM_MODE) {
+          pending_auth_failed_ = true;
+          return ret;
+        }
 
-    //    return r == 1 ? jsi::Value((int)kSuccess) :
-    //    jsi::Value((int)kErrorState);
-    return ret;
-  }));
+        //    return r == 1 ? jsi::Value((int)kSuccess) :
+        //    jsi::Value((int)kErrorState);
+        return ret;
+      }));
 
   this->fields.push_back(HOST_LAMBDA("final", {
     if (ctx_ == nullptr) {
