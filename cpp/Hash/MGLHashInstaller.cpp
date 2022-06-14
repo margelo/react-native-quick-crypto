@@ -5,14 +5,14 @@
 //  Created by Marc Rousavy on 31.10.21.
 //
 
-#include "HashInstaller.h"
+#include "MGLHashInstaller.h"
 
 #include <openssl/hmac.h>
 
 #include <memory>
 
-#include "HashHostObject.h"
-#include "JSI Utils/JSIMacros.h"
+#include "JSI Utils/MGLJSIMacros.h"
+#include "MGLHashHostObject.h"
 
 using namespace facebook;
 
@@ -33,7 +33,7 @@ FieldDefinition getHashFieldDefinition(
       md_len = (int)arguments[1].asNumber();
     }
 
-    auto hostObject = std::make_shared<HashHostObject>(
+    auto hostObject = std::make_shared<MGLHashHostObject>(
         hashAlgorithm, md_len, jsCallInvoker, workerQueue);
     return jsi::Object::createFromHostObject(runtime, hostObject);
   });

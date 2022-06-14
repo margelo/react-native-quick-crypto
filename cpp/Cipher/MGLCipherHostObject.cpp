@@ -1,9 +1,9 @@
 //
 // Created by Oscar on 07.06.22.
 //
-#include "CipherHostObject.h"
+#include "MGLCipherHostObject.h"
 
-#include <JSI Utils/TypedArray.h>
+#include <JSI Utils/MGLTypedArray.h>
 #include <Utils/logs.h>
 #include <openssl/evp.h>
 
@@ -56,26 +56,28 @@ void CopyTo(jsi::Runtime &runtime, jsi::ArrayBuffer *src, char *dest,
     memcpy(dest, src->data(runtime), len);
 }
 
-CipherHostObject::CipherHostObject(
+MGLCipherHostObject::MGLCipherHostObject(
     std::shared_ptr<react::CallInvoker> jsCallInvoker,
     std::shared_ptr<DispatchQueue::dispatch_queue> workerQueue)
-    : SmartHostObject(jsCallInvoker, workerQueue) {
+    : MGLSmartHostObject(jsCallInvoker, workerQueue) {
   installMethods();
 }
 
-CipherHostObject::CipherHostObject(
-    CipherHostObject *other, std::shared_ptr<react::CallInvoker> jsCallInvoker,
+MGLCipherHostObject::MGLCipherHostObject(
+    MGLCipherHostObject *other,
+    std::shared_ptr<react::CallInvoker> jsCallInvoker,
     std::shared_ptr<DispatchQueue::dispatch_queue> workerQueue)
-    : SmartHostObject(jsCallInvoker, workerQueue), isCipher_(other->isCipher_) {
+    : MGLSmartHostObject(jsCallInvoker, workerQueue),
+      isCipher_(other->isCipher_) {
   installMethods();
 }
 
-CipherHostObject::CipherHostObject(
+MGLCipherHostObject::MGLCipherHostObject(
     const std::string &cipher_type, jsi::ArrayBuffer *cipher_key, bool isCipher,
     unsigned int auth_tag_len, jsi::Runtime &runtime,
     std::shared_ptr<react::CallInvoker> jsCallInvoker,
     std::shared_ptr<DispatchQueue::dispatch_queue> workerQueue)
-    : SmartHostObject(jsCallInvoker, workerQueue),
+    : MGLSmartHostObject(jsCallInvoker, workerQueue),
       isCipher_(isCipher),
       pending_auth_failed_(false) {
   // TODO(osp) is this needed on the SSL version we are using?
@@ -123,12 +125,12 @@ CipherHostObject::CipherHostObject(
   installMethods();
 }
 
-CipherHostObject::CipherHostObject(
+MGLCipherHostObject::MGLCipherHostObject(
     const std::string &cipher_type, jsi::ArrayBuffer *cipher_key, bool isCipher,
     unsigned int auth_tag_len, jsi::ArrayBuffer *iv, jsi::Runtime &runtime,
     std::shared_ptr<react::CallInvoker> jsCallInvoker,
     std::shared_ptr<DispatchQueue::dispatch_queue> workerQueue)
-    : SmartHostObject(jsCallInvoker, workerQueue),
+    : MGLSmartHostObject(jsCallInvoker, workerQueue),
       isCipher_(isCipher),
       pending_auth_failed_(false) {
   // TODO(osp) is this needed on the SSL version we are using?
@@ -175,12 +177,12 @@ CipherHostObject::CipherHostObject(
   installMethods();
 }
 
-void CipherHostObject::commonInit(jsi::Runtime &runtime,
-                                  const char *cipher_type,
-                                  const EVP_CIPHER *cipher,
-                                  const unsigned char *key, int key_len,
-                                  const unsigned char *iv, int iv_len,
-                                  unsigned int auth_tag_len) {
+void MGLCipherHostObject::commonInit(jsi::Runtime &runtime,
+                                     const char *cipher_type,
+                                     const EVP_CIPHER *cipher,
+                                     const unsigned char *key, int key_len,
+                                     const unsigned char *iv, int iv_len,
+                                     unsigned int auth_tag_len) {
   // TODO(osp) check for this macro
   //  CHECK(!ctx_);
 
@@ -216,7 +218,7 @@ void CipherHostObject::commonInit(jsi::Runtime &runtime,
   }
 }
 
-void CipherHostObject::installMethods() {
+void MGLCipherHostObject::installMethods() {
   // Instance methods
 
   // update
@@ -268,7 +270,7 @@ void CipherHostObject::installMethods() {
           throw jsi::JSError(runtime, "kErrorState");
         }
 
-        TypedArray<TypedArrayKind::Uint8Array> out(runtime, buf_len);
+        MGLTypedArray<MGLTypedArrayKind::Uint8Array> out(runtime, buf_len);
 
         // Important this function returns the real size of the data in buf_len
         // Output needs to be truncated to not send extra 0s
@@ -276,7 +278,7 @@ void CipherHostObject::installMethods() {
                                  &buf_len, data, len);
 
         // Trim exceeding bytes
-        TypedArray<TypedArrayKind::Uint8Array> ret(runtime, buf_len);
+        MGLTypedArray<MGLTypedArrayKind::Uint8Array> ret(runtime, buf_len);
         std::vector<unsigned char> vec(
             out.getBuffer(runtime).data(runtime),
             out.getBuffer(runtime).data(runtime) + buf_len);
@@ -304,7 +306,7 @@ void CipherHostObject::installMethods() {
     const int mode = EVP_CIPHER_CTX_mode(ctx_);
 
     int buf_len = EVP_CIPHER_CTX_block_size(ctx_);
-    TypedArray<TypedArrayKind::Uint8Array> out(runtime, buf_len);
+    MGLTypedArray<MGLTypedArrayKind::Uint8Array> out(runtime, buf_len);
 
     if (!isCipher_ && IsSupportedAuthenticatedMode(ctx_)) {
       MaybePassAuthTagToOpenSSL();
@@ -316,7 +318,7 @@ void CipherHostObject::installMethods() {
     int out_len = out.byteLength(runtime);
     if (!isCipher_ && mode == EVP_CIPH_CCM_MODE) {
       ok = !pending_auth_failed_;
-      TypedArray<TypedArrayKind::Uint8Array> out(runtime, 0);
+      MGLTypedArray<MGLTypedArrayKind::Uint8Array> out(runtime, 0);
     } else {
       ok = EVP_CipherFinal_ex(ctx_, out.getBuffer(runtime).data(runtime),
                               &out_len) == 1;
@@ -336,7 +338,7 @@ void CipherHostObject::installMethods() {
       }
     }
 
-    TypedArray<TypedArrayKind::Uint8Array> ret(runtime, out_len);
+    MGLTypedArray<MGLTypedArrayKind::Uint8Array> ret(runtime, out_len);
     if (out_len > 0) {
       std::vector<unsigned char> vec(
           out.getBuffer(runtime).data(runtime),
@@ -497,7 +499,7 @@ void CipherHostObject::installMethods() {
   }));
 }
 
-bool CipherHostObject::MaybePassAuthTagToOpenSSL() {
+bool MGLCipherHostObject::MaybePassAuthTagToOpenSSL() {
   if (auth_tag_state_ == kAuthTagKnown) {
     if (!EVP_CIPHER_CTX_ctrl(ctx_, EVP_CTRL_AEAD_SET_TAG, auth_tag_len_,
                              reinterpret_cast<unsigned char *>(auth_tag_))) {
@@ -508,14 +510,14 @@ bool CipherHostObject::MaybePassAuthTagToOpenSSL() {
   return true;
 }
 
-bool CipherHostObject::IsAuthenticatedMode() const {
+bool MGLCipherHostObject::IsAuthenticatedMode() const {
   // Check if this cipher operates in an AEAD mode that we support.
   //  CHECK(ctx_);
   return IsSupportedAuthenticatedMode(ctx_);
 }
 
-bool CipherHostObject::InitAuthenticated(const char *cipher_type, int iv_len,
-                                         unsigned int auth_tag_len) {
+bool MGLCipherHostObject::InitAuthenticated(const char *cipher_type, int iv_len,
+                                            unsigned int auth_tag_len) {
   // TODO(osp) implement this check
   //      CHECK(IsAuthenticatedMode());
   // TODO(osp) what is this? some sort of node error?
@@ -604,7 +606,7 @@ bool CipherHostObject::InitAuthenticated(const char *cipher_type, int iv_len,
   return true;
 }
 
-bool CipherHostObject::CheckCCMMessageLength(int message_len) {
+bool MGLCipherHostObject::CheckCCMMessageLength(int message_len) {
   // TODO(osp) Implement this check
   //      CHECK(EVP_CIPHER_CTX_mode(ctx_) == EVP_CIPH_CCM_MODE);
 
@@ -616,11 +618,11 @@ bool CipherHostObject::CheckCCMMessageLength(int message_len) {
   return true;
 }
 
-CipherHostObject::~CipherHostObject() {
+MGLCipherHostObject::~MGLCipherHostObject() {
   if (this->ctx_ != nullptr) {
     EVP_CIPHER_CTX_free(this->ctx_);
   }
-}
 
-// TODO(osp) implement destructor
+  // TODO(osp) go over destructor
+}
 }  // namespace margelo

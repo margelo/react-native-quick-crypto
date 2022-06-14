@@ -2,8 +2,8 @@
 // Created by Oscar on 07.06.22.
 //
 
-#ifndef CipherHostObject_h
-#define CipherHostObject_h
+#ifndef MGLCipherHostObject_h
+#define MGLCipherHostObject_h
 
 #include <jsi/jsi.h>
 #include <openssl/evp.h>
@@ -11,13 +11,13 @@
 #include <memory>
 #include <string>
 
-#include "JSI Utils/SmartHostObject.h"
+#include "JSI Utils/MGLSmartHostObject.h"
 
 namespace margelo {
 
 namespace jsi = facebook::jsi;
 
-class CipherHostObject : public SmartHostObject {
+class MGLCipherHostObject : public MGLSmartHostObject {
  protected:
   enum CipherKind { kCipher, kDecipher };
   enum UpdateResult { kSuccess, kErrorMessageSize, kErrorState };
@@ -26,24 +26,24 @@ class CipherHostObject : public SmartHostObject {
  public:
   // TODO(osp)  Why does an empty constructor need to be here and not on
   // HashHostObject?
-  explicit CipherHostObject(
+  explicit MGLCipherHostObject(
       std::shared_ptr<react::CallInvoker> jsCallInvoker,
       std::shared_ptr<DispatchQueue::dispatch_queue> workerQueue);
 
-  explicit CipherHostObject(
-      CipherHostObject *other,
+  explicit MGLCipherHostObject(
+      MGLCipherHostObject *other,
       std::shared_ptr<react::CallInvoker> jsCallInvoker,
       std::shared_ptr<DispatchQueue::dispatch_queue> workerQueue);
 
   // Without iv
-  explicit CipherHostObject(
+  explicit MGLCipherHostObject(
       const std::string &cipher_type, jsi::ArrayBuffer *cipher_key,
       bool isCipher, unsigned int auth_tag_len, jsi::Runtime &runtime,
       std::shared_ptr<react::CallInvoker> jsCallInvoker,
       std::shared_ptr<DispatchQueue::dispatch_queue> workerQueue);
 
   // With iv
-  explicit CipherHostObject(
+  explicit MGLCipherHostObject(
       const std::string &cipher_type, jsi::ArrayBuffer *cipher_key,
       bool isCipher, unsigned int auth_tag_len, jsi::ArrayBuffer *iv,
       jsi::Runtime &runtime, std::shared_ptr<react::CallInvoker> jsCallInvoker,
@@ -65,7 +65,7 @@ class CipherHostObject : public SmartHostObject {
 
   bool MaybePassAuthTagToOpenSSL();
 
-  virtual ~CipherHostObject();
+  virtual ~MGLCipherHostObject();
 
  private:
   // TODO(osp) this is the node version, DeleteFnPtr seems to be some custom
@@ -83,4 +83,4 @@ class CipherHostObject : public SmartHostObject {
 
 }  // namespace margelo
 
-#endif  // CipherHostObject_h
+#endif  // MGLCipherHostObject_h

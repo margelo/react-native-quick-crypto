@@ -1,8 +1,8 @@
 // Copyright 2022 Margelo
 
-#include "HashHostObject.h"
+#include "MGLHashHostObject.h"
 
-#include <JSI Utils/TypedArray.h>
+#include <JSI Utils/MGLTypedArray.h>
 #include <jsi/jsi.h>
 #include <openssl/err.h>
 
@@ -26,10 +26,10 @@ const EVP_MD *parseHashAlgorithmForHashObject(
   throw std::runtime_error("Invalid Hash Algorithm!");
 }
 
-HashHostObject::HashHostObject(
-    HashHostObject *other, std::shared_ptr<react::CallInvoker> jsCallInvoker,
+MGLHashHostObject::MGLHashHostObject(
+    MGLHashHostObject *other, std::shared_ptr<react::CallInvoker> jsCallInvoker,
     std::shared_ptr<DispatchQueue::dispatch_queue> workerQueue)
-    : SmartHostObject(jsCallInvoker, workerQueue) {
+    : MGLSmartHostObject(jsCallInvoker, workerQueue) {
   const EVP_MD *md = EVP_MD_CTX_md(other->mdctx_);
   this->mdctx_ = EVP_MD_CTX_new();
   EVP_MD_CTX_copy(this->mdctx_, other->mdctx_);
@@ -38,11 +38,11 @@ HashHostObject::HashHostObject(
   installMethods();
 }
 
-HashHostObject::HashHostObject(
+MGLHashHostObject::MGLHashHostObject(
     const std::string hashAlgorithm, unsigned int md_len,
     std::shared_ptr<react::CallInvoker> jsCallInvoker,
     std::shared_ptr<DispatchQueue::dispatch_queue> workerQueue)
-    : SmartHostObject(jsCallInvoker, workerQueue) {
+    : MGLSmartHostObject(jsCallInvoker, workerQueue) {
   const EVP_MD *md = parseHashAlgorithmForHashObject(hashAlgorithm);
   mdctx_ = EVP_MD_CTX_new();
   if (!mdctx_ || EVP_DigestInit_ex(mdctx_, md, nullptr) <= 0) {
@@ -57,7 +57,7 @@ HashHostObject::HashHostObject(
   installMethods();
 }
 
-void HashHostObject::installMethods() {
+void MGLHashHostObject::installMethods() {
   this->fields.push_back(HOST_LAMBDA("update", {
     if (!arguments[0].isObject() ||
         !arguments[0].getObject(runtime).isArrayBuffer(runtime)) {
@@ -83,8 +83,9 @@ void HashHostObject::installMethods() {
         if (!arguments[0].isUndefined()) {
           md_len = static_cast<int>(arguments[0].asNumber());
         }
-        std::shared_ptr<HashHostObject> copy = std::make_shared<HashHostObject>(
-            this, this->weakJsCallInvoker.lock(), this->dispatchQueue);
+        std::shared_ptr<MGLHashHostObject> copy =
+            std::make_shared<MGLHashHostObject>(
+                this, this->weakJsCallInvoker.lock(), this->dispatchQueue);
         if (md_len != -1) {
           copy->md_len_ = md_len;
         }
@@ -122,14 +123,14 @@ void HashHostObject::installMethods() {
           digest_ = md_value;
         }
 
-        TypedArray<TypedArrayKind::Uint8Array> typedArray(runtime, len);
+        MGLTypedArray<MGLTypedArrayKind::Uint8Array> typedArray(runtime, len);
         std::vector<unsigned char> vec(digest_, digest_ + len);
         typedArray.update(runtime, vec);
         return typedArray;
       }));
 }
 
-HashHostObject::~HashHostObject() {
+MGLHashHostObject::~MGLHashHostObject() {
   if (this->mdctx_ != nullptr) {
     EVP_MD_CTX_free(this->mdctx_);
   }

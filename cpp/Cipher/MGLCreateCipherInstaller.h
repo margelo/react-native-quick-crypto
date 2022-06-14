@@ -2,7 +2,7 @@
 
 #include <memory>
 
-#include "JSI Utils/SmartHostObject.h"
+#include "JSI Utils/MGLSmartHostObject.h"
 
 namespace margelo {
 namespace jsi = facebook::jsi;
