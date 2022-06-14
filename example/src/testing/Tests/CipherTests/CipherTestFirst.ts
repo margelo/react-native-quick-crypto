@@ -55,16 +55,11 @@ export function registerCipherTests1() {
       // Encrypt plaintext which is in utf8 format to a ciphertext which will be in
       // Base64.
       let ciph = cipher.update(plaintext, 'utf8', 'base64');
-      console.warn('ciph middle', ciph);
-
       ciph += cipher.final('base64');
-      console.warn('ciph final', ciph);
 
       const decipher = crypto.createDecipher('aes256', key);
       let txt = decipher.update(ciph, 'base64', 'utf8');
       txt += decipher.final('utf8');
-
-      console.warn('ROPO shuold match', txt, plaintext);
 
       assert.strictEqual(txt, plaintext);
     });
@@ -78,7 +73,6 @@ export function registerCipherTests1() {
 
   it('#createCipher with invalid algorithm should throw', () => {
     try {
-      // @ts-expect-error
       crypto.createCipher('blah', 'secret');
       assert.fail('createCipher with invalid algo did not throw');
     } catch {
@@ -95,32 +89,38 @@ export function registerCipherTests1() {
   it('Calling Cipher.final() or Decipher.final() twice should error', () => {
     const c = crypto.createCipher('aes-256-cbc', 'secret');
     try {
+      // @ts-expect-error
       c.final('xxx');
     } catch {
       /* Ignore. */
     }
     try {
+      // @ts-expect-error
       c.final('xxx');
     } catch {
       /* Ignore. */
     }
     try {
+      // @ts-expect-error
       c.final('xxx');
     } catch {
       /* Ignore. */
     }
     const d = crypto.createDecipher('aes-256-cbc', 'secret');
     try {
+      // @ts-expect-error
       d.final('xxx');
     } catch {
       /* Ignore. */
     }
     try {
+      // @ts-expect-error
       d.final('xxx');
     } catch {
       /* Ignore. */
     }
     try {
+      // @ts-expect-error
       d.final('xxx');
     } catch {
       /* Ignore. */
@@ -129,12 +129,16 @@ export function registerCipherTests1() {
 
   it('string to Cipher#update() should not assert.', () => {
     const c = crypto.createCipher('aes192', '0123456789abcdef');
+    console.warn('mk1');
+
     c.update('update');
+    console.warn('mk2');
     c.final();
   });
 
   it("'utf-8' and 'utf8' are identical.", () => {
     let c = crypto.createCipher('aes192', '0123456789abcdef');
+    // @ts-expect-error
     c.update('update', ''); // Defaults to "utf8".
     c.final('utf-8'); // Should not throw.
 

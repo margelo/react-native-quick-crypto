@@ -9,17 +9,17 @@ import {
   getDefaultEncoding,
 } from './Utils';
 import type { InternalCipher } from './NativeFastCrypto/cipher';
-import type {
-  CipherCCMOptions,
-  CipherCCMTypes,
-  CipherGCMTypes,
-  CipherGCMOptions,
-  // CipherKey,
-  // KeyObject,
-  // TODO @Szymon20000 This types seem to be missing? Where did you get this definitions from?
-  // CipherOCBTypes,
-  // CipherOCBOptions,
-} from 'crypto'; // Node crypto typings
+// import type {
+//   CipherCCMOptions,
+//   CipherCCMTypes,
+//   CipherGCMTypes,
+//   CipherGCMOptions,
+//   // CipherKey,
+//   // KeyObject,
+//   // TODO @Szymon20000 This types seem to be missing? Where did you get this definitions from?
+//   // CipherOCBTypes,
+//   // CipherOCBOptions,
+// } from 'crypto'; // Node crypto typings
 import { StringDecoder } from 'string_decoder';
 import { Buffer } from '@craftzdog/react-native-buffer';
 import { Buffer as SBuffer } from 'safe-buffer';
@@ -124,6 +124,9 @@ class CipherCommon extends Stream.Transform {
     }
 
     if (typeof data === 'string') {
+      // On node this is handled on the native side
+      // on our case we need to correctly send the arraybuffer to the jsi side
+      inputEncoding = inputEncoding === 'buffer' ? 'utf8' : inputEncoding;
       data = binaryLikeToArrayBuffer(data, inputEncoding);
     }
 
@@ -211,16 +214,17 @@ class Decipher extends CipherCommon {
   }
 }
 
-export function createDecipher(
-  algorithm: CipherCCMTypes,
-  password: BinaryLike,
-  options: CipherCCMOptions
-): Decipher;
-export function createDecipher(
-  algorithm: CipherGCMTypes,
-  password: BinaryLike,
-  options?: CipherGCMOptions
-): Decipher;
+// TODO(osp) This definitions cause typescript errors when using the API
+// export function createDecipher(
+//   algorithm: CipherCCMTypes,
+//   password: BinaryLike,
+//   options: CipherCCMOptions
+// ): Decipher;
+// export function createDecipher(
+//   algorithm: CipherGCMTypes,
+//   password: BinaryLike,
+//   options?: CipherGCMOptions
+// ): Decipher;
 export function createDecipher(
   algorithm: string,
   password: BinaryLike,
@@ -229,24 +233,25 @@ export function createDecipher(
   return new Decipher(algorithm, password, options);
 }
 
-export function createDecipheriv(
-  algorithm: CipherCCMTypes,
-  key: BinaryLike,
-  iv: BinaryLike,
-  options: CipherCCMOptions
-): Decipher;
+// TODO(osp) This definitions cause typescript errors when using the API
+// export function createDecipheriv(
+//   algorithm: CipherCCMTypes,
+//   key: BinaryLike,
+//   iv: BinaryLike,
+//   options: CipherCCMOptions
+// ): Decipher;
 // export function createDecipheriv(
 //   algorithm: CipherOCBTypes,
 //   key: BinaryLike,
 //   iv: BinaryLike,
 //   options: CipherOCBOptions
 // ): DecipherOCB;
-export function createDecipheriv(
-  algorithm: CipherGCMTypes,
-  key: BinaryLike,
-  iv: BinaryLike,
-  options?: CipherGCMOptions
-): Decipher;
+// export function createDecipheriv(
+//   algorithm: CipherGCMTypes,
+//   key: BinaryLike,
+//   iv: BinaryLike,
+//   options?: CipherGCMOptions
+// ): Decipher;
 export function createDecipheriv(
   algorithm: string,
   key: BinaryLike,
@@ -256,16 +261,18 @@ export function createDecipheriv(
   return new Decipher(algorithm, key, options, iv);
 }
 
-export function createCipher(
-  algorithm: CipherCCMTypes,
-  password: BinaryLike,
-  options: CipherCCMOptions
-): Cipher;
-export function createCipher(
-  algorithm: CipherGCMTypes,
-  password: BinaryLike,
-  options?: CipherGCMOptions
-): Cipher;
+// TODO(osp) This definitions cause typescript errors when using the API
+// commenting them out for now
+// export function createCipher(
+//   algorithm: CipherCCMTypes,
+//   password: BinaryLike,
+//   options: CipherCCMOptions
+// ): Cipher;
+// export function createCipher(
+//   algorithm: CipherGCMTypes,
+//   password: BinaryLike,
+//   options?: CipherGCMOptions
+// ): Cipher;
 export function createCipher(
   algorithm: string,
   password: BinaryLike,
@@ -277,24 +284,24 @@ export function createCipher(
 // TODO(osp) on all the createCipheriv methods, node seems to use a "KeyObject" is seems to be a thread safe
 // object that creates keys and what not. Not sure if we should support it.
 // Fow now I replaced all of them to BinaryLike
-export function createCipheriv(
-  algorithm: CipherCCMTypes,
-  key: BinaryLike,
-  iv: BinaryLike,
-  options: CipherCCMOptions
-): Cipher;
+// export function createCipheriv(
+//   algorithm: CipherCCMTypes,
+//   key: BinaryLike,
+//   iv: BinaryLike,
+//   options: CipherCCMOptions
+// ): Cipher;
 // export function createCipheriv(
 //   algorithm: CipherOCBTypes,
 //   key: BinaryLike,
 //   iv: BinaryLike,
 //   options: CipherOCBOptions
 // ): CipherOCB;
-export function createCipheriv(
-  algorithm: CipherGCMTypes,
-  key: BinaryLike,
-  iv: BinaryLike,
-  options?: CipherGCMOptions
-): Cipher;
+// export function createCipheriv(
+//   algorithm: CipherGCMTypes,
+//   key: BinaryLike,
+//   iv: BinaryLike,
+//   options?: CipherGCMOptions
+// ): Cipher;
 export function createCipheriv(
   algorithm: string,
   key: BinaryLike,
