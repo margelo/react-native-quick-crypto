@@ -1,27 +1,27 @@
 // Copyright 2022 Margelo
-#include "FastCryptoHostObject.h"
+#include "MGLFastCryptoHostObject.h"
 
-#include <Hash/HashInstaller.h>
+#include <Hash/MGLHashInstaller.h>
 #include <ReactCommon/TurboModuleUtils.h>
 #include <jsi/jsi.h>
 
 #include <memory>
 #include <vector>
 
-#include "Cipher/CreateCipherInstaller.h"
-#include "Cipher/CreateDecipherInstaller.h"
-#include "HMAC/HmacInstaller.h"
-#include "Random/RandomHostObject.h"
-#include "fastpbkdf2/Pbkdf2HostObject.h"
+#include "Cipher/MGLCreateCipherInstaller.h"
+#include "Cipher/MGLCreateDecipherInstaller.h"
+#include "HMAC/MGLHmacInstaller.h"
+#include "Random/MGLRandomHostObject.h"
+#include "fastpbkdf2/MGLPbkdf2HostObject.h"
 
 namespace margelo {
 
 namespace jsi = facebook::jsi;
 
-FastCryptoHostObject::FastCryptoHostObject(
+MGLFastCryptoHostObject::MGLFastCryptoHostObject(
     std::shared_ptr<react::CallInvoker> jsCallInvoker,
     std::shared_ptr<DispatchQueue::dispatch_queue> workerQueue)
-    : SmartHostObject(jsCallInvoker, workerQueue) {
+    : MGLSmartHostObject(jsCallInvoker, workerQueue) {
   // HmacInstaller
   this->fields.push_back(getHmacFieldDefinition(jsCallInvoker, workerQueue));
 
@@ -39,14 +39,14 @@ FastCryptoHostObject::FastCryptoHostObject(
   // Pbkdf2HostObject
   this->fields.push_back(JSI_VALUE("pbkdf2", {
     auto hostObject =
-        std::make_shared<Pbkdf2HostObject>(jsCallInvoker, workerQueue);
+        std::make_shared<MGLPbkdf2HostObject>(jsCallInvoker, workerQueue);
     return jsi::Object::createFromHostObject(runtime, hostObject);
   }));
 
   // RandomHostObject
   this->fields.push_back(JSI_VALUE("random", {
     auto hostObject =
-        std::make_shared<RandomHostObject>(jsCallInvoker, workerQueue);
+        std::make_shared<MGLRandomHostObject>(jsCallInvoker, workerQueue);
     return jsi::Object::createFromHostObject(runtime, hostObject);
   }));
 }

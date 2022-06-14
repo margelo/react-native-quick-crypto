@@ -1,9 +1,9 @@
-#include "CreateDecipherInstaller.h"
+#include "MGLCreateDecipherInstaller.h"
 
 #include <memory>
 
-#include "CipherHostObject.h"
-#include "JSI Utils/JSIMacros.h"
+#include "JSI Utils/MGLJSIMacros.h"
+#include "MGLCipherHostObject.h"
 
 using namespace facebook;
 
@@ -52,13 +52,13 @@ FieldDefinition getCreateDecipherFieldDefinition(
       auto iv = params.getProperty(runtime, "iv")
                     .getObject(runtime)
                     .getArrayBuffer(runtime);
-      auto hostObject = std::make_shared<CipherHostObject>(
+      auto hostObject = std::make_shared<MGLCipherHostObject>(
           cipher_type, &cipher_key, false, auth_tag_len, &iv, runtime,
           jsCallInvoker, workerQueue);
 
       return jsi::Object::createFromHostObject(runtime, hostObject);
     } else {
-      auto hostObject = std::make_shared<CipherHostObject>(
+      auto hostObject = std::make_shared<MGLCipherHostObject>(
           cipher_type, &cipher_key, false, auth_tag_len, runtime, jsCallInvoker,
           workerQueue);
 

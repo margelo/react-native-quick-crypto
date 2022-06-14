@@ -2,14 +2,16 @@
 // Created by Szymon on 23/02/2022.
 //
 
-#include "DispatchQueue.h"
+#include "MGLDispatchQueue.h"
+
+#include <utility>
 
 namespace margelo {
 
 namespace DispatchQueue {
 
 dispatch_queue::dispatch_queue(std::string name, size_t thread_cnt)
-  : name_{std::move(name)}, threads_(thread_cnt) {
+    : name_{std::move(name)}, threads_(thread_cnt) {
   printf("Creating dispatch queue: %s\n", name_.c_str());
   printf("Dispatch threads: %zu\n", thread_cnt);
 
@@ -53,9 +55,7 @@ void dispatch_queue::dispatch_thread_handler(void) {
 
   do {
     // Wait until we have data or a quit signal
-    cv_.wait(lock, [this] {
-	  return (q_.size() || quit_);
-	});
+    cv_.wait(lock, [this] { return (q_.size() || quit_); });
 
     // after wait, we own the lock
     if (!quit_ && q_.size()) {

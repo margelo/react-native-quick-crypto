@@ -2,9 +2,9 @@
 // Created by Szymon on 25/02/2022.
 //
 
-#include "RandomHostObject.h"
+#include "MGLRandomHostObject.h"
 
-#include <JSI Utils/TypedArray.h>
+#include <JSI Utils/MGLTypedArray.h>
 #include <openssl/bn.h>
 #include <openssl/dsa.h>
 #include <openssl/ec.h>
@@ -22,10 +22,10 @@ namespace margelo {
 namespace jsi = facebook::jsi;
 namespace react = facebook::react;
 
-RandomHostObject::RandomHostObject(
+MGLRandomHostObject::MGLRandomHostObject(
     std::shared_ptr<react::CallInvoker> jsCallInvoker,
     std::shared_ptr<DispatchQueue::dispatch_queue> workerQueue)
-    : SmartHostObject(jsCallInvoker, workerQueue) {
+    : MGLSmartHostObject(jsCallInvoker, workerQueue) {
   this->fields.push_back(buildPair(
       "randomFill", JSIF([=]) {
         if (count != 3) {

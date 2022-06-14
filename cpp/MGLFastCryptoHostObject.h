@@ -7,22 +7,22 @@
 
 #include <memory>
 
-#include "JSI Utils/SmartHostObject.h"
-#include "JSI Utils/TypedArray.h"
-#include "Utils/DispatchQueue.h"
+#include "JSI Utils/MGLSmartHostObject.h"
+#include "JSI Utils/MGLTypedArray.h"
+#include "Utils/MGLDispatchQueue.h"
 
 namespace margelo {
 
 namespace jsi = facebook::jsi;
 namespace react = facebook::react;
 
-class JSI_EXPORT FastCryptoHostObject : public SmartHostObject {
+class JSI_EXPORT MGLFastCryptoHostObject : public MGLSmartHostObject {
  public:
-  explicit FastCryptoHostObject(
+  explicit MGLFastCryptoHostObject(
       std::shared_ptr<react::CallInvoker> jsCallInvoker,
       std::shared_ptr<DispatchQueue::dispatch_queue> workerQueue);
 
-  virtual ~FastCryptoHostObject() { invalidateJsiPropNameIDCache(); }
+  virtual ~MGLFastCryptoHostObject() { invalidateJsiPropNameIDCache(); }
 };
 
 }  // namespace margelo

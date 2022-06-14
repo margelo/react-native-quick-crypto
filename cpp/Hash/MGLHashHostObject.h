@@ -18,25 +18,26 @@
 #include <memory>
 #include <string>
 
-#include "JSI Utils/SmartHostObject.h"
+#include "JSI Utils/MGLSmartHostObject.h"
 
 namespace margelo {
 
 using namespace facebook;
 
-class HashHostObject : public SmartHostObject {
+class MGLHashHostObject : public MGLSmartHostObject {
  public:
-  explicit HashHostObject(
+  explicit MGLHashHostObject(
       std::string hashAlgorithm, unsigned int md_len,
       std::shared_ptr<react::CallInvoker> jsCallInvoker,
       std::shared_ptr<DispatchQueue::dispatch_queue> workerQueue);
 
-  explicit HashHostObject(
-      HashHostObject *other, std::shared_ptr<react::CallInvoker> jsCallInvoker,
+  explicit MGLHashHostObject(
+      MGLHashHostObject *other,
+      std::shared_ptr<react::CallInvoker> jsCallInvoker,
       std::shared_ptr<DispatchQueue::dispatch_queue> workerQueue);
   void installMethods();
 
-  virtual ~HashHostObject();
+  virtual ~MGLHashHostObject();
 
  private:
   EVP_MD_CTX *mdctx_ = nullptr;
@@ -45,4 +46,4 @@ class HashHostObject : public SmartHostObject {
 };
 }  // namespace margelo
 
-#endif /* HashHostObject_h */
+#endif /* MGLHashHostObject_h */

@@ -1,8 +1,8 @@
 // Copyright 2022 Margelo
 
-#include "HmacHostObject.h"
+#include "MGLHmacHostObject.h"
 
-#include <JSI Utils/TypedArray.h>
+#include <JSI Utils/MGLTypedArray.h>
 #include <jsi/jsi.h>
 #include <openssl/hmac.h>
 
@@ -33,11 +33,11 @@ const EVP_MD *parseHashAlgorithm(const std::string &hashAlgorithm) {
   throw std::runtime_error("Invalid Hash Algorithm!");
 }
 
-HmacHostObject::HmacHostObject(
+MGLHmacHostObject::MGLHmacHostObject(
     const std::string &hashAlgorithm, jsi::Runtime &runtime,
     jsi::ArrayBuffer &key, std::shared_ptr<react::CallInvoker> jsCallInvoker,
     std::shared_ptr<DispatchQueue::dispatch_queue> workerQueue)
-    : SmartHostObject(jsCallInvoker, workerQueue) {
+    : MGLSmartHostObject(jsCallInvoker, workerQueue) {
   this->context = HMAC_CTX_new();
   if (key.size(runtime) == 0) {
     HMAC_Init_ex(this->context, "", 0, parseHashAlgorithm(hashAlgorithm),
@@ -51,9 +51,10 @@ HmacHostObject::HmacHostObject(
   this->fields.push_back(HOST_LAMBDA("update", {
     if (!arguments[0].isObject() ||
         !arguments[0].getObject(runtime).isArrayBuffer(runtime)) {
-      throw jsi::JSError(runtime,
-                         "HmacHostObject::update: First argument ('message') "
-                         "has to be of type ArrayBuffer!");
+      throw jsi::JSError(
+          runtime,
+          "MGLHmacHostObject::update: First argument ('message') "
+          "has to be of type ArrayBuffer!");
     }
 
     auto message = arguments[0].getObject(runtime).getArrayBuffer(runtime);
@@ -71,15 +72,15 @@ HmacHostObject::HmacHostObject(
 
     HMAC_Final(this->context, md, &length);
 
-    TypedArray<TypedArrayKind::Uint8Array> typedArray(runtime, length);
+    MGLTypedArray<MGLTypedArrayKind::Uint8Array> MGLtypedArray(runtime, length);
     std::vector<unsigned char> vec(md, md + length);
-    typedArray.update(runtime, vec);
+    MGLtypedArray.update(runtime, vec);
 
-    return typedArray;
+    return MGLtypedArray;
   }));
 }
 
-HmacHostObject::~HmacHostObject() {
+MGLHmacHostObject::~MGLHmacHostObject() {
   if (this->context != nullptr) {
     HMAC_CTX_free(this->context);
   }
