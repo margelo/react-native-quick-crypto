@@ -2,7 +2,7 @@
 
 #include "MGLHmacHostObject.h"
 
-#include <JSI Utils/MGLTypedArray.h>
+#include <JSIUtils/MGLTypedArray.h>
 #include <jsi/jsi.h>
 #include <openssl/hmac.h>
 

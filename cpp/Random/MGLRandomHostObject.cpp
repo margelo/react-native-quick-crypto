@@ -4,7 +4,7 @@
 
 #include "MGLRandomHostObject.h"
 
-#include <JSI Utils/MGLTypedArray.h>
+#include <JSIUtils/MGLTypedArray.h>
 #include <openssl/bn.h>
 #include <openssl/dsa.h>
 #include <openssl/ec.h>

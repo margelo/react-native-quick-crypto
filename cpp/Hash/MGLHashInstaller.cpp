@@ -11,7 +11,7 @@
 
 #include <memory>
 
-#include "JSI Utils/MGLJSIMacros.h"
+#include "JSIUtils/MGLJSIMacros.h"
 #include "MGLHashHostObject.h"
 
 using namespace facebook;

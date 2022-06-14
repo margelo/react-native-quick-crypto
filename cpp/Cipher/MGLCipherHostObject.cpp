@@ -3,7 +3,7 @@
 //
 #include "MGLCipherHostObject.h"
 
-#include <JSI Utils/MGLTypedArray.h>
+#include <JSIUtils/MGLTypedArray.h>
 #include <Utils/logs.h>
 #include <openssl/evp.h>
 

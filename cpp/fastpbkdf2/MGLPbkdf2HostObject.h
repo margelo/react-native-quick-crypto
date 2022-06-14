@@ -2,12 +2,12 @@
 // Created by Szymon on 25/02/2022.
 //
 
-#ifndef FASTCRYPTOEXAMPLE_PBKDF2HOSTOBJECT_H
-#define FASTCRYPTOEXAMPLE_PBKDF2HOSTOBJECT_H
+#ifndef MGL_PBKDF2HOSTOBJECT_H
+#define MGL_PBKDF2HOSTOBJECT_H
 
 #include <memory>
 
-#include "JSI Utils/MGLSmartHostObject.h"
+#include "JSIUtils/MGLSmartHostObject.h"
 #include "fastpbkdf2/fastpbkdf2.h"
 
 namespace margelo {
@@ -21,4 +21,4 @@ class MGLPbkdf2HostObject : public MGLSmartHostObject {
 };
 
 }  // namespace margelo
-#endif  // FASTCRYPTOEXAMPLE_PBKDF2HOSTOBJECT_H
+#endif  // MGL_PBKDF2HOSTOBJECT_H

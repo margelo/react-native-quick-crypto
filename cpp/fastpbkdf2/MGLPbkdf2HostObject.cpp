@@ -4,7 +4,7 @@
 
 #include "MGLPbkdf2HostObject.h"
 
-#include <JSI Utils/MGLTypedArray.h>
+#include <JSIUtils/MGLTypedArray.h>
 #include <openssl/dsa.h>
 #include <openssl/ec.h>
 #include <openssl/err.h>

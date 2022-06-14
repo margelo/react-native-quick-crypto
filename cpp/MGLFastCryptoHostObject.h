@@ -7,8 +7,8 @@
 
 #include <memory>
 
-#include "JSI Utils/MGLSmartHostObject.h"
-#include "JSI Utils/MGLTypedArray.h"
+#include "JSIUtils/MGLSmartHostObject.h"
+#include "JSIUtils/MGLTypedArray.h"
 #include "Utils/MGLDispatchQueue.h"
 
 namespace margelo {

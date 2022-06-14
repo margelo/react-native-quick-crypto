@@ -9,7 +9,7 @@
 
 #include <openssl/hmac.h>
 
-#include "JSI Utils/MGLJSIMacros.h"
+#include "JSIUtils/MGLJSIMacros.h"
 #include "MGLHmacHostObject.h"
 
 using namespace facebook;

@@ -34,10 +34,10 @@ add_library(reactnativefastcrypto  # <-- Library name
         SHARED
         "src/main/cpp/cpp-adapter.cpp"
         "../cpp/MGLFastCryptoHostObject.cpp"
-        "../cpp/JSI Utils/MGLTypedArray.cpp"
+        "../cpp/JSIUtils/MGLTypedArray.cpp"
         "../cpp/Utils/MGLDispatchQueue.cpp"
-        "../cpp/JSI Utils/MGLThreadAwareHostObject.cpp"
-        "../cpp/JSI Utils/MGLSmartHostObject.cpp"
+        "../cpp/JSIUtils/MGLThreadAwareHostObject.cpp"
+        "../cpp/JSIUtils/MGLSmartHostObject.cpp"
         "../cpp/HMAC/MGLHmacInstaller.cpp"
         "../cpp/HMAC/MGLHmacHostObject.cpp"
         "../cpp/fastpbkdf2/MGLPbkdf2HostObject.cpp"

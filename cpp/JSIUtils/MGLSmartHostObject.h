@@ -43,4 +43,4 @@ class JSI_EXPORT MGLSmartHostObject : public MGLThreadAwareHostObject {
 
 }  // namespace margelo
 
-#endif  // MGL_MGLSMARTHOSTOBJECT_H
+#endif  // MGL_SMARTHOSTOBJECT_H

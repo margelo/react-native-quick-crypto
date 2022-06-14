@@ -3,7 +3,7 @@
 
 #include <memory>
 
-#include "JSI Utils/MGLJSIMacros.h"
+#include "JSIUtils/MGLJSIMacros.h"
 #include "MGLCipherHostObject.h"
 
 using namespace facebook;

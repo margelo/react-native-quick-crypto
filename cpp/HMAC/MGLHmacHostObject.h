@@ -13,7 +13,7 @@
 #include <memory>
 #include <string>
 
-#include "JSI Utils/MGLSmartHostObject.h"
+#include "JSIUtils/MGLSmartHostObject.h"
 
 namespace margelo {
 
