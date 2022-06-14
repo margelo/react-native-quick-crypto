@@ -127,25 +127,25 @@ export function registerCipherTests1() {
     }
   });
 
-  // it('string to Cipher#update() should not assert.', () => {
-  //   const c = crypto.createCipher('aes192', '0123456789abcdef');
-  //   c.update('update');
-  //   c.final();
-  // });
+  it('string to Cipher#update() should not assert.', () => {
+    const c = crypto.createCipher('aes192', '0123456789abcdef');
+    c.update('update');
+    c.final();
+  });
 
-  // it("'utf-8' and 'utf8' are identical.", () => {
-  //   let c = crypto.createCipher('aes192', '0123456789abcdef');
-  //   c.update('update', ''); // Defaults to "utf8".
-  //   c.final('utf-8'); // Should not throw.
+  it("'utf-8' and 'utf8' are identical.", () => {
+    let c = crypto.createCipher('aes192', '0123456789abcdef');
+    c.update('update', ''); // Defaults to "utf8".
+    c.final('utf-8'); // Should not throw.
 
-  //   c = crypto.createCipher('aes192', '0123456789abcdef');
-  //   c.update('update', 'utf8');
-  //   c.final('utf-8'); // Should not throw.
+    c = crypto.createCipher('aes192', '0123456789abcdef');
+    c.update('update', 'utf8');
+    c.final('utf-8'); // Should not throw.
 
-  //   c = crypto.createCipher('aes192', '0123456789abcdef');
-  //   c.update('update', 'utf-8');
-  //   c.final('utf8'); // Should not throw.
-  // });
+    c = crypto.createCipher('aes192', '0123456789abcdef');
+    c.update('update', 'utf-8');
+    c.final('utf8'); // Should not throw.
+  });
 
   // it('Regression tests for https://github.com/nodejs/node/issues/8236', () => {
   //   const key = '0123456789abcdef';

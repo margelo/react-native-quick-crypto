@@ -147,7 +147,5 @@ export function binaryLikeToArrayBuffer(
 }
 
 export function ab2str(buf: ArrayBuffer, encoding: string = 'hex') {
-  console.warn('ROPO ab2str', encoding);
-
   return Buffer.from(buf).toString(encoding);
 }

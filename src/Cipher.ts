@@ -1,9 +1,7 @@
 /* eslint-disable no-dupe-class-members */
 import { NativeFastCrypto } from './NativeFastCrypto/NativeFastCrypto';
 import Stream from 'stream';
-import { Buffer } from '@craftzdog/react-native-buffer';
 import {
-  ab2str,
   BinaryLike,
   binaryLikeToArrayBuffer,
   CipherEncoding,
@@ -22,6 +20,9 @@ import type {
   // CipherOCBTypes,
   // CipherOCBOptions,
 } from 'crypto'; // Node crypto typings
+import { StringDecoder } from 'string_decoder';
+import { Buffer } from '@craftzdog/react-native-buffer';
+import { Buffer as SBuffer } from 'safe-buffer';
 
 const createInternalCipher = NativeFastCrypto.createCipher;
 const createInternalDecipher = NativeFastCrypto.createDecipher;
@@ -37,9 +38,51 @@ function getUIntOption(options: Record<string, any>, key: string) {
   return -1;
 }
 
+function normalizeEncoding(enc: string) {
+  if (!enc) return 'utf8';
+  var retried;
+  while (true) {
+    switch (enc) {
+      case 'utf8':
+      case 'utf-8':
+        return 'utf8';
+      case 'ucs2':
+      case 'ucs-2':
+      case 'utf16le':
+      case 'utf-16le':
+        return 'utf16le';
+      case 'latin1':
+      case 'binary':
+        return 'latin1';
+      case 'base64':
+      case 'ascii':
+      case 'hex':
+        return enc;
+      default:
+        if (retried) return; // undefined
+        enc = ('' + enc).toLowerCase();
+        retried = true;
+    }
+  }
+}
+
+function validateEncoding(data: string, encoding: string) {
+  const normalizedEncoding = normalizeEncoding(encoding);
+  const length = data.length;
+
+  if (normalizedEncoding === 'hex' && length % 2 !== 0) {
+    throw new Error(`Encoding ${encoding} not valid for data length ${length}`);
+  }
+}
+
+function getDecoder(decoder?: StringDecoder, encoding?: BufferEncoding) {
+  return decoder ?? new StringDecoder(encoding);
+}
+
 class CipherCommon extends Stream.Transform {
   private internal: InternalCipher;
   private options: any;
+  private decoder: StringDecoder | undefined;
 
   constructor(
     cipherType: string,
@@ -65,17 +108,6 @@ class CipherCommon extends Stream.Transform {
     this.options = options;
   }
 
-  // TODO(osp) missing function
-  // function validateEncoding(data, encoding) {
-  //   const normalizedEncoding = normalizeEncoding(encoding);
-  //   const length = data.length;
-
-  //   if (normalizedEncoding === 'hex' && length % 2 !== 0) {
-  //     throw new ERR_INVALID_ARG_VALUE('encoding', encoding,
-  //                                     `is invalid for data of length ${length}`);
-  //   }
-  // }
-
   update(
     data: BinaryLike | ArrayBufferView,
     inputEncoding?: CipherEncoding,
@@ -85,24 +117,22 @@ class CipherCommon extends Stream.Transform {
     inputEncoding = inputEncoding ?? defaultEncoding;
     outputEncoding = outputEncoding ?? defaultEncoding;
 
-    // TODO(osp) validation
-    // if (typeof data === 'string') {
-    // validateEncoding(data, inputEncoding);
-    // } else if (!isArrayBufferView(data)) {
-    // throw new ERR_INVALID_ARG_TYPE(
-    //   'data', ['string', 'Buffer', 'TypedArray', 'DataView'], data);
-    // }
+    if (typeof data === 'string') {
+      validateEncoding(data, inputEncoding);
+    } else if (!ArrayBuffer.isView(data)) {
+      throw new Error('Invalid data argument');
+    }
 
     if (typeof data === 'string') {
-      console.warn('input encoding', inputEncoding, outputEncoding);
-
       data = binaryLikeToArrayBuffer(data, inputEncoding);
     }
 
     const ret = this.internal.update(data);
 
     if (outputEncoding && outputEncoding !== 'buffer') {
-      return ab2str(ret, outputEncoding);
+      this.decoder = getDecoder(this.decoder, outputEncoding);
+
+      return this.decoder!.write(SBuffer.from(ret) as any);
     }
 
     return ret;
@@ -114,14 +144,16 @@ class CipherCommon extends Stream.Transform {
     const ret = this.internal.final();
 
     if (outputEncoding && outputEncoding !== 'buffer') {
-      return ab2str(ret, outputEncoding);
+      this.decoder = getDecoder(this.decoder, outputEncoding);
+
+      return this.decoder!.end(SBuffer.from(ret) as any);
     }
 
     return ret;
   }
 
   _transform(chunk: BinaryLike, encoding: Encoding, callback: () => void) {
-    // this.update(chunk, encoding);
+    this.update(chunk, encoding);
     callback();
   }
 

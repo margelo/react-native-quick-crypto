@@ -227,7 +227,6 @@ void CipherHostObject::installMethods() {
 
         const unsigned char *data = dataArrayBuffer.data(runtime);
         auto len = dataArrayBuffer.length(runtime);
-        LOGW("ROPO len %i", len);
 
         if (ctx_ == nullptr || len > INT_MAX) {
           // On the node version there are several layers of wrapping and errors
@@ -259,13 +258,10 @@ void CipherHostObject::installMethods() {
 
         TypedArray<TypedArrayKind::Uint8Array> out(runtime, buf_len);
 
-        LOGW("buf_length before update %i", buf_len);
         // Important this function returns the real size of the data in buf_len
         // Output needs to be truncated to not send extra 0s
         int r = EVP_CipherUpdate(ctx_, out.getBuffer(runtime).data(runtime),
                                  &buf_len, data, len);
-
-        LOGW("buf_length after update %i", buf_len);
 
         // Trim exceeding bytes
         TypedArray<TypedArrayKind::Uint8Array> ret(runtime, buf_len);
@@ -305,15 +301,12 @@ void CipherHostObject::installMethods() {
     // update(). EVP_CipherFinal_ex must not be called and will fail.
     bool ok;
     int out_len = out.byteLength(runtime);
-    LOGW("buf len: %i, out len: %i", buf_len, out_len);
     if (!isCipher_ && mode == EVP_CIPH_CCM_MODE) {
       ok = !pending_auth_failed_;
       TypedArray<TypedArrayKind::Uint8Array> out(runtime, 0);
     } else {
       ok = EVP_CipherFinal_ex(ctx_, out.getBuffer(runtime).data(runtime),
                               &out_len) == 1;
-
-      LOGW("out_len after _ex call: %i", out_len);
 
       if (ok && isCipher_ && IsAuthenticatedMode()) {
         // In GCM mode, the authentication tag length can be specified in

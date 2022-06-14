@@ -1,6 +1,6 @@
 import * as pbkdf2 from './pbkdf2';
 import * as random from './random';
-import * as cipher from './cipher';
+import * as cipher from './Cipher';
 import { createHmac } from './Hmac';
 import { createHash } from './Hash';
 
