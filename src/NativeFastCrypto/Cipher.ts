@@ -4,6 +4,12 @@ export type InternalCipher = {
   update: (data: BinaryLike | ArrayBufferView) => ArrayBuffer;
   final: () => ArrayBuffer;
   copy: () => void;
+  setAAD: (args: {
+    data: BinaryLike;
+    plaintextLength?: number;
+  }) => InternalCipher;
+  setAutoPadding: (autoPad: boolean) => boolean;
+  setAuthTag: (tag: ArrayBuffer) => boolean;
 };
 
 export type CreateCipherMethod = (params: {

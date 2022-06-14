@@ -21,7 +21,7 @@ import type { InternalCipher } from './NativeFastCrypto/cipher';
 //   // CipherOCBOptions,
 // } from 'crypto'; // Node crypto typings
 import { StringDecoder } from 'string_decoder';
-import { Buffer } from '@craftzdog/react-native-buffer';
+import type { Buffer } from '@craftzdog/react-native-buffer';
 import { Buffer as SBuffer } from 'safe-buffer';
 
 const createInternalCipher = NativeFastCrypto.createCipher;
@@ -165,23 +165,31 @@ class CipherCommon extends Stream.Transform {
     callback();
   }
 
-  setAutoPadding(autoPadding?: boolean): this {
+  public setAutoPadding(autoPadding?: boolean): this {
     this.internal.setAutoPadding(!!autoPadding);
     return this;
   }
 
-  protected setAAD(
-    buffer: ArrayBufferView,
+  public setAAD(
+    buffer: Buffer,
     options?: {
       plaintextLength: number;
     }
   ): this {
-    this.internal.setAAD(buffer.buffer, options?.plaintextLength);
+    this.internal.setAAD({
+      data: buffer.buffer,
+      plaintextLength: options?.plaintextLength,
+    });
     return this;
   }
 
-  protected getAuthTag(): Buffer {
-    return Buffer.from(this.internal.getAuthTag());
+  // protected getAuthTag(): Buffer {
+  //   return Buffer.from(this.internal.getAuthTag());
+  // }
+
+  public setAuthTag(tag: Buffer): this {
+    this.internal.setAuthTag(tag.buffer);
+    return this;
   }
 }
 

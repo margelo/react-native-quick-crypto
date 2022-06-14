@@ -208,6 +208,9 @@ void CipherHostObject::commonInit(jsi::Runtime &runtime,
 }
 
 void CipherHostObject::installMethods() {
+  // Instance methods
+
+  // update
   this->fields.push_back(buildPair(
       "update", JSIF([this]) {
         if (count != 1) {
@@ -283,6 +286,7 @@ void CipherHostObject::installMethods() {
         return ret;
       }));
 
+  // final
   this->fields.push_back(HOST_LAMBDA("final", {
     if (ctx_ == nullptr) {
       throw jsi::JSError(runtime, "kErrorState");
@@ -335,6 +339,154 @@ void CipherHostObject::installMethods() {
     ctx_ = nullptr;
 
     return ret;
+  }));
+
+  // setAAD
+  this->fields.push_back(HOST_LAMBDA("setAAD", {
+    if (count != 1) {
+      throw jsi::JSError(runtime, "cipher.setAAD requires an argument record");
+    }
+
+    if (!arguments[0].isObject()) {
+      throw jsi::JSError(runtime,
+                         "cipher.setAAD first argument needs to be a record");
+    }
+
+    auto args = arguments[0].asObject(runtime);
+
+    if (!args.hasProperty(runtime, "data") ||
+        !args.getProperty(runtime, "data").isObject() ||
+        !args.getProperty(runtime, "data")
+             .asObject(runtime)
+             .isArrayBuffer(runtime)) {
+      throw jsi::JSError(runtime, "data is missing in arguments record");
+    }
+
+    auto dataArrayBuffer = args.getProperty(runtime, "data")
+                               .asObject(runtime)
+                               .getArrayBuffer(runtime);
+
+    int plaintext_len = -1;
+    if (args.hasProperty(runtime, "plaintextLength") &&
+        !args.getProperty(runtime, "plaintextLength").isNull() &&
+        !args.getProperty(runtime, "plaintextLength").isUndefined()) {
+      if (args.getProperty(runtime, "plaintextLength").isNumber()) {
+        plaintext_len =
+            (int)args.getProperty(runtime, "plaintextLength").asNumber();
+      } else {
+        throw new jsi::JSError(runtime,
+                               "plaintextLength property needs to be a number");
+      }
+    }
+
+    const unsigned char *data = dataArrayBuffer.data(runtime);
+    auto len = dataArrayBuffer.length(runtime);
+
+    if (!ctx_ || !IsAuthenticatedMode()) return false;
+
+    int outlen;
+    const int mode = EVP_CIPHER_CTX_mode(ctx_);
+
+    // When in CCM mode, we need to set the authentication tag and the plaintext
+    // length in advance.
+    if (mode == EVP_CIPH_CCM_MODE) {
+      if (plaintext_len < 0) {
+        throw jsi::JSError(runtime,
+                           "plaintextLength required for CCM mode with AAD");
+        return false;
+      }
+
+      if (!CheckCCMMessageLength(plaintext_len)) return false;
+
+      if (!isCipher_) {
+        if (!MaybePassAuthTagToOpenSSL()) return false;
+      }
+
+      // Specify the plaintext length.
+      if (!EVP_CipherUpdate(ctx_, nullptr, &outlen, nullptr, plaintext_len))
+        return false;
+    }
+
+    return 1 == EVP_CipherUpdate(ctx_, nullptr, &outlen, data, len);
+  }));
+
+  //  setAutoPadding
+  this->fields.push_back(HOST_LAMBDA("setAutoPadding", {
+    if (count != 1) {
+      throw jsi::JSError(
+          runtime, "cipher.setAutoPadding requires at least one argument");
+    }
+
+    if (!arguments[0].isBool()) {
+      throw jsi::JSError(
+          runtime, "cipher.setAutoPadding first argument must be a boolean");
+    }
+
+    if (ctx_ == nullptr) {
+      return false;
+    }
+
+    return EVP_CIPHER_CTX_set_padding(ctx_, arguments[0].getBool());
+  }));
+
+  // setAuthTag
+  this->fields.push_back(HOST_LAMBDA("setAuthTag", {
+    if (count != 1 || !arguments[0].isObject() ||
+        !arguments[0].asObject(runtime).isArrayBuffer(runtime)) {
+      throw jsi::JSError(
+          runtime, "cipher.setAuthTag requires an ArrayBuffer tag argument");
+    }
+
+    if (!ctx_ || !IsAuthenticatedMode() || isCipher_ ||
+        auth_tag_state_ != kAuthTagUnknown) {
+      return false;
+    }
+
+    auto authTagArrayBuffer =
+        arguments[0].asObject(runtime).getArrayBuffer(runtime);
+    const unsigned char *data = authTagArrayBuffer.data(runtime);
+    auto tag_len = authTagArrayBuffer.length(runtime);
+
+    //    ArrayBufferOrViewContents<char> auth_tag(args[0]);
+    // TODO(osp) implement this check
+    //    if (UNLIKELY(!auth_tag.CheckSizeInt32()))
+    //      return THROW_ERR_OUT_OF_RANGE(env, "buffer is too big");
+
+    //    unsigned int tag_len = auth_tag.size();
+
+    const int mode = EVP_CIPHER_CTX_mode(ctx_);
+    bool is_valid;
+    if (mode == EVP_CIPH_GCM_MODE) {
+      // Restrict GCM tag lengths according to NIST 800-38d, page 9.
+      is_valid =
+          (auth_tag_len_ == kNoAuthTagLength || auth_tag_len_ == tag_len) &&
+          IsValidGCMTagLength(tag_len);
+    } else {
+      // At this point, the tag length is already known and must match the
+      // length of the given authentication tag.
+      // TODO(osp) add CHECK here
+      IsSupportedAuthenticatedMode(ctx_);
+      //      CHECK_NE(cipher->auth_tag_len_, kNoAuthTagLength);
+      is_valid = auth_tag_len_ == tag_len;
+    }
+
+    if (!is_valid) {
+      throw jsi::JSError(runtime,
+                         "Invalid authentication tag length: " + tag_len);
+      //      return THROW_ERR_CRYPTO_INVALID_AUTH_TAG(
+      //              env, "Invalid authentication tag length: %u", tag_len);
+    }
+
+    auth_tag_len_ = tag_len;
+    auth_tag_state_ = kAuthTagKnown;
+    //    CHECK_LE(cipher->auth_tag_len_, sizeof(cipher->auth_tag_));
+
+    //  memset(cipher->auth_tag_, 0, sizeof(cipher->auth_tag_));
+    //  auth_tag.CopyTo(cipher->auth_tag_, cipher->auth_tag_len_);
+    memset(auth_tag_, 0, sizeof(auth_tag_));
+    //      auth_tag.CopyTo(cipher->auth_tag_, cipher->auth_tag_len_);
+
+    return true;
   }));
 }
 

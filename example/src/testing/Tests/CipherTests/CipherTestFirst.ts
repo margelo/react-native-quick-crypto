@@ -178,8 +178,12 @@ export function registerCipherTests1() {
     const tagbuf = Buffer.from('auth_tag');
     const aadbuf = Buffer.from('aadbuf');
     const decipher = crypto.createDecipher('aes-256-gcm', key);
+    console.warn('mk1');
+
     assert.strictEqual(decipher.setAutoPadding(), decipher);
+    console.warn('mk2');
     assert.strictEqual(decipher.setAuthTag(tagbuf), decipher);
+    console.warn('mk3');
     assert.strictEqual(decipher.setAAD(aadbuf), decipher);
   });
 }
