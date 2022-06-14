@@ -23,6 +23,7 @@ import type { InternalCipher } from './NativeFastCrypto/cipher';
 import { StringDecoder } from 'string_decoder';
 import type { Buffer } from '@craftzdog/react-native-buffer';
 import { Buffer as SBuffer } from 'safe-buffer';
+// import { isArrayBufferView } from 'util/types';
 
 const createInternalCipher = NativeFastCrypto.createCipher;
 const createInternalDecipher = NativeFastCrypto.createDecipher;
@@ -109,7 +110,7 @@ class CipherCommon extends Stream.Transform {
   }
 
   update(
-    data: BinaryLike | ArrayBufferView,
+    data: BinaryLike,
     inputEncoding?: CipherEncoding,
     outputEncoding?: CipherEncoding
   ): ArrayBuffer | string {
@@ -128,6 +129,8 @@ class CipherCommon extends Stream.Transform {
       // on our case we need to correctly send the arraybuffer to the jsi side
       inputEncoding = inputEncoding === 'buffer' ? 'utf8' : inputEncoding;
       data = binaryLikeToArrayBuffer(data, inputEncoding);
+    } else {
+      data = binaryLikeToArrayBuffer(data as any, inputEncoding);
     }
 
     const ret = this.internal.update(data);

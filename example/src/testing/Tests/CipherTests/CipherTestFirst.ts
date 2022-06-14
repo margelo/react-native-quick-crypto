@@ -168,7 +168,9 @@ export function registerCipherTests1() {
     assert.strictEqual(txt, plaintext);
 
     decipher = crypto.createDecipher('aes192', key);
+    // @ts-expect-error
     txt = decipher.update(ciph, 'base64', 'utf-16le');
+    // @ts-expect-error
     txt += decipher.final('utf-16le');
     assert.strictEqual(txt, plaintext);
   });
@@ -178,12 +180,9 @@ export function registerCipherTests1() {
     const tagbuf = Buffer.from('auth_tag');
     const aadbuf = Buffer.from('aadbuf');
     const decipher = crypto.createDecipher('aes-256-gcm', key);
-    console.warn('mk1');
 
     assert.strictEqual(decipher.setAutoPadding(), decipher);
-    console.warn('mk2');
     assert.strictEqual(decipher.setAuthTag(tagbuf), decipher);
-    console.warn('mk3');
     assert.strictEqual(decipher.setAAD(aadbuf), decipher);
   });
 }

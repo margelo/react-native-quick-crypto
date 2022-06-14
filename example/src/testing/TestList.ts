@@ -5,6 +5,7 @@ import { registerRandomTests } from './Tests/RandomTests/random';
 import { registerHmacTests } from './Tests/HmacTests/HmacTests';
 import { registerHashTests } from './Tests/HashTests/HashTests';
 import { registerCipherTests1 } from './Tests/CipherTests/CipherTestFirst';
+import { registerCipherTests2 } from './Tests/CipherTests/CipherTestSecond';
 import chai from 'chai';
 
 export const TEST_LIST: Array<TestItemType> = [
@@ -44,8 +45,13 @@ export const TEST_LIST: Array<TestItemType> = [
     registrator: registerHashTests,
   },
   {
-    description: 'Cipher 1',
+    description: 'createCipher/createDecipher',
     value: false,
     registrator: registerCipherTests1,
+  },
+  {
+    description: 'createCipheriv/createDecipheriv',
+    value: false,
+    registrator: registerCipherTests2,
   },
 ];
