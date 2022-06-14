@@ -129,10 +129,7 @@ export function registerCipherTests1() {
 
   it('string to Cipher#update() should not assert.', () => {
     const c = crypto.createCipher('aes192', '0123456789abcdef');
-    console.warn('mk1');
-
     c.update('update');
-    console.warn('mk2');
     c.final();
   });
 
@@ -151,38 +148,38 @@ export function registerCipherTests1() {
     c.final('utf8'); // Should not throw.
   });
 
-  // it('Regression tests for https://github.com/nodejs/node/issues/8236', () => {
-  //   const key = '0123456789abcdef';
-  //   const plaintext = 'Top secret!!!';
-  //   const c = crypto.createCipher('aes192', key);
-  //   let ciph = c.update(plaintext, 'utf16le', 'base64');
-  //   ciph += c.final('base64');
+  it('Regression tests for https://github.com/nodejs/node/issues/8236', () => {
+    const key = '0123456789abcdef';
+    const plaintext = 'Top secret!!!';
+    const c = crypto.createCipher('aes192', key);
+    let ciph = c.update(plaintext, 'utf16le', 'base64');
+    ciph += c.final('base64');
 
-  //   let decipher = crypto.createDecipher('aes192', key);
+    let decipher = crypto.createDecipher('aes192', key);
 
-  //   let txt;
-  //   txt = decipher.update(ciph, 'base64', 'ucs2');
-  //   txt += decipher.final('ucs2');
-  //   assert.strictEqual(txt, plaintext);
+    let txt;
+    txt = decipher.update(ciph, 'base64', 'ucs2');
+    txt += decipher.final('ucs2');
+    assert.strictEqual(txt, plaintext);
 
-  //   decipher = crypto.createDecipher('aes192', key);
-  //   txt = decipher.update(ciph, 'base64', 'ucs-2');
-  //   txt += decipher.final('ucs-2');
-  //   assert.strictEqual(txt, plaintext);
+    decipher = crypto.createDecipher('aes192', key);
+    txt = decipher.update(ciph, 'base64', 'ucs-2');
+    txt += decipher.final('ucs-2');
+    assert.strictEqual(txt, plaintext);
 
-  //   decipher = crypto.createDecipher('aes192', key);
-  //   txt = decipher.update(ciph, 'base64', 'utf-16le');
-  //   txt += decipher.final('utf-16le');
-  //   assert.strictEqual(txt, plaintext);
-  // });
+    decipher = crypto.createDecipher('aes192', key);
+    txt = decipher.update(ciph, 'base64', 'utf-16le');
+    txt += decipher.final('utf-16le');
+    assert.strictEqual(txt, plaintext);
+  });
 
-  // it('setAutoPadding/setAuthTag/setAAD should return `this`', () => {
-  //   const key = '0123456789';
-  //   const tagbuf = Buffer.from('auth_tag');
-  //   const aadbuf = Buffer.from('aadbuf');
-  //   const decipher = crypto.createDecipher('aes-256-gcm', key);
-  //   assert.strictEqual(decipher.setAutoPadding(), decipher);
-  //   assert.strictEqual(decipher.setAuthTag(tagbuf), decipher);
-  //   assert.strictEqual(decipher.setAAD(aadbuf), decipher);
-  // });
+  it('setAutoPadding/setAuthTag/setAAD should return `this`', () => {
+    const key = '0123456789';
+    const tagbuf = Buffer.from('auth_tag');
+    const aadbuf = Buffer.from('aadbuf');
+    const decipher = crypto.createDecipher('aes-256-gcm', key);
+    assert.strictEqual(decipher.setAutoPadding(), decipher);
+    assert.strictEqual(decipher.setAuthTag(tagbuf), decipher);
+    assert.strictEqual(decipher.setAAD(aadbuf), decipher);
+  });
 }
