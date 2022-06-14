@@ -160,7 +160,7 @@ class CipherCommon extends Stream.Transform {
   }
 
   _transform(chunk: BinaryLike, encoding: Encoding, callback: () => void) {
-    this.update(chunk, encoding);
+    this.push(this.update(chunk, encoding));
     callback();
   }
 

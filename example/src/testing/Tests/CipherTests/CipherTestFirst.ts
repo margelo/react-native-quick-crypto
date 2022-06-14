@@ -31,14 +31,14 @@ export function registerCipherTests1() {
       // NB: In real life, it's not guaranteed that you can get all of it
       // in a single read() like this.  But in this case, we know it's
       // quite small, so there's no harm.
-      // const cStream = crypto.createCipher('aes192', key);
-      // cStream.end(plaintext);
-      // ciph = cStream.read();
+      const cStream = crypto.createCipher('aes192', key);
+      cStream.end(plaintext);
+      ciph = cStream.read();
 
-      // const dStream = crypto.createDecipher('aes192', key);
-      // dStream.end(ciph);
-      // txt = dStream.read().toString('utf8');
-      // assert.strictEqual(txt, plaintext);
+      const dStream = crypto.createDecipher('aes192', key);
+      dStream.end(ciph);
+      txt = dStream.read().toString('utf8');
+      assert.strictEqual(txt, plaintext);
     });
   }
 
