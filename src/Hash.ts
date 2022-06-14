@@ -85,7 +85,7 @@ class Hash extends Stream.Transform {
    * @param encoding The `encoding` of the return value.
    */
   digest(): Buffer;
-  digest(encoding: BinaryToTextEncoding): string;
+  digest(encoding: BinaryToTextEncoding | 'buffer'): string;
   digest(encoding?: BinaryToTextEncoding | 'buffer'): string | Buffer {
     const result: ArrayBuffer = this.internalHash.digest();
 

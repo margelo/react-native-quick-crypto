@@ -1,7 +1,7 @@
 // copied from https://github.com/nodejs/node/blob/master/test/parallel/test-crypto-hmac.js
 import { FastCrypto as crypto } from 'react-native-fast-crypto';
 import { Buffer } from '@craftzdog/react-native-buffer';
-import { describe, it, itOnly } from '../../MochaRNAdapter';
+import { describe, it } from '../../MochaRNAdapter';
 import chai, { expect } from 'chai';
 
 export function registerHmacTests() {
@@ -13,24 +13,32 @@ export function registerHmacTests() {
     });
 
     it('invalid arg1', () => {
+      // @ts-expect-error
       chai.expect(crypto.createHmac(null)).Throw(/ERR_INVALID_ARG_TYPE/);
     });
 
     it('invalid arg type', () => {
       chai
+        // @ts-expect-error
         .expect(crypto.createHmac('sha1', null))
         .Throw(/ERR_INVALID_ARG_TYPE/);
     });
   });
 
-  function testHmac(algo, key, data, expected) {
+  function testHmac(
+    algo: string,
+    key: string,
+    data: string | string[],
+    expected: any
+  ) {
     it(`testHmac ${algo} ${key} ${data}`, () => {
       if (!Array.isArray(data)) data = [data];
 
       // If the key is a Buffer, test Hmac with a key object as well.
       const keyWrappers = [
-        (key) => key,
-    //    ...(typeof key === 'string' ? [] : [crypto.createSecretKey]),
+        // eslint-disable-next-line no-shadow
+        (key: string) => key,
+        //    ...(typeof key === 'string' ? [] : [crypto.createSecretKey]),
       ];
 
       for (const keyWrapper of keyWrappers) {
@@ -44,15 +52,13 @@ export function registerHmacTests() {
     });
   }
 
-  {
-    // Test HMAC with multiple updates.
-    testHmac(
-      'sha1',
-      'Node',
-      ['some data', 'to hmac'],
-      '19fd6e1ba73d9ed2224dd5094a71babe85d9a892'
-    );
-  }
+  // Test HMAC with multiple updates.
+  testHmac(
+    'sha1',
+    'Node',
+    ['some data', 'to hmac'],
+    '19fd6e1ba73d9ed2224dd5094a71babe85d9a892'
+  );
 
   // Test HMAC (Wikipedia Test Cases)
   const wikipedia = [

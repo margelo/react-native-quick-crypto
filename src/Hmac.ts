@@ -1,3 +1,4 @@
+/* eslint-disable no-dupe-class-members */
 import { NativeFastCrypto } from './NativeFastCrypto/NativeFastCrypto';
 import type { InternalHmac } from './NativeFastCrypto/hmac';
 import {
@@ -5,7 +6,7 @@ import {
   Encoding,
   toArrayBuffer,
   BinaryLike,
-  binaryLikeToArrayBuffer
+  binaryLikeToArrayBuffer,
 } from './Utils';
 import Stream from 'stream';
 import { Buffer } from '@craftzdog/react-native-buffer';
@@ -49,7 +50,10 @@ class Hmac extends Stream.Transform {
       throw 'Wrong key type';
     }
 
-    this.internalHmac = createInternalHmac(algorithm, keyAsString as ArrayBuffer);
+    this.internalHmac = createInternalHmac(
+      algorithm,
+      keyAsString as ArrayBuffer
+    );
     this.options = options;
   }
 
@@ -103,9 +107,11 @@ class Hmac extends Stream.Transform {
    * @param encoding The `encoding` of the return value.
    */
   digest(): Buffer;
-  digest(encoding: BinaryToTextEncoding): string;
-  digest(encoding: BinaryToTextEncoding): string | Buffer {
-    const result: ArrayBuffer = (this.isFinalized) ? new ArrayBuffer(0) : this.internalHmac.digest();
+  digest(encoding: BinaryToTextEncoding | 'buffer'): string;
+  digest(encoding?: BinaryToTextEncoding | 'buffer'): string | Buffer {
+    const result: ArrayBuffer = this.isFinalized
+      ? new ArrayBuffer(0)
+      : this.internalHmac.digest();
     this.isFinalized = true;
     if (encoding && encoding !== 'buffer') {
       return Buffer.from(result).toString(encoding);
