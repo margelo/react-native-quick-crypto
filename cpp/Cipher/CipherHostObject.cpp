@@ -7,6 +7,7 @@
 #include <Utils/logs.h>
 #include <openssl/evp.h>
 
+#include <algorithm>
 #include <memory>
 #include <string>
 #include <utility>
@@ -45,6 +46,14 @@ bool IsSupportedAuthenticatedMode(const EVP_CIPHER_CTX *ctx) {
 
 bool IsValidGCMTagLength(unsigned int tag_len) {
   return tag_len == 4 || tag_len == 8 || (tag_len >= 12 && tag_len <= 16);
+}
+
+void CopyTo(jsi::Runtime &runtime, jsi::ArrayBuffer *src, char *dest,
+            size_t len) {
+  //  static_assert(sizeof(M) == 1, "sizeof(M) must equal 1");
+  len = std::min(len, src->size(runtime));
+  if (len > 0 && src->data(runtime) != nullptr)
+    memcpy(dest, src->data(runtime), len);
 }
 
 CipherHostObject::CipherHostObject(
@@ -481,10 +490,8 @@ void CipherHostObject::installMethods() {
     auth_tag_state_ = kAuthTagKnown;
     //    CHECK_LE(cipher->auth_tag_len_, sizeof(cipher->auth_tag_));
 
-    //  memset(cipher->auth_tag_, 0, sizeof(cipher->auth_tag_));
-    //  auth_tag.CopyTo(cipher->auth_tag_, cipher->auth_tag_len_);
     memset(auth_tag_, 0, sizeof(auth_tag_));
-    //      auth_tag.CopyTo(cipher->auth_tag_, cipher->auth_tag_len_);
+    CopyTo(runtime, &authTagArrayBuffer, auth_tag_, auth_tag_len_);
 
     return true;
   }));
