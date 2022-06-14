@@ -9,6 +9,8 @@ import {
   getDefaultEncoding,
 } from './Utils';
 import type { InternalCipher } from './NativeFastCrypto/cipher';
+// TODO(osp) re-enable type specific constructors
+// They are nice to have but not absolutely necessary
 // import type {
 //   CipherCCMOptions,
 //   CipherCCMTypes,
@@ -23,7 +25,6 @@ import type { InternalCipher } from './NativeFastCrypto/cipher';
 import { StringDecoder } from 'string_decoder';
 import type { Buffer } from '@craftzdog/react-native-buffer';
 import { Buffer as SBuffer } from 'safe-buffer';
-// import { isArrayBufferView } from 'util/types';
 
 const createInternalCipher = NativeFastCrypto.createCipher;
 const createInternalDecipher = NativeFastCrypto.createDecipher;
