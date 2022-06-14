@@ -9,8 +9,13 @@
 
 #include <openssl/hmac.h>
 
+#ifdef ANDROID
+#include "JSIUtils/MGLHmacHostObject.h"
 #include "JSIUtils/MGLJSIMacros.h"
+#else
 #include "MGLHmacHostObject.h"
+#include "MGLJSIMacros.h"
+#endif
 
 using namespace facebook;
 

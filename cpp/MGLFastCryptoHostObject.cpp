@@ -1,18 +1,28 @@
 // Copyright 2022 Margelo
 #include "MGLFastCryptoHostObject.h"
 
-#include <Hash/MGLHashInstaller.h>
 #include <ReactCommon/TurboModuleUtils.h>
 #include <jsi/jsi.h>
 
 #include <memory>
 #include <vector>
 
+#ifdef ANDROID
 #include "Cipher/MGLCreateCipherInstaller.h"
 #include "Cipher/MGLCreateDecipherInstaller.h"
 #include "HMAC/MGLHmacInstaller.h"
+#include "Hash/MGLHashInstaller.h"
 #include "Random/MGLRandomHostObject.h"
 #include "fastpbkdf2/MGLPbkdf2HostObject.h"
+#else
+#include "MGLCreateCipherInstaller.h"
+#include "MGLCreateDecipherInstaller.h"
+#include "MGLHashInstaller.h"
+#include "MGLHmacInstaller.h"
+#include "MGLPbkdf2HostObject.h"
+#include "MGLRandomHostObject.h"
+
+#endif
 
 namespace margelo {
 

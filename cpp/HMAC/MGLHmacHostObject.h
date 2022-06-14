@@ -13,7 +13,11 @@
 #include <memory>
 #include <string>
 
+#ifdef ANDROID
 #include "JSIUtils/MGLSmartHostObject.h"
+#else
+#include "MGLSmartHostObject.h"
+#endif
 
 namespace margelo {
 

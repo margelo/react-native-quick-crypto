@@ -11,7 +11,12 @@
 
 #include <memory>
 
+#ifdef ANDROID
 #include "JSIUtils/MGLJSIMacros.h"
+#else
+#include "MGLJSIMacros.h"
+#endif
+
 #include "MGLHashHostObject.h"
 
 using namespace facebook;

@@ -2,7 +2,12 @@
 
 #include "MGLHashHostObject.h"
 
-#include <JSIUtils/MGLTypedArray.h>
+#ifdef ANDROID
+#include "JSIUtils/MGLTypedArray.h"
+#else
+#include "MGLTypedArray.h"
+#endif
+
 #include <jsi/jsi.h>
 #include <openssl/err.h>
 

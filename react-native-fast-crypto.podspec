@@ -17,7 +17,7 @@ Pod::Spec.new do |s|
   # Note how this does not include headers, since those can nameclash.
   s.source_files = [
     "ios/**/*.{h,m,mm}",
-    "cpp/**/*.{h,cpp}",
+    "cpp/**/*.{h,c,cpp}",
     "ios/FastCryptoModule.h"
   ]
   # Any private headers that are not globally unique should be mentioned here.

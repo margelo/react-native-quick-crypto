@@ -7,7 +7,11 @@
 
 #include <memory>
 
+#ifdef ANDROID
 #include "JSIUtils/MGLSmartHostObject.h"
+#else
+#include "MGLSmartHostObject.h"
+#endif
 
 namespace margelo {
 namespace jsi = facebook::jsi;

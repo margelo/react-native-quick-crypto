@@ -1,8 +1,14 @@
 // Copyright 2022 Margelo
 
+#ifdef ANDROID
 #include "MGLHmacHostObject.h"
 
-#include <JSIUtils/MGLTypedArray.h>
+#include "JSIUtils/MGLTypedArray.h"
+#else
+#include "MGLHmacHostObject.h"
+#include "MGLTypedArray.h"
+#endif
+
 #include <jsi/jsi.h>
 #include <openssl/hmac.h>
 

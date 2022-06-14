@@ -2,8 +2,13 @@
 
 #include <memory>
 
-#include "JSIUtils/MGLJSIMacros.h"
 #include "MGLCipherHostObject.h"
+
+#ifdef ANDROID
+#include "JSIUtils/MGLJSIMacros.h"
+#else
+#include "MGLJSIMacros.h"
+#endif
 
 using namespace facebook;
 

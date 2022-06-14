@@ -4,7 +4,11 @@
 
 #include "MGLRandomHostObject.h"
 
-#include <JSIUtils/MGLTypedArray.h>
+#ifdef ANDROID
+#include "JSIUtils/MGLTypedArray.h"
+#else
+#include "MGLTypedArray.h"
+#endif
 #include <openssl/bn.h>
 #include <openssl/dsa.h>
 #include <openssl/ec.h>

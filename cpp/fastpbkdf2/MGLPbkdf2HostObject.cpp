@@ -4,7 +4,11 @@
 
 #include "MGLPbkdf2HostObject.h"
 
-#include <JSIUtils/MGLTypedArray.h>
+#ifdef ANDROID
+#include "JSIUtils/MGLTypedArray.h"
+#else
+#include "MGLTypedArray.h"
+#endif
 #include <openssl/dsa.h>
 #include <openssl/ec.h>
 #include <openssl/err.h>
@@ -15,6 +19,8 @@
 
 #include <memory>
 #include <utility>
+
+#include "fastpbkdf2.h"
 
 namespace margelo {
 namespace jsi = facebook::jsi;
@@ -47,7 +53,7 @@ MGLPbkdf2HostObject::MGLPbkdf2HostObject(
         auto keyLength = arguments[3].asNumber();
         auto hashAlgorithm = arguments[4].asString(runtime).utf8(runtime);
 
-        auto resultArray = MGLTypedArray<MGLTypedArrayKind::Uint8Array>(
+        MGLTypedArray<MGLTypedArrayKind::Uint8Array> resultArray(
             runtime, static_cast<size_t>(keyLength));
         auto result = resultArray.getBuffer(runtime);
         auto resultSize = result.size(runtime);
@@ -117,7 +123,7 @@ MGLPbkdf2HostObject::MGLPbkdf2HostObject(
     auto keyLength = arguments[3].asNumber();
     auto hashAlgorithm = arguments[4].asString(runtime).utf8(runtime);
 
-    auto resultArray = MGLTypedArray<MGLTypedArrayKind::Uint8Array>(
+    MGLTypedArray<MGLTypedArrayKind::Uint8Array> resultArray(
         runtime, static_cast<size_t>(keyLength));
     auto result = resultArray.getBuffer(runtime);
 

@@ -3,8 +3,12 @@
 //
 #include "MGLCipherHostObject.h"
 
-#include <JSIUtils/MGLTypedArray.h>
-#include <Utils/logs.h>
+#ifdef ANDROID
+#include "JSIUtils/MGLTypedArray.h"
+#else
+#include "MGLTypedArray.h"
+#endif
+
 #include <openssl/evp.h>
 
 #include <algorithm>
