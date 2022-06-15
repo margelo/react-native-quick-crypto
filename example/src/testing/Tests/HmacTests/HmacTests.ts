@@ -1,3 +1,4 @@
+/* eslint-disable jest/valid-expect */
 // copied from https://github.com/nodejs/node/blob/master/test/parallel/test-crypto-hmac.js
 import { FastCrypto as crypto } from 'react-native-fast-crypto';
 import { Buffer } from '@craftzdog/react-native-buffer';
@@ -32,19 +33,19 @@ export function registerHmacTests() {
     expected: any
   ) {
     it(`testHmac ${algo} ${key} ${data}`, () => {
-      if (!Array.isArray(data)) data = [data];
+      if (!Array.isArray(data)) data = [data] as any;
 
       // If the key is a Buffer, test Hmac with a key object as well.
       const keyWrappers = [
         // eslint-disable-next-line no-shadow
-        (key: string) => key,
+        (key: any) => key,
         //    ...(typeof key === 'string' ? [] : [crypto.createSecretKey]),
       ];
 
       for (const keyWrapper of keyWrappers) {
         const hmac = crypto.createHmac(algo, keyWrapper(key));
         for (const chunk of data) {
-          hmac.update(chunk);
+          hmac.update(chunk as any);
         }
         const actual = hmac.digest('hex');
         chai.expect(actual).to.be.eql(expected);
@@ -113,7 +114,7 @@ export function registerHmacTests() {
   ];
 
   for (const { key, data, hmac } of wikipedia) {
-    for (const hash in hmac) testHmac(hash, key, data, hmac[hash]);
+    for (const hash in hmac) testHmac(hash, key, data, (hmac as any)[hash]);
   }
 
   // Test HMAC-SHA-* (rfc 4231 Test Cases)
@@ -297,7 +298,7 @@ export function registerHmacTests() {
           actual = actual.substr(0, 32); // first 128 bits == 32 hex chars
           strRes = strRes.substr(0, 32);
         }
-        const expected = rfc4231[i].hmac[hash];
+        const expected = (rfc4231[i].hmac as any)[hash];
         chai.expect(actual).to.be.eql(expected);
         chai.expect(actual).to.be.eql(strRes);
       });

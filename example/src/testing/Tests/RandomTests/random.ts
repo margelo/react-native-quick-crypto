@@ -119,9 +119,9 @@ export function registerRandomTests() {
     const buf = Buffer.alloc(10);
     const before = buf.toString('hex');
     // eslint-disable-next-line handle-callback-err
-    crypto.randomFill(buf, (err, buf) => {
+    crypto.randomFill(buf, (_, res) => {
       try {
-        const after = buf?.toString('hex');
+        const after = res?.toString('hex');
         assert.notStrictEqual(before, after);
       } catch (e) {
         done(e);
@@ -134,9 +134,9 @@ export function registerRandomTests() {
     const buf = new Uint8Array(new Array(10).fill(0));
     const before = Buffer.from(buf).toString('hex');
     // eslint-disable-next-line handle-callback-err
-    crypto.randomFill(buf, (err, buf) => {
+    crypto.randomFill(buf, (_, res) => {
       try {
-        const after = Buffer.from(buf).toString('hex');
+        const after = Buffer.from(res).toString('hex');
         assert.notStrictEqual(before, after);
         done();
       } catch (e) {
@@ -175,9 +175,9 @@ export function registerRandomTests() {
     let ctr = 0;
     [new ArrayBuffer(10)].forEach((buf) => {
       const before = Buffer.from(buf).toString('hex');
-      crypto.randomFill(buf, (_err, buf) => {
+      crypto.randomFill(buf, (_err, res) => {
         try {
-          const after = Buffer.from(buf).toString('hex');
+          const after = Buffer.from(res).toString('hex');
           assert.notStrictEqual(before, after);
         } catch (e) {
           done(e);
@@ -220,9 +220,9 @@ export function registerRandomTests() {
   it('randomFill - deepStringEqual - Buffer', (done: Done) => {
     const buf = Buffer.alloc(10);
     const before = buf.toString('hex');
-    crypto.randomFill(buf, 5, 5, (_err, buf) => {
+    crypto.randomFill(buf, 5, 5, (_err, res) => {
       try {
-        const after = buf.toString('hex');
+        const after = res.toString('hex');
         assert.notStrictEqual(before, after);
         assert.deepStrictEqual(before.slice(0, 5), after.slice(0, 5));
       } catch (e) {
@@ -235,9 +235,9 @@ export function registerRandomTests() {
   it('randomFill - deepStringEqual - Uint8Array', (done: Done) => {
     const buf = new Uint8Array(new Array(10).fill(0));
     const before = Buffer.from(buf).toString('hex');
-    crypto.randomFill(buf, 5, 5, (_err, buf) => {
+    crypto.randomFill(buf, 5, 5, (_err, res) => {
       try {
-        const after = Buffer.from(buf).toString('hex');
+        const after = Buffer.from(res).toString('hex');
         assert.notStrictEqual(before, after);
         assert.deepStrictEqual(before.slice(0, 5), after.slice(0, 5));
       } catch (e) {
@@ -424,7 +424,7 @@ export function registerRandomTests() {
     const randomInts: number[] = [];
     let failed = false;
     for (let i = 0; i < 100; i++) {
-      crypto.randomInt(1, 3, (er, n) => {
+      crypto.randomInt(1, 3, (_, n) => {
         try {
           assert.ok(n >= 1);
           assert.ok(n < 3);
@@ -448,7 +448,7 @@ export function registerRandomTests() {
     const randomInts: number[] = [];
     let failed = false;
     for (let i = 0; i < 100; i++) {
-      crypto.randomInt(-10, -8, (er, n) => {
+      crypto.randomInt(-10, -8, (_, n) => {
         try {
           assert.ok(n >= -10);
           assert.ok(n < -8);
