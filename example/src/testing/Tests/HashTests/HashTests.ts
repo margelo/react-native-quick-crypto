@@ -40,11 +40,8 @@ export function registerHashTests() {
     a8 = a8.read();
 
     cryptoType = 'md5';
-    digest = 'latin1';
-    const a0 = crypto
-      .createHash(cryptoType)
-      .update('Test123')
-      .digest(digest as any);
+    digest = 'latin1' as 'latin1';
+    const a0 = crypto.createHash(cryptoType).update('Test123').digest(digest);
     chai.assert.strictEqual(
       a0,
       'h\u00ea\u00cb\u0097\u00d8o\fF!\u00fa+\u000e\u0017\u00ca\u00bd\u008c',
@@ -81,17 +78,16 @@ export function registerHashTests() {
     );
     cryptoType = 'sha1';
     digest = 'hex';
-    // TODO(Szymon) check types
+
     assert.deepStrictEqual(
       a4,
       Buffer.from('8308651804facb7b9af8ffc53a33a22d6a1c8ac2', 'hex'),
       `${cryptoType} with ${digest} digest failed to evaluate to expected hash`
     );
 
-    // TODO(Szymon) check types
     // Stream interface should produce the same result.
-    assert.deepStrictEqual(a5, a3);
-    assert.deepStrictEqual(a6, a3);
+    assert.deepStrictEqual(a5 as any as Buffer, a3);
+    assert.deepStrictEqual(a6 as any as Buffer, a3);
     assert.notStrictEqual(a7, undefined);
     assert.notStrictEqual(a8, undefined);
   });
@@ -181,7 +177,6 @@ export function registerHashTests() {
 
   it('shas ucs2', () => {
     assert.strictEqual(
-      // TODO(Szymon) check uc2 is not on the list of supported algorithms
       crypto.createHash('sha256').update('test').digest('ucs2'),
       crypto.createHash('sha256').update('test').digest().toString('ucs2')
     );
@@ -212,7 +207,6 @@ export function registerHashTests() {
         '7f9c2ba4e88f827d616045507605853e'
       );
       assert.strictEqual(
-        // TODO(Szymon) check, should null be added to the type signature?
         crypto.createHash('shake128', null).digest('hex'),
         '7f9c2ba4e88f827d616045507605853e'
       );
@@ -237,7 +231,6 @@ export function registerHashTests() {
       assert.strictEqual(
         crypto
           .createHash('shake128', { outputLength: 5 })
-          // TODO(Szymon) check types, outputLength is in theory not supported?
           .copy({ outputLength: 0 })
           .digest('hex'),
         ''
@@ -249,7 +242,6 @@ export function registerHashTests() {
       assert.strictEqual(
         crypto
           .createHash('shake128', { outputLength: 0 })
-          // TODO(Szymon) check types, outputLength is in theory not supported?
           .copy({ outputLength: 5 })
           .digest('hex'),
         '7f9c2ba4e8'
@@ -301,7 +293,7 @@ export function registerHashTests() {
 
       for (const outputLength of [null, {}, 'foo', false]) {
         assert.throws(
-          // TODO(Szymon) check types, outputLength is in theory not supported?
+          // @ts-expect-error
           () => crypto.createHash('sha256', { outputLength }),
           /ERR_INVALID_ARG_TYPE/
         );

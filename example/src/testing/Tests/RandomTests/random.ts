@@ -23,18 +23,13 @@
 // Flags: --pending-deprecation
 import { FastCrypto as crypto } from 'react-native-fast-crypto';
 import { describe, it } from '../../MochaRNAdapter';
-// TODO(Szymon) check
-import { Buffer, kMaxLength } from '@craftzdog/react-native-buffer';
+import { Buffer } from '@craftzdog/react-native-buffer';
 import chai from 'chai';
 import type { Done } from 'mocha';
 
 const assert = chai.assert;
 
 export function registerRandomTests() {
-  const kMaxInt32 = 2 ** 31 - 1;
-  // TODO(Szymon) check
-  const kMaxPossibleLength = Math.min(kMaxLength, kMaxInt32);
-
   describe('check args', () => {
     // TODO (Szymon)
     [crypto.randomBytes, crypto.pseudoRandomBytes].forEach((f) => {
@@ -123,7 +118,6 @@ export function registerRandomTests() {
   it('simple test (do sth) 5- random Fill ', (done: Done) => {
     const buf = Buffer.alloc(10);
     const before = buf.toString('hex');
-    // TODO(Szymon) check
     // eslint-disable-next-line handle-callback-err
     crypto.randomFill(buf, (err, buf) => {
       try {
@@ -161,7 +155,6 @@ export function registerRandomTests() {
       new DataView(new ArrayBuffer(10)),
     ].forEach((buf) => {
       const before = Buffer.from(buf.buffer).toString('hex');
-      // TODO(Szymon) check
       // eslint-disable-next-line no-shadow
       crypto.randomFill(buf, (_err, buf) => {
         try {
@@ -180,8 +173,7 @@ export function registerRandomTests() {
 
   it('simple test (do sth) 8', (done: Done) => {
     let ctr = 0;
-    // TODO(Szymon) check
-    [new ArrayBuffer(10), new SharedArrayBuffer(10)].forEach((buf) => {
+    [new ArrayBuffer(10)].forEach((buf) => {
       const before = Buffer.from(buf).toString('hex');
       crypto.randomFill(buf, (_err, buf) => {
         try {
@@ -228,7 +220,6 @@ export function registerRandomTests() {
   it('randomFill - deepStringEqual - Buffer', (done: Done) => {
     const buf = Buffer.alloc(10);
     const before = buf.toString('hex');
-    // TODO(Szymon) check
     crypto.randomFill(buf, 5, 5, (_err, buf) => {
       try {
         const after = buf.toString('hex');
@@ -244,7 +235,6 @@ export function registerRandomTests() {
   it('randomFill - deepStringEqual - Uint8Array', (done: Done) => {
     const buf = new Uint8Array(new Array(10).fill(0));
     const before = Buffer.from(buf).toString('hex');
-    // TODO(Szymon) check
     crypto.randomFill(buf, 5, 5, (_err, buf) => {
       try {
         const after = Buffer.from(buf).toString('hex');
@@ -257,7 +247,7 @@ export function registerRandomTests() {
     });
   });
 
-  // TODO(Szymon) finish
+  //   finish
   /*describe('errors checks', () => {
     [Buffer.alloc(10), new Uint8Array(new Array(10).fill(0))].forEach((buf) => {
       const buffer = buf;
@@ -345,7 +335,7 @@ export function registerRandomTests() {
   // https://github.com/nodejs/node-v0.x-archive/issues/5126,
   // "FATAL ERROR: v8::Object::SetIndexedPropertiesToExternalArrayData() length
   // exceeds max acceptable value"
-  // TODO(Szymon) handle errors properly
+  //   handle errors properly
   /*  assert.throws(() => crypto.randomBytes((-1 >>> 0) + 1), {
     code: 'ERR_OUT_OF_RANGE',
     name: 'RangeError',
@@ -391,8 +381,7 @@ export function registerRandomTests() {
     const randomInts: number[] = [];
     let failed = false;
     for (let i = 0; i < 100; i++) {
-      // TODO(Szymon) check types, here is something definitely wrong
-      crypto.randomInt(3, (n) => {
+      crypto.randomInt(3, (_, n) => {
         try {
           assert.ok(n >= 0);
           assert.ok(n < 3);
@@ -610,11 +599,11 @@ export function registerRandomTests() {
       );
     });
 
-    // TODO(Szymon) check, this test doesn't seem to be wrapped in an it?
     [true, NaN, null, {}, [], 10].forEach((i) => {
       const val = i;
       it('expect type error', () => {
         assert.throws(
+          // @ts-expect-error
           () => crypto.randomInt(0, 1, val),
           /ERR_INVALID_ARG_TYPE/
         );
@@ -624,19 +613,16 @@ export function registerRandomTests() {
 
   describe("Verify that it doesn't throw or abort", () => {
     it('int16', (done: Done) => {
-      // TODO(Szymon) check
       crypto.randomFill(new Uint16Array(10), 0, () => {
         done();
       });
     });
     it('int32', (done: Done) => {
-      // TODO(Szymon) check
       crypto.randomFill(new Uint32Array(10), 0, () => {
         done();
       });
     });
     it('int32, 1', (done: Done) => {
-      // TODO(Szymon) check
       crypto.randomFill(new Uint32Array(10), 0, 1, () => {
         done();
       });

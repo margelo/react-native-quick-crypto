@@ -2,7 +2,6 @@
 import { NativeFastCrypto } from './NativeFastCrypto/NativeFastCrypto';
 import type { InternalHmac } from './NativeFastCrypto/hmac';
 import {
-  BinaryToTextEncoding,
   Encoding,
   toArrayBuffer,
   BinaryLike,
@@ -93,8 +92,9 @@ class Hmac extends Stream.Transform {
    * @param encoding The `encoding` of the return value.
    */
   digest(): Buffer;
-  digest(encoding: BinaryToTextEncoding | 'buffer'): string;
-  digest(encoding?: BinaryToTextEncoding | 'buffer'): string | Buffer {
+  digest(encoding: 'buffer'): Buffer;
+  digest(encoding: Encoding): string;
+  digest(encoding?: Encoding | 'buffer'): string | Buffer {
     const result: ArrayBuffer = this.isFinalized
       ? new ArrayBuffer(0)
       : this.internalHmac.digest();

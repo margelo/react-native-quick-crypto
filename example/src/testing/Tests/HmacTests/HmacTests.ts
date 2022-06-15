@@ -442,7 +442,6 @@ export function registerHmacTests() {
 
   it('digest encoding', () => {
     chai
-      // TODO(Szymon) check
       .expect(crypto.createHmac('sha256', 'w00t').digest('ucs2'))
       .to.be.eql(crypto.createHmac('sha256', 'w00t').digest().toString('ucs2'));
   });
@@ -458,7 +457,6 @@ export function registerHmacTests() {
     }
     {
       const h = crypto.createHmac('sha1', 'key').update('data');
-      // TODO(Szymon) check
       expect(h.digest('latin1')).to.equal(expected);
       expect(h.digest('latin1')).to.equal('');
     }
@@ -475,7 +473,6 @@ export function registerHmacTests() {
     }
     {
       const h = crypto.createHmac('sha1', 'key');
-      // TODO(Szymon) check
       expect(h.digest('latin1')).to.equal(expected);
       expect(h.digest('latin1')).to.equal('');
     }
