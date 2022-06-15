@@ -7,6 +7,7 @@ import {
   CipherEncoding,
   Encoding,
   getDefaultEncoding,
+  validateString,
 } from './Utils';
 import type { InternalCipher } from './NativeQuickCrypto/Cipher';
 // TODO(osp) re-enable type specific constructors
@@ -18,16 +19,20 @@ import type { InternalCipher } from './NativeQuickCrypto/Cipher';
 //   CipherGCMOptions,
 //   // CipherKey,
 //   // KeyObject,
-//   // TODO @Szymon20000 This types seem to be missing? Where did you get this definitions from?
+//   // TODO(Szymon) This types seem to be missing? Where did you get this definitions from?
 //   // CipherOCBTypes,
 //   // CipherOCBOptions,
 // } from 'crypto'; // Node crypto typings
 import { StringDecoder } from 'string_decoder';
 import type { Buffer } from '@craftzdog/react-native-buffer';
 import { Buffer as SBuffer } from 'safe-buffer';
+import { constants } from './constants';
+import { preparePrivateKey, preparePublicOrPrivateKey } from './keys';
 
 const createInternalCipher = NativeQuickCrypto.createCipher;
 const createInternalDecipher = NativeQuickCrypto.createDecipher;
+const _publicEncrypt = NativeQuickCrypto.publicEncrypt;
+const _publicDecrypt = NativeQuickCrypto.publicDecrypt;
 
 function getUIntOption(options: Record<string, any>, key: string) {
   let value;
@@ -320,3 +325,58 @@ export function createCipheriv(
 ): Cipher {
   return new Cipher(algorithm, key, options, iv);
 }
+
+// RSA Functions
+// Follows closely the model implemented in node
+
+// TODO(osp) types...
+function rsaFunctionFor(
+  method: (
+    data: ArrayBuffer,
+    format: string,
+    type: any,
+    passphrase: any,
+    buffer: ArrayBuffer,
+    padding: number,
+    oaepHash: any,
+    oaepLabel: any
+  ) => ArrayBuffer,
+  defaultPadding: number,
+  keyType: 'public' | 'private'
+) {
+  return (options: Record<string, any>, buffer: BinaryLike) => {
+    const { format, type, data, passphrase } =
+      keyType === 'private'
+        ? preparePrivateKey(options)
+        : preparePublicOrPrivateKey(options);
+    const padding = options.padding || defaultPadding;
+    const { oaepHash, encoding } = options;
+    let { oaepLabel } = options;
+    if (oaepHash !== undefined) validateString(oaepHash, 'key.oaepHash');
+    if (oaepLabel !== undefined)
+      oaepLabel = binaryLikeToArrayBuffer(oaepLabel, encoding);
+    buffer = binaryLikeToArrayBuffer(buffer, encoding);
+
+    return method(
+      data,
+      format,
+      type,
+      passphrase,
+      buffer,
+      padding,
+      oaepHash,
+      oaepLabel
+    );
+  };
+}
+
+export const publicEncrypt = rsaFunctionFor(
+  _publicEncrypt,
+  constants.RSA_PKCS1_OAEP_PADDING,
+  'public'
+);
+export const publicDecrypt = rsaFunctionFor(
+  _publicDecrypt,
+  constants.RSA_PKCS1_PADDING,
+  'public'
+);

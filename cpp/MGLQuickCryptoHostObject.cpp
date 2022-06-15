@@ -20,6 +20,7 @@
 #include "MGLHashInstaller.h"
 #include "MGLHmacInstaller.h"
 #include "MGLPbkdf2HostObject.h"
+#include "MGLPublicEncryptInstaller.h"
 #include "MGLRandomHostObject.h"
 
 #endif
@@ -45,6 +46,10 @@ MGLQuickCryptoHostObject::MGLQuickCryptoHostObject(
   // CreateDecipherInstaller
   this->fields.push_back(
       getCreateDecipherFieldDefinition(jsCallInvoker, workerQueue));
+
+  // publicEncrypt
+  this->fields.push_back(
+      getCreatePublicEncryptFieldDefinition(jsCallInvoker, workerQueue));
 
   // Pbkdf2HostObject
   this->fields.push_back(JSI_VALUE("pbkdf2", {

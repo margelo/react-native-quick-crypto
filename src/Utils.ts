@@ -24,6 +24,7 @@ export function getDefaultEncoding(): CipherEncoding {
   return defaultEncoding;
 }
 
+// Should be used by Cipher (or any other module that requires valid encodings)
 // function slowCases(enc: string) {
 //   switch (enc.length) {
 //     case 4:
@@ -148,4 +149,16 @@ export function binaryLikeToArrayBuffer(
 
 export function ab2str(buf: ArrayBuffer, encoding: string = 'hex') {
   return Buffer.from(buf).toString(encoding);
+}
+
+export function validateString(str: string, name?: string): str is string {
+  const isString = typeof str === 'string';
+  if (isString) {
+    throw new Error(`${name} is not a string`);
+  }
+  return isString;
+}
+
+export function isStringOrBuffer(val: any): val is string | ArrayBuffer {
+  return typeof val === 'string' || ArrayBuffer.isView(val);
 }

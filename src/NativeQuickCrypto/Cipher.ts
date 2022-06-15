@@ -23,3 +23,14 @@ export type CreateDecipherMethod = (params: {
   cipher_key: ArrayBuffer;
   auth_tag_len: number;
 }) => InternalCipher;
+
+export type PublicEncryptMethod = (
+  data: ArrayBuffer,
+  format: string,
+  type: any,
+  passphrase: any,
+  buffer: ArrayBuffer,
+  padding: number,
+  oaepHash: any,
+  oaepLabel: any
+) => ArrayBuffer;

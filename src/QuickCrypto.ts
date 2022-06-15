@@ -8,6 +8,7 @@ import {
 } from './Cipher';
 import { createHmac } from './Hmac';
 import { createHash } from './Hash';
+import { constants } from './constants';
 
 export const QuickCrypto = {
   createHmac,
@@ -18,6 +19,7 @@ export const QuickCrypto = {
   createCipheriv,
   createDecipher,
   createDecipheriv,
+  constants,
   ...pbkdf2,
   ...random,
 };
