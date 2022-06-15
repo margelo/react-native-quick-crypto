@@ -40,4 +40,4 @@ FieldDefinition getHmacFieldDefinition(
     return jsi::Object::createFromHostObject(runtime, hostObject);
   });
 }
-} // namespace margelo
+}  // namespace margelo
