@@ -3,7 +3,7 @@ import type { CreateHmacMethod } from './hmac';
 import type { CreateHashMethod } from './hash';
 import type { Pbkdf2Object } from './pbkdf2';
 import type { RandomObject } from './random';
-import type { CreateCipherMethod, CreateDecipherMethod } from './cipher';
+import type { CreateCipherMethod, CreateDecipherMethod } from './Cipher';
 
 interface NativeFastCryptoSpec {
   createHmac: CreateHmacMethod;

@@ -8,7 +8,7 @@ import {
   Encoding,
   getDefaultEncoding,
 } from './Utils';
-import type { InternalCipher } from './NativeFastCrypto/cipher';
+import type { InternalCipher } from './NativeFastCrypto/Cipher';
 // TODO(osp) re-enable type specific constructors
 // They are nice to have but not absolutely necessary
 // import type {
