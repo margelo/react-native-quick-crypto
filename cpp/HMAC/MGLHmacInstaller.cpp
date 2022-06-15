@@ -10,8 +10,8 @@
 #include <openssl/hmac.h>
 
 #ifdef ANDROID
-#include "JSIUtils/MGLHmacHostObject.h"
 #include "JSIUtils/MGLJSIMacros.h"
+#include "MGLHmacHostObject.h"
 #else
 #include "MGLHmacHostObject.h"
 #include "MGLJSIMacros.h"
@@ -40,4 +40,4 @@ FieldDefinition getHmacFieldDefinition(
     return jsi::Object::createFromHostObject(runtime, hostObject);
   });
 }
-}  // namespace margelo
+} // namespace margelo
