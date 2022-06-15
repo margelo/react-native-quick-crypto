@@ -1,7 +1,8 @@
+/* eslint-disable jest/valid-expect */
 // copied from https://github.com/nodejs/node/blob/master/test/parallel/test-crypto-hmac.js
 import { FastCrypto as crypto } from 'react-native-fast-crypto';
 import { Buffer } from '@craftzdog/react-native-buffer';
-import { describe, it, itOnly } from '../../MochaRNAdapter';
+import { describe, it } from '../../MochaRNAdapter';
 import chai, { expect } from 'chai';
 
 export function registerHmacTests() {
@@ -13,30 +14,38 @@ export function registerHmacTests() {
     });
 
     it('invalid arg1', () => {
+      // @ts-expect-error
       chai.expect(crypto.createHmac(null)).Throw(/ERR_INVALID_ARG_TYPE/);
     });
 
     it('invalid arg type', () => {
       chai
+        // @ts-expect-error
         .expect(crypto.createHmac('sha1', null))
         .Throw(/ERR_INVALID_ARG_TYPE/);
     });
   });
 
-  function testHmac(algo, key, data, expected) {
+  function testHmac(
+    algo: string,
+    key: string | Buffer,
+    data: string | string[] | Buffer,
+    expected: any
+  ) {
     it(`testHmac ${algo} ${key} ${data}`, () => {
-      if (!Array.isArray(data)) data = [data];
+      if (!Array.isArray(data)) data = [data] as any;
 
       // If the key is a Buffer, test Hmac with a key object as well.
       const keyWrappers = [
-        (key) => key,
-    //    ...(typeof key === 'string' ? [] : [crypto.createSecretKey]),
+        // eslint-disable-next-line no-shadow
+        (key: any) => key,
+        //    ...(typeof key === 'string' ? [] : [crypto.createSecretKey]),
       ];
 
       for (const keyWrapper of keyWrappers) {
         const hmac = crypto.createHmac(algo, keyWrapper(key));
         for (const chunk of data) {
-          hmac.update(chunk);
+          hmac.update(chunk as any);
         }
         const actual = hmac.digest('hex');
         chai.expect(actual).to.be.eql(expected);
@@ -44,15 +53,13 @@ export function registerHmacTests() {
     });
   }
 
-  {
-    // Test HMAC with multiple updates.
-    testHmac(
-      'sha1',
-      'Node',
-      ['some data', 'to hmac'],
-      '19fd6e1ba73d9ed2224dd5094a71babe85d9a892'
-    );
-  }
+  // Test HMAC with multiple updates.
+  testHmac(
+    'sha1',
+    'Node',
+    ['some data', 'to hmac'],
+    '19fd6e1ba73d9ed2224dd5094a71babe85d9a892'
+  );
 
   // Test HMAC (Wikipedia Test Cases)
   const wikipedia = [
@@ -107,7 +114,7 @@ export function registerHmacTests() {
   ];
 
   for (const { key, data, hmac } of wikipedia) {
-    for (const hash in hmac) testHmac(hash, key, data, hmac[hash]);
+    for (const hash in hmac) testHmac(hash, key, data, (hmac as any)[hash]);
   }
 
   // Test HMAC-SHA-* (rfc 4231 Test Cases)
@@ -291,7 +298,7 @@ export function registerHmacTests() {
           actual = actual.substr(0, 32); // first 128 bits == 32 hex chars
           strRes = strRes.substr(0, 32);
         }
-        const expected = rfc4231[i].hmac[hash];
+        const expected = (rfc4231[i].hmac as any)[hash];
         chai.expect(actual).to.be.eql(expected);
         chai.expect(actual).to.be.eql(strRes);
       });

@@ -118,10 +118,21 @@ android {
   }
 
   packagingOptions {
-    excludes = ["**/libc++_shared.so", "**/libfbjni.so", "**/libreactnativejni.so", "**/libjsi.so", "**/MANIFEST.MF"]
+    excludes = ["**/libc++_shared.so", "**/libfbjni.so", "**/libreactnativejni.so", "**/libjsi.so", "**/MANIFEST.MF", ""]
+    doNotStrip '**/*.so'
   }
 
   buildTypes {
+    debug {
+      packagingOptions {
+        doNotStrip '**/*.so'
+      }
+      minifyEnabled false
+      debuggable true
+      jniDebuggable true
+      renderscriptDebuggable true
+    }
+
     release {
       minifyEnabled false
     }

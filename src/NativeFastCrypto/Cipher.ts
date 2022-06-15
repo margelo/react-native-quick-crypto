@@ -1,14 +1,25 @@
+import type { BinaryLike } from 'src/Utils';
+
 export type InternalCipher = {
-  update: (
-    data: ArrayBuffer,
-    inputEncoding: string,
-    outputEncoding: string
-  ) => InternalCipher;
+  update: (data: BinaryLike | ArrayBufferView) => ArrayBuffer;
   final: () => ArrayBuffer;
-  copy: (len?: number) => InternalHash;
+  copy: () => void;
+  setAAD: (args: {
+    data: BinaryLike;
+    plaintextLength?: number;
+  }) => InternalCipher;
+  setAutoPadding: (autoPad: boolean) => boolean;
+  setAuthTag: (tag: ArrayBuffer) => boolean;
 };
 
-export type createInternalCipher = (
-  cipher: string,
-  outputLength?: number
-) => InternalCipher;
+export type CreateCipherMethod = (params: {
+  cipher_type: string;
+  cipher_key: ArrayBuffer;
+  auth_tag_len: number;
+}) => InternalCipher;
+
+export type CreateDecipherMethod = (params: {
+  cipher_type: string;
+  cipher_key: ArrayBuffer;
+  auth_tag_len: number;
+}) => InternalCipher;

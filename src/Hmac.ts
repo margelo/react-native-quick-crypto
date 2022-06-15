@@ -1,11 +1,11 @@
+/* eslint-disable no-dupe-class-members */
 import { NativeFastCrypto } from './NativeFastCrypto/NativeFastCrypto';
 import type { InternalHmac } from './NativeFastCrypto/hmac';
 import {
-  BinaryToTextEncoding,
   Encoding,
   toArrayBuffer,
   BinaryLike,
-  binaryLikeToArrayBuffer
+  binaryLikeToArrayBuffer,
 } from './Utils';
 import Stream from 'stream';
 import { Buffer } from '@craftzdog/react-native-buffer';
@@ -22,35 +22,24 @@ export function createHmac(
 
 class Hmac extends Stream.Transform {
   private internalHmac: InternalHmac;
-  private options?: Stream.TransformOptions;
   private isFinalized: boolean = false;
 
   constructor(
     algorithm: string,
     key: BinaryLike,
-    options?: Stream.TransformOptions
+    _options?: Stream.TransformOptions
   ) {
     super();
-    let keyAsString: ArrayBuffer | undefined;
-
-    if (typeof key === 'string') {
-      keyAsString = Buffer.from(key).buffer;
-    }
-
-    if (key instanceof ArrayBuffer) {
-      keyAsString = key;
-    }
-
-    if (key.buffer != undefined) {
-      keyAsString = key.buffer;
-    }
+    let keyAsString = binaryLikeToArrayBuffer(key);
 
     if (keyAsString === undefined) {
       throw 'Wrong key type';
     }
 
-    this.internalHmac = createInternalHmac(algorithm, keyAsString as ArrayBuffer);
-    this.options = options;
+    this.internalHmac = createInternalHmac(
+      algorithm,
+      keyAsString as ArrayBuffer
+    );
   }
 
   /**
@@ -103,9 +92,12 @@ class Hmac extends Stream.Transform {
    * @param encoding The `encoding` of the return value.
    */
   digest(): Buffer;
-  digest(encoding: BinaryToTextEncoding): string;
-  digest(encoding: BinaryToTextEncoding): string | Buffer {
-    const result: ArrayBuffer = (this.isFinalized) ? new ArrayBuffer(0) : this.internalHmac.digest();
+  digest(encoding: 'buffer'): Buffer;
+  digest(encoding: Encoding): string;
+  digest(encoding?: Encoding | 'buffer'): string | Buffer {
+    const result: ArrayBuffer = this.isFinalized
+      ? new ArrayBuffer(0)
+      : this.internalHmac.digest();
     this.isFinalized = true;
     if (encoding && encoding !== 'buffer') {
       return Buffer.from(result).toString(encoding);

@@ -1,5 +1,6 @@
 import { NativeFastCrypto } from './NativeFastCrypto/NativeFastCrypto';
 import { Buffer } from '@craftzdog/react-native-buffer';
+import { isBuffer } from '../src/Utils';
 
 const random = NativeFastCrypto.random;
 
@@ -13,30 +14,27 @@ type TypedArray =
   | Int32Array
   | Float32Array
   | Float64Array;
-type ArrayBufferView = TypedArray | DataView;
+type ArrayBufferView = TypedArray | DataView | ArrayBufferLike | Buffer;
 
 export function randomFill<T extends ArrayBufferView>(
   buffer: T,
-  callback: (err: Error | null, buf?: ArrayBuffer) => T
+  callback: (err: Error | null, buf: T) => void
 ): void;
 
 export function randomFill<T extends ArrayBufferView>(
   buffer: T,
   offset: number,
-  callback: (err: Error | null, buf?: ArrayBuffer) => T
+  callback: (err: Error | null, buf: T) => void
 ): void;
 
 export function randomFill<T extends ArrayBufferView>(
   buffer: T,
   offset: number,
   size: number,
-  callback: (err: Error | null, buf?: ArrayBuffer) => T
+  callback: (err: Error | null, buf: T) => void
 ): void;
 
-export function randomFill<T extends ArrayBufferView>(
-  buffer: T,
-  ...rest: any[]
-): void {
+export function randomFill(buffer: any, ...rest: any[]): void {
   if (typeof rest[rest.length - 1] !== 'function') {
     throw new Error('No callback provided to randomDill');
   }
@@ -58,21 +56,25 @@ export function randomFill<T extends ArrayBufferView>(
     offset = rest[0];
   }
 
-  random.randomFill(buffer.buffer ? buffer.buffer : buffer, offset, size).then(
-    () => {
-      callback(null, buffer);
-    },
-    (e: Error) => {
-      callback(e);
-    }
-  );
+  random
+    .randomFill(isBuffer(buffer) ? buffer.buffer : buffer, offset, size)
+    .then(
+      () => {
+        callback(null, buffer);
+      },
+      (e: Error) => {
+        callback(e);
+      }
+    );
 }
 
 export function randomFillSync<T extends ArrayBufferView>(
   buffer: T,
-  offset: number = 0,
+  offset?: number,
   size?: number
-) {
+): T;
+
+export function randomFillSync(buffer: any, offset: number = 0, size?: number) {
   random.randomFillSync(
     buffer.buffer ? buffer.buffer : buffer,
     offset,
@@ -107,7 +109,11 @@ export function randomBytes(
   });
 }
 
-type RandomIntCallback = (err: Error | null, value?: number) => void;
+export const rng = randomBytes;
+export const pseudoRandomBytes = randomBytes;
+export const prng = randomBytes;
+
+type RandomIntCallback = (err: Error | null, value: number) => void;
 type Task = {
   min: number;
   max: number;
@@ -152,12 +158,12 @@ export function randomInt(
     typeof arg2 === 'undefined' || typeof arg2 === 'function';
 
   if (minNotSpecified) {
-    callback = arg2;
+    callback = arg2 as any as undefined | RandomIntCallback;
     max = arg1;
     min = 0;
   } else {
     min = arg1;
-    max = arg2;
+    max = arg2 as any as number;
   }
 
   const isSync = typeof callback === 'undefined';
@@ -246,7 +252,7 @@ function asyncRefillRandomIntCache() {
     });
 
     // This is the only call that might throw, and is therefore done at the end.
-    if (errorReceiver) errorReceiver.callback(err);
+    if (errorReceiver) errorReceiver.callback(err, 0);
   });
 }
 

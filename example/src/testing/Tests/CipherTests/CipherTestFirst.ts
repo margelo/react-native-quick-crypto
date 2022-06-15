@@ -1,28 +1,29 @@
 // copied from https://github.com/nodejs/node/blob/master/test/parallel/test-crypto-hash.js
-import { FastCrypto as crypto } from 'react-native-fast-crypto';
-import { describe, it, itOnly } from '../../MochaRNAdapter';
-import chai from 'chai';
 import { Buffer } from '@craftzdog/react-native-buffer';
+import chai from 'chai';
+import { FastCrypto as crypto } from 'react-native-fast-crypto';
+import { it } from '../../MochaRNAdapter';
 
 const assert = chai.assert;
 
-export function registerCipherFirstGroupOfTests() {
+export function registerCipherTests1() {
   'use strict';
-  function testCipher1(key) {
+  function testCipher1(key: Buffer | string) {
     it('testCipher1 + ' + key, () => {
       // Test encryption and decryption
-      const plaintext = 'Keep this a secret? No! Tell everyone about node.js!';
+      const plaintext =
+        'Keep this a secret? No! Tell everyone about fast-crypto!';
       const cipher = crypto.createCipher('aes192', key);
 
       // Encrypt plaintext which is in utf8 format
       // to a ciphertext which will be in hex
-      let ciph = cipher.update(plaintext, 'utf8', 'hex');
+      let ciph = cipher.update(plaintext, 'utf-8', 'hex');
       // Only use binary or hex, not base64.
       ciph += cipher.final('hex');
 
       const decipher = crypto.createDecipher('aes192', key);
-      let txt = decipher.update(ciph, 'hex', 'utf8');
-      txt += decipher.final('utf8');
+      let txt = decipher.update(ciph, 'hex', 'utf-8');
+      txt += decipher.final('utf-8');
 
       assert.strictEqual(txt, plaintext);
 
@@ -37,12 +38,11 @@ export function registerCipherFirstGroupOfTests() {
       const dStream = crypto.createDecipher('aes192', key);
       dStream.end(ciph);
       txt = dStream.read().toString('utf8');
-
       assert.strictEqual(txt, plaintext);
     });
   }
 
-  function testCipher2(key) {
+  function testCipher2(key: string | Buffer) {
     it('testCipher2 + ' + key, () => {
       // Encryption and decryption with Base64.
       // Reported in https://github.com/joyent/node/issues/738
@@ -71,6 +71,15 @@ export function registerCipherFirstGroupOfTests() {
   testCipher2('0123456789abcdef');
   testCipher2(Buffer.from('0123456789abcdef'));
 
+  it('#createCipher with invalid algorithm should throw', () => {
+    try {
+      crypto.createCipher('blah', 'secret');
+      assert.fail('createCipher with invalid algo did not throw');
+    } catch {
+      // Intentionally left blank
+    }
+  });
+
   it('Base64 padding regression test', () => {
     const c = crypto.createCipher('aes-256-cbc', 'secret');
     const s = c.update('test', 'utf8', 'base64') + c.final('base64');
@@ -80,32 +89,38 @@ export function registerCipherFirstGroupOfTests() {
   it('Calling Cipher.final() or Decipher.final() twice should error', () => {
     const c = crypto.createCipher('aes-256-cbc', 'secret');
     try {
+      // @ts-expect-error
       c.final('xxx');
     } catch {
       /* Ignore. */
     }
     try {
+      // @ts-expect-error
       c.final('xxx');
     } catch {
       /* Ignore. */
     }
     try {
+      // @ts-expect-error
       c.final('xxx');
     } catch {
       /* Ignore. */
     }
     const d = crypto.createDecipher('aes-256-cbc', 'secret');
     try {
+      // @ts-expect-error
       d.final('xxx');
     } catch {
       /* Ignore. */
     }
     try {
+      // @ts-expect-error
       d.final('xxx');
     } catch {
       /* Ignore. */
     }
     try {
+      // @ts-expect-error
       d.final('xxx');
     } catch {
       /* Ignore. */
@@ -120,6 +135,7 @@ export function registerCipherFirstGroupOfTests() {
 
   it("'utf-8' and 'utf8' are identical.", () => {
     let c = crypto.createCipher('aes192', '0123456789abcdef');
+    // @ts-expect-error
     c.update('update', ''); // Defaults to "utf8".
     c.final('utf-8'); // Should not throw.
 
@@ -152,7 +168,9 @@ export function registerCipherFirstGroupOfTests() {
     assert.strictEqual(txt, plaintext);
 
     decipher = crypto.createDecipher('aes192', key);
+    // @ts-expect-error
     txt = decipher.update(ciph, 'base64', 'utf-16le');
+    // @ts-expect-error
     txt += decipher.final('utf-16le');
     assert.strictEqual(txt, plaintext);
   });
@@ -162,6 +180,7 @@ export function registerCipherFirstGroupOfTests() {
     const tagbuf = Buffer.from('auth_tag');
     const aadbuf = Buffer.from('aadbuf');
     const decipher = crypto.createDecipher('aes-256-gcm', key);
+
     assert.strictEqual(decipher.setAutoPadding(), decipher);
     assert.strictEqual(decipher.setAuthTag(tagbuf), decipher);
     assert.strictEqual(decipher.setAAD(aadbuf), decipher);

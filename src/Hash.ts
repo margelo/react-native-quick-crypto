@@ -1,12 +1,15 @@
+/* eslint-disable no-dupe-class-members */
 import 'react-native';
 import { NativeFastCrypto } from './NativeFastCrypto/NativeFastCrypto';
 import type { InternalHash } from './NativeFastCrypto/hash';
-import { BinaryToTextEncoding, Encoding, toArrayBuffer } from './Utils';
+import { Encoding, toArrayBuffer } from './Utils';
 import Stream from 'stream';
 import { Buffer } from '@craftzdog/react-native-buffer';
-interface HashOptions extends Stream.TransformOptions {
+interface HashOptionsBase extends Stream.TransformOptions {
   outputLength?: number | undefined;
 }
+
+type HashOptions = null | undefined | HashOptionsBase;
 
 global.process.nextTick = setImmediate;
 
@@ -20,23 +23,20 @@ export function createHash(algorithm: string, options?: HashOptions) {
 
 class Hash extends Stream.Transform {
   private internalHash: InternalHash;
-  private options?: Stream.TransformOptions;
 
   constructor(other: Hash, options?: HashOptions);
   constructor(algorithm: string, options?: HashOptions);
   constructor(arg: string | Hash, options?: HashOptions) {
-    super(options);
+    super(options ?? undefined);
     if (arg instanceof Hash) {
       this.internalHash = arg.internalHash.copy(options?.outputLength);
     } else {
       this.internalHash = createInternalHash(arg, options?.outputLength);
     }
-    this.options = options;
   }
 
-  copy(options?: Stream.TransformOptions): Hash {
+  copy(options?: HashOptionsBase): Hash {
     const copy = new Hash(this, options);
-    copy.options = options;
     return copy;
   }
   /**
@@ -84,13 +84,15 @@ class Hash extends Stream.Transform {
    * @param encoding The `encoding` of the return value.
    */
   digest(): Buffer;
-  digest(encoding: BinaryToTextEncoding): string;
-  digest(encoding: BinaryToTextEncoding | undefined): string | Buffer {
+  digest(encoding: 'buffer'): Buffer;
+  digest(encoding: Encoding): string;
+  digest(encoding?: Encoding | 'buffer'): string | Buffer {
     const result: ArrayBuffer = this.internalHash.digest();
+
     if (encoding && encoding !== 'buffer') {
       return Buffer.from(result).toString(encoding);
     }
+
     return Buffer.from(result);
   }
-
 }

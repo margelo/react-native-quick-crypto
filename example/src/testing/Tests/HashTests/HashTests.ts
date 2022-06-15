@@ -1,8 +1,8 @@
 // copied from https://github.com/nodejs/node/blob/master/test/parallel/test-crypto-hash.js
-import { FastCrypto as crypto } from 'react-native-fast-crypto';
-import { describe, it, itOnly } from '../../MochaRNAdapter';
-import chai from 'chai';
 import { Buffer } from '@craftzdog/react-native-buffer';
+import chai from 'chai';
+import { FastCrypto as crypto } from 'react-native-fast-crypto';
+import { describe, it } from '../../MochaRNAdapter';
 
 const assert = chai.assert;
 
@@ -40,7 +40,7 @@ export function registerHashTests() {
     a8 = a8.read();
 
     cryptoType = 'md5';
-    digest = 'latin1';
+    digest = 'latin1' as 'latin1';
     const a0 = crypto.createHash(cryptoType).update('Test123').digest(digest);
     chai.assert.strictEqual(
       a0,
@@ -78,6 +78,7 @@ export function registerHashTests() {
     );
     cryptoType = 'sha1';
     digest = 'hex';
+
     assert.deepStrictEqual(
       a4,
       Buffer.from('8308651804facb7b9af8ffc53a33a22d6a1c8ac2', 'hex'),
@@ -85,8 +86,8 @@ export function registerHashTests() {
     );
 
     // Stream interface should produce the same result.
-    assert.deepStrictEqual(a5, a3);
-    assert.deepStrictEqual(a6, a3);
+    assert.deepStrictEqual(a5 as any as Buffer, a3);
+    assert.deepStrictEqual(a6 as any as Buffer, a3);
     assert.notStrictEqual(a7, undefined);
     assert.notStrictEqual(a8, undefined);
   });
@@ -134,7 +135,7 @@ export function registerHashTests() {
           toString: () => {
             throw new Error('boom');
           },
-        }),
+        } as any),
       /Error/,
       'boom'
     );
@@ -143,6 +144,7 @@ export function registerHashTests() {
   // Issue https://github.com/nodejs/node/issues/25487: error message for invalid
   it('arg type to update method should include all possible types.', () => {
     assert.throws(
+      // @ts-expect-error
       () => crypto.createHash('sha256').update(),
       /ERR_INVALID_ARG_TYPE/,
       'TypeError'
@@ -182,6 +184,7 @@ export function registerHashTests() {
 
   it('empty call', () => {
     assert.throws(
+      // @ts-expect-error
       () => crypto.createHash(),
       /ERR_INVALID_ARG_TYPE/,
       'The "algorithm" argument must be of type string. ' + 'Received undefined'
@@ -290,6 +293,7 @@ export function registerHashTests() {
 
       for (const outputLength of [null, {}, 'foo', false]) {
         assert.throws(
+          // @ts-expect-error
           () => crypto.createHash('sha256', { outputLength }),
           /ERR_INVALID_ARG_TYPE/
         );

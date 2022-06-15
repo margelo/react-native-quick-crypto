@@ -1,15 +1,15 @@
 // copied from https://github.com/nodejs/node/blob/master/test/parallel/test-crypto-hash.js
 import { FastCrypto as crypto } from 'react-native-fast-crypto';
-import { describe, it, itOnly } from '../../MochaRNAdapter';
+import { it } from '../../MochaRNAdapter';
 import chai from 'chai';
 import { Buffer } from '@craftzdog/react-native-buffer';
 
 const assert = chai.assert;
 
-export function registerHashTests() {
+export function registerCipherTests2() {
   'use strict';
 
-  function testCipher1(key, iv) {
+  function testCipher1(key: string | Buffer, iv: string | Buffer) {
     it('testCipher1 + ' + key + ' + ' + iv, () => {
       // Test encryption and decryption with explicit key and iv
       const plaintext =
@@ -50,7 +50,7 @@ export function registerHashTests() {
     });
   }
 
-  function testCipher2(key, iv) {
+  function testCipher2(key: string | Buffer, iv: string | Buffer) {
     it('testCipher2 + ' + key + ' + ' + iv, () => {
       // Test encryption and decryption with explicit key and iv
       const plaintext =
@@ -59,6 +59,7 @@ export function registerHashTests() {
         'jAfaFg**';
       const cipher = crypto.createCipheriv('des-ede3-cbc', key, iv);
       let ciph = cipher.update(plaintext, 'utf8', 'buffer');
+      // @ts-expect-error
       ciph = Buffer.concat([ciph, cipher.final('buffer')]);
 
       const decipher = crypto.createDecipheriv('des-ede3-cbc', key, iv);
@@ -73,30 +74,30 @@ export function registerHashTests() {
     });
   }
 
-  function testCipher3(key, iv) {
-    it('test3 + ' + key + ' + ' + iv, () => {
-      // Test encryption and decryption with explicit key and iv.
-      // AES Key Wrap test vector comes from RFC3394
-      const plaintext = Buffer.from('00112233445566778899AABBCCDDEEFF', 'hex');
+  // function testCipher3(key: string, iv: string) {
+  //   it('test3 + ' + key + ' + ' + iv, () => {
+  //     // Test encryption and decryption with explicit key and iv.
+  //     // AES Key Wrap test vector comes from RFC3394
+  //     const plaintext = Buffer.from('00112233445566778899AABBCCDDEEFF', 'hex');
 
-      const cipher = crypto.createCipheriv('id-aes128-wrap', key, iv);
-      let ciph = cipher.update(plaintext, 'utf8', 'buffer');
-      ciph = Buffer.concat([ciph, cipher.final('buffer')]);
-      const ciph2 = Buffer.from(
-        '1FA68B0A8112B447AEF34BD8FB5A7B829D3E862371D2CFE5',
-        'hex'
-      );
-      assert(ciph.equals(ciph2));
-      const decipher = crypto.createDecipheriv('id-aes128-wrap', key, iv);
-      let deciph = decipher.update(ciph, 'buffer');
-      deciph = Buffer.concat([deciph, decipher.final()]);
+  //     const cipher = crypto.createCipheriv('id-aes128-wrap', key, iv);
+  //     let ciph = cipher.update(plaintext, 'utf8', 'buffer');
+  //     ciph = Buffer.concat([ciph, cipher.final('buffer')]);
+  //     const ciph2 = Buffer.from(
+  //       '1FA68B0A8112B447AEF34BD8FB5A7B829D3E862371D2CFE5',
+  //       'hex'
+  //     );
+  //     assert(ciph.equals(ciph2));
+  //     const decipher = crypto.createDecipheriv('id-aes128-wrap', key, iv);
+  //     let deciph = decipher.update(ciph, 'buffer');
+  //     deciph = Buffer.concat([deciph, decipher.final()]);
 
-      assert(
-        deciph.equals(plaintext),
-        `encryption/decryption with key ${key} and iv ${iv}`
-      );
-    });
-  }
+  //     assert(
+  //       deciph.equals(plaintext),
+  //       `encryption/decryption with key ${key} and iv ${iv}`
+  //     );
+  //   });
+  // }
 
   testCipher1('0123456789abcd0123456789', '12345678');
   testCipher1('0123456789abcd0123456789', Buffer.from('12345678'));

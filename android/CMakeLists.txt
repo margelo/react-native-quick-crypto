@@ -5,6 +5,9 @@ set (BUILD_DIR ${CMAKE_SOURCE_DIR}/build)
 file (GLOB LIBFBJNI_INCLUDES "${BUILD_DIR}/fbjni-*-headers.jar/")
 file (GLOB LIBRN_SO "${BUILD_DIR}/react-native-0*/jni/${ANDROID_ABI}")
 set (CMAKE_CXX_STANDARD 17)
+# TODO(osp) remove before release
+set (CMAKE_C_FLAGS_DEBUG "${CMAKE_C_FLAGS_DEBUG} -g")
+set (CMAKE_CXX_FLAGS_DEBUG "${CMAKE_CXX_FLAGS_DEBUG} -g")
 
 include_directories(
         ../cpp
@@ -30,18 +33,21 @@ endif()
 add_library(reactnativefastcrypto  # <-- Library name
         SHARED
         "src/main/cpp/cpp-adapter.cpp"
-        "../cpp/FastCryptoHostObject.cpp"
-        "../cpp/JSI Utils/TypedArray.cpp"
-        "../cpp/Utils/DispatchQueue.cpp"
-        "../cpp/JSI Utils/ThreadAwareHostObject.cpp"
-        "../cpp/JSI Utils/SmartHostObject.cpp"
-        "../cpp/HMAC/HmacInstaller.cpp"
-        "../cpp/HMAC/HmacHostObject.cpp"
-        "../cpp/fastpbkdf2/Pbkdf2HostObject.cpp"
+        "../cpp/MGLFastCryptoHostObject.cpp"
+        "../cpp/JSIUtils/MGLTypedArray.cpp"
+        "../cpp/Utils/MGLDispatchQueue.cpp"
+        "../cpp/JSIUtils/MGLThreadAwareHostObject.cpp"
+        "../cpp/JSIUtils/MGLSmartHostObject.cpp"
+        "../cpp/HMAC/MGLHmacInstaller.cpp"
+        "../cpp/HMAC/MGLHmacHostObject.cpp"
+        "../cpp/fastpbkdf2/MGLPbkdf2HostObject.cpp"
         "../cpp/fastpbkdf2/fastpbkdf2.c"
-        "../cpp/Random/RandomHostObject.cpp"
-        "../cpp/Hash/HashInstaller.cpp"
-        "../cpp/Hash/HashHostObject.cpp"
+        "../cpp/Random/MGLRandomHostObject.cpp"
+        "../cpp/Hash/MGLHashInstaller.cpp"
+        "../cpp/Hash/MGLHashHostObject.cpp"
+        "../cpp/Cipher/MGLCipherHostObject.cpp"
+        "../cpp/Cipher/MGLCreateCipherInstaller.cpp"
+        "../cpp/Cipher/MGLCreateDecipherInstaller.cpp"
         ${INCLUDE_JSI_CPP} # only on older RN versions
 )
 

@@ -22,17 +22,14 @@
 
 // Flags: --pending-deprecation
 import { FastCrypto as crypto } from 'react-native-fast-crypto';
-import { describe, it, itOnly } from '../../MochaRNAdapter';
-import { Buffer, kMaxLength } from '@craftzdog/react-native-buffer';
+import { describe, it } from '../../MochaRNAdapter';
+import { Buffer } from '@craftzdog/react-native-buffer';
 import chai from 'chai';
 import type { Done } from 'mocha';
 
 const assert = chai.assert;
 
 export function registerRandomTests() {
-  const kMaxInt32 = 2 ** 31 - 1;
-  const kMaxPossibleLength = Math.min(kMaxLength, kMaxInt32);
-
   describe('check args', () => {
     // TODO (Szymon)
     [crypto.randomBytes, crypto.pseudoRandomBytes].forEach((f) => {
@@ -64,7 +61,7 @@ export function registerRandomTests() {
         const length = len;
         const funn = f;
         it('function ' + funn + ' & len ' + length, (done: Done) => {
-          funn(length, (ex, buf) => {
+          funn(length, (ex: any, buf: any) => {
             try {
               assert.strictEqual(ex, null);
               assert.strictEqual(buf.length, Math.floor(len));
@@ -121,9 +118,10 @@ export function registerRandomTests() {
   it('simple test (do sth) 5- random Fill ', (done: Done) => {
     const buf = Buffer.alloc(10);
     const before = buf.toString('hex');
-    crypto.randomFill(buf, (err, buf) => {
+    // eslint-disable-next-line handle-callback-err
+    crypto.randomFill(buf, (_, res) => {
       try {
-        const after = buf?.toString('hex');
+        const after = res?.toString('hex');
         assert.notStrictEqual(before, after);
       } catch (e) {
         done(e);
@@ -135,9 +133,10 @@ export function registerRandomTests() {
   it('simple test (do sth) 6 ', (done: Done) => {
     const buf = new Uint8Array(new Array(10).fill(0));
     const before = Buffer.from(buf).toString('hex');
-    crypto.randomFill(buf, (err, buf) => {
+    // eslint-disable-next-line handle-callback-err
+    crypto.randomFill(buf, (_, res) => {
       try {
-        const after = Buffer.from(buf).toString('hex');
+        const after = Buffer.from(res).toString('hex');
         assert.notStrictEqual(before, after);
         done();
       } catch (e) {
@@ -156,9 +155,10 @@ export function registerRandomTests() {
       new DataView(new ArrayBuffer(10)),
     ].forEach((buf) => {
       const before = Buffer.from(buf.buffer).toString('hex');
+      // eslint-disable-next-line no-shadow
       crypto.randomFill(buf, (_err, buf) => {
         try {
-          const after = Buffer.from(buf.buffer).toString('hex');
+          const after = Buffer.from(buf!.buffer).toString('hex');
           assert.notStrictEqual(before, after);
         } catch (e) {
           done(e);
@@ -173,11 +173,11 @@ export function registerRandomTests() {
 
   it('simple test (do sth) 8', (done: Done) => {
     let ctr = 0;
-    [new ArrayBuffer(10), new SharedArrayBuffer(10)].forEach((buf) => {
+    [new ArrayBuffer(10)].forEach((buf) => {
       const before = Buffer.from(buf).toString('hex');
-      crypto.randomFill(buf, (_err, buf) => {
+      crypto.randomFill(buf, (_err, res) => {
         try {
-          const after = Buffer.from(buf).toString('hex');
+          const after = Buffer.from(res).toString('hex');
           assert.notStrictEqual(before, after);
         } catch (e) {
           done(e);
@@ -220,9 +220,9 @@ export function registerRandomTests() {
   it('randomFill - deepStringEqual - Buffer', (done: Done) => {
     const buf = Buffer.alloc(10);
     const before = buf.toString('hex');
-    crypto.randomFill(buf, 5, 5, (_err, buf) => {
+    crypto.randomFill(buf, 5, 5, (_err, res) => {
       try {
-        const after = buf.toString('hex');
+        const after = res.toString('hex');
         assert.notStrictEqual(before, after);
         assert.deepStrictEqual(before.slice(0, 5), after.slice(0, 5));
       } catch (e) {
@@ -235,9 +235,9 @@ export function registerRandomTests() {
   it('randomFill - deepStringEqual - Uint8Array', (done: Done) => {
     const buf = new Uint8Array(new Array(10).fill(0));
     const before = Buffer.from(buf).toString('hex');
-    crypto.randomFill(buf, 5, 5, (_err, buf) => {
+    crypto.randomFill(buf, 5, 5, (_err, res) => {
       try {
-        const after = Buffer.from(buf).toString('hex');
+        const after = Buffer.from(res).toString('hex');
         assert.notStrictEqual(before, after);
         assert.deepStrictEqual(before.slice(0, 5), after.slice(0, 5));
       } catch (e) {
@@ -247,7 +247,7 @@ export function registerRandomTests() {
     });
   });
 
-  // TODO(Szymon) finish
+  //   finish
   /*describe('errors checks', () => {
     [Buffer.alloc(10), new Uint8Array(new Array(10).fill(0))].forEach((buf) => {
       const buffer = buf;
@@ -335,7 +335,7 @@ export function registerRandomTests() {
   // https://github.com/nodejs/node-v0.x-archive/issues/5126,
   // "FATAL ERROR: v8::Object::SetIndexedPropertiesToExternalArrayData() length
   // exceeds max acceptable value"
-  // TODO(Szymon) handle errors properly
+  //   handle errors properly
   /*  assert.throws(() => crypto.randomBytes((-1 >>> 0) + 1), {
     code: 'ERR_OUT_OF_RANGE',
     name: 'RangeError',
@@ -378,10 +378,10 @@ export function registerRandomTests() {
   });
 
   it('randomInt - Asyncynchronous API', (done: Done) => {
-    const randomInts = [];
+    const randomInts: number[] = [];
     let failed = false;
     for (let i = 0; i < 100; i++) {
-      crypto.randomInt(3, (n) => {
+      crypto.randomInt(3, (_, n) => {
         try {
           assert.ok(n >= 0);
           assert.ok(n < 3);
@@ -421,10 +421,10 @@ export function registerRandomTests() {
   });
 
   it('randomInt positive range', (done: Done) => {
-    const randomInts = [];
+    const randomInts: number[] = [];
     let failed = false;
     for (let i = 0; i < 100; i++) {
-      crypto.randomInt(1, 3, (er, n) => {
+      crypto.randomInt(1, 3, (_, n) => {
         try {
           assert.ok(n >= 1);
           assert.ok(n < 3);
@@ -445,10 +445,10 @@ export function registerRandomTests() {
   });
 
   it('randomInt negative range', (done: Done) => {
-    const randomInts = [];
+    const randomInts: number[] = [];
     let failed = false;
     for (let i = 0; i < 100; i++) {
-      crypto.randomInt(-10, -8, (er, n) => {
+      crypto.randomInt(-10, -8, (_, n) => {
         try {
           assert.ok(n >= -10);
           assert.ok(n < -8);
@@ -603,6 +603,7 @@ export function registerRandomTests() {
       const val = i;
       it('expect type error', () => {
         assert.throws(
+          // @ts-expect-error
           () => crypto.randomInt(0, 1, val),
           /ERR_INVALID_ARG_TYPE/
         );

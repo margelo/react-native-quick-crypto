@@ -1,4 +1,4 @@
-import { describe, it, itOnly } from '../../MochaRNAdapter';
+import { describe, it } from '../../MochaRNAdapter';
 import chai from 'chai';
 import { FastCrypto } from 'react-native-fast-crypto';
 import { Buffer } from '@craftzdog/react-native-buffer';
@@ -15,6 +15,7 @@ export const pbkdf2RegisterTests = () => {
   // https://stackoverflow.com/questions/5130513/pbkdf2-hmac-sha2-test-vectors
   // https://stackoverflow.com/questions/15593184/pbkdf2-hmac-sha-512-test-vectors
   var { fixtures } = require('./fixtures');
+  // eslint-disable-next-line no-shadow
   var Buffer = require('safe-buffer').Buffer;
 
   fixtures.invalid.push(
@@ -107,8 +108,10 @@ export const pbkdf2RegisterTests = () => {
         Buffer.from('salt'),
         1,
         32,
-        function (err, result) {
+        // eslint-disable-next-line handle-callback-err
+        function (_, result) {
           chai
+            // @ts-expect-error
             .expect(ab2str(result))
             .to.eql(
               '0c60c80f961f0e71f3a9b524af6012062fe037a6e0f0eb94fe8fc46bdc637164'
@@ -120,12 +123,14 @@ export const pbkdf2RegisterTests = () => {
 
     it('should throw if no callback is provided', function () {
       chai
+        // @ts-expect-error
         .expect(FastCrypto.pbkdf2('password', 'salt', 1, 32, 'sha1'))
         .to.throw(/No callback provided to pbkdf2/);
     });
 
     it('should throw if the password is not a string or an ArrayBuffer', function () {
       chai
+        // @ts-expect-error
         .expect(FastCrypto.pbkdf2(['a'], 'salt', 1, 32, 'sha1'))
         .to.throw(
           /Password must be a string, a Buffer, a typed array or a DataView/
@@ -134,16 +139,17 @@ export const pbkdf2RegisterTests = () => {
 
     it(' should throw if the salt is not a string or an ArrayBuffer', function () {
       chai
+        // @ts-expect-error
         .expect(FastCrypto.pbkdf2('a', ['salt'], 1, 32, 'sha1'))
         .to.throw(
           /Salt must be a string, a Buffer, a typed array or a DataView/
         );
     });
 
-    var algos = ['sha1', 'sha224', 'sha256', 'sha384', 'sha512', 'ripemd160'];
+    let algos = ['sha1', 'sha224', 'sha256', 'sha384', 'sha512', 'ripemd160'];
     algos.forEach(function (algorithm) {
-      fixtures.valid.forEach(function (f) {
-        var key, keyType, salt, saltType;
+      fixtures.valid.forEach(function (f: any) {
+        let key: any, keyType: any, salt: any, saltType: any;
         if (f.keyUint8Array) {
           key = new Uint8Array(f.keyUint8Array);
           keyType = 'Uint8Array';

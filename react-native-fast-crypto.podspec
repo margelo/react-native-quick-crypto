@@ -16,17 +16,17 @@ Pod::Spec.new do |s|
   # All source files that should be publicly visible
   # Note how this does not include headers, since those can nameclash.
   s.source_files = [
-    "ios/**/*.{m,mm}",
-    "cpp/**/*.cpp",
+    "ios/**/*.{h,m,mm}",
+    "cpp/**/*.{h,c,cpp}",
     "ios/FastCryptoModule.h"
   ]
   # Any private headers that are not globally unique should be mentioned here.
   # Otherwise there will be a nameclash, since CocoaPods flattens out any header directories
   # See https://github.com/firebase/firebase-ios-sdk/issues/4035 for more details.
-  s.preserve_paths = [
-    'ios/**/*.h',
-    'cpp/**/*.h'
-  ]
+  # s.preserve_paths = [
+  #   'ios/**/*.h',
+  #   'cpp/**/*.h'
+  # ]
 
   s.pod_target_xcconfig    = {
     "USE_HEADERMAP" => "YES",

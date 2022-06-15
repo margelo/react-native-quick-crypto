@@ -8,7 +8,7 @@ type CorrectResultItemProps = {
 export const CorrectResultItem: React.FC<CorrectResultItemProps> = ({
   description,
 }: CorrectResultItemProps) => {
-  const emoji = '😎';
+  const emoji = '✅';
   const fullText = emoji + ' [' + description + ']';
 
   return (
