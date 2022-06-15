@@ -58,6 +58,7 @@ export function randomFill<T extends ArrayBufferView>(
     offset = rest[0];
   }
 
+  // TODO(Szymon) check
   random.randomFill(buffer.buffer ? buffer.buffer : buffer, offset, size).then(
     () => {
       callback(null, buffer);
@@ -73,6 +74,7 @@ export function randomFillSync<T extends ArrayBufferView>(
   offset: number = 0,
   size?: number
 ) {
+  // TODO(Szymon) check
   random.randomFillSync(
     buffer.buffer ? buffer.buffer : buffer,
     offset,
@@ -230,6 +232,7 @@ function asyncRefillRandomIntCache() {
   if (asyncCacheFillInProgress) return;
 
   asyncCacheFillInProgress = true;
+  // TODO(Szymon) check
   randomFill(randomCache, (err) => {
     asyncCacheFillInProgress = false;
 

@@ -23,28 +23,15 @@ export function createHmac(
 
 class Hmac extends Stream.Transform {
   private internalHmac: InternalHmac;
-  private options?: Stream.TransformOptions;
   private isFinalized: boolean = false;
 
   constructor(
     algorithm: string,
     key: BinaryLike,
-    options?: Stream.TransformOptions
+    _options?: Stream.TransformOptions
   ) {
     super();
-    let keyAsString: ArrayBuffer | undefined;
-
-    if (typeof key === 'string') {
-      keyAsString = Buffer.from(key).buffer;
-    }
-
-    if (key instanceof ArrayBuffer) {
-      keyAsString = key;
-    }
-
-    if (key.buffer != undefined) {
-      keyAsString = key.buffer;
-    }
+    let keyAsString = binaryLikeToArrayBuffer(key);
 
     if (keyAsString === undefined) {
       throw 'Wrong key type';
@@ -54,7 +41,6 @@ class Hmac extends Stream.Transform {
       algorithm,
       keyAsString as ArrayBuffer
     );
-    this.options = options;
   }
 
   /**

@@ -21,7 +21,6 @@ export function createHash(algorithm: string, options?: HashOptions) {
 
 class Hash extends Stream.Transform {
   private internalHash: InternalHash;
-  private options?: Stream.TransformOptions;
 
   constructor(other: Hash, options?: HashOptions);
   constructor(algorithm: string, options?: HashOptions);
@@ -32,12 +31,10 @@ class Hash extends Stream.Transform {
     } else {
       this.internalHash = createInternalHash(arg, options?.outputLength);
     }
-    this.options = options;
   }
 
   copy(options?: Stream.TransformOptions): Hash {
     const copy = new Hash(this, options);
-    copy.options = options;
     return copy;
   }
   /**

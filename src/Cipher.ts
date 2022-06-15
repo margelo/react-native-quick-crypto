@@ -83,7 +83,6 @@ function getDecoder(decoder?: StringDecoder, encoding?: BufferEncoding) {
 
 class CipherCommon extends Stream.Transform {
   private internal: InternalCipher;
-  private options: any;
   private decoder: StringDecoder | undefined;
 
   constructor(
@@ -107,7 +106,6 @@ class CipherCommon extends Stream.Transform {
     this.internal = isCipher
       ? createInternalCipher(args)
       : createInternalDecipher(args);
-    this.options = options;
   }
 
   update(
