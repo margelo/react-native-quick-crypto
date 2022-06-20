@@ -26,9 +26,9 @@ if (global.__FastCryptoProxy == null) {
   const FastCryptoModule = NativeModules.QuickCrypto;
   if (FastCryptoModule == null) {
     let message =
-      'Failed to install react-native-fast-crypto: The native `QuickCrypto` Module could not be found.';
+      'Failed to install react-native-quick-crypto: The native `QuickCrypto` Module could not be found.';
     message +=
-      '\n* Make sure react-native-fast-crypto is correctly autolinked (run `npx react-native config` to verify)';
+      '\n* Make sure react-native-quick-crypto is correctly autolinked (run `npx react-native config` to verify)';
     if (Platform.OS === 'ios' || Platform.OS === 'macos') {
       message += '\n* Make sure you ran `pod install` in the ios/ directory.';
     }
@@ -42,7 +42,7 @@ if (global.__FastCryptoProxy == null) {
       if (ExpoConstants.appOwnership === 'expo') {
         // We're running Expo Go
         throw new Error(
-          'react-native-fast-crypto is not supported in Expo Go! Use EAS (`expo prebuild`) or eject to a bare workflow instead.'
+          'react-native-quick-crypto is not supported in Expo Go! Use EAS (`expo prebuild`) or eject to a bare workflow instead.'
         );
       } else {
         // We're running Expo bare / standalone
@@ -57,7 +57,7 @@ if (global.__FastCryptoProxy == null) {
   // Check if we are running on-device (JSI)
   if (global.nativeCallSyncHook == null || FastCryptoModule.install == null) {
     throw new Error(
-      'Failed to install react-native-fast-crypto: React Native is not running on-device. QuickCrypto can only be used when synchronous method invocations (JSI) are possible. If you are using a remote debugger (e.g. Chrome), switch to an on-device debugger (e.g. Flipper) instead.'
+      'Failed to install react-native-quick-crypto: React Native is not running on-device. QuickCrypto can only be used when synchronous method invocations (JSI) are possible. If you are using a remote debugger (e.g. Chrome), switch to an on-device debugger (e.g. Flipper) instead.'
     );
   }
 
@@ -65,13 +65,13 @@ if (global.__FastCryptoProxy == null) {
   const result = FastCryptoModule.install();
   if (result !== true)
     throw new Error(
-      `Failed to install react-native-fast-crypto: The native QuickCrypto Module could not be installed! Looks like something went wrong when installing JSI bindings: ${result}`
+      `Failed to install react-native-quick-crypto: The native QuickCrypto Module could not be installed! Looks like something went wrong when installing JSI bindings: ${result}`
     );
 
   // Check again if the constructor now exists. If not, throw an error.
   if (global.__FastCryptoProxy == null)
     throw new Error(
-      'Failed to install react-native-fast-crypto, the native initializer function does not exist. Are you trying to use QuickCrypto from different JS Runtimes?'
+      'Failed to install react-native-quick-crypto, the native initializer function does not exist. Are you trying to use QuickCrypto from different JS Runtimes?'
     );
 }
 

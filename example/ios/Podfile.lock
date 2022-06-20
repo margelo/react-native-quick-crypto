@@ -210,7 +210,7 @@ PODS:
   - React-jsinspector (0.66.0)
   - React-logger (0.66.0):
     - glog
-  - react-native-fast-crypto (0.1.0):
+  - react-native-quick-crypto (0.1.0):
     - OpenSSL-Universal (~> 1.1.1300)
     - React
     - React-callinvoker
@@ -315,7 +315,7 @@ DEPENDENCIES:
   - React-jsiexecutor (from `../node_modules/react-native/ReactCommon/jsiexecutor`)
   - React-jsinspector (from `../node_modules/react-native/ReactCommon/jsinspector`)
   - React-logger (from `../node_modules/react-native/ReactCommon/logger`)
-  - react-native-fast-crypto (from `../..`)
+  - react-native-quick-crypto (from `../..`)
   - react-native-quick-base64 (from `../node_modules/react-native-quick-base64`)
   - react-native-safe-area-context (from `../node_modules/react-native-safe-area-context`)
   - React-perflogger (from `../node_modules/react-native/ReactCommon/reactperflogger`)
@@ -374,7 +374,7 @@ EXTERNAL SOURCES:
     :path: "../node_modules/react-native/ReactCommon/jsinspector"
   React-logger:
     :path: "../node_modules/react-native/ReactCommon/logger"
-  react-native-fast-crypto:
+  react-native-quick-crypto:
     :path: "../.."
   react-native-quick-base64:
     :path: "../node_modules/react-native-quick-base64"
@@ -431,7 +431,7 @@ SPEC CHECKSUMS:
   React-jsiexecutor: 6a05173dc0142abc582bd4edd2d23146b8cc218a
   React-jsinspector: be95ad424ba9f7b817aff22732eb9b1b810a000a
   React-logger: 9a9cd87d4ea681ae929b32ef580638ff1b50fb24
-  react-native-fast-crypto: 04bc21f0eccbf21c180ceea40d543d58495f986d
+  react-native-quick-crypto: 04bc21f0eccbf21c180ceea40d543d58495f986d
   react-native-quick-base64: 5b0692872a9456fb4723f7b2a0083d51485baa95
   react-native-safe-area-context: f98b0b16d1546d208fc293b4661e3f81a895afd9
   React-perflogger: 1f554c2b684e2f484f9edcdfdaeedab039fbaca8

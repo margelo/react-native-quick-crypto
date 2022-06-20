@@ -47,14 +47,14 @@ public boolean install() {
                                                 .getJSCallInvokerHolder();
 
 
-    Log.i(NAME, "Installing JSI Bindings for react-native-fast-crypto...");
+    Log.i(NAME, "Installing JSI Bindings for react-native-quick-crypto...");
     mHybridData = initHybrid();
     nativeInstall(jsContext.get(), jsCallInvokerHolder);
-    Log.i(NAME, "Successfully installed JSI Bindings for react-native-fast-crypto!");
+    Log.i(NAME, "Successfully installed JSI Bindings for react-native-quick-crypto!");
 
     return true;
   } catch (Exception exception) {
-    Log.e(NAME, "Failed to install JSI Bindings for react-native-fast-crypto!", exception);
+    Log.e(NAME, "Failed to install JSI Bindings for react-native-quick-crypto!", exception);
     return false;
   }
 }

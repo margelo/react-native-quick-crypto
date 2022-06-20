@@ -1,5 +1,5 @@
 {
-  "name": "react-native-fast-crypto",
+  "name": "react-native-quick-crypto",
   "version": "0.1.0",
   "description": "A fast implementation of Node's `crypto` module written in C/C++ JSI",
   "main": "lib/commonjs/index",
@@ -13,7 +13,7 @@
     "android",
     "ios",
     "cpp",
-    "react-native-fast-crypto.podspec",
+    "react-native-quick-crypto.podspec",
     "!lib/typescript/example",
     "!android/build",
     "!ios/build",
@@ -38,13 +38,13 @@
     "fast",
     "web3"
   ],
-  "repository": "https://github.com/margelo/react-native-fast-crypto",
+  "repository": "https://github.com/margelo/react-native-quick-crypto",
   "authors": "Szymon Kapała (szymon20000@gmail.com) & Marc Rousavy <me@mrousavy.com> (https://github.com/mrousavy)",
   "license": "MIT",
   "bugs": {
-    "url": "https://github.com/margelo/react-native-fast-crypto/issues"
+    "url": "https://github.com/margelo/react-native-quick-crypto/issues"
   },
-  "homepage": "https://github.com/margelo/react-native-fast-crypto#readme",
+  "homepage": "https://github.com/margelo/react-native-quick-crypto#readme",
   "publishConfig": {
     "registry": "https://registry.npmjs.org/"
   },

@@ -2,7 +2,7 @@
   "compilerOptions": {
     "baseUrl": ".",
     "paths": {
-      "react-native-fast-crypto": ["./src/index"]
+      "react-native-quick-crypto": ["./src/index"]
     },
     "allowUnreachableCode": false,
     "allowUnusedLabels": false,

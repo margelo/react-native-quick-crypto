@@ -1,6 +1,6 @@
 import { describe, it } from '../../MochaRNAdapter';
 import chai from 'chai';
-import { QuickCrypto } from 'react-native-fast-crypto';
+import { QuickCrypto } from 'react-native-quick-crypto';
 import { Buffer } from '@craftzdog/react-native-buffer';
 import type { Done } from 'mocha';
 

@@ -3,7 +3,7 @@ require "json"
 package = JSON.parse(File.read(File.join(__dir__, "package.json")))
 
 Pod::Spec.new do |s|
-  s.name         = "react-native-fast-crypto"
+  s.name         = "react-native-quick-crypto"
   s.version      = package["version"]
   s.summary      = package["description"]
   s.homepage     = package["homepage"]
@@ -11,7 +11,7 @@ Pod::Spec.new do |s|
   s.authors      = package["authors"]
 
   s.platforms    = { :ios => "11.0", :tvos => "12.0", :osx => "10.14" }
-  s.source       = { :git => "https://github.com/mrousavy/react-native-fast-crypto.git", :tag => "#{s.version}" }
+  s.source       = { :git => "https://github.com/mrousavy/react-native-quick-crypto.git", :tag => "#{s.version}" }
 
   # All source files that should be publicly visible
   # Note how this does not include headers, since those can nameclash.
