@@ -4,12 +4,6 @@ We want this community to be friendly and respectful to each other. Please follo
 
 ## Development workflow
 
-Before starting you need to install [pre-commit](https://pre-commit.com).
-
-```sh
-brew install pre-commit
-```
-
 To get started with the project, run `yarn` in the root directory to install the required dependencies for each package:
 
 ```sh
@@ -72,15 +66,13 @@ We follow the [conventional commits specification](https://www.conventionalcommi
 - `test`: adding or updating tests, e.g. add integration tests using detox.
 - `chore`: tooling changes, e.g. change CI config.
 
-Our pre-commit hooks verify that your commit message matches this format when committing.
-
 ### Linting and tests
 
 [ESLint](https://eslint.org/), [Prettier](https://prettier.io/), [TypeScript](https://www.typescriptlang.org/)
 
 We use [TypeScript](https://www.typescriptlang.org/) for type checking, [ESLint](https://eslint.org/) with [Prettier](https://prettier.io/) for linting and formatting the code, and [Jest](https://jestjs.io/) for testing.
 
-Our pre-commit hooks verify that the linter and tests pass when committing.
+Our CI verify that the linter and tests pass when creating a PR.
 
 ### Publishing to npm
 
