@@ -1,4 +1,4 @@
-package com.reactnativefastcrypto;
+package com.reactnativequickcrypto;
 
 import android.util.Log;
 
@@ -13,8 +13,8 @@ import com.facebook.react.bridge.ReactMethod;
 import com.facebook.react.module.annotations.ReactModule;
 import com.facebook.react.turbomodule.core.CallInvokerHolderImpl;
 
-@ReactModule(name = FastCryptoModule.NAME)
-public class FastCryptoModule extends ReactContextBaseJavaModule {
+@ReactModule(name = QuickCryptoModule.NAME)
+public class QuickCryptoModule extends ReactContextBaseJavaModule {
 public static final String NAME = "QuickCrypto";
 
 @DoNotStrip
@@ -22,7 +22,7 @@ private HybridData mHybridData;
 
 private native HybridData initHybrid();
 
-public FastCryptoModule(ReactApplicationContext reactContext) {
+public QuickCryptoModule(ReactApplicationContext reactContext) {
   super(reactContext);
 }
 
@@ -39,7 +39,7 @@ public boolean install() {
       return false;
     }
     Log.i(NAME, "Loading C++ library...");
-    System.loadLibrary("reactnativefastcrypto");
+    System.loadLibrary("reactnativequickcrypto");
 
     JavaScriptContextHolder jsContext = getReactApplicationContext().getJavaScriptContextHolder();
     CallInvokerHolderImpl jsCallInvokerHolder = (CallInvokerHolderImpl) getReactApplicationContext()

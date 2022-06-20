@@ -1,13 +1,13 @@
-#import "FastCryptoModule.h"
+#import "QuickCryptoModule.h"
 
 #import <React/RCTBridge+Private.h>
 #import <React/RCTUtils.h>
 #import <ReactCommon/RCTTurboModule.h>
 #import <jsi/jsi.h>
 
-#import "../cpp/MGLFastCryptoHostObject.h"
+#import "../cpp/MGLQuickCryptoHostObject.h"
 
-@implementation FastCryptoModule
+@implementation QuickCryptoModule
 
 RCT_EXPORT_MODULE(QuickCrypto)
 
@@ -31,9 +31,9 @@ RCT_EXPORT_BLOCKING_SYNCHRONOUS_METHOD(install) {
   auto workerQueue =
       std::make_shared<margelo::DispatchQueue::dispatch_queue>("margelo crypto thread");
   auto hostObject = std::static_pointer_cast<jsi::HostObject>(
-      std::make_shared<margelo::MGLFastCryptoHostObject>(callInvoker, workerQueue));
+      std::make_shared<margelo::MGLQuickCryptoHostObject>(callInvoker, workerQueue));
   auto object = jsi::Object::createFromHostObject(runtime, hostObject);
-  runtime.global().setProperty(runtime, "__FastCryptoProxy", std::move(object));
+  runtime.global().setProperty(runtime, "__QuickCryptoProxy", std::move(object));
 
   NSLog(@"Successfully installed JSI bindings for react-native-quick-crypto!");
   return @true;

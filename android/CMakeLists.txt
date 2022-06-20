@@ -30,10 +30,10 @@ if(${REACT_NATIVE_VERSION} LESS 66)
         )
 endif()
 
-add_library(reactnativefastcrypto  # <-- Library name
+add_library(reactnativequickcrypto  # <-- Library name
         SHARED
         "src/main/cpp/cpp-adapter.cpp"
-        "../cpp/MGLFastCryptoHostObject.cpp"
+        "../cpp/MGLQuickCryptoHostObject.cpp"
         "../cpp/JSIUtils/MGLTypedArray.cpp"
         "../cpp/Utils/MGLDispatchQueue.cpp"
         "../cpp/JSIUtils/MGLThreadAwareHostObject.cpp"
@@ -52,7 +52,7 @@ add_library(reactnativefastcrypto  # <-- Library name
 )
 
 set_target_properties(
-        reactnativefastcrypto PROPERTIES
+        reactnativequickcrypto PROPERTIES
         CXX_STANDARD 17
         CXX_EXTENSIONS OFF
         POSITION_INDEPENDENT_CODE ON
@@ -105,7 +105,7 @@ endif()
 find_package(openssl REQUIRED CONFIG)
 
 target_link_libraries(
-        reactnativefastcrypto
+        reactnativequickcrypto
         ${TURBOMODULES_LIB}
         ${FBJNI_LIB}
         ${log-lib}

@@ -1,4 +1,4 @@
-package com.example.reactnativefastcrypto;
+package com.example.reactnativequickcrypto;
 
 import android.app.Application;
 
@@ -8,7 +8,7 @@ import com.facebook.react.ReactNativeHost;
 import com.facebook.react.ReactPackage;
 import com.facebook.react.bridge.JSIModulePackage;
 import com.facebook.soloader.SoLoader;
-import com.reactnativefastcrypto.FastCryptoPackage;
+import com.reactnativequickcrypto.QuickCryptoPackage;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -25,7 +25,7 @@ public class MainApplication extends Application implements ReactApplication {
         @Override
         protected List<ReactPackage> getPackages() {
           ArrayList<ReactPackage> packages = new PackageList(this).getPackages();
-          packages.add(new FastCryptoPackage());
+          packages.add(new QuickCryptoPackage());
           return packages;
         }
 

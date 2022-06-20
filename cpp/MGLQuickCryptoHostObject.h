@@ -16,13 +16,13 @@ namespace margelo {
 namespace jsi = facebook::jsi;
 namespace react = facebook::react;
 
-class JSI_EXPORT MGLFastCryptoHostObject : public MGLSmartHostObject {
+class JSI_EXPORT MGLQuickCryptoHostObject : public MGLSmartHostObject {
  public:
-  explicit MGLFastCryptoHostObject(
+  explicit MGLQuickCryptoHostObject(
       std::shared_ptr<react::CallInvoker> jsCallInvoker,
       std::shared_ptr<DispatchQueue::dispatch_queue> workerQueue);
 
-  virtual ~MGLFastCryptoHostObject() { invalidateJsiPropNameIDCache(); }
+  virtual ~MGLQuickCryptoHostObject() { invalidateJsiPropNameIDCache(); }
 };
 
 }  // namespace margelo

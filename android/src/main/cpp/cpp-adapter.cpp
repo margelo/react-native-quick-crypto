@@ -3,14 +3,14 @@
 #include <jni.h>
 #include <jsi/jsi.h>
 
-#include "MGLFastCryptoHostObject.h"
+#include "MGLQuickCryptoHostObject.h"
 
 using namespace facebook;
 
 class CryptoCppAdapter : public jni::HybridClass<CryptoCppAdapter> {
  public:
   static auto constexpr kJavaDescriptor =
-      "Lcom/reactnativefastcrypto/FastCryptoModule;";
+      "Lcom/reactnativequickcrypto/QuickCryptoModule;";
 
   static jni::local_ref<jni::HybridClass<CryptoCppAdapter>::jhybriddata>
   initHybrid(jni::alias_ref<jhybridobject> jThis) {
@@ -23,10 +23,10 @@ class CryptoCppAdapter : public jni::HybridClass<CryptoCppAdapter> {
                std::shared_ptr<facebook::react::CallInvoker> jsCallInvoker) {
     auto workerQueue = std::make_shared<margelo::DispatchQueue::dispatch_queue>(
         "margelo crypto worker thread");
-    auto hostObject = std::make_shared<margelo::MGLFastCryptoHostObject>(
+    auto hostObject = std::make_shared<margelo::MGLQuickCryptoHostObject>(
         jsCallInvoker, workerQueue);
     auto object = jsi::Object::createFromHostObject(runtime, hostObject);
-    runtime.global().setProperty(runtime, "__FastCryptoProxy",
+    runtime.global().setProperty(runtime, "__QuickCryptoProxy",
                                  std::move(object));
   }
 

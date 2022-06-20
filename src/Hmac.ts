@@ -1,6 +1,6 @@
 /* eslint-disable no-dupe-class-members */
-import { NativeFastCrypto } from './NativeFastCrypto/NativeFastCrypto';
-import type { InternalHmac } from './NativeFastCrypto/hmac';
+import { NativeQuickCrypto } from './NativeQuickCrypto/NativeQuickCrypto';
+import type { InternalHmac } from './NativeQuickCrypto/hmac';
 import {
   Encoding,
   toArrayBuffer,
@@ -10,7 +10,7 @@ import {
 import Stream from 'stream';
 import { Buffer } from '@craftzdog/react-native-buffer';
 
-const createInternalHmac = NativeFastCrypto.createHmac;
+const createInternalHmac = NativeQuickCrypto.createHmac;
 
 export function createHmac(
   algorithm: string,

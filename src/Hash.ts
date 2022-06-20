@@ -1,7 +1,7 @@
 /* eslint-disable no-dupe-class-members */
 import 'react-native';
-import { NativeFastCrypto } from './NativeFastCrypto/NativeFastCrypto';
-import type { InternalHash } from './NativeFastCrypto/hash';
+import { NativeQuickCrypto } from './NativeQuickCrypto/NativeQuickCrypto';
+import type { InternalHash } from './NativeQuickCrypto/hash';
 import { Encoding, toArrayBuffer } from './Utils';
 import Stream from 'stream';
 import { Buffer } from '@craftzdog/react-native-buffer';
@@ -13,7 +13,7 @@ type HashOptions = null | undefined | HashOptionsBase;
 
 global.process.nextTick = setImmediate;
 
-const createInternalHash = NativeFastCrypto.createHash;
+const createInternalHash = NativeQuickCrypto.createHash;
 
 type BinaryLike = ArrayBuffer;
 

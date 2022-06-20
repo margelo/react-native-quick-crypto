@@ -29,9 +29,9 @@
             <BuildableReference
                BuildableIdentifier = "primary"
                BlueprintIdentifier = "13B07F861A680F5B00A75B9A"
-               BuildableName = "FastCryptoExample.app"
-               BlueprintName = "FastCryptoExample"
-               ReferencedContainer = "container:FastCryptoExample.xcodeproj">
+               BuildableName = "QuickCryptoExample.app"
+               BlueprintName = "QuickCryptoExample"
+               ReferencedContainer = "container:QuickCryptoExample.xcodeproj">
             </BuildableReference>
          </BuildActionEntry>
       </BuildActionEntries>
@@ -45,9 +45,9 @@
          <BuildableReference
             BuildableIdentifier = "primary"
             BlueprintIdentifier = "13B07F861A680F5B00A75B9A"
-            BuildableName = "FastCryptoExample.app"
-            BlueprintName = "FastCryptoExample"
-            ReferencedContainer = "container:FastCryptoExample.xcodeproj">
+            BuildableName = "QuickCryptoExample.app"
+            BlueprintName = "QuickCryptoExample"
+            ReferencedContainer = "container:QuickCryptoExample.xcodeproj">
          </BuildableReference>
       </MacroExpansion>
       <Testables>
@@ -68,9 +68,9 @@
          <BuildableReference
             BuildableIdentifier = "primary"
             BlueprintIdentifier = "13B07F861A680F5B00A75B9A"
-            BuildableName = "FastCryptoExample.app"
-            BlueprintName = "FastCryptoExample"
-            ReferencedContainer = "container:FastCryptoExample.xcodeproj">
+            BuildableName = "QuickCryptoExample.app"
+            BlueprintName = "QuickCryptoExample"
+            ReferencedContainer = "container:QuickCryptoExample.xcodeproj">
          </BuildableReference>
       </BuildableProductRunnable>
    </LaunchAction>
@@ -85,9 +85,9 @@
          <BuildableReference
             BuildableIdentifier = "primary"
             BlueprintIdentifier = "13B07F861A680F5B00A75B9A"
-            BuildableName = "FastCryptoExample.app"
-            BlueprintName = "FastCryptoExample"
-            ReferencedContainer = "container:FastCryptoExample.xcodeproj">
+            BuildableName = "QuickCryptoExample.app"
+            BlueprintName = "QuickCryptoExample"
+            ReferencedContainer = "container:QuickCryptoExample.xcodeproj">
          </BuildableReference>
       </BuildableProductRunnable>
    </ProfileAction>

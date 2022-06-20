@@ -1,5 +1,5 @@
 /* eslint-disable no-dupe-class-members */
-import { NativeFastCrypto } from './NativeFastCrypto/NativeFastCrypto';
+import { NativeQuickCrypto } from './NativeQuickCrypto/NativeQuickCrypto';
 import Stream from 'stream';
 import {
   BinaryLike,
@@ -8,7 +8,7 @@ import {
   Encoding,
   getDefaultEncoding,
 } from './Utils';
-import type { InternalCipher } from './NativeFastCrypto/Cipher';
+import type { InternalCipher } from './NativeQuickCrypto/Cipher';
 // TODO(osp) re-enable type specific constructors
 // They are nice to have but not absolutely necessary
 // import type {
@@ -26,8 +26,8 @@ import { StringDecoder } from 'string_decoder';
 import type { Buffer } from '@craftzdog/react-native-buffer';
 import { Buffer as SBuffer } from 'safe-buffer';
 
-const createInternalCipher = NativeFastCrypto.createCipher;
-const createInternalDecipher = NativeFastCrypto.createDecipher;
+const createInternalCipher = NativeQuickCrypto.createCipher;
+const createInternalDecipher = NativeQuickCrypto.createDecipher;
 
 function getUIntOption(options: Record<string, any>, key: string) {
   let value;

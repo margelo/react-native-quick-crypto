@@ -39,11 +39,11 @@ apply plugin: 'com.android.library'
 apply plugin: 'de.undercouch.download'
 
 def getExtOrDefault(name) {
-  return rootProject.ext.has(name) ? rootProject.ext.get(name) : project.properties['FastCrypto_' + name]
+  return rootProject.ext.has(name) ? rootProject.ext.get(name) : project.properties['QuickCrypto_' + name]
 }
 
 def getExtOrIntegerDefault(name) {
-  return rootProject.ext.has(name) ? rootProject.ext.get(name) : (project.properties['FastCrypto_' + name]).toInteger()
+  return rootProject.ext.has(name) ? rootProject.ext.get(name) : (project.properties['QuickCrypto_' + name]).toInteger()
 }
 
 def reactNativeArchitectures() {

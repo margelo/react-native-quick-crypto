@@ -1,5 +1,5 @@
 #import <React/RCTBridgeModule.h>
 
-@interface FastCryptoModule : NSObject <RCTBridgeModule>
+@interface QuickCryptoModule : NSObject <RCTBridgeModule>
 
 @end
