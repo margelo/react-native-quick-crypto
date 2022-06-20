@@ -22,7 +22,6 @@
     "!**/__mocks__"
   ],
   "scripts": {
-    "preinstall": "./scripts/preinstall.sh",
     "typescript": "tsc --noEmit",
     "lint": "eslint \"**/*.{js,ts,tsx}\"",
     "prepare": "bob build",
