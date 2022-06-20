@@ -1,5 +1,5 @@
 // Copyright 2022 Margelo
-#include "MGLFastCryptoHostObject.h"
+#include "MGLQuickCryptoHostObject.h"
 
 #include <ReactCommon/TurboModuleUtils.h>
 #include <jsi/jsi.h>
@@ -28,7 +28,7 @@ namespace margelo {
 
 namespace jsi = facebook::jsi;
 
-MGLFastCryptoHostObject::MGLFastCryptoHostObject(
+MGLQuickCryptoHostObject::MGLQuickCryptoHostObject(
     std::shared_ptr<react::CallInvoker> jsCallInvoker,
     std::shared_ptr<DispatchQueue::dispatch_queue> workerQueue)
     : MGLSmartHostObject(jsCallInvoker, workerQueue) {

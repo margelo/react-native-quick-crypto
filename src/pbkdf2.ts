@@ -1,4 +1,4 @@
-import { NativeFastCrypto } from './NativeFastCrypto/NativeFastCrypto';
+import { NativeQuickCrypto } from './NativeQuickCrypto/NativeQuickCrypto';
 import { Buffer } from '@craftzdog/react-native-buffer';
 import { BinaryLike, binaryLikeToArrayBuffer } from './Utils';
 
@@ -18,7 +18,7 @@ function sanitizeInput(input: BinaryLike, errorMsg: string): ArrayBuffer {
   }
 }
 
-const nativePbkdf2 = NativeFastCrypto.pbkdf2;
+const nativePbkdf2 = NativeQuickCrypto.pbkdf2;
 
 export function pbkdf2(
   password: Password,

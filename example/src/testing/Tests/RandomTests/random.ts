@@ -21,7 +21,7 @@
 // USE OR OTHER DEALINGS IN THE SOFTWARE.
 
 // Flags: --pending-deprecation
-import { FastCrypto as crypto } from 'react-native-fast-crypto';
+import { QuickCrypto as crypto } from 'react-native-quick-crypto';
 import { describe, it } from '../../MochaRNAdapter';
 import { Buffer } from '@craftzdog/react-native-buffer';
 import chai from 'chai';

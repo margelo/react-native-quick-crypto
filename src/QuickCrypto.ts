@@ -9,7 +9,7 @@ import {
 import { createHmac } from './Hmac';
 import { createHash } from './Hash';
 
-export const FastCrypto = {
+export const QuickCrypto = {
   createHmac,
   Hmac: createHmac,
   Hash: createHash,

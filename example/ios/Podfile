@@ -3,7 +3,7 @@ require_relative '../node_modules/@react-native-community/cli-platform-ios/nativ
 
 platform :ios, '11.0'
 
-target 'FastCryptoExample' do
+target 'QuickCryptoExample' do
   config = use_native_modules!
 
   use_react_native!(
@@ -11,7 +11,7 @@ target 'FastCryptoExample' do
     :hermes_enabled => false
   )
 
-  pod 'react-native-fast-crypto', :path => '../..'
+  pod 'react-native-quick-crypto', :path => '../..'
 
   post_install do |installer|
     react_native_post_install(installer)

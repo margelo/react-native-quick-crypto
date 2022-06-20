@@ -1,4 +1,4 @@
-package com.reactnativefastcrypto;
+package com.reactnativequickcrypto;
 
 import android.util.Log;
 
@@ -13,16 +13,16 @@ import com.facebook.react.bridge.ReactMethod;
 import com.facebook.react.module.annotations.ReactModule;
 import com.facebook.react.turbomodule.core.CallInvokerHolderImpl;
 
-@ReactModule(name = FastCryptoModule.NAME)
-public class FastCryptoModule extends ReactContextBaseJavaModule {
-public static final String NAME = "FastCrypto";
+@ReactModule(name = QuickCryptoModule.NAME)
+public class QuickCryptoModule extends ReactContextBaseJavaModule {
+public static final String NAME = "QuickCrypto";
 
 @DoNotStrip
 private HybridData mHybridData;
 
 private native HybridData initHybrid();
 
-public FastCryptoModule(ReactApplicationContext reactContext) {
+public QuickCryptoModule(ReactApplicationContext reactContext) {
   super(reactContext);
 }
 
@@ -39,7 +39,7 @@ public boolean install() {
       return false;
     }
     Log.i(NAME, "Loading C++ library...");
-    System.loadLibrary("reactnativefastcrypto");
+    System.loadLibrary("reactnativequickcrypto");
 
     JavaScriptContextHolder jsContext = getReactApplicationContext().getJavaScriptContextHolder();
     CallInvokerHolderImpl jsCallInvokerHolder = (CallInvokerHolderImpl) getReactApplicationContext()
@@ -47,14 +47,14 @@ public boolean install() {
                                                 .getJSCallInvokerHolder();
 
 
-    Log.i(NAME, "Installing JSI Bindings for react-native-fast-crypto...");
+    Log.i(NAME, "Installing JSI Bindings for react-native-quick-crypto...");
     mHybridData = initHybrid();
     nativeInstall(jsContext.get(), jsCallInvokerHolder);
-    Log.i(NAME, "Successfully installed JSI Bindings for react-native-fast-crypto!");
+    Log.i(NAME, "Successfully installed JSI Bindings for react-native-quick-crypto!");
 
     return true;
   } catch (Exception exception) {
-    Log.e(NAME, "Failed to install JSI Bindings for react-native-fast-crypto!", exception);
+    Log.e(NAME, "Failed to install JSI Bindings for react-native-quick-crypto!", exception);
     return false;
   }
 }

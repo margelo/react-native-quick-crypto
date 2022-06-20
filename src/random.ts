@@ -1,8 +1,8 @@
-import { NativeFastCrypto } from './NativeFastCrypto/NativeFastCrypto';
+import { NativeQuickCrypto } from './NativeQuickCrypto/NativeQuickCrypto';
 import { Buffer } from '@craftzdog/react-native-buffer';
 import { isBuffer } from '../src/Utils';
 
-const random = NativeFastCrypto.random;
+const random = NativeQuickCrypto.random;
 
 type TypedArray =
   | Uint8Array

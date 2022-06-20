@@ -1,6 +1,6 @@
 /* eslint-disable jest/valid-expect */
 // copied from https://github.com/nodejs/node/blob/master/test/parallel/test-crypto-hmac.js
-import { FastCrypto as crypto } from 'react-native-fast-crypto';
+import { QuickCrypto as crypto } from 'react-native-quick-crypto';
 import { Buffer } from '@craftzdog/react-native-buffer';
 import { describe, it } from '../../MochaRNAdapter';
 import chai, { expect } from 'chai';

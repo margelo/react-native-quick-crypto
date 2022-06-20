@@ -1,7 +1,7 @@
 // copied from https://github.com/nodejs/node/blob/master/test/parallel/test-crypto-hash.js
 import { Buffer } from '@craftzdog/react-native-buffer';
 import chai from 'chai';
-import { FastCrypto as crypto } from 'react-native-fast-crypto';
+import { QuickCrypto as crypto } from 'react-native-quick-crypto';
 import { it } from '../../MochaRNAdapter';
 
 const assert = chai.assert;
@@ -12,7 +12,7 @@ export function registerCipherTests1() {
     it('testCipher1 + ' + key, () => {
       // Test encryption and decryption
       const plaintext =
-        'Keep this a secret? No! Tell everyone about fast-crypto!';
+        'Keep this a secret? No! Tell everyone about quick-crypto!';
       const cipher = crypto.createCipher('aes192', key);
 
       // Encrypt plaintext which is in utf8 format
