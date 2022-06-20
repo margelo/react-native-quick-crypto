@@ -9,7 +9,7 @@
 
 @implementation FastCryptoModule
 
-RCT_EXPORT_MODULE(FastCrypto)
+RCT_EXPORT_MODULE(QuickCrypto)
 
 RCT_EXPORT_BLOCKING_SYNCHRONOUS_METHOD(install) {
   NSLog(@"Installing JSI bindings for react-native-fast-crypto...");

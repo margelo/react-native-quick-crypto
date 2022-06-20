@@ -39,7 +39,7 @@ class CryptoCppAdapter : public jni::HybridClass<CryptoCppAdapter> {
     if (runtime) {
       install(*runtime, jsCallInvoker);
     }
-    // if runtime was nullptr, FastCrypto will not be installed. This should
+    // if runtime was nullptr, QuickCrypto will not be installed. This should
     // only happen while Remote Debugging (Chrome), but will be weird either
     // way.
   }

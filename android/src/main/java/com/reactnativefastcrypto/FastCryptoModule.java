@@ -15,7 +15,7 @@ import com.facebook.react.turbomodule.core.CallInvokerHolderImpl;
 
 @ReactModule(name = FastCryptoModule.NAME)
 public class FastCryptoModule extends ReactContextBaseJavaModule {
-public static final String NAME = "FastCrypto";
+public static final String NAME = "QuickCrypto";
 
 @DoNotStrip
 private HybridData mHybridData;

@@ -1,1 +1,1 @@
-export * from './FastCrypto';
+export * from './QuickCrypto';

@@ -61,9 +61,9 @@
 /* End PBXGroup section */
 
 /* Begin PBXNativeTarget section */
-		58B511DA1A9E6C8500147676 /* FastCrypto */ = {
+		58B511DA1A9E6C8500147676 /* QuickCrypto */ = {
 			isa = PBXNativeTarget;
-			buildConfigurationList = 58B511EF1A9E6C8500147676 /* Build configuration list for PBXNativeTarget "FastCrypto" */;
+			buildConfigurationList = 58B511EF1A9E6C8500147676 /* Build configuration list for PBXNativeTarget "QuickCrypto" */;
 			buildPhases = (
 				58B511D71A9E6C8500147676 /* Sources */,
 				58B511D81A9E6C8500147676 /* Frameworks */,
@@ -73,7 +73,7 @@
 			);
 			dependencies = (
 			);
-			name = FastCrypto;
+			name = QuickCrypto;
 			productName = RCTDataManager;
 			productReference = 134814201AA4EA6300B7C361 /* libFastCrypto.a */;
 			productType = "com.apple.product-type.library.static";
@@ -92,7 +92,7 @@
 					};
 				};
 			};
-			buildConfigurationList = 58B511D61A9E6C8500147676 /* Build configuration list for PBXProject "FastCrypto" */;
+			buildConfigurationList = 58B511D61A9E6C8500147676 /* Build configuration list for PBXProject "QuickCrypto" */;
 			compatibilityVersion = "Xcode 3.2";
 			developmentRegion = English;
 			hasScannedForEncodings = 0;
@@ -105,7 +105,7 @@
 			projectDirPath = "";
 			projectRoot = "";
 			targets = (
-				58B511DA1A9E6C8500147676 /* FastCrypto */,
+				58B511DA1A9E6C8500147676 /* QuickCrypto */,
 			);
 		};
 /* End PBXProject section */
@@ -226,7 +226,7 @@
 				);
 				LIBRARY_SEARCH_PATHS = "$(inherited)";
 				OTHER_LDFLAGS = "-ObjC";
-				PRODUCT_NAME = FastCrypto;
+				PRODUCT_NAME = QuickCrypto;
 				SKIP_INSTALL = YES;
 			};
 			name = Debug;
@@ -242,7 +242,7 @@
 				);
 				LIBRARY_SEARCH_PATHS = "$(inherited)";
 				OTHER_LDFLAGS = "-ObjC";
-				PRODUCT_NAME = FastCrypto;
+				PRODUCT_NAME = QuickCrypto;
 				SKIP_INSTALL = YES;
 			};
 			name = Release;
@@ -250,7 +250,7 @@
 /* End XCBuildConfiguration section */
 
 /* Begin XCConfigurationList section */
-		58B511D61A9E6C8500147676 /* Build configuration list for PBXProject "FastCrypto" */ = {
+		58B511D61A9E6C8500147676 /* Build configuration list for PBXProject "QuickCrypto" */ = {
 			isa = XCConfigurationList;
 			buildConfigurations = (
 				58B511ED1A9E6C8500147676 /* Debug */,
@@ -259,7 +259,7 @@
 			defaultConfigurationIsVisible = 0;
 			defaultConfigurationName = Release;
 		};
-		58B511EF1A9E6C8500147676 /* Build configuration list for PBXNativeTarget "FastCrypto" */ = {
+		58B511EF1A9E6C8500147676 /* Build configuration list for PBXNativeTarget "QuickCrypto" */ = {
 			isa = XCConfigurationList;
 			buildConfigurations = (
 				58B511F01A9E6C8500147676 /* Debug */,

@@ -2,7 +2,7 @@
 
 A fast implementation of Node's `crypto` module written in C/C++ JSI.
 
-FastCrypto can be used as a drop-in replacement for your Web3/Crypto apps to speed up all cryptography functions.
+QuickCrypto can be used as a drop-in replacement for your Web3/Crypto apps to speed up all cryptography functions.
 
 For example, creating a Wallet using ethers.js uses complex algorithms to generate a private-key/mnemonic-phrase pair:
 

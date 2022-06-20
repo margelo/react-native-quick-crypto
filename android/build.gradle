@@ -14,11 +14,11 @@ static def findNodeModules(baseDir) {
     }
     basePath = basePath.getParent()
   }
-  throw new GradleException("FastCrypto: Failed to find node_modules/ path!")
+  throw new GradleException("QuickCrypto: Failed to find node_modules/ path!")
 }
 
 def nodeModules = findNodeModules(projectDir)
-logger.warn("FastCrypto: node_modules/ found at: ${nodeModules}")
+logger.warn("QuickCrypto: node_modules/ found at: ${nodeModules}")
 
 buildscript {
   repositories {
