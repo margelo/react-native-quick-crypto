@@ -1,6 +1,11 @@
 import * as pbkdf2 from './pbkdf2';
 import * as random from './random';
-import * as cipher from './Cipher';
+import {
+  createCipher,
+  createCipheriv,
+  createDecipher,
+  createDecipheriv,
+} from './Cipher';
 import { createHmac } from './Hmac';
 import { createHash } from './Hash';
 
@@ -9,7 +14,10 @@ export const FastCrypto = {
   Hmac: createHmac,
   Hash: createHash,
   createHash,
+  createCipher,
+  createCipheriv,
+  createDecipher,
+  createDecipheriv,
   ...pbkdf2,
   ...random,
-  ...cipher,
 };
