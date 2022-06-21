@@ -1,10 +1,11 @@
 import { BinaryLike, binaryLikeToArrayBuffer, isStringOrBuffer } from './Utils';
 
 // On node this value is defined on the native side, for now I'm just creating it here in JS
+// TODO(osp) move this into native side to make sure they always match
 enum KFormatType {
-  kKeyFormatDER = 'der',
-  kKeyFormatPEM = 'pem',
-  kKeyFormatJWK = 'jwk',
+  kKeyFormatDER,
+  kKeyFormatPEM,
+  kKeyFormatJWK,
 }
 
 enum KeyInputContext {
@@ -113,10 +114,10 @@ function parseKeyFormatAndType(
 }
 
 function parseKeyEncoding(
-  enc: any,
-  keyType: any,
-  isPublic: any,
-  objName?: any
+  enc: { key: any; encoding?: string; format?: string, cipher?: string, passphrase?: string },
+  keyType: KFormatType | undefined,
+  isPublic: boolean | undefined,
+  objName?: string
 ) {
   // validateObject(enc, 'options');
 
@@ -172,7 +173,7 @@ function parseKeyEncoding(
 }
 
 function prepareAsymmetricKey(
-  key: BinaryLike | { key: any; encoding: string; format: any },
+  key: BinaryLike | { key: any; encoding?: string; format?: any },
   ctx: KeyInputContext
 ): {
   format: KFormatType;
@@ -230,11 +231,11 @@ function prepareAsymmetricKey(
 }
 
 // TODO(osp) any here is a node KeyObject
-export function preparePrivateKey(key: BinaryLike | any) {
+export function preparePrivateKey(key: BinaryLike | { key: any; encoding?: string; format?: any, padding?: number }) {
   return prepareAsymmetricKey(key, KeyInputContext.kConsumePrivate);
 }
 
 // TODO(osp) any here is a node KeyObject
-export function preparePublicOrPrivateKey(key: BinaryLike | any) {
+export function preparePublicOrPrivateKey(key: BinaryLike | { key: any; encoding?: string; format?: any, padding?: number }) {
   return prepareAsymmetricKey(key, KeyInputContext.kConsumePublic);
 }

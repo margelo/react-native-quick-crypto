@@ -333,7 +333,7 @@ export function createCipheriv(
 function rsaFunctionFor(
   method: (
     data: ArrayBuffer,
-    format: string,
+    format: number,
     type: any,
     passphrase: any,
     buffer: ArrayBuffer,
@@ -344,7 +344,8 @@ function rsaFunctionFor(
   defaultPadding: number,
   keyType: 'public' | 'private'
 ) {
-  return (options: Record<string, any>, buffer: BinaryLike) => {
+  return (options: { key: any; encoding?: string; format?: any, padding?: any, oaepHash?: any, oaepLabel?: any }, buffer: BinaryLike) => {
+    console.warn('publicEncrypt called')
     const { format, type, data, passphrase } =
       keyType === 'private'
         ? preparePrivateKey(options)
@@ -357,6 +358,7 @@ function rsaFunctionFor(
       oaepLabel = binaryLikeToArrayBuffer(oaepLabel, encoding);
     buffer = binaryLikeToArrayBuffer(buffer, encoding);
 
+    console.warn('calling method with', data, format, type, passphrase)
     return method(
       data,
       format,

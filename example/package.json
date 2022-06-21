@@ -19,6 +19,7 @@
     "@react-navigation/native-stack": "^6.5.2",
     "Buffer": "^0.0.0",
     "chai": "^4.3.6",
+    "crypto-browserify": "^3.12.0",
     "events": "^3.3.0",
     "mocha": "^9.2.1",
     "react": "^17.0.2",
@@ -26,6 +27,7 @@
     "react-native-quick-base64": "^2.0.2",
     "react-native-safe-area-context": "^4.2.4",
     "react-native-screens": "^3.13.1",
+    "sscrypto": "^1.1.1",
     "stream-browserify": "^3.0.0",
     "util": "^0.12.4"
   },

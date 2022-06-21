@@ -26,7 +26,7 @@ export type CreateDecipherMethod = (params: {
 
 export type PublicEncryptMethod = (
   data: ArrayBuffer,
-  format: string,
+  format: number,
   type: any,
   passphrase: any,
   buffer: ArrayBuffer,

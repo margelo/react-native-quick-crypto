@@ -1,3 +1,6 @@
+const crypto = require('crypto');
+crypto.publicEncrypt =
+  require('react-native-quick-crypto').default.publicEncrypt;
 import { Buffer } from 'buffer';
 global.Buffer = Buffer;
 // @ts-ignore

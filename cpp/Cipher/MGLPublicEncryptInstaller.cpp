@@ -39,9 +39,15 @@ FieldDefinition getCreatePublicEncryptFieldDefinition(
     //    auto params = arguments[0].getObject(runtime);
 
     unsigned int offset = 0;
+
     ManagedEVPPKey pkey = ManagedEVPPKey::GetPublicOrPrivateKeyFromJs(
         runtime, arguments, &offset);
-    if (!pkey) return {};
+    if (!pkey) {
+      std::cout << "did not generate key!" << std::endl;
+      return {};
+    }
+
+    std::cout << "offset " << offset << std::endl;
 
     return {};
   });

@@ -23,4 +23,18 @@ const crypto = require('crypto');
 // // pjH5c8XubEM+ugGSdWBaLzEbgnnMndQtcsqjVlkBkRjOq35z0OeARw9GVdNJF92TXCTisH55pT+D4XWfLi2Mj6L2aoAOCQtULNrvdMKCFOj1lyRf208lz0EzKB/P62jsJ3PR3SrNrozW6VIbcMMD40gFyw4rCaSgPwITY1w9qC34cGcIAKX/kDu+SKF1mHIz
 // console.warn('ciph final', ciph);
 
-console.warn('constants', crypto.constants);
+// console.warn('constants', crypto.constants);
+
+const { publicKey, privateKey } = crypto.generateKeyPairSync("rsa", {
+  // The standard secure default length for RSA keys is 2048 bits
+  modulusLength: 2048,
+});
+
+const plaintext = 'clear text string'
+
+const encrypted = crypto.publicEncrypt({
+  key: publicKey,
+  padding: crypto.constants.RSA_PKCS1_OAEP_PADDING
+}, Buffer.from(plaintext))
+
+console.log(encrypted);
