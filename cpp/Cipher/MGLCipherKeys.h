@@ -74,7 +74,7 @@ struct PrivateKeyEncodingConfig : public AsymmetricKeyEncodingConfig {
 // you know why
 class ManagedEVPPKey {
  public:
-  ManagedEVPPKey();
+  ManagedEVPPKey() {}
   explicit ManagedEVPPKey(EVPKeyPointer&& pkey);
   ManagedEVPPKey(const ManagedEVPPKey& that);
   ManagedEVPPKey& operator=(const ManagedEVPPKey& that);
@@ -94,10 +94,9 @@ class ManagedEVPPKey {
       jsi::Runtime& runtime, const jsi::Value* arguments, unsigned int* offset,
       KeyEncodingContext context);
   //
-  //  static ManagedEVPPKey GetParsedKey(Environment* env,
-  //                                     EVPKeyPointer&& pkey,
-  //                                     ParseKeyResult ret,
-  //                                     const char* default_msg);
+  static ManagedEVPPKey GetParsedKey(jsi::Runtime& runtime,
+                                     EVPKeyPointer&& pkey, ParseKeyResult ret,
+                                     const char* default_msg);
 
   static ManagedEVPPKey GetPublicOrPrivateKeyFromJs(jsi::Runtime& runtime,
                                                     const jsi::Value* args,

@@ -523,35 +523,27 @@ ParseKeyResult ParsePrivateKey(EVPKeyPointer* pkey,
 //  return Nothing<bool>();
 //}
 //}  // namespace
-//
-// ManagedEVPPKey::ManagedEVPPKey(EVPKeyPointer&& pkey) :
-// pkey_(std::move(pkey)), mutex_(std::make_shared<Mutex>()) {}
-//
-// ManagedEVPPKey::ManagedEVPPKey(const ManagedEVPPKey& that) {
-//  *this = that;
-//}
-//
-// ManagedEVPPKey& ManagedEVPPKey::operator=(const ManagedEVPPKey& that) {
-//  Mutex::ScopedLock lock(*that.mutex_);
-//
-//  pkey_.reset(that.get());
-//
-//  if (pkey_)
-//    EVP_PKEY_up_ref(pkey_.get());
-//
-//  mutex_ = that.mutex_;
-//
-//  return *this;
-//}
-//
-// ManagedEVPPKey::operator bool() const {
-//  return !!pkey_;
-//}
-//
-// EVP_PKEY* ManagedEVPPKey::get() const {
-//  return pkey_.get();
-//}
-//
+
+ManagedEVPPKey::ManagedEVPPKey(EVPKeyPointer&& pkey) : pkey_(std::move(pkey)) {}
+
+ManagedEVPPKey::ManagedEVPPKey(const ManagedEVPPKey& that) { *this = that; }
+
+ManagedEVPPKey& ManagedEVPPKey::operator=(const ManagedEVPPKey& that) {
+  //  Mutex::ScopedLock lock(*that.mutex_);
+
+  pkey_.reset(that.get());
+
+  if (pkey_) EVP_PKEY_up_ref(pkey_.get());
+
+  //  mutex_ = that.mutex_;
+
+  return *this;
+}
+
+ManagedEVPPKey::operator bool() const { return !!pkey_; }
+
+EVP_PKEY* ManagedEVPPKey::get() const { return pkey_.get(); }
+
 // Mutex* ManagedEVPPKey::mutex() const {
 //  return mutex_.get();
 //}
@@ -813,7 +805,7 @@ ManagedEVPPKey ManagedEVPPKey::GetPublicOrPrivateKeyFromJs(
       }
     }
 
-    return ManagedEVPPKey::GetParsedKey(env, std::move(pkey), ret,
+    return ManagedEVPPKey::GetParsedKey(runtime, std::move(pkey), ret,
                                         "Failed to read asymmetric key");
   } else {
     throw new jsi::JSError(runtime,
@@ -829,25 +821,26 @@ ManagedEVPPKey ManagedEVPPKey::GetPublicOrPrivateKeyFromJs(
   }
 }
 
-// ManagedEVPPKey ManagedEVPPKey::GetParsedKey(Environment* env,
-//                                             EVPKeyPointer&& pkey,
-//                                             ParseKeyResult ret,
-//                                             const char* default_msg) {
-//   switch (ret) {
-//     case ParseKeyResult::kParseKeyOk:
-//       CHECK(pkey);
-//       break;
-//     case ParseKeyResult::kParseKeyNeedPassphrase:
-//       THROW_ERR_MISSING_PASSPHRASE(env,
-//                                    "Passphrase required for encrypted
-//                                    key");
-//       break;
-//     default:
-//       ThrowCryptoError(env, ERR_get_error(), default_msg);
-//   }
-//
-//   return ManagedEVPPKey(std::move(pkey));
-// }
+ManagedEVPPKey ManagedEVPPKey::GetParsedKey(jsi::Runtime& runtime,
+                                            EVPKeyPointer&& pkey,
+                                            ParseKeyResult ret,
+                                            const char* default_msg) {
+  switch (ret) {
+    case ParseKeyResult::kParseKeyOk:
+      //       CHECK(pkey);
+      break;
+    case ParseKeyResult::kParseKeyNeedPassphrase:
+      throw new jsi::JSError(runtime, "Passphrase required for encrypted key");
+      //       THROW_ERR_MISSING_PASSPHRASE(env, "Passphrase required for
+      //       encrypted key");
+      break;
+    default:
+      throw new jsi::JSError(runtime, default_msg);
+      //       ThrowCryptoError(env, ERR_get_error(), default_msg);
+  }
+
+  return ManagedEVPPKey(std::move(pkey));
+}
 //
 // KeyObjectData::KeyObjectData(
 //                              ByteSource symmetric_key)

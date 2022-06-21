@@ -19,9 +19,13 @@
 #include <openssl/engine.h>
 #endif  // !OPENSSL_NO_ENGINE
 
+#include <jsi/jsi.h>
+
 #include <memory>
 #include <optional>
 #include <utility>
+
+namespace margelo {
 
 namespace jsi = facebook::jsi;
 
@@ -222,5 +226,6 @@ int PasswordCallback(char* buf, int size, int rwflag, void* u) {
 
   return -1;
 }
+}  // namespace margelo
 
 #endif /* MGLUtils_h */
