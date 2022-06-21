@@ -1,5 +1,5 @@
 import chai from 'chai';
-import { PublicKey } from 'sscrypto/node';
+import { PublicKey, PrivateKey } from 'sscrypto/node';
 import { Buffer } from '@craftzdog/react-native-buffer';
 import { it } from '../../MochaRNAdapter';
 // import { QuickCrypto as crypto } from 'react-native-quick-crypto';
@@ -10,7 +10,7 @@ import { it } from '../../MochaRNAdapter';
 // and we are trying to cover SSCrypto only (for now), so SSCrypto is used here
 // internally it calls publicEncrypt/privateEncrypt but it takes over KeyPair generation
 export function registerPublicEncryptTests() {
-  it('publicEncrypt base test', () => {
+  it('publicEncrypt base test', async () => {
     // crypto.publicEncrypt(
     //   {
     //     key: 'test',
@@ -18,15 +18,22 @@ export function registerPublicEncryptTests() {
     //   },
     //   'cleartext'
     // );
-    const keyBuffer = Buffer.from('myKey');
+    // const keyBuffer = Buffer.from('myKey');
 
-    console.warn('isBuffer', Buffer.isBuffer(keyBuffer));
+    // console.warn('isBuffer', keyBuffer.);
 
     console.warn('mk1');
-    const key = new PublicKey(keyBuffer as any);
-    console.warn('mk2');
-    const encrypted = key.encrypt(Buffer.from('this is my random text') as any);
-    console.log('encrypted', encrypted);
-    chai.expect(true).to.equal(true);
+    // const key = new PublicKey(keyBuffer as any);
+    try {
+      const privateKey = await PrivateKey.generate(1024);
+      console.warn('mk2');
+      const encrypted = privateKey.encrypt(
+        Buffer.from('This is clear text') as any
+      );
+      console.log('encrypted', encrypted);
+      chai.expect(true).to.equal(true);
+    } catch (e) {
+      console.warn('error', e);
+    }
   });
 }
