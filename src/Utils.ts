@@ -24,6 +24,8 @@ export function getDefaultEncoding(): CipherEncoding {
   return defaultEncoding;
 }
 
+export const kEmptyObject = Object.freeze(Object.create(null));
+
 // Should be used by Cipher (or any other module that requires valid encodings)
 // function slowCases(enc: string) {
 //   switch (enc.length) {
@@ -151,7 +153,7 @@ export function ab2str(buf: ArrayBuffer, encoding: string = 'hex') {
   return Buffer.from(buf).toString(encoding);
 }
 
-export function validateString(str: string, name?: string): str is string {
+export function validateString(str: any, name?: string): str is string {
   const isString = typeof str === 'string';
   if (isString) {
     throw new Error(`${name} is not a string`);
@@ -159,6 +161,82 @@ export function validateString(str: string, name?: string): str is string {
   return isString;
 }
 
+export function validateFunction(f: any): f is Function {
+  return f != null && typeof f === 'function';
+}
+
 export function isStringOrBuffer(val: any): val is string | ArrayBuffer {
   return typeof val === 'string' || ArrayBuffer.isView(val);
+}
+
+export function validateObject<T>(
+  value: any,
+  name: string,
+  options?: {
+    allowArray: boolean;
+    allowFunction: boolean;
+    nullable: boolean;
+  } | null
+): value is T {
+  const useDefaultOptions = options == null;
+  const allowArray = useDefaultOptions ? false : options.allowArray;
+  const allowFunction = useDefaultOptions ? false : options.allowFunction;
+  const nullable = useDefaultOptions ? false : options.nullable;
+  if (
+    (!nullable && value === null) ||
+    (!allowArray && Array.isArray(value)) ||
+    (typeof value !== 'object' &&
+      (!allowFunction || typeof value !== 'function'))
+  ) {
+    throw new Error(`${name} is not a valid object $${value}`);
+  }
+  return true;
+}
+
+export function validateInt32(
+  value: any,
+  name: string,
+  min = -2147483648,
+  max = 2147483647
+) {
+  // The defaults for min and max correspond to the limits of 32-bit integers.
+  if (typeof value !== 'number') {
+    throw new Error(`Invalid argument - ${name} is not a number: ${value}`);
+  }
+  if (!Number.isInteger(value)) {
+    throw new Error(
+      `Argument out of range - ${name} out of integer range: ${value}`
+    );
+  }
+  if (value < min || value > max) {
+    throw new Error(
+      `Invalid argument - ${name} out of range >= ${min} && <= ${max}: ${value}`
+    );
+  }
+}
+
+export function validateUint32(
+  value: number,
+  name: string,
+  positive?: boolean
+) {
+  if (typeof value !== 'number') {
+    // throw new ERR_INVALID_ARG_TYPE(name, 'number', value);
+    throw new Error(`Invalid argument - ${name} is not a number: ${value}`);
+  }
+  if (!Number.isInteger(value)) {
+    // throw new ERR_OUT_OF_RANGE(name, 'an integer', value);
+    throw new Error(
+      `Argument out of range - ${name} out of integer range: ${value}`
+    );
+  }
+  const min = positive ? 1 : 0;
+  // 2 ** 32 === 4294967296
+  const max = 4_294_967_295;
+  if (value < min || value > max) {
+    // throw new ERR_OUT_OF_RANGE(name, `>= ${min} && <= ${max}`, value);
+    throw new Error(
+      `Invalid argument - ${name} out of range >= ${min} && <= ${max}: ${value}`
+    );
+  }
 }

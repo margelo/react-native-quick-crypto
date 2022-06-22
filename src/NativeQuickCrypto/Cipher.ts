@@ -1,5 +1,13 @@
 import type { BinaryLike } from 'src/Utils';
 
+// TODO(osp) on node this is defined on the native side
+// Need to do the same so that values are always in sync
+export enum RSAKeyVariant {
+  kKeyVariantRSA_SSA_PKCS1_v1_5,
+  kKeyVariantRSA_PSS,
+  kKeyVariantRSA_OAEP,
+}
+
 export type InternalCipher = {
   update: (data: BinaryLike | ArrayBufferView) => ArrayBuffer;
   final: () => ArrayBuffer;
@@ -34,3 +42,8 @@ export type PublicEncryptMethod = (
   oaepHash: any,
   oaepLabel: any
 ) => ArrayBuffer;
+
+export type GenerateKeyPairMethod = (
+  async: boolean,
+  keyVariant: RSAKeyVariant
+) => any;

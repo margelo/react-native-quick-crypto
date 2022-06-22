@@ -7,6 +7,7 @@ import {
   createDecipheriv,
   publicEncrypt,
   publicDecrypt,
+  generateKeyPair
 } from './Cipher';
 import { createHmac } from './Hmac';
 import { createHash } from './Hash';
@@ -23,6 +24,7 @@ export const QuickCrypto = {
   createDecipheriv,
   publicEncrypt,
   publicDecrypt,
+  generateKeyPair,
   constants,
   ...pbkdf2,
   ...random,

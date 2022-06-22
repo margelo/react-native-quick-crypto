@@ -10,12 +10,11 @@
 
 #include <optional>
 
-#include "crypto/crypto_cipher.h"
-#include "crypto/crypto_keygen.h"
-#include "crypto/crypto_keys.h"
-#include "crypto/crypto_util.h"
+#include "MGLKeygen.h"
+#include "MGLUtils.h"
 
 namespace margelo {
+
 enum RSAKeyVariant {
   kKeyVariantRSA_SSA_PKCS1_v1_5,
   kKeyVariantRSA_PSS,

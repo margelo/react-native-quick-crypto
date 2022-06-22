@@ -7,9 +7,13 @@ import {
   CipherEncoding,
   Encoding,
   getDefaultEncoding,
+  kEmptyObject,
+  validateFunction,
+  validateObject,
   validateString,
+  validateUint32,
 } from './Utils';
-import type { InternalCipher } from './NativeQuickCrypto/Cipher';
+import { InternalCipher, RSAKeyVariant } from './NativeQuickCrypto/Cipher';
 // TODO(osp) re-enable type specific constructors
 // They are nice to have but not absolutely necessary
 // import type {
@@ -27,7 +31,12 @@ import { StringDecoder } from 'string_decoder';
 import type { Buffer } from '@craftzdog/react-native-buffer';
 import { Buffer as SBuffer } from 'safe-buffer';
 import { constants } from './constants';
-import { preparePrivateKey, preparePublicOrPrivateKey } from './keys';
+import {
+  parsePrivateKeyEncoding,
+  parsePublicKeyEncoding,
+  preparePrivateKey,
+  preparePublicOrPrivateKey,
+} from './keys';
 
 const createInternalCipher = NativeQuickCrypto.createCipher;
 const createInternalDecipher = NativeQuickCrypto.createDecipher;
@@ -344,8 +353,18 @@ function rsaFunctionFor(
   defaultPadding: number,
   keyType: 'public' | 'private'
 ) {
-  return (options: { key: any; encoding?: string; format?: any, padding?: any, oaepHash?: any, oaepLabel?: any }, buffer: BinaryLike) => {
-    console.warn('publicEncrypt called')
+  return (
+    options: {
+      key: any;
+      encoding?: string;
+      format?: any;
+      padding?: any;
+      oaepHash?: any;
+      oaepLabel?: any;
+    },
+    buffer: BinaryLike
+  ) => {
+    console.warn('publicEncrypt called');
     const { format, type, data, passphrase } =
       keyType === 'private'
         ? preparePrivateKey(options)
@@ -358,7 +377,7 @@ function rsaFunctionFor(
       oaepLabel = binaryLikeToArrayBuffer(oaepLabel, encoding);
     buffer = binaryLikeToArrayBuffer(buffer, encoding);
 
-    console.warn('calling method with', data, format, type, passphrase)
+    console.warn('calling method with', data, format, type, passphrase);
     return method(
       data,
       format,
@@ -382,3 +401,293 @@ export const publicDecrypt = rsaFunctionFor(
   constants.RSA_PKCS1_PADDING,
   'public'
 );
+
+//                                   _       _  __          _____      _
+//                                  | |     | |/ /         |  __ \    (_)
+//    __ _  ___ _ __   ___ _ __ __ _| |_ ___| ' / ___ _   _| |__) |_ _ _ _ __
+//   / _` |/ _ \ '_ \ / _ \ '__/ _` | __/ _ \  < / _ \ | | |  ___/ _` | | '__|
+//  | (_| |  __/ | | |  __/ | | (_| | ||  __/ . \  __/ |_| | |  | (_| | | |
+//   \__, |\___|_| |_|\___|_|  \__,_|\__\___|_|\_\___|\__, |_|   \__,_|_|_|
+//    __/ |                                            __/ |
+//   |___/                                            |___/
+type GenerateKeyPairOptions = {
+  modulusLength: number; // Key size in bits (RSA, DSA).
+  publicExponent?: number; // Public exponent (RSA). Default: 0x10001.
+  hashAlgorithm?: string; // Name of the message digest (RSA-PSS).
+  mgf1HashAlgorithm?: string; // string Name of the message digest used by MGF1 (RSA-PSS).
+  saltLength?: number; // Minimal salt length in bytes (RSA-PSS).
+  divisorLength?: number; // Size of q in bits (DSA).
+  namedCurve?: string; // Name of the curve to use (EC).
+  prime?: Buffer; // The prime parameter (DH).
+  primeLength?: number; // Prime length in bits (DH).
+  generator?: number; // Custom generator (DH). Default: 2.
+  groupName?: string; // Diffie-Hellman group name (DH). See crypto.getDiffieHellman().
+  publicKeyEncoding?: any; // See keyObject.export().
+  privateKeyEncoding?: any; // See keyObject.export().
+  paramEncoding?: string;
+  hash?: any;
+  mgf1Hash?: any;
+};
+type GenerateKeyPairCallback = (
+  error: unknown | null,
+  publicKey?: Buffer,
+  privateKey?: Buffer
+) => void;
+
+function parseKeyEncoding(
+  keyType: string,
+  options: GenerateKeyPairOptions = kEmptyObject
+) {
+  const { publicKeyEncoding, privateKeyEncoding } = options;
+
+  let publicFormat, publicType;
+  if (publicKeyEncoding == null) {
+    publicFormat = publicType = undefined;
+  } else if (typeof publicKeyEncoding === 'object') {
+    ({ format: publicFormat, type: publicType } = parsePublicKeyEncoding(
+      publicKeyEncoding,
+      keyType,
+      'publicKeyEncoding'
+    ));
+  } else {
+    throw new Error(
+      'Invalid argument options.publicKeyEncoding',
+      publicKeyEncoding
+    );
+  }
+
+  let privateFormat, privateType, cipher, passphrase;
+  if (privateKeyEncoding == null) {
+    privateFormat = privateType = undefined;
+  } else if (typeof privateKeyEncoding === 'object') {
+    ({
+      format: privateFormat,
+      type: privateType,
+      cipher,
+      passphrase,
+    } = parsePrivateKeyEncoding(
+      privateKeyEncoding,
+      keyType,
+      'privateKeyEncoding'
+    ));
+  } else {
+    throw new Error(
+      'Invalid argument options.privateKeyEncoding',
+      publicKeyEncoding
+    );
+  }
+
+  return [
+    publicFormat,
+    publicType,
+    privateFormat,
+    privateType,
+    cipher,
+    passphrase,
+  ];
+}
+
+// TODO(osp) put correct types (e.g. type -> 'rsa', etc..)
+export function generateKeyPair(
+  type: string,
+  callback: GenerateKeyPairCallback
+): void;
+export function generateKeyPair(
+  type: string,
+  options: GenerateKeyPairOptions,
+  callback: GenerateKeyPairCallback
+): void;
+export function generateKeyPair(
+  type: string,
+  options?: GenerateKeyPairCallback | GenerateKeyPairOptions,
+  callback?: GenerateKeyPairCallback
+) {
+  if (typeof options === 'function') {
+    callback = options;
+    options = undefined;
+  }
+
+  validateFunction(callback);
+
+  // On node a very complex "job" chain is created, we are going for a far simpler approach and calling
+  // an internal function that basically executes the same byte shuffling on the native side
+  const encoding = parseKeyEncoding(type, options);
+
+  console.warn('generated encoding', encoding);
+
+  // if (options !== undefined)
+  //   validateObject(options, 'options');
+
+  // NativeQuickCrypto.generateKeyPair()
+
+  console.warn('generateKeyPair called');
+
+  switch (type) {
+    // case 'rsa-pss':
+    case 'rsa': {
+      validateObject<GenerateKeyPairOptions>(options, 'options');
+      const { modulusLength } = options!;
+      validateUint32(modulusLength, 'options.modulusLength');
+
+      let { publicExponent } = options!;
+      if (publicExponent == null) {
+        publicExponent = 0x10001;
+      } else {
+        validateUint32(publicExponent, 'options.publicExponent');
+      }
+
+      // if (type === 'rsa') {
+      return NativeQuickCrypto.generateKeyPair(
+        true,
+        RSAKeyVariant.kKeyVariantRSA_SSA_PKCS1_v1_5,
+        modulusLength,
+        publicExponent,
+        ...encoding
+      );
+      // }
+
+      // const { hash, mgf1Hash, hashAlgorithm, mgf1HashAlgorithm, saltLength } =
+      //   options!;
+
+      // // We don't have a process object on RN
+      // // const pendingDeprecation = getOptionValue('--pending-deprecation');
+
+      // if (saltLength !== undefined)
+      //   validateInt32(saltLength, 'options.saltLength', 0);
+      // if (hashAlgorithm !== undefined)
+      //   validateString(hashAlgorithm, 'options.hashAlgorithm');
+      // if (mgf1HashAlgorithm !== undefined)
+      //   validateString(mgf1HashAlgorithm, 'options.mgf1HashAlgorithm');
+      // if (hash !== undefined) {
+      //   // pendingDeprecation && process.emitWarning(
+      //   //   '"options.hash" is deprecated, ' +
+      //   //   'use "options.hashAlgorithm" instead.',
+      //   //   'DeprecationWarning',
+      //   //   'DEP0154');
+      //   validateString(hash, 'options.hash');
+      //   if (hashAlgorithm && hash !== hashAlgorithm) {
+      //     throw new Error(`Invalid Argument options.hash ${hash}`);
+      //   }
+      // }
+      // if (mgf1Hash !== undefined) {
+      //   // pendingDeprecation && process.emitWarning(
+      //   //   '"options.mgf1Hash" is deprecated, ' +
+      //   //   'use "options.mgf1HashAlgorithm" instead.',
+      //   //   'DeprecationWarning',
+      //   //   'DEP0154');
+      //   validateString(mgf1Hash, 'options.mgf1Hash');
+      //   if (mgf1HashAlgorithm && mgf1Hash !== mgf1HashAlgorithm) {
+      //     throw new Error(`Invalid Argument options.mgf1Hash ${mgf1Hash}`);
+      //   }
+      // }
+
+      // return new RsaKeyPairGenJob(
+      //   mode,
+      //   kKeyVariantRSA_PSS,
+      //   modulusLength,
+      //   publicExponent,
+      //   hashAlgorithm || hash,
+      //   mgf1HashAlgorithm || mgf1Hash,
+      //   saltLength,
+      //   ...encoding);
+    }
+    // case 'dsa': {
+    //   validateObject(options, 'options');
+    //   const { modulusLength } = options!;
+    //   validateUint32(modulusLength, 'options.modulusLength');
+
+    //   let { divisorLength } = options!;
+    //   if (divisorLength == null) {
+    //     divisorLength = -1;
+    //   } else validateInt32(divisorLength, 'options.divisorLength', 0);
+
+    //   // return new DsaKeyPairGenJob(
+    //   //   mode,
+    //   //   modulusLength,
+    //   //   divisorLength,
+    //   //   ...encoding);
+    // }
+    // case 'ec': {
+    //   validateObject(options, 'options');
+    //   const { namedCurve } = options!;
+    //   validateString(namedCurve, 'options.namedCurve');
+    //   let { paramEncoding } = options!;
+    //   if (paramEncoding == null || paramEncoding === 'named')
+    //     paramEncoding = OPENSSL_EC_NAMED_CURVE;
+    //   else if (paramEncoding === 'explicit')
+    //     paramEncoding = OPENSSL_EC_EXPLICIT_CURVE;
+    //   else
+    //   throw new Error(`Invalid Argument options.paramEncoding ${paramEncoding}`);
+    //     // throw new ERR_INVALID_ARG_VALUE('options.paramEncoding', paramEncoding);
+
+    //   // return new EcKeyPairGenJob(mode, namedCurve, paramEncoding, ...encoding);
+    // }
+    // case 'ed25519':
+    // case 'ed448':
+    // case 'x25519':
+    // case 'x448': {
+    //   let id;
+    //   switch (type) {
+    //     case 'ed25519':
+    //       id = EVP_PKEY_ED25519;
+    //       break;
+    //     case 'ed448':
+    //       id = EVP_PKEY_ED448;
+    //       break;
+    //     case 'x25519':
+    //       id = EVP_PKEY_X25519;
+    //       break;
+    //     case 'x448':
+    //       id = EVP_PKEY_X448;
+    //       break;
+    //   }
+    //   return new NidKeyPairGenJob(mode, id, ...encoding);
+    // }
+    // case 'dh': {
+    //   validateObject(options, 'options');
+    //   const { group, primeLength, prime, generator } = options;
+    //   if (group != null) {
+    //     if (prime != null)
+    //       throw new ERR_INCOMPATIBLE_OPTION_PAIR('group', 'prime');
+    //     if (primeLength != null)
+    //       throw new ERR_INCOMPATIBLE_OPTION_PAIR('group', 'primeLength');
+    //     if (generator != null)
+    //       throw new ERR_INCOMPATIBLE_OPTION_PAIR('group', 'generator');
+
+    //     validateString(group, 'options.group');
+
+    //     return new DhKeyPairGenJob(mode, group, ...encoding);
+    //   }
+
+    //   if (prime != null) {
+    //     if (primeLength != null)
+    //       throw new ERR_INCOMPATIBLE_OPTION_PAIR('prime', 'primeLength');
+
+    //     validateBuffer(prime, 'options.prime');
+    //   } else if (primeLength != null) {
+    //     validateInt32(primeLength, 'options.primeLength', 0);
+    //   } else {
+    //     throw new ERR_MISSING_OPTION(
+    //       'At least one of the group, prime, or primeLength options'
+    //     );
+    //   }
+
+    //   if (generator != null) {
+    //     validateInt32(generator, 'options.generator', 0);
+    //   }
+    //   return new DhKeyPairGenJob(
+    //     mode,
+    //     prime != null ? prime : primeLength,
+    //     generator == null ? 2 : generator,
+    //     ...encoding
+    //   );
+    // }
+    default:
+    // Fall through
+  }
+  throw new Error(
+    `Invalid Argument options, currently not all encryption methods are supported in quick-crypto!`
+  );
+
+  // callback!(new Error("Not implemented"))
+}
