@@ -537,6 +537,16 @@ export function generateKeyPair(
       }
 
       // if (type === 'rsa') {
+
+      console.warn(
+        'calling generateKeyPair with: ',
+        true,
+        RSAKeyVariant.kKeyVariantRSA_SSA_PKCS1_v1_5,
+        modulusLength,
+        publicExponent,
+        ...encoding
+      );
+
       return NativeQuickCrypto.generateKeyPair(
         true,
         RSAKeyVariant.kKeyVariantRSA_SSA_PKCS1_v1_5,

@@ -694,22 +694,14 @@ ManagedEVPPKey::GetPrivateKeyEncodingFromJs(jsi::Runtime& runtime,
   return NonCopyableMaybe<PrivateKeyEncodingConfig>(std::move(result));
 }
 
-//
-// PublicKeyEncodingConfig ManagedEVPPKey::GetPublicKeyEncodingFromJs(
-//                                                                   const
-//                                                                   FunctionCallbackInfo<Value>&
-//                                                                   args,
-//                                                                   unsigned
-//                                                                   int*
-//                                                                   offset,
-//                                                                   KeyEncodingContext
-//                                                                   context)
-//                                                                   {
-//  PublicKeyEncodingConfig result;
-//  GetKeyFormatAndTypeFromJs(&result, args, offset, context);
-//  return result;
-//}
-//
+PublicKeyEncodingConfig ManagedEVPPKey::GetPublicKeyEncodingFromJs(
+    jsi::Runtime& runtime, const jsi::Value* arguments, unsigned int* offset,
+    KeyEncodingContext context) {
+  PublicKeyEncodingConfig result;
+  GetKeyFormatAndTypeFromJs(&result, runtime, arguments, offset, context);
+  return result;
+}
+
 // ManagedEVPPKey ManagedEVPPKey::GetPrivateKeyFromJs(
 //                                                   const
 //                                                   FunctionCallbackInfo<Value>&

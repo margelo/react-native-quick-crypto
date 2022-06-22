@@ -82,14 +82,10 @@ class ManagedEVPPKey {
   operator bool() const;
   EVP_PKEY* get() const;
 
-  //  static PublicKeyEncodingConfig GetPublicKeyEncodingFromJs(
-  //                                                            const
-  //                                                            v8::FunctionCallbackInfo<v8::Value>&
-  //                                                            args, unsigned
-  //                                                            int* offset,
-  //                                                            KeyEncodingContext
-  //                                                            context);
-  //
+  static PublicKeyEncodingConfig GetPublicKeyEncodingFromJs(
+      jsi::Runtime& runtime, const jsi::Value* arguments, unsigned int* offset,
+      KeyEncodingContext context);
+
   static NonCopyableMaybe<PrivateKeyEncodingConfig> GetPrivateKeyEncodingFromJs(
       jsi::Runtime& runtime, const jsi::Value* arguments, unsigned int* offset,
       KeyEncodingContext context);
