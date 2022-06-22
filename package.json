@@ -26,7 +26,7 @@
     "lint": "eslint \"**/*.{js,ts,tsx}\"",
     "prepare": "bob build",
     "release": "release-it",
-    "pods": "cd example && pod-install --quiet"
+    "pods": "cd example/ios && pod-install --quiet"
   },
   "keywords": [
     "react-native",
