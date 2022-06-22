@@ -636,9 +636,6 @@ EVP_PKEY* ManagedEVPPKey::get() const { return pkey_.get(); }
 // }
 //
 
-// For some reason this function crawls through the arguments with a int
-// pointer we don't understand why... but in order to re-use as much as the
-// code as we can we've kept it that way
 NonCopyableMaybe<PrivateKeyEncodingConfig>
 ManagedEVPPKey::GetPrivateKeyEncodingFromJs(jsi::Runtime& runtime,
                                             const jsi::Value* arguments,
@@ -675,7 +672,7 @@ ManagedEVPPKey::GetPrivateKeyEncodingFromJs(jsi::Runtime& runtime,
       //      passphrase(arguments[*offset]);
       jsi::ArrayBuffer passphrase =
           arguments[*offset].asObject(runtime).getArrayBuffer(runtime);
-      if (CheckSizeInt32(runtime, passphrase)) {
+      if (!CheckSizeInt32(runtime, passphrase)) {
         jsi::detail::throwJSError(runtime, "passphrase is too long");
       }
 
