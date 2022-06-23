@@ -487,28 +487,11 @@ function parseKeyEncoding(
   ];
 }
 
-// TODO(osp) put correct types (e.g. type -> 'rsa', etc..)
-export function generateKeyPair(
+function internalGenerateKeyPair(
   type: string,
-  callback: GenerateKeyPairCallback
-): void;
-export function generateKeyPair(
-  type: string,
-  options: GenerateKeyPairOptions,
-  callback: GenerateKeyPairCallback
-): void;
-export function generateKeyPair(
-  type: string,
-  options?: GenerateKeyPairCallback | GenerateKeyPairOptions,
-  callback?: GenerateKeyPairCallback
+  options: GenerateKeyPairOptions | undefined,
+  callback: GenerateKeyPairCallback | undefined
 ) {
-  if (typeof options === 'function') {
-    callback = options;
-    options = undefined;
-  }
-
-  validateFunction(callback);
-
   // On node a very complex "job" chain is created, we are going for a far simpler approach and calling
   // an internal function that basically executes the same byte shuffling on the native side
   const encoding = parseKeyEncoding(type, options);
@@ -539,9 +522,7 @@ export function generateKeyPair(
         ...encoding
       );
 
-      console.warn('generateKeyPair returned', res);
-
-      callback!(...res);
+      callback?.(...res);
 
       return res;
       // }
@@ -688,6 +669,53 @@ export function generateKeyPair(
   throw new Error(
     `Invalid Argument options, currently not all encryption methods are supported in quick-crypto!`
   );
+}
 
-  // callback!(new Error("Not implemented"))
+// TODO(osp) put correct types (e.g. type -> 'rsa', etc..)
+export function generateKeyPair(
+  type: string,
+  callback: GenerateKeyPairCallback
+): void;
+export function generateKeyPair(
+  type: string,
+  options: GenerateKeyPairOptions,
+  callback: GenerateKeyPairCallback
+): void;
+export function generateKeyPair(
+  type: string,
+  options?: GenerateKeyPairCallback | GenerateKeyPairOptions,
+  callback?: GenerateKeyPairCallback
+) {
+  if (typeof options === 'function') {
+    callback = options;
+    options = undefined;
+  }
+
+  validateFunction(callback);
+
+  internalGenerateKeyPair(type, options, callback);
+}
+
+export function generateKeyPairSync(type: string): {
+  publicKey: any;
+  privateKey: any;
+};
+export function generateKeyPairSync(
+  type: string,
+  options: GenerateKeyPairOptions
+): { publicKey: any; privateKey: any };
+export function generateKeyPairSync(
+  type: string,
+  options?: GenerateKeyPairOptions
+): { publicKey: any; privateKey: any } {
+  const [publicKey, privateKey] = internalGenerateKeyPair(
+    type,
+    options,
+    undefined
+  );
+
+  return {
+    publicKey,
+    privateKey,
+  };
 }
