@@ -9,6 +9,7 @@
 
 #include <iostream>
 #include <memory>
+#include <utility>
 
 #ifdef ANDROID
 #include "JSIUtils/MGLJSIMacros.h"
@@ -175,23 +176,21 @@ FieldDefinition getGenerateKeyPairFieldDefinition(
 
     config.key = ManagedEVPPKey(EVPKeyPointer(pkey));
 
-    std::cout << "Keys are generated!" << std::endl;
+    std::optional<jsi::Value> publicBuffer = ManagedEVPPKey::ToEncodedPublicKey(
+        runtime, std::move(config.key), config.public_key_encoding);
+    std::optional<jsi::Value> privateBuffer =
+        ManagedEVPPKey::ToEncodedPrivateKey(runtime, std::move(config.key),
+                                            config.private_key_encoding);
 
-    //    if (ManagedEVPPKey::ToEncodedPublicKey(
-    //                                           env,
-    //                                           std::move(params->key),
-    //                                           params->public_key_encoding,
-    //                                           &keys[0]).IsNothing() ||
-    //        ManagedEVPPKey::ToEncodedPrivateKey(
-    //                                            env,
-    //                                            std::move(params->key),
-    //                                            params->private_key_encoding,
-    //                                            &keys[1]).IsNothing()) {
-    //                                              return v8::Nothing<bool>();
-    //                                            }
-    //    *result = v8::Array::New(env->isolate(), keys, arraysize(keys));
-    //    return v8::Just(true);
-    return {};
+    if (!publicBuffer.has_value() || !privateBuffer.has_value()) {
+      jsi::detail::throwJSError(runtime,
+                                "Failed to encode public and/or private key");
+    }
+
+    std::cout << "keys generated!" << std::endl;
+    return jsi::Array::createWithElements(runtime, jsi::Value::undefined(),
+                                          publicBuffer.value(),
+                                          privateBuffer.value());
   });
 }
 }  // namespace margelo

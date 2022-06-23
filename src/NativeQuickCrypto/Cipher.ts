@@ -45,5 +45,8 @@ export type PublicEncryptMethod = (
 
 export type GenerateKeyPairMethod = (
   async: boolean,
-  keyVariant: RSAKeyVariant
-) => any;
+  keyVariant: RSAKeyVariant,
+  modulusLength: number,
+  publicExponent: number,
+  ...rest: any[]
+) => [error: unknown, publicBuffer: any, privateBuffer: any];

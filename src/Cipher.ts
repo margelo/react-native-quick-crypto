@@ -513,14 +513,8 @@ export function generateKeyPair(
   // an internal function that basically executes the same byte shuffling on the native side
   const encoding = parseKeyEncoding(type, options);
 
-  console.warn('generated encoding', encoding);
-
   // if (options !== undefined)
   //   validateObject(options, 'options');
-
-  // NativeQuickCrypto.generateKeyPair()
-
-  console.warn('generateKeyPair called');
 
   switch (type) {
     // case 'rsa-pss':
@@ -537,9 +531,7 @@ export function generateKeyPair(
       }
 
       // if (type === 'rsa') {
-
-      console.warn(
-        'calling generateKeyPair with: ',
+      const res = NativeQuickCrypto.generateKeyPair(
         true,
         RSAKeyVariant.kKeyVariantRSA_SSA_PKCS1_v1_5,
         modulusLength,
@@ -547,13 +539,11 @@ export function generateKeyPair(
         ...encoding
       );
 
-      return NativeQuickCrypto.generateKeyPair(
-        true,
-        RSAKeyVariant.kKeyVariantRSA_SSA_PKCS1_v1_5,
-        modulusLength,
-        publicExponent,
-        ...encoding
-      );
+      console.warn('generateKeyPair returned', res);
+
+      callback!(...res);
+
+      return res;
       // }
 
       // const { hash, mgf1Hash, hashAlgorithm, mgf1HashAlgorithm, saltLength } =

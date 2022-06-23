@@ -44,6 +44,7 @@ using PKCS8Pointer = DeleteFnPtr<PKCS8_PRIV_KEY_INFO, PKCS8_PRIV_KEY_INFO_free>;
 using EVPKeyCtxPointer = DeleteFnPtr<EVP_PKEY_CTX, EVP_PKEY_CTX_free>;
 using EVPKeyPointer = DeleteFnPtr<EVP_PKEY, EVP_PKEY_free>;
 using BignumPointer = DeleteFnPtr<BIGNUM, BN_free>;
+using RSAPointer = DeleteFnPtr<RSA, RSA_free>;
 
 template <typename T>
 class NonCopyableMaybe {

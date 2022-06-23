@@ -13,8 +13,11 @@
 #include <algorithm>
 #include <optional>
 #include <utility>
+#include <vector>
 
 #include "MGLJSIUtils.h"
+#include "MGLTypedArray.h"
+#include "MGLUtils.h"
 
 namespace margelo {
 namespace jsi = facebook::jsi;
@@ -226,172 +229,156 @@ ParseKeyResult ParsePrivateKey(EVPKeyPointer* pkey,
   return ParseKeyResult::kParseKeyFailed;
 }
 
-// MaybeLocal<Value> BIOToStringOrBuffer(
-//                                      Environment* env,
-//                                      BIO* bio,
-//                                      PKFormatType format) {
-//  BUF_MEM* bptr;
-//  BIO_get_mem_ptr(bio, &bptr);
-//  if (format == kKeyFormatPEM) {
-//    // PEM is an ASCII format, so we will return it as a string.
-//    return String::NewFromUtf8(env->isolate(), bptr->data,
-//                               NewStringType::kNormal,
-//                               bptr->length).FromMaybe(Local<Value>());
-//  } else {
-//    CHECK_EQ(format, kKeyFormatDER);
-//    // DER is binary, return it as a buffer.
-//    return Buffer::Copy(env, bptr->data, bptr->length)
-//      .FromMaybe(Local<Value>());
-//  }
-//}
-//
-//
-// MaybeLocal<Value> WritePrivateKey(
-//                                  Environment* env,
-//                                  EVP_PKEY* pkey,
-//                                  const PrivateKeyEncodingConfig& config) {
-//  BIOPointer bio(BIO_new(BIO_s_mem()));
-//  CHECK(bio);
-//
-//  // If an empty string was passed as the passphrase, the ByteSource might
-//  // contain a null pointer, which OpenSSL will ignore, causing it to invoke
-//  its
-//  // default passphrase callback, which would block the thread until the
-//  user
-//  // manually enters a passphrase. We could supply our own passphrase
-//  callback
-//  // to handle this special case, but it is easier to avoid passing a null
-//  // pointer to OpenSSL.
-//  char* pass = nullptr;
-//  size_t pass_len = 0;
-//  if (!config.passphrase_.IsEmpty()) {
-//    pass = const_cast<char*>(config.passphrase_->data<char>());
-//    pass_len = config.passphrase_->size();
-//    if (pass == nullptr) {
-//      // OpenSSL will not actually dereference this pointer, so it can be
-//      any
-//      // non-null pointer. We cannot assert that directly, which is why we
-//      // intentionally use a pointer that will likely cause a segmentation
-//      fault
-//      // when dereferenced.
-//      CHECK_EQ(pass_len, 0);
-//      pass = reinterpret_cast<char*>(-1);
-//      CHECK_NE(pass, nullptr);
-//    }
-//  }
-//
-//  bool err;
-//
-//  PKEncodingType encoding_type = config.type_.ToChecked();
-//  if (encoding_type == kKeyEncodingPKCS1) {
-//    // PKCS#1 is only permitted for RSA keys.
-//    CHECK_EQ(EVP_PKEY_id(pkey), EVP_PKEY_RSA);
-//
-//    RSAPointer rsa(EVP_PKEY_get1_RSA(pkey));
-//    if (config.format_ == kKeyFormatPEM) {
-//      // Encode PKCS#1 as PEM.
-//      err = PEM_write_bio_RSAPrivateKey(
-//                                        bio.get(), rsa.get(),
-//                                        config.cipher_,
-//                                        reinterpret_cast<unsigned
-//                                        char*>(pass), pass_len, nullptr,
-//                                        nullptr) != 1;
-//    } else {
-//      // Encode PKCS#1 as DER. This does not permit encryption.
-//      CHECK_EQ(config.format_, kKeyFormatDER);
-//      CHECK_NULL(config.cipher_);
-//      err = i2d_RSAPrivateKey_bio(bio.get(), rsa.get()) != 1;
-//    }
-//  } else if (encoding_type == kKeyEncodingPKCS8) {
-//    if (config.format_ == kKeyFormatPEM) {
-//      // Encode PKCS#8 as PEM.
-//      err = PEM_write_bio_PKCS8PrivateKey(
-//                                          bio.get(), pkey,
-//                                          config.cipher_,
-//                                          pass,
-//                                          pass_len,
-//                                          nullptr, nullptr) != 1;
-//    } else {
-//      // Encode PKCS#8 as DER.
-//      CHECK_EQ(config.format_, kKeyFormatDER);
-//      err = i2d_PKCS8PrivateKey_bio(
-//                                    bio.get(), pkey,
-//                                    config.cipher_,
-//                                    pass,
-//                                    pass_len,
-//                                    nullptr, nullptr) != 1;
-//    }
-//  } else {
-//    CHECK_EQ(encoding_type, kKeyEncodingSEC1);
-//
-//    // SEC1 is only permitted for EC keys.
-//    CHECK_EQ(EVP_PKEY_id(pkey), EVP_PKEY_EC);
-//
-//    ECKeyPointer ec_key(EVP_PKEY_get1_EC_KEY(pkey));
-//    if (config.format_ == kKeyFormatPEM) {
-//      // Encode SEC1 as PEM.
-//      err = PEM_write_bio_ECPrivateKey(
-//                                       bio.get(), ec_key.get(),
-//                                       config.cipher_,
-//                                       reinterpret_cast<unsigned
-//                                       char*>(pass), pass_len, nullptr,
-//                                       nullptr) != 1;
-//    } else {
-//      // Encode SEC1 as DER. This does not permit encryption.
-//      CHECK_EQ(config.format_, kKeyFormatDER);
-//      CHECK_NULL(config.cipher_);
-//      err = i2d_ECPrivateKey_bio(bio.get(), ec_key.get()) != 1;
-//    }
-//  }
-//
-//  if (err) {
-//    ThrowCryptoError(env, ERR_get_error(), "Failed to encode private key");
-//    return MaybeLocal<Value>();
-//  }
-//  return BIOToStringOrBuffer(env, bio.get(), config.format_);
-//}
-//
-// bool WritePublicKeyInner(EVP_PKEY* pkey,
-//                         const BIOPointer& bio,
-//                         const PublicKeyEncodingConfig& config) {
-//  if (config.type_.ToChecked() == kKeyEncodingPKCS1) {
-//    // PKCS#1 is only valid for RSA keys.
-//    CHECK_EQ(EVP_PKEY_id(pkey), EVP_PKEY_RSA);
-//    RSAPointer rsa(EVP_PKEY_get1_RSA(pkey));
-//    if (config.format_ == kKeyFormatPEM) {
-//      // Encode PKCS#1 as PEM.
-//      return PEM_write_bio_RSAPublicKey(bio.get(), rsa.get()) == 1;
-//    } else {
-//      // Encode PKCS#1 as DER.
-//      CHECK_EQ(config.format_, kKeyFormatDER);
-//      return i2d_RSAPublicKey_bio(bio.get(), rsa.get()) == 1;
-//    }
-//  } else {
-//    CHECK_EQ(config.type_.ToChecked(), kKeyEncodingSPKI);
-//    if (config.format_ == kKeyFormatPEM) {
-//      // Encode SPKI as PEM.
-//      return PEM_write_bio_PUBKEY(bio.get(), pkey) == 1;
-//    } else {
-//      // Encode SPKI as DER.
-//      CHECK_EQ(config.format_, kKeyFormatDER);
-//      return i2d_PUBKEY_bio(bio.get(), pkey) == 1;
-//    }
-//  }
-//}
-//
-// MaybeLocal<Value> WritePublicKey(Environment* env,
-//                                 EVP_PKEY* pkey,
-//                                 const PublicKeyEncodingConfig& config) {
-//  BIOPointer bio(BIO_new(BIO_s_mem()));
-//  CHECK(bio);
-//
-//  if (!WritePublicKeyInner(pkey, bio, config)) {
-//    ThrowCryptoError(env, ERR_get_error(), "Failed to encode public key");
-//    return MaybeLocal<Value>();
-//  }
-//  return BIOToStringOrBuffer(env, bio.get(), config.format_);
-//}
-//
+std::optional<jsi::Value> BIOToStringOrBuffer(jsi::Runtime& runtime, BIO* bio,
+                                              PKFormatType format) {
+  BUF_MEM* bptr;
+  BIO_get_mem_ptr(bio, &bptr);
+  if (format == kKeyFormatPEM) {
+    // PEM is an ASCII format, so we will return it as a string.
+    return jsi::String::createFromUtf8(
+        runtime, reinterpret_cast<const uint8_t*>(bptr->data), bptr->length);
+  } else {
+    //    CHECK_EQ(format, kKeyFormatDER);
+    // DER is binary, return it as a buffer.
+
+    MGLTypedArray<MGLTypedArrayKind::Uint8Array> out(runtime, bptr->length);
+    std::vector<unsigned char> vec(bptr->data, bptr->data + bptr->length);
+    out.update(runtime, vec);
+
+    return out.getArrayBuffer(runtime);
+  }
+}
+
+std::optional<jsi::Value> WritePrivateKey(
+    jsi::Runtime& runtime, EVP_PKEY* pkey,
+    const PrivateKeyEncodingConfig& config) {
+  BIOPointer bio(BIO_new(BIO_s_mem()));
+  //  CHECK(bio);
+
+  // If an empty string was passed as the passphrase, the ByteSource might
+  // contain a null pointer, which OpenSSL will ignore, causing it to invoke its
+  // default passphrase callback, which would block the thread until the user
+  // manually enters a passphrase. We could supply our own passphrase callback
+  // to handle this special case, but it is easier to avoid passing a null
+  // pointer to OpenSSL.
+  char* pass = nullptr;
+  size_t pass_len = 0;
+  if (!config.passphrase_.IsEmpty()) {
+    pass = const_cast<char*>(config.passphrase_->data<char>());
+    pass_len = config.passphrase_->size();
+    if (pass == nullptr) {
+      // OpenSSL will not actually dereference this pointer, so it can be any
+      // non-null pointer. We cannot assert that directly, which is why we
+      // intentionally use a pointer that will likely cause a segmentation fault
+      // when dereferenced.
+      //      CHECK_EQ(pass_len, 0);
+      pass = reinterpret_cast<char*>(-1);
+      //      CHECK_NE(pass, nullptr);
+    }
+  }
+
+  bool err;
+
+  PKEncodingType encoding_type = config.type_.value();
+  if (encoding_type == kKeyEncodingPKCS1) {
+    // PKCS#1 is only permitted for RSA keys.
+    //    CHECK_EQ(EVP_PKEY_id(pkey), EVP_PKEY_RSA);
+
+    RSAPointer rsa(EVP_PKEY_get1_RSA(pkey));
+    if (config.format_ == kKeyFormatPEM) {
+      // Encode PKCS#1 as PEM.
+      err = PEM_write_bio_RSAPrivateKey(bio.get(), rsa.get(), config.cipher_,
+                                        reinterpret_cast<unsigned char*>(pass),
+                                        pass_len, nullptr, nullptr) != 1;
+    } else {
+      // Encode PKCS#1 as DER. This does not permit encryption.
+      //      CHECK_EQ(config.format_, kKeyFormatDER);
+      //      CHECK_NULL(config.cipher_);
+      err = i2d_RSAPrivateKey_bio(bio.get(), rsa.get()) != 1;
+    }
+  } else if (encoding_type == kKeyEncodingPKCS8) {
+    if (config.format_ == kKeyFormatPEM) {
+      // Encode PKCS#8 as PEM.
+      err = PEM_write_bio_PKCS8PrivateKey(bio.get(), pkey, config.cipher_, pass,
+                                          pass_len, nullptr, nullptr) != 1;
+    } else {
+      // Encode PKCS#8 as DER.
+      //      CHECK_EQ(config.format_, kKeyFormatDER);
+      err = i2d_PKCS8PrivateKey_bio(bio.get(), pkey, config.cipher_, pass,
+                                    pass_len, nullptr, nullptr) != 1;
+    }
+  } else {
+    //    CHECK_EQ(encoding_type, kKeyEncodingSEC1);
+
+    // SEC1 is only permitted for EC keys.
+    //    CHECK_EQ(EVP_PKEY_id(pkey), EVP_PKEY_EC);
+
+    //    ECKeyPointer ec_key(EVP_PKEY_get1_EC_KEY(pkey));
+    //    if (config.format_ == kKeyFormatPEM) {
+    //      // Encode SEC1 as PEM.
+    //      err = PEM_write_bio_ECPrivateKey(
+    //                                       bio.get(), ec_key.get(),
+    //                                       config.cipher_,
+    //                                       reinterpret_cast<unsigned
+    //                                       char*>(pass), pass_len, nullptr,
+    //                                       nullptr) != 1;
+    //    } else {
+    //      // Encode SEC1 as DER. This does not permit encryption.
+    //      CHECK_EQ(config.format_, kKeyFormatDER);
+    //      CHECK_NULL(config.cipher_);
+    //      err = i2d_ECPrivateKey_bio(bio.get(), ec_key.get()) != 1;
+    //    }
+  }
+
+  if (err) {
+    jsi::detail::throwJSError(runtime, "Failed to encode private key");
+    //    ThrowCryptoError(env, ERR_get_error(), "Failed to encode private
+    //    key");
+    return std::nullopt;
+  }
+  return BIOToStringOrBuffer(runtime, bio.get(), config.format_);
+}
+
+bool WritePublicKeyInner(EVP_PKEY* pkey, const BIOPointer& bio,
+                         const PublicKeyEncodingConfig& config) {
+  if (config.type_.value() == kKeyEncodingPKCS1) {
+    // PKCS#1 is only valid for RSA keys.
+    //    CHECK_EQ(EVP_PKEY_id(pkey), EVP_PKEY_RSA);
+    RSAPointer rsa(EVP_PKEY_get1_RSA(pkey));
+    if (config.format_ == kKeyFormatPEM) {
+      // Encode PKCS#1 as PEM.
+      return PEM_write_bio_RSAPublicKey(bio.get(), rsa.get()) == 1;
+    } else {
+      // Encode PKCS#1 as DER.
+      //      CHECK_EQ(config.format_, kKeyFormatDER);
+      return i2d_RSAPublicKey_bio(bio.get(), rsa.get()) == 1;
+    }
+  } else {
+    //    CHECK_EQ(config.type_.ToChecked(), kKeyEncodingSPKI);
+    if (config.format_ == kKeyFormatPEM) {
+      // Encode SPKI as PEM.
+      return PEM_write_bio_PUBKEY(bio.get(), pkey) == 1;
+    } else {
+      // Encode SPKI as DER.
+      //      CHECK_EQ(config.format_, kKeyFormatDER);
+      return i2d_PUBKEY_bio(bio.get(), pkey) == 1;
+    }
+  }
+}
+
+std::optional<jsi::Value> WritePublicKey(
+    jsi::Runtime& runtime, EVP_PKEY* pkey,
+    const PublicKeyEncodingConfig& config) {
+  BIOPointer bio(BIO_new(BIO_s_mem()));
+  //  CHECK(bio);
+
+  if (!WritePublicKeyInner(pkey, bio, config)) {
+    jsi::detail::throwJSError(runtime, "Failed to encode public key");
+    return std::nullopt;
+  }
+  return BIOToStringOrBuffer(runtime, bio.get(), config.format_);
+}
+
 // Maybe<bool> ExportJWKSecretKey(
 //                               Environment* env,
 //                               std::shared_ptr<KeyObjectData> key,
@@ -590,51 +577,49 @@ EVP_PKEY* ManagedEVPPKey::get() const { return pkey_.get(); }
 //   }
 // }
 //
-// Maybe<bool> ManagedEVPPKey::ToEncodedPublicKey(
-//                                                Environment* env,
-//                                                ManagedEVPPKey key,
-//                                                const
-//                                                PublicKeyEncodingConfig&
-//                                                config, Local<Value>* out) {
-//   if (!key) return Nothing<bool>();
-//   if (config.output_key_object_) {
-//     // Note that this has the downside of containing sensitive data of the
-//     // private key.
-//     std::shared_ptr<KeyObjectData> data =
-//     KeyObjectData::CreateAsymmetric(kKeyTypePublic, std::move(key));
-//     return Tristate(KeyObjectHandle::Create(env, data).ToLocal(out));
-//   } else if (config.format_ == kKeyFormatJWK) {
-//     std::shared_ptr<KeyObjectData> data =
-//     KeyObjectData::CreateAsymmetric(kKeyTypePublic, std::move(key));
-//     *out = Object::New(env->isolate());
-//     return ExportJWKInner(env, data, *out, false);
-//   }
-//
-//   return Tristate(WritePublicKey(env, key.get(), config).ToLocal(out));
-// }
-//
-// Maybe<bool> ManagedEVPPKey::ToEncodedPrivateKey(
-//                                                 Environment* env,
-//                                                 ManagedEVPPKey key,
-//                                                 const
-//                                                 PrivateKeyEncodingConfig&
-//                                                 config, Local<Value>* out)
-//                                                 {
-//   if (!key) return Nothing<bool>();
-//   if (config.output_key_object_) {
-//     std::shared_ptr<KeyObjectData> data =
-//     KeyObjectData::CreateAsymmetric(kKeyTypePrivate, std::move(key));
-//     return Tristate(KeyObjectHandle::Create(env, data).ToLocal(out));
-//   } else if (config.format_ == kKeyFormatJWK) {
-//     std::shared_ptr<KeyObjectData> data =
-//     KeyObjectData::CreateAsymmetric(kKeyTypePrivate, std::move(key));
-//     *out = Object::New(env->isolate());
-//     return ExportJWKInner(env, data, *out, false);
-//   }
-//
-//   return Tristate(WritePrivateKey(env, key.get(), config).ToLocal(out));
-// }
-//
+
+inline std::optional<bool> Tristate(std::optional<bool> b) {
+  return b.has_value() && b.value() ? std::optional<bool>{true} : std::nullopt;
+}
+
+std::optional<jsi::Value> ManagedEVPPKey::ToEncodedPublicKey(
+    jsi::Runtime& runtime, ManagedEVPPKey key,
+    const PublicKeyEncodingConfig& config) {
+  if (!key) return std::nullopt;
+  // TODO(osp) ignore all this for now
+  //   if (config.output_key_object_) {
+  //     // Note that this has the downside of containing sensitive data of the
+  //     // private key.
+  //     std::shared_ptr<KeyObjectData> data =
+  //     KeyObjectData::CreateAsymmetric(kKeyTypePublic, std::move(key));
+  //     return Tristate(KeyObjectHandle::Create(env, data).ToLocal(out));
+  //   } else if (config.format_ == kKeyFormatJWK) {
+  //     std::shared_ptr<KeyObjectData> data =
+  //     KeyObjectData::CreateAsymmetric(kKeyTypePublic, std::move(key));
+  //     *out = Object::New(env->isolate());
+  //     return ExportJWKInner(env, data, *out, false);
+  //   }
+
+  return WritePublicKey(runtime, key.get(), config);
+}
+
+std::optional<jsi::Value> ManagedEVPPKey::ToEncodedPrivateKey(
+    jsi::Runtime& runtime, ManagedEVPPKey key,
+    const PrivateKeyEncodingConfig& config) {
+  if (!key) return std::nullopt;
+  //   if (config.output_key_object_) {
+  //     std::shared_ptr<KeyObjectData> data =
+  //     KeyObjectData::CreateAsymmetric(kKeyTypePrivate, std::move(key));
+  //     return Tristate(KeyObjectHandle::Create(env, data).ToLocal(out));
+  //   } else if (config.format_ == kKeyFormatJWK) {
+  //     std::shared_ptr<KeyObjectData> data =
+  //     KeyObjectData::CreateAsymmetric(kKeyTypePrivate, std::move(key));
+  //     *out = Object::New(env->isolate());
+  //     return ExportJWKInner(env, data, *out, false);
+  //   }
+
+  return WritePrivateKey(runtime, key.get(), config);
+}
 
 NonCopyableMaybe<PrivateKeyEncodingConfig>
 ManagedEVPPKey::GetPrivateKeyEncodingFromJs(jsi::Runtime& runtime,

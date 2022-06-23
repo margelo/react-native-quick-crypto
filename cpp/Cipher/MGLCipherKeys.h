@@ -103,20 +103,14 @@ class ManagedEVPPKey {
   //                                            v8::FunctionCallbackInfo<v8::Value>&
   //                                            args, unsigned int* offset, bool
   //                                            allow_key_object);
-  //
-  //  static v8::Maybe<bool> ToEncodedPublicKey(
-  //                                            Environment* env,
-  //                                            ManagedEVPPKey key,
-  //                                            const PublicKeyEncodingConfig&
-  //                                            config, v8::Local<v8::Value>*
-  //                                            out);
-  //
-  //  static v8::Maybe<bool> ToEncodedPrivateKey(
-  //                                             Environment* env,
-  //                                             ManagedEVPPKey key,
-  //                                             const PrivateKeyEncodingConfig&
-  //                                             config, v8::Local<v8::Value>*
-  //                                             out);
+
+  static std::optional<jsi::Value> ToEncodedPublicKey(
+      jsi::Runtime& runtime, ManagedEVPPKey key,
+      const PublicKeyEncodingConfig& config);
+
+  static std::optional<jsi::Value> ToEncodedPrivateKey(
+      jsi::Runtime& runtime, ManagedEVPPKey key,
+      const PrivateKeyEncodingConfig& config);
 
  private:
   size_t size_of_private_key() const;
