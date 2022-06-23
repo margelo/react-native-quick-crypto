@@ -13,6 +13,7 @@
 #include <openssl/err.h>
 #include <openssl/evp.h>
 #include <openssl/kdf.h>
+#include <openssl/rand.h>
 #include <openssl/rsa.h>
 #include <openssl/ssl.h>
 #ifndef OPENSSL_NO_ENGINE
@@ -42,6 +43,7 @@ using BIOPointer = DeleteFnPtr<BIO, BIO_free_all>;
 using PKCS8Pointer = DeleteFnPtr<PKCS8_PRIV_KEY_INFO, PKCS8_PRIV_KEY_INFO_free>;
 using EVPKeyCtxPointer = DeleteFnPtr<EVP_PKEY_CTX, EVP_PKEY_CTX_free>;
 using EVPKeyPointer = DeleteFnPtr<EVP_PKEY, EVP_PKEY_free>;
+using BignumPointer = DeleteFnPtr<BIGNUM, BN_free>;
 
 template <typename T>
 class NonCopyableMaybe {
@@ -226,6 +228,18 @@ int PasswordCallback(char* buf, int size, int rwflag, void* u) {
 
   return -1;
 }
+
+void CheckEntropy() {
+  for (;;) {
+    int status = RAND_status();
+    //    CHECK_GE(status, 0);  // Cannot fail.
+    if (status != 0) break;
+
+    // Give up, RAND_poll() not supported.
+    if (RAND_poll() == 0) break;
+  }
+}
+
 }  // namespace margelo
 
 #endif /* MGLUtils_h */

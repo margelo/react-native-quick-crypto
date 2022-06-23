@@ -15,18 +15,75 @@
 #else
 #include "MGLJSIMacros.h"
 #endif
-#include "MGLCipherKeys.h"
-#include "MGLRsa.h"
 
 using namespace facebook;
 
 namespace margelo {
+
+EVPKeyCtxPointer setup(RsaKeyPairGenConfig* params) {
+  EVPKeyCtxPointer ctx(EVP_PKEY_CTX_new_id(
+      params->variant == kKeyVariantRSA_PSS ? EVP_PKEY_RSA_PSS : EVP_PKEY_RSA,
+      nullptr));
+
+  if (EVP_PKEY_keygen_init(ctx.get()) <= 0) return EVPKeyCtxPointer();
+
+  if (EVP_PKEY_CTX_set_rsa_keygen_bits(ctx.get(), params->modulus_bits) <= 0) {
+    return EVPKeyCtxPointer();
+  }
+
+  // 0x10001 is the default RSA exponent.
+  if (params->exponent != 0x10001) {
+    BignumPointer bn(BN_new());
+    //    CHECK_NOT_NULL(bn.get());
+    //    CHECK(BN_set_word(bn.get(), params->params.exponent));
+    // EVP_CTX accepts ownership of bn on success.
+    if (EVP_PKEY_CTX_set_rsa_keygen_pubexp(ctx.get(), bn.get()) <= 0)
+      return EVPKeyCtxPointer();
+
+    bn.release();
+  }
+
+  if (params->variant == kKeyVariantRSA_PSS) {
+    if (params->md != nullptr &&
+        EVP_PKEY_CTX_set_rsa_pss_keygen_md(ctx.get(), params->md) <= 0) {
+      return EVPKeyCtxPointer();
+    }
+
+    // TODO(tniessen): This appears to only be necessary in OpenSSL 3, while
+    // OpenSSL 1.1.1 behaves as recommended by RFC 8017 and defaults the MGF1
+    // hash algorithm to the RSA-PSS hashAlgorithm. Remove this code if the
+    // behavior of OpenSSL 3 changes.
+    const EVP_MD* mgf1_md = params->mgf1_md;
+    if (mgf1_md == nullptr && params->md != nullptr) {
+      mgf1_md = params->md;
+    }
+
+    if (mgf1_md != nullptr &&
+        EVP_PKEY_CTX_set_rsa_pss_keygen_mgf1_md(ctx.get(), mgf1_md) <= 0) {
+      return EVPKeyCtxPointer();
+    }
+
+    int saltlen = params->saltlen;
+    if (saltlen < 0 && params->md != nullptr) {
+      saltlen = EVP_MD_size(params->md);
+    }
+
+    if (saltlen >= 0 &&
+        EVP_PKEY_CTX_set_rsa_pss_keygen_saltlen(ctx.get(), saltlen) <= 0) {
+      return EVPKeyCtxPointer();
+    }
+  }
+
+  return ctx;
+}
 
 FieldDefinition getGenerateKeyPairFieldDefinition(
     std::shared_ptr<react::CallInvoker> jsCallInvoker,
     std::shared_ptr<DispatchQueue::dispatch_queue> workerQueue) {
   return HOST_LAMBDA("generateKeyPair", {
     bool isAsync = arguments[0].getBool();
+
+    RsaKeyPairGenConfig config = RsaKeyPairGenConfig();
 
     // This is a funky one: depending on which encryption scheme you are using,
     // there is a variable number of arguments that will need to be parsed,
@@ -39,7 +96,7 @@ FieldDefinition getGenerateKeyPairFieldDefinition(
     //    CHECK(args[*offset]->IsUint32());  // Variant
     //    CHECK(args[*offset + 1]->IsUint32());  // Modulus bits
     //    CHECK(args[*offset + 2]->IsUint32());  // Exponent
-    RSAKeyVariant variant =
+    config.variant =
         static_cast<RSAKeyVariant>((int)arguments[offset].asNumber());
 
     // TODO(osp)
@@ -47,24 +104,20 @@ FieldDefinition getGenerateKeyPairFieldDefinition(
     //                  args.Length() == 10);
     //    CHECK_IMPLIES(params->params.variant == kKeyVariantRSA_PSS,
     //                  args.Length() == 13);
-    unsigned int modulus_bits =
+    config.modulus_bits =
         static_cast<unsigned int>(arguments[offset + 1].asNumber());
-    unsigned int exponent =
+    config.exponent =
         static_cast<unsigned int>(arguments[offset + 2].asNumber());
 
     offset += 3;
 
-    const EVP_MD* md = nullptr;
-    const EVP_MD* mgf1_md = nullptr;
-    int saltlen = -1;
-
-    if (variant == kKeyVariantRSA_PSS) {
+    if (config.variant == kKeyVariantRSA_PSS) {
       if (!arguments[offset].isUndefined()) {
         // TODO(osp) CHECK(string)
-        md = EVP_get_digestbyname(
+        config.md = EVP_get_digestbyname(
             arguments[offset].asString(runtime).utf8(runtime).c_str());
 
-        if (md == nullptr) {
+        if (config.md == nullptr) {
           jsi::detail::throwJSError(runtime, "invalid digest");
           throw new jsi::JSError(runtime, "invalid digest");
         }
@@ -72,10 +125,10 @@ FieldDefinition getGenerateKeyPairFieldDefinition(
 
       if (!arguments[offset + 1].isUndefined()) {
         // TODO(osp) CHECK(string)
-        mgf1_md = EVP_get_digestbyname(
+        config.mgf1_md = EVP_get_digestbyname(
             arguments[offset + 1].asString(runtime).utf8(runtime).c_str());
 
-        if (mgf1_md == nullptr) {
+        if (config.mgf1_md == nullptr) {
           jsi::detail::throwJSError(runtime, "invalid digest");
           throw new jsi::JSError(runtime, "invalid digest");
         }
@@ -83,9 +136,9 @@ FieldDefinition getGenerateKeyPairFieldDefinition(
 
       if (!arguments[offset + 2].isUndefined()) {
         //        CHECK(args[*offset + 2]->IsInt32());
-        saltlen = static_cast<int>(arguments[offset + 2].asNumber());
+        config.saltlen = static_cast<int>(arguments[offset + 2].asNumber());
 
-        if (saltlen < 0) {
+        if (config.saltlen < 0) {
           jsi::detail::throwJSError(runtime, "salt length is out of range");
           throw new jsi::JSError(runtime, "salt length is out of range");
         }
@@ -94,17 +147,50 @@ FieldDefinition getGenerateKeyPairFieldDefinition(
       offset += 3;
     }
 
-    auto public_key_encoding = ManagedEVPPKey::GetPublicKeyEncodingFromJs(
+    config.public_key_encoding = ManagedEVPPKey::GetPublicKeyEncodingFromJs(
         runtime, arguments, &offset, kKeyContextGenerate);
 
     auto private_key_encoding = ManagedEVPPKey::GetPrivateKeyEncodingFromJs(
         runtime, arguments, &offset, kKeyContextGenerate);
 
-    //    if (!private_key_encoding.IsEmpty())
-    //      params->private_key_encoding = private_key_encoding.Release();
+    if (!private_key_encoding.IsEmpty()) {
+      config.private_key_encoding = private_key_encoding.Release();
+    }
 
-    std::cout << "Received variant" << variant << " and isAsync " << isAsync
-              << std::endl;
+    CheckEntropy();
+
+    EVPKeyCtxPointer ctx = setup(&config);
+
+    if (!ctx) {
+      jsi::detail::throwJSError(runtime, "Error on key generation job");
+      throw new jsi::JSError(runtime, "Error on key generation job");
+    }
+
+    // Generate the key
+    EVP_PKEY* pkey = nullptr;
+    if (!EVP_PKEY_keygen(ctx.get(), &pkey)) {
+      jsi::detail::throwJSError(runtime, "Error generating key");
+      throw new jsi::JSError(runtime, "Error generating key");
+    }
+
+    config.key = ManagedEVPPKey(EVPKeyPointer(pkey));
+
+    std::cout << "Keys are generated!" << std::endl;
+
+    //    if (ManagedEVPPKey::ToEncodedPublicKey(
+    //                                           env,
+    //                                           std::move(params->key),
+    //                                           params->public_key_encoding,
+    //                                           &keys[0]).IsNothing() ||
+    //        ManagedEVPPKey::ToEncodedPrivateKey(
+    //                                            env,
+    //                                            std::move(params->key),
+    //                                            params->private_key_encoding,
+    //                                            &keys[1]).IsNothing()) {
+    //                                              return v8::Nothing<bool>();
+    //                                            }
+    //    *result = v8::Array::New(env->isolate(), keys, arraysize(keys));
+    //    return v8::Just(true);
     return {};
   });
 }
