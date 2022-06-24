@@ -50,7 +50,7 @@ FieldDefinition getCreateDecipherFieldDefinition(
           throw jsi::JSError(runtime, "createCipher: auth_tag_len is required");
         }
 
-        unsigned auto int auth_tag_len =
+        unsigned int auth_tag_len =
             (int)params.getProperty(runtime, "auth_tag_len").getNumber();
 
         if (params.hasProperty(runtime, "iv") &&
