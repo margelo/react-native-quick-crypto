@@ -2,7 +2,7 @@
 //  MGLGenerateKeyPairInstaller.cpp
 //  react-native-quick-crypto
 //
-//  Created by Oscar on 22.06.22.
+//  Created by Oscar on 24.06.22.
 //
 
 #include "MGLGenerateKeyPairInstaller.h"
@@ -34,14 +34,56 @@ FieldDefinition getGenerateKeyPairFieldDefinition(
     std::shared_ptr<react::CallInvoker> jsCallInvoker,
     std::shared_ptr<DispatchQueue::dispatch_queue> workerQueue) {
   return buildPair(
-      "generateKeyPair", JSIF([=]) {
-        bool isAsync = arguments[0].getBool();
+      "generateKeyPairSync", JSIF([=]) {
+        RsaKeyPairGenConfig config = prepareRsaKeyGenConfig(runtime, arguments);
+        auto promiseConstructor =
+            runtime.global().getPropertyAsFunction(runtime, "Promise");
 
-        // For asynchronisity I'm skipping the MGLDispatchQueue for now
-        // But in the future a thread pool is necessary to avoid creating too
-        // many threads
+        auto promise = promiseConstructor.callAsConstructor(
+            runtime,
+            jsi::Function::createFromHostFunction(
+                runtime, jsi::PropNameID::forAscii(runtime, "executor"), 2,
+                [arguments, &jsCallInvoker, &config](
+                    jsi::Runtime &runtime, const jsi::Value &thisValue,
+                    const jsi::Value *promiseArgs, size_t) -> jsi::Value {
+                  auto resolve =
+                      std::make_shared<jsi::Value>(runtime, promiseArgs[0]);
+                  auto reject =
+                      std::make_shared<jsi::Value>(runtime, promiseArgs[1]);
 
-        return generateRSAKeyPair(runtime, arguments);
+                  std::thread t([&runtime, arguments, resolve, reject,
+                                 &jsCallInvoker, &config]() {
+                    m.lock();
+                    try {
+                      auto result = generateRSAKeyPair(runtime, config);
+                      jsCallInvoker->invokeAsync(
+                          [&runtime, &result, &jsCallInvoker, resolve]() {
+                            resolve->asObject(runtime).asFunction(runtime).call(
+                                runtime, std::move(result));
+                          });
+                    } catch (std::exception e) {
+                      jsCallInvoker->invokeAsync(
+                          [&runtime, &jsCallInvoker, reject]() {
+                            reject->asObject(runtime).asFunction(runtime).call(
+                                runtime, jsi::String::createFromUtf8(
+                                             runtime, "Error generating key"));
+                            //                             reject->asObject(runtime).asFunction(runtime).call(runtime,
+                            //                             jsi::JSError(runtime,
+                            //                             "Error generating key
+                            //                             pair"));
+                          });
+                    }
+                    m.unlock();
+                  });
+
+                  t.detach();
+
+                  std::cout << "RETURN" << std::endl;
+
+                  return {};
+                }));
+
+        return promise;
       });
 }
 }  // namespace margelo

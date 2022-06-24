@@ -51,8 +51,11 @@ struct RsaKeyPairGenConfig {
   int saltlen = -1;
 };
 
+RsaKeyPairGenConfig prepareRsaKeyGenConfig(jsi::Runtime& runtime,
+                                           const jsi::Value* arguments);
+
 jsi::Value generateRSAKeyPair(jsi::Runtime& runtime,
-                              const jsi::Value* arguments);
+                              RsaKeyPairGenConfig& config);
 
 }  // namespace margelo
 

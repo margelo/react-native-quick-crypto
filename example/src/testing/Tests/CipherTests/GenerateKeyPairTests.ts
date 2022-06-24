@@ -26,44 +26,33 @@ const pkcs8EncExp = getRegExpForPEM('ENCRYPTED PRIVATE KEY');
 // const sec1EncExp = (cipher) => getRegExpForPEM('EC PRIVATE KEY', cipher);
 
 export function registerGenerateKeyPairTests() {
-  it('Async RSA: spki - pkcs8/aes-256-cbc/passphrase', (done) => {
-    crypto.generateKeyPair(
-      'rsa',
-      {
-        modulusLength: 4096,
-        publicKeyEncoding: {
-          type: 'spki',
-          format: 'pem',
-        },
-        privateKeyEncoding: {
-          type: 'pkcs8',
-          format: 'pem',
-          cipher: 'aes-256-cbc',
-          passphrase: 'top secret',
-        },
+  it('Async RSA: spki - pkcs8/aes-256-cbc/passphrase', () => {
+    const { publicKey, privateKey } = crypto.generateKeyPairSync('rsa', {
+      modulusLength: 4096,
+      publicKeyEncoding: {
+        type: 'spki',
+        format: 'pem',
       },
-      (err, publicKey, privateKey) => {
-        if (err) {
-          chai.assert.fail('error generating key');
-        }
+      privateKeyEncoding: {
+        type: 'pkcs8',
+        format: 'pem',
+        cipher: 'aes-256-cbc',
+        passphrase: 'top secret',
+      },
+    });
 
-        chai.expect(true).to.equal(true);
+    chai.expect(!!publicKey).to.equal(true);
+    chai.expect(!!privateKey).to.equal(true);
 
-        chai.expect(!!publicKey).to.equal(true);
-        chai.expect(!!privateKey).to.equal(true);
+    // chai.assert.strictEqual(Object.keys(ret).length, 2);
+    // const { publicKey, privateKey } = ret;
 
-        // chai.assert.strictEqual(Object.keys(ret).length, 2);
-        // const { publicKey, privateKey } = ret;
-
-        chai.assert.strictEqual(typeof publicKey, 'string');
-        chai.assert.match(publicKey as any, spkiExp);
-        // chai.assertApproximateSize(publicKey, 162);
-        chai.assert.strictEqual(typeof privateKey, 'string');
-        chai.assert.match(privateKey as any, pkcs8EncExp);
-        // chai.assertApproximateSize(privateKey, 512);
-        done();
-      }
-    );
+    chai.assert.strictEqual(typeof publicKey, 'string');
+    chai.assert.match(publicKey as any, spkiExp);
+    // chai.assertApproximateSize(publicKey, 162);
+    chai.assert.strictEqual(typeof privateKey, 'string');
+    chai.assert.match(privateKey as any, pkcs8EncExp);
+    // chai.assertApproximateSize(privateKey, 512);
   });
 
   it('RSA sync: pkcs1/pkcs8', () => {

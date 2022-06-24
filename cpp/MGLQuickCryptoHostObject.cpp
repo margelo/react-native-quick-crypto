@@ -18,6 +18,7 @@
 #include "MGLCreateCipherInstaller.h"
 #include "MGLCreateDecipherInstaller.h"
 #include "MGLGenerateKeyPairInstaller.h"
+#include "MGLGenerateKeyPairSyncInstaller.h"
 #include "MGLHashInstaller.h"
 #include "MGLHmacInstaller.h"
 #include "MGLPbkdf2HostObject.h"
@@ -53,6 +54,9 @@ MGLQuickCryptoHostObject::MGLQuickCryptoHostObject(
       getCreatePublicEncryptFieldDefinition(jsCallInvoker, workerQueue));
 
   // generateKeyPair
+  this->fields.push_back(
+      getGenerateKeyPairFieldDefinition(jsCallInvoker, workerQueue));
+  // generateKeyPairSync
   this->fields.push_back(
       getGenerateKeyPairFieldDefinition(jsCallInvoker, workerQueue));
 

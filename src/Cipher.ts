@@ -488,6 +488,7 @@ function parseKeyEncoding(
 }
 
 function internalGenerateKeyPair(
+  isAsync: boolean,
   type: string,
   options: GenerateKeyPairOptions | undefined,
   callback: GenerateKeyPairCallback | undefined
@@ -500,7 +501,7 @@ function internalGenerateKeyPair(
   //   validateObject(options, 'options');
 
   switch (type) {
-    // case 'rsa-pss':
+    case 'rsa-pss':
     case 'rsa': {
       validateObject<GenerateKeyPairOptions>(options, 'options');
       const { modulusLength } = options!;
@@ -514,17 +515,25 @@ function internalGenerateKeyPair(
       }
 
       // if (type === 'rsa') {
-      const res = NativeQuickCrypto.generateKeyPair(
-        true,
-        RSAKeyVariant.kKeyVariantRSA_SSA_PKCS1_v1_5,
-        modulusLength,
-        publicExponent,
-        ...encoding
-      );
+      if (isAsync) {
+        NativeQuickCrypto.generateKeyPair(
+          RSAKeyVariant.kKeyVariantRSA_SSA_PKCS1_v1_5,
+          modulusLength,
+          publicExponent,
+          ...encoding
+        ).then((res) => {
+          callback?.(...res);
+        });
+        break;
+      } else {
+        return NativeQuickCrypto.generateKeyPairSync(
+          RSAKeyVariant.kKeyVariantRSA_SSA_PKCS1_v1_5,
+          modulusLength,
+          publicExponent,
+          ...encoding
+        );
+      }
 
-      callback?.(...res);
-
-      return res;
       // }
 
       // const { hash, mgf1Hash, hashAlgorithm, mgf1HashAlgorithm, saltLength } =
@@ -693,7 +702,7 @@ export function generateKeyPair(
 
   validateFunction(callback);
 
-  internalGenerateKeyPair(type, options, callback);
+  internalGenerateKeyPair(true, type, options, callback);
 }
 
 export function generateKeyPairSync(type: string): {
@@ -709,6 +718,7 @@ export function generateKeyPairSync(
   options?: GenerateKeyPairOptions
 ): { publicKey: any; privateKey: any } {
   const [_, publicKey, privateKey] = internalGenerateKeyPair(
+    false,
     type,
     options,
     undefined

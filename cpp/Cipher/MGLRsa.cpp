@@ -71,8 +71,8 @@ EVPKeyCtxPointer setup(RsaKeyPairGenConfig* params) {
   return ctx;
 }
 
-jsi::Value generateRSAKeyPair(jsi::Runtime& runtime,
-                              const jsi::Value* arguments) {
+RsaKeyPairGenConfig prepareRsaKeyGenConfig(jsi::Runtime& runtime,
+                                           const jsi::Value* arguments) {
   RsaKeyPairGenConfig config = RsaKeyPairGenConfig();
 
   // This is a funky one: depending on which encryption scheme you are
@@ -81,7 +81,7 @@ jsi::Value generateRSAKeyPair(jsi::Runtime& runtime,
   // as they go reading the arguments based on the selected scheme. I
   // tried to keep as close to the node implementation to make future
   // debugging easier
-  unsigned int offset = 1;
+  unsigned int offset = 0;
 
   // TODO(osp)
   //    CHECK(args[*offset]->IsUint32());  // Variant
@@ -147,6 +147,11 @@ jsi::Value generateRSAKeyPair(jsi::Runtime& runtime,
     config.private_key_encoding = private_key_encoding.Release();
   }
 
+  return config;
+}
+
+jsi::Value generateRSAKeyPair(jsi::Runtime& runtime,
+                              RsaKeyPairGenConfig& config) {
   CheckEntropy();
 
   EVPKeyCtxPointer ctx = setup(&config);

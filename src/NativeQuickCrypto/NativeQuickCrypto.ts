@@ -8,6 +8,7 @@ import type {
   CreateDecipherMethod,
   PublicEncryptMethod,
   GenerateKeyPairMethod,
+  GenerateKeyPairSyncMethod,
 } from './Cipher';
 
 interface NativeQuickCryptoSpec {
@@ -20,6 +21,7 @@ interface NativeQuickCryptoSpec {
   publicEncrypt: PublicEncryptMethod;
   publicDecrypt: PublicEncryptMethod;
   generateKeyPair: GenerateKeyPairMethod;
+  generateKeyPairSync: GenerateKeyPairSyncMethod;
 }
 
 // global func declaration for JSI functions

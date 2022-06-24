@@ -44,7 +44,13 @@ export type PublicEncryptMethod = (
 ) => ArrayBuffer;
 
 export type GenerateKeyPairMethod = (
-  async: boolean,
+  keyVariant: RSAKeyVariant,
+  modulusLength: number,
+  publicExponent: number,
+  ...rest: any[]
+) => Promise<[error: unknown, publicBuffer: any, privateBuffer: any]>;
+
+export type GenerateKeyPairSyncMethod = (
   keyVariant: RSAKeyVariant,
   modulusLength: number,
   publicExponent: number,

@@ -1,4 +1,3 @@
-
 //
 //  MGLGenerateKeyPairInstaller.hpp
 //  react-native-quick-crypto
@@ -24,7 +23,7 @@
 
 namespace margelo {
 
-FieldDefinition getGenerateKeyPairFieldDefinition(
+FieldDefinition getGenerateKeyPairSyncFieldDefinition(
     std::shared_ptr<react::CallInvoker> jsCallInvoker,
     std::shared_ptr<DispatchQueue::dispatch_queue> workerQueue);
 }  // namespace margelo
