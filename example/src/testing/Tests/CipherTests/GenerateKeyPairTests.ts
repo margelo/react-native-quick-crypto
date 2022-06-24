@@ -17,32 +17,56 @@ function getRegExpForPEM(label: string, cipher?: string | null) {
 }
 
 const pkcs1PubExp = getRegExpForPEM('RSA PUBLIC KEY');
+// const pkcs1PrivExp = getRegExpForPEM('RSA PRIVATE KEY');
+// const pkcs1EncExp = (cipher) => getRegExpForPEM('RSA PRIVATE KEY', cipher);
+const spkiExp = getRegExpForPEM('PUBLIC KEY');
 const pkcs8Exp = getRegExpForPEM('PRIVATE KEY');
+const pkcs8EncExp = getRegExpForPEM('ENCRYPTED PRIVATE KEY');
+// const sec1Exp = getRegExpForPEM('EC PRIVATE KEY');
+// const sec1EncExp = (cipher) => getRegExpForPEM('EC PRIVATE KEY', cipher);
 
 export function registerGenerateKeyPairTests() {
-  it('registerGenerateKeyPairTests', () => {
-    // crypto.generateKeyPair(
-    //   'rsa',
-    //   {
-    //     modulusLength: 4096,
-    //     publicKeyEncoding: {
-    //       type: 'spki',
-    //       format: 'pem',
-    //     },
-    //     privateKeyEncoding: {
-    //       type: 'pkcs8',
-    //       format: 'pem',
-    //       cipher: 'aes-256-cbc',
-    //       passphrase: 'top secret',
-    //     },
-    //   },
-    //   (err, publicKey, privateKey) => {
-    //     console.warn(err, publicKey, privateKey);
-    //     chai.expect(true).to.equal(true);
-    //     done();
-    //   }
-    // );
+  it('Async RSA: spki - pkcs8/aes-256-cbc/passphrase', (done) => {
+    crypto.generateKeyPair(
+      'rsa',
+      {
+        modulusLength: 4096,
+        publicKeyEncoding: {
+          type: 'spki',
+          format: 'pem',
+        },
+        privateKeyEncoding: {
+          type: 'pkcs8',
+          format: 'pem',
+          cipher: 'aes-256-cbc',
+          passphrase: 'top secret',
+        },
+      },
+      (err, publicKey, privateKey) => {
+        if (err) {
+          chai.assert.fail('error generating key');
+        }
 
+        chai.expect(true).to.equal(true);
+
+        chai.expect(!!publicKey).to.equal(true);
+        chai.expect(!!privateKey).to.equal(true);
+
+        // chai.assert.strictEqual(Object.keys(ret).length, 2);
+        // const { publicKey, privateKey } = ret;
+
+        chai.assert.strictEqual(typeof publicKey, 'string');
+        chai.assert.match(publicKey as any, spkiExp);
+        // chai.assertApproximateSize(publicKey, 162);
+        chai.assert.strictEqual(typeof privateKey, 'string');
+        chai.assert.match(privateKey as any, pkcs8EncExp);
+        // chai.assertApproximateSize(privateKey, 512);
+        done();
+      }
+    );
+  });
+
+  it('RSA sync: pkcs1/pkcs8', () => {
     // To make the test faster, we will only test sync key generation once and
     // with a relatively small key.
     const ret = crypto.generateKeyPairSync('rsa', {
@@ -57,8 +81,6 @@ export function registerGenerateKeyPairTests() {
         format: 'pem',
       },
     });
-
-    console.warn('ret', ret);
 
     chai.assert.strictEqual(Object.keys(ret).length, 2);
     const { publicKey, privateKey } = ret;

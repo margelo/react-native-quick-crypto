@@ -708,7 +708,7 @@ export function generateKeyPairSync(
   type: string,
   options?: GenerateKeyPairOptions
 ): { publicKey: any; privateKey: any } {
-  const [publicKey, privateKey] = internalGenerateKeyPair(
+  const [_, publicKey, privateKey] = internalGenerateKeyPair(
     type,
     options,
     undefined

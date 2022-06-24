@@ -36,10 +36,11 @@ EVPKeyCtxPointer setup(RsaKeyPairGenConfig* params) {
   if (params->exponent != 0x10001) {
     BignumPointer bn(BN_new());
     //    CHECK_NOT_NULL(bn.get());
-    //    CHECK(BN_set_word(bn.get(), params->params.exponent));
+    BN_set_word(bn.get(), params->exponent);
     // EVP_CTX accepts ownership of bn on success.
-    if (EVP_PKEY_CTX_set_rsa_keygen_pubexp(ctx.get(), bn.get()) <= 0)
+    if (EVP_PKEY_CTX_set_rsa_keygen_pubexp(ctx.get(), bn.get()) <= 0) {
       return EVPKeyCtxPointer();
+    }
 
     bn.release();
   }
@@ -81,116 +82,118 @@ EVPKeyCtxPointer setup(RsaKeyPairGenConfig* params) {
 FieldDefinition getGenerateKeyPairFieldDefinition(
     std::shared_ptr<react::CallInvoker> jsCallInvoker,
     std::shared_ptr<DispatchQueue::dispatch_queue> workerQueue) {
-  return HOST_LAMBDA("generateKeyPair", {
-    bool isAsync = arguments[0].getBool();
+  return buildPair(
+      "generateKeyPair", JSIF([=]) {
+        bool isAsync = arguments[0].getBool();
 
-    RsaKeyPairGenConfig config = RsaKeyPairGenConfig();
+        RsaKeyPairGenConfig config = RsaKeyPairGenConfig();
 
-    // This is a funky one: depending on which encryption scheme you are using,
-    // there is a variable number of arguments that will need to be parsed,
-    // therefore this pointer will be used by the internal functions as they go
-    // reading the arguments based on the selected scheme Tried to keep as close
-    // to the node implementation to make future debugging easier
-    unsigned int offset = 1;
+        // This is a funky one: depending on which encryption scheme you are
+        // using, there is a variable number of arguments that will need to be
+        // parsed, therefore this pointer will be used by the internal functions
+        // as they go reading the arguments based on the selected scheme. I
+        // tried to keep as close to the node implementation to make future
+        // debugging easier
+        unsigned int offset = 1;
 
-    // TODO(osp)
-    //    CHECK(args[*offset]->IsUint32());  // Variant
-    //    CHECK(args[*offset + 1]->IsUint32());  // Modulus bits
-    //    CHECK(args[*offset + 2]->IsUint32());  // Exponent
-    config.variant =
-        static_cast<RSAKeyVariant>((int)arguments[offset].asNumber());
+        // TODO(osp)
+        //    CHECK(args[*offset]->IsUint32());  // Variant
+        //    CHECK(args[*offset + 1]->IsUint32());  // Modulus bits
+        //    CHECK(args[*offset + 2]->IsUint32());  // Exponent
+        config.variant =
+            static_cast<RSAKeyVariant>((int)arguments[offset].asNumber());
 
-    // TODO(osp)
-    //    CHECK_IMPLIES(params->params.variant != kKeyVariantRSA_PSS,
-    //                  args.Length() == 10);
-    //    CHECK_IMPLIES(params->params.variant == kKeyVariantRSA_PSS,
-    //                  args.Length() == 13);
-    config.modulus_bits =
-        static_cast<unsigned int>(arguments[offset + 1].asNumber());
-    config.exponent =
-        static_cast<unsigned int>(arguments[offset + 2].asNumber());
+        // TODO(osp)
+        //    CHECK_IMPLIES(params->params.variant != kKeyVariantRSA_PSS,
+        //                  args.Length() == 10);
+        //    CHECK_IMPLIES(params->params.variant == kKeyVariantRSA_PSS,
+        //                  args.Length() == 13);
+        config.modulus_bits =
+            static_cast<unsigned int>(arguments[offset + 1].asNumber());
+        config.exponent =
+            static_cast<unsigned int>(arguments[offset + 2].asNumber());
 
-    offset += 3;
+        offset += 3;
 
-    if (config.variant == kKeyVariantRSA_PSS) {
-      if (!arguments[offset].isUndefined()) {
-        // TODO(osp) CHECK(string)
-        config.md = EVP_get_digestbyname(
-            arguments[offset].asString(runtime).utf8(runtime).c_str());
+        if (config.variant == kKeyVariantRSA_PSS) {
+          if (!arguments[offset].isUndefined()) {
+            // TODO(osp) CHECK(string)
+            config.md = EVP_get_digestbyname(
+                arguments[offset].asString(runtime).utf8(runtime).c_str());
 
-        if (config.md == nullptr) {
-          jsi::detail::throwJSError(runtime, "invalid digest");
-          throw new jsi::JSError(runtime, "invalid digest");
+            if (config.md == nullptr) {
+              jsi::detail::throwJSError(runtime, "invalid digest");
+              throw new jsi::JSError(runtime, "invalid digest");
+            }
+          }
+
+          if (!arguments[offset + 1].isUndefined()) {
+            // TODO(osp) CHECK(string)
+            config.mgf1_md = EVP_get_digestbyname(
+                arguments[offset + 1].asString(runtime).utf8(runtime).c_str());
+
+            if (config.mgf1_md == nullptr) {
+              jsi::detail::throwJSError(runtime, "invalid digest");
+              throw new jsi::JSError(runtime, "invalid digest");
+            }
+          }
+
+          if (!arguments[offset + 2].isUndefined()) {
+            //        CHECK(args[*offset + 2]->IsInt32());
+            config.saltlen = static_cast<int>(arguments[offset + 2].asNumber());
+
+            if (config.saltlen < 0) {
+              jsi::detail::throwJSError(runtime, "salt length is out of range");
+              throw new jsi::JSError(runtime, "salt length is out of range");
+            }
+          }
+
+          offset += 3;
         }
-      }
 
-      if (!arguments[offset + 1].isUndefined()) {
-        // TODO(osp) CHECK(string)
-        config.mgf1_md = EVP_get_digestbyname(
-            arguments[offset + 1].asString(runtime).utf8(runtime).c_str());
+        config.public_key_encoding = ManagedEVPPKey::GetPublicKeyEncodingFromJs(
+            runtime, arguments, &offset, kKeyContextGenerate);
 
-        if (config.mgf1_md == nullptr) {
-          jsi::detail::throwJSError(runtime, "invalid digest");
-          throw new jsi::JSError(runtime, "invalid digest");
+        auto private_key_encoding = ManagedEVPPKey::GetPrivateKeyEncodingFromJs(
+            runtime, arguments, &offset, kKeyContextGenerate);
+
+        if (!private_key_encoding.IsEmpty()) {
+          config.private_key_encoding = private_key_encoding.Release();
         }
-      }
 
-      if (!arguments[offset + 2].isUndefined()) {
-        //        CHECK(args[*offset + 2]->IsInt32());
-        config.saltlen = static_cast<int>(arguments[offset + 2].asNumber());
+        CheckEntropy();
 
-        if (config.saltlen < 0) {
-          jsi::detail::throwJSError(runtime, "salt length is out of range");
-          throw new jsi::JSError(runtime, "salt length is out of range");
+        EVPKeyCtxPointer ctx = setup(&config);
+
+        if (!ctx) {
+          jsi::detail::throwJSError(runtime, "Error on key generation job");
+          throw new jsi::JSError(runtime, "Error on key generation job");
         }
-      }
 
-      offset += 3;
-    }
+        // Generate the key
+        EVP_PKEY* pkey = nullptr;
+        if (!EVP_PKEY_keygen(ctx.get(), &pkey)) {
+          jsi::detail::throwJSError(runtime, "Error generating key");
+          throw new jsi::JSError(runtime, "Error generating key");
+        }
 
-    config.public_key_encoding = ManagedEVPPKey::GetPublicKeyEncodingFromJs(
-        runtime, arguments, &offset, kKeyContextGenerate);
+        config.key = ManagedEVPPKey(EVPKeyPointer(pkey));
 
-    auto private_key_encoding = ManagedEVPPKey::GetPrivateKeyEncodingFromJs(
-        runtime, arguments, &offset, kKeyContextGenerate);
+        std::optional<jsi::Value> publicBuffer =
+            ManagedEVPPKey::ToEncodedPublicKey(runtime, std::move(config.key),
+                                               config.public_key_encoding);
+        std::optional<jsi::Value> privateBuffer =
+            ManagedEVPPKey::ToEncodedPrivateKey(runtime, std::move(config.key),
+                                                config.private_key_encoding);
 
-    if (!private_key_encoding.IsEmpty()) {
-      config.private_key_encoding = private_key_encoding.Release();
-    }
+        if (!publicBuffer.has_value() || !privateBuffer.has_value()) {
+          jsi::detail::throwJSError(
+              runtime, "Failed to encode public and/or private key");
+        }
 
-    CheckEntropy();
-
-    EVPKeyCtxPointer ctx = setup(&config);
-
-    if (!ctx) {
-      jsi::detail::throwJSError(runtime, "Error on key generation job");
-      throw new jsi::JSError(runtime, "Error on key generation job");
-    }
-
-    // Generate the key
-    EVP_PKEY* pkey = nullptr;
-    if (!EVP_PKEY_keygen(ctx.get(), &pkey)) {
-      jsi::detail::throwJSError(runtime, "Error generating key");
-      throw new jsi::JSError(runtime, "Error generating key");
-    }
-
-    config.key = ManagedEVPPKey(EVPKeyPointer(pkey));
-
-    std::optional<jsi::Value> publicBuffer = ManagedEVPPKey::ToEncodedPublicKey(
-        runtime, std::move(config.key), config.public_key_encoding);
-    std::optional<jsi::Value> privateBuffer =
-        ManagedEVPPKey::ToEncodedPrivateKey(runtime, std::move(config.key),
-                                            config.private_key_encoding);
-
-    if (!publicBuffer.has_value() || !privateBuffer.has_value()) {
-      jsi::detail::throwJSError(runtime,
-                                "Failed to encode public and/or private key");
-    }
-
-    std::cout << "keys generated!" << std::endl;
-    return jsi::Array::createWithElements(runtime, jsi::Value::undefined(),
-                                          publicBuffer.value(),
-                                          privateBuffer.value());
-  });
+        return jsi::Array::createWithElements(runtime, jsi::Value::undefined(),
+                                              publicBuffer.value(),
+                                              privateBuffer.value());
+      });
 }
 }  // namespace margelo
