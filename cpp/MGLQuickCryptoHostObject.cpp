@@ -58,7 +58,7 @@ MGLQuickCryptoHostObject::MGLQuickCryptoHostObject(
       getGenerateKeyPairFieldDefinition(jsCallInvoker, workerQueue));
   // generateKeyPairSync
   this->fields.push_back(
-      getGenerateKeyPairFieldDefinition(jsCallInvoker, workerQueue));
+      getGenerateKeyPairSyncFieldDefinition(jsCallInvoker, workerQueue));
 
   // Pbkdf2HostObject
   this->fields.push_back(JSI_VALUE("pbkdf2", {

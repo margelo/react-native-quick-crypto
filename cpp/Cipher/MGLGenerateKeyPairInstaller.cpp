@@ -34,7 +34,7 @@ FieldDefinition getGenerateKeyPairFieldDefinition(
     std::shared_ptr<react::CallInvoker> jsCallInvoker,
     std::shared_ptr<DispatchQueue::dispatch_queue> workerQueue) {
   return buildPair(
-      "generateKeyPairSync", JSIF([=]) {
+      "generateKeyPair", JSIF([=]) {
         RsaKeyPairGenConfig config = prepareRsaKeyGenConfig(runtime, arguments);
         auto promiseConstructor =
             runtime.global().getPropertyAsFunction(runtime, "Promise");

@@ -5,8 +5,8 @@
 //  Created by Oscar on 22.06.22.
 //
 
-#ifndef MGLGenerateKeyPairInstaller_hpp
-#define MGLGenerateKeyPairInstaller_hpp
+#ifndef MGLGenerateKeyPairSyncInstaller_hpp
+#define MGLGenerateKeyPairSyncInstaller_hpp
 
 #include <jsi/jsi.h>
 
@@ -23,6 +23,10 @@
 
 namespace margelo {
 
+// https://nodejs.org/api/crypto.html go to generateKeyPair
+/// It's signature is:
+/// generateKeyPair(type: string, options: record, callback: (error, publicKey,
+/// privateKey))
 FieldDefinition getGenerateKeyPairSyncFieldDefinition(
     std::shared_ptr<react::CallInvoker> jsCallInvoker,
     std::shared_ptr<DispatchQueue::dispatch_queue> workerQueue);

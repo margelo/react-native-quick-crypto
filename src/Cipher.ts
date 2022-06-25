@@ -12,6 +12,7 @@ import {
   validateObject,
   validateString,
   validateUint32,
+  validateInt32,
 } from './Utils';
 import { InternalCipher, RSAKeyVariant } from './NativeQuickCrypto/Cipher';
 // TODO(osp) re-enable type specific constructors
@@ -514,72 +515,72 @@ function internalGenerateKeyPair(
         validateUint32(publicExponent, 'options.publicExponent');
       }
 
-      // if (type === 'rsa') {
-      if (isAsync) {
-        NativeQuickCrypto.generateKeyPair(
-          RSAKeyVariant.kKeyVariantRSA_SSA_PKCS1_v1_5,
-          modulusLength,
-          publicExponent,
-          ...encoding
-        ).then((res) => {
-          callback?.(...res);
-        });
-        break;
-      } else {
-        return NativeQuickCrypto.generateKeyPairSync(
-          RSAKeyVariant.kKeyVariantRSA_SSA_PKCS1_v1_5,
-          modulusLength,
-          publicExponent,
-          ...encoding
-        );
+      if (type === 'rsa') {
+        if (isAsync) {
+          NativeQuickCrypto.generateKeyPair(
+            RSAKeyVariant.kKeyVariantRSA_SSA_PKCS1_v1_5,
+            modulusLength,
+            publicExponent,
+            ...encoding
+          ).then((res) => {
+            // console.warn('callback res', res);
+            callback?.(...res);
+          });
+          break;
+        } else {
+          return NativeQuickCrypto.generateKeyPairSync(
+            RSAKeyVariant.kKeyVariantRSA_SSA_PKCS1_v1_5,
+            modulusLength,
+            publicExponent,
+            ...encoding
+          );
+        }
       }
 
-      // }
-
-      // const { hash, mgf1Hash, hashAlgorithm, mgf1HashAlgorithm, saltLength } =
-      //   options!;
+      const { hash, mgf1Hash, hashAlgorithm, mgf1HashAlgorithm, saltLength } =
+        options!;
 
       // // We don't have a process object on RN
       // // const pendingDeprecation = getOptionValue('--pending-deprecation');
 
-      // if (saltLength !== undefined)
-      //   validateInt32(saltLength, 'options.saltLength', 0);
-      // if (hashAlgorithm !== undefined)
-      //   validateString(hashAlgorithm, 'options.hashAlgorithm');
-      // if (mgf1HashAlgorithm !== undefined)
-      //   validateString(mgf1HashAlgorithm, 'options.mgf1HashAlgorithm');
-      // if (hash !== undefined) {
-      //   // pendingDeprecation && process.emitWarning(
-      //   //   '"options.hash" is deprecated, ' +
-      //   //   'use "options.hashAlgorithm" instead.',
-      //   //   'DeprecationWarning',
-      //   //   'DEP0154');
-      //   validateString(hash, 'options.hash');
-      //   if (hashAlgorithm && hash !== hashAlgorithm) {
-      //     throw new Error(`Invalid Argument options.hash ${hash}`);
-      //   }
-      // }
-      // if (mgf1Hash !== undefined) {
-      //   // pendingDeprecation && process.emitWarning(
-      //   //   '"options.mgf1Hash" is deprecated, ' +
-      //   //   'use "options.mgf1HashAlgorithm" instead.',
-      //   //   'DeprecationWarning',
-      //   //   'DEP0154');
-      //   validateString(mgf1Hash, 'options.mgf1Hash');
-      //   if (mgf1HashAlgorithm && mgf1Hash !== mgf1HashAlgorithm) {
-      //     throw new Error(`Invalid Argument options.mgf1Hash ${mgf1Hash}`);
-      //   }
-      // }
+      if (saltLength !== undefined)
+        validateInt32(saltLength, 'options.saltLength', 0);
+      if (hashAlgorithm !== undefined)
+        validateString(hashAlgorithm, 'options.hashAlgorithm');
+      if (mgf1HashAlgorithm !== undefined)
+        validateString(mgf1HashAlgorithm, 'options.mgf1HashAlgorithm');
+      if (hash !== undefined) {
+        // pendingDeprecation && process.emitWarning(
+        //   '"options.hash" is deprecated, ' +
+        //   'use "options.hashAlgorithm" instead.',
+        //   'DeprecationWarning',
+        //   'DEP0154');
+        validateString(hash, 'options.hash');
+        if (hashAlgorithm && hash !== hashAlgorithm) {
+          throw new Error(`Invalid Argument options.hash ${hash}`);
+        }
+      }
+      if (mgf1Hash !== undefined) {
+        // pendingDeprecation && process.emitWarning(
+        //   '"options.mgf1Hash" is deprecated, ' +
+        //   'use "options.mgf1HashAlgorithm" instead.',
+        //   'DeprecationWarning',
+        //   'DEP0154');
+        validateString(mgf1Hash, 'options.mgf1Hash');
+        if (mgf1HashAlgorithm && mgf1Hash !== mgf1HashAlgorithm) {
+          throw new Error(`Invalid Argument options.mgf1Hash ${mgf1Hash}`);
+        }
+      }
 
-      // return new RsaKeyPairGenJob(
-      //   mode,
-      //   kKeyVariantRSA_PSS,
-      //   modulusLength,
-      //   publicExponent,
-      //   hashAlgorithm || hash,
-      //   mgf1HashAlgorithm || mgf1Hash,
-      //   saltLength,
-      //   ...encoding);
+      return NativeQuickCrypto.generateKeyPairSync(
+        RSAKeyVariant.kKeyVariantRSA_PSS,
+        modulusLength,
+        publicExponent,
+        hashAlgorithm || hash,
+        mgf1HashAlgorithm || mgf1Hash,
+        saltLength,
+        ...encoding
+      );
     }
     // case 'dsa': {
     //   validateObject(options, 'options');
@@ -676,7 +677,7 @@ function internalGenerateKeyPair(
     // Fall through
   }
   throw new Error(
-    `Invalid Argument options, currently not all encryption methods are supported in quick-crypto!`
+    `Invalid Argument options: ${type} scheme not supported. Currently not all encryption methods are supported in quick-crypto!`
   );
 }
 
