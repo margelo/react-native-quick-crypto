@@ -13,22 +13,22 @@ namespace margelo {
 
 namespace jsi = facebook::jsi;
 
-EVPKeyCtxPointer setup(RsaKeyPairGenConfig* params) {
+EVPKeyCtxPointer setup(std::shared_ptr<RsaKeyPairGenConfig> config) {
   EVPKeyCtxPointer ctx(EVP_PKEY_CTX_new_id(
-      params->variant == kKeyVariantRSA_PSS ? EVP_PKEY_RSA_PSS : EVP_PKEY_RSA,
+      config->variant == kKeyVariantRSA_PSS ? EVP_PKEY_RSA_PSS : EVP_PKEY_RSA,
       nullptr));
 
   if (EVP_PKEY_keygen_init(ctx.get()) <= 0) return EVPKeyCtxPointer();
 
-  if (EVP_PKEY_CTX_set_rsa_keygen_bits(ctx.get(), params->modulus_bits) <= 0) {
+  if (EVP_PKEY_CTX_set_rsa_keygen_bits(ctx.get(), config->modulus_bits) <= 0) {
     return EVPKeyCtxPointer();
   }
 
   // 0x10001 is the default RSA exponent.
-  if (params->exponent != 0x10001) {
+  if (config->exponent != 0x10001) {
     BignumPointer bn(BN_new());
     //    CHECK_NOT_NULL(bn.get());
-    BN_set_word(bn.get(), params->exponent);
+    BN_set_word(bn.get(), config->exponent);
     // EVP_CTX accepts ownership of bn on success.
     if (EVP_PKEY_CTX_set_rsa_keygen_pubexp(ctx.get(), bn.get()) <= 0) {
       return EVPKeyCtxPointer();
@@ -37,9 +37,9 @@ EVPKeyCtxPointer setup(RsaKeyPairGenConfig* params) {
     bn.release();
   }
 
-  if (params->variant == kKeyVariantRSA_PSS) {
-    if (params->md != nullptr &&
-        EVP_PKEY_CTX_set_rsa_pss_keygen_md(ctx.get(), params->md) <= 0) {
+  if (config->variant == kKeyVariantRSA_PSS) {
+    if (config->md != nullptr &&
+        EVP_PKEY_CTX_set_rsa_pss_keygen_md(ctx.get(), config->md) <= 0) {
       return EVPKeyCtxPointer();
     }
 
@@ -47,9 +47,9 @@ EVPKeyCtxPointer setup(RsaKeyPairGenConfig* params) {
     // OpenSSL 1.1.1 behaves as recommended by RFC 8017 and defaults the MGF1
     // hash algorithm to the RSA-PSS hashAlgorithm. Remove this code if the
     // behavior of OpenSSL 3 changes.
-    const EVP_MD* mgf1_md = params->mgf1_md;
-    if (mgf1_md == nullptr && params->md != nullptr) {
-      mgf1_md = params->md;
+    const EVP_MD* mgf1_md = config->mgf1_md;
+    if (mgf1_md == nullptr && config->md != nullptr) {
+      mgf1_md = config->md;
     }
 
     if (mgf1_md != nullptr &&
@@ -57,9 +57,9 @@ EVPKeyCtxPointer setup(RsaKeyPairGenConfig* params) {
       return EVPKeyCtxPointer();
     }
 
-    int saltlen = params->saltlen;
-    if (saltlen < 0 && params->md != nullptr) {
-      saltlen = EVP_MD_size(params->md);
+    int saltlen = config->saltlen;
+    if (saltlen < 0 && config->md != nullptr) {
+      saltlen = EVP_MD_size(config->md);
     }
 
     if (saltlen >= 0 &&
@@ -151,10 +151,10 @@ RsaKeyPairGenConfig prepareRsaKeyGenConfig(jsi::Runtime& runtime,
 }
 
 jsi::Value generateRSAKeyPair(jsi::Runtime& runtime,
-                              RsaKeyPairGenConfig& config) {
+                              std::shared_ptr<RsaKeyPairGenConfig> config) {
   CheckEntropy();
 
-  EVPKeyCtxPointer ctx = setup(&config);
+  EVPKeyCtxPointer ctx = setup(config);
 
   if (!ctx) {
     jsi::detail::throwJSError(runtime, "Error on key generation job");
@@ -168,12 +168,12 @@ jsi::Value generateRSAKeyPair(jsi::Runtime& runtime,
     throw new jsi::JSError(runtime, "Error generating key");
   }
 
-  config.key = ManagedEVPPKey(EVPKeyPointer(pkey));
+  config->key = ManagedEVPPKey(EVPKeyPointer(pkey));
 
   std::optional<jsi::Value> publicBuffer = ManagedEVPPKey::ToEncodedPublicKey(
-      runtime, std::move(config.key), config.public_key_encoding);
+      runtime, std::move(config->key), config->public_key_encoding);
   std::optional<jsi::Value> privateBuffer = ManagedEVPPKey::ToEncodedPrivateKey(
-      runtime, std::move(config.key), config.private_key_encoding);
+      runtime, std::move(config->key), config->private_key_encoding);
 
   if (!publicBuffer.has_value() || !privateBuffer.has_value()) {
     jsi::detail::throwJSError(runtime,

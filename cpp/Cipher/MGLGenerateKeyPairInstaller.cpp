@@ -35,7 +35,8 @@ FieldDefinition getGenerateKeyPairFieldDefinition(
     std::shared_ptr<DispatchQueue::dispatch_queue> workerQueue) {
   return buildPair(
       "generateKeyPair", JSIF([=]) {
-        RsaKeyPairGenConfig config = prepareRsaKeyGenConfig(runtime, arguments);
+        auto config = std::make_shared<RsaKeyPairGenConfig>(
+            prepareRsaKeyGenConfig(runtime, arguments));
         auto promiseConstructor =
             runtime.global().getPropertyAsFunction(runtime, "Promise");
 
@@ -43,8 +44,8 @@ FieldDefinition getGenerateKeyPairFieldDefinition(
             runtime,
             jsi::Function::createFromHostFunction(
                 runtime, jsi::PropNameID::forAscii(runtime, "executor"), 2,
-                [arguments, &jsCallInvoker, &config](
-                    jsi::Runtime &runtime, const jsi::Value &thisValue,
+                [arguments, &jsCallInvoker, config](
+                    jsi::Runtime &runtime, const jsi::Value &,
                     const jsi::Value *promiseArgs, size_t) -> jsi::Value {
                   auto resolve =
                       std::make_shared<jsi::Value>(runtime, promiseArgs[0]);
@@ -52,33 +53,41 @@ FieldDefinition getGenerateKeyPairFieldDefinition(
                       std::make_shared<jsi::Value>(runtime, promiseArgs[1]);
 
                   std::thread t([&runtime, arguments, resolve, reject,
-                                 &jsCallInvoker, &config]() {
+                                 jsCallInvoker, config]() {
                     m.lock();
                     try {
-                      auto result = generateRSAKeyPair(runtime, config);
-                      jsCallInvoker->invokeAsync(
-                          [&runtime, &result, &jsCallInvoker, resolve]() {
-                            resolve->asObject(runtime).asFunction(runtime).call(
-                                runtime, std::move(result));
-                          });
+                      // Here be a lot of concurrency moving
+                      // First take the object created by generate key pair and
+                      // turn it into an object to allow copy semantics. There
+                      // is maybe a way to make it work with smart pointers
+                      const auto result = generateRSAKeyPair(runtime, config)
+                                              .getObject(runtime);
+                      // Allocate a copy in the heap to prevent stack
+                      // de-allocation
+                      const auto *tempResult = new jsi::Value(runtime, result);
+                      jsCallInvoker->invokeAsync([&runtime, tempResult,
+                                                  jsCallInvoker, resolve]() {
+                        // Create a copy in this inner function stack
+                        // this will be really returned to the JS context
+                        const auto tempResult2 =
+                            jsi::Value(runtime, tempResult->getObject(runtime));
+                        resolve->asObject(runtime).asFunction(runtime).call(
+                            runtime, std::move(tempResult2));
+                        // Delete the heap copy we had
+                        delete tempResult;
+                      });
                     } catch (std::exception e) {
                       jsCallInvoker->invokeAsync(
                           [&runtime, &jsCallInvoker, reject]() {
                             reject->asObject(runtime).asFunction(runtime).call(
                                 runtime, jsi::String::createFromUtf8(
                                              runtime, "Error generating key"));
-                            //                             reject->asObject(runtime).asFunction(runtime).call(runtime,
-                            //                             jsi::JSError(runtime,
-                            //                             "Error generating key
-                            //                             pair"));
                           });
                     }
                     m.unlock();
                   });
 
                   t.detach();
-
-                  std::cout << "RETURN" << std::endl;
 
                   return {};
                 }));

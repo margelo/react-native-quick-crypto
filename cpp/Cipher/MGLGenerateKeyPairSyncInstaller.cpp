@@ -31,8 +31,9 @@ FieldDefinition getGenerateKeyPairSyncFieldDefinition(
     std::shared_ptr<DispatchQueue::dispatch_queue> workerQueue) {
   return buildPair(
       "generateKeyPairSync", JSIF([=]) {
-        auto config = prepareRsaKeyGenConfig(runtime, arguments);
-        return generateRSAKeyPair(runtime, config);
+        auto config = std::make_shared<RsaKeyPairGenConfig>(
+            prepareRsaKeyGenConfig(runtime, arguments));
+        return generateRSAKeyPair(runtime, std::move(config));
       });
 }
 }  // namespace margelo

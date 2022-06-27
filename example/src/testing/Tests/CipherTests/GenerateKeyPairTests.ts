@@ -101,7 +101,10 @@ export function registerGenerateKeyPairTests() {
           passphrase: 'top secret',
         },
       },
-      (_, publicKey, privateKey) => {
+      (err, publicKey, privateKey) => {
+        if (err) {
+          chai.assert.fail((err as any).toString());
+        }
         chai.expect(!!publicKey).to.equal(true);
         chai.expect(!!privateKey).to.equal(true);
 

@@ -14,7 +14,6 @@
 #include <optional>
 
 #include "MGLCipherKeys.h"
-#include "MGLRsa.h"
 #include "MGLUtils.h"
 
 namespace margelo {
@@ -31,10 +30,9 @@ enum RSAKeyVariant {
 // initialize the data in a generic manner this is to be later be used to
 // generate the keys in a thread-safe manner (I think) I'm however too dumb and
 // after ~4hrs I have given up on trying to replicate/extract the important
-// parts For now I'm doing the calculation directly in this method but as more
-// schemes/algorithms are supported some similar abstraction might be necessary
-// this struct is just a very simplified version meant to carry information
-// around
+// parts For now I'm storing a single config param, a generic abstractino is
+// necessary for more schemes. this struct is just a very simplified version
+// meant to carry information around
 struct RsaKeyPairGenConfig {
   PublicKeyEncodingConfig public_key_encoding;
   PrivateKeyEncodingConfig private_key_encoding;
@@ -55,7 +53,7 @@ RsaKeyPairGenConfig prepareRsaKeyGenConfig(jsi::Runtime& runtime,
                                            const jsi::Value* arguments);
 
 jsi::Value generateRSAKeyPair(jsi::Runtime& runtime,
-                              RsaKeyPairGenConfig& config);
+                              std::shared_ptr<RsaKeyPairGenConfig> config);
 
 }  // namespace margelo
 

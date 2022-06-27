@@ -522,11 +522,14 @@ function internalGenerateKeyPair(
             modulusLength,
             publicExponent,
             ...encoding
-          ).then((res) => {
-            // console.warn('callback res', res);
-            callback?.(...res);
-          });
-          break;
+          )
+            .then((res) => {
+              callback?.(...res);
+            })
+            .catch((err) => {
+              callback?.(err, undefined, undefined);
+            });
+          return;
         } else {
           return NativeQuickCrypto.generateKeyPairSync(
             RSAKeyVariant.kKeyVariantRSA_SSA_PKCS1_v1_5,
@@ -723,7 +726,7 @@ export function generateKeyPairSync(
     type,
     options,
     undefined
-  );
+  )!;
 
   return {
     publicKey,
