@@ -58,8 +58,7 @@ FieldDefinition getGenerateKeyPairFieldDefinition(
                     try {
                       // Here be a lot of concurrency moving
                       // First take the object created by generate key pair and
-                      // turn it into an object to allow copy semantics. There
-                      // is maybe a way to make it work with smart pointers
+                      // turn it into an object to allow copy semantics.
                       const auto result = generateRSAKeyPair(runtime, config)
                                               .getObject(runtime);
                       // Allocate a copy in the heap to prevent stack

@@ -1,9 +1,19 @@
 import chai from 'chai';
-// import { PrivateKey } from 'sscrypto/node';
-// import { Buffer } from '@craftzdog/react-native-buffer';
+import { Buffer } from '@craftzdog/react-native-buffer';
 import { it } from '../../MochaRNAdapter';
 import { QuickCrypto as crypto } from 'react-native-quick-crypto';
 // const crypto = require('crypto');
+
+// function testEncryptDecrypt(publicKey: any, privateKey: any) {
+//   const message = 'Hello Node.js world!';
+//   const plaintext = Buffer.from(message, 'utf8');
+//   for (const key of [publicKey, privateKey]) {
+//     const ciphertext = crypto.publicEncrypt(key, plaintext);
+//     console.warn('cipher text', ciphertext);
+//     // const received = crypto.privateDecrypt(privateKey, ciphertext);
+//     // assert.strictEqual(received.toString('utf8'), message);
+//   }
+// }
 
 export function registerPublicEncryptTests() {
   // it('sscrypto basic test', async () => {
@@ -30,27 +40,25 @@ export function registerPublicEncryptTests() {
   //     console.warn('error', e);
   //   }
   // });
-  it('generateKeyPair', (done) => {
-    crypto.generateKeyPair(
-      'rsa',
-      {
-        modulusLength: 4096,
-        publicKeyEncoding: {
-          type: 'spki',
-          format: 'pem',
-        },
-        privateKeyEncoding: {
-          type: 'pkcs8',
-          format: 'pem',
-          cipher: 'aes-256-cbc',
-          passphrase: 'top secret',
-        },
+
+  it('basic encrypt/decrypt', () => {
+    const { privateKey, publicKey } = crypto.generateKeyPairSync('rsa', {
+      publicExponent: 3,
+      modulusLength: 512,
+      publicKeyEncoding: {
+        type: 'pkcs1',
+        format: 'pem',
       },
-      (err, publicKey, privateKey) => {
-        console.warn(err, publicKey, privateKey);
-        chai.expect(true).to.equal(true);
-        done();
-      }
-    );
+      privateKeyEncoding: {
+        type: 'pkcs8',
+        format: 'pem',
+      },
+    });
+
+    // testEncryptDecrypt(publicKey, privateKey);
+    const message = 'Hello RN world!';
+    const plaintext = Buffer.from(message, 'utf8');
+    const ciphertext = crypto.publicEncrypt(publicKey, plaintext);
+    console.warn('ciphertext', ciphertext);
   });
 }
