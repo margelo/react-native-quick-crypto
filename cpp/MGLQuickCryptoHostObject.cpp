@@ -10,6 +10,8 @@
 #ifdef ANDROID
 #include "Cipher/MGLCreateCipherInstaller.h"
 #include "Cipher/MGLCreateDecipherInstaller.h"
+#include "Cipher/MGLPrivateDecryptInstaller.h"
+#include "Cipher/MGLPublicEncryptInstaller.h"
 #include "HMAC/MGLHmacInstaller.h"
 #include "Hash/MGLHashInstaller.h"
 #include "Random/MGLRandomHostObject.h"
@@ -22,9 +24,9 @@
 #include "MGLHashInstaller.h"
 #include "MGLHmacInstaller.h"
 #include "MGLPbkdf2HostObject.h"
+#include "MGLPrivateDecryptInstaller.h"
 #include "MGLPublicEncryptInstaller.h"
 #include "MGLRandomHostObject.h"
-
 #endif
 
 namespace margelo {
@@ -41,17 +43,21 @@ MGLQuickCryptoHostObject::MGLQuickCryptoHostObject(
   // HashInstaller
   this->fields.push_back(getHashFieldDefinition(jsCallInvoker, workerQueue));
 
-  // CreateCipherInstaller
+  // createCipher
   this->fields.push_back(
       getCreateCipherFieldDefinition(jsCallInvoker, workerQueue));
 
-  // CreateDecipherInstaller
+  // createDecipher
   this->fields.push_back(
       getCreateDecipherFieldDefinition(jsCallInvoker, workerQueue));
 
+  // privateDecrypt
+  this->fields.push_back(
+      getPrivateDecryptFieldDefinition(jsCallInvoker, workerQueue));
+
   // publicEncrypt
   this->fields.push_back(
-      getCreatePublicEncryptFieldDefinition(jsCallInvoker, workerQueue));
+      getPublicEncryptFieldDefinition(jsCallInvoker, workerQueue));
 
   // generateKeyPair
   this->fields.push_back(

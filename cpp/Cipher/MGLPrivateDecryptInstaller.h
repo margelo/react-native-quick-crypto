@@ -1,5 +1,12 @@
-#ifndef MGLPublicEncryptInstaller_h
-#define MGLPublicEncryptInstaller_h
+//
+//  MGLPrivateDecryptInstaller.h
+//  react-native-quick-crypto
+//
+//  Created by Oscar on 28.06.22.
+//
+
+#ifndef MGLPrivateDecryptInstaller_h
+#define MGLPrivateDecryptInstaller_h
 
 #include <jsi/jsi.h>
 #include <openssl/evp.h>
@@ -15,9 +22,9 @@
 namespace margelo {
 namespace jsi = facebook::jsi;
 
-FieldDefinition getPublicEncryptFieldDefinition(
+FieldDefinition getPrivateDecryptFieldDefinition(
     std::shared_ptr<react::CallInvoker> jsCallInvoker,
     std::shared_ptr<DispatchQueue::dispatch_queue> workerQueue);
 }  // namespace margelo
 
-#endif
+#endif /* MGLPrivateDecryptInstaller_h */

@@ -5,7 +5,7 @@
 //  Created by Oscar on 17.06.22.
 //
 
-#include "MGLPublicEncryptInstaller.h"
+#include "MGLPrivateDecryptInstaller.h"
 
 #include <iostream>
 #include <memory>
@@ -24,15 +24,15 @@
 #include "MGLTypedArray.h"
 #endif
 
-using namespace facebook;
-
 namespace margelo {
 
-FieldDefinition getPublicEncryptFieldDefinition(
+namespace jsi = facebook::jsi;
+
+FieldDefinition getPrivateDecryptFieldDefinition(
     std::shared_ptr<react::CallInvoker> jsCallInvoker,
     std::shared_ptr<DispatchQueue::dispatch_queue> workerQueue) {
   return buildPair(
-      "publicEncrypt", JSIF([=]) {
+      "privateDecrypt", JSIF([=]) {
         // TODO(osp) validation of params
         //    if (count < 1) {
         //      throw jsi::JSError(runtime, "Params object is required");
@@ -90,8 +90,8 @@ FieldDefinition getPublicEncryptFieldDefinition(
         }
 
         auto outBufferOptional =
-            MGLPublicCipher::Cipher<MGLPublicCipher::kPublic,
-                                    EVP_PKEY_encrypt_init, EVP_PKEY_encrypt>(
+            MGLPublicCipher::Cipher<MGLPublicCipher::kPrivate,
+                                    EVP_PKEY_decrypt_init, EVP_PKEY_decrypt>(
                 runtime, pkey, padding, digest, arguments[offset + 3], buf);
 
         if (!outBufferOptional.has_value()) {
