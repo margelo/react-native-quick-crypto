@@ -106,7 +106,7 @@ MGLCipherHostObject::MGLCipherHostObject(
 
   int key_len =
       EVP_BytesToKey(cipher, EVP_md5(), nullptr, cipher_key->data(runtime),
-                     cipher_key->size(runtime), 1, key, iv);
+                     static_cast<int>(cipher_key->size(runtime)), 1, key, iv);
 
   // TODO(osp) this looks like a macro, check if necessary
   // CHECK_NE(key_len, 0);

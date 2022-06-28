@@ -1,4 +1,5 @@
 #include <jsi/jsi.h>
+#include <openssl/evp.h>
 
 #include <memory>
 
