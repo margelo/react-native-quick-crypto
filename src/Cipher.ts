@@ -363,6 +363,7 @@ function rsaFunctionFor(
       padding?: any;
       oaepHash?: any;
       oaepLabel?: any;
+      passphrase?: string;
     },
     buffer: BinaryLike
   ) => {
@@ -377,6 +378,18 @@ function rsaFunctionFor(
     if (oaepLabel !== undefined)
       oaepLabel = binaryLikeToArrayBuffer(oaepLabel, encoding);
     buffer = binaryLikeToArrayBuffer(buffer, encoding);
+
+    console.warn(
+      'method called with',
+      data,
+      format,
+      type,
+      passphrase,
+      buffer,
+      padding,
+      oaepHash,
+      oaepLabel
+    );
 
     return method(
       data,

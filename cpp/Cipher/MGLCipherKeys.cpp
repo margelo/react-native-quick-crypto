@@ -18,6 +18,10 @@
 #include "MGLJSIUtils.h"
 #include "MGLTypedArray.h"
 #include "MGLUtils.h"
+#ifdef ANDROID
+#else
+#include "logs.h"
+#endif
 
 namespace margelo {
 namespace jsi = facebook::jsi;
@@ -181,8 +185,10 @@ ParseKeyResult ParsePrivateKey(EVPKeyPointer* pkey,
   const ByteSource* passphrase = config.passphrase_.get();
 
   if (config.format_ == kKeyFormatPEM) {
-    BIOPointer bio(BIO_new_mem_buf(key, key_len));
-    if (!bio) return ParseKeyResult::kParseKeyFailed;
+    BIOPointer bio(BIO_new_mem_buf(key, (int)key_len));
+    if (!bio) {
+      return ParseKeyResult::kParseKeyFailed;
+    }
 
     pkey->reset(PEM_read_bio_PrivateKey(bio.get(), nullptr, PasswordCallback,
                                         &passphrase));
@@ -198,7 +204,7 @@ ParseKeyResult ParsePrivateKey(EVPKeyPointer* pkey,
       const unsigned char* p = reinterpret_cast<const unsigned char*>(key);
       pkey->reset(d2i_PrivateKey(EVP_PKEY_RSA, nullptr, &p, key_len));
     } else if (config.type_.value() == kKeyEncodingPKCS8) {
-      BIOPointer bio(BIO_new_mem_buf(key, key_len));
+      BIOPointer bio(BIO_new_mem_buf(key, (int)key_len));
       if (!bio) return ParseKeyResult::kParseKeyFailed;
 
       if (IsEncryptedPrivateKeyInfo(reinterpret_cast<const unsigned char*>(key),
@@ -220,11 +226,16 @@ ParseKeyResult ParsePrivateKey(EVPKeyPointer* pkey,
   unsigned long err = ERR_peek_error();  // NOLINT(runtime/int)
   if (err != 0) pkey->reset();
 
-  if (*pkey) return ParseKeyResult::kParseKeyOk;
-  if (ERR_GET_LIB(err) == ERR_LIB_PEM &&
-      ERR_GET_REASON(err) == PEM_R_BAD_PASSWORD_READ) {
-    if (config.passphrase_.IsEmpty())
+  if (*pkey) {
+    return ParseKeyResult::kParseKeyOk;
+  }
+
+  if (ERR_GET_LIB(err) == ERR_LIB_PEM) {
+    auto reason = ERR_GET_REASON(err);
+    LOGW("OpenSSL error reading private key: %i", reason);
+    if (reason == PEM_R_BAD_PASSWORD_READ && config.passphrase_.IsEmpty()) {
       return ParseKeyResult::kParseKeyNeedPassphrase;
+    }
   }
   return ParseKeyResult::kParseKeyFailed;
 }

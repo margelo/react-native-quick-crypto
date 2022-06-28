@@ -114,7 +114,13 @@ function parseKeyFormatAndType(
 }
 
 function parseKeyEncoding(
-  enc: { key: any; encoding?: string; format?: string, cipher?: string, passphrase?: string },
+  enc: {
+    key: any;
+    encoding?: string;
+    format?: string;
+    cipher?: string;
+    passphrase?: string;
+  },
   keyType: string | undefined,
   isPublic: boolean | undefined,
   objName?: string
@@ -231,12 +237,20 @@ function prepareAsymmetricKey(
 }
 
 // TODO(osp) any here is a node KeyObject
-export function preparePrivateKey(key: BinaryLike | { key: any; encoding?: string; format?: any, padding?: number }) {
+export function preparePrivateKey(
+  key:
+    | BinaryLike
+    | { key: any; encoding?: string; format?: any; padding?: number }
+) {
   return prepareAsymmetricKey(key, KeyInputContext.kConsumePrivate);
 }
 
 // TODO(osp) any here is a node KeyObject
-export function preparePublicOrPrivateKey(key: BinaryLike | { key: any; encoding?: string; format?: any, padding?: number }) {
+export function preparePublicOrPrivateKey(
+  key:
+    | BinaryLike
+    | { key: any; encoding?: string; format?: any; padding?: number }
+) {
   return prepareAsymmetricKey(key, KeyInputContext.kConsumePublic);
 }
 
@@ -244,7 +258,13 @@ export function preparePublicOrPrivateKey(key: BinaryLike | { key: any; encoding
 // when this is used to parse an input encoding and must be a valid key type if
 // used to parse an output encoding.
 export function parsePublicKeyEncoding(
-  enc: { key: any; encoding?: string; format?: string, cipher?: string, passphrase?: string },
+  enc: {
+    key: any;
+    encoding?: string;
+    format?: string;
+    cipher?: string;
+    passphrase?: string;
+  },
   keyType: string | undefined,
   objName?: string
 ) {
@@ -254,8 +274,16 @@ export function parsePublicKeyEncoding(
 // Parses the private key encoding based on an object. keyType must be undefined
 // when this is used to parse an input encoding and must be a valid key type if
 // used to parse an output encoding.
-export function parsePrivateKeyEncoding(enc: { key: any; encoding?: string; format?: string, cipher?: string, passphrase?: string },
+export function parsePrivateKeyEncoding(
+  enc: {
+    key: any;
+    encoding?: string;
+    format?: string;
+    cipher?: string;
+    passphrase?: string;
+  },
   keyType: string | undefined,
-  objName?: string) {
+  objName?: string
+) {
   return parseKeyEncoding(enc, keyType, false, objName);
 }

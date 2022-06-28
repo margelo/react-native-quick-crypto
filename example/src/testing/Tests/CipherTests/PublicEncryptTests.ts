@@ -42,25 +42,45 @@ export function registerPublicEncryptTests() {
   // });
 
   it('basic encrypt/decrypt', () => {
+    // const { privateKey, publicKey } = crypto.generateKeyPairSync('rsa', {
+    //   publicExponent: 3,
+    //   modulusLength: 512,
+    //   publicKeyEncoding: {
+    //     type: 'pkcs1',
+    //     format: 'pem',
+    //   },
+    //   privateKeyEncoding: {
+    //     type: 'pkcs8',
+    //     format: 'pem',
+    //   },
+    // });
     const { privateKey, publicKey } = crypto.generateKeyPairSync('rsa', {
-      publicExponent: 3,
-      modulusLength: 512,
+      modulusLength: 4096,
       publicKeyEncoding: {
-        type: 'pkcs1',
+        type: 'spki',
         format: 'pem',
       },
       privateKeyEncoding: {
         type: 'pkcs8',
         format: 'pem',
+        cipher: 'aes-256-cbc',
+        passphrase: 'top secret',
       },
     });
 
+    // console.warn('PRIVATE KEY');
+    // console.warn(privateKey);
+    // console.warn('PUBLIC KEY');
+    // console.warn(publicKey);
     // testEncryptDecrypt(publicKey, privateKey);
     const message = 'Hello RN world!';
     const plaintext = Buffer.from(message, 'utf8');
     const ciphertext = crypto.publicEncrypt(publicKey, plaintext);
     // console.warn('ciphertext', ciphertext);
-    const decrypted = crypto.privateDecrypt(privateKey, ciphertext);
+    const decrypted = crypto.privateDecrypt(
+      { key: privateKey, passphrase: 'top secret' },
+      ciphertext
+    );
     console.log(decrypted.toString('utf-8'));
     // const decrypted = crypto.
   });
