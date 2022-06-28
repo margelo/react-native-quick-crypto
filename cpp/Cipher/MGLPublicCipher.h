@@ -83,7 +83,7 @@ std::optional<jsi::Value> MGLPublicCipher::Cipher(jsi::Runtime& runtime,
     if (label == nullptr) {
       throw new jsi::JSError(runtime, "Error openSSL memdump oaep label");
     }
-    //    CHECK_NOT_NULL(label);
+
     if (0 >= EVP_PKEY_CTX_set0_rsa_oaep_label(
                  ctx.get(), static_cast<unsigned char*>(label),
                  static_cast<int>(oaep_label_buffer.size(runtime)))) {
@@ -92,23 +92,23 @@ std::optional<jsi::Value> MGLPublicCipher::Cipher(jsi::Runtime& runtime,
     }
   }
 
-  // First pass without storing to get the output length
+  // First pass without storing to get the out_len
   size_t out_len = 0;
   if (EVP_PKEY_cipher(ctx.get(), nullptr, &out_len, data.data(runtime),
                       data.size(runtime)) <= 0) {
     return {};
   }
 
-  std::vector<unsigned char> outVec(out_len);
+  std::vector<unsigned char> out_vec(out_len);
 
-  if (EVP_PKEY_cipher(ctx.get(), outVec.data(), &out_len, data.data(runtime),
+  if (EVP_PKEY_cipher(ctx.get(), out_vec.data(), &out_len, data.data(runtime),
                       data.size(runtime)) <= 0) {
     return {};
   }
 
   MGLTypedArray<MGLTypedArrayKind::Uint8Array> outBuffer(runtime, out_len);
 
-  outBuffer.update(runtime, outVec);
+  outBuffer.update(runtime, out_vec);
 
   return outBuffer.getArrayBuffer(runtime);
 }
