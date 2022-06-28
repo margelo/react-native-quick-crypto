@@ -7,6 +7,7 @@ import type {
   CreateCipherMethod,
   CreateDecipherMethod,
   PublicEncryptMethod,
+  PrivateDecryptMethod,
   GenerateKeyPairMethod,
   GenerateKeyPairSyncMethod,
 } from './Cipher';
@@ -20,6 +21,7 @@ interface NativeQuickCryptoSpec {
   createDecipher: CreateDecipherMethod;
   publicEncrypt: PublicEncryptMethod;
   publicDecrypt: PublicEncryptMethod;
+  privateDecrypt: PrivateDecryptMethod;
   generateKeyPair: GenerateKeyPairMethod;
   generateKeyPairSync: GenerateKeyPairSyncMethod;
 }

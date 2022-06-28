@@ -37,4 +37,5 @@ const encrypted = crypto.publicEncrypt({
   padding: crypto.constants.RSA_PKCS1_OAEP_PADDING
 }, Buffer.from(plaintext))
 
-console.log(encrypted);
+const decrypted = crypto.privateDecrypt(privateKey, encrypted)
+console.log(decrypted.toString('utf-8'));

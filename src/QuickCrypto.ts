@@ -7,6 +7,7 @@ import {
   createDecipheriv,
   publicEncrypt,
   publicDecrypt,
+  privateDecrypt,
   generateKeyPair,
   generateKeyPairSync,
 } from './Cipher';
@@ -25,6 +26,7 @@ export const QuickCrypto = {
   createDecipheriv,
   publicEncrypt,
   publicDecrypt,
+  privateDecrypt,
   generateKeyPair,
   generateKeyPairSync,
   constants,

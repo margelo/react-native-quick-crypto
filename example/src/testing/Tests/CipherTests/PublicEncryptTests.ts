@@ -1,4 +1,4 @@
-import chai from 'chai';
+// import chai from 'chai';
 import { Buffer } from '@craftzdog/react-native-buffer';
 import { it } from '../../MochaRNAdapter';
 import { QuickCrypto as crypto } from 'react-native-quick-crypto';
@@ -59,6 +59,9 @@ export function registerPublicEncryptTests() {
     const message = 'Hello RN world!';
     const plaintext = Buffer.from(message, 'utf8');
     const ciphertext = crypto.publicEncrypt(publicKey, plaintext);
-    console.warn('ciphertext', ciphertext);
+    // console.warn('ciphertext', ciphertext);
+    const decrypted = crypto.privateDecrypt(privateKey, ciphertext);
+    console.log(decrypted.toString('utf-8'));
+    // const decrypted = crypto.
   });
 }

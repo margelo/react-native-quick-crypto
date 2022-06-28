@@ -110,7 +110,7 @@ std::optional<jsi::Value> MGLPublicCipher::Cipher(jsi::Runtime& runtime,
 
   outBuffer.update(runtime, out_vec);
 
-  return outBuffer.getArrayBuffer(runtime);
+  return outBuffer.getBuffer(runtime);
 }
 
 }  // namespace margelo

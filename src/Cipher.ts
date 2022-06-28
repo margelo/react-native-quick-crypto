@@ -43,6 +43,7 @@ const createInternalCipher = NativeQuickCrypto.createCipher;
 const createInternalDecipher = NativeQuickCrypto.createDecipher;
 const _publicEncrypt = NativeQuickCrypto.publicEncrypt;
 const _publicDecrypt = NativeQuickCrypto.publicDecrypt;
+const _privateDecrypt = NativeQuickCrypto.privateDecrypt;
 
 function getUIntOption(options: Record<string, any>, key: string) {
   let value;
@@ -350,7 +351,7 @@ function rsaFunctionFor(
     padding: number,
     oaepHash: any,
     oaepLabel: any
-  ) => ArrayBuffer,
+  ) => Buffer,
   defaultPadding: number,
   keyType: 'public' | 'private'
 ) {
@@ -399,6 +400,13 @@ export const publicDecrypt = rsaFunctionFor(
   _publicDecrypt,
   constants.RSA_PKCS1_PADDING,
   'public'
+);
+// const privateEncrypt = rsaFunctionFor(_privateEncrypt, constants.RSA_PKCS1_PADDING,
+//   'private');
+export const privateDecrypt = rsaFunctionFor(
+  _privateDecrypt,
+  constants.RSA_PKCS1_OAEP_PADDING,
+  'private'
 );
 
 //                                   _       _  __          _____      _
