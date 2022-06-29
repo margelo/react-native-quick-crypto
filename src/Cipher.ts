@@ -532,20 +532,36 @@ function internalGenerateKeyPair(
             publicExponent,
             ...encoding
           )
-            .then((res) => {
-              callback?.(...res);
+            .then(([err, publicKey, privateKey]) => {
+              if (typeof publicKey === 'object') {
+                publicKey = Buffer.from(publicKey);
+              }
+              if (typeof privateKey === 'object') {
+                privateKey = Buffer.from(privateKey);
+              }
+              callback?.(err, publicKey, privateKey);
             })
             .catch((err) => {
               callback?.(err, undefined, undefined);
             });
           return;
         } else {
-          return NativeQuickCrypto.generateKeyPairSync(
-            RSAKeyVariant.kKeyVariantRSA_SSA_PKCS1_v1_5,
-            modulusLength,
-            publicExponent,
-            ...encoding
-          );
+          let [err, publicKey, privateKey] =
+            NativeQuickCrypto.generateKeyPairSync(
+              RSAKeyVariant.kKeyVariantRSA_SSA_PKCS1_v1_5,
+              modulusLength,
+              publicExponent,
+              ...encoding
+            );
+
+          if (typeof publicKey === 'object') {
+            publicKey = Buffer.from(publicKey);
+          }
+          if (typeof privateKey === 'object') {
+            privateKey = Buffer.from(privateKey);
+          }
+
+          return [err, publicKey, privateKey];
         }
       }
 

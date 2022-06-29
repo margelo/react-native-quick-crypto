@@ -245,27 +245,28 @@ ParseKeyResult ParsePrivateKey(EVPKeyPointer* pkey,
   return ParseKeyResult::kParseKeyFailed;
 }
 
-std::optional<jsi::Value> BIOToStringOrBuffer(jsi::Runtime& runtime, BIO* bio,
-                                              PKFormatType format) {
+std::optional<StringOrBuffer> BIOToStringOrBuffer(BIO* bio,
+                                                  PKFormatType format) {
   BUF_MEM* bptr;
   BIO_get_mem_ptr(bio, &bptr);
   if (format == kKeyFormatPEM) {
     // PEM is an ASCII format, so we will return it as a string.
-    return jsi::String::createFromUtf8(
-        runtime, reinterpret_cast<const uint8_t*>(bptr->data), bptr->length);
+    return StringOrBuffer{
+        .isString = true,
+        .stringValue = std::string(bptr->data, bptr->length),
+    };
   } else {
-    //    CHECK_EQ(format, kKeyFormatDER);
+    // CHECK_EQ(format, kKeyFormatDER);
     // DER is binary, return it as a buffer.
-
-    MGLTypedArray<MGLTypedArrayKind::Uint8Array> out(runtime, bptr->length);
     std::vector<unsigned char> vec(bptr->data, bptr->data + bptr->length);
-    out.update(runtime, vec);
-
-    return out.getArrayBuffer(runtime);
+    return StringOrBuffer{
+        .isString = false,
+        .vectorValue = vec,
+    };
   }
 }
 
-std::optional<jsi::Value> WritePrivateKey(
+std::optional<StringOrBuffer> WritePrivateKey(
     jsi::Runtime& runtime, EVP_PKEY* pkey,
     const PrivateKeyEncodingConfig& config) {
   BIOPointer bio(BIO_new(BIO_s_mem()));
@@ -348,11 +349,10 @@ std::optional<jsi::Value> WritePrivateKey(
 
   if (err) {
     jsi::detail::throwJSError(runtime, "Failed to encode private key");
-    //    ThrowCryptoError(env, ERR_get_error(), "Failed to encode private
-    //    key");
-    return std::nullopt;
+    return {};
   }
-  return BIOToStringOrBuffer(runtime, bio.get(), config.format_);
+
+  return BIOToStringOrBuffer(bio.get(), config.format_);
 }
 
 bool WritePublicKeyInner(EVP_PKEY* pkey, const BIOPointer& bio,
@@ -382,7 +382,7 @@ bool WritePublicKeyInner(EVP_PKEY* pkey, const BIOPointer& bio,
   }
 }
 
-std::optional<jsi::Value> WritePublicKey(
+std::optional<StringOrBuffer> WritePublicKey(
     jsi::Runtime& runtime, EVP_PKEY* pkey,
     const PublicKeyEncodingConfig& config) {
   BIOPointer bio(BIO_new(BIO_s_mem()));
@@ -392,7 +392,8 @@ std::optional<jsi::Value> WritePublicKey(
     jsi::detail::throwJSError(runtime, "Failed to encode public key");
     return std::nullopt;
   }
-  return BIOToStringOrBuffer(runtime, bio.get(), config.format_);
+
+  return BIOToStringOrBuffer(bio.get(), config.format_);
 }
 
 // Maybe<bool> ExportJWKSecretKey(
@@ -598,10 +599,10 @@ inline std::optional<bool> Tristate(std::optional<bool> b) {
   return b.has_value() && b.value() ? std::optional<bool>{true} : std::nullopt;
 }
 
-std::optional<jsi::Value> ManagedEVPPKey::ToEncodedPublicKey(
+std::optional<StringOrBuffer> ManagedEVPPKey::ToEncodedPublicKey(
     jsi::Runtime& runtime, ManagedEVPPKey key,
     const PublicKeyEncodingConfig& config) {
-  if (!key) return std::nullopt;
+  if (!key) return {};
   // TODO(osp) ignore all this for now
   //   if (config.output_key_object_) {
   //     // Note that this has the downside of containing sensitive data of the
@@ -619,10 +620,10 @@ std::optional<jsi::Value> ManagedEVPPKey::ToEncodedPublicKey(
   return WritePublicKey(runtime, key.get(), config);
 }
 
-std::optional<jsi::Value> ManagedEVPPKey::ToEncodedPrivateKey(
+std::optional<StringOrBuffer> ManagedEVPPKey::ToEncodedPrivateKey(
     jsi::Runtime& runtime, ManagedEVPPKey key,
     const PrivateKeyEncodingConfig& config) {
-  if (!key) return std::nullopt;
+  if (!key) return {};
   //   if (config.output_key_object_) {
   //     std::shared_ptr<KeyObjectData> data =
   //     KeyObjectData::CreateAsymmetric(kKeyTypePrivate, std::move(key));

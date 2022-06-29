@@ -8,7 +8,7 @@ export function testLib(
   addTestResult: (testResult: RowItemType) => void,
   testRegistrators: Array<() => void> = []
 ) {
-  console.log('setting up mocha');
+  // console.log('setting up mocha');
 
   const {
     EVENT_RUN_BEGIN,
@@ -67,7 +67,6 @@ export function testLib(
   testRegistrators.forEach((register) => {
     register();
   });
-
   runner.run();
 
   return () => {

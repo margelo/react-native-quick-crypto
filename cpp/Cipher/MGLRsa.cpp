@@ -150,8 +150,8 @@ RsaKeyPairGenConfig prepareRsaKeyGenConfig(jsi::Runtime& runtime,
   return config;
 }
 
-jsi::Value generateRSAKeyPair(jsi::Runtime& runtime,
-                              std::shared_ptr<RsaKeyPairGenConfig> config) {
+std::pair<StringOrBuffer, StringOrBuffer> generateRSAKeyPair(
+    jsi::Runtime& runtime, std::shared_ptr<RsaKeyPairGenConfig> config) {
   CheckEntropy();
 
   EVPKeyCtxPointer ctx = setup(config);
@@ -170,19 +170,19 @@ jsi::Value generateRSAKeyPair(jsi::Runtime& runtime,
 
   config->key = ManagedEVPPKey(EVPKeyPointer(pkey));
 
-  std::optional<jsi::Value> publicBuffer = ManagedEVPPKey::ToEncodedPublicKey(
-      runtime, std::move(config->key), config->public_key_encoding);
-  std::optional<jsi::Value> privateBuffer = ManagedEVPPKey::ToEncodedPrivateKey(
-      runtime, std::move(config->key), config->private_key_encoding);
+  std::optional<StringOrBuffer> publicBuffer =
+      ManagedEVPPKey::ToEncodedPublicKey(runtime, std::move(config->key),
+                                         config->public_key_encoding);
+  std::optional<StringOrBuffer> privateBuffer =
+      ManagedEVPPKey::ToEncodedPrivateKey(runtime, std::move(config->key),
+                                          config->private_key_encoding);
 
   if (!publicBuffer.has_value() || !privateBuffer.has_value()) {
     jsi::detail::throwJSError(runtime,
                               "Failed to encode public and/or private key");
   }
 
-  return jsi::Array::createWithElements(runtime, jsi::Value::undefined(),
-                                        publicBuffer.value(),
-                                        privateBuffer.value());
+  return std::make_pair(publicBuffer.value(), privateBuffer.value());
 }
 
 }  // namespace margelo

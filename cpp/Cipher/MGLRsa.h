@@ -12,6 +12,7 @@
 
 #include <memory>
 #include <optional>
+#include <utility>
 
 #include "MGLCipherKeys.h"
 #include "MGLUtils.h"
@@ -52,8 +53,8 @@ struct RsaKeyPairGenConfig {
 RsaKeyPairGenConfig prepareRsaKeyGenConfig(jsi::Runtime& runtime,
                                            const jsi::Value* arguments);
 
-jsi::Value generateRSAKeyPair(jsi::Runtime& runtime,
-                              std::shared_ptr<RsaKeyPairGenConfig> config);
+std::pair<StringOrBuffer, StringOrBuffer> generateRSAKeyPair(
+    jsi::Runtime& runtime, std::shared_ptr<RsaKeyPairGenConfig> config);
 
 }  // namespace margelo
 

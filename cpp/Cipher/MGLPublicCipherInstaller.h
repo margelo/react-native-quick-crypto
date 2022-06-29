@@ -100,16 +100,6 @@ FieldDefinition getPublicCipherFieldDefinition(
                                     EVP_PKEY_cipher>(
                 runtime, pkey, padding, digest, arguments[offset + 3], buf);
 
-        //                     MGLPublicCipher::Cipher<MGLPublicCipher::kPrivate,
-        //                     EVP_PKEY_decrypt_init, EVP_PKEY_decrypt>(
-        //                                                              runtime,
-        //                                                              pkey,
-        //                                                              padding,
-        //                                                              digest,
-        //                                                              arguments[offset
-        //                                                              + 3],
-        //                                                              buf);
-
         if (!out.has_value()) {
           jsi::detail::throwJSError(runtime, "Failed to decrypt");
           throw new jsi::JSError(runtime, "Failed to decrypt");

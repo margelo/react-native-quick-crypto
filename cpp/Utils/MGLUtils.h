@@ -24,11 +24,19 @@
 
 #include <memory>
 #include <optional>
+#include <string>
 #include <utility>
+#include <vector>
 
 namespace margelo {
 
 namespace jsi = facebook::jsi;
+
+struct StringOrBuffer {
+  bool isString;
+  std::string stringValue;
+  std::vector<unsigned char> vectorValue;
+};
 
 template <typename T, void (*function)(T*)>
 struct FunctionDeleter {

@@ -17,8 +17,10 @@
 
 #ifdef ANDROID
 #include "JSIUtils/MGLJSIMacros.h"
+#include "JSIUtils/MGLTypedArray.h"
 #else
 #include "MGLJSIMacros.h"
+#include "MGLTypedArray.h"
 #endif
 
 using namespace facebook;
@@ -56,24 +58,32 @@ FieldDefinition getGenerateKeyPairFieldDefinition(
                                  jsCallInvoker, config]() {
                     m.lock();
                     try {
-                      // Here be a lot of concurrency moving
-                      // First take the object created by generate key pair and
-                      // turn it into an object to allow copy semantics.
-                      const auto result = generateRSAKeyPair(runtime, config)
-                                              .getObject(runtime);
-                      // Allocate a copy in the heap to prevent stack
-                      // de-allocation
-                      const auto *tempResult = new jsi::Value(runtime, result);
-                      jsCallInvoker->invokeAsync([&runtime, tempResult,
-                                                  jsCallInvoker, resolve]() {
-                        // Create a copy in this inner function stack
-                        // this will be really returned to the JS context
-                        const auto tempResult2 =
-                            jsi::Value(runtime, tempResult->getObject(runtime));
-                        resolve->asObject(runtime).asFunction(runtime).call(
-                            runtime, std::move(tempResult2));
-                        // Delete the heap copy we had
-                        delete tempResult;
+                      const auto keys = generateRSAKeyPair(runtime, config);
+                      jsCallInvoker->invokeAsync([&runtime, keys, jsCallInvoker,
+                                                  resolve]() {
+                        if (keys.first.isString && keys.second.isString) {
+                          auto publicKey = jsi::String::createFromUtf8(
+                              runtime, keys.first.stringValue);
+                          auto privateKey = jsi::String::createFromUtf8(
+                              runtime, keys.second.stringValue);
+                          auto res = jsi::Array::createWithElements(
+                              runtime, jsi::Value::undefined(), publicKey,
+                              privateKey);
+                          resolve->asObject(runtime).asFunction(runtime).call(
+                              runtime, std::move(res));
+                        } else {
+                          MGLTypedArray<MGLTypedArrayKind::Uint8Array>
+                              publicKeyBuffer(runtime, keys.first.vectorValue);
+                          MGLTypedArray<MGLTypedArrayKind::Uint8Array>
+                              privateKeyBuffer(runtime,
+                                               keys.second.vectorValue);
+
+                          auto res = jsi::Array::createWithElements(
+                              runtime, jsi::Value::undefined(), publicKeyBuffer,
+                              privateKeyBuffer);
+                          resolve->asObject(runtime).asFunction(runtime).call(
+                              runtime, std::move(res));
+                        }
                       });
                     } catch (std::exception e) {
                       jsCallInvoker->invokeAsync(

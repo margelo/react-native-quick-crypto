@@ -2,6 +2,7 @@ import 'mocha';
 import type * as MochaTypes from 'mocha';
 
 export const rootSuite = new Mocha.Suite('') as MochaTypes.Suite;
+rootSuite.timeout(10 * 1000);
 
 let mochaContext = rootSuite;
 let only = false;
@@ -18,7 +19,9 @@ export const it = (
   f: MochaTypes.Func | MochaTypes.AsyncFunc
 ): void => {
   if (!only) {
-    mochaContext.addTest(new Mocha.Test(name, f) as MochaTypes.Test);
+    const test = new Mocha.Test(name, f);
+    test.timeout(20000);
+    mochaContext.addTest(test);
   }
 };
 
@@ -27,7 +30,9 @@ export const itOnly = (
   f: MochaTypes.Func | MochaTypes.AsyncFunc
 ): void => {
   clearTests();
-  mochaContext.addTest(new Mocha.Test(name, f) as MochaTypes.Test);
+  const test = new Mocha.Test(name, f);
+  test.timeout(20000);
+  mochaContext.addTest(test);
   only = true;
 };
 

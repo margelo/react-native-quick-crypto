@@ -104,11 +104,11 @@ class ManagedEVPPKey {
   //                                            args, unsigned int* offset, bool
   //                                            allow_key_object);
 
-  static std::optional<jsi::Value> ToEncodedPublicKey(
+  static std::optional<StringOrBuffer> ToEncodedPublicKey(
       jsi::Runtime& runtime, ManagedEVPPKey key,
       const PublicKeyEncodingConfig& config);
 
-  static std::optional<jsi::Value> ToEncodedPrivateKey(
+  static std::optional<StringOrBuffer> ToEncodedPrivateKey(
       jsi::Runtime& runtime, ManagedEVPPKey key,
       const PrivateKeyEncodingConfig& config);
 
