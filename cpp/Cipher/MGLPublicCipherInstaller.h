@@ -1,15 +1,20 @@
 //
-//  MGLPublicEncryptInstaller.cpp
-//  react-native-fast-crypto
+//  MGLPrivateDecryptInstaller.h
+//  react-native-quick-crypto
 //
-//  Created by Oscar on 17.06.22.
+//  Created by Oscar on 28.06.22.
 //
 
-#include "MGLPrivateDecryptInstaller.h"
+#ifndef MGLPublicCipherInstaller_h
+#define MGLPublicCipherInstaller_h
+
+#include <jsi/jsi.h>
+#include <openssl/evp.h>
 
 #include <iostream>
 #include <memory>
 #include <optional>
+#include <string>
 #include <utility>
 #include <vector>
 
@@ -18,34 +23,34 @@
 
 #ifdef ANDROID
 #include "JSIUtils/MGLJSIUtils.h"
+#include "JSIUtils/MGLSmartHostObject.h"
 #include "JSIUtils/MGLTypedArray.h"
 #else
 #include "MGLJSIUtils.h"
+#include "MGLSmartHostObject.h"
 #include "MGLTypedArray.h"
-#include "logs.h"
 #endif
 
 namespace margelo {
-
 namespace jsi = facebook::jsi;
 
-FieldDefinition getPrivateDecryptFieldDefinition(
-    std::shared_ptr<react::CallInvoker> jsCallInvoker,
+// "publicEncrypt", "publicDecrypt", "privateEncrypt", "privateDecrypt" all use
+// the same key extraction logic, only vary in the final openSSL call, so this
+// is a template that accepts and incoming template function, think of it as a
+// weird lambda before real lambdas Because this is a template, the
+// implementation needs to be in this header to prevent linker failure
+template <MGLPublicCipher::Operation operation,
+          MGLPublicCipher::EVP_PKEY_cipher_init_t EVP_PKEY_cipher_init,
+          MGLPublicCipher::EVP_PKEY_cipher_t EVP_PKEY_cipher>
+FieldDefinition getPublicCipherFieldDefinition(
+    std::string name, std::shared_ptr<react::CallInvoker> jsCallInvoker,
     std::shared_ptr<DispatchQueue::dispatch_queue> workerQueue) {
   return buildPair(
-      "privateDecrypt", JSIF([=]) {
-        // TODO(osp) validation of params
-        //    if (count < 1) {
-        //      throw jsi::JSError(runtime, "Params object is required");
-        //    }
-        //
-        //    if (!arguments[0].isObject()) {
-        //      throw jsi::JSError(runtime, "createCipher: Params needs to be an
-        //      object");
-        //    }
-        //
-        //    auto params = arguments[0].getObject(runtime);
-
+      name, JSIF([=]) {
+        // there is a variable amount of parameters passed depending on the
+        // scheme therefore making param validation on this level makes little
+        // sense everything should be done on JS, which makes this a bit unsafe
+        // but it's acceptable
         unsigned int offset = 0;
 
         ManagedEVPPKey pkey = ManagedEVPPKey::GetPublicOrPrivateKeyFromJs(
@@ -91,16 +96,28 @@ FieldDefinition getPrivateDecryptFieldDefinition(
         }
 
         std::optional<jsi::Value> out =
-            MGLPublicCipher::Cipher<MGLPublicCipher::kPrivate,
-                                    EVP_PKEY_decrypt_init, EVP_PKEY_decrypt>(
+            MGLPublicCipher::Cipher<operation, EVP_PKEY_cipher_init,
+                                    EVP_PKEY_cipher>(
                 runtime, pkey, padding, digest, arguments[offset + 3], buf);
 
+        //                     MGLPublicCipher::Cipher<MGLPublicCipher::kPrivate,
+        //                     EVP_PKEY_decrypt_init, EVP_PKEY_decrypt>(
+        //                                                              runtime,
+        //                                                              pkey,
+        //                                                              padding,
+        //                                                              digest,
+        //                                                              arguments[offset
+        //                                                              + 3],
+        //                                                              buf);
+
         if (!out.has_value()) {
-          jsi::detail::throwJSError(runtime, "Failed to encrypt");
-          throw new jsi::JSError(runtime, "Failed to encrypt");
+          jsi::detail::throwJSError(runtime, "Failed to decrypt");
+          throw new jsi::JSError(runtime, "Failed to decrypt");
         }
 
         return out.value().getObject(runtime);
       });
 }
 }  // namespace margelo
+
+#endif /* MGLPublicCipherInstaller_h */

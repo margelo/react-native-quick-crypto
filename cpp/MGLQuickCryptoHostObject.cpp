@@ -5,13 +5,14 @@
 #include <jsi/jsi.h>
 
 #include <memory>
+#include <string>
 #include <vector>
 
 #ifdef ANDROID
 #include "Cipher/MGLCreateCipherInstaller.h"
 #include "Cipher/MGLCreateDecipherInstaller.h"
-#include "Cipher/MGLPrivateDecryptInstaller.h"
-#include "Cipher/MGLPublicEncryptInstaller.h"
+#include "Cipher/MGLPublicCipher.h"
+#include "Cipher/MGLPublicCipherInstaller.h"
 #include "HMAC/MGLHmacInstaller.h"
 #include "Hash/MGLHashInstaller.h"
 #include "Random/MGLRandomHostObject.h"
@@ -24,8 +25,8 @@
 #include "MGLHashInstaller.h"
 #include "MGLHmacInstaller.h"
 #include "MGLPbkdf2HostObject.h"
-#include "MGLPrivateDecryptInstaller.h"
-#include "MGLPublicEncryptInstaller.h"
+#include "MGLPublicCipher.h"
+#include "MGLPublicCipherInstaller.h"
 #include "MGLRandomHostObject.h"
 #endif
 
@@ -51,13 +52,30 @@ MGLQuickCryptoHostObject::MGLQuickCryptoHostObject(
   this->fields.push_back(
       getCreateDecipherFieldDefinition(jsCallInvoker, workerQueue));
 
-  // privateDecrypt
-  this->fields.push_back(
-      getPrivateDecryptFieldDefinition(jsCallInvoker, workerQueue));
-
   // publicEncrypt
   this->fields.push_back(
-      getPublicEncryptFieldDefinition(jsCallInvoker, workerQueue));
+      getPublicCipherFieldDefinition<MGLPublicCipher::kPublic,
+                                     EVP_PKEY_encrypt_init, EVP_PKEY_encrypt>(
+          "publicEncrypt", jsCallInvoker, workerQueue));
+
+  // privateDecrypt
+  this->fields.push_back(
+      getPublicCipherFieldDefinition<MGLPublicCipher::kPrivate,
+                                     EVP_PKEY_decrypt_init, EVP_PKEY_decrypt>(
+          "privateDecrypt", jsCallInvoker, workerQueue));
+
+  // privateEncrypt
+  this->fields.push_back(
+      getPublicCipherFieldDefinition<MGLPublicCipher::kPrivate,
+                                     EVP_PKEY_sign_init, EVP_PKEY_sign>(
+          "privateEncrypt", jsCallInvoker, workerQueue));
+
+  // publicDecrypt
+  this->fields.push_back(
+      getPublicCipherFieldDefinition<MGLPublicCipher::kPublic,
+                                     EVP_PKEY_verify_recover_init,
+                                     EVP_PKEY_verify_recover>(
+          "publicDecrypt", jsCallInvoker, workerQueue));
 
   // generateKeyPair
   this->fields.push_back(
