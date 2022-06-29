@@ -179,7 +179,9 @@ function parseKeyEncoding(
 }
 
 function prepareAsymmetricKey(
-  key: BinaryLike | { key: any; encoding?: string; format?: any },
+  key:
+    | BinaryLike
+    | { key: any; encoding?: string; format?: any; passphrase?: string },
   ctx: KeyInputContext
 ): {
   format: KFormatType;
@@ -240,7 +242,13 @@ function prepareAsymmetricKey(
 export function preparePrivateKey(
   key:
     | BinaryLike
-    | { key: any; encoding?: string; format?: any; padding?: number }
+    | {
+        key: any;
+        encoding?: string;
+        format?: any;
+        padding?: number;
+        passphrase?: string;
+      }
 ) {
   return prepareAsymmetricKey(key, KeyInputContext.kConsumePrivate);
 }

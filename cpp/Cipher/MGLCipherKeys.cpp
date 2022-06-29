@@ -224,6 +224,13 @@ ParseKeyResult ParsePrivateKey(EVPKeyPointer* pkey,
 
   // OpenSSL can fail to parse the key but still return a non-null pointer.
   unsigned long err = ERR_peek_error();  // NOLINT(runtime/int)
+  auto reason = ERR_GET_REASON(err);
+  // Per OpenSSL documentation PEM_R_NO_START_LINE signals all PEM certs have
+  // been consumed and is a harmless error
+  if (reason == PEM_R_NO_START_LINE && *pkey) {
+    return ParseKeyResult::kParseKeyOk;
+  }
+
   if (err != 0) pkey->reset();
 
   if (*pkey) {
@@ -231,8 +238,6 @@ ParseKeyResult ParsePrivateKey(EVPKeyPointer* pkey,
   }
 
   if (ERR_GET_LIB(err) == ERR_LIB_PEM) {
-    auto reason = ERR_GET_REASON(err);
-    LOGW("OpenSSL error reading private key: %i", reason);
     if (reason == PEM_R_BAD_PASSWORD_READ && config.passphrase_.IsEmpty()) {
       return ParseKeyResult::kParseKeyNeedPassphrase;
     }

@@ -22,6 +22,7 @@
 #else
 #include "MGLJSIUtils.h"
 #include "MGLTypedArray.h"
+#include "logs.h"
 #endif
 
 namespace margelo {
@@ -89,17 +90,17 @@ FieldDefinition getPrivateDecryptFieldDefinition(
           }
         }
 
-        auto outBufferOptional =
+        std::optional<jsi::Value> out =
             MGLPublicCipher::Cipher<MGLPublicCipher::kPrivate,
                                     EVP_PKEY_decrypt_init, EVP_PKEY_decrypt>(
                 runtime, pkey, padding, digest, arguments[offset + 3], buf);
 
-        if (!outBufferOptional.has_value()) {
+        if (!out.has_value()) {
           jsi::detail::throwJSError(runtime, "Failed to encrypt");
           throw new jsi::JSError(runtime, "Failed to encrypt");
         }
 
-        return std::move(outBufferOptional.value());
+        return out.value().getObject(runtime);
       });
 }
 }  // namespace margelo

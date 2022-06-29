@@ -21,6 +21,7 @@
 #else
 #include "MGLJSIUtils.h"
 #include "MGLTypedArray.h"
+#include "logs.h"
 #endif
 
 namespace margelo {
@@ -106,13 +107,14 @@ std::optional<jsi::Value> MGLPublicCipher::Cipher(jsi::Runtime& runtime,
     return {};
   }
 
+  // trim unnecessary data
+  std::vector<unsigned char> helper_vec(out_vec.data(),
+                                        out_vec.data() + out_len);
   MGLTypedArray<MGLTypedArrayKind::Uint8Array> outBuffer(runtime, out_len);
+  outBuffer.update(runtime, helper_vec);
 
-  outBuffer.update(runtime, out_vec);
-
-  return outBuffer.getBuffer(runtime);
+  return outBuffer;
 }
-
 }  // namespace margelo
 
 #endif /* MGLPublicCipher_h */

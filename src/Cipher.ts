@@ -29,7 +29,7 @@ import { InternalCipher, RSAKeyVariant } from './NativeQuickCrypto/Cipher';
 //   // CipherOCBOptions,
 // } from 'crypto'; // Node crypto typings
 import { StringDecoder } from 'string_decoder';
-import type { Buffer } from '@craftzdog/react-native-buffer';
+import { Buffer } from '@craftzdog/react-native-buffer';
 import { Buffer as SBuffer } from 'safe-buffer';
 import { constants } from './constants';
 import {
@@ -379,8 +379,7 @@ function rsaFunctionFor(
       oaepLabel = binaryLikeToArrayBuffer(oaepLabel, encoding);
     buffer = binaryLikeToArrayBuffer(buffer, encoding);
 
-    console.warn(
-      'method called with',
+    const rawRes = method(
       data,
       format,
       type,
@@ -391,16 +390,7 @@ function rsaFunctionFor(
       oaepLabel
     );
 
-    return method(
-      data,
-      format,
-      type,
-      passphrase,
-      buffer,
-      padding,
-      oaepHash,
-      oaepLabel
-    );
+    return Buffer.from(rawRes);
   };
 }
 
