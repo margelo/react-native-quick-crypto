@@ -2,18 +2,6 @@ import chai from 'chai';
 import { Buffer } from '@craftzdog/react-native-buffer';
 import { it } from '../../MochaRNAdapter';
 import { QuickCrypto as crypto } from 'react-native-quick-crypto';
-// const crypto = require('crypto');
-
-// function testEncryptDecrypt(publicKey: any, privateKey: any) {
-//   const message = 'Hello Node.js world!';
-//   const plaintext = Buffer.from(message, 'utf8');
-//   for (const key of [publicKey, privateKey]) {
-//     const ciphertext = crypto.publicEncrypt(key, plaintext);
-//     console.warn('cipher text', ciphertext);
-//     // const received = crypto.privateDecrypt(privateKey, ciphertext);
-//     // assert.strictEqual(received.toString('utf8'), message);
-//   }
-// }
 
 export function registerPublicEncryptTests() {
   // it('sscrypto basic test', async () => {
@@ -41,19 +29,29 @@ export function registerPublicEncryptTests() {
   //   }
   // });
 
-  it('basic encrypt/decrypt', () => {
-    // const { privateKey, publicKey } = crypto.generateKeyPairSync('rsa', {
-    //   publicExponent: 3,
-    //   modulusLength: 512,
-    //   publicKeyEncoding: {
-    //     type: 'pkcs1',
-    //     format: 'pem',
-    //   },
-    //   privateKeyEncoding: {
-    //     type: 'pkcs8',
-    //     format: 'pem',
-    //   },
-    // });
+  it('publicEncrypt/privateDecrypt', () => {
+    const { privateKey, publicKey } = crypto.generateKeyPairSync('rsa', {
+      publicExponent: 3,
+      modulusLength: 512,
+      publicKeyEncoding: {
+        type: 'pkcs1',
+        format: 'pem',
+      },
+      privateKeyEncoding: {
+        type: 'pkcs8',
+        format: 'pem',
+      },
+    });
+
+    const message = 'Hello RN world!';
+    const plaintext = Buffer.from(message, 'utf8');
+    const ciphertext = crypto.publicEncrypt(publicKey, plaintext);
+    const decrypted = crypto.privateDecrypt(privateKey, ciphertext);
+
+    chai.expect(decrypted.toString('utf-8')).to.equal(message);
+  });
+
+  it('publicEncrypt/privateDecrypt with passphrase', () => {
     const { privateKey, publicKey } = crypto.generateKeyPairSync('rsa', {
       modulusLength: 4096,
       publicKeyEncoding: {
@@ -68,29 +66,14 @@ export function registerPublicEncryptTests() {
       },
     });
 
-    // console.warn('PRIVATE KEY');
-    // console.warn(privateKey);
-    // console.warn('PUBLIC KEY');
-    // console.warn(publicKey);
-    // testEncryptDecrypt(publicKey, privateKey);
     const message = 'Hello RN world!';
     const plaintext = Buffer.from(message, 'utf8');
     const ciphertext = crypto.publicEncrypt(publicKey, plaintext);
-    // console.warn('ciphertext', ciphertext);
     const decrypted = crypto.privateDecrypt(
       { key: privateKey, passphrase: 'top secret' },
       ciphertext
     );
-    // console.warn(`decrypted is buffer: ${Buffer.isBuffer(decrypted)}`);
 
-    // debugger;
-    // console.log(
-    //   'decrypted',
-    //   typeof decrypted,
-    //   Buffer.from(decrypted).toString('utf8'),
-    //   decrypted.toString('utf-8')
-    // );
     chai.expect(decrypted.toString('utf-8')).to.equal(message);
-    // const decrypted = crypto.
   });
 }
