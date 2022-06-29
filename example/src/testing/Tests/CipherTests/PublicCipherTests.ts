@@ -4,6 +4,7 @@ import { it } from '../../MochaRNAdapter';
 import { QuickCrypto as crypto } from 'react-native-quick-crypto';
 
 export function registerPublicCipherTests() {
+  // We need to monkey patch sscrypto to use all the crypto functions from quick-crypto
   // it('sscrypto basic test', async () => {
   //   // crypto.publicEncrypt(
   //   //   {
