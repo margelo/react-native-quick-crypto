@@ -1,6 +1,5 @@
 import chai from 'chai';
-// import { PrivateKey } from 'sscrypto/node';
-import { Buffer } from '@craftzdog/react-native-buffer';
+import type { Buffer } from '@craftzdog/react-native-buffer';
 import { it } from '../../MochaRNAdapter';
 import { QuickCrypto as crypto } from 'react-native-quick-crypto';
 
