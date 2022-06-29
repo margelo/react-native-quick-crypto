@@ -8,7 +8,7 @@ import { registerCipherTests1 } from './Tests/CipherTests/CipherTestFirst';
 import { registerCipherTests2 } from './Tests/CipherTests/CipherTestSecond';
 import { registerConstantsTest } from './Tests/ConstantsTest/ConstantsTest';
 import chai from 'chai';
-import { registerPublicEncryptTests } from './Tests/CipherTests/PublicEncryptTests';
+import { registerPublicCipherTests } from './Tests/CipherTests/PublicCipherTests';
 import { registerGenerateKeyPairTests } from './Tests/CipherTests/GenerateKeyPairTests';
 
 export const TEST_LIST: Array<TestItemType> = [
@@ -63,9 +63,9 @@ export const TEST_LIST: Array<TestItemType> = [
     registrator: registerConstantsTest,
   },
   {
-    description: 'publicEncrypt',
+    description: 'public cipher',
     value: false,
-    registrator: registerPublicEncryptTests,
+    registrator: registerPublicCipherTests,
   },
   {
     description: 'generateKeyPair',

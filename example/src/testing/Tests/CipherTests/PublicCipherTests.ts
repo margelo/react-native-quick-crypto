@@ -3,7 +3,7 @@ import { Buffer } from '@craftzdog/react-native-buffer';
 import { it } from '../../MochaRNAdapter';
 import { QuickCrypto as crypto } from 'react-native-quick-crypto';
 
-export function registerPublicEncryptTests() {
+export function registerPublicCipherTests() {
   // it('sscrypto basic test', async () => {
   //   // crypto.publicEncrypt(
   //   //   {
