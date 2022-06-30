@@ -39,6 +39,9 @@ import {
   preparePublicOrPrivateKey,
 } from './keys';
 
+// make sure that nextTick is there
+global.process.nextTick = setImmediate;
+
 const createInternalCipher = NativeQuickCrypto.createCipher;
 const createInternalDecipher = NativeQuickCrypto.createDecipher;
 const _publicEncrypt = NativeQuickCrypto.publicEncrypt;

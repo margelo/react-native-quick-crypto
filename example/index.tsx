@@ -8,13 +8,8 @@ crypto.generateKeyPair =
 import { Buffer } from 'buffer';
 global.Buffer = Buffer;
 // @ts-ignore
-global.process = {
-  cwd: () => 'sxsx',
-  env: { NODE_ENV: 'production' },
-  nextTick: () => {
-    return null;
-  },
-};
+global.process.cwd = () => 'sxsx';
+global.process.env = { NODE_ENV: 'production' };
 // @ts-ignore
 global.location = {};
 

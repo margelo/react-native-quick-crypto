@@ -1,5 +1,5 @@
-import {QuickCrypto} from './QuickCrypto';
+import { QuickCrypto } from './QuickCrypto';
 
-export * from './QuickCrypto'
+export * from './QuickCrypto';
 
-export default QuickCrypto
+export default QuickCrypto;
