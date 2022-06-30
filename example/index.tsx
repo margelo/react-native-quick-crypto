@@ -11,6 +11,9 @@ global.Buffer = Buffer;
 global.process = {
   cwd: () => 'sxsx',
   env: { NODE_ENV: 'production' },
+  nextTick: () => {
+    return null;
+  },
 };
 // @ts-ignore
 global.location = {};

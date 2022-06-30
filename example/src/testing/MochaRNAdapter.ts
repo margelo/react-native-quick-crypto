@@ -20,7 +20,6 @@ export const it = (
 ): void => {
   if (!only) {
     const test = new Mocha.Test(name, f);
-    test.timeout(20000);
     mochaContext.addTest(test);
   }
 };
@@ -31,7 +30,6 @@ export const itOnly = (
 ): void => {
   clearTests();
   const test = new Mocha.Test(name, f);
-  test.timeout(20000);
   mochaContext.addTest(test);
   only = true;
 };
