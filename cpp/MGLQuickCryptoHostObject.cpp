@@ -5,11 +5,14 @@
 #include <jsi/jsi.h>
 
 #include <memory>
+#include <string>
 #include <vector>
 
 #ifdef ANDROID
 #include "Cipher/MGLCreateCipherInstaller.h"
 #include "Cipher/MGLCreateDecipherInstaller.h"
+#include "Cipher/MGLPublicCipher.h"
+#include "Cipher/MGLPublicCipherInstaller.h"
 #include "HMAC/MGLHmacInstaller.h"
 #include "Hash/MGLHashInstaller.h"
 #include "Random/MGLRandomHostObject.h"
@@ -17,11 +20,14 @@
 #else
 #include "MGLCreateCipherInstaller.h"
 #include "MGLCreateDecipherInstaller.h"
+#include "MGLGenerateKeyPairInstaller.h"
+#include "MGLGenerateKeyPairSyncInstaller.h"
 #include "MGLHashInstaller.h"
 #include "MGLHmacInstaller.h"
 #include "MGLPbkdf2HostObject.h"
+#include "MGLPublicCipher.h"
+#include "MGLPublicCipherInstaller.h"
 #include "MGLRandomHostObject.h"
-
 #endif
 
 namespace margelo {
@@ -38,13 +44,46 @@ MGLQuickCryptoHostObject::MGLQuickCryptoHostObject(
   // HashInstaller
   this->fields.push_back(getHashFieldDefinition(jsCallInvoker, workerQueue));
 
-  // CreateCipherInstaller
+  // createCipher
   this->fields.push_back(
       getCreateCipherFieldDefinition(jsCallInvoker, workerQueue));
 
-  // CreateDecipherInstaller
+  // createDecipher
   this->fields.push_back(
       getCreateDecipherFieldDefinition(jsCallInvoker, workerQueue));
+
+  // publicEncrypt
+  this->fields.push_back(
+      getPublicCipherFieldDefinition<MGLPublicCipher::kPublic,
+                                     EVP_PKEY_encrypt_init, EVP_PKEY_encrypt>(
+          "publicEncrypt", jsCallInvoker, workerQueue));
+
+  // privateDecrypt
+  this->fields.push_back(
+      getPublicCipherFieldDefinition<MGLPublicCipher::kPrivate,
+                                     EVP_PKEY_decrypt_init, EVP_PKEY_decrypt>(
+          "privateDecrypt", jsCallInvoker, workerQueue));
+
+  // privateEncrypt
+  this->fields.push_back(
+      getPublicCipherFieldDefinition<MGLPublicCipher::kPrivate,
+                                     EVP_PKEY_sign_init, EVP_PKEY_sign>(
+          "privateEncrypt", jsCallInvoker, workerQueue));
+
+  // publicDecrypt
+  this->fields.push_back(
+      getPublicCipherFieldDefinition<MGLPublicCipher::kPublic,
+                                     EVP_PKEY_verify_recover_init,
+                                     EVP_PKEY_verify_recover>(
+          "publicDecrypt", jsCallInvoker, workerQueue));
+
+  // generateKeyPair
+  this->fields.push_back(
+      getGenerateKeyPairFieldDefinition(jsCallInvoker, workerQueue));
+
+  // generateKeyPairSync
+  this->fields.push_back(
+      getGenerateKeyPairSyncFieldDefinition(jsCallInvoker, workerQueue));
 
   // Pbkdf2HostObject
   this->fields.push_back(JSI_VALUE("pbkdf2", {

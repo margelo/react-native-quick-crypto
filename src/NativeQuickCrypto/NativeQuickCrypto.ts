@@ -3,7 +3,14 @@ import type { CreateHmacMethod } from './hmac';
 import type { CreateHashMethod } from './hash';
 import type { Pbkdf2Object } from './pbkdf2';
 import type { RandomObject } from './random';
-import type { CreateCipherMethod, CreateDecipherMethod } from './Cipher';
+import type {
+  CreateCipherMethod,
+  CreateDecipherMethod,
+  PublicEncryptMethod,
+  PrivateDecryptMethod,
+  GenerateKeyPairMethod,
+  GenerateKeyPairSyncMethod,
+} from './Cipher';
 
 interface NativeQuickCryptoSpec {
   createHmac: CreateHmacMethod;
@@ -12,6 +19,11 @@ interface NativeQuickCryptoSpec {
   createHash: CreateHashMethod;
   createCipher: CreateCipherMethod;
   createDecipher: CreateDecipherMethod;
+  publicEncrypt: PublicEncryptMethod;
+  publicDecrypt: PublicEncryptMethod;
+  privateDecrypt: PrivateDecryptMethod;
+  generateKeyPair: GenerateKeyPairMethod;
+  generateKeyPairSync: GenerateKeyPairSyncMethod;
 }
 
 // global func declaration for JSI functions

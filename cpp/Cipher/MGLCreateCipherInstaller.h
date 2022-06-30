@@ -1,3 +1,6 @@
+#ifndef MGLCreateCipherInstaller_h
+#define MGLCreateCipherInstaller_h
+
 #include <jsi/jsi.h>
 
 #include <memory>
@@ -15,3 +18,5 @@ FieldDefinition getCreateCipherFieldDefinition(
     std::shared_ptr<react::CallInvoker> jsCallInvoker,
     std::shared_ptr<DispatchQueue::dispatch_queue> workerQueue);
 }  // namespace margelo
+
+#endif
