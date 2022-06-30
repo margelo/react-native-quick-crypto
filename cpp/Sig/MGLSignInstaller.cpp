@@ -6,6 +6,8 @@
 //
 
 #include "MGLSignInstaller.h"
+
+#include "MGLSignHostObjects.h"
 #ifdef ANDROID
 #include "JSIUtils/MGLJSIMacros.h"
 #else
@@ -20,8 +22,9 @@ FieldDefinition getSignFieldDefinition(
     std::shared_ptr<DispatchQueue::dispatch_queue> workerQueue) {
   return buildPair(
       "createSign", JSIF([=]) {
-        LOGW("createSign called!");
-        return {};
+        auto hostObject =
+            std::make_shared<MGLSignHostObject>(jsCallInvoker, workerQueue);
+        return jsi::Object::createFromHostObject(runtime, hostObject);
       });
 }
 

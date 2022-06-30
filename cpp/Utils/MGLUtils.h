@@ -53,6 +53,7 @@ using EVPKeyCtxPointer = DeleteFnPtr<EVP_PKEY_CTX, EVP_PKEY_CTX_free>;
 using EVPKeyPointer = DeleteFnPtr<EVP_PKEY, EVP_PKEY_free>;
 using BignumPointer = DeleteFnPtr<BIGNUM, BN_free>;
 using RSAPointer = DeleteFnPtr<RSA, RSA_free>;
+using EVPMDPointer = DeleteFnPtr<EVP_MD_CTX, EVP_MD_CTX_free>;
 
 template <typename T>
 class NonCopyableMaybe {

@@ -43,6 +43,6 @@ import { PrivateKey } from 'sscrypto/node';
 export function registerSignTests() {
   // We need to monkey patch sscrypto to use all the crypto functions from quick-crypto
   it('basic sign test', async () => {
-    const sign = crypto.createSign('blah', {});
+    const sign = crypto.createSign('SHA256', {});
   });
 }
