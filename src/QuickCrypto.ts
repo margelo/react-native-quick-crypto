@@ -11,6 +11,7 @@ import {
   generateKeyPair,
   generateKeyPairSync,
 } from './Cipher';
+import { createSign } from './sig';
 import { createHmac } from './Hmac';
 import { createHash } from './Hash';
 import { constants } from './constants';
@@ -29,6 +30,7 @@ export const QuickCrypto = {
   privateDecrypt,
   generateKeyPair,
   generateKeyPairSync,
+  createSign,
   constants,
   ...pbkdf2,
   ...random,

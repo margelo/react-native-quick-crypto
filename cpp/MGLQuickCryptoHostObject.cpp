@@ -16,6 +16,7 @@
 #include "HMAC/MGLHmacInstaller.h"
 #include "Hash/MGLHashInstaller.h"
 #include "Random/MGLRandomHostObject.h"
+#include "Sig/MGLSignInstaller.h"
 #include "fastpbkdf2/MGLPbkdf2HostObject.h"
 #else
 #include "MGLCreateCipherInstaller.h"
@@ -28,6 +29,7 @@
 #include "MGLPublicCipher.h"
 #include "MGLPublicCipherInstaller.h"
 #include "MGLRandomHostObject.h"
+#include "MGLSignInstaller.h"
 #endif
 
 namespace margelo {
@@ -98,6 +100,9 @@ MGLQuickCryptoHostObject::MGLQuickCryptoHostObject(
         std::make_shared<MGLRandomHostObject>(jsCallInvoker, workerQueue);
     return jsi::Object::createFromHostObject(runtime, hostObject);
   }));
+
+  // createSign
+  this->fields.push_back(getSignFieldDefinition(jsCallInvoker, workerQueue));
 }
 
 }  // namespace margelo

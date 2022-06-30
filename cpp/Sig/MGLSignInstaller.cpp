@@ -10,15 +10,19 @@
 #include "JSIUtils/MGLJSIMacros.h"
 #else
 #include "MGLJSIMacros.h"
+#include "logs.h"
 #endif
 
 namespace margelo {
 
-FieldDefinition getCreateSignFieldDefinition(
+FieldDefinition getSignFieldDefinition(
     std::shared_ptr<react::CallInvoker> jsCallInvoker,
     std::shared_ptr<DispatchQueue::dispatch_queue> workerQueue) {
   return buildPair(
-      "createSign", JSIF([=]) { return {}; });
+      "createSign", JSIF([=]) {
+        LOGW("createSign called!");
+        return {};
+      });
 }
 
 }  // namespace margelo

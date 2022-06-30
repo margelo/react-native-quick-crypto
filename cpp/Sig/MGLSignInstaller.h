@@ -21,7 +21,7 @@
 namespace margelo {
 namespace jsi = facebook::jsi;
 
-FieldDefinition getCreateSignFieldDefinition(
+FieldDefinition getSignFieldDefinition(
     std::shared_ptr<react::CallInvoker> jsCallInvoker,
     std::shared_ptr<DispatchQueue::dispatch_queue> workerQueue);
 }  // namespace margelo
