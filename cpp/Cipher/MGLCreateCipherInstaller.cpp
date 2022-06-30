@@ -3,13 +3,14 @@
 
 #include <memory>
 
-#include "MGLCipherHostObject.h"
-
 #ifdef ANDROID
 #include "JSIUtils/MGLJSIMacros.h"
 #else
 #include "MGLJSIMacros.h"
 #endif
+#include "MGLCipherHostObject.h"
+
+using namespace facebook;
 
 namespace margelo {
 
@@ -19,22 +20,18 @@ FieldDefinition getCreateCipherFieldDefinition(
   return buildPair(
       "createCipher", JSIF([=]) {
         if (count < 1) {
-          jsi::detail::throwJSError(runtime, "Params object is required");
-          return {};
+          throw jsi::JSError(runtime, "Params object is required");
         }
 
         if (!arguments[0].isObject()) {
-          jsi::detail::throwJSError(
-              runtime, "createCipher: Params needs to be an object");
-          return {};
+          throw jsi::JSError(runtime,
+                             "createCipher: Params needs to be an object");
         }
 
         auto params = arguments[0].getObject(runtime);
 
         if (!params.hasProperty(runtime, "cipher_type")) {
-          jsi::detail::throwJSError(runtime,
-                                    "createCipher: cipher_type is required");
-          return {};
+          throw jsi::JSError(runtime, "createCipher: cipher_type is required");
         }
 
         auto cipher_type = params.getProperty(runtime, "cipher_type")
@@ -42,9 +39,7 @@ FieldDefinition getCreateCipherFieldDefinition(
                                .utf8(runtime);
 
         if (!params.hasProperty(runtime, "cipher_key")) {
-          jsi::detail::throwJSError(runtime,
-                                    "createCipher: cipher_key is required");
-          return {};
+          throw jsi::JSError(runtime, "createCipher: cipher_key is required");
         }
 
         auto cipher_key = params.getProperty(runtime, "cipher_key")
@@ -55,8 +50,8 @@ FieldDefinition getCreateCipherFieldDefinition(
           throw jsi::JSError(runtime, "createCipher: auth_tag_len is required");
         }
 
-        unsigned int auth_tag_len = static_cast<int>(
-            params.getProperty(runtime, "auth_tag_len").getNumber());
+        unsigned auto int auth_tag_len =
+            (int)params.getProperty(runtime, "auth_tag_len").getNumber();
 
         if (params.hasProperty(runtime, "iv") &&
             !params.getProperty(runtime, "iv").isNull() &&
@@ -79,5 +74,4 @@ FieldDefinition getCreateCipherFieldDefinition(
         }
       });
 }
-
 }  // namespace margelo
