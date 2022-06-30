@@ -4,8 +4,10 @@
 #include "MGLCipherHostObject.h"
 
 #ifdef ANDROID
+#include "JSIUtils/MGLJSIUtils.h"
 #include "JSIUtils/MGLTypedArray.h"
 #else
+#include "MGLJSIUtils.h"
 #include "MGLTypedArray.h"
 #endif
 
@@ -445,62 +447,76 @@ void MGLCipherHostObject::installMethods() {
   }));
 
   // setAuthTag
-  this->fields.push_back(HOST_LAMBDA("setAuthTag", {
-    if (count != 1 || !arguments[0].isObject() ||
-        !arguments[0].asObject(runtime).isArrayBuffer(runtime)) {
-      throw jsi::JSError(
-          runtime, "cipher.setAuthTag requires an ArrayBuffer tag argument");
-    }
+  this->fields.push_back(buildPair(
+      "setAuthTag", JSIF([=]) {
+        if (count != 1 || !arguments[0].isObject() ||
+            !arguments[0].asObject(runtime).isArrayBuffer(runtime)) {
+          jsi::detail::throwJSError(
+              runtime,
+              "cipher.setAuthTag requires an ArrayBuffer tag argument");
+          throw jsi::JSError(
+              runtime,
+              "cipher.setAuthTag requires an ArrayBuffer tag argument");
+        }
 
-    if (!ctx_ || !IsAuthenticatedMode() || isCipher_ ||
-        auth_tag_state_ != kAuthTagUnknown) {
-      return false;
-    }
+        if (!ctx_ || !IsAuthenticatedMode() || isCipher_ ||
+            auth_tag_state_ != kAuthTagUnknown) {
+          return false;
+        }
 
-    auto authTagArrayBuffer =
-        arguments[0].asObject(runtime).getArrayBuffer(runtime);
-    const unsigned char *data = authTagArrayBuffer.data(runtime);
-    auto tag_len = authTagArrayBuffer.length(runtime);
+        auto authTagArrayBuffer =
+            arguments[0].asObject(runtime).getArrayBuffer(runtime);
+        if (!CheckSizeInt32(runtime, authTagArrayBuffer)) {
+          jsi::detail::throwJSError(
+              runtime,
+              "cipher.setAuthTag requires an ArrayBuffer tag argument");
+          throw jsi::JSError(
+              runtime,
+              "cipher.setAuthTag requires an ArrayBuffer tag argument");
+        }
+        //    const unsigned char *data = authTagArrayBuffer.data(runtime);
+        unsigned int tag_len =
+            static_cast<unsigned int>(authTagArrayBuffer.length(runtime));
 
-    //    ArrayBufferOrViewContents<char> auth_tag(args[0]);
-    // TODO(osp) implement this check
-    //    if (UNLIKELY(!auth_tag.CheckSizeInt32()))
-    //      return THROW_ERR_OUT_OF_RANGE(env, "buffer is too big");
+        //    ArrayBufferOrViewContents<char> auth_tag(args[0]);
+        // TODO(osp) implement this check
+        //    if (UNLIKELY(!auth_tag.CheckSizeInt32()))
+        //      return THROW_ERR_OUT_OF_RANGE(env, "buffer is too big");
 
-    //    unsigned int tag_len = auth_tag.size();
+        //        unsigned int tag_len = auth_tag.size();
 
-    const int mode = EVP_CIPHER_CTX_mode(ctx_);
-    bool is_valid;
-    if (mode == EVP_CIPH_GCM_MODE) {
-      // Restrict GCM tag lengths according to NIST 800-38d, page 9.
-      is_valid =
-          (auth_tag_len_ == kNoAuthTagLength || auth_tag_len_ == tag_len) &&
-          IsValidGCMTagLength(tag_len);
-    } else {
-      // At this point, the tag length is already known and must match the
-      // length of the given authentication tag.
-      // TODO(osp) add CHECK here
-      IsSupportedAuthenticatedMode(ctx_);
-      //      CHECK_NE(cipher->auth_tag_len_, kNoAuthTagLength);
-      is_valid = auth_tag_len_ == tag_len;
-    }
+        const int mode = EVP_CIPHER_CTX_mode(ctx_);
+        bool is_valid;
+        if (mode == EVP_CIPH_GCM_MODE) {
+          // Restrict GCM tag lengths according to NIST 800-38d, page 9.
+          is_valid =
+              (auth_tag_len_ == kNoAuthTagLength || auth_tag_len_ == tag_len) &&
+              IsValidGCMTagLength(tag_len);
+        } else {
+          // At this point, the tag length is already known and must match the
+          // length of the given authentication tag.
+          // TODO(osp) add CHECK here
+          IsSupportedAuthenticatedMode(ctx_);
+          //      CHECK_NE(cipher->auth_tag_len_, kNoAuthTagLength);
+          is_valid = auth_tag_len_ == tag_len;
+        }
 
-    if (!is_valid) {
-      throw jsi::JSError(runtime,
-                         "Invalid authentication tag length: " + tag_len);
-      //      return THROW_ERR_CRYPTO_INVALID_AUTH_TAG(
-      //              env, "Invalid authentication tag length: %u", tag_len);
-    }
+        if (!is_valid) {
+          jsi::detail::throwJSError(
+              runtime, "Invalid authentication tag length" + tag_len);
+          throw jsi::JSError(runtime,
+                             "Invalid authentication tag length: " + tag_len);
+        }
 
-    auth_tag_len_ = tag_len;
-    auth_tag_state_ = kAuthTagKnown;
-    //    CHECK_LE(cipher->auth_tag_len_, sizeof(cipher->auth_tag_));
+        auth_tag_len_ = tag_len;
+        auth_tag_state_ = kAuthTagKnown;
+        //    CHECK_LE(cipher->auth_tag_len_, sizeof(cipher->auth_tag_));
 
-    memset(auth_tag_, 0, sizeof(auth_tag_));
-    CopyTo(runtime, &authTagArrayBuffer, auth_tag_, auth_tag_len_);
+        memset(auth_tag_, 0, sizeof(auth_tag_));
+        CopyTo(runtime, &authTagArrayBuffer, auth_tag_, auth_tag_len_);
 
-    return true;
-  }));
+        return true;
+      }));
 }
 
 bool MGLCipherHostObject::MaybePassAuthTagToOpenSSL() {
