@@ -571,11 +571,6 @@ EVP_PKEY* ManagedEVPPKey::get() const { return pkey_.get(); }
 //                                               == 1) ? len : 0;
 //}
 //
-//// This maps true to Just<bool>(true) and false to Nothing<bool>().
-// static inline Maybe<bool> Tristate(bool b) {
-//   return b ? Just(true) : Nothing<bool>();
-// }
-//
 // Maybe<bool> ExportJWKInner(Environment* env,
 //                            std::shared_ptr<KeyObjectData> key,
 //                            Local<Value> result,
@@ -595,10 +590,6 @@ EVP_PKEY* ManagedEVPPKey::get() const { return pkey_.get(); }
 // }
 //
 
-inline std::optional<bool> Tristate(std::optional<bool> b) {
-  return b.has_value() && b.value() ? std::optional<bool>{true} : std::nullopt;
-}
-
 std::optional<StringOrBuffer> ManagedEVPPKey::ToEncodedPublicKey(
     jsi::Runtime& runtime, ManagedEVPPKey key,
     const PublicKeyEncodingConfig& config) {
@@ -609,6 +600,7 @@ std::optional<StringOrBuffer> ManagedEVPPKey::ToEncodedPublicKey(
   //     // private key.
   //     std::shared_ptr<KeyObjectData> data =
   //     KeyObjectData::CreateAsymmetric(kKeyTypePublic, std::move(key));
+  // TODO(osp) Replaced tristate for std::optional
   //     return Tristate(KeyObjectHandle::Create(env, data).ToLocal(out));
   //   } else if (config.format_ == kKeyFormatJWK) {
   //     std::shared_ptr<KeyObjectData> data =
@@ -627,6 +619,7 @@ std::optional<StringOrBuffer> ManagedEVPPKey::ToEncodedPrivateKey(
   //   if (config.output_key_object_) {
   //     std::shared_ptr<KeyObjectData> data =
   //     KeyObjectData::CreateAsymmetric(kKeyTypePrivate, std::move(key));
+  // TODO(osp) replaced tristate for std::optional
   //     return Tristate(KeyObjectHandle::Create(env, data).ToLocal(out));
   //   } else if (config.format_ == kKeyFormatJWK) {
   //     std::shared_ptr<KeyObjectData> data =
@@ -653,12 +646,10 @@ ManagedEVPPKey::GetPrivateKeyEncodingFromJs(jsi::Runtime& runtime,
     if (context != kKeyContextInput) {
       if (arguments[*offset].isString()) {
         auto cipher_name = arguments[*offset].getString(runtime).utf8(runtime);
-        //        Utf8Value cipher_name(env->isolate(), args[*offset]);
         result.cipher_ = EVP_get_cipherbyname(cipher_name.c_str());
         if (result.cipher_ == nullptr) {
           jsi::detail::throwJSError(runtime, "Unknown cipher");
-          //          THROW_ERR_CRYPTO_UNKNOWN_CIPHER(env);
-          //          return NonCopyableMaybe<PrivateKeyEncodingConfig>();
+          return NonCopyableMaybe<PrivateKeyEncodingConfig>();
         }
         needs_passphrase = true;
       } else {
@@ -701,6 +692,8 @@ PublicKeyEncodingConfig ManagedEVPPKey::GetPublicKeyEncodingFromJs(
   return result;
 }
 
+// TODO(osp) I never quite manage to figure out whether this is really necessary
+// maybe is other crypto function, leaving it for future uncommenting
 // ManagedEVPPKey ManagedEVPPKey::GetPrivateKeyFromJs(
 //                                                   const
 //                                                   FunctionCallbackInfo<Value>&
@@ -730,7 +723,6 @@ PublicKeyEncodingConfig ManagedEVPPKey::GetPublicKeyEncodingFromJs(
 //  }
 //}
 
-// On this entire file "data" refers to the key data buffer
 ManagedEVPPKey ManagedEVPPKey::GetPublicOrPrivateKeyFromJs(
     jsi::Runtime& runtime, const jsi::Value* args, unsigned int* offset) {
   if (args[*offset].asObject(runtime).isArrayBuffer(runtime)) {
@@ -776,8 +768,8 @@ ManagedEVPPKey ManagedEVPPKey::GetPublicOrPrivateKeyFromJs(
           is_public = false;
           break;
         default:
-          //            UNREACHABLE("Invalid key encoding type");
           jsi::detail::throwJSError(runtime, "Invalid key encoding type");
+          throw new jsi::JSError(runtime, "Invalid key encoding type");
       }
 
       if (is_public) {
@@ -795,8 +787,8 @@ ManagedEVPPKey ManagedEVPPKey::GetPublicOrPrivateKeyFromJs(
                                         "Failed to read asymmetric key");
   } else {
     jsi::detail::throwJSError(runtime,
-                              "publicEncrypt api only supports ArrayBuffer "
-                              "'data' encryption for now");
+                              "publicEncrypt api only supports ArrayBuffer keys"
+                              "for now");
     throw new jsi::JSError(
         runtime, "public encrypt only supports ArrayBuffer at the moment");
     //    CHECK(args[*offset]->IsObject());
