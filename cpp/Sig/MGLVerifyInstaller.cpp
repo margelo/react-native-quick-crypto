@@ -1,4 +1,4 @@
-#include "MGLSignInstaller.h"
+#include "MGLVerifyInstaller.h"
 
 #include "MGLSignHostObjects.h"
 #ifdef ANDROID
@@ -10,13 +10,13 @@
 
 namespace margelo {
 
-FieldDefinition getSignFieldDefinition(
+FieldDefinition getVerifyFieldDefinition(
     std::shared_ptr<react::CallInvoker> jsCallInvoker,
     std::shared_ptr<DispatchQueue::dispatch_queue> workerQueue) {
   return buildPair(
-      "createSign", JSIF([=]) {
+      "createVerify", JSIF([=]) {
         auto hostObject =
-            std::make_shared<MGLSignHostObject>(jsCallInvoker, workerQueue);
+            std::make_shared<MGLVerifyHostObject>(jsCallInvoker, workerQueue);
         return jsi::Object::createFromHostObject(runtime, hostObject);
       });
 }

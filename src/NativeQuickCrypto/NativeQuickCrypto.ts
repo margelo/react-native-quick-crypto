@@ -11,7 +11,7 @@ import type {
   GenerateKeyPairMethod,
   GenerateKeyPairSyncMethod,
 } from './Cipher';
-import type { CreateSignMethod } from './sig';
+import type { CreateSignMethod, CreateVerifyMethod } from './sig';
 
 interface NativeQuickCryptoSpec {
   createHmac: CreateHmacMethod;
@@ -26,6 +26,7 @@ interface NativeQuickCryptoSpec {
   generateKeyPair: GenerateKeyPairMethod;
   generateKeyPairSync: GenerateKeyPairSyncMethod;
   createSign: CreateSignMethod;
+  createVerify: CreateVerifyMethod;
 }
 
 // global func declaration for JSI functions

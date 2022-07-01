@@ -1,5 +1,5 @@
 import { NativeQuickCrypto } from './NativeQuickCrypto/NativeQuickCrypto';
-import type { InternalSign } from './NativeQuickCrypto/sig';
+import type { InternalSign, InternalVerify } from './NativeQuickCrypto/sig';
 import Stream from 'stream';
 
 // TODO(osp) same as publicCipher on node this are defined on C++ and exposed to node
@@ -14,9 +14,10 @@ import {
   binaryLikeToArrayBuffer,
   getDefaultEncoding,
 } from './Utils';
-import { preparePrivateKey } from './keys';
+import { preparePrivateKey, preparePublicOrPrivateKey } from './keys';
 
 const createInternalSign = NativeQuickCrypto.createSign;
+const createInternalVerify = NativeQuickCrypto.createVerify;
 
 function getPadding(options: any) {
   return getIntOption('padding', options);
@@ -48,12 +49,71 @@ function getIntOption(name: string, options: any) {
   return undefined;
 }
 
+class Verify extends Stream.Writable {
+  private internal: InternalVerify;
+  constructor(algorithm: string, options: Stream.WritableOptions) {
+    super(options);
+    this.internal = createInternalVerify();
+    this.internal.init(algorithm);
+  }
+
+  _write(chunk: BinaryLike, encoding: string, callback: () => void) {
+    this.update(chunk, encoding);
+    callback();
+  }
+
+  update(data: BinaryLike, encoding?: string) {
+    encoding = encoding ?? getDefaultEncoding();
+    data = binaryLikeToArrayBuffer(data);
+    this.internal.update(data);
+    return this;
+  }
+
+  verify(
+    options: {
+      key: string | Buffer;
+      format?: string;
+      type?: string;
+      passphrase?: string;
+      padding?: number;
+      saltLength?: number;
+    },
+    signature: BinaryLike
+  ): boolean {
+    if (!options) {
+      throw new Error('Crypto sign key required');
+    }
+
+    const { data, format, type, passphrase } =
+      preparePublicOrPrivateKey(options);
+
+    const rsaPadding = getPadding(options);
+    const pssSaltLength = getSaltLength(options);
+
+    // Options specific to (EC)DSA
+    const dsaSigEnc = getDSASignatureEncoding(options);
+
+    const ret = this.internal.verify(
+      data,
+      format,
+      type,
+      passphrase,
+      binaryLikeToArrayBuffer(signature),
+      rsaPadding,
+      pssSaltLength,
+      dsaSigEnc
+    );
+
+    return ret;
+  }
+}
+
 class Sign extends Stream.Writable {
   private internal: InternalSign;
   constructor(algorithm: string, options: Stream.WritableOptions) {
     super(options);
     this.internal = createInternalSign();
-    console.warn('init response', this.internal.init(algorithm));
+    this.internal.init(algorithm);
   }
 
   _write(chunk: BinaryLike, encoding: string, callback: () => void) {
@@ -91,17 +151,6 @@ class Sign extends Stream.Writable {
     // Options specific to (EC)DSA
     const dsaSigEnc = getDSASignatureEncoding(options);
 
-    console.warn(
-      'internal sign called with',
-      data,
-      format,
-      type,
-      passphrase,
-      rsaPadding,
-      pssSaltLength,
-      dsaSigEnc
-    );
-
     const ret = this.internal.sign(
       data,
       format,
@@ -123,4 +172,8 @@ class Sign extends Stream.Writable {
 
 export function createSign(algorithm: string, options?: any) {
   return new Sign(algorithm, options);
+}
+
+export function createVerify(algorithm: string, options?: any) {
+  return new Verify(algorithm, options);
 }

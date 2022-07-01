@@ -3,6 +3,7 @@ import { Buffer } from '@craftzdog/react-native-buffer';
 import { it } from '../../MochaRNAdapter';
 import { QuickCrypto as crypto } from 'react-native-quick-crypto';
 import { PrivateKey } from 'sscrypto/node';
+import { binaryLikeToArrayBuffer } from 'src/Utils';
 
 // Tests that a key pair can be used for encryption / decryption.
 // function testEncryptDecrypt(publicKey: any, privateKey: any) {
@@ -42,8 +43,7 @@ import { PrivateKey } from 'sscrypto/node';
 
 export function registerSignTests() {
   // We need to monkey patch sscrypto to use all the crypto functions from quick-crypto
-  it('basic sign test', async () => {
-    console.warn('mk1');
+  it('basic sign/verify', async () => {
     const { publicKey, privateKey } = crypto.generateKeyPairSync('rsa', {
       modulusLength: 1024,
       publicKeyEncoding: {
@@ -55,22 +55,27 @@ export function registerSignTests() {
         format: 'pem',
       },
     });
-    console.warn('mk2');
+
     const textToSign = 'This text should be signed';
-    console.warn('mk3');
     const textBuffer = Buffer.from(textToSign, 'utf-8');
-    console.warn('mk4');
     const sign = crypto.createSign('SHA256');
-    console.warn('mk5');
     sign.update(textBuffer);
-    console.warn('mk6');
     const signature = sign.sign({
       key: privateKey,
       padding: crypto.constants.RSA_PKCS1_PSS_PADDING,
       saltLength: crypto.constants.RSA_PSS_SALTLEN_MAX_SIGN,
     });
 
-    console.warn('mk7');
-    chai.expect(signature.toString('utf8')).to.equal(1);
+    const verify = crypto.createVerify('SHA256');
+    verify.update(textToSign);
+    const matches = verify.verify(
+      {
+        key: publicKey,
+        padding: crypto.constants.RSA_PKCS1_PSS_PADDING,
+        saltLength: crypto.constants.RSA_PSS_SALTLEN_MAX_SIGN,
+      },
+      signature
+    );
+    chai.expect(matches).to.equal(true);
   });
 }

@@ -22,6 +22,10 @@ namespace margelo {
 
 namespace jsi = facebook::jsi;
 
+static const unsigned int kNoDsaSignature = static_cast<unsigned int>(-1);
+
+enum mode { kModeSign, kModeVerify };
+
 enum DSASigEnc {
   kSigEncDER,
   kSigEncP1363,
@@ -45,18 +49,21 @@ class SignBase : public MGLSmartHostObject {
 
   struct SignResult {
     Error error;
-    std::optional<jsi::ArrayBuffer> signature;
+    std::optional<jsi::Value> signature;
 
-    explicit SignResult(Error err,
-                        std::optional<jsi::ArrayBuffer> sig = std::nullopt)
+    explicit SignResult(Error err, std::optional<jsi::Value> sig = std::nullopt)
         : error(err), signature(std::move(sig)) {}
   };
 
-  void InstallMethods();
+  void InstallMethods(mode);
 
   SignResult SignFinal(jsi::Runtime& runtime, const ManagedEVPPKey& pkey,
                        int padding, std::optional<int>& salt_len,
                        DSASigEnc dsa_sig_enc);
+
+  Error VerifyFinal(const ManagedEVPPKey& pkey, const ByteSource& sig,
+                    int padding, std::optional<int>& saltlen,
+                    bool* verify_result);
 
  protected:
   EVPMDPointer mdctx_;
@@ -67,13 +74,13 @@ class MGLSignHostObject : public SignBase {
   explicit MGLSignHostObject(
       std::shared_ptr<react::CallInvoker> jsCallInvoker,
       std::shared_ptr<DispatchQueue::dispatch_queue> workerQueue);
-  //
-  //  explicit MGLSignHostObject(
-  //                               MGLSignHostObject *other,
-  //                               std::shared_ptr<react::CallInvoker>
-  //                               jsCallInvoker,
-  //                               std::shared_ptr<DispatchQueue::dispatch_queue>
-  //                               workerQueue);
+};
+
+class MGLVerifyHostObject : public SignBase {
+ public:
+  explicit MGLVerifyHostObject(
+      std::shared_ptr<react::CallInvoker> jsCallInvoker,
+      std::shared_ptr<DispatchQueue::dispatch_queue> workerQueue);
 };
 
 }  // namespace margelo

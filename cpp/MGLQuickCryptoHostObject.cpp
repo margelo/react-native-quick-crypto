@@ -17,6 +17,7 @@
 #include "Hash/MGLHashInstaller.h"
 #include "Random/MGLRandomHostObject.h"
 #include "Sig/MGLSignInstaller.h"
+#include "Sig/MGLVerifyInstaller.h"
 #include "fastpbkdf2/MGLPbkdf2HostObject.h"
 #else
 #include "MGLCreateCipherInstaller.h"
@@ -30,6 +31,7 @@
 #include "MGLPublicCipherInstaller.h"
 #include "MGLRandomHostObject.h"
 #include "MGLSignInstaller.h"
+#include "MGLVerifyInstaller.h"
 #endif
 
 namespace margelo {
@@ -103,6 +105,9 @@ MGLQuickCryptoHostObject::MGLQuickCryptoHostObject(
 
   // createSign
   this->fields.push_back(getSignFieldDefinition(jsCallInvoker, workerQueue));
+
+  // createVerify
+  this->fields.push_back(getVerifyFieldDefinition(jsCallInvoker, workerQueue));
 }
 
 }  // namespace margelo

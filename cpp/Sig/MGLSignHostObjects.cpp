@@ -1,10 +1,3 @@
-//
-//  MGLSig.cpp
-//  DoubleConversion
-//
-//  Created by Oscar on 30.06.22.
-//
-
 #include "MGLSignHostObjects.h"
 
 #include <openssl/evp.h>
@@ -15,9 +8,11 @@
 #ifdef ANDROID
 #include "JSIUtils/MGLJSIUtils.h"
 #include "JSIUtils/MGLTypedArray.h"
+#include "Utils/MGLUtils.h"
 #else
 #include "MGLJSIUtils.h"
 #include "MGLTypedArray.h"
+#include "MGLUtils.h"
 #endif
 
 namespace margelo {
@@ -60,9 +55,11 @@ bool ApplyRSAOptions(const ManagedEVPPKey& pkey, EVP_PKEY_CTX* pkctx,
   return true;
 }
 
-std::optional<jsi::ArrayBuffer> Node_SignFinal(
-    jsi::Runtime& runtime, EVPMDPointer&& mdctx, const ManagedEVPPKey& pkey,
-    int padding, std::optional<int> pss_salt_len) {
+std::optional<jsi::Value> Node_SignFinal(jsi::Runtime& runtime,
+                                         EVPMDPointer&& mdctx,
+                                         const ManagedEVPPKey& pkey,
+                                         int padding,
+                                         std::optional<int> pss_salt_len) {
   unsigned char m[EVP_MAX_MD_SIZE];
   unsigned int m_len;
 
@@ -90,7 +87,7 @@ std::optional<jsi::ArrayBuffer> Node_SignFinal(
     //    else
     //      sig = BackingStore::Reallocate(env->isolate(), std::move(sig),
     //      sig_len);
-    return sig.getArrayBuffer(runtime);
+    return sig;
   }
 
   return {};
@@ -101,23 +98,23 @@ std::optional<jsi::ArrayBuffer> Node_SignFinal(
 //    RSA_PKCS1_PSS_PADDING : RSA_PKCS1_PADDING;
 //  }
 //
-//  unsigned int GetBytesOfRS(const ManagedEVPPKey& pkey) {
-//    int bits, base_id = EVP_PKEY_base_id(pkey.get());
-//
-//    if (base_id == EVP_PKEY_DSA) {
-//      const DSA* dsa_key = EVP_PKEY_get0_DSA(pkey.get());
-//      // Both r and s are computed mod q, so their width is limited by that of
-//      q. bits = BN_num_bits(DSA_get0_q(dsa_key));
-//    } else if (base_id == EVP_PKEY_EC) {
-//      const EC_KEY* ec_key = EVP_PKEY_get0_EC_KEY(pkey.get());
-//      const EC_GROUP* ec_group = EC_KEY_get0_group(ec_key);
-//      bits = EC_GROUP_order_bits(ec_group);
-//    } else {
-//      return kNoDsaSignature;
-//    }
-//
-//    return (bits + 7) / 8;
-//  }
+unsigned int GetBytesOfRS(const ManagedEVPPKey& pkey) {
+  int bits, base_id = EVP_PKEY_base_id(pkey.get());
+
+  if (base_id == EVP_PKEY_DSA) {
+    const DSA* dsa_key = EVP_PKEY_get0_DSA(pkey.get());
+    // Both r and s are computed mod q, so their width is limited by that of
+    bits = BN_num_bits(DSA_get0_q(dsa_key));
+  } else if (base_id == EVP_PKEY_EC) {
+    const EC_KEY* ec_key = EVP_PKEY_get0_EC_KEY(pkey.get());
+    const EC_GROUP* ec_group = EC_KEY_get0_group(ec_key);
+    bits = EC_GROUP_order_bits(ec_group);
+  } else {
+    return kNoDsaSignature;
+  }
+
+  return (bits + 7) / 8;
+}
 //
 //  bool ExtractP1363(
 //                    const unsigned char* sig_data,
@@ -182,45 +179,34 @@ std::optional<jsi::ArrayBuffer> Node_SignFinal(
 //                                       return std::move(out).release();
 //                                     }
 //
-//  ByteSource ConvertSignatureToDER(
-//                                   const ManagedEVPPKey& pkey,
-//                                   ByteSource&& out) {
-//                                     unsigned int n = GetBytesOfRS(pkey);
-//                                     if (n == kNoDsaSignature)
-//                                       return std::move(out);
-//
-//                                     const unsigned char* sig_data =
-//                                     out.data<unsigned char>();
-//
-//                                     if (out.size() != 2 * n)
-//                                       return ByteSource();
-//
-//                                     ECDSASigPointer
-//                                     asn1_sig(ECDSA_SIG_new());
-//                                     CHECK(asn1_sig);
-//                                     BIGNUM* r = BN_new();
-//                                     CHECK_NOT_NULL(r);
-//                                     BIGNUM* s = BN_new();
-//                                     CHECK_NOT_NULL(s);
-//                                     CHECK_EQ(r, BN_bin2bn(sig_data, n, r));
-//                                     CHECK_EQ(s, BN_bin2bn(sig_data + n, n,
-//                                     s)); CHECK_EQ(1,
-//                                     ECDSA_SIG_set0(asn1_sig.get(), r, s));
-//
-//                                     unsigned char* data = nullptr;
-//                                     int len = i2d_ECDSA_SIG(asn1_sig.get(),
-//                                     &data);
-//
-//                                     if (len <= 0)
-//                                       return ByteSource();
-//
-//                                     CHECK_NOT_NULL(data);
-//
-//                                     return
-//                                     ByteSource::Allocated(reinterpret_cast<char*>(data),
-//                                     len);
-//                                   }
-//
+ByteSource ConvertSignatureToDER(const ManagedEVPPKey& pkey, ByteSource&& out) {
+  unsigned int n = GetBytesOfRS(pkey);
+  if (n == kNoDsaSignature) return std::move(out);
+
+  const unsigned char* sig_data = out.data<unsigned char>();
+
+  if (out.size() != 2 * n) return ByteSource();
+
+  ECDSASigPointer asn1_sig(ECDSA_SIG_new());
+  CHECK(asn1_sig);
+  BIGNUM* r = BN_new();
+  CHECK_NOT_NULL(r);
+  BIGNUM* s = BN_new();
+  CHECK_NOT_NULL(s);
+  CHECK_EQ(r, BN_bin2bn(sig_data, n, r));
+  CHECK_EQ(s, BN_bin2bn(sig_data + n, n, s));
+  CHECK_EQ(1, ECDSA_SIG_set0(asn1_sig.get(), r, s));
+
+  unsigned char* data = nullptr;
+  int len = i2d_ECDSA_SIG(asn1_sig.get(), &data);
+
+  if (len <= 0) return ByteSource();
+
+  CHECK_NOT_NULL(data);
+
+  return ByteSource::Allocated(reinterpret_cast<char*>(data), len);
+}
+
 //  void CheckThrow(Environment* env, SignBase::Error error) {
 //    HandleScope scope(env->isolate());
 //
@@ -300,7 +286,7 @@ SignBase::SignResult SignBase::SignFinal(jsi::Runtime& runtime,
 
   if (!ValidateDSAParameters(pkey.get())) return SignResult(kSignPrivateKey);
 
-  std::optional<jsi::ArrayBuffer> buffer =
+  std::optional<jsi::Value> buffer =
       Node_SignFinal(runtime, std::move(mdctx), pkey, padding, salt_len);
   Error error = buffer.has_value() ? kSignOk : kSignPrivateKey;
   // TODO(osp) enable this
@@ -311,6 +297,32 @@ SignBase::SignResult SignBase::SignFinal(jsi::Runtime& runtime,
   return SignResult(error, std::move(buffer.value()));
 }
 
+SignBase::Error SignBase::VerifyFinal(const ManagedEVPPKey& pkey,
+                                      const ByteSource& sig, int padding,
+                                      std::optional<int>& saltlen,
+                                      bool* verify_result) {
+  if (!mdctx_) return kSignNotInitialised;
+
+  unsigned char m[EVP_MAX_MD_SIZE];
+  unsigned int m_len;
+  *verify_result = false;
+  EVPMDPointer mdctx = std::move(mdctx_);
+
+  if (!EVP_DigestFinal_ex(mdctx.get(), m, &m_len)) return kSignPublicKey;
+
+  EVPKeyCtxPointer pkctx(EVP_PKEY_CTX_new(pkey.get(), nullptr));
+  if (pkctx && EVP_PKEY_verify_init(pkctx.get()) > 0 &&
+      ApplyRSAOptions(pkey, pkctx.get(), padding, saltlen) &&
+      EVP_PKEY_CTX_set_signature_md(pkctx.get(), EVP_MD_CTX_md(mdctx.get())) >
+          0) {
+    const unsigned char* s = sig.data<unsigned char>();
+    const int r = EVP_PKEY_verify(pkctx.get(), s, sig.size(), m, m_len);
+    *verify_result = r == 1;
+  }
+
+  return kSignOk;
+}
+
 SignBase::SignBase(std::shared_ptr<react::CallInvoker> jsCallInvoker,
                    std::shared_ptr<DispatchQueue::dispatch_queue> workerQueue)
     : MGLSmartHostObject(jsCallInvoker, workerQueue) {}
@@ -319,7 +331,14 @@ MGLSignHostObject::MGLSignHostObject(
     std::shared_ptr<react::CallInvoker> jsCallInvoker,
     std::shared_ptr<DispatchQueue::dispatch_queue> workerQueue)
     : SignBase(jsCallInvoker, workerQueue) {
-  InstallMethods();
+  InstallMethods(kModeSign);
+}
+
+MGLVerifyHostObject::MGLVerifyHostObject(
+    std::shared_ptr<react::CallInvoker> jsCallInvoker,
+    std::shared_ptr<DispatchQueue::dispatch_queue> workerQueue)
+    : SignBase(jsCallInvoker, workerQueue) {
+  InstallMethods(kModeVerify);
 }
 
 int GetDefaultSignPadding(const ManagedEVPPKey& m_pkey) {
@@ -327,7 +346,7 @@ int GetDefaultSignPadding(const ManagedEVPPKey& m_pkey) {
                                                        : RSA_PKCS1_PADDING;
 }
 
-void SignBase::InstallMethods() {
+void SignBase::InstallMethods(mode mode) {
   this->fields.push_back(buildPair(
       "init", JSIF([=]) {
         if (count != 1 || !arguments[0].isString()) {
@@ -381,124 +400,106 @@ void SignBase::InstallMethods() {
         return (int)kSignOk;
       }));
 
-  this->fields.push_back(buildPair(
-      "sign", JSIF([=]) {
-        unsigned int offset = 0;
-        ManagedEVPPKey key = ManagedEVPPKey::GetPrivateKeyFromJs(
-            runtime, arguments, &offset, true);
-        if (!key) {
-          return {};
-        }
+  if (mode == kModeSign) {
+    this->fields.push_back(buildPair(
+        "sign", JSIF([=]) {
+          unsigned int offset = 0;
+          ManagedEVPPKey key = ManagedEVPPKey::GetPrivateKeyFromJs(
+              runtime, arguments, &offset, true);
+          if (!key) {
+            return {};
+          }
 
-        int padding = GetDefaultSignPadding(key);
-        if (!arguments[offset].isUndefined()) {
-          // TODO(osp) need to add a check for int32
-          CHECK(arguments[offset].isNumber());
-          padding = static_cast<int>(arguments[offset].asNumber());
-        }
+          int padding = GetDefaultSignPadding(key);
+          if (!arguments[offset].isUndefined()) {
+            // TODO(osp) need to add a check for int32
+            CHECK(arguments[offset].isNumber());
+            padding = static_cast<int>(arguments[offset].asNumber());
+          }
 
-        std::optional<int> salt_len;
-        if (!arguments[offset + 1].isUndefined()) {
+          std::optional<int> salt_len;
+          if (!arguments[offset + 1].isUndefined()) {
+            // TODO(osp) add check for int32
+            CHECK(arguments[offset + 1].isNumber());
+            salt_len = static_cast<int>(arguments[offset + 1].asNumber());
+          }
+
           // TODO(osp) add check for int32
-          CHECK(arguments[offset + 1].isNumber());
-          salt_len = static_cast<int>(arguments[offset + 1].asNumber());
-        }
+          CHECK(arguments[offset + 2].isNumber());
+          DSASigEnc dsa_sig_enc = static_cast<DSASigEnc>(
+              static_cast<int>(arguments[offset + 2].asNumber()));
 
-        // TODO(osp) add check for int32
-        CHECK(arguments[offset + 2].isNumber());
-        DSASigEnc dsa_sig_enc = static_cast<DSASigEnc>(
-            static_cast<int>(arguments[offset + 2].asNumber()));
+          SignResult ret =
+              this->SignFinal(runtime, key, padding, salt_len, dsa_sig_enc);
 
-        SignResult ret =
-            this->SignFinal(runtime, key, padding, salt_len, dsa_sig_enc);
+          if (ret.error != kSignOk) {
+            jsi::detail::throwJSError(runtime, "Error signing");
+            throw new jsi::JSError(runtime, "Error signing");
+          }
 
-        if (ret.error != kSignOk) {
-          jsi::detail::throwJSError(runtime, "Error signing");
-          throw new jsi::JSError(runtime, "Error signing");
-        }
+          return std::move(ret.signature.value());
+        }));
+  } else {
+    this->fields.push_back(buildPair(
+        "verify", JSIF([=]) {
+          //      Verify* verify;
+          //      ASSIGN_OR_RETURN_UNWRAP(&verify, args.Holder());
 
-        return std::move(ret.signature.value());
-      }));
+          unsigned int offset = 0;
+          ManagedEVPPKey pkey = ManagedEVPPKey::GetPublicOrPrivateKeyFromJs(
+              runtime, arguments, &offset);
+          if (!pkey) {
+            return {};
+          }
+
+          jsi::ArrayBuffer hbuf =
+              arguments[offset].asObject(runtime).getArrayBuffer(runtime);
+          if (!CheckSizeInt32(runtime, hbuf)) {
+            jsi::detail::throwJSError(runtime, "buffer is too big");
+            throw jsi::JSError(runtime, "buffer is too big");
+          }
+
+          int padding = GetDefaultSignPadding(pkey);
+          if (!arguments[offset + 1].isUndefined()) {
+            CHECK(arguments[offset + 1].isNumber());
+            padding = static_cast<int>(arguments[offset + 1].asNumber());
+          }
+
+          std::optional<int> salt_len;
+          if (!arguments[offset + 2].isUndefined()) {
+            // TODO(osp) add check for int32
+            CHECK(arguments[offset + 2].isNumber());
+            salt_len = static_cast<int>(arguments[offset + 2].asNumber());
+          }
+
+          // TODO(osp) add check for int32
+          CHECK(arguments[offset + 3].isNumber());
+          DSASigEnc dsa_sig_enc = static_cast<DSASigEnc>(
+              static_cast<int>(arguments[offset + 3].asNumber()));
+
+          ByteSource signature = ArrayBufferToByteSource(runtime, hbuf);
+          if (dsa_sig_enc == kSigEncP1363) {
+            signature = ConvertSignatureToDER(
+                pkey, ArrayBufferToByteSource(runtime, hbuf));
+            if (signature.data() == nullptr) {
+              jsi::detail::throwJSError(runtime, "kSignMalformedSignature");
+            }
+            //          return crypto::CheckThrow(env,
+            //          Error::kSignMalformedSignature);
+          }
+
+          bool verify_result;
+          Error err = this->VerifyFinal(pkey, signature, padding, salt_len,
+                                        &verify_result);
+          if (err != kSignOk) {
+            jsi::detail::throwJSError(runtime, "Error on verify");
+          }
+
+          return verify_result;
+        }));
+  }
 }
 
-// void Sign::SignUpdate(const FunctionCallbackInfo<Value>& args) {
-//   Decode<Sign>(args, [](Sign* sign, const FunctionCallbackInfo<Value>& args,
-//                         const char* data, size_t size) {
-//     Environment* env = Environment::GetCurrent(args);
-//     if (UNLIKELY(size > INT_MAX))
-//       return THROW_ERR_OUT_OF_RANGE(env, "data is too long");
-//     Error err = sign->Update(data, size);
-//     crypto::CheckThrow(sign->env(), err);
-//   });
-// }
-//
-// Sign::SignResult Sign::SignFinal(
-//                                  const ManagedEVPPKey& pkey,
-//                                  int padding,
-//                                  const Maybe<int>& salt_len,
-//                                  DSASigEnc dsa_sig_enc) {
-//   if (!mdctx_)
-//     return SignResult(kSignNotInitialised);
-//
-//   EVPMDPointer mdctx = std::move(mdctx_);
-//
-//   if (!ValidateDSAParameters(pkey.get()))
-//     return SignResult(kSignPrivateKey);
-//
-//   std::unique_ptr<BackingStore> buffer =
-//   Node_SignFinal(env(), std::move(mdctx), pkey, padding, salt_len);
-//   Error error = buffer ? kSignOk : kSignPrivateKey;
-//   if (error == kSignOk && dsa_sig_enc == kSigEncP1363) {
-//     buffer = ConvertSignatureToP1363(env(), pkey, std::move(buffer));
-//     CHECK_NOT_NULL(buffer->Data());
-//   }
-//   return SignResult(error, std::move(buffer));
-// }
-//
-// void Sign::SignFinal(const FunctionCallbackInfo<Value>& args) {
-//   Environment* env = Environment::GetCurrent(args);
-//   Sign* sign;
-//   ASSIGN_OR_RETURN_UNWRAP(&sign, args.Holder());
-//
-//   ClearErrorOnReturn clear_error_on_return;
-//
-//   unsigned int offset = 0;
-//   ManagedEVPPKey key = ManagedEVPPKey::GetPrivateKeyFromJs(args, &offset,
-//   true); if (!key)
-//     return;
-//
-//   int padding = GetDefaultSignPadding(key);
-//   if (!args[offset]->IsUndefined()) {
-//     CHECK(args[offset]->IsInt32());
-//     padding = args[offset].As<Int32>()->Value();
-//   }
-//
-//   Maybe<int> salt_len = Nothing<int>();
-//   if (!args[offset + 1]->IsUndefined()) {
-//     CHECK(args[offset + 1]->IsInt32());
-//     salt_len = Just<int>(args[offset + 1].As<Int32>()->Value());
-//   }
-//
-//   CHECK(args[offset + 2]->IsInt32());
-//   DSASigEnc dsa_sig_enc =
-//   static_cast<DSASigEnc>(args[offset + 2].As<Int32>()->Value());
-//
-//   SignResult ret = sign->SignFinal(
-//                                    key,
-//                                    padding,
-//                                    salt_len,
-//                                    dsa_sig_enc);
-//
-//   if (ret.error != kSignOk)
-//     return crypto::CheckThrow(env, ret.error);
-//
-//   Local<ArrayBuffer> ab =
-//   ArrayBuffer::New(env->isolate(), std::move(ret.signature));
-//   args.GetReturnValue().Set(
-//                             Buffer::New(env, ab, 0,
-//                             ab->ByteLength()).FromMaybe(Local<Value>()));
-// }
-//
 // Verify::Verify(Environment* env, Local<Object> wrap)
 //: SignBase(env, wrap) {
 //  MakeWeak();

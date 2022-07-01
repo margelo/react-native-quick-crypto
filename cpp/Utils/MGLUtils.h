@@ -54,6 +54,7 @@ using EVPKeyPointer = DeleteFnPtr<EVP_PKEY, EVP_PKEY_free>;
 using BignumPointer = DeleteFnPtr<BIGNUM, BN_free>;
 using RSAPointer = DeleteFnPtr<RSA, RSA_free>;
 using EVPMDPointer = DeleteFnPtr<EVP_MD_CTX, EVP_MD_CTX_free>;
+using ECDSASigPointer = DeleteFnPtr<ECDSA_SIG, ECDSA_SIG_free>;
 
 template <typename T>
 class NonCopyableMaybe {
@@ -213,6 +214,12 @@ class ByteSource {
   ByteSource(const void* data, void* allocated_data, size_t size)
       : data_(data), allocated_data_(allocated_data), size_(size) {}
 };
+
+ByteSource ArrayBufferToByteSource(jsi::Runtime& runtime,
+                                   const jsi::ArrayBuffer& buffer);
+
+ByteSource ArrayBufferToNTCByteSource(jsi::Runtime& runtime,
+                                      const jsi::ArrayBuffer& buffer);
 
 // Originally part of the ArrayBufferContentOrView class
 inline ByteSource ToNullTerminatedByteSource(jsi::Runtime& runtime,
