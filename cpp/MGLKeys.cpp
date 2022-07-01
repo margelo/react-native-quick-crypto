@@ -19,8 +19,9 @@
 #include "MGLTypedArray.h"
 #include "MGLUtils.h"
 #ifdef ANDROID
+#include "JSIUtils/MGLJSIMacros.h"
 #else
-#include "logs.h"
+#include "MGLJSIMacros.h"
 #endif
 
 namespace margelo {
@@ -33,8 +34,8 @@ void GetKeyFormatAndTypeFromJs(AsymmetricKeyEncodingConfig* config,
   // During key pair generation, it is possible not to specify a key encoding,
   // which will lead to a key object being returned.
   if (args[*offset].isUndefined()) {
-    //    CHECK_EQ(context, kKeyContextGenerate);
-    //    CHECK(args[*offset + 1].IsUndefined());
+    CHECK_EQ(context, kKeyContextGenerate);
+    CHECK(args[*offset + 1].isUndefined());
     config->output_key_object_ = true;
   } else {
     config->output_key_object_ = false;
@@ -44,16 +45,13 @@ void GetKeyFormatAndTypeFromJs(AsymmetricKeyEncodingConfig* config,
     config->format_ = static_cast<PKFormatType>((int)args[*offset].getNumber());
 
     if (args[*offset + 1].isNumber()) {
-      config->type_ = std::optional<PKEncodingType>(
-          static_cast<PKEncodingType>((int)args[*offset + 1].getNumber()));
+      config->type_ =
+          static_cast<PKEncodingType>((int)args[*offset + 1].getNumber());
     } else {
-      // TODO(osp) implement checks
-      //      CHECK(
-      //            (context == kKeyContextInput &&
-      //             config->format_ == kKeyFormatPEM) ||
-      //            (context == kKeyContextGenerate &&
-      //             config->format_ == kKeyFormatJWK));
-      //      CHECK(args[*offset + 1]->IsNullOrUndefined());
+      CHECK(
+          (context == kKeyContextInput && config->format_ == kKeyFormatPEM) ||
+          (context == kKeyContextGenerate && config->format_ == kKeyFormatJWK));
+      CHECK(args[*offset + 1].isUndefined());
       config->type_ = std::nullopt;
     }
   }
@@ -193,11 +191,10 @@ ParseKeyResult ParsePrivateKey(EVPKeyPointer* pkey,
     pkey->reset(PEM_read_bio_PrivateKey(bio.get(), nullptr, PasswordCallback,
                                         &passphrase));
   } else {
-    //    CHECK_EQ(config.format_, kKeyFormatDER);
+    CHECK_EQ(config.format_, kKeyFormatDER);
 
     if (!config.type_.has_value()) {
-      // TODO(osp) need to implement end of the world exception
-      //      throw new crashing exception
+      throw new std::runtime_error("ParsePrivateKey key config has no type!");
     }
 
     if (config.type_.value() == kKeyEncodingPKCS1) {
@@ -216,7 +213,7 @@ ParseKeyResult ParsePrivateKey(EVPKeyPointer* pkey,
         if (p8inf) pkey->reset(EVP_PKCS82PKEY(p8inf.get()));
       }
     } else {
-      //      CHECK_EQ(config.type_.ToChecked(), kKeyEncodingSEC1);
+      CHECK_EQ(config.type_.value(), kKeyEncodingSEC1);
       const unsigned char* p = reinterpret_cast<const unsigned char*>(key);
       pkey->reset(d2i_PrivateKey(EVP_PKEY_EC, nullptr, &p, key_len));
     }
@@ -699,6 +696,7 @@ ManagedEVPPKey ManagedEVPPKey::GetPrivateKeyFromJs(jsi::Runtime& runtime,
   if (args[*offset].isString() ||
       args[*offset].asObject(runtime).isArrayBuffer(runtime)) {
     ByteSource key = ByteSource::FromStringOrBuffer(runtime, args[*offset]);
+    (*offset)++;
     NonCopyableMaybe<PrivateKeyEncodingConfig> config =
         GetPrivateKeyEncodingFromJs(runtime, args, offset, kKeyContextInput);
     if (config.IsEmpty()) return ManagedEVPPKey();

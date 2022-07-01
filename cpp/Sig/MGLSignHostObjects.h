@@ -58,8 +58,6 @@ class SignBase : public MGLSmartHostObject {
                        int padding, std::optional<int>& salt_len,
                        DSASigEnc dsa_sig_enc);
 
-  //  Error Init(const char* sign_type);
-  //  Error Update(const char* data, size_t len);
  protected:
   EVPMDPointer mdctx_;
 };
@@ -76,14 +74,6 @@ class MGLSignHostObject : public SignBase {
   //                               jsCallInvoker,
   //                               std::shared_ptr<DispatchQueue::dispatch_queue>
   //                               workerQueue);
-
- protected:
-  //  static void New
-  //  static void SignInit
-  //  static void SignUpdate
-  //  static void SignFinal
-
-  //  Sign
 };
 
 }  // namespace margelo

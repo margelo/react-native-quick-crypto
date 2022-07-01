@@ -68,7 +68,17 @@ class Sign extends Stream.Writable {
     return this;
   }
 
-  sign(options: any, encoding?: string) {
+  sign(
+    options: {
+      key: string | Buffer;
+      format?: string;
+      type?: string;
+      passphrase?: string;
+      padding?: number;
+      saltLength?: number;
+    },
+    encoding?: string
+  ) {
     if (!options) {
       throw new Error('Crypto sign key required');
     }
@@ -80,6 +90,17 @@ class Sign extends Stream.Writable {
 
     // Options specific to (EC)DSA
     const dsaSigEnc = getDSASignatureEncoding(options);
+
+    console.warn(
+      'internal sign called with',
+      data,
+      format,
+      type,
+      passphrase,
+      rsaPadding,
+      pssSaltLength,
+      dsaSigEnc
+    );
 
     const ret = this.internal.sign(
       data,
