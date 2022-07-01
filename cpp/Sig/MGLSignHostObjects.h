@@ -5,8 +5,11 @@
 #include <openssl/evp.h>
 
 #include <memory>
+#include <optional>
 #include <string>
+#include <utility>
 
+#include "MGLKeys.h"
 #ifdef ANDROID
 #include "JSIUtils/MGLSmartHostObject.h"
 #include "Utils/MGLUtils.h"
@@ -18,6 +21,11 @@
 namespace margelo {
 
 namespace jsi = facebook::jsi;
+
+enum DSASigEnc {
+  kSigEncDER,
+  kSigEncP1363,
+};
 
 class SignBase : public MGLSmartHostObject {
  public:
@@ -35,7 +43,20 @@ class SignBase : public MGLSmartHostObject {
     kSignMalformedSignature
   } Error;
 
+  struct SignResult {
+    Error error;
+    std::optional<jsi::ArrayBuffer> signature;
+
+    explicit SignResult(Error err,
+                        std::optional<jsi::ArrayBuffer> sig = std::nullopt)
+        : error(err), signature(std::move(sig)) {}
+  };
+
   void InstallMethods();
+
+  SignResult SignFinal(jsi::Runtime& runtime, const ManagedEVPPKey& pkey,
+                       int padding, std::optional<int>& salt_len,
+                       DSASigEnc dsa_sig_enc);
 
   //  Error Init(const char* sign_type);
   //  Error Update(const char* data, size_t len);

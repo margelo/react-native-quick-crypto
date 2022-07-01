@@ -68,7 +68,7 @@ class Sign extends Stream.Writable {
     return this;
   }
 
-  sign(options: any, encoding: string) {
+  sign(options: any, encoding?: string) {
     if (!options) {
       throw new Error('Crypto sign key required');
     }
@@ -93,13 +93,13 @@ class Sign extends Stream.Writable {
 
     encoding = encoding || getDefaultEncoding();
     if (encoding && encoding !== 'buffer') {
-      return ret.toString(encoding);
+      return Buffer.from(ret).toString(encoding as any);
     }
 
-    return ret;
+    return Buffer.from(ret);
   }
 }
 
-export function createSign(algorithm: string, options: any) {
+export function createSign(algorithm: string, options?: any) {
   return new Sign(algorithm, options);
 }

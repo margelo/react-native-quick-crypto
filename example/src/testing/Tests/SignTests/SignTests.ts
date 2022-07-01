@@ -43,6 +43,19 @@ import { PrivateKey } from 'sscrypto/node';
 export function registerSignTests() {
   // We need to monkey patch sscrypto to use all the crypto functions from quick-crypto
   it('basic sign test', async () => {
-    const sign = crypto.createSign('SHA256', {});
+    const { publicKey, privateKey } = await crypto.generateKeyPairSync('rsa', {
+      modulusLength: 1024,
+    });
+    const textToSign = 'This text should be signed';
+    const textBuffer = Buffer.from(textToSign, 'utf-8');
+    const sign = crypto.createSign('SHA256');
+    sign.update(textBuffer);
+    const signature = sign.sign({
+      key: privateKey,
+      padding: crypto.constants.RSA_PKCS1_PSS_PADDING,
+      saltLength: crypto.constants.RSA_PSS_SALTLEN_MAX_SIGN,
+    });
+
+    chai.expect(signature.toString('utf8')).to.equal(1);
   });
 }

@@ -9,97 +9,93 @@
 
 #include <openssl/evp.h>
 
+#include <optional>
+
 #include "MGLKeys.h"
 #ifdef ANDROID
 #include "JSIUtils/MGLJSIUtils.h"
+#include "JSIUtils/MGLTypedArray.h"
 #else
 #include "MGLJSIUtils.h"
+#include "MGLTypedArray.h"
 #endif
 
 namespace margelo {
-//
-// bool ValidateDSAParameters(EVP_PKEY* key) {
-//  /* Validate DSA2 parameters from FIPS 186-4 */
-//#if OPENSSL_VERSION_MAJOR >= 3
-//  if (EVP_default_properties_is_fips_enabled(nullptr) &&
-//      EVP_PKEY_DSA == EVP_PKEY_base_id(key)) {
-//#else
-//    if (FIPS_mode() && EVP_PKEY_DSA == EVP_PKEY_base_id(key)) {
-//#endif
-//      const DSA* dsa = EVP_PKEY_get0_DSA(key);
-//      const BIGNUM* p;
-//      DSA_get0_pqg(dsa, &p, nullptr, nullptr);
-//      size_t L = BN_num_bits(p);
-//      const BIGNUM* q;
-//      DSA_get0_pqg(dsa, nullptr, &q, nullptr);
-//      size_t N = BN_num_bits(q);
-//
-//      return (L == 1024 && N == 160) ||
-//      (L == 2048 && N == 224) ||
-//      (L == 2048 && N == 256) ||
-//      (L == 3072 && N == 256);
-//    }
-//
-//    return true;
-//  }
-//
-//  bool ApplyRSAOptions(const ManagedEVPPKey& pkey,
-//                       EVP_PKEY_CTX* pkctx,
-//                       int padding,
-//                       const Maybe<int>& salt_len) {
-//    if (EVP_PKEY_id(pkey.get()) == EVP_PKEY_RSA ||
-//        EVP_PKEY_id(pkey.get()) == EVP_PKEY_RSA2 ||
-//        EVP_PKEY_id(pkey.get()) == EVP_PKEY_RSA_PSS) {
-//      if (EVP_PKEY_CTX_set_rsa_padding(pkctx, padding) <= 0)
-//        return false;
-//      if (padding == RSA_PKCS1_PSS_PADDING && salt_len.IsJust()) {
-//        if (EVP_PKEY_CTX_set_rsa_pss_saltlen(pkctx, salt_len.FromJust()) <= 0)
-//          return false;
-//      }
-//    }
-//
-//    return true;
-//  }
-//
-//  std::unique_ptr<BackingStore> Node_SignFinal(Environment* env,
-//                                               EVPMDPointer&& mdctx,
-//                                               const ManagedEVPPKey& pkey,
-//                                               int padding,
-//                                               Maybe<int> pss_salt_len) {
-//    unsigned char m[EVP_MAX_MD_SIZE];
-//    unsigned int m_len;
-//
-//    if (!EVP_DigestFinal_ex(mdctx.get(), m, &m_len))
-//      return nullptr;
-//
-//    int signed_sig_len = EVP_PKEY_size(pkey.get());
-//    CHECK_GE(signed_sig_len, 0);
-//    size_t sig_len = static_cast<size_t>(signed_sig_len);
-//    std::unique_ptr<BackingStore> sig;
-//    {
-//      NoArrayBufferZeroFillScope no_zero_fill_scope(env->isolate_data());
-//      sig = ArrayBuffer::NewBackingStore(env->isolate(), sig_len);
-//    }
-//    EVPKeyCtxPointer pkctx(EVP_PKEY_CTX_new(pkey.get(), nullptr));
-//    if (pkctx &&
-//        EVP_PKEY_sign_init(pkctx.get()) &&
-//        ApplyRSAOptions(pkey, pkctx.get(), padding, pss_salt_len) &&
-//        EVP_PKEY_CTX_set_signature_md(pkctx.get(), EVP_MD_CTX_md(mdctx.get()))
-//        && EVP_PKEY_sign(pkctx.get(), static_cast<unsigned
-//        char*>(sig->Data()),
-//                      &sig_len, m, m_len)) {
-//      CHECK_LE(sig_len, sig->ByteLength());
-//      if (sig_len == 0)
-//        sig = ArrayBuffer::NewBackingStore(env->isolate(), 0);
-//      else
-//        sig = BackingStore::Reallocate(env->isolate(), std::move(sig),
-//        sig_len);
-//      return sig;
-//    }
-//
-//    return nullptr;
-//  }
-//
+
+bool ValidateDSAParameters(EVP_PKEY* key) {
+  /* Validate DSA2 parameters from FIPS 186-4 */
+#if OPENSSL_VERSION_MAJOR >= 3
+  if (EVP_default_properties_is_fips_enabled(nullptr) &&
+      EVP_PKEY_DSA == EVP_PKEY_base_id(key)) {
+#else
+  if (FIPS_mode() && EVP_PKEY_DSA == EVP_PKEY_base_id(key)) {
+#endif
+    const DSA* dsa = EVP_PKEY_get0_DSA(key);
+    const BIGNUM* p;
+    DSA_get0_pqg(dsa, &p, nullptr, nullptr);
+    size_t L = BN_num_bits(p);
+    const BIGNUM* q;
+    DSA_get0_pqg(dsa, nullptr, &q, nullptr);
+    size_t N = BN_num_bits(q);
+
+    return (L == 1024 && N == 160) || (L == 2048 && N == 224) ||
+           (L == 2048 && N == 256) || (L == 3072 && N == 256);
+  }
+
+  return true;
+}
+
+bool ApplyRSAOptions(const ManagedEVPPKey& pkey, EVP_PKEY_CTX* pkctx,
+                     int padding, std::optional<int> salt_len) {
+  if (EVP_PKEY_id(pkey.get()) == EVP_PKEY_RSA ||
+      EVP_PKEY_id(pkey.get()) == EVP_PKEY_RSA2 ||
+      EVP_PKEY_id(pkey.get()) == EVP_PKEY_RSA_PSS) {
+    if (EVP_PKEY_CTX_set_rsa_padding(pkctx, padding) <= 0) return false;
+    if (padding == RSA_PKCS1_PSS_PADDING && salt_len.has_value()) {
+      if (EVP_PKEY_CTX_set_rsa_pss_saltlen(pkctx, salt_len.value()) <= 0)
+        return false;
+    }
+  }
+
+  return true;
+}
+
+std::optional<jsi::ArrayBuffer> Node_SignFinal(
+    jsi::Runtime& runtime, EVPMDPointer&& mdctx, const ManagedEVPPKey& pkey,
+    int padding, std::optional<int> pss_salt_len) {
+  unsigned char m[EVP_MAX_MD_SIZE];
+  unsigned int m_len;
+
+  if (!EVP_DigestFinal_ex(mdctx.get(), m, &m_len)) return {};
+
+  int signed_sig_len = EVP_PKEY_size(pkey.get());
+  CHECK_GE(signed_sig_len, 0);
+  size_t sig_len = static_cast<size_t>(signed_sig_len);
+
+  MGLTypedArray<MGLTypedArrayKind::Uint8Array> sig(runtime, sig_len);
+
+  EVPKeyCtxPointer pkctx(EVP_PKEY_CTX_new(pkey.get(), nullptr));
+  if (pkctx && EVP_PKEY_sign_init(pkctx.get()) &&
+      ApplyRSAOptions(pkey, pkctx.get(), padding, pss_salt_len) &&
+      EVP_PKEY_CTX_set_signature_md(pkctx.get(), EVP_MD_CTX_md(mdctx.get())) &&
+      EVP_PKEY_sign(
+          pkctx.get(),
+          static_cast<unsigned char*>(sig.getBuffer(runtime).data(runtime)),
+          &sig_len, m, m_len)) {
+    CHECK_LE(sig_len, sig.size(runtime));
+
+    // do this bits need to be trimmed? I think so
+    //    if (sig_len == 0)
+    //      sig = ArrayBuffer::NewBackingStore(env->isolate(), 0);
+    //    else
+    //      sig = BackingStore::Reallocate(env->isolate(), std::move(sig),
+    //      sig_len);
+    return sig.getArrayBuffer(runtime);
+  }
+
+  return {};
+}
+
 //  int GetDefaultSignPadding(const ManagedEVPPKey& m_pkey) {
 //    return EVP_PKEY_id(m_pkey.get()) == EVP_PKEY_RSA_PSS ?
 //    RSA_PKCS1_PSS_PADDING : RSA_PKCS1_PADDING;
@@ -293,46 +289,27 @@ namespace margelo {
 //    }
 //  }
 
-//
-// SignBase::Error SignBase::Init(const char* sign_type) {
-//  CHECK_NULL(mdctx_);
-//  // Historically, "dss1" and "DSS1" were DSA aliases for SHA-1
-//  // exposed through the public API.
-//  if (strcmp(sign_type, "dss1") == 0 ||
-//      strcmp(sign_type, "DSS1") == 0) {
-//    sign_type = "SHA1";
-//  }
-//  const EVP_MD* md = EVP_get_digestbyname(sign_type);
-//  if (md == nullptr)
-//    return kSignUnknownDigest;
-//
-//  mdctx_.reset(EVP_MD_CTX_new());
-//  if (!mdctx_ || !EVP_DigestInit_ex(mdctx_.get(), md, nullptr)) {
-//    mdctx_.reset();
-//    return kSignInit;
-//  }
-//
-//  return kSignOk;
-//}
-//
-// SignBase::Error SignBase::Update(const char* data, size_t len) {
-//  if (mdctx_ == nullptr)
-//    return kSignNotInitialised;
-//  if (!EVP_DigestUpdate(mdctx_.get(), data, len))
-//    return kSignUpdate;
-//  return kSignOk;
-//}
-//
-// SignBase::SignBase(Environment* env, Local<Object> wrap)
-//: BaseObject(env, wrap) {}
-//
-// void SignBase::MemoryInfo(MemoryTracker* tracker) const {
-//  tracker->TrackFieldWithSize("mdctx", mdctx_ ? kSizeOf_EVP_MD_CTX : 0);
-//}
-//
-// Sign::Sign(Environment* env, Local<Object> wrap) : SignBase(env, wrap) {
-//  MakeWeak();
-//}
+SignBase::SignResult SignBase::SignFinal(jsi::Runtime& runtime,
+                                         const ManagedEVPPKey& pkey,
+                                         int padding,
+                                         std::optional<int>& salt_len,
+                                         DSASigEnc dsa_sig_enc) {
+  if (!mdctx_) return SignResult(kSignNotInitialised);
+
+  EVPMDPointer mdctx = std::move(mdctx_);
+
+  if (!ValidateDSAParameters(pkey.get())) return SignResult(kSignPrivateKey);
+
+  std::optional<jsi::ArrayBuffer> buffer =
+      Node_SignFinal(runtime, std::move(mdctx), pkey, padding, salt_len);
+  Error error = buffer.has_value() ? kSignOk : kSignPrivateKey;
+  // TODO(osp) enable this
+  //  if (error == kSignOk && dsa_sig_enc == kSigEncP1363) {
+  //    buffer = ConvertSignatureToP1363(env(), pkey, std::move(buffer));
+  //    CHECK_NOT_NULL(buffer->Data());
+  //  }
+  return SignResult(error, std::move(buffer.value()));
+}
 
 SignBase::SignBase(std::shared_ptr<react::CallInvoker> jsCallInvoker,
                    std::shared_ptr<DispatchQueue::dispatch_queue> workerQueue)
@@ -414,7 +391,33 @@ void SignBase::InstallMethods() {
         }
 
         int padding = GetDefaultSignPadding(key);
-        return {};
+        if (!arguments[offset].isUndefined()) {
+          // TODO(osp) need to add a check for int32
+          CHECK(arguments[offset].isNumber());
+          padding = static_cast<int>(arguments[offset].asNumber());
+        }
+
+        std::optional<int> salt_len;
+        if (!arguments[offset + 1].isUndefined()) {
+          // TODO(osp) add check for int32
+          CHECK(arguments[offset + 1].isNumber());
+          salt_len = static_cast<int>(arguments[offset + 1].asNumber());
+        }
+
+        // TODO(osp) add check for int32
+        CHECK(arguments[offset + 2].isNumber());
+        DSASigEnc dsa_sig_enc = static_cast<DSASigEnc>(
+            static_cast<int>(arguments[offset + 2].asNumber()));
+
+        SignResult ret =
+            this->SignFinal(runtime, key, padding, salt_len, dsa_sig_enc);
+
+        if (ret.error != kSignOk) {
+          jsi::detail::throwJSError(runtime, "Error signing");
+          throw new jsi::JSError(runtime, "Error signing");
+        }
+
+        return std::move(ret.signature.value());
       }));
 }
 
