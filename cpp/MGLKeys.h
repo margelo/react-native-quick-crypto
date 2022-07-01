@@ -98,11 +98,10 @@ class ManagedEVPPKey {
                                                     const jsi::Value* args,
                                                     unsigned int* offset);
 
-  //  static ManagedEVPPKey GetPrivateKeyFromJs(
-  //                                            const
-  //                                            v8::FunctionCallbackInfo<v8::Value>&
-  //                                            args, unsigned int* offset, bool
-  //                                            allow_key_object);
+  static ManagedEVPPKey GetPrivateKeyFromJs(jsi::Runtime& runtime,
+                                            const jsi::Value* args,
+                                            unsigned int* offset,
+                                            bool allow_key_object);
 
   static std::optional<StringOrBuffer> ToEncodedPublicKey(
       jsi::Runtime& runtime, ManagedEVPPKey key,

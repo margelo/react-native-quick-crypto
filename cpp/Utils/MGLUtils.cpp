@@ -9,9 +9,40 @@
 
 #include <jsi/jsi.h>
 
+#include <string>
+
+#include "MGLJSIMacros.h"
+
 namespace margelo {
 
 namespace jsi = facebook::jsi;
+
+ByteSource ArrayBufferToByteSource(jsi::Runtime& runtime,
+                                   const jsi::ArrayBuffer& buffer) {
+  if (buffer.size(runtime) == 0) return ByteSource();
+  char* buf = MallocOpenSSL<char>(buffer.size(runtime));
+  CHECK_NOT_NULL(buf);
+  // const cast artificially removes the const qualifier, but you cannot still
+  // modify the data in this case, this is safe because we are just memcopying
+  // to the buffer
+  memcpy(buf, const_cast<jsi::ArrayBuffer&>(buffer).data(runtime),
+         buffer.size(runtime));
+  return ByteSource::Allocated(buf, buffer.size(runtime));
+}
+
+ByteSource ArrayBufferToNTCByteSource(jsi::Runtime& runtime,
+                                      const jsi::ArrayBuffer& buffer) {
+  if (buffer.size(runtime) == 0) return ByteSource();
+  char* buf = MallocOpenSSL<char>(buffer.size(runtime) + 1);
+  CHECK_NOT_NULL(buf);
+  buf[buffer.size(runtime)] = 0;
+  // const cast artificially removes the const qualifier, but you cannot still
+  // modify the data in this case, this is safe because we are just memcopying
+  // to the buffer
+  memcpy(buf, const_cast<jsi::ArrayBuffer&>(buffer).data(runtime),
+         buffer.size(runtime));
+  return ByteSource::Allocated(buf, buffer.size(runtime));
+}
 
 ByteSource::ByteSource(ByteSource&& other) noexcept
     : data_(other.data_),
@@ -95,28 +126,38 @@ ByteSource& ByteSource::operator=(ByteSource&& other) noexcept {
 //   return out;
 // }
 //
-// ByteSource ByteSource::FromStringOrBuffer(Environment* env,
-//                                           Local<Value> value) {
-//   return IsAnyByteSource(value) ? FromBuffer(value)
-//   : FromString(env, value.As<String>());
-// }
-//
-// ByteSource ByteSource::FromString(Environment* env, Local<String> str,
-//                                   bool ntc) {
-//   CHECK(str->IsString());
-//   size_t size = str->Utf8Length(env->isolate());
-//   size_t alloc_size = ntc ? size + 1 : size;
-//   ByteSource::Builder out(alloc_size);
-//   int opts = String::NO_OPTIONS;
-//   if (!ntc) opts |= String::NO_NULL_TERMINATION;
-//   str->WriteUtf8(env->isolate(), out.data<char>(), alloc_size, nullptr,
-//   opts); return std::move(out).release();
-// }
-//
-// ByteSource ByteSource::FromBuffer(Local<Value> buffer, bool ntc) {
-//   ArrayBufferOrViewContents<char> buf(buffer);
-//   return ntc ? buf.ToNullTerminatedCopy() : buf.ToByteSource();
-// }
+ByteSource ByteSource::FromStringOrBuffer(jsi::Runtime& runtime,
+                                          const jsi::Value& value) {
+  return value.isString()
+             ? FromString(value.asString(runtime).utf8(runtime))
+             : FromBuffer(runtime,
+                          value.asObject(runtime).getArrayBuffer(runtime));
+}
+
+// ntc = null terminated copy
+ByteSource ByteSource::FromString(std::string str, bool ntc) {
+  //   CHECK(str->IsString());
+  size_t size = str.size();
+  size_t alloc_size = ntc ? size + 1 : size;
+  ByteSource::Builder out(alloc_size);
+  //   int opts = String::NO_OPTIONS;
+  //   if (!ntc) opts |= String::NO_NULL_TERMINATION;
+  //   str->WriteUtf8(env->isolate(), out.data<char>(), alloc_size, nullptr,
+  //   opts);
+  if (ntc) {
+    strcpy(out.data<char>(), str.data());
+  } else {
+    strncpy(out.data<char>(), str.data(), alloc_size);
+  }
+
+  return std::move(out).release();
+}
+
+ByteSource ByteSource::FromBuffer(jsi::Runtime& runtime,
+                                  const jsi::ArrayBuffer& buffer, bool ntc) {
+  return ntc ? ArrayBufferToNTCByteSource(runtime, buffer)
+             : ArrayBufferToByteSource(runtime, buffer);
+}
 //
 // ByteSource ByteSource::FromSecretKeyBytes(
 //                                           Environment* env,

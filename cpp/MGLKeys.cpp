@@ -5,7 +5,7 @@
 //  Created by Oscar on 20.06.22.
 //
 
-#include "MGLCipherKeys.h"
+#include "MGLKeys.h"
 
 #include <jsi/jsi.h>
 #include <openssl/bio.h>
@@ -692,36 +692,33 @@ PublicKeyEncodingConfig ManagedEVPPKey::GetPublicKeyEncodingFromJs(
   return result;
 }
 
-// TODO(osp) I never quite manage to figure out whether this is really necessary
-// maybe is other crypto function, leaving it for future uncommenting
-// ManagedEVPPKey ManagedEVPPKey::GetPrivateKeyFromJs(
-//                                                   const
-//                                                   FunctionCallbackInfo<Value>&
-//                                                   args, unsigned int*
-//                                                   offset, bool
-//                                                   allow_key_object) {
-//  if (args[*offset]->IsString() || IsAnyByteSource(args[*offset])) {
-//    Environment* env = Environment::GetCurrent(args);
-//    ByteSource key = ByteSource::FromStringOrBuffer(env, args[(*offset)++]);
-//    NonCopyableMaybe<PrivateKeyEncodingConfig> config =
-//    GetPrivateKeyEncodingFromJs(args, offset, kKeyContextInput);
-//    if (config.IsEmpty())
-//      return ManagedEVPPKey();
-//
-//    EVPKeyPointer pkey;
-//    ParseKeyResult ret =
-//    ParsePrivateKey(&pkey, config.Release(), key.data<char>(), key.size());
-//    return GetParsedKey(env, std::move(pkey), ret,
-//                        "Failed to read private key");
-//  } else {
-//    CHECK(args[*offset]->IsObject() && allow_key_object);
-//    KeyObjectHandle* key;
-//    ASSIGN_OR_RETURN_UNWRAP(&key, args[*offset].As<Object>(),
-//    ManagedEVPPKey()); CHECK_EQ(key->Data()->GetKeyType(), kKeyTypePrivate);
-//    (*offset) += 4;
-//    return key->Data()->GetAsymmetricKey();
-//  }
-//}
+ManagedEVPPKey ManagedEVPPKey::GetPrivateKeyFromJs(jsi::Runtime& runtime,
+                                                   const jsi::Value* args,
+                                                   unsigned int* offset,
+                                                   bool allow_key_object) {
+  if (args[*offset].isString() ||
+      args[*offset].asObject(runtime).isArrayBuffer(runtime)) {
+    ByteSource key = ByteSource::FromStringOrBuffer(runtime, args[*offset]);
+    NonCopyableMaybe<PrivateKeyEncodingConfig> config =
+        GetPrivateKeyEncodingFromJs(runtime, args, offset, kKeyContextInput);
+    if (config.IsEmpty()) return ManagedEVPPKey();
+
+    EVPKeyPointer pkey;
+    ParseKeyResult ret =
+        ParsePrivateKey(&pkey, config.Release(), key.data<char>(), key.size());
+    return GetParsedKey(runtime, std::move(pkey), ret,
+                        "Failed to read private key");
+  } else {
+    //    CHECK(args[*offset]->IsObject() && allow_key_object);
+    //    KeyObjectHandle* key;
+    //    ASSIGN_OR_RETURN_UNWRAP(&key, args[*offset].As<Object>(),
+    //    ManagedEVPPKey()); CHECK_EQ(key->Data()->GetKeyType(),
+    //    kKeyTypePrivate);
+    //    (*offset) += 4;
+    //    return key->Data()->GetAsymmetricKey();
+    throw jsi::JSError(runtime, "KeyObject are not currently supported");
+  }
+}
 
 ManagedEVPPKey ManagedEVPPKey::GetPublicOrPrivateKeyFromJs(
     jsi::Runtime& runtime, const jsi::Value* args, unsigned int* offset) {

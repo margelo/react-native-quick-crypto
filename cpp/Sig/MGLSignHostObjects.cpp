@@ -9,18 +9,7 @@
 
 #include <openssl/evp.h>
 
-#include "logs.h"
-//#include "crypto/crypto_sig.h"
-//#include "async_wrap-inl.h"
-//#include "base_object-inl.h"
-//#include "crypto/crypto_ec.h"
-//#include "crypto/crypto_keys.h"
-//#include "crypto/crypto_util.h"
-//#include "env-inl.h"
-//#include "memory_tracker-inl.h"
-//#include "threadpoolwork-inl.h"
-//#include "v8.h"
-
+#include "MGLKeys.h"
 #ifdef ANDROID
 #include "JSIUtils/MGLJSIUtils.h"
 #else
@@ -356,6 +345,11 @@ MGLSignHostObject::MGLSignHostObject(
   InstallMethods();
 }
 
+int GetDefaultSignPadding(const ManagedEVPPKey& m_pkey) {
+  return EVP_PKEY_id(m_pkey.get()) == EVP_PKEY_RSA_PSS ? RSA_PKCS1_PSS_PADDING
+                                                       : RSA_PKCS1_PADDING;
+}
+
 void SignBase::InstallMethods() {
   this->fields.push_back(buildPair(
       "init", JSIF([=]) {
@@ -408,6 +402,19 @@ void SignBase::InstallMethods() {
                               data.size(runtime)))
           return (int)kSignUpdate;
         return (int)kSignOk;
+      }));
+
+  this->fields.push_back(buildPair(
+      "sign", JSIF([=]) {
+        unsigned int offset = 0;
+        ManagedEVPPKey key = ManagedEVPPKey::GetPrivateKeyFromJs(
+            runtime, arguments, &offset, true);
+        if (!key) {
+          return {};
+        }
+
+        int padding = GetDefaultSignPadding(key);
+        return {};
       }));
 }
 

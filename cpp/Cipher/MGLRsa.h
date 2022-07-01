@@ -14,7 +14,7 @@
 #include <optional>
 #include <utility>
 
-#include "MGLCipherKeys.h"
+#include "MGLKeys.h"
 #include "MGLUtils.h"
 
 namespace margelo {

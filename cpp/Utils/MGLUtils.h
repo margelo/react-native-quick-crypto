@@ -184,15 +184,14 @@ class ByteSource {
   //                                      v8::Local<v8::String> value,
   //                                      enum encoding enc = BASE64);
   //
-  //  static ByteSource FromStringOrBuffer(Environment* env,
-  //                                       v8::Local<v8::Value> value);
-  //
-  //  static ByteSource FromString(Environment* env,
-  //                               v8::Local<v8::String> str,
-  //                               bool ntc = false);
+  static ByteSource FromStringOrBuffer(jsi::Runtime& runtime,
+                                       const jsi::Value& value);
 
-  //  static ByteSource FromBuffer(v8::Local<v8::Value> buffer,
-  //                               bool ntc = false);
+  static ByteSource FromString(std::string str, bool ntc = false);
+
+  static ByteSource FromBuffer(jsi::Runtime& runtime,
+                               const jsi::ArrayBuffer& buffer,
+                               bool ntc = false);
 
   //  static ByteSource FromBIO(const BIOPointer& bio);
   //

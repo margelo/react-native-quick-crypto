@@ -18,7 +18,7 @@
 #else
 #include "MGLSmartHostObject.h"
 #endif
-#include "MGLCipherKeys.h"
+#include "MGLKeys.h"
 #include "MGLRsa.h"
 #include "MGLUtils.h"
 

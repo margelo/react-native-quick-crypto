@@ -14,7 +14,7 @@
 #include <optional>
 #include <vector>
 
-#include "MGLCipherKeys.h"
+#include "MGLKeys.h"
 #ifdef ANDROID
 #include "JSIUtils/MGLJSIUtils.h"
 #include "JSIUtils/MGLTypedArray.h"

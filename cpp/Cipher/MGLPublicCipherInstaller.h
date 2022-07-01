@@ -18,7 +18,7 @@
 #include <utility>
 #include <vector>
 
-#include "MGLCipherKeys.h"
+#include "MGLKeys.h"
 #include "MGLPublicCipher.h"
 
 #ifdef ANDROID
