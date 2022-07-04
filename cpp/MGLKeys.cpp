@@ -15,13 +15,16 @@
 #include <utility>
 #include <vector>
 
+#ifdef ANDROID
+#include "JSIUtils/MGLJSIMacros.h"
+#include "JSIUtils/MGLJSIUtils.h"
+#include "JSIUtils/MGLTypedArray.h"
+#include "Utils/MGLUtils.h"
+#else
+#include "MGLJSIMacros.h"
 #include "MGLJSIUtils.h"
 #include "MGLTypedArray.h"
 #include "MGLUtils.h"
-#ifdef ANDROID
-#include "JSIUtils/MGLJSIMacros.h"
-#else
-#include "MGLJSIMacros.h"
 #endif
 
 namespace margelo {

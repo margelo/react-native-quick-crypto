@@ -11,7 +11,11 @@
 
 #include <string>
 
+#ifdef ANDROID
+#include "JSIUtils/MGLJSIMacros.h"
+#else
 #include "MGLJSIMacros.h"
+#endif
 
 namespace margelo {
 

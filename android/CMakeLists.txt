@@ -48,6 +48,14 @@ add_library(reactnativequickcrypto  # <-- Library name
         "../cpp/Cipher/MGLCipherHostObject.cpp"
         "../cpp/Cipher/MGLCreateCipherInstaller.cpp"
         "../cpp/Cipher/MGLCreateDecipherInstaller.cpp"
+        "../cpp/MGLKeys.cpp"
+        "../cpp/Utils/MGLUtils.cpp"
+        "../cpp/Cipher/MGLRsa.cpp"
+        "../cpp/Cipher/MGLGenerateKeyPairInstaller.cpp"
+        "../cpp/Cipher/MGLGenerateKeyPairSyncInstaller.cpp"
+        "../cpp/Sig/MGLSignInstaller.cpp"
+        "../cpp/Sig/MGLVerifyInstaller.cpp"
+        "../cpp/Sig/MGLSignHostObjects.cpp"
         ${INCLUDE_JSI_CPP} # only on older RN versions
 )
 

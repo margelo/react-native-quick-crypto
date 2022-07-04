@@ -11,6 +11,8 @@
 #ifdef ANDROID
 #include "Cipher/MGLCreateCipherInstaller.h"
 #include "Cipher/MGLCreateDecipherInstaller.h"
+#include "Cipher/MGLGenerateKeyPairInstaller.h"
+#include "Cipher/MGLGenerateKeyPairSyncInstaller.h"
 #include "Cipher/MGLPublicCipher.h"
 #include "Cipher/MGLPublicCipherInstaller.h"
 #include "HMAC/MGLHmacInstaller.h"
