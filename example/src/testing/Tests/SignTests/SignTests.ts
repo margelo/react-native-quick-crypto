@@ -78,4 +78,16 @@ export function registerSignTests() {
     );
     chai.expect(matches).to.equal(true);
   });
+
+  it('simple sscrypto sign/verify', async () => {
+    const clearText = 'This is clear text';
+    const privateKey = await PrivateKey.generate(1024);
+    const signature = privateKey.sign(Buffer.from(clearText) as any);
+    const verified = privateKey.verify(
+      Buffer.from(clearText) as any,
+      signature
+    );
+
+    chai.expect(verified).to.equal(true);
+  });
 }

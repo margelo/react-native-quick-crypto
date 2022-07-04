@@ -5,12 +5,14 @@ crypto.privateDecrypt =
   require('react-native-quick-crypto').default.privateDecrypt;
 crypto.generateKeyPair =
   require('react-native-quick-crypto').default.generateKeyPair;
+crypto.createVerify = 
+  require('react-native-quick-crypto').default.createVerify;
+crypto.createSign =
+  require('react-native-quick-crypto').default.createSign;
 import { Buffer } from 'buffer';
 global.Buffer = Buffer;
-// @ts-ignore
 global.process.cwd = () => 'sxsx';
 global.process.env = { NODE_ENV: 'production' };
-// @ts-ignore
 global.location = {};
 
 import { AppRegistry } from 'react-native';
