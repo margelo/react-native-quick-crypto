@@ -1,12 +1,12 @@
 //
-//  MGLCipherKeys.hpp
-//  react-native-fast-crypto
+//  MGLCipherKeys.h
+//  react-native-quick-crypto
 //
 //  Created by Oscar on 20.06.22.
 //
 
-#ifndef MGLCipherKeys_hpp
-#define MGLCipherKeys_hpp
+#ifndef MGLCipherKeys_h
+#define MGLCipherKeys_h
 
 #include <jsi/jsi.h>
 #include <openssl/evp.h>
@@ -112,12 +112,12 @@ class ManagedEVPPKey {
       const PrivateKeyEncodingConfig &config);
 
  private:
-  size_t size_of_private_key() const;
-  size_t size_of_public_key() const;
+  //  size_t size_of_private_key() const;
+  //  size_t size_of_public_key() const;
 
   EVPKeyPointer pkey_;
 };
 
 }  // namespace margelo
 
-#endif /* MGLCipherKeys_hpp */
+#endif /* MGLCipherKeys_h */
