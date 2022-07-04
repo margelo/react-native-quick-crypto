@@ -252,7 +252,7 @@ void MGLCipherHostObject::installMethods() {
           // On the node version there are several layers of wrapping and errors
           // are not immediately surfaced On our version we can simply throw an
           // error as soon as something goes wrong
-          throw jsi::JSError(runtime, 'kErrorState');
+          throw jsi::JSError(runtime, "kErrorState");
         }
 
         const int mode = EVP_CIPHER_CTX_mode(ctx_);
@@ -502,10 +502,9 @@ void MGLCipherHostObject::installMethods() {
         }
 
         if (!is_valid) {
-          jsi::detail::throwJSError(
-              runtime, "Invalid authentication tag length" + tag_len);
-          throw jsi::JSError(runtime,
-                             "Invalid authentication tag length: " + tag_len);
+          jsi::detail::throwJSError(runtime,
+                                    "Invalid authentication tag length");
+          throw jsi::JSError(runtime, "Invalid authentication tag length");
         }
 
         auth_tag_len_ = tag_len;

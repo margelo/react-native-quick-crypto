@@ -1,10 +1,3 @@
-//
-//  MGLUtils.h
-//  Pods
-//
-//  Created by Oscar on 20.06.22.
-//
-
 #ifndef MGLUtils_h
 #define MGLUtils_h
 
@@ -232,7 +225,7 @@ inline ByteSource ToNullTerminatedByteSource(jsi::Runtime& runtime,
   return ByteSource::Allocated(buf, buffer.size(runtime));
 }
 
-int PasswordCallback(char* buf, int size, int rwflag, void* u) {
+inline int PasswordCallback(char* buf, int size, int rwflag, void* u) {
   const ByteSource* passphrase = *static_cast<const ByteSource**>(u);
   if (passphrase != nullptr) {
     size_t buflen = static_cast<size_t>(size);
@@ -245,7 +238,7 @@ int PasswordCallback(char* buf, int size, int rwflag, void* u) {
   return -1;
 }
 
-void CheckEntropy() {
+inline void CheckEntropy() {
   for (;;) {
     int status = RAND_status();
     //    CHECK_GE(status, 0);  // Cannot fail.

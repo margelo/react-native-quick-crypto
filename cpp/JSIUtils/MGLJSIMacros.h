@@ -1,7 +1,3 @@
-//
-// Created by Szymon on 24/02/2022.
-//
-
 #ifndef MGL_JSIMACROS_H
 #define MGL_JSIMACROS_H
 
@@ -20,13 +16,13 @@ struct AssertionInfo {
   const char *function;
 };
 
-[[noreturn]] void Abort() {
+inline void Abort() {
   //  DumpBacktrace(stderr);
   fflush(stderr);
   ABORT_NO_BACKTRACE();
 }
 
-[[noreturn]] void Assert(const AssertionInfo &info) {
+inline void Assert(const AssertionInfo &info) {
   //  std::string name = GetHumanReadableProcessName();
 
   fprintf(stderr, "%s:%s%s Assertion `%s' failed.\n", info.file_line,
@@ -35,9 +31,6 @@ struct AssertionInfo {
 
   Abort();
 }
-
-// if you want to create a new marco use (https://godbolt.org) provide flag -E
-// in right panel
 
 #define HOST_LAMBDA(name, body) HOST_LAMBDA_CAP(name, [=], body)
 

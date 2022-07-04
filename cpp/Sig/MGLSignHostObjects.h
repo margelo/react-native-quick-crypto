@@ -85,4 +85,4 @@ class MGLVerifyHostObject : public SignBase {
 
 }  // namespace margelo
 
-#endif /* MGLSignHostObject_h */
+#endif /* MGLSignHostObjects_h */

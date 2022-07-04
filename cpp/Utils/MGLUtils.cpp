@@ -1,10 +1,3 @@
-//
-//  MGLUtils.cpp
-//  react-native-quick-crypto
-//
-//  Created by Oscar on 21.06.22.
-//
-
 #include "MGLUtils.h"
 
 #include <jsi/jsi.h>
