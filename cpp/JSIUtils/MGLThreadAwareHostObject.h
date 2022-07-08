@@ -13,7 +13,7 @@
 #ifdef ONANDROID
 #include "Utils/MGLDispatchQueue.h"
 #else
-#include "../Utils/MGLDispatchQueue.h"
+#include "MGLDispatchQueue.h"
 #endif
 
 namespace margelo {
