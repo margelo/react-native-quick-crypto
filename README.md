@@ -62,18 +62,25 @@ expo prebuild
 
 ## Usage
 
-In your `metro.config.js`, add a module resolver to replace `crypto` with `react-native-quick-crypto`:
+In your `babel.config.js`, add a module resolver to replace `crypto` with `react-native-quick-crypto`:
 
 ```diff
 +const path = require('path');
 
- module.exports = {
-+  resolver: {
-+    extraNodeModules: {
-+      crypto: path.resolve(__dirname, './node_modules/react-native-quick-crypto'),
-+    },
-+  },
-   ...
+module.exports = {
+  presets: ['module:metro-react-native-babel-preset'],
+  plugins: [
++   [
++     'module-resolver',
++     {
++       alias: {
++         'crypto': 'react-native-quick-crypto',
++       },
++     },
++   ],
+    ...
+  ],
+};
 ```
 
 Now, all imports for `crypto` will be resolved as `react-native-quick-crypto` instead.
