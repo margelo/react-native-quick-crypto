@@ -1,5 +1,6 @@
 import { QuickCrypto } from './QuickCrypto';
+const fallbackCrypto = require('crypto-browserify');
+const crypto = {...fallbackCrypto, ...QuickCrypto};
 
-export * from './QuickCrypto';
-
-export default QuickCrypto;
+module.exports = crypto;
+export default crypto;

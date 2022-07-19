@@ -1,6 +1,6 @@
 /* eslint-disable no-dupe-class-members */
 import { NativeQuickCrypto } from './NativeQuickCrypto/NativeQuickCrypto';
-import Stream from 'stream';
+import Stream from 'stream-browserify';
 import {
   BinaryLike,
   binaryLikeToArrayBuffer,
