@@ -22,7 +22,7 @@ For example, creating a Wallet using ethers.js uses complex algorithms to genera
 const start = performance.now()
 const wallet = ethers.Wallet.createRandom()
 const end = performance.now()
-console.log(`Creating a Wallet took ${end - start}ms.`)
+console.log(`Creating a Wallet took ${end - start} ms.`)
 ```
 
 **Without** react-native-crypto 🐢:
