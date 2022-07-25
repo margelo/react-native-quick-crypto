@@ -9,11 +9,10 @@ A fast implementation of Node's `crypto` module.
 Unlike any other current JS-based polyfills, react-native-quick-crypto is written in C/C++ JSI and provides much greater performance - especially on mobile devices.
 QuickCrypto can be used as a drop-in replacement for your Web3/Crypto apps to speed up common cryptography functions.
 
-* 🏎️ Up to 300x faster than all other solutions
+* 🏎️ Up to 58x faster than all other solutions
 * ⚡️ Lightning fast implementation with pure C++ and JSI, instead of JS
 * 🧪 Well tested in JS and C++ (OpenSSL)
 * 💰 Made for crypto apps and Wallets
-* 🤌 Up to 5x smaller in JS-bundle size
 * 🔢 Secure native compiled cryptography
 * 🔁 Easy drop-in replacement for [crypto-browserify](https://github.com/crypto-browserify/crypto-browserify) or [react-native-crypto](https://github.com/tradle/react-native-crypto)
 
