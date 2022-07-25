@@ -3,14 +3,12 @@
 
 #include <memory>
 
+#include "MGLCipherHostObject.h"
 #ifdef ANDROID
 #include "JSIUtils/MGLJSIMacros.h"
 #else
 #include "MGLJSIMacros.h"
 #endif
-#include "MGLCipherHostObject.h"
-
-using namespace facebook;
 
 namespace margelo {
 

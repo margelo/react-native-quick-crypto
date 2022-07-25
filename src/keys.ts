@@ -36,7 +36,7 @@ function option(name: string, objName: string | undefined) {
 }
 
 function parseKeyFormat(
-  formatStr: string,
+  formatStr: string | undefined,
   defaultFormat: KFormatType | undefined,
   optionName?: string
 ) {
@@ -50,10 +50,10 @@ function parseKeyFormat(
 }
 
 function parseKeyType(
-  typeStr: string,
+  typeStr: string | undefined,
   required: boolean,
-  keyType: string,
-  isPublic: boolean,
+  keyType: string | undefined,
+  isPublic: boolean | undefined,
   optionName: string
 ) {
   if (typeStr === undefined && !required) {
@@ -63,10 +63,6 @@ function parseKeyType(
       throw new Error(
         `Crypto incompatible key options: ${typeStr} can only be used for RSA keys`
       );
-      // throw new ERR_CRYPTO_INCOMPATIBLE_KEY_OPTIONS(
-      //   typeStr,
-      //   'can only be used for RSA keys'
-      // );
     }
     return KeyEncoding.kKeyEncodingPKCS1;
   } else if (typeStr === 'spki' && isPublic !== false) {
@@ -86,10 +82,17 @@ function parseKeyType(
 }
 
 function parseKeyFormatAndType(
-  enc: any,
-  keyType: any,
-  isPublic: any,
-  objName: any
+  enc: {
+    key: any;
+    type?: string;
+    encoding?: string;
+    format?: string;
+    cipher?: string;
+    passphrase?: string;
+  },
+  keyType: string | undefined,
+  isPublic: boolean | undefined,
+  objName: string | undefined
 ) {
   const { format: formatStr, type: typeStr } = enc;
 
@@ -103,6 +106,7 @@ function parseKeyFormatAndType(
   const isRequired =
     (!isInput || format === KFormatType.kKeyFormatDER) &&
     format !== KFormatType.kKeyFormatJWK;
+
   const type = parseKeyType(
     typeStr,
     isRequired,
@@ -116,6 +120,7 @@ function parseKeyFormatAndType(
 function parseKeyEncoding(
   enc: {
     key: any;
+    type?: string;
     encoding?: string;
     format?: string;
     cipher?: string;
@@ -123,7 +128,7 @@ function parseKeyEncoding(
   },
   keyType: string | undefined,
   isPublic: boolean | undefined,
-  objName?: string
+  objName?: string | undefined
 ) {
   // validateObject(enc, 'options');
 

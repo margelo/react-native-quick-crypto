@@ -5,7 +5,7 @@
 //  Created by Oscar on 20.06.22.
 //
 
-#include "MGLCipherKeys.h"
+#include "MGLKeys.h"
 
 #include <jsi/jsi.h>
 #include <openssl/bio.h>
@@ -15,12 +15,16 @@
 #include <utility>
 #include <vector>
 
+#ifdef ANDROID
+#include "JSIUtils/MGLJSIMacros.h"
+#include "JSIUtils/MGLJSIUtils.h"
+#include "JSIUtils/MGLTypedArray.h"
+#include "Utils/MGLUtils.h"
+#else
+#include "MGLJSIMacros.h"
 #include "MGLJSIUtils.h"
 #include "MGLTypedArray.h"
 #include "MGLUtils.h"
-#ifdef ANDROID
-#else
-#include "logs.h"
 #endif
 
 namespace margelo {
@@ -33,8 +37,8 @@ void GetKeyFormatAndTypeFromJs(AsymmetricKeyEncodingConfig* config,
   // During key pair generation, it is possible not to specify a key encoding,
   // which will lead to a key object being returned.
   if (args[*offset].isUndefined()) {
-    //    CHECK_EQ(context, kKeyContextGenerate);
-    //    CHECK(args[*offset + 1].IsUndefined());
+    CHECK_EQ(context, kKeyContextGenerate);
+    CHECK(args[*offset + 1].isUndefined());
     config->output_key_object_ = true;
   } else {
     config->output_key_object_ = false;
@@ -44,16 +48,13 @@ void GetKeyFormatAndTypeFromJs(AsymmetricKeyEncodingConfig* config,
     config->format_ = static_cast<PKFormatType>((int)args[*offset].getNumber());
 
     if (args[*offset + 1].isNumber()) {
-      config->type_ = std::optional<PKEncodingType>(
-          static_cast<PKEncodingType>((int)args[*offset + 1].getNumber()));
+      config->type_ =
+          static_cast<PKEncodingType>((int)args[*offset + 1].getNumber());
     } else {
-      // TODO(osp) implement checks
-      //      CHECK(
-      //            (context == kKeyContextInput &&
-      //             config->format_ == kKeyFormatPEM) ||
-      //            (context == kKeyContextGenerate &&
-      //             config->format_ == kKeyFormatJWK));
-      //      CHECK(args[*offset + 1]->IsNullOrUndefined());
+      CHECK(
+          (context == kKeyContextInput && config->format_ == kKeyFormatPEM) ||
+          (context == kKeyContextGenerate && config->format_ == kKeyFormatJWK));
+      CHECK(args[*offset + 1].isUndefined());
       config->type_ = std::nullopt;
     }
   }
@@ -193,11 +194,10 @@ ParseKeyResult ParsePrivateKey(EVPKeyPointer* pkey,
     pkey->reset(PEM_read_bio_PrivateKey(bio.get(), nullptr, PasswordCallback,
                                         &passphrase));
   } else {
-    //    CHECK_EQ(config.format_, kKeyFormatDER);
+    CHECK_EQ(config.format_, kKeyFormatDER);
 
     if (!config.type_.has_value()) {
-      // TODO(osp) need to implement end of the world exception
-      //      throw new crashing exception
+      throw new std::runtime_error("ParsePrivateKey key config has no type!");
     }
 
     if (config.type_.value() == kKeyEncodingPKCS1) {
@@ -216,7 +216,7 @@ ParseKeyResult ParsePrivateKey(EVPKeyPointer* pkey,
         if (p8inf) pkey->reset(EVP_PKCS82PKEY(p8inf.get()));
       }
     } else {
-      //      CHECK_EQ(config.type_.ToChecked(), kKeyEncodingSEC1);
+      CHECK_EQ(config.type_.value(), kKeyEncodingSEC1);
       const unsigned char* p = reinterpret_cast<const unsigned char*>(key);
       pkey->reset(d2i_PrivateKey(EVP_PKEY_EC, nullptr, &p, key_len));
     }
@@ -692,36 +692,34 @@ PublicKeyEncodingConfig ManagedEVPPKey::GetPublicKeyEncodingFromJs(
   return result;
 }
 
-// TODO(osp) I never quite manage to figure out whether this is really necessary
-// maybe is other crypto function, leaving it for future uncommenting
-// ManagedEVPPKey ManagedEVPPKey::GetPrivateKeyFromJs(
-//                                                   const
-//                                                   FunctionCallbackInfo<Value>&
-//                                                   args, unsigned int*
-//                                                   offset, bool
-//                                                   allow_key_object) {
-//  if (args[*offset]->IsString() || IsAnyByteSource(args[*offset])) {
-//    Environment* env = Environment::GetCurrent(args);
-//    ByteSource key = ByteSource::FromStringOrBuffer(env, args[(*offset)++]);
-//    NonCopyableMaybe<PrivateKeyEncodingConfig> config =
-//    GetPrivateKeyEncodingFromJs(args, offset, kKeyContextInput);
-//    if (config.IsEmpty())
-//      return ManagedEVPPKey();
-//
-//    EVPKeyPointer pkey;
-//    ParseKeyResult ret =
-//    ParsePrivateKey(&pkey, config.Release(), key.data<char>(), key.size());
-//    return GetParsedKey(env, std::move(pkey), ret,
-//                        "Failed to read private key");
-//  } else {
-//    CHECK(args[*offset]->IsObject() && allow_key_object);
-//    KeyObjectHandle* key;
-//    ASSIGN_OR_RETURN_UNWRAP(&key, args[*offset].As<Object>(),
-//    ManagedEVPPKey()); CHECK_EQ(key->Data()->GetKeyType(), kKeyTypePrivate);
-//    (*offset) += 4;
-//    return key->Data()->GetAsymmetricKey();
-//  }
-//}
+ManagedEVPPKey ManagedEVPPKey::GetPrivateKeyFromJs(jsi::Runtime& runtime,
+                                                   const jsi::Value* args,
+                                                   unsigned int* offset,
+                                                   bool allow_key_object) {
+  if (args[*offset].isString() ||
+      args[*offset].asObject(runtime).isArrayBuffer(runtime)) {
+    ByteSource key = ByteSource::FromStringOrBuffer(runtime, args[*offset]);
+    (*offset)++;
+    NonCopyableMaybe<PrivateKeyEncodingConfig> config =
+        GetPrivateKeyEncodingFromJs(runtime, args, offset, kKeyContextInput);
+    if (config.IsEmpty()) return ManagedEVPPKey();
+
+    EVPKeyPointer pkey;
+    ParseKeyResult ret =
+        ParsePrivateKey(&pkey, config.Release(), key.data<char>(), key.size());
+    return GetParsedKey(runtime, std::move(pkey), ret,
+                        "Failed to read private key");
+  } else {
+    //    CHECK(args[*offset]->IsObject() && allow_key_object);
+    //    KeyObjectHandle* key;
+    //    ASSIGN_OR_RETURN_UNWRAP(&key, args[*offset].As<Object>(),
+    //    ManagedEVPPKey()); CHECK_EQ(key->Data()->GetKeyType(),
+    //    kKeyTypePrivate);
+    //    (*offset) += 4;
+    //    return key->Data()->GetAsymmetricKey();
+    throw jsi::JSError(runtime, "KeyObject are not currently supported");
+  }
+}
 
 ManagedEVPPKey ManagedEVPPKey::GetPublicOrPrivateKeyFromJs(
     jsi::Runtime& runtime, const jsi::Value* args, unsigned int* offset) {

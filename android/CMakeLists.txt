@@ -6,8 +6,8 @@ file (GLOB LIBFBJNI_INCLUDES "${BUILD_DIR}/fbjni-*-headers.jar/")
 file (GLOB LIBRN_SO "${BUILD_DIR}/react-native-0*/jni/${ANDROID_ABI}")
 set (CMAKE_CXX_STANDARD 17)
 # TODO(osp) remove before release
-set (CMAKE_C_FLAGS_DEBUG "${CMAKE_C_FLAGS_DEBUG} -g")
-set (CMAKE_CXX_FLAGS_DEBUG "${CMAKE_CXX_FLAGS_DEBUG} -g")
+#set (CMAKE_C_FLAGS_DEBUG "${CMAKE_C_FLAGS_DEBUG} -g")
+#set (CMAKE_CXX_FLAGS_DEBUG "${CMAKE_CXX_FLAGS_DEBUG} -g")
 
 include_directories(
         ../cpp
@@ -48,6 +48,14 @@ add_library(reactnativequickcrypto  # <-- Library name
         "../cpp/Cipher/MGLCipherHostObject.cpp"
         "../cpp/Cipher/MGLCreateCipherInstaller.cpp"
         "../cpp/Cipher/MGLCreateDecipherInstaller.cpp"
+        "../cpp/MGLKeys.cpp"
+        "../cpp/Utils/MGLUtils.cpp"
+        "../cpp/Cipher/MGLRsa.cpp"
+        "../cpp/Cipher/MGLGenerateKeyPairInstaller.cpp"
+        "../cpp/Cipher/MGLGenerateKeyPairSyncInstaller.cpp"
+        "../cpp/Sig/MGLSignInstaller.cpp"
+        "../cpp/Sig/MGLVerifyInstaller.cpp"
+        "../cpp/Sig/MGLSignHostObjects.cpp"
         ${INCLUDE_JSI_CPP} # only on older RN versions
 )
 

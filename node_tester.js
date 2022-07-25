@@ -39,3 +39,6 @@ const encrypted = crypto.publicEncrypt({
 
 const decrypted = crypto.privateDecrypt(privateKey, encrypted)
 console.log(decrypted.toString('utf-8'));
+
+const verify = crypto.createVerify()
+verify.verify()

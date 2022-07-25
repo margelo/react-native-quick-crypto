@@ -10,6 +10,7 @@ import { registerConstantsTest } from './Tests/ConstantsTest/ConstantsTest';
 import chai from 'chai';
 import { registerPublicCipherTests } from './Tests/CipherTests/PublicCipherTests';
 import { registerGenerateKeyPairTests } from './Tests/CipherTests/GenerateKeyPairTests';
+import { registerSignTests } from './Tests/SignTests/SignTests';
 
 export const TEST_LIST: Array<TestItemType> = [
   {
@@ -71,5 +72,10 @@ export const TEST_LIST: Array<TestItemType> = [
     description: 'generateKeyPair',
     value: false,
     registrator: registerGenerateKeyPairTests,
+  },
+  {
+    description: 'sign/verify',
+    value: false,
+    registrator: registerSignTests,
   },
 ];

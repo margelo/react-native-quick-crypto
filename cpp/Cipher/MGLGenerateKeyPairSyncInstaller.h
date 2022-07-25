@@ -13,13 +13,15 @@
 #include <memory>
 
 #ifdef ANDROID
+#include "Cipher/MGLRsa.h"
 #include "JSIUtils/MGLSmartHostObject.h"
+#include "Utils/MGLUtils.h"
 #else
-#include "MGLSmartHostObject.h"
-#endif
-#include "MGLCipherKeys.h"
 #include "MGLRsa.h"
+#include "MGLSmartHostObject.h"
 #include "MGLUtils.h"
+#endif
+#include "MGLKeys.h"
 
 namespace margelo {
 

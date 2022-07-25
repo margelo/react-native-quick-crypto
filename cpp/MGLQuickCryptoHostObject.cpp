@@ -11,11 +11,15 @@
 #ifdef ANDROID
 #include "Cipher/MGLCreateCipherInstaller.h"
 #include "Cipher/MGLCreateDecipherInstaller.h"
+#include "Cipher/MGLGenerateKeyPairInstaller.h"
+#include "Cipher/MGLGenerateKeyPairSyncInstaller.h"
 #include "Cipher/MGLPublicCipher.h"
 #include "Cipher/MGLPublicCipherInstaller.h"
 #include "HMAC/MGLHmacInstaller.h"
 #include "Hash/MGLHashInstaller.h"
 #include "Random/MGLRandomHostObject.h"
+#include "Sig/MGLSignInstaller.h"
+#include "Sig/MGLVerifyInstaller.h"
 #include "fastpbkdf2/MGLPbkdf2HostObject.h"
 #else
 #include "MGLCreateCipherInstaller.h"
@@ -28,6 +32,8 @@
 #include "MGLPublicCipher.h"
 #include "MGLPublicCipherInstaller.h"
 #include "MGLRandomHostObject.h"
+#include "MGLSignInstaller.h"
+#include "MGLVerifyInstaller.h"
 #endif
 
 namespace margelo {
@@ -98,6 +104,12 @@ MGLQuickCryptoHostObject::MGLQuickCryptoHostObject(
         std::make_shared<MGLRandomHostObject>(jsCallInvoker, workerQueue);
     return jsi::Object::createFromHostObject(runtime, hostObject);
   }));
+
+  // createSign
+  this->fields.push_back(getSignFieldDefinition(jsCallInvoker, workerQueue));
+
+  // createVerify
+  this->fields.push_back(getVerifyFieldDefinition(jsCallInvoker, workerQueue));
 }
 
 }  // namespace margelo

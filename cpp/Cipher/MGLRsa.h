@@ -14,8 +14,12 @@
 #include <optional>
 #include <utility>
 
-#include "MGLCipherKeys.h"
+#include "MGLKeys.h"
+#ifdef ANDROID
+#include "Utils/MGLUtils.h"
+#else
 #include "MGLUtils.h"
+#endif
 
 namespace margelo {
 

@@ -1,10 +1,3 @@
-//
-//  MGLUtils.h
-//  Pods
-//
-//  Created by Oscar on 20.06.22.
-//
-
 #ifndef MGLUtils_h
 #define MGLUtils_h
 
@@ -53,6 +46,8 @@ using EVPKeyCtxPointer = DeleteFnPtr<EVP_PKEY_CTX, EVP_PKEY_CTX_free>;
 using EVPKeyPointer = DeleteFnPtr<EVP_PKEY, EVP_PKEY_free>;
 using BignumPointer = DeleteFnPtr<BIGNUM, BN_free>;
 using RSAPointer = DeleteFnPtr<RSA, RSA_free>;
+using EVPMDPointer = DeleteFnPtr<EVP_MD_CTX, EVP_MD_CTX_free>;
+using ECDSASigPointer = DeleteFnPtr<ECDSA_SIG, ECDSA_SIG_free>;
 
 template <typename T>
 class NonCopyableMaybe {
@@ -183,15 +178,14 @@ class ByteSource {
   //                                      v8::Local<v8::String> value,
   //                                      enum encoding enc = BASE64);
   //
-  //  static ByteSource FromStringOrBuffer(Environment* env,
-  //                                       v8::Local<v8::Value> value);
-  //
-  //  static ByteSource FromString(Environment* env,
-  //                               v8::Local<v8::String> str,
-  //                               bool ntc = false);
+  static ByteSource FromStringOrBuffer(jsi::Runtime& runtime,
+                                       const jsi::Value& value);
 
-  //  static ByteSource FromBuffer(v8::Local<v8::Value> buffer,
-  //                               bool ntc = false);
+  static ByteSource FromString(std::string str, bool ntc = false);
+
+  static ByteSource FromBuffer(jsi::Runtime& runtime,
+                               const jsi::ArrayBuffer& buffer,
+                               bool ntc = false);
 
   //  static ByteSource FromBIO(const BIOPointer& bio);
   //
@@ -214,6 +208,12 @@ class ByteSource {
       : data_(data), allocated_data_(allocated_data), size_(size) {}
 };
 
+ByteSource ArrayBufferToByteSource(jsi::Runtime& runtime,
+                                   const jsi::ArrayBuffer& buffer);
+
+ByteSource ArrayBufferToNTCByteSource(jsi::Runtime& runtime,
+                                      const jsi::ArrayBuffer& buffer);
+
 // Originally part of the ArrayBufferContentOrView class
 inline ByteSource ToNullTerminatedByteSource(jsi::Runtime& runtime,
                                              jsi::ArrayBuffer& buffer) {
@@ -225,7 +225,7 @@ inline ByteSource ToNullTerminatedByteSource(jsi::Runtime& runtime,
   return ByteSource::Allocated(buf, buffer.size(runtime));
 }
 
-int PasswordCallback(char* buf, int size, int rwflag, void* u) {
+inline int PasswordCallback(char* buf, int size, int rwflag, void* u) {
   const ByteSource* passphrase = *static_cast<const ByteSource**>(u);
   if (passphrase != nullptr) {
     size_t buflen = static_cast<size_t>(size);
@@ -238,7 +238,7 @@ int PasswordCallback(char* buf, int size, int rwflag, void* u) {
   return -1;
 }
 
-void CheckEntropy() {
+inline void CheckEntropy() {
   for (;;) {
     int status = RAND_status();
     //    CHECK_GE(status, 0);  // Cannot fail.

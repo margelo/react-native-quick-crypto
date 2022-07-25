@@ -1,12 +1,12 @@
 //
-//  MGLCipherKeys.hpp
-//  react-native-fast-crypto
+//  MGLCipherKeys.h
+//  react-native-quick-crypto
 //
 //  Created by Oscar on 20.06.22.
 //
 
-#ifndef MGLCipherKeys_hpp
-#define MGLCipherKeys_hpp
+#ifndef MGLCipherKeys_h
+#define MGLCipherKeys_h
 
 #include <jsi/jsi.h>
 #include <openssl/evp.h>
@@ -16,7 +16,7 @@
 #include <string>
 
 #ifdef ANDROID
-#include "JSIUtils/MGLUtils.h"
+#include "Utils/MGLUtils.h"
 #else
 #include "MGLUtils.h"
 #endif
@@ -62,7 +62,7 @@ struct AsymmetricKeyEncodingConfig {
 using PublicKeyEncodingConfig = AsymmetricKeyEncodingConfig;
 
 struct PrivateKeyEncodingConfig : public AsymmetricKeyEncodingConfig {
-  const EVP_CIPHER* cipher_;
+  const EVP_CIPHER *cipher_;
   // The ByteSource alone is not enough to distinguish between "no passphrase"
   // and a zero-length passphrase (which can be a null pointer), therefore, we
   // use a NonCopyableMaybe.
@@ -75,50 +75,49 @@ struct PrivateKeyEncodingConfig : public AsymmetricKeyEncodingConfig {
 class ManagedEVPPKey {
  public:
   ManagedEVPPKey() {}
-  explicit ManagedEVPPKey(EVPKeyPointer&& pkey);
-  ManagedEVPPKey(const ManagedEVPPKey& that);
-  ManagedEVPPKey& operator=(const ManagedEVPPKey& that);
+  explicit ManagedEVPPKey(EVPKeyPointer &&pkey);
+  ManagedEVPPKey(const ManagedEVPPKey &that);
+  ManagedEVPPKey &operator=(const ManagedEVPPKey &that);
 
   operator bool() const;
-  EVP_PKEY* get() const;
+  EVP_PKEY *get() const;
 
   static PublicKeyEncodingConfig GetPublicKeyEncodingFromJs(
-      jsi::Runtime& runtime, const jsi::Value* arguments, unsigned int* offset,
+      jsi::Runtime &runtime, const jsi::Value *arguments, unsigned int *offset,
       KeyEncodingContext context);
 
   static NonCopyableMaybe<PrivateKeyEncodingConfig> GetPrivateKeyEncodingFromJs(
-      jsi::Runtime& runtime, const jsi::Value* arguments, unsigned int* offset,
+      jsi::Runtime &runtime, const jsi::Value *arguments, unsigned int *offset,
       KeyEncodingContext context);
   //
-  static ManagedEVPPKey GetParsedKey(jsi::Runtime& runtime,
-                                     EVPKeyPointer&& pkey, ParseKeyResult ret,
-                                     const char* default_msg);
+  static ManagedEVPPKey GetParsedKey(jsi::Runtime &runtime,
+                                     EVPKeyPointer &&pkey, ParseKeyResult ret,
+                                     const char *default_msg);
 
-  static ManagedEVPPKey GetPublicOrPrivateKeyFromJs(jsi::Runtime& runtime,
-                                                    const jsi::Value* args,
-                                                    unsigned int* offset);
+  static ManagedEVPPKey GetPublicOrPrivateKeyFromJs(jsi::Runtime &runtime,
+                                                    const jsi::Value *args,
+                                                    unsigned int *offset);
 
-  //  static ManagedEVPPKey GetPrivateKeyFromJs(
-  //                                            const
-  //                                            v8::FunctionCallbackInfo<v8::Value>&
-  //                                            args, unsigned int* offset, bool
-  //                                            allow_key_object);
+  static ManagedEVPPKey GetPrivateKeyFromJs(jsi::Runtime &runtime,
+                                            const jsi::Value *args,
+                                            unsigned int *offset,
+                                            bool allow_key_object);
 
   static std::optional<StringOrBuffer> ToEncodedPublicKey(
-      jsi::Runtime& runtime, ManagedEVPPKey key,
-      const PublicKeyEncodingConfig& config);
+      jsi::Runtime &runtime, ManagedEVPPKey key,
+      const PublicKeyEncodingConfig &config);
 
   static std::optional<StringOrBuffer> ToEncodedPrivateKey(
-      jsi::Runtime& runtime, ManagedEVPPKey key,
-      const PrivateKeyEncodingConfig& config);
+      jsi::Runtime &runtime, ManagedEVPPKey key,
+      const PrivateKeyEncodingConfig &config);
 
  private:
-  size_t size_of_private_key() const;
-  size_t size_of_public_key() const;
+  //  size_t size_of_private_key() const;
+  //  size_t size_of_public_key() const;
 
   EVPKeyPointer pkey_;
 };
 
 }  // namespace margelo
 
-#endif /* MGLCipherKeys_hpp */
+#endif /* MGLCipherKeys_h */
