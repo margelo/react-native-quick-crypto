@@ -1,7 +1,6 @@
-import { Buffer } from '@craftzdog/react-native-buffer';
 /* global Crypto */
+import '@craftzdog/react-native-buffer';
 
-global.Buffer = Buffer;
 const crypto = new Proxy({} as Crypto, {
   get: (_, p) => {
     // Try to load from C++ QuickCrypto, otherwise fall back to browserify
