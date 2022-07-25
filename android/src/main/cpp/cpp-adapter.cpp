@@ -10,7 +10,7 @@ using namespace facebook;
 class CryptoCppAdapter : public jni::HybridClass<CryptoCppAdapter> {
  public:
   static auto constexpr kJavaDescriptor =
-      "Lcom/reactnativequickcrypto/QuickCryptoModule;";
+      "Lcom/margelo/quickcrypto/QuickCryptoModule;";
 
   static jni::local_ref<jni::HybridClass<CryptoCppAdapter>::jhybriddata>
   initHybrid(jni::alias_ref<jhybridobject> jThis) {

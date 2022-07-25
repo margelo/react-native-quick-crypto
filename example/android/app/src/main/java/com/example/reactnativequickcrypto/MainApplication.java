@@ -8,7 +8,7 @@ import com.facebook.react.ReactNativeHost;
 import com.facebook.react.ReactPackage;
 import com.facebook.react.bridge.JSIModulePackage;
 import com.facebook.soloader.SoLoader;
-import com.reactnativequickcrypto.QuickCryptoPackage;
+import com.margelo.quickcrypto.QuickCryptoPackage;
 
 import java.util.ArrayList;
 import java.util.List;
