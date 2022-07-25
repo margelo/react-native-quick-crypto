@@ -64,7 +64,7 @@ class Verify extends Stream.Writable {
 
   update(data: BinaryLike, encoding?: string) {
     encoding = encoding ?? getDefaultEncoding();
-    data = binaryLikeToArrayBuffer(data);
+    data = binaryLikeToArrayBuffer(data, encoding);
     this.internal.update(data);
     return this;
   }
@@ -123,7 +123,7 @@ class Sign extends Stream.Writable {
 
   update(data: BinaryLike, encoding?: string) {
     encoding = encoding ?? getDefaultEncoding();
-    data = binaryLikeToArrayBuffer(data);
+    data = binaryLikeToArrayBuffer(data, encoding);
     this.internal.update(data);
     return this;
   }
