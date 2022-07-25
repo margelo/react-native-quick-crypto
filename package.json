@@ -128,7 +128,8 @@
       ]
     },
     "globals": {
-      "BufferEncoding": true
+      "BufferEncoding": true,
+      "Buffer": true
     }
   },
   "eslintIgnore": [
