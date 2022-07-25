@@ -1,13 +1,14 @@
 import { Buffer } from '@craftzdog/react-native-buffer';
 import { QuickCrypto } from './QuickCrypto';
+import FallbackCrypto from 'crypto-browserify';
 
-// @ts-expect-error
+// @ts-expect-error Buffer does not match exact same type definition.
 global.Buffer = Buffer;
-// @ts-expect-error
-global.crypto = QuickCrypto; // for randombytes https://github.com/crypto-browserify/randombytes/blob/master/browser.js#L16
 
-const fallbackCrypto = require('crypto-browserify');
-const crypto = { ...fallbackCrypto, ...QuickCrypto }; // Maybe use proxy to not load everything?
+const crypto = { ...FallbackCrypto, ...QuickCrypto };
+
+// for randombytes https://github.com/crypto-browserify/randombytes/blob/master/browser.js#L16
+// @ts-expect-error QuickCrypto is missing `subtle` and `randomUUID`
 global.crypto = crypto;
 
 module.exports = crypto;
