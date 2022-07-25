@@ -89,7 +89,12 @@ Now, all imports for `crypto` will be resolved as `react-native-quick-crypto` in
 
 ## Sponsors
 
-- TODO: List sponsors here
+<div align="center">
+
+<img width="350" src="./img/sponsors/litentry.png" align="center"><br/>
+<a href="https://litentry.com"><b>Litentry</b></a> - A decentralized identity aggregator, providing the structure and tools to empower you and your identity.
+
+</div>
 
 ## Limitations
 
