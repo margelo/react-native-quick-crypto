@@ -116,7 +116,7 @@ const hashed = Crypto.createHash('sha256')
 
 <!-- Steakwallet -->
 <div align="center">
-<img height="50" src="./img/sponsors/omni.png" align="center"><br/>
+<img height="37" src="./img/sponsors/omni.png" align="center"><br/>
 <a href="https://steakwallet.fi"><b>Omni</b></a> - Web3 for all. Access all of Web3 in one easy to use wallet. Omni supports more blockchains so you get more tokens, more yields, more NFTs, and more fun!
 </div>
 <br/>
@@ -134,7 +134,7 @@ const hashed = Crypto.createHash('sha256')
 
 <!-- THORSwap -->
 <div align="center">
-<img height="50" src="./img/sponsors/thorswap.png" align="center"><br/>
+<img height="40" src="./img/sponsors/thorswap.png" align="center"><br/>
 <a href="https://thorswap.finance"><b>THORSwap</b></a> - THORSwap is a cross-chain DEX aggregator that enables users to swap native assets across chains, provide liquidity to earn yield, and more. THORSwap is fully permissionless and non-custodial. No account signup, your wallet, your keys, your coins.
 </div>
 <br/>
