@@ -47,7 +47,7 @@ Creating a Wallet took 289 ms
 
 ```sh
 yarn add react-native-quick-crypto
-yarn add @craftzdog/react-native-buffer
+yarn add react-native-quick-base64
 cd ios && pod install
 ```
 
@@ -57,7 +57,7 @@ cd ios && pod install
 
 ```sh
 expo install react-native-quick-crypto
-expo install @craftzdog/react-native-buffer
+expo install react-native-quick-base64
 expo prebuild
 ```
 
