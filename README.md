@@ -94,23 +94,29 @@ Now, all imports for `crypto` will be resolved as `react-native-quick-crypto` in
 
 <!-- 1. Steakwallet -->
 <div align="center">
-<img width="350" src="./img/sponsors/omni.png" align="center"><br/>
+<img height="50" src="./img/sponsors/omni.png" align="center"><br/>
 <a href="https://steakwallet.fi"><b>Omni</b></a> - Web3 for all. Access all of Web3 in one easy to use wallet. Omni supports more blockchains so you get more tokens, more yields, more NFTs, and more fun!
 </div>
+<br/>
+<br/>
 
 <!-- 2. Litentry -->
 <div align="center">
-<img width="350" src="./img/sponsors/litentry.png" align="center"><br/>
+<img height="70" src="./img/sponsors/litentry.png" align="center"><br/>
 <a href="https://litentry.com"><b>Litentry</b></a> - A decentralized identity aggregator, providing the structure and tools to empower you and your identity.
 </div>
+<br/>
+<br/>
 
 <!-- 3. WalletConnect -->
 
 <!-- 4. THORSwap -->
 <div align="center">
-<img width="350" src="./img/sponsors/thorswap.png" align="center"><br/>
+<img height="50" src="./img/sponsors/thorswap.png" align="center"><br/>
 <a href="https://thorswap.finance"><b>THORSwap</b></a> - THORSwap is a cross-chain DEX aggregator that enables users to swap native assets across chains, provide liquidity to earn yield, and more. THORSwap is fully permissionless and non-custodial. No account signup, your wallet, your keys, your coins.
 </div>
+<br/>
+<br/>
 
 <!-- 5. Onin -->
 
