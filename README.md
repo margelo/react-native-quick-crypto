@@ -131,6 +131,14 @@ const hashed = Crypto.createHash('sha256')
 <br/>
 
 <!-- WalletConnect -->
+<div align="center">
+<img height="35" src="./img/sponsors/walletconnect.png" align="center"><br/>
+<a href="https://walletconnect.com"><b>WalletConnect</b></a> - The communications protocol for web3, WalletConnect brings the ecosystem together by enabling wallets and apps to securely connect and interact.
+</div>
+<br/>
+<br/>
+
+<!-- WalletConnect -->
 
 <!-- THORSwap -->
 <div align="center">
