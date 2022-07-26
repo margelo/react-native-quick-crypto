@@ -61,7 +61,9 @@ expo install @craftzdog/react-native-buffer
 expo prebuild
 ```
 
-## Usage
+## Replace `crypto-browserify`
+
+If you are using a library that depends on `crypto`, instead of polyfilling it with `crypto-browserify` (or `react-native-crypto`) you can use `react-native-quick-crypto` for a fully native implementation. This way you can get much faster crypto operations with just a single-line change!
 
 In your `babel.config.js`, add a module resolver to replace `crypto` with `react-native-quick-crypto`:
 
@@ -86,7 +88,19 @@ module.exports = {
 
 Now, all imports for `crypto` will be resolved as `react-native-quick-crypto` instead.
 
-Since react-native-quick-crypto depends on `stream` and `buffer`, we can resolve those to `stream-browserify` and @craftzdog's `react-native-buffer` (which is faster than `buffer` because it uses JSI for base64 encoding and decoding).
+> 💡 Since react-native-quick-crypto depends on `stream` and `buffer`, we can resolve those to `stream-browserify` and @craftzdog's `react-native-buffer` (which is faster than `buffer` because it uses JSI for base64 encoding and decoding).
+
+## Usage
+
+For example, to hash a string with SHA256 you can do the following:
+
+```ts
+import Crypto from 'react-native-quick-crypto'
+
+const hashed = Crypto.createHash('sha256')
+  .update('Damn, Margelo writes hella good software!')
+  .digest('hex')
+```
 
 ---
 
