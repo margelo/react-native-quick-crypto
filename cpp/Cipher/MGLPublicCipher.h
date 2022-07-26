@@ -1,6 +1,6 @@
 //
 //  MGLPublicCipher.h
-//  react-native-fast-crypto
+//  react-native-quick-crypto
 //
 //  Created by Oscar on 17.06.22.
 //

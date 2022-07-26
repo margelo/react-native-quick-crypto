@@ -1,6 +1,6 @@
 //
 //  MGLCipherKeys.cpp
-//  react-native-fast-crypto
+//  react-native-quick-crypto
 //
 //  Created by Oscar on 20.06.22.
 //
