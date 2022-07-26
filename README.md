@@ -148,4 +148,5 @@ See the [contributing guide](CONTRIBUTING.md) to learn how to contribute to the 
 
 ## License
 
-MIT
+- react-native-fast-crypto is licensed under MIT.
+- react-native-fast-crypto is heavily inspired by NodeJS Crypto, which is licensed under [nodejs/LICENSE](https://github.com/nodejs/node/blob/main/LICENSE).
