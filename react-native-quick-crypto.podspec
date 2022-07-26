@@ -37,7 +37,7 @@ Pod::Spec.new do |s|
     "HEADER_SEARCH_PATHS" => "\"$(PODS_ROOT)/boost\" \"$(PODS_ROOT)/boost-for-react-native\" \"$(PODS_ROOT)/glog\"  \"${PODS_ROOT}/Headers/Public/React-hermes\" \"${PODS_ROOT}/Headers/Public/hermes-engine\""
   }
 
-  s.dependency "OpenSSL-Universal", "~> 1.1.1300"
+  s.dependency "OpenSSL-Universal"
   s.dependency "React-Core"
   s.dependency "React"
   s.dependency "React-callinvoker"
