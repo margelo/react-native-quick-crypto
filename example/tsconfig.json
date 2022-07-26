@@ -1,6 +1,5 @@
-
 {
-  "extends": "./tsconfig",
+  "extends": "../tsconfig",
   "include": [
     "src",
     "index.js"
