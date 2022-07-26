@@ -66,8 +66,6 @@ expo prebuild
 In your `babel.config.js`, add a module resolver to replace `crypto` with `react-native-quick-crypto`:
 
 ```diff
-+const path = require('path');
-
 module.exports = {
   presets: ['module:metro-react-native-babel-preset'],
   plugins: [
@@ -87,6 +85,8 @@ module.exports = {
 ```
 
 Now, all imports for `crypto` will be resolved as `react-native-quick-crypto` instead.
+
+Since react-native-quick-crypto depends on `stream` and `buffer`, we can resolve those to `stream-browserify` and @craftzdog's `react-native-buffer` (which is faster than `buffer` because it uses JSI for base64 encoding and decoding).
 
 ---
 
