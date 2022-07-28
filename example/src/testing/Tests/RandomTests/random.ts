@@ -537,7 +537,7 @@ export function registerRandomTests() {
       }
     });
 
-    const MAX_RANGE = 0xffff_ffff_ffff;
+    const MAX_RANGE = 0xffffffffffff;
     describe('must succeed', () => {
       const maxInt = Number.MAX_SAFE_INTEGER;
       const minInt = Number.MIN_SAFE_INTEGER;

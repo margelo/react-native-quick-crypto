@@ -124,7 +124,7 @@ type Task = {
 
 // Largest integer we can read from a buffer.
 // e.g.: Buffer.from("ff".repeat(6), "hex").readUIntBE(0, 6);
-const RAND_MAX = 0xffff_ffff_ffff;
+const RAND_MAX = 0xffffffffffff;
 
 // Cache random data to use in randomInt. The cache size must be evenly
 // divisible by 6 because each attempt to obtain a random int uses 6 bytes.
