@@ -232,7 +232,7 @@ export function validateUint32(
   }
   const min = positive ? 1 : 0;
   // 2 ** 32 === 4294967296
-  const max = 4_294_967_295;
+  const max = 4294967295;
   if (value < min || value > max) {
     // throw new ERR_OUT_OF_RANGE(name, `>= ${min} && <= ${max}`, value);
     throw new Error(
