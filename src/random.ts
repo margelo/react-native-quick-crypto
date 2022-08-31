@@ -1,6 +1,6 @@
 import { NativeQuickCrypto } from './NativeQuickCrypto/NativeQuickCrypto';
 import { Buffer } from '@craftzdog/react-native-buffer';
-import { isBuffer } from '../src/Utils';
+import { isBuffer } from './Utils';
 
 const random = NativeQuickCrypto.random;
 
