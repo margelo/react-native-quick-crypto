@@ -25,13 +25,13 @@ const end = performance.now()
 console.log(`Creating a Wallet took ${end - start} ms.`)
 ```
 
-**Without** react-native-crypto 🐢:
+**Without** react-native-quick-crypto 🐢:
 
 ```
 Creating a Wallet took 16862 ms
 ```
 
-**With** react-native-crypto ⚡️:
+**With** react-native-quick-crypto ⚡️:
 
 ```
 Creating a Wallet took 289 ms
