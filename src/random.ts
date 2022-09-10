@@ -1,6 +1,5 @@
 import { NativeQuickCrypto } from './NativeQuickCrypto/NativeQuickCrypto';
 import { Buffer } from '@craftzdog/react-native-buffer';
-import { isBuffer } from './Utils';
 
 const random = NativeQuickCrypto.random;
 
@@ -57,7 +56,7 @@ export function randomFill(buffer: any, ...rest: any[]): void {
   }
 
   random
-    .randomFill(isBuffer(buffer) ? buffer.buffer : buffer, offset, size)
+    .randomFill(Buffer.isBuffer(buffer) ? buffer.buffer : buffer, offset, size)
     .then(
       () => {
         callback(null, buffer);
