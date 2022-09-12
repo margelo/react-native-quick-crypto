@@ -97,10 +97,6 @@ export const kEmptyObject = Object.freeze(Object.create(null));
 //   return slowCases(enc);
 // }
 
-export function isBuffer(buf: any): buf is Buffer {
-  return buf instanceof Buffer || buf?.constructor?.name === 'Buffer';
-}
-
 export function toArrayBuffer(buf: Buffer): ArrayBuffer {
   if (buf?.buffer?.slice) {
     return buf.buffer.slice(buf.byteOffset, buf.byteOffset + buf.byteLength);
@@ -126,7 +122,7 @@ export function binaryLikeToArrayBuffer(
     );
   }
 
-  if (isBuffer(input)) {
+  if (Buffer.isBuffer(input)) {
     return toArrayBuffer(input);
   }
 
