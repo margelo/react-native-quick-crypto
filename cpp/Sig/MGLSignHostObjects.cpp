@@ -350,7 +350,7 @@ void SignBase::InstallMethods(mode mode) {
   this->fields.push_back(buildPair(
       "init", JSIF([=]) {
         if (count != 1 || !arguments[0].isString()) {
-          jsi::detail::throwJSError(runtime, "init requires algorithm param");
+          jsi::detail::throwOrDie<jsi::JSError>(runtime, "init requires algorithm param");
           return {};
         }
 
@@ -378,19 +378,19 @@ void SignBase::InstallMethods(mode mode) {
   this->fields.push_back(buildPair(
       "update", JSIF([=]) {
         if (count != 1) {
-          jsi::detail::throwJSError(runtime, "update requires 2 arguments");
+          jsi::detail::throwOrDie<jsi::JSError>(runtime, "update requires 2 arguments");
         }
 
         if (!arguments[0].isObject() ||
             !arguments[0].asObject(runtime).isArrayBuffer(runtime)) {
-          jsi::detail::throwJSError(
+          jsi::detail::throwOrDie<jsi::JSError>(
               runtime, "First argument (data) needs to be an array buffer");
         }
 
         auto data = arguments[0].asObject(runtime).getArrayBuffer(runtime);
 
         if (!CheckSizeInt32(runtime, data)) {
-          jsi::detail::throwJSError(runtime, "data is too large");
+          jsi::detail::throwOrDie<jsi::JSError>(runtime, "data is too large");
         }
 
         if (mdctx_ == nullptr) return (int)kSignNotInitialised;
@@ -433,7 +433,7 @@ void SignBase::InstallMethods(mode mode) {
               this->SignFinal(runtime, key, padding, salt_len, dsa_sig_enc);
 
           if (ret.error != kSignOk) {
-            jsi::detail::throwJSError(runtime, "Error signing");
+            jsi::detail::throwOrDie<jsi::JSError>(runtime, "Error signing");
             throw new jsi::JSError(runtime, "Error signing");
           }
 
@@ -455,7 +455,7 @@ void SignBase::InstallMethods(mode mode) {
           jsi::ArrayBuffer hbuf =
               arguments[offset].asObject(runtime).getArrayBuffer(runtime);
           if (!CheckSizeInt32(runtime, hbuf)) {
-            jsi::detail::throwJSError(runtime, "buffer is too big");
+            jsi::detail::throwOrDie<jsi::JSError>(runtime, "buffer is too big");
             throw jsi::JSError(runtime, "buffer is too big");
           }
 
@@ -482,7 +482,7 @@ void SignBase::InstallMethods(mode mode) {
             signature = ConvertSignatureToDER(
                 pkey, ArrayBufferToByteSource(runtime, hbuf));
             if (signature.data() == nullptr) {
-              jsi::detail::throwJSError(runtime, "kSignMalformedSignature");
+              jsi::detail::throwOrDie<jsi::JSError>(runtime, "kSignMalformedSignature");
             }
             //          return crypto::CheckThrow(env,
             //          Error::kSignMalformedSignature);
@@ -492,7 +492,7 @@ void SignBase::InstallMethods(mode mode) {
           Error err = this->VerifyFinal(pkey, signature, padding, salt_len,
                                         &verify_result);
           if (err != kSignOk) {
-            jsi::detail::throwJSError(runtime, "Error on verify");
+            jsi::detail::throwOrDie<jsi::JSError>(runtime, "Error on verify");
           }
 
           return verify_result;
