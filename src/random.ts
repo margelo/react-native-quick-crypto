@@ -274,3 +274,44 @@ export function getRandomValues(data: DataType) {
   randomFillSync(data, 0);
   return data;
 }
+
+const byteToHex: string[] = [];
+
+for (let i = 0; i < 256; ++i) {
+  byteToHex.push((i + 0x100).toString(16).slice(1));
+}
+
+// Based on https://github.com/uuidjs/uuid/blob/main/src/v4.js
+export function randomUUID() {
+  const size = 16;
+  const buffer = new Buffer(size)
+  randomFillSync(buffer, 0, size);
+
+  // Per 4.4, set bits for version and `clock_seq_hi_and_reserved`
+  buffer[6] = (buffer[6] & 0x0f) | 0x40;
+  buffer[8] = (buffer[8] & 0x3f) | 0x80;
+
+  return (
+    byteToHex[buffer[0]] +
+    byteToHex[buffer[1]] +
+    byteToHex[buffer[2]] +
+    byteToHex[buffer[3]] +
+    '-' +
+    byteToHex[buffer[4]] +
+    byteToHex[buffer[5]] +
+    '-' +
+    byteToHex[buffer[6]] +
+    byteToHex[buffer[7]] +
+    '-' +
+    byteToHex[buffer[8]] +
+    byteToHex[buffer[9]] +
+    '-' +
+    byteToHex[buffer[10]] +
+    byteToHex[buffer[11]] +
+    byteToHex[buffer[12]] +
+    byteToHex[buffer[13]] +
+    byteToHex[buffer[14]] +
+    byteToHex[buffer[15]]
+  ).toLowerCase();
+}
+
