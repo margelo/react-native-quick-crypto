@@ -108,7 +108,7 @@ RsaKeyPairGenConfig prepareRsaKeyGenConfig(jsi::Runtime& runtime,
           arguments[offset].asString(runtime).utf8(runtime).c_str());
 
       if (config.md == nullptr) {
-        jsi::detail::throwOrDie<jsi::JSError>(runtime, "invalid digest");
+        throw jsi::JSError<jsi::JSError>(runtime, "invalid digest");
         throw new jsi::JSError(runtime, "invalid digest");
       }
     }
@@ -119,7 +119,7 @@ RsaKeyPairGenConfig prepareRsaKeyGenConfig(jsi::Runtime& runtime,
           arguments[offset + 1].asString(runtime).utf8(runtime).c_str());
 
       if (config.mgf1_md == nullptr) {
-        jsi::detail::throwOrDie<jsi::JSError>(runtime, "invalid digest");
+        throw jsi::JSError<jsi::JSError>(runtime, "invalid digest");
         throw new jsi::JSError(runtime, "invalid digest");
       }
     }
@@ -129,7 +129,7 @@ RsaKeyPairGenConfig prepareRsaKeyGenConfig(jsi::Runtime& runtime,
       config.saltlen = static_cast<int>(arguments[offset + 2].asNumber());
 
       if (config.saltlen < 0) {
-        jsi::detail::throwOrDie<jsi::JSError>(runtime, "salt length is out of range");
+        throw jsi::JSError<jsi::JSError>(runtime, "salt length is out of range");
         throw new jsi::JSError(runtime, "salt length is out of range");
       }
     }
@@ -157,14 +157,14 @@ std::pair<StringOrBuffer, StringOrBuffer> generateRSAKeyPair(
   EVPKeyCtxPointer ctx = setup(config);
 
   if (!ctx) {
-    jsi::detail::throwOrDie<jsi::JSError>(runtime, "Error on key generation job");
+    throw jsi::JSError<jsi::JSError>(runtime, "Error on key generation job");
     throw new jsi::JSError(runtime, "Error on key generation job");
   }
 
   // Generate the key
   EVP_PKEY* pkey = nullptr;
   if (!EVP_PKEY_keygen(ctx.get(), &pkey)) {
-    jsi::detail::throwOrDie<jsi::JSError>(runtime, "Error generating key");
+    throw jsi::JSError<jsi::JSError>(runtime, "Error generating key");
     throw new jsi::JSError(runtime, "Error generating key");
   }
 
@@ -178,7 +178,7 @@ std::pair<StringOrBuffer, StringOrBuffer> generateRSAKeyPair(
                                           config->private_key_encoding);
 
   if (!publicBuffer.has_value() || !privateBuffer.has_value()) {
-    jsi::detail::throwOrDie<jsi::JSError>(runtime,
+    throw jsi::JSError<jsi::JSError>(runtime,
                               "Failed to encode public and/or private key");
   }
 
