@@ -451,7 +451,7 @@ void MGLCipherHostObject::installMethods() {
       "setAuthTag", JSIF([=]) {
         if (count != 1 || !arguments[0].isObject() ||
             !arguments[0].asObject(runtime).isArrayBuffer(runtime)) {
-          throw jsi::JSError<jsi::JSError>(
+          throw jsi::JSError(
               runtime,
               "cipher.setAuthTag requires an ArrayBuffer tag argument");
           throw jsi::JSError(
@@ -467,7 +467,7 @@ void MGLCipherHostObject::installMethods() {
         auto authTagArrayBuffer =
             arguments[0].asObject(runtime).getArrayBuffer(runtime);
         if (!CheckSizeInt32(runtime, authTagArrayBuffer)) {
-          throw jsi::JSError<jsi::JSError>(
+          throw jsi::JSError(
               runtime,
               "cipher.setAuthTag requires an ArrayBuffer tag argument");
           throw jsi::JSError(
@@ -502,7 +502,7 @@ void MGLCipherHostObject::installMethods() {
         }
 
         if (!is_valid) {
-          throw jsi::JSError<jsi::JSError>(runtime,
+          throw jsi::JSError(runtime,
                                     "Invalid authentication tag length");
           throw jsi::JSError(runtime, "Invalid authentication tag length");
         }

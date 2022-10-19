@@ -348,7 +348,7 @@ std::optional<StringOrBuffer> WritePrivateKey(
   }
 
   if (err) {
-    throw jsi::JSError<jsi::JSError>(runtime, "Failed to encode private key");
+    throw jsi::JSError(runtime, "Failed to encode private key");
     return {};
   }
 
@@ -389,7 +389,7 @@ std::optional<StringOrBuffer> WritePublicKey(
   //  CHECK(bio);
 
   if (!WritePublicKeyInner(pkey, bio, config)) {
-    throw jsi::JSError<jsi::JSError>(runtime, "Failed to encode public key");
+    throw jsi::JSError(runtime, "Failed to encode public key");
     return std::nullopt;
   }
 
@@ -648,7 +648,7 @@ ManagedEVPPKey::GetPrivateKeyEncodingFromJs(jsi::Runtime& runtime,
         auto cipher_name = arguments[*offset].getString(runtime).utf8(runtime);
         result.cipher_ = EVP_get_cipherbyname(cipher_name.c_str());
         if (result.cipher_ == nullptr) {
-          throw jsi::JSError<jsi::JSError>(runtime, "Unknown cipher");
+          throw jsi::JSError(runtime, "Unknown cipher");
           return NonCopyableMaybe<PrivateKeyEncodingConfig>();
         }
         needs_passphrase = true;
@@ -666,7 +666,7 @@ ManagedEVPPKey::GetPrivateKeyEncodingFromJs(jsi::Runtime& runtime,
       jsi::ArrayBuffer passphrase =
           arguments[*offset].asObject(runtime).getArrayBuffer(runtime);
       if (!CheckSizeInt32(runtime, passphrase)) {
-        throw jsi::JSError<jsi::JSError>(runtime, "passphrase is too long");
+        throw jsi::JSError(runtime, "passphrase is too long");
       }
 
       result.passphrase_ = NonCopyableMaybe<ByteSource>(
@@ -674,7 +674,7 @@ ManagedEVPPKey::GetPrivateKeyEncodingFromJs(jsi::Runtime& runtime,
     } else {
       if (needs_passphrase &&
           (arguments[*offset].isNull() || arguments[*offset].isUndefined())) {
-        throw jsi::JSError<jsi::JSError>(
+        throw jsi::JSError(
             runtime, "passphrase is null or unfedined but it is required");
       }
     }
@@ -728,7 +728,7 @@ ManagedEVPPKey ManagedEVPPKey::GetPublicOrPrivateKeyFromJs(
         args[(*offset)++].asObject(runtime).getArrayBuffer(runtime);
 
     if (!CheckSizeInt32(runtime, dataArrayBuffer)) {
-      throw jsi::JSError<jsi::JSError>(runtime, "data is too big");
+      throw jsi::JSError(runtime, "data is too big");
     }
 
     NonCopyableMaybe<PrivateKeyEncodingConfig> config_ =
@@ -766,7 +766,7 @@ ManagedEVPPKey ManagedEVPPKey::GetPublicOrPrivateKeyFromJs(
           is_public = false;
           break;
         default:
-          throw jsi::JSError<jsi::JSError>(runtime, "Invalid key encoding type");
+          throw jsi::JSError(runtime, "Invalid key encoding type");
           throw new jsi::JSError(runtime, "Invalid key encoding type");
       }
 
@@ -784,7 +784,7 @@ ManagedEVPPKey ManagedEVPPKey::GetPublicOrPrivateKeyFromJs(
     return ManagedEVPPKey::GetParsedKey(runtime, std::move(pkey), ret,
                                         "Failed to read asymmetric key");
   } else {
-    throw jsi::JSError<jsi::JSError>(runtime,
+    throw jsi::JSError(runtime,
                               "publicEncrypt api only supports ArrayBuffer keys"
                               "for now");
     throw new jsi::JSError(
@@ -808,11 +808,11 @@ ManagedEVPPKey ManagedEVPPKey::GetParsedKey(jsi::Runtime& runtime,
       //       CHECK(pkey);
       break;
     case ParseKeyResult::kParseKeyNeedPassphrase:
-      throw jsi::JSError<jsi::JSError>(runtime,
+      throw jsi::JSError(runtime,
                                 "Passphrase required for encrypted key");
       break;
     default:
-      throw jsi::JSError<jsi::JSError>(runtime, default_msg);
+      throw jsi::JSError(runtime, default_msg);
       throw new jsi::JSError(runtime, default_msg);
   }
 
