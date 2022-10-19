@@ -108,7 +108,6 @@ RsaKeyPairGenConfig prepareRsaKeyGenConfig(jsi::Runtime& runtime,
           arguments[offset].asString(runtime).utf8(runtime).c_str());
 
       if (config.md == nullptr) {
-        throw jsi::JSError(runtime, "invalid digest");
         throw new jsi::JSError(runtime, "invalid digest");
       }
     }
@@ -119,7 +118,6 @@ RsaKeyPairGenConfig prepareRsaKeyGenConfig(jsi::Runtime& runtime,
           arguments[offset + 1].asString(runtime).utf8(runtime).c_str());
 
       if (config.mgf1_md == nullptr) {
-        throw jsi::JSError(runtime, "invalid digest");
         throw new jsi::JSError(runtime, "invalid digest");
       }
     }
@@ -129,7 +127,6 @@ RsaKeyPairGenConfig prepareRsaKeyGenConfig(jsi::Runtime& runtime,
       config.saltlen = static_cast<int>(arguments[offset + 2].asNumber());
 
       if (config.saltlen < 0) {
-        throw jsi::JSError(runtime, "salt length is out of range");
         throw new jsi::JSError(runtime, "salt length is out of range");
       }
     }
@@ -157,14 +154,12 @@ std::pair<StringOrBuffer, StringOrBuffer> generateRSAKeyPair(
   EVPKeyCtxPointer ctx = setup(config);
 
   if (!ctx) {
-    throw jsi::JSError(runtime, "Error on key generation job");
     throw new jsi::JSError(runtime, "Error on key generation job");
   }
 
   // Generate the key
   EVP_PKEY* pkey = nullptr;
   if (!EVP_PKEY_keygen(ctx.get(), &pkey)) {
-    throw jsi::JSError(runtime, "Error generating key");
     throw new jsi::JSError(runtime, "Error generating key");
   }
 

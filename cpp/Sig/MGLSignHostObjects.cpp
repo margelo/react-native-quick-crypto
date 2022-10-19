@@ -433,7 +433,6 @@ void SignBase::InstallMethods(mode mode) {
               this->SignFinal(runtime, key, padding, salt_len, dsa_sig_enc);
 
           if (ret.error != kSignOk) {
-            throw jsi::JSError(runtime, "Error signing");
             throw new jsi::JSError(runtime, "Error signing");
           }
 
@@ -455,7 +454,6 @@ void SignBase::InstallMethods(mode mode) {
           jsi::ArrayBuffer hbuf =
               arguments[offset].asObject(runtime).getArrayBuffer(runtime);
           if (!CheckSizeInt32(runtime, hbuf)) {
-            throw jsi::JSError(runtime, "buffer is too big");
             throw jsi::JSError(runtime, "buffer is too big");
           }
 

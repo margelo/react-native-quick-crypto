@@ -766,7 +766,6 @@ ManagedEVPPKey ManagedEVPPKey::GetPublicOrPrivateKeyFromJs(
           is_public = false;
           break;
         default:
-          throw jsi::JSError(runtime, "Invalid key encoding type");
           throw new jsi::JSError(runtime, "Invalid key encoding type");
       }
 
@@ -784,9 +783,6 @@ ManagedEVPPKey ManagedEVPPKey::GetPublicOrPrivateKeyFromJs(
     return ManagedEVPPKey::GetParsedKey(runtime, std::move(pkey), ret,
                                         "Failed to read asymmetric key");
   } else {
-    throw jsi::JSError(runtime,
-                              "publicEncrypt api only supports ArrayBuffer keys"
-                              "for now");
     throw new jsi::JSError(
         runtime, "public encrypt only supports ArrayBuffer at the moment");
     //    CHECK(args[*offset]->IsObject());
@@ -812,7 +808,6 @@ ManagedEVPPKey ManagedEVPPKey::GetParsedKey(jsi::Runtime& runtime,
                                 "Passphrase required for encrypted key");
       break;
     default:
-      throw jsi::JSError(runtime, default_msg);
       throw new jsi::JSError(runtime, default_msg);
   }
 
