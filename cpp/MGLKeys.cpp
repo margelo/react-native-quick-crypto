@@ -349,7 +349,6 @@ std::optional<StringOrBuffer> WritePrivateKey(
 
   if (err) {
     throw jsi::JSError(runtime, "Failed to encode private key");
-    return {};
   }
 
   return BIOToStringOrBuffer(bio.get(), config.format_);
@@ -390,7 +389,6 @@ std::optional<StringOrBuffer> WritePublicKey(
 
   if (!WritePublicKeyInner(pkey, bio, config)) {
     throw jsi::JSError(runtime, "Failed to encode public key");
-    return std::nullopt;
   }
 
   return BIOToStringOrBuffer(bio.get(), config.format_);
@@ -649,7 +647,6 @@ ManagedEVPPKey::GetPrivateKeyEncodingFromJs(jsi::Runtime& runtime,
         result.cipher_ = EVP_get_cipherbyname(cipher_name.c_str());
         if (result.cipher_ == nullptr) {
           throw jsi::JSError(runtime, "Unknown cipher");
-          return NonCopyableMaybe<PrivateKeyEncodingConfig>();
         }
         needs_passphrase = true;
       } else {
