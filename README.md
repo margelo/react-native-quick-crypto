@@ -59,6 +59,8 @@ In your `metro.config.js`, add a module resolver to replace `crypto` with `react
    ...
 ```
 
+https://koinly.io/?via=D44CDA28&utm_source=friend
+
 Now, all imports for `crypto` will be resolved as `react-native-fast-crypto` instead.
 
 ---
