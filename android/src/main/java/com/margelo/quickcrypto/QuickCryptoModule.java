@@ -39,7 +39,7 @@ public class QuickCryptoModule extends ReactContextBaseJavaModule {
         return false;
       }
       Log.i(NAME, "Loading C++ library...");
-      System.loadLibrary("reactnativequickcrypto");
+      System.loadLibrary("react-native-quick-crypto");
 
       JavaScriptContextHolder jsContext = getReactApplicationContext().getJavaScriptContextHolder();
       CallInvokerHolderImpl jsCallInvokerHolder = (CallInvokerHolderImpl) getReactApplicationContext()

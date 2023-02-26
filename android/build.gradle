@@ -118,7 +118,16 @@ android {
   }
 
   packagingOptions {
-    excludes = ["**/libc++_shared.so", "**/libfbjni.so", "**/libreactnativejni.so", "**/libjsi.so", "**/MANIFEST.MF", ""]
+    excludes = [
+      "**/libc++_shared.so",
+      "**/libfbjni.so",
+      "**/libreactnativejni.so",
+      "**/libjsi.so",
+      "**/libreact_nativemodule_core.so",
+      "**/libturbomodulejsijni.so",
+      "**/MANIFEST.MF",
+      ""
+    ]
     doNotStrip '**/*.so'
   }
 
@@ -168,13 +177,7 @@ repositories {
 dependencies {
   // https://mvnrepository.com/artifact/com.android.ndk.thirdparty/openssl
   implementation 'com.android.ndk.thirdparty:openssl:1.1.1l-beta-1'
-  // noinspection GradleDynamicVersion
-  implementation 'com.facebook.react:react-native:+'
-
-  //noinspection GradleDynamicVersion
-  extractHeaders("com.facebook.fbjni:fbjni:+:headers")
-  //noinspection GradleDynamicVersion
-  extractJNI("com.facebook.fbjni:fbjni:+")
+  implementation "com.facebook.react:react-android:"
 
   if (!sourceBuild) {
     def buildType = "debug"
@@ -183,12 +186,6 @@ dependencies {
         buildType = "release"
       }
     })
-    def rnAarMatcher = "**/react-native/**/*${buildType}.aar"
-    if (REACT_NATIVE_VERSION < 69) {
-      rnAarMatcher = "**/**/*.aar"
-    }
-    def rnAAR = fileTree("${defaultDir.toString()}").matching({ it.include rnAarMatcher }).singleFile
-    extractJNI(files(rnAAR))
   }
 }
 
@@ -375,8 +372,6 @@ afterEvaluate {
     nativeBuildDependsOn(":ReactAndroid:packageReactNdkDebugLibsForBuck", "Debug")
     nativeBuildDependsOn(":ReactAndroid:packageReactNdkReleaseLibsForBuck", "Rel")
   } else {
-    nativeBuildDependsOn(extractAARHeaders, null)
     nativeBuildDependsOn(extractJNIFiles, null)
-    nativeBuildDependsOn(prepareThirdPartyNdkHeaders, null)
   }
 }
