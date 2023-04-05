@@ -43,6 +43,8 @@ target 'QuickCryptoExample' do
     :app_path => "#{Pod::Config.instance.installation_root}/.."
   )
 
+  pod 'react-native-quick-crypto', :path => '../..'
+
   target 'QuickCryptoExampleTests' do
     inherit! :complete
     # Pods for testing

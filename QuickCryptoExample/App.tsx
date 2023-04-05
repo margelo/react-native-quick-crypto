@@ -5,7 +5,7 @@
  * @format
  */
 
-import React from 'react';
+import React, {useEffect} from 'react';
 import type {PropsWithChildren} from 'react';
 import {
   SafeAreaView,
@@ -16,6 +16,7 @@ import {
   useColorScheme,
   View,
 } from 'react-native';
+import Crypto from 'react-native-quick-crypto';
 
 import {
   Colors,
@@ -61,6 +62,13 @@ function App(): JSX.Element {
   const backgroundStyle = {
     backgroundColor: isDarkMode ? Colors.darker : Colors.lighter,
   };
+
+  useEffect(() => {
+    const hashed = Crypto.createHash('sha256')
+      .update('Damn, Margelo writes hella good software!')
+      .digest('hex');
+    console.log({hashed});
+  }, []);
 
   return (
     <SafeAreaView style={backgroundStyle}>
