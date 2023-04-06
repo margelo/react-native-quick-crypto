@@ -88,6 +88,12 @@ android {
   buildToolsVersion getExtOrDefault('buildToolsVersion')
   ndkVersion getExtOrDefault('ndkVersion')
 
+  if (REACT_NATIVE_VERSION >= 71) {
+    buildFeatures {
+      prefab true
+    }
+  }
+
   defaultConfig {
     minSdkVersion 21
     targetSdkVersion getExtOrIntegerDefault('targetSdkVersion')
@@ -95,7 +101,7 @@ android {
     versionName "1.0"
     externalNativeBuild {
       cmake {
-        cppFlags "-fexceptions", "-frtti", "-std=c++1y", "-DONANDROID"
+        cppFlags "-fexceptions", "-frtti", "-std=c++1y", "-DONANDROID", "-DANDROID"
         arguments '-DANDROID_STL=c++_shared',
                   "-DREACT_NATIVE_VERSION=${REACT_NATIVE_VERSION}",
                   "-DNODE_MODULES_DIR=${nodeModules}",
@@ -107,10 +113,6 @@ android {
     }
   }
 
-  dexOptions {
-    javaMaxHeapSize "4g"
-  }
-
   externalNativeBuild {
     cmake {
       path "CMakeLists.txt"
@@ -118,7 +120,16 @@ android {
   }
 
   packagingOptions {
-    excludes = ["**/libc++_shared.so", "**/libfbjni.so", "**/libreactnativejni.so", "**/libjsi.so", "**/MANIFEST.MF", ""]
+    excludes = [
+            "**/libc++_shared.so",
+            "**/libfbjni.so",
+            "**/libreactnativejni.so",
+            "**/libjsi.so",
+            "**/libreact_nativemodule_core.so",
+            "**/libturbomodulejsijni.so",
+            "**/MANIFEST.MF",
+            ""
+    ]
     doNotStrip '**/*.so'
   }
 
@@ -168,27 +179,35 @@ repositories {
 dependencies {
   // https://mvnrepository.com/artifact/com.android.ndk.thirdparty/openssl
   implementation 'com.android.ndk.thirdparty:openssl:1.1.1l-beta-1'
-  // noinspection GradleDynamicVersion
-  implementation 'com.facebook.react:react-native:+'
 
-  //noinspection GradleDynamicVersion
-  extractHeaders("com.facebook.fbjni:fbjni:+:headers")
-  //noinspection GradleDynamicVersion
-  extractJNI("com.facebook.fbjni:fbjni:+")
+  if (REACT_NATIVE_VERSION >= 71) {
+    implementation "com.facebook.react:react-android:"
+    implementation "com.facebook.react:hermes-android:"
+  } else {
+    // noinspection GradleDynamicVersion
+    implementation 'com.facebook.react:react-native:+'
+  }
 
-  if (!sourceBuild) {
-    def buildType = "debug"
-    tasks.all({ task ->
-      if (task.name == "buildCMakeRelease") {
-        buildType = "release"
+  if (REACT_NATIVE_VERSION < 71) {
+    //noinspection GradleDynamicVersion
+    extractHeaders("com.facebook.fbjni:fbjni:+:headers")
+    //noinspection GradleDynamicVersion
+    extractJNI("com.facebook.fbjni:fbjni:+")
+
+    if (!sourceBuild) {
+      def buildType = "debug"
+      tasks.all({ task ->
+        if (task.name == "buildCMakeRelease") {
+          buildType = "release"
+        }
+      })
+      def rnAarMatcher = "**/react-native/**/*${buildType}.aar"
+      if (REACT_NATIVE_VERSION < 69) {
+        rnAarMatcher = "**/**/*.aar"
       }
-    })
-    def rnAarMatcher = "**/react-native/**/*${buildType}.aar"
-    if (REACT_NATIVE_VERSION < 69) {
-      rnAarMatcher = "**/**/*.aar"
+      def rnAAR = fileTree("${defaultDir.toString()}").matching({ it.include rnAarMatcher }).singleFile
+      extractJNI(files(rnAAR))
     }
-    def rnAAR = fileTree("${defaultDir.toString()}").matching({ it.include rnAarMatcher }).singleFile
-    extractJNI(files(rnAAR))
   }
 }
 
@@ -375,8 +394,11 @@ afterEvaluate {
     nativeBuildDependsOn(":ReactAndroid:packageReactNdkDebugLibsForBuck", "Debug")
     nativeBuildDependsOn(":ReactAndroid:packageReactNdkReleaseLibsForBuck", "Rel")
   } else {
-    nativeBuildDependsOn(extractAARHeaders, null)
     nativeBuildDependsOn(extractJNIFiles, null)
-    nativeBuildDependsOn(prepareThirdPartyNdkHeaders, null)
+
+    if (REACT_NATIVE_VERSION < 71) {
+      nativeBuildDependsOn(extractAARHeaders, null)
+      nativeBuildDependsOn(prepareThirdPartyNdkHeaders, null)
+    }
   }
 }
