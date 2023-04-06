@@ -13,3 +13,4 @@ global.crypto = crypto;
 
 module.exports = crypto;
 export default crypto;
+export { QuickCrypto };

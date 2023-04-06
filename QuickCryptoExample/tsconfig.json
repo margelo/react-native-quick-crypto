@@ -1,8 +1,8 @@
 {
-  "extends": "../tsconfig",
-  "include": [
-    "src",
-    "index.js",
-    "App.tsx"
-  ]
+  "extends": "@tsconfig/react-native/tsconfig.json",
+  "compilerOptions": {
+    "paths": {
+      "react-native-quick-crypto": ["../src/index"]
+    },
+  },
 }

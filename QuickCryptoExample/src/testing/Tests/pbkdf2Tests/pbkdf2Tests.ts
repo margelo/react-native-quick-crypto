@@ -108,7 +108,7 @@ export const pbkdf2RegisterTests = () => {
         Buffer.from('salt'),
         1,
         32,
-        // eslint-disable-next-line handle-callback-err
+
         function (_, result) {
           chai
             // @ts-expect-error
