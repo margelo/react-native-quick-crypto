@@ -284,7 +284,7 @@ for (let i = 0; i < 256; ++i) {
 // Based on https://github.com/uuidjs/uuid/blob/main/src/v4.js
 export function randomUUID() {
   const size = 16;
-  const buffer = new Buffer(size)
+  const buffer = new Buffer(size);
   randomFillSync(buffer, 0, size);
 
   // Per 4.4, set bits for version and `clock_seq_hi_and_reserved`
@@ -314,4 +314,3 @@ export function randomUUID() {
     byteToHex[buffer[15]]
   ).toLowerCase();
 }
-

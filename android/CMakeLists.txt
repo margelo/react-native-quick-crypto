@@ -87,7 +87,6 @@ set_target_properties(
         POSITION_INDEPENDENT_CODE ON
 )
 
-# file (GLOB LIBRN_DIR "${PREBUILT_DIR}/${ANDROID_ABI}")
 file(GLOB LIBRN_DIR "${BUILD_DIR}/react-native-0*/jni/${ANDROID_ABI}")
 
 find_library(
@@ -125,7 +124,7 @@ endif()
 if(${REACT_NATIVE_VERSION} LESS 66)
         # JSI lib didn't exist on RN 0.65 and before. Simply omit it.
         set(JSI_LIB "")
-else()
+elseif(${REACT_NATIVE_VERSION} LESS 71)
         # RN 0.66 distributes libjsi.so, can be used instead of compiling jsi.cpp manually.
         find_library(
                 JSI_LIB
