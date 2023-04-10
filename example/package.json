@@ -18,7 +18,7 @@
     "@react-native-community/checkbox": "^0.5.15",
     "@react-navigation/native": "^6.1.6",
     "@react-navigation/native-stack": "^6.9.12",
-    "Buffer": "^0.0.0",
+    "buffer": "^6.0.3",
     "chai": "^4.3.7",
     "crypto-browserify": "^3.12.0",
     "events": "^3.3.0",
