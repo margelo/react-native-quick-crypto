@@ -21,7 +21,7 @@
 // USE OR OTHER DEALINGS IN THE SOFTWARE.
 
 // Flags: --pending-deprecation
-import { QuickCrypto as crypto } from 'react-native-quick-crypto';
+import crypto from 'react-native-quick-crypto';
 import { describe, it } from '../../MochaRNAdapter';
 import { Buffer } from '@craftzdog/react-native-buffer';
 import chai from 'chai';
@@ -118,7 +118,7 @@ export function registerRandomTests() {
   it('simple test (do sth) 5- random Fill ', (done: Done) => {
     const buf = Buffer.alloc(10);
     const before = buf.toString('hex');
-    // eslint-disable-next-line handle-callback-err
+
     crypto.randomFill(buf, (_, res) => {
       try {
         const after = res?.toString('hex');
@@ -133,7 +133,7 @@ export function registerRandomTests() {
   it('simple test (do sth) 6 ', (done: Done) => {
     const buf = new Uint8Array(new Array(10).fill(0));
     const before = Buffer.from(buf).toString('hex');
-    // eslint-disable-next-line handle-callback-err
+
     crypto.randomFill(buf, (_, res) => {
       try {
         const after = Buffer.from(res).toString('hex');
@@ -155,7 +155,7 @@ export function registerRandomTests() {
       new DataView(new ArrayBuffer(10)),
     ].forEach((buf) => {
       const before = Buffer.from(buf.buffer).toString('hex');
-      // eslint-disable-next-line no-shadow
+
       crypto.randomFill(buf, (_err, buf) => {
         try {
           const after = Buffer.from(buf!.buffer).toString('hex');
@@ -220,6 +220,7 @@ export function registerRandomTests() {
   it('randomFill - deepStringEqual - Buffer', (done: Done) => {
     const buf = Buffer.alloc(10);
     const before = buf.toString('hex');
+
     crypto.randomFill(buf, 5, 5, (_err, res) => {
       try {
         const after = res.toString('hex');

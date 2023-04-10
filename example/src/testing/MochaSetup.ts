@@ -1,4 +1,3 @@
-/* eslint-disable no-undef */
 import 'mocha';
 import type * as MochaTypes from 'mocha';
 import type { RowItemType } from '../navigators/children/TestingScreen/RowItemType';

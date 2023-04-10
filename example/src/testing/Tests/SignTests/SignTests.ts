@@ -1,9 +1,8 @@
 import chai from 'chai';
 import { Buffer } from '@craftzdog/react-native-buffer';
 import { it } from '../../MochaRNAdapter';
-import { QuickCrypto as crypto } from 'react-native-quick-crypto';
+import crypto from 'react-native-quick-crypto';
 import { PrivateKey } from 'sscrypto/node';
-import { binaryLikeToArrayBuffer } from 'src/Utils';
 
 // Tests that a key pair can be used for encryption / decryption.
 // function testEncryptDecrypt(publicKey: any, privateKey: any) {

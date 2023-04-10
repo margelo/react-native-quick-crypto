@@ -749,7 +749,6 @@ export function generateKeyPairSync(
   type: string,
   options?: GenerateKeyPairOptions
 ): { publicKey: any; privateKey: any } {
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const [_, publicKey, privateKey] = internalGenerateKeyPair(
     false,
     type,

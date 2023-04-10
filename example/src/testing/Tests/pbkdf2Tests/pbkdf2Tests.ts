@@ -1,6 +1,6 @@
 import { describe, it } from '../../MochaRNAdapter';
 import chai from 'chai';
-import { QuickCrypto } from 'react-native-quick-crypto';
+import QuickCrypto from 'react-native-quick-crypto';
 import { Buffer } from '@craftzdog/react-native-buffer';
 import type { Done } from 'mocha';
 
@@ -15,7 +15,7 @@ export const pbkdf2RegisterTests = () => {
   // https://stackoverflow.com/questions/5130513/pbkdf2-hmac-sha2-test-vectors
   // https://stackoverflow.com/questions/15593184/pbkdf2-hmac-sha-512-test-vectors
   var { fixtures } = require('./fixtures');
-  // eslint-disable-next-line no-shadow
+
   var Buffer = require('safe-buffer').Buffer;
 
   fixtures.invalid.push(
@@ -108,7 +108,7 @@ export const pbkdf2RegisterTests = () => {
         Buffer.from('salt'),
         1,
         32,
-        // eslint-disable-next-line handle-callback-err
+
         function (_, result) {
           chai
             // @ts-expect-error

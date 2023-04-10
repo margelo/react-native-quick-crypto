@@ -1,4 +1,4 @@
-import { QuickCrypto } from 'react-native-quick-crypto';
+import QuickCrypto from 'react-native-quick-crypto';
 
 // TODO use jasmine and write proper unit tests
 

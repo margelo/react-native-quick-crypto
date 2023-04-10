@@ -1,14 +1,12 @@
 const crypto = require('crypto');
-crypto.publicEncrypt =
-  require('react-native-quick-crypto').default.publicEncrypt;
-crypto.privateDecrypt =
-  require('react-native-quick-crypto').default.privateDecrypt;
-crypto.generateKeyPair =
-  require('react-native-quick-crypto').default.generateKeyPair;
-crypto.createVerify = 
-  require('react-native-quick-crypto').default.createVerify;
-crypto.createSign =
-  require('react-native-quick-crypto').default.createSign;
+const quickCrypto = require('react-native-quick-crypto');
+
+crypto.publicEncrypt = quickCrypto.publicEncrypt;
+crypto.privateDecrypt = quickCrypto.privateDecrypt;
+crypto.generateKeyPair = quickCrypto.generateKeyPair;
+crypto.createVerify = quickCrypto.createVerify;
+crypto.createSign = quickCrypto.createSign;
+
 import { Buffer } from 'buffer';
 global.Buffer = Buffer;
 global.process.cwd = () => 'sxsx';

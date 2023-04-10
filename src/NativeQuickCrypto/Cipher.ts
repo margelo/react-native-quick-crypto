@@ -1,4 +1,4 @@
-import type { BinaryLike } from 'src/Utils';
+import type { BinaryLike } from '../Utils';
 import type { Buffer } from '@craftzdog/react-native-buffer';
 
 // TODO(osp) on node this is defined on the native side

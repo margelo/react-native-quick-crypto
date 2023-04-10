@@ -1,5 +1,5 @@
 import chai from 'chai';
-import { QuickCrypto as crypto } from 'react-native-quick-crypto';
+import crypto from 'react-native-quick-crypto';
 import { it } from '../../MochaRNAdapter';
 
 export function registerConstantsTest() {
