@@ -10,7 +10,7 @@ Pod::Spec.new do |s|
   s.license      = package["license"]
   s.authors      = package["authors"]
 
-  s.platforms    = { :ios => "11.0", :tvos => "12.0", :osx => "10.14" }
+  s.platforms    = { :ios => "12.4", :tvos => "12.0", :osx => "10.14" }
   s.source       = { :git => "https://github.com/mrousavy/react-native-quick-crypto.git", :tag => "#{s.version}" }
 
   # All source files that should be publicly visible
