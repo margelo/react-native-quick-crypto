@@ -45,6 +45,7 @@ add_library(
         "../cpp/MGLKeys.cpp"
         "../cpp/Utils/MGLUtils.cpp"
         "../cpp/Cipher/MGLRsa.cpp"
+        "../cpp/Cipher/MGLX25519.cpp"
         "../cpp/Cipher/MGLGenerateKeyPairInstaller.cpp"
         "../cpp/Cipher/MGLGenerateKeyPairSyncInstaller.cpp"
         "../cpp/Sig/MGLSignInstaller.cpp"

@@ -131,4 +131,16 @@ export function registerGenerateKeyPairTests() {
       }
     );
   });
+
+  it('Sync X25519: spki - pkcs8', () => {
+    const ret = crypto.generateKeyPairSync('x25519', {
+      publicKeyEncoding: { format: 'der', type: 'spki' },
+      privateKeyEncoding: { format: 'der', type: 'pkcs8' },
+    });
+
+    const { publicKey, privateKey } = ret;
+
+    chai.assert.strictEqual(privateKey.length, 48);
+    chai.assert.strictEqual(publicKey.length, 44);
+  });
 }

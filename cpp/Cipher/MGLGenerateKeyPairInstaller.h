@@ -17,12 +17,14 @@
 
 #ifdef ANDROID
 #include "Cipher/MGLRsa.h"
+#include "Cipher/MGLX25519.h"
 #include "JSIUtils/MGLSmartHostObject.h"
 #include "Utils/MGLUtils.h"
 #else
 #include "MGLRsa.h"
 #include "MGLSmartHostObject.h"
 #include "MGLUtils.h"
+#include "MGLX25519.h"
 #endif
 
 namespace margelo {

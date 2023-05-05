@@ -40,6 +40,13 @@ enum PKFormatType { kKeyFormatDER, kKeyFormatPEM, kKeyFormatJWK };
 
 enum KeyType { kKeyTypeSecret, kKeyTypePublic, kKeyTypePrivate };
 
+enum KeyVariant {
+  kKeyVariantRSA_SSA_PKCS1_v1_5,
+  kKeyVariantRSA_PSS,
+  kKeyVariantRSA_OAEP,
+  kKeyVariantX25519,
+};
+
 enum KeyEncodingContext {
   kKeyContextInput,
   kKeyContextExport,

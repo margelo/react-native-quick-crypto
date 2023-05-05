@@ -3,10 +3,11 @@ import type { Buffer } from '@craftzdog/react-native-buffer';
 
 // TODO(osp) on node this is defined on the native side
 // Need to do the same so that values are always in sync
-export enum RSAKeyVariant {
+export enum KeyVariant {
   kKeyVariantRSA_SSA_PKCS1_v1_5,
   kKeyVariantRSA_PSS,
   kKeyVariantRSA_OAEP,
+  kKeyVariantX25519,
 }
 
 export type InternalCipher = {
@@ -55,15 +56,13 @@ export type PrivateDecryptMethod = (
 ) => Buffer;
 
 export type GenerateKeyPairMethod = (
-  keyVariant: RSAKeyVariant,
+  keyVariant: KeyVariant,
   modulusLength: number,
   publicExponent: number,
   ...rest: any[]
 ) => Promise<[error: unknown, publicBuffer: any, privateBuffer: any]>;
 
 export type GenerateKeyPairSyncMethod = (
-  keyVariant: RSAKeyVariant,
-  modulusLength: number,
-  publicExponent: number,
+  keyVariant: KeyVariant,
   ...rest: any[]
 ) => [error: unknown, publicBuffer: any, privateBuffer: any];

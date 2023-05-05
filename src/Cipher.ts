@@ -14,7 +14,7 @@ import {
   validateUint32,
   validateInt32,
 } from './Utils';
-import { InternalCipher, RSAKeyVariant } from './NativeQuickCrypto/Cipher';
+import { InternalCipher, KeyVariant } from './NativeQuickCrypto/Cipher';
 // TODO(osp) re-enable type specific constructors
 // They are nice to have but not absolutely necessary
 // import type {
@@ -530,7 +530,7 @@ function internalGenerateKeyPair(
       if (type === 'rsa') {
         if (isAsync) {
           NativeQuickCrypto.generateKeyPair(
-            RSAKeyVariant.kKeyVariantRSA_SSA_PKCS1_v1_5,
+            KeyVariant.kKeyVariantRSA_SSA_PKCS1_v1_5,
             modulusLength,
             publicExponent,
             ...encoding
@@ -551,7 +551,7 @@ function internalGenerateKeyPair(
         } else {
           let [err, publicKey, privateKey] =
             NativeQuickCrypto.generateKeyPairSync(
-              RSAKeyVariant.kKeyVariantRSA_SSA_PKCS1_v1_5,
+              KeyVariant.kKeyVariantRSA_SSA_PKCS1_v1_5,
               modulusLength,
               publicExponent,
               ...encoding
@@ -604,7 +604,7 @@ function internalGenerateKeyPair(
       }
 
       return NativeQuickCrypto.generateKeyPairSync(
-        RSAKeyVariant.kKeyVariantRSA_PSS,
+        KeyVariant.kKeyVariantRSA_PSS,
         modulusLength,
         publicExponent,
         hashAlgorithm || hash,
@@ -644,6 +644,14 @@ function internalGenerateKeyPair(
 
     //   // return new EcKeyPairGenJob(mode, namedCurve, paramEncoding, ...encoding);
     // }
+    case 'x25519': {
+      validateObject<GenerateKeyPairOptions>(options, 'options');
+
+      return NativeQuickCrypto.generateKeyPairSync(
+        KeyVariant.kKeyVariantX25519,
+        ...encoding
+      );
+    }
     // case 'ed25519':
     // case 'ed448':
     // case 'x25519':
