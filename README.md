@@ -65,6 +65,27 @@ expo prebuild
 
 If you are using a library that depends on `crypto`, instead of polyfilling it with `crypto-browserify` (or `react-native-crypto`) you can use `react-native-quick-crypto` for a fully native implementation. This way you can get much faster crypto operations with just a single-line change!
 
+### Using metro config
+
+Use the [`resolveRequest`](https://facebook.github.io/metro/docs/resolution#resolverequest-customresolver) configuration option in your `metro.config.js`
+
+```
+config.resolver.resolveRequest = (context, moduleName, platform) => {
+  if (moduleName === 'crypto') {
+    // when importing crypto, resolve to react-native-quick-crypto
+    return context.resolveRequest(
+      context,
+      'react-native-quick-crypto',
+      platform,
+    )
+  }
+  // otherwise chain to the standard Metro resolver.
+  return context.resolveRequest(context, moduleName, platform)
+}
+```
+
+### Using babel-plugin-module-resolver
+
 In your `babel.config.js`, add a module resolver to replace `crypto` with `react-native-quick-crypto`:
 
 ```diff
