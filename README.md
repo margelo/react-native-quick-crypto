@@ -154,6 +154,10 @@ const hashed = Crypto.createHash('sha256')
 
 As the library uses JSI for synchronous native methods access, remote debugging (e.g. with Chrome) is no longer possible. Instead, you should use [Flipper](https://fbflipper.com).
 
+## Community Discord
+
+[Join the Margelo Community Discord](https://discord.gg/6CSHz2qAvA) to chat about react-native-quick-crypto or other Margelo libraries.
+
 ## Adopting at scale
 
 react-native-quick-crypto was built at Margelo, an elite app development agency. For enterprise support or other business inquiries, contact us at <a href="mailto:hello@margelo.io?subject=Adopting react-native-quick-crypto at scale">hello@margelo.io</a>!
