@@ -88,7 +88,7 @@ RsaKeyPairGenConfig prepareRsaKeyGenConfig(jsi::Runtime& runtime,
   //    CHECK(args[*offset + 1]->IsUint32());  // Modulus bits
   //    CHECK(args[*offset + 2]->IsUint32());  // Exponent
   config.variant =
-      static_cast<RSAKeyVariant>((int)arguments[offset].asNumber());
+      static_cast<KeyVariant>((int)arguments[offset].asNumber());
 
   // TODO(osp)
   //    CHECK_IMPLIES(params->params.variant != kKeyVariantRSA_PSS,
