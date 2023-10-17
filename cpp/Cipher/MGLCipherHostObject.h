@@ -23,7 +23,6 @@ namespace jsi = facebook::jsi;
 
 class MGLCipherHostObject : public MGLSmartHostObject {
  protected:
-  enum CipherKind { kCipher, kDecipher };
   enum UpdateResult { kSuccess, kErrorMessageSize, kErrorState };
   enum AuthTagState { kAuthTagUnknown, kAuthTagKnown, kAuthTagPassedToOpenSSL };
 

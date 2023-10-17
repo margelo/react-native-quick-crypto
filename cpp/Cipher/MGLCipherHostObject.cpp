@@ -577,7 +577,7 @@ bool MGLCipherHostObject::InitAuthenticated(const char *cipher_type, int iv_len,
     // TODO(tniessen) Support CCM decryption in FIPS mode
 
 #if OPENSSL_VERSION_MAJOR >= 3
-    if (mode == EVP_CIPH_CCM_MODE && kind_ == kDecipher &&
+    if (mode == EVP_CIPH_CCM_MODE && !isCipher_ &&
         EVP_default_properties_is_fips_enabled(nullptr)) {
 #else
     if (mode == EVP_CIPH_CCM_MODE && !isCipher_ && FIPS_mode()) {
