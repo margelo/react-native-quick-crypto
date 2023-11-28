@@ -35,7 +35,7 @@ export function randomFill<T extends ArrayBufferView>(
 
 export function randomFill(buffer: any, ...rest: any[]): void {
   if (typeof rest[rest.length - 1] !== 'function') {
-    throw new Error('No callback provided to randomDill');
+    throw new Error('No callback provided to randomFill');
   }
 
   const callback = rest[rest.length - 1] as any as (
@@ -56,7 +56,15 @@ export function randomFill(buffer: any, ...rest: any[]): void {
   }
 
   random
-    .randomFill(Buffer.isBuffer(buffer) ? buffer.buffer : buffer, offset, size)
+    .randomFill(
+      Buffer.isBuffer(buffer)
+        ? buffer.buffer
+        : ArrayBuffer.isView(buffer)
+        ? buffer.buffer
+        : buffer,
+      offset,
+      size
+    )
     .then(
       () => {
         callback(null, buffer);

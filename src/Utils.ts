@@ -104,7 +104,7 @@ export function toArrayBuffer(buf: Buffer): ArrayBuffer {
   const ab = new ArrayBuffer(buf.length);
   const view = new Uint8Array(ab);
   for (let i = 0; i < buf.length; ++i) {
-    view[i] = buf[i];
+    view[i] = buf[i]!;
   }
   return ab;
 }
@@ -127,8 +127,8 @@ export function binaryLikeToArrayBuffer(
   }
 
   // TODO add further binary types to BinaryLike, UInt8Array and so for have this array as property
-  if ((input as any).buffer) {
-    return (input as any).buffer;
+  if (ArrayBuffer.isView(input)) {
+    return input.buffer;
   }
 
   if (!(input instanceof ArrayBuffer)) {
@@ -142,6 +142,7 @@ export function binaryLikeToArrayBuffer(
       throw 'error';
     }
   }
+
   return input;
 }
 

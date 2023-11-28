@@ -10,7 +10,7 @@ enum DSASigEnc {
 }
 
 import {
-  BinaryLike,
+  type BinaryLike,
   binaryLikeToArrayBuffer,
   getDefaultEncoding,
 } from './Utils';
