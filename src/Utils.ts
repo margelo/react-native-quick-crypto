@@ -114,6 +114,12 @@ export function binaryLikeToArrayBuffer(
   encoding: string = 'utf-8'
 ): ArrayBuffer {
   if (typeof input === 'string') {
+    if (encoding === 'buffer') {
+      throw new Error(
+        'Cannot create a buffer from a string with a buffer encoding'
+      );
+    }
+
     const buffer = Buffer.from(input, encoding);
 
     return buffer.buffer.slice(
