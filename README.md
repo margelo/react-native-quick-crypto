@@ -61,36 +61,44 @@ expo install react-native-quick-base64
 expo prebuild
 ```
 
-## Replace `crypto-browserify`
+<h3>
+  Package Mappings 
+</h3>
 
-If you are using a library that depends on `crypto`, instead of polyfilling it with `crypto-browserify` (or `react-native-crypto`) you can use `react-native-quick-crypto` for a fully native implementation. This way you can get much faster crypto operations with just a single-line change!
+Since `react-native-quick-crypto` depends on `stream` and `buffer`, we can resolve those to `stream-browserify` and @craftzdog's `react-native-buffer` (which is faster than `buffer` because it uses JSI for base64 encoding and decoding).
 
-In your `babel.config.js`, add a module resolver to replace `crypto` with `react-native-quick-crypto`:
+In your `metro.config.js`, add a module resolver to replace these packages:
 
 ```diff
-module.exports = {
-  presets: ['module:metro-react-native-babel-preset'],
-  plugins: [
-+   [
-+     'module-resolver',
-+     {
-+       alias: {
-+         'crypto': 'react-native-quick-crypto',
-+         'stream': 'stream-browserify',
-+         'buffer': '@craftzdog/react-native-buffer',
-+       },
-+     },
-+   ],
-    ...
-  ],
+const config = {
++  resolver: {
++    extraNodeModules: {
++      stream: path.resolve(__dirname, './node_modules/stream-browserify'),
++      buffer: path.resolve(__dirname, './node_modules/@craftzdog/react-native-buffer'),
++    },
++  },
 };
 ```
 
 Then restart your bundler using `yarn start --reset-cache`.
 
-Now, all imports for `crypto` will be resolved as `react-native-quick-crypto` instead.
+## Replace `crypto-browserify`
 
-> 💡 Since react-native-quick-crypto depends on `stream` and `buffer`, we can resolve those to `stream-browserify` and @craftzdog's `react-native-buffer` (which is faster than `buffer` because it uses JSI for base64 encoding and decoding).
+If you are using a library that depends on `crypto`, instead of polyfilling it with `crypto-browserify` (or `react-native-crypto`) you can use `react-native-quick-crypto` for a fully native implementation. This way you can get much faster crypto operations with just a single-line change!
+
+```diff
+const config = {
+  resolver: {
+    extraNodeModules: {
++     crypto: path.resolve(__dirname, './node_modules/react-native-quick-crypto'),
+      stream: path.resolve(__dirname, './node_modules/stream-browserify'),
+      buffer: path.resolve(__dirname, './node_modules/@craftzdog/react-native-buffer'),
+    },
+  },
+};
+```
+
+Now, all imports for `crypto` will be resolved as `react-native-quick-crypto` instead.
 
 ## Usage
 
