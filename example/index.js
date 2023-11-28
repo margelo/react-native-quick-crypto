@@ -1,5 +1,6 @@
 const crypto = require('crypto');
-const quickCrypto = require('react-native-quick-crypto');
+// const quickCrypto = require('react-native-quick-crypto');
+import quickCrypto from 'react-native-quick-crypto';
 
 crypto.publicEncrypt = quickCrypto.publicEncrypt;
 crypto.privateDecrypt = quickCrypto.privateDecrypt;
