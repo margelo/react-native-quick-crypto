@@ -33,6 +33,7 @@
     "util": "^0.12.5"
   },
   "devDependencies": {
+    "@react-native/metro-config": "^0.73.2",
     "@babel/core": "^7.20.0",
     "@babel/preset-env": "^7.20.0",
     "@babel/runtime": "^7.20.0",
