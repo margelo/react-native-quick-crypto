@@ -12,8 +12,8 @@ export const Indentator: React.FC<IndentatorProps> = ({
 }: IndentatorProps) => {
   return (
     <View style={styles.container}>
-      <View style={{ paddingHorizontal: indentation * 20 }} />
-      <View>{children}</View>
+      <View style={{ width: indentation * 40 }} />
+      <View style={styles.result}>{children}</View>
     </View>
   );
 };
@@ -21,8 +21,10 @@ export const Indentator: React.FC<IndentatorProps> = ({
 const styles = StyleSheet.create({
   container: {
     width: '100%',
-    padding: 5,
     flexDirection: 'row',
     alignContent: 'center',
+  },
+  result: {
+    flex: 1,
   },
 });

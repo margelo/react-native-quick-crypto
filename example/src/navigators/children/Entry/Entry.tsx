@@ -1,10 +1,11 @@
+/* eslint-disable @typescript-eslint/no-shadow */
 import React, { useState, useCallback } from 'react';
 import type { RootStackParamList } from '../../RootProps';
 import type {
   NativeStackNavigationProp,
   NativeStackScreenProps,
 } from '@react-navigation/native-stack';
-import { View, ScrollView, StyleSheet } from 'react-native';
+import { View, ScrollView, StyleSheet, SafeAreaView } from 'react-native';
 import { Button } from '../../../components/Button';
 import { useNavigation } from '@react-navigation/native';
 import { TestItem } from '../../../components/TestItem';
@@ -24,7 +25,7 @@ const useTests = (): [
   const toggle = useCallback(
     (index: number) => {
       setTests((tests) => {
-        tests[index].value = !tests[index].value;
+        tests[index]!.value = !tests[index]!.value;
         return [...tests];
       });
     },
@@ -57,7 +58,7 @@ export const Entry: React.FC<EntryProps> = ({}: EntryProps) => {
   const navigation =
     useNavigation<NativeStackNavigationProp<RootStackParamList, 'Entry'>>();
   return (
-    <View style={styles.mainContainer}>
+    <SafeAreaView style={styles.mainContainer}>
       <View style={styles.testList}>
         <ScrollView style={styles.scrollView}>
           {tests.map((test, index: number) => (
@@ -91,7 +92,7 @@ export const Entry: React.FC<EntryProps> = ({}: EntryProps) => {
           }}
         />
       </View>
-    </View>
+    </SafeAreaView>
   );
 };
 
