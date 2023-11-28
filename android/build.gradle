@@ -28,7 +28,7 @@ buildscript {
   }
 
   dependencies {
-    classpath 'com.android.tools.build:gradle:4.2.2'
+    classpath("com.android.tools.build:gradle:7.2.2")
   }
 }
 
@@ -45,6 +45,13 @@ def getExtOrIntegerDefault(name) {
 def reactNativeArchitectures() {
     def value = project.getProperties().get("reactNativeArchitectures")
     return value ? value.split(",") : ["armeabi-v7a", "x86", "x86_64", "arm64-v8a"]
+}
+
+def resolveBuildType() {
+    Gradle gradle = getGradle()
+    String tskReqStr = gradle.getStartParameter().getTaskRequests()['args'].toString()
+
+    return tskReqStr.contains('Release') ? 'release' : 'debug'
 }
 
 def reactProperties = new Properties()
@@ -83,6 +90,7 @@ android {
   }
 
   packagingOptions {
+    doNotStrip resolveBuildType() == 'debug' ? "**/**/*.so" : ''
     excludes = [
             "**/libc++_shared.so",
             "**/libfbjni.so",
@@ -91,9 +99,12 @@ android {
             "**/libreact_nativemodule_core.so",
             "**/libturbomodulejsijni.so",
             "**/MANIFEST.MF",
-            ""
     ]
-    doNotStrip '**/*.so'
+    // Should prevent clashes with other libraries that use OpenSSL
+    pickFirst '**/x86/libcrypto.so'
+    pickFirst '**/x86_64/libcrypto.so'
+    pickFirst '**/armeabi-v7a/libcrypto.so'
+    pickFirst '**/arm64-v8a/libcrypto.so'
   }
 
   buildTypes {
@@ -130,9 +141,8 @@ repositories {
 }
 
 dependencies {
+  //noinspection GradleDynamicVersion
+  implementation 'com.facebook.react:react-android:+'
   // https://mvnrepository.com/artifact/com.android.ndk.thirdparty/openssl
-  implementation 'com.android.ndk.thirdparty:openssl:1.1.1l-beta-1'
-
-  implementation "com.facebook.react:react-android:"
-  implementation "com.facebook.react:hermes-android:"
+  implementation 'com.android.ndk.thirdparty:openssl:1.1.1q-beta-1'
 }
