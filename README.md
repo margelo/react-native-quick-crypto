@@ -9,20 +9,20 @@ A fast implementation of Node's `crypto` module.
 Unlike any other current JS-based polyfills, react-native-quick-crypto is written in C/C++ JSI and provides much greater performance - especially on mobile devices.
 QuickCrypto can be used as a drop-in replacement for your Web3/Crypto apps to speed up common cryptography functions.
 
-* 🏎️ Up to 58x faster than all other solutions
-* ⚡️ Lightning fast implementation with pure C++ and JSI, instead of JS
-* 🧪 Well tested in JS and C++ (OpenSSL)
-* 💰 Made for crypto apps and Wallets
-* 🔢 Secure native compiled cryptography
-* 🔁 Easy drop-in replacement for [crypto-browserify](https://github.com/crypto-browserify/crypto-browserify) or [react-native-crypto](https://github.com/tradle/react-native-crypto)
+- 🏎️ Up to 58x faster than all other solutions
+- ⚡️ Lightning fast implementation with pure C++ and JSI, instead of JS
+- 🧪 Well tested in JS and C++ (OpenSSL)
+- 💰 Made for crypto apps and Wallets
+- 🔢 Secure native compiled cryptography
+- 🔁 Easy drop-in replacement for [crypto-browserify](https://github.com/crypto-browserify/crypto-browserify) or [react-native-crypto](https://github.com/tradle/react-native-crypto)
 
 For example, creating a Wallet using ethers.js uses complex algorithms to generate a private-key/mnemonic-phrase pair:
 
 ```ts
-const start = performance.now()
-const wallet = ethers.Wallet.createRandom()
-const end = performance.now()
-console.log(`Creating a Wallet took ${end - start} ms.`)
+const start = performance.now();
+const wallet = ethers.Wallet.createRandom();
+const end = performance.now();
+console.log(`Creating a Wallet took ${end - start} ms.`);
 ```
 
 **Without** react-native-quick-crypto 🐢:
@@ -65,7 +65,13 @@ expo prebuild
 
 If you are using a library that depends on `crypto`, instead of polyfilling it with `crypto-browserify` (or `react-native-crypto`) you can use `react-native-quick-crypto` for a fully native implementation. This way you can get much faster crypto operations with just a single-line change!
 
-In your `babel.config.js`, add a module resolver to replace `crypto` with `react-native-quick-crypto`:
+You need to install `babel-plugin-module-resolver`, it's a babel plugin that will alias any imports in the code with the values you pass to it. It tricks any module that will try to import certain dependencies with the native versions we require for React Native.
+
+```sh
+yarn add --dev babel-plugin-module-resolver
+```
+
+In your `babel.config.js`, add the plugin to swap the `crypto`, `stream` and `buffer` dependencies:
 
 ```diff
 module.exports = {
@@ -88,20 +94,16 @@ module.exports = {
 
 Then restart your bundler using `yarn start --reset-cache`.
 
-Now, all imports for `crypto` will be resolved as `react-native-quick-crypto` instead.
-
-> 💡 Since react-native-quick-crypto depends on `stream` and `buffer`, we can resolve those to `stream-browserify` and @craftzdog's `react-native-buffer` (which is faster than `buffer` because it uses JSI for base64 encoding and decoding).
-
 ## Usage
 
 For example, to hash a string with SHA256 you can do the following:
 
 ```ts
-import Crypto from 'react-native-quick-crypto'
+import Crypto from 'react-native-quick-crypto';
 
 const hashed = Crypto.createHash('sha256')
   .update('Damn, Margelo writes hella good software!')
-  .digest('hex')
+  .digest('hex');
 ```
 
 ---
