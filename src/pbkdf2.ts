@@ -1,6 +1,6 @@
 import { NativeQuickCrypto } from './NativeQuickCrypto/NativeQuickCrypto';
 import { Buffer } from '@craftzdog/react-native-buffer';
-import { BinaryLike, binaryLikeToArrayBuffer } from './Utils';
+import { type BinaryLike, binaryLikeToArrayBuffer } from './Utils';
 
 const WRONG_PASS =
   'Password must be a string, a Buffer, a typed array or a DataView';
