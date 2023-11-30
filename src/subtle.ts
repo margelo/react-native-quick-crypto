@@ -4,6 +4,7 @@ import {
   type SubtleAlgorithm,
   type KeyUsage,
   CryptoKey,
+  InternalCryptoKey,
 } from './keys';
 import { ecImportKey } from './ec';
 
@@ -15,7 +16,7 @@ class Subtle {
     extractable: boolean,
     keyUsages: KeyUsage[]
   ): Promise<CryptoKey> {
-    let result;
+    let result: InternalCryptoKey;
     switch (algorithm.name) {
       // case 'RSASSA-PKCS1-v1_5':
       // // Fall through
