@@ -14,7 +14,6 @@
 #endif  // !OPENSSL_NO_ENGINE
 
 #include <jsi/jsi.h>
-
 #include <memory>
 #include <optional>
 #include <string>
