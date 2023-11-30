@@ -32,6 +32,13 @@ inline void Assert(const AssertionInfo &info) {
   Abort();
 }
 
+#define HOSTFN(name, basecount) \
+    jsi::Function::createFromHostFunction( \
+        rt, \
+        jsi::PropNameID::forAscii(rt, name), \
+        basecount, \
+        [=](jsi::Runtime &rt, const jsi::Value &thisValue, const jsi::Value *args, size_t count) -> jsi::Value
+
 #define HOST_LAMBDA(name, body) HOST_LAMBDA_CAP(name, [=], body)
 
 #define HOST_LAMBDA_CAP(name, capture, body)                                 \

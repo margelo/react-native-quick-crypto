@@ -19,7 +19,10 @@
 #include "Utils/MGLUtils.h"
 #else
 #include "MGLUtils.h"
+#include "JSIUtils/MGLSmartHostObject.h"
 #endif
+
+// This file should roughly match https://github.com/nodejs/node/blob/main/src/crypto/crypto_keys.cc
 
 namespace margelo {
 
@@ -116,6 +119,13 @@ class ManagedEVPPKey {
   //  size_t size_of_public_key() const;
 
   EVPKeyPointer pkey_;
+};
+
+class JSI_EXPORT KeyObjectHandle: public jsi::HostObject {
+public:
+    KeyObjectHandle() {};
+    
+    jsi::Value get(jsi::Runtime &rt, const jsi::PropNameID &propNameID);
 };
 
 }  // namespace margelo

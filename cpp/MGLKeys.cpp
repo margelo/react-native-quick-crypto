@@ -9,6 +9,8 @@
 
 #include <jsi/jsi.h>
 #include <openssl/bio.h>
+#include <OpenSSL/OpenSSL.h>
+#include <openssl/ec.h>
 
 #include <algorithm>
 #include <optional>
@@ -1033,6 +1035,49 @@ ManagedEVPPKey ManagedEVPPKey::GetParsedKey(jsi::Runtime& runtime,
 //
 //  args.GetReturnValue().Set(key->data_->GetKeyType());
 //}
+
+jsi::Value KeyObjectHandle::get(jsi::Runtime &rt, const jsi::PropNameID &propNameID) {
+    auto name = propNameID.utf8(rt);
+    
+    if(name == "initECRaw") {
+        return HOSTFN("initECRaw", 2) {
+            CHECK(args[0].isString());
+            std::string curveName = args[0].asString(rt).utf8(rt);
+
+              int id = OBJ_txt2nid(curveName.c_str());
+              ECKeyPointer eckey(EC_KEY_new_by_curve_name(id));
+            if (!eckey) {
+                return false;
+            }
+
+
+              const EC_GROUP* group = EC_KEY_get0_group(eckey.get());
+              ECPointPointer pub(ECDH::BufferToPoint(env, group, args[1]));
+
+              if (!pub ||
+                  !eckey ||
+                  !EC_KEY_set_public_key(eckey.get(), pub.get())) {
+                  return false;
+              }
+
+              EVPKeyPointer pkey(EVP_PKEY_new());
+            if (!EVP_PKEY_assign_EC_KEY(pkey.get(), eckey.get())) {
+                return false;
+            }
+                
+              eckey.release();  // Release ownership of the key
+
+//              key->data_ =
+//                  KeyObjectData::CreateAsymmetric(
+//                      kKeyTypePublic,
+//                      ManagedEVPPKey(std::move(pkey)));
+
+            return true;
+        });
+    }
+    return {};
+}
+
 //
 // void KeyObjectHandle::InitECRaw(const FunctionCallbackInfo<Value>& args) {
 //  Environment* env = Environment::GetCurrent(args);
