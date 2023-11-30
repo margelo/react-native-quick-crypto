@@ -77,7 +77,10 @@ import {
 //   }
 // }
 
-function createECPublicKeyRaw(namedCurve: NamedCurve, keyData: ArrayBuffer) {
+function createECPublicKeyRaw(
+  namedCurve: NamedCurve,
+  keyData: ArrayBuffer
+): PublicKeyObject {
   const handle = NativeQuickCrypto.createKeyObjectHandle();
 
   if (!handle.initECRaw(kNamedCurveAliases[namedCurve], keyData)) {
@@ -266,6 +269,9 @@ export function ecImportKey(
       // verifyAcceptableEcKeyUse(name, true, usagesSet);
       keyObject = createECPublicKeyRaw(namedCurve, keyData);
       break;
+    }
+    default: {
+      throw new Error('Unknown format');
     }
   }
 

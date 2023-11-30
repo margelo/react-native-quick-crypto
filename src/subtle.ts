@@ -3,6 +3,7 @@ import {
   type BufferLike,
   type SubtleAlgorithm,
   type KeyUsage,
+  CryptoKey,
 } from './keys';
 import { ecImportKey } from './ec';
 
@@ -13,7 +14,7 @@ class Subtle {
     algorithm: SubtleAlgorithm,
     extractable: boolean,
     keyUsages: KeyUsage[]
-  ) {
+  ): Promise<CryptoKey> {
     let result;
     switch (algorithm.name) {
       // case 'RSASSA-PKCS1-v1_5':
@@ -94,14 +95,14 @@ class Subtle {
         throw new Error('Unrecognized algorithm name');
     }
 
-    if (
-      (result.type === 'secret' || result.type === 'private') &&
-      result.usages.length === 0
-    ) {
-      throw new Error(
-        `Usages cannot be empty when importing a ${result.type} key.`
-      );
-    }
+    // if (
+    //   (result.type === 'secret' || result.type === 'private') &&
+    //   result.usages.length === 0
+    // ) {
+    //   throw new Error(
+    //     `Usages cannot be empty when importing a ${result.type} key.`
+    //   );
+    // }
 
     return result;
   }

@@ -821,45 +821,25 @@ ManagedEVPPKey ManagedEVPPKey::GetParsedKey(jsi::Runtime& runtime,
 // symmetric_key_len_(symmetric_key_.size()),
 // asymmetric_key_() {}
 //
-// KeyObjectData::KeyObjectData(
-//                              KeyType type,
-//                              const ManagedEVPPKey& pkey)
-//: key_type_(type),
+ KeyObjectData::KeyObjectData(KeyType type,
+                              const ManagedEVPPKey& pkey)
+: key_type_(type),
 // symmetric_key_(),
 // symmetric_key_len_(0),
-// asymmetric_key_{pkey} {}
-//
-// void KeyObjectData::MemoryInfo(MemoryTracker* tracker) const {
-//   switch (GetKeyType()) {
-//     case kKeyTypeSecret:
-//       tracker->TrackFieldWithSize("symmetric_key", symmetric_key_.size());
-//       break;
-//     case kKeyTypePrivate:
-//       // Fall through
-//     case kKeyTypePublic:
-//       tracker->TrackFieldWithSize("key", asymmetric_key_);
-//       break;
-//     default:
-//       UNREACHABLE();
-//   }
-// }
-//
+ asymmetric_key_{pkey} {}
+
 // std::shared_ptr<KeyObjectData> KeyObjectData::CreateSecret(ByteSource key)
 // {
 //   CHECK(key);
 //   return std::shared_ptr<KeyObjectData>(new KeyObjectData(std::move(key)));
 // }
-//
-// std::shared_ptr<KeyObjectData> KeyObjectData::CreateAsymmetric(
-//                                                                KeyType
-//                                                                key_type,
-//                                                                const
-//                                                                ManagedEVPPKey&
-//                                                                pkey) {
-//   CHECK(pkey);
-//   return std::shared_ptr<KeyObjectData>(new KeyObjectData(key_type, pkey));
-// }
-//
+
+ std::shared_ptr<KeyObjectData> KeyObjectData::CreateAsymmetric(KeyType key_type,
+                                                                const ManagedEVPPKey& pkey) {
+   CHECK(pkey);
+   return std::shared_ptr<KeyObjectData>(new KeyObjectData(key_type, pkey));
+ }
+
 // KeyType KeyObjectData::GetKeyType() const {
 //   return key_type_;
 // }
@@ -1070,10 +1050,10 @@ jsi::Value KeyObjectHandle::get(jsi::Runtime &rt, const jsi::PropNameID &propNam
             
             eckey.release();  // Release ownership of the key
             
-            //              key->data_ =
-            //                  KeyObjectData::CreateAsymmetric(
-            //                      kKeyTypePublic,
-            //                      ManagedEVPPKey(std::move(pkey)));
+            this->data_ =
+            KeyObjectData::CreateAsymmetric(
+                                            kKeyTypePublic,
+                                            ManagedEVPPKey(std::move(pkey)));
             
             return true;
         });

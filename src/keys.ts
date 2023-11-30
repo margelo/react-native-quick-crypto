@@ -341,7 +341,7 @@ export function parsePrivateKeyEncoding(
   return parseKeyEncoding(enc, keyType, false, objName);
 }
 
-class CryptoKey {
+export class CryptoKey {
   // TODO fix this
   keyObject: any;
   algorithm: SubtleAlgorithm;
@@ -407,7 +407,7 @@ class CryptoKey {
 
 export class InternalCryptoKey extends CryptoKey {
   constructor(
-    keyObject: any,
+    keyObject: PublicKeyObject,
     algorithm: SubtleAlgorithm,
     keyUsages: KeyUsage[],
     extractable: boolean
@@ -453,25 +453,12 @@ export class InternalCryptoKey extends CryptoKey {
 }
 
 class KeyObject {
-  handle: any;
+  handle: KeyObjectHandle;
 
-  constructor(type: string, handle: any) {
+  constructor(type: string, handle: KeyObjectHandle) {
     if (type !== 'secret' && type !== 'public' && type !== 'private')
       throw new Error(`type: ${type}`);
-    // if (typeof handle !== 'object' || !(handle instanceof KeyObjectHandle))
-    //   throw new ERR_INVALID_ARG_TYPE('handle', 'object', handle);
-
-    // super(handle);
-
-    // this[kKeyType] = type;
-
-    // ObjectDefineProperty(this, kHandle, {
-    //   __proto__: null,
-    //   value: handle,
-    //   enumerable: false,
-    //   configurable: false,
-    //   writable: false,
-    // });
+    this.handle = handle;
   }
 
   // get type(): string {
@@ -509,7 +496,7 @@ class KeyObject {
 // });
 
 export class SecretKeyObject extends KeyObject {
-  constructor(handle: any) {
+  constructor(handle: KeyObjectHandle) {
     super('secret', handle);
   }
 
@@ -549,7 +536,7 @@ export class SecretKeyObject extends KeyObject {
 // }
 
 class AsymmetricKeyObject extends KeyObject {
-  constructor(type: string, handle: any) {
+  constructor(type: string, handle: KeyObjectHandle) {
     super(type, handle);
   }
 
@@ -596,7 +583,7 @@ export class PublicKeyObject extends AsymmetricKeyObject {
 }
 
 export class PrivateKeyObject extends AsymmetricKeyObject {
-  constructor(handle: any) {
+  constructor(handle: KeyObjectHandle) {
     super('private', handle);
   }
 
