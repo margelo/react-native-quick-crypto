@@ -10,9 +10,15 @@
 
 #include <jsi/jsi.h>
 #include <openssl/ec.h>
+#include "MGLKeys.h"
+#ifdef ANDROID
+#include "Utils/MGLUtils.h"
+#include "webcrypto/MGLWebCrypto.h"
+#else
 #include "MGLUtils.h"
 #include "MGLWebCrypto.h"
-#include "MGLKeys.h"
+#endif
+
 
 namespace margelo {
 namespace jsi = facebook::jsi;

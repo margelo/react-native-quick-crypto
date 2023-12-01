@@ -21,6 +21,7 @@
 #include "Sig/MGLSignInstaller.h"
 #include "Sig/MGLVerifyInstaller.h"
 #include "fastpbkdf2/MGLPbkdf2HostObject.h"
+#include "webcrypto/MGLWebCrypto.h"
 #else
 #include "MGLCreateCipherInstaller.h"
 #include "MGLCreateDecipherInstaller.h"

@@ -9,9 +9,14 @@
 
 #include <memory>
 #include <utility>
-#include "MGLJSIMacros.h"
 #include "MGLKeys.h"
+#ifdef ANDROID
+#include "JSIUtils/MGLJSIMacros.h"
+#include "webcrypto/crypto_ec.h"
+#else
+#include "MGLJSIMacros.h"
 #include "crypto_ec.h"
+#endif
 
 namespace margelo {
 namespace jsi = facebook::jsi;

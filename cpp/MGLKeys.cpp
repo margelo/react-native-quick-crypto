@@ -9,7 +9,6 @@
 
 #include <jsi/jsi.h>
 #include <openssl/bio.h>
-#include <OpenSSL/OpenSSL.h>
 #include <openssl/ec.h>
 
 #include <algorithm>
@@ -22,6 +21,7 @@
 #include "JSIUtils/MGLJSIUtils.h"
 #include "JSIUtils/MGLTypedArray.h"
 #include "Utils/MGLUtils.h"
+#include "webcrypto/crypto_ec.h"
 #else
 #include "MGLJSIMacros.h"
 #include "MGLJSIUtils.h"
