@@ -6,7 +6,7 @@
 //
 
 #include "crypto_ec.h"
-#include <OpenSSL/ec.h>
+#include <openssl/ec.h>
 
 namespace margelo {
 namespace jsi = facebook::jsi;
