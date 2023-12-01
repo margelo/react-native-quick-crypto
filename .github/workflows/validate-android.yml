@@ -23,10 +23,10 @@ jobs:
         working-directory: ./android
     steps:
       - uses: actions/checkout@v2
-      - name: Setup JDK 1.8
+      - name: Setup JDK
         uses: actions/setup-java@v1
         with:
-          java-version: 1.8
+          java-version: 11
 
       - name: Get yarn cache directory path
         id: yarn-cache-dir-path
@@ -44,22 +44,23 @@ jobs:
       - name: Install node_modules for example/
         run: yarn install --frozen-lockfile --cwd ../example
 
-      - name: Restore Gradle cache
-        uses: actions/cache@v2
-        with:
-          path: |
-            ~/.gradle/caches
-            ~/.gradle/wrapper
-          key: ${{ runner.os }}-gradle-${{ hashFiles('**/*.gradle*', '**/gradle-wrapper.properties') }}
-          restore-keys: |
-            ${{ runner.os }}-gradle-
+      # - name: Restore Gradle cache
+      #   uses: actions/cache@v2
+      #   with:
+      #     path: |
+      #       ~/.gradle/caches
+      #       ~/.gradle/wrapper
+      #     key: ${{ runner.os }}-gradle-${{ hashFiles('**/*.gradle*', '**/gradle-wrapper.properties') }}
+      #     restore-keys: |
+      #       ${{ runner.os }}-gradle-
+
       - name: Run Gradle Lint
-        run: ./gradlew lint --build-cache
+        run: cd ../example/android && ./gradlew lint
 
       - name: Parse Gradle Lint Report
         uses: yutailang0119/action-android-lint@v1.0.2
         with:
-          xml_path: android/build/reports/lint-results.xml
+          xml_path: example/android/app/build/reports/lint-results-debug.html
   # ktlint:
   #   name: Kotlin Lint
   #   runs-on: ubuntu-latest

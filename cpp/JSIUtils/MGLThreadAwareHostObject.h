@@ -10,7 +10,7 @@
 
 #include <memory>
 
-#ifdef ONANDROID
+#ifdef ANDROID
 #include "Utils/MGLDispatchQueue.h"
 #else
 #include "MGLDispatchQueue.h"
