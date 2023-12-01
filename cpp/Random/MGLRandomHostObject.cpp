@@ -36,8 +36,9 @@ MGLRandomHostObject::MGLRandomHostObject(
           throw jsi::JSError(runtime,
                              "randomFill(..) expects exactly 4 arguments!");
         }
-          
-      if(!arguments[0].isObject() || !arguments[0].asObject(runtime).isArrayBuffer(runtime)) {
+
+      if (!arguments[0].isObject()
+        || !arguments[0].asObject(runtime).isArrayBuffer(runtime)) {
           throw std::runtime_error("First argument it not an array buffer");
       }
 

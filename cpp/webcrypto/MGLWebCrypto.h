@@ -8,8 +8,9 @@
 #ifndef MGLWebCryptoHostObject_h
 #define MGLWebCryptoHostObject_h
 
-#include <memory>
 #include <jsi/jsi.h>
+#include <memory>
+
 #ifdef ANDROID
 #include "JSIUtils/MGLSmartHostObject.h"
 #else

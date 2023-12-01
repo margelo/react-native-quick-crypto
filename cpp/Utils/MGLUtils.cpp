@@ -16,8 +16,13 @@ namespace jsi = facebook::jsi;
 
 jsi::Object ByteSourceToArrayBuffer(jsi::Runtime &rt,
                                          ByteSource &source) {
-    jsi::Function array_buffer_ctor = rt.global().getPropertyAsFunction(rt, "ArrayBuffer");
-    jsi::Object o = array_buffer_ctor.callAsConstructor(rt, (int)source.size()).getObject(rt);
+    jsi::Function array_buffer_ctor = rt.global()
+                                      .getPropertyAsFunction(rt, "ArrayBuffer");
+    jsi::Object o = array_buffer_ctor.callAsConstructor(
+      rt,
+      (int)source.size())
+      .getObject(rt);
+
     jsi::ArrayBuffer buf = o.getArrayBuffer(rt);
     // You cannot share raw memory between native and JS
     // always copy the data
@@ -108,7 +113,7 @@ ByteSource& ByteSource::operator=(ByteSource&& other) noexcept {
 //   return Buffer::New(env, ab, 0, ab->ByteLength());
 // }
 
- ByteSource ByteSource::FromBIO(const BIOPointer& bio) {
+ByteSource ByteSource::FromBIO(const BIOPointer& bio) {
 //  CHECK(bio);
   BUF_MEM* bptr;
   BIO_get_mem_ptr(bio.get(), &bptr);

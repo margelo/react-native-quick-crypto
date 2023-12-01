@@ -52,27 +52,27 @@ using ECPointPointer = DeleteFnPtr<EC_POINT, EC_POINT_free>;
 
 template <typename T>
 class NonCopyableMaybe {
-public:
+ public:
     NonCopyableMaybe() : empty_(true) {}
     explicit NonCopyableMaybe(T&& value)
     : empty_(false), value_(std::move(value)) {}
-    
+
     bool IsEmpty() const { return empty_; }
-    
+
     const T* get() const { return empty_ ? nullptr : &value_; }
-    
+
     const T* operator->() const {
         //    CHECK(!empty_);
         return &value_;
     }
-    
+
     T&& Release() {
         //    CHECK_EQ(empty_, false);
         empty_ = true;
         return std::move(value_);
     }
-    
-private:
+
+ private:
     bool empty_;
     T value_;
 };
@@ -82,7 +82,7 @@ inline T MultiplyWithOverflowCheck(T a, T b) {
     auto ret = a * b;
     //  if (a != 0)
     //    CHECK_EQ(b, ret / a);
-    
+
     return ret;
 }
 
@@ -96,29 +96,29 @@ T* MallocOpenSSL(size_t count) {
 // A helper class representing a read-only byte array. When deallocated, its
 // contents are zeroed.
 class ByteSource {
-public:
+ public:
     class Builder {
-    public:
+     public:
         // Allocates memory using OpenSSL's memory allocator.
         explicit Builder(size_t size)
         : data_(MallocOpenSSL<char>(size)), size_(size) {}
-        
+
         Builder(Builder&& other) = delete;
         Builder& operator=(Builder&& other) = delete;
         Builder(const Builder&) = delete;
         Builder& operator=(const Builder&) = delete;
-        
+
         ~Builder() { OPENSSL_clear_free(data_, size_); }
-        
+
         // Returns the underlying non-const pointer.
         template <typename T>
         T* data() {
             return reinterpret_cast<T*>(data_);
         }
-        
+
         // Returns the (allocated) size in bytes.
         size_t size() const { return size_; }
-        
+
         // Finalizes the Builder and returns a read-only view that is optionally
         // truncated.
         ByteSource release(std::optional<size_t> resize = std::nullopt) && {
@@ -135,34 +135,34 @@ public:
             size_ = 0;
             return out;
         }
-        
-    private:
+
+     private:
         void* data_;
         size_t size_;
     };
-    
+
     ByteSource() = default;
     ByteSource(ByteSource&& other) noexcept;
     ~ByteSource();
-    
+
     ByteSource& operator=(ByteSource&& other) noexcept;
-    
+
     ByteSource(const ByteSource&) = delete;
     ByteSource& operator=(const ByteSource&) = delete;
-    
+
     template <typename T = void>
     const T* data() const {
         return reinterpret_cast<const T*>(data_);
     }
-    
+
     size_t size() const { return size_; }
-    
+
     operator bool() const { return data_ != nullptr; }
-    
-    //  BignumPointer ToBN() const {
-    //    return BignumPointer(BN_bin2bn(data<unsigned char>(), size(), nullptr));
+
+    // BignumPointer ToBN() const {
+    // return BignumPointer(BN_bin2bn(data<unsigned char>(), size(), nullptr));
     //  }
-    
+
     // Creates a v8::BackingStore that takes over responsibility for
     // any allocated data. The ByteSource will be reset with size = 0
     // after being called.
@@ -171,40 +171,40 @@ public:
     //  v8::Local<v8::ArrayBuffer> ToArrayBuffer(Environment* env);
     //
     //  v8::MaybeLocal<v8::Uint8Array> ToBuffer(Environment* env);
-    
+
     static ByteSource Allocated(void* data, size_t size);
     static ByteSource Foreign(const void* data, size_t size);
-    
+
     //  static ByteSource FromEncodedString(Environment* env,
     //                                      v8::Local<v8::String> value,
     //                                      enum encoding enc = BASE64);
     //
     static ByteSource FromStringOrBuffer(jsi::Runtime& runtime,
                                          const jsi::Value& value);
-    
+
     static ByteSource FromString(std::string str, bool ntc = false);
-    
+
     static ByteSource FromBuffer(jsi::Runtime& runtime,
                                  const jsi::ArrayBuffer& buffer,
                                  bool ntc = false);
-    
+
     static ByteSource FromBIO(const BIOPointer& bio);
-    
+
     //  static ByteSource NullTerminatedCopy(Environment* env,
     //                                       v8::Local<v8::Value> value);
     //
     //  static ByteSource FromSymmetricKeyObjectHandle(v8::Local<v8::Value>
     //  handle);
-    
+
     //  static ByteSource FromSecretKeyBytes(
     //                                       Environment* env,
     //                                       v8::Local<v8::Value> value);
-    
-private:
+
+ private:
     const void* data_ = nullptr;
     void* allocated_data_ = nullptr;
     size_t size_ = 0;
-    
+
     ByteSource(const void* data, void* allocated_data, size_t size)
     : data_(data), allocated_data_(allocated_data), size_(size) {}
 };
@@ -238,7 +238,7 @@ inline int PasswordCallback(char* buf, int size, int rwflag, void* u) {
         memcpy(buf, passphrase->data(), len);
         return len;
     }
-    
+
     return -1;
 }
 
@@ -247,7 +247,7 @@ inline void CheckEntropy() {
         int status = RAND_status();
         //    CHECK_GE(status, 0);  // Cannot fail.
         if (status != 0) break;
-        
+
         // Give up, RAND_poll() not supported.
         if (RAND_poll() == 0) break;
     }

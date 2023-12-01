@@ -37,7 +37,10 @@ inline void Assert(const AssertionInfo &info) {
         rt, \
         jsi::PropNameID::forAscii(rt, name), \
         basecount, \
-        [=](jsi::Runtime &rt, const jsi::Value &thisValue, const jsi::Value *args, size_t count) -> jsi::Value
+        [=](jsi::Runtime &rt, \
+            const jsi::Value &thisValue, \
+            const jsi::Value *args, \
+            size_t count) -> jsi::Value
 
 #define HOST_LAMBDA(name, body) HOST_LAMBDA_CAP(name, [=], body)
 

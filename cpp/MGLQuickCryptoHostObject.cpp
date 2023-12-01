@@ -107,13 +107,12 @@ MGLQuickCryptoHostObject::MGLQuickCryptoHostObject(
     return jsi::Object::createFromHostObject(runtime, hostObject);
   }));
 
-        
   // subtle API created from a simple jsi::Object
-  // because this FieldDefinition is only good for returning objects and too convoluted
+  // because this FieldDefinition is only good for returning
+  // objects and too convoluted
     this->fields.push_back(JSI_VALUE("webcrypto", {
       return createWebCryptoObject(runtime);
     }));
-        
 }
 
 }  // namespace margelo

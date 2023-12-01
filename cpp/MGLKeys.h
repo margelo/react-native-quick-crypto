@@ -154,17 +154,11 @@ class KeyObjectData {
 // Analoguous to the KeyObjectHandle class in node
 // https://github.com/nodejs/node/blob/main/src/crypto/crypto_keys.h#L164
 class JSI_EXPORT KeyObjectHandle: public jsi::HostObject {
-public:
-    KeyObjectHandle() {};
-    
+ public:
+    KeyObjectHandle() {}
     jsi::Value get(jsi::Runtime &rt, const jsi::PropNameID &propNameID);
-    
-    // TODO this should be protected
+    // TODO(osp) this should be protected
     std::shared_ptr<KeyObjectData> data_;
-//    const std::shared_ptr<KeyObjectData>& Data();
-    
-//private:
-    
 };
 
 }  // namespace margelo

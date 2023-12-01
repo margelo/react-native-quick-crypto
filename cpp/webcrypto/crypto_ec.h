@@ -10,6 +10,7 @@
 
 #include <jsi/jsi.h>
 #include <openssl/ec.h>
+#include <memory>
 #include "MGLKeys.h"
 #ifdef ANDROID
 #include "Utils/MGLUtils.h"
@@ -24,14 +25,17 @@ namespace margelo {
 namespace jsi = facebook::jsi;
 
 class ECDH final {
-public:
+ public:
     static ECPointPointer BufferToPoint(jsi::Runtime &rt,
                                         const EC_GROUP* group,
                                         jsi::ArrayBuffer &buf);
-    static void doExport(jsi::Runtime &rt, WebCryptoKeyFormat format, std::shared_ptr<KeyObjectData> key_data, ByteSource* out);
+    static void doExport(jsi::Runtime &rt,
+                        WebCryptoKeyFormat format,
+                        std::shared_ptr<KeyObjectData> key_data,
+                        ByteSource* out);
 };
 
-}
+} // namespace margelo
 
 
 #endif /* crypto_ec_hpp */
