@@ -2,10 +2,10 @@
 import { NativeQuickCrypto } from './NativeQuickCrypto/NativeQuickCrypto';
 import Stream from 'stream-browserify';
 import {
-  BinaryLike,
+  type BinaryLike,
   binaryLikeToArrayBuffer,
-  CipherEncoding,
-  Encoding,
+  type CipherEncoding,
+  type Encoding,
   getDefaultEncoding,
   kEmptyObject,
   validateFunction,
@@ -14,7 +14,7 @@ import {
   validateUint32,
   validateInt32,
 } from './Utils';
-import { InternalCipher, RSAKeyVariant } from './NativeQuickCrypto/Cipher';
+import { type InternalCipher, RSAKeyVariant } from './NativeQuickCrypto/Cipher';
 // TODO(osp) re-enable type specific constructors
 // They are nice to have but not absolutely necessary
 // import type {

@@ -1,4 +1,8 @@
-import { BinaryLike, binaryLikeToArrayBuffer, isStringOrBuffer } from './Utils';
+import {
+  type BinaryLike,
+  binaryLikeToArrayBuffer,
+  isStringOrBuffer,
+} from './Utils';
 
 // On node this value is defined on the native side, for now I'm just creating it here in JS
 // TODO(osp) move this into native side to make sure they always match
