@@ -142,7 +142,7 @@ repositories {
 
 dependencies {
   //noinspection GradleDynamicVersion
-  implementation 'com.facebook.react:react-android:+'
+  implementation "com.facebook.react:react-native:+"
   // https://mvnrepository.com/artifact/com.android.ndk.thirdparty/openssl
   implementation 'com.android.ndk.thirdparty:openssl:1.1.1q-beta-1'
 }
