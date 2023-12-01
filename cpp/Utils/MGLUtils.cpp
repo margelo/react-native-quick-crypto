@@ -14,6 +14,18 @@ namespace margelo {
 
 namespace jsi = facebook::jsi;
 
+jsi::Object ByteSourceToArrayBuffer(jsi::Runtime &rt,
+                                         ByteSource &source) {
+    jsi::Function array_buffer_ctor = rt.global().getPropertyAsFunction(rt, "ArrayBuffer");
+    jsi::Object o = array_buffer_ctor.callAsConstructor(rt, (int)source.size()).getObject(rt);
+    jsi::ArrayBuffer buf = o.getArrayBuffer(rt);
+    // You cannot share raw memory between native and JS
+    // always copy the data
+    // see https://github.com/facebook/hermes/pull/419 and https://github.com/facebook/hermes/issues/564.
+    memcpy(buf.data(rt), source.data(), source.size());
+    return o;
+}
+
 ByteSource ArrayBufferToByteSource(jsi::Runtime& runtime,
                                    const jsi::ArrayBuffer& buffer) {
   if (buffer.size(runtime) == 0) return ByteSource();
@@ -96,14 +108,14 @@ ByteSource& ByteSource::operator=(ByteSource&& other) noexcept {
 //   return Buffer::New(env, ab, 0, ab->ByteLength());
 // }
 
-// ByteSource ByteSource::FromBIO(const BIOPointer& bio) {
-////  CHECK(bio);
-//  BUF_MEM* bptr;
-//  BIO_get_mem_ptr(bio.get(), &bptr);
-//  ByteSource::Builder out(bptr->length);
-//  memcpy(out.data<void>(), bptr->data, bptr->length);
-//  return std::move(out).release();
-//}
+ ByteSource ByteSource::FromBIO(const BIOPointer& bio) {
+//  CHECK(bio);
+  BUF_MEM* bptr;
+  BIO_get_mem_ptr(bio.get(), &bptr);
+  ByteSource::Builder out(bptr->length);
+  memcpy(out.data<void>(), bptr->data, bptr->length);
+  return std::move(out).release();
+}
 
 // ByteSource ByteSource::FromEncodedString(Environment* env,
 //                                          Local<String> key,

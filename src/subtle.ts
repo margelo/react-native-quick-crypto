@@ -108,12 +108,15 @@ class Subtle {
     return result;
   }
 
-  async exportKey(format: ImportFormat, key: CryptoKey) {
+  async exportKey(
+    format: ImportFormat,
+    key: CryptoKey
+  ): Promise<ArrayBuffer | any> {
     if (!key.extractable) throw new Error('key is not extractable');
 
     switch (format) {
       case 'spki':
-        return this.exportKeySpki(key);
+        return await this.exportKeySpki(key);
       // case 'jwk':
       //   return exportKeyJWK(key);
       // case 'raw':
@@ -122,7 +125,7 @@ class Subtle {
     throw new Error('Export format is unsupported');
   }
 
-  private async exportKeySpki(key: CryptoKey) {
+  private async exportKeySpki(key: CryptoKey): Promise<ArrayBuffer | any> {
     switch (key.algorithm.name) {
       // case 'RSASSA-PKCS1-v1_5':
       // // Fall through

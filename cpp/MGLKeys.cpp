@@ -27,7 +27,7 @@
 #include "MGLJSIUtils.h"
 #include "MGLTypedArray.h"
 #include "MGLUtils.h"
-#include "crypto/crypto_ec.h"
+#include "crypto_ec.h"
 #endif
 
 namespace margelo {
@@ -840,15 +840,15 @@ ManagedEVPPKey ManagedEVPPKey::GetParsedKey(jsi::Runtime& runtime,
    return std::shared_ptr<KeyObjectData>(new KeyObjectData(key_type, pkey));
  }
 
-// KeyType KeyObjectData::GetKeyType() const {
-//   return key_type_;
-// }
-//
-// ManagedEVPPKey KeyObjectData::GetAsymmetricKey() const {
+ KeyType KeyObjectData::GetKeyType() const {
+   return key_type_;
+ }
+
+ ManagedEVPPKey KeyObjectData::GetAsymmetricKey() const {
 //   CHECK_NE(key_type_, kKeyTypeSecret);
-//   return asymmetric_key_;
-// }
-//
+   return asymmetric_key_;
+ }
+
 // const char* KeyObjectData::GetSymmetricKey() const {
 //   CHECK_EQ(key_type_, kKeyTypeSecret);
 //   return symmetric_key_.data<char>();

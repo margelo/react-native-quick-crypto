@@ -155,7 +155,10 @@ function createECPublicKeyRaw(
 //   return { __proto__: null, publicKey, privateKey };
 // }
 
-export function ecExportKey(key: CryptoKey, format: KWebCryptoKeyFormat) {
+export function ecExportKey(
+  key: CryptoKey,
+  format: KWebCryptoKeyFormat
+): ArrayBuffer {
   return NativeQuickCrypto.webcrypto.ecExportKey(format, key.keyObject.handle);
 }
 

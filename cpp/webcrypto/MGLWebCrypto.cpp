@@ -11,6 +11,7 @@
 #include <utility>
 #include "MGLJSIMacros.h"
 #include "MGLKeys.h"
+#include "crypto_ec.h"
 
 namespace margelo {
 namespace jsi = facebook::jsi;
@@ -25,8 +26,13 @@ jsi::Value createWebCryptoObject(jsi::Runtime &rt) {
         return jsi::Object::createFromHostObject(rt, keyObjectHandleHostObject);
     });
     
-    auto ecExportKey = HOSTFN("ecExportKey", 0) {
-        return {};
+    auto ecExportKey = HOSTFN("ecExportKey", 2) {
+        ByteSource out;
+        std::shared_ptr<KeyObjectHandle> handle = std::static_pointer_cast<KeyObjectHandle>(args[1].asObject(rt).getHostObject(rt));
+        std::shared_ptr<KeyObjectData> key_data = handle->data_;
+        ECDH::doExport(rt, static_cast<WebCryptoKeyFormat>(args[0].asNumber()), key_data, &out);
+        auto buffer = ByteSourceToArrayBuffer(rt, out);
+        return buffer;
     });
     
     obj.setProperty(rt, "createKeyObjectHandle", std::move(createKeyObjectHandle));

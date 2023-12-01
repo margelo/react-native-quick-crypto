@@ -1,8 +1,7 @@
-import { Buffer } from '@craftzdog/react-native-buffer';
 import chai from 'chai';
+import { atob, btoa } from 'react-native-quick-base64';
 import crypto from 'react-native-quick-crypto';
-import { describe, it } from '../../MochaRNAdapter';
-import { atob } from 'react-native-quick-base64';
+import { it } from '../../MochaRNAdapter';
 
 // Tests that a key pair can be used for encryption / decryption.
 // function testEncryptDecrypt(publicKey: any, privateKey: any) {
@@ -49,6 +48,16 @@ function base64ToArrayBuffer(val: string): ArrayBuffer {
   return bytes.buffer;
 }
 
+function arrayBufferToBase64(buffer: ArrayBuffer) {
+  var binary = '';
+  var bytes = new Uint8Array(buffer);
+  var len = bytes.byteLength;
+  for (var i = 0; i < len; i++) {
+    binary += String.fromCharCode(bytes[i]!);
+  }
+  return btoa(binary);
+}
+
 export function webcryptoRegisterTests() {
   it('EC import raw/export SPKI', async () => {
     const key = await crypto.subtle.importKey(
@@ -61,8 +70,13 @@ export function webcryptoRegisterTests() {
       ['verify']
     );
 
-    crypto.subtle.exportKey('spki', key);
-
-    chai.expect(1).to.equal(2);
+    const buf = await crypto.subtle.exportKey('spki', key);
+    const spkiKey = arrayBufferToBase64(buf);
+    console.warn(spkiKey);
+    chai
+      .expect(spkiKey)
+      .to.equal(
+        'MFkwEwYHKoZIzj0CAQYIKoZIzj0DAQcDQgAENlFpbMBNfCY6Lhj9A/clefyxJVIXGJ0y6CcZ/cbbyyebvN6T0aNPvpQyFdUwRtYvFHlYbqIZOM8AoqdPcnSMIA=='
+      );
   });
 }

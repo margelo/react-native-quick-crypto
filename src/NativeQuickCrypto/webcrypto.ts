@@ -3,7 +3,7 @@ import type { KWebCryptoKeyFormat } from '../keys';
 type ECExportKey = (
   format: KWebCryptoKeyFormat,
   handle: KeyObjectHandle
-) => Promise<any>;
+) => ArrayBuffer;
 
 export type KeyObjectHandle = {
   initECRaw(curveName: string, keyData: ArrayBuffer): boolean;

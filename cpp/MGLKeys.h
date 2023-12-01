@@ -43,13 +43,6 @@ enum PKFormatType { kKeyFormatDER, kKeyFormatPEM, kKeyFormatJWK };
 
 enum KeyType { kKeyTypeSecret, kKeyTypePublic, kKeyTypePrivate };
 
-enum WebCryptoKeyFormat {
-  kWebCryptoKeyFormatRaw,
-  kWebCryptoKeyFormatPKCS8,
-  kWebCryptoKeyFormatSPKI,
-  kWebCryptoKeyFormatJWK
-};
-
 enum KeyEncodingContext {
   kKeyContextInput,
   kKeyContextExport,
@@ -138,11 +131,11 @@ class KeyObjectData {
       KeyType type,
       const ManagedEVPPKey& pkey);
 
-//  KeyType GetKeyType() const;
+  KeyType GetKeyType() const;
 
   // These functions allow unprotected access to the raw key material and should
   // only be used to implement cryptographic operations requiring the key.
-//  ManagedEVPPKey GetAsymmetricKey() const;
+  ManagedEVPPKey GetAsymmetricKey() const;
 //  const char* GetSymmetricKey() const;
 //  size_t GetSymmetricKeySize() const;
 
@@ -166,8 +159,12 @@ public:
     
     jsi::Value get(jsi::Runtime &rt, const jsi::PropNameID &propNameID);
     
-private:
+    // TODO this should be protected
     std::shared_ptr<KeyObjectData> data_;
+//    const std::shared_ptr<KeyObjectData>& Data();
+    
+//private:
+    
 };
 
 }  // namespace margelo
