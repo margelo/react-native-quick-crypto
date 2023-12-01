@@ -13,6 +13,7 @@ import type {
 } from './Cipher';
 import type { CreateSignMethod, CreateVerifyMethod } from './sig';
 import type { CreateKeyObjectHandle } from './KeyObjectHandle';
+import type { ecKeyExport } from './ec';
 
 interface NativeQuickCryptoSpec {
   createHmac: CreateHmacMethod;
@@ -29,6 +30,7 @@ interface NativeQuickCryptoSpec {
   createSign: CreateSignMethod;
   createVerify: CreateVerifyMethod;
   createKeyObjectHandle: CreateKeyObjectHandle;
+  ecKeyExport: ecKeyExport;
 }
 
 // global func declaration for JSI functions

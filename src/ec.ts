@@ -1,13 +1,14 @@
 import { NativeQuickCrypto } from './NativeQuickCrypto/NativeQuickCrypto';
+import { bufferLikeToArrayBuffer, type BufferLike } from './Utils';
 import {
   type ImportFormat,
-  type BufferLike,
   type SubtleAlgorithm,
   type KeyUsage,
-  InternalCryptoKey,
   kNamedCurveAliases,
   type NamedCurve,
   PublicKeyObject,
+  KWebCryptoKeyFormat,
+  CryptoKey,
 } from './keys';
 
 // const {
@@ -82,7 +83,6 @@ function createECPublicKeyRaw(
   keyData: ArrayBuffer
 ): PublicKeyObject {
   const handle = NativeQuickCrypto.createKeyObjectHandle();
-
   if (!handle.initECRaw(kNamedCurveAliases[namedCurve], keyData)) {
     throw new Error('Invalid keyData');
   }
@@ -155,12 +155,9 @@ function createECPublicKeyRaw(
 //   return { __proto__: null, publicKey, privateKey };
 // }
 
-// function ecExportKey(key, format) {
-//   return jobPromise(() => new ECKeyExportJob(
-//     kCryptoJobAsync,
-//     format,
-//     key[kKeyObject][kHandle]));
-// }
+export function ecExportKey(key: CryptoKey, format: KWebCryptoKeyFormat) {
+  return NativeQuickCrypto.ecKeyExport(format, key.keyObject.handle);
+}
 
 export function ecImportKey(
   format: ImportFormat,
@@ -267,7 +264,8 @@ export function ecImportKey(
     // }
     case 'raw': {
       // verifyAcceptableEcKeyUse(name, true, usagesSet);
-      keyObject = createECPublicKeyRaw(namedCurve, keyData);
+      let buffer = bufferLikeToArrayBuffer(keyData);
+      keyObject = createECPublicKeyRaw(namedCurve, buffer);
       break;
     }
     default: {
@@ -292,12 +290,7 @@ export function ecImportKey(
   // if (kNamedCurveAliases[namedCurve] !== checkNamedCurve)
   //   throw new Error('Named curve mismatch');
 
-  return new InternalCryptoKey(
-    keyObject,
-    { name, namedCurve },
-    keyUsages,
-    extractable
-  );
+  return new CryptoKey(keyObject, { name, namedCurve }, keyUsages, extractable);
 }
 
 // function ecdsaSignVerify(key, data, { name, hash }, signature) {

@@ -112,11 +112,10 @@ MGLQuickCryptoHostObject::MGLQuickCryptoHostObject(
   this->fields.push_back(getVerifyFieldDefinition(jsCallInvoker, workerQueue));
         
   // create new KeyObjectHandle instance
-    this->fields.push_back(JSI_VALUE("createKeyObjectHandle", {
-        auto keyObjectHandleHostObject =
-        std::make_shared<KeyObjectHandle>();
-        return jsi::Object::createFromHostObject(runtime, keyObjectHandleHostObject);
-    }));
+    this->fields.push_back(getCreateKeyObjectHandleFieldDefinition());
+
+  // Creates an export job
+    this->fields.push_back(getECKeyExportFieldDefinition());
 }
 
 }  // namespace margelo

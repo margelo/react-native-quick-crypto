@@ -32,6 +32,7 @@ ECPointPointer ECDH::BufferToPoint(jsi::Runtime &rt,
       buf.data(rt),
       buf.size(rt),
       nullptr);
+
   if (!r)
     return ECPointPointer();
 

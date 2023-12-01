@@ -1,12 +1,12 @@
 import {
   type ImportFormat,
-  type BufferLike,
   type SubtleAlgorithm,
   type KeyUsage,
   CryptoKey,
-  InternalCryptoKey,
+  KWebCryptoKeyFormat,
 } from './keys';
-import { ecImportKey } from './ec';
+import { ecImportKey, ecExportKey } from './ec';
+import type { BufferLike } from './Utils';
 
 class Subtle {
   async importKey(
@@ -16,7 +16,7 @@ class Subtle {
     extractable: boolean,
     keyUsages: KeyUsage[]
   ): Promise<CryptoKey> {
-    let result: InternalCryptoKey;
+    let result: CryptoKey;
     switch (algorithm.name) {
       // case 'RSASSA-PKCS1-v1_5':
       // // Fall through
@@ -93,7 +93,7 @@ class Subtle {
       //   );
       //   break;
       default:
-        throw new Error('Unrecognized algorithm name');
+        throw new Error(`Unrecognized algorithm name ${algorithm.name}`);
     }
 
     // if (
@@ -106,6 +106,62 @@ class Subtle {
     // }
 
     return result;
+  }
+
+  async exportKey(format: ImportFormat, key: CryptoKey) {
+    if (!key.extractable) throw new Error('key is not extractable');
+
+    switch (format) {
+      case 'spki':
+        return this.exportKeySpki(key);
+      // case 'jwk':
+      //   return exportKeyJWK(key);
+      // case 'raw':
+      //   return exportKeyRaw(key);
+    }
+    throw new Error('Export format is unsupported');
+  }
+
+  private async exportKeySpki(key: CryptoKey) {
+    switch (key.algorithm.name) {
+      // case 'RSASSA-PKCS1-v1_5':
+      // // Fall through
+      // case 'RSA-PSS':
+      // // Fall through
+      // case 'RSA-OAEP':
+      //   if (key.type === 'public') {
+      //     return require('internal/crypto/rsa').rsaExportKey(
+      //       key,
+      //       kWebCryptoKeyFormatSPKI
+      //     );
+      //   }
+      //   break;
+      case 'ECDSA':
+      // Fall through
+      case 'ECDH':
+        if (key.type === 'public') {
+          return ecExportKey(key, KWebCryptoKeyFormat.kWebCryptoKeyFormatSPKI);
+        }
+        break;
+      // case 'Ed25519':
+      // // Fall through
+      // case 'Ed448':
+      // // Fall through
+      // case 'X25519':
+      // // Fall through
+      // case 'X448':
+      //   if (key.type === 'public') {
+      //     return require('internal/crypto/cfrg').cfrgExportKey(
+      //       key,
+      //       kWebCryptoKeyFormatSPKI
+      //     );
+      //   }
+      //   break;
+    }
+
+    throw new Error(
+      `Unable to export a raw ${key.algorithm.name} ${key.type} key`
+    );
   }
 }
 

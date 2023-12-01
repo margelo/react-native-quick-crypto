@@ -1,4 +1,3 @@
-import { Buffer } from '@craftzdog/react-native-buffer';
 import {
   type BinaryLike,
   binaryLikeToArrayBuffer,
@@ -12,19 +11,8 @@ export const kNamedCurveAliases = {
   'P-521': 'secp521r1',
 } as const;
 
-type TypedArray =
-  | Uint8Array
-  | Uint8ClampedArray
-  | Uint16Array
-  | Uint32Array
-  | Int8Array
-  | Int16Array
-  | Int32Array
-  | Float32Array
-  | Float64Array;
-
 export type NamedCurve = 'P-256' | 'P-384' | 'P-521';
-export type BufferLike = ArrayBuffer | Buffer | TypedArray;
+
 export type ImportFormat = 'raw' | 'pkcs8' | 'spki' | 'jwk';
 export type SubtleAlgorithm = {
   name: 'ECDSA' | 'ECDH';
@@ -46,6 +34,14 @@ enum KFormatType {
   kKeyFormatDER,
   kKeyFormatPEM,
   kKeyFormatJWK,
+}
+
+// Same as KFormatType, this enum needs to be defined on the native side
+export enum KWebCryptoKeyFormat {
+  kWebCryptoKeyFormatRaw,
+  kWebCryptoKeyFormatPKCS8,
+  kWebCryptoKeyFormatSPKI,
+  kWebCryptoKeyFormatJWK,
 }
 
 enum KeyInputContext {
@@ -343,13 +339,29 @@ export function parsePrivateKeyEncoding(
 
 export class CryptoKey {
   // TODO fix this
-  keyObject: any;
+  keyObject: PublicKeyObject;
   algorithm: SubtleAlgorithm;
   keyUsages: KeyUsage[];
   extractable: boolean;
 
-  constructor() {
-    throw new Error('Illegal constructor');
+  constructor(
+    keyObject: PublicKeyObject,
+    algorithm: SubtleAlgorithm,
+    keyUsages: KeyUsage[],
+    extractable: boolean
+  ) {
+    this.keyObject = keyObject;
+    this.algorithm = algorithm;
+    this.keyUsages = keyUsages;
+    this.extractable = extractable;
+    // markTransferMode(this, true, false);
+    // Using symbol properties here currently instead of private
+    // properties because (for now) the performance penalty of
+    // private fields is still too high.
+    // this[kKeyObject] = keyObject;
+    // this[kAlgorithm] = algorithm;
+    // this[kExtractable] = extractable;
+    // this[kKeyUsages] = keyUsages;
   }
 
   inspect(_depth: number, _options: any): any {
@@ -372,10 +384,10 @@ export class CryptoKey {
     // )}`;
   }
 
-  // get type() {
-  //   if (!(this instanceof CryptoKey)) throw new Error('Invalid CryptoKey');
-  //   return this[kKeyObject].type;
-  // }
+  get type() {
+    // if (!(this instanceof CryptoKey)) throw new Error('Invalid CryptoKey');
+    return this.keyObject.type;
+  }
 
   // get extractable() {
   //   if (!(this instanceof CryptoKey)) throw new ERR_INVALID_THIS('CryptoKey');
@@ -405,55 +417,9 @@ export class CryptoKey {
 //   },
 // });
 
-export class InternalCryptoKey extends CryptoKey {
-  constructor(
-    keyObject: PublicKeyObject,
-    algorithm: SubtleAlgorithm,
-    keyUsages: KeyUsage[],
-    extractable: boolean
-  ) {
-    super();
-    this.keyObject = keyObject;
-    this.algorithm = algorithm;
-    this.keyUsages = keyUsages;
-    this.extractable = extractable;
-    // markTransferMode(this, true, false);
-    // Using symbol properties here currently instead of private
-    // properties because (for now) the performance penalty of
-    // private fields is still too high.
-    // this[kKeyObject] = keyObject;
-    // this[kAlgorithm] = algorithm;
-    // this[kExtractable] = extractable;
-    // this[kKeyUsages] = keyUsages;
-  }
-
-  // clone() {
-  //   const keyObject = this[kKeyObject];
-  //   const algorithm = this.algorithm;
-  //   const extractable = this.extractable;
-  //   const usages = this.usages;
-
-  //   return {
-  //     data: {
-  //       keyObject,
-  //       algorithm,
-  //       usages,
-  //       extractable,
-  //     },
-  //     deserializeInfo: 'internal/crypto/keys:InternalCryptoKey',
-  //   };
-  // }
-
-  // deserialize({ keyObject, algorithm, usages, extractable }) {
-  //   this[kKeyObject] = keyObject;
-  //   this[kAlgorithm] = algorithm;
-  //   this[kKeyUsages] = usages;
-  //   this[kExtractable] = extractable;
-  // }
-}
-
 class KeyObject {
   handle: KeyObjectHandle;
+  type: 'public' | 'secret' | 'private' | 'unknown' = 'unknown';
 
   constructor(type: string, handle: KeyObjectHandle) {
     if (type !== 'secret' && type !== 'public' && type !== 'private')

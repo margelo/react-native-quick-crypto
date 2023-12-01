@@ -43,6 +43,13 @@ enum PKFormatType { kKeyFormatDER, kKeyFormatPEM, kKeyFormatJWK };
 
 enum KeyType { kKeyTypeSecret, kKeyTypePublic, kKeyTypePrivate };
 
+enum WebCryptoKeyFormat {
+  kWebCryptoKeyFormatRaw,
+  kWebCryptoKeyFormatPKCS8,
+  kWebCryptoKeyFormatSPKI,
+  kWebCryptoKeyFormatJWK
+};
+
 enum KeyEncodingContext {
   kKeyContextInput,
   kKeyContextExport,
@@ -162,6 +169,9 @@ public:
 private:
     std::shared_ptr<KeyObjectData> data_;
 };
+
+FieldDefinition getECKeyExportFieldDefinition();
+FieldDefinition getCreateKeyObjectHandleFieldDefinition();
 
 }  // namespace margelo
 
