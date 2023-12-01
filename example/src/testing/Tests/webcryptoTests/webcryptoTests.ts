@@ -61,7 +61,7 @@ export function webcryptoRegisterTests() {
       ['verify']
     );
 
-    // crypto.subtle.exportKey('spki', key);
+    crypto.subtle.exportKey('spki', key);
 
     chai.expect(1).to.equal(2);
   });

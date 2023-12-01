@@ -1485,23 +1485,4 @@ jsi::Value KeyObjectHandle::get(jsi::Runtime &rt, const jsi::PropNameID &propNam
 //    KeyObjectHandle::RegisterExternalReferences(registry);
 //  }
 
-FieldDefinition getECKeyExportFieldDefinition() {
-    return HOST_LAMBDA("ecKeyExport", {
-      if (count != 2) {
-        throw jsi::JSError(runtime,
-                           "createHmac(..) expects exactly 2 arguments!");
-      }
-
-        return {};
-    });
-}
-
-FieldDefinition getCreateKeyObjectHandleFieldDefinition() {
-    return HOST_LAMBDA("createKeyObjectHandle", {
-        auto keyObjectHandleHostObject =
-                std::make_shared<KeyObjectHandle>();
-        return jsi::Object::createFromHostObject(runtime, keyObjectHandleHostObject);
-    });
-}
-
 }  // namespace margelo

@@ -170,9 +170,6 @@ private:
     std::shared_ptr<KeyObjectData> data_;
 };
 
-FieldDefinition getECKeyExportFieldDefinition();
-FieldDefinition getCreateKeyObjectHandleFieldDefinition();
-
 }  // namespace margelo
 
 #endif /* MGLCipherKeys_h */

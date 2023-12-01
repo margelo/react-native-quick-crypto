@@ -82,7 +82,7 @@ function createECPublicKeyRaw(
   namedCurve: NamedCurve,
   keyData: ArrayBuffer
 ): PublicKeyObject {
-  const handle = NativeQuickCrypto.createKeyObjectHandle();
+  const handle = NativeQuickCrypto.webcrypto.createKeyObjectHandle();
   if (!handle.initECRaw(kNamedCurveAliases[namedCurve], keyData)) {
     throw new Error('Invalid keyData');
   }
@@ -156,7 +156,7 @@ function createECPublicKeyRaw(
 // }
 
 export function ecExportKey(key: CryptoKey, format: KWebCryptoKeyFormat) {
-  return NativeQuickCrypto.ecKeyExport(format, key.keyObject.handle);
+  return NativeQuickCrypto.webcrypto.ecExportKey(format, key.keyObject.handle);
 }
 
 export function ecImportKey(
@@ -316,10 +316,3 @@ export function ecImportKey(
 //     kSigEncP1363,
 //     signature));
 // }
-
-module.exports = {
-  // ecExportKey,
-  ecImportKey,
-  // ecGenerateKey,
-  // ecdsaSignVerify,
-};

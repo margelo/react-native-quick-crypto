@@ -3,7 +3,7 @@ import {
   binaryLikeToArrayBuffer,
   isStringOrBuffer,
 } from './Utils';
-import type { KeyObjectHandle } from './NativeQuickCrypto/KeyObjectHandle';
+import type { KeyObjectHandle } from './NativeQuickCrypto/webcrypto';
 
 export const kNamedCurveAliases = {
   'P-256': 'prime256v1',
@@ -338,14 +338,13 @@ export function parsePrivateKeyEncoding(
 }
 
 export class CryptoKey {
-  // TODO fix this
   keyObject: PublicKeyObject;
   algorithm: SubtleAlgorithm;
   keyUsages: KeyUsage[];
   extractable: boolean;
 
   constructor(
-    keyObject: PublicKeyObject,
+    keyObject: KeyObject,
     algorithm: SubtleAlgorithm,
     keyUsages: KeyUsage[],
     extractable: boolean
@@ -354,14 +353,6 @@ export class CryptoKey {
     this.algorithm = algorithm;
     this.keyUsages = keyUsages;
     this.extractable = extractable;
-    // markTransferMode(this, true, false);
-    // Using symbol properties here currently instead of private
-    // properties because (for now) the performance penalty of
-    // private fields is still too high.
-    // this[kKeyObject] = keyObject;
-    // this[kAlgorithm] = algorithm;
-    // this[kExtractable] = extractable;
-    // this[kKeyUsages] = keyUsages;
   }
 
   inspect(_depth: number, _options: any): any {
@@ -425,6 +416,7 @@ class KeyObject {
     if (type !== 'secret' && type !== 'public' && type !== 'private')
       throw new Error(`type: ${type}`);
     this.handle = handle;
+    this.type = type;
   }
 
   // get type(): string {

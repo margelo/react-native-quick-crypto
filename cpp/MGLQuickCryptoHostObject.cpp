@@ -34,6 +34,7 @@
 #include "MGLRandomHostObject.h"
 #include "MGLSignInstaller.h"
 #include "MGLVerifyInstaller.h"
+#include "MGLWebCrypto.h"
 #endif
 
 namespace margelo {
@@ -105,17 +106,13 @@ MGLQuickCryptoHostObject::MGLQuickCryptoHostObject(
     return jsi::Object::createFromHostObject(runtime, hostObject);
   }));
 
-  // createSign
-  this->fields.push_back(getSignFieldDefinition(jsCallInvoker, workerQueue));
-
-  // createVerify
-  this->fields.push_back(getVerifyFieldDefinition(jsCallInvoker, workerQueue));
         
-  // create new KeyObjectHandle instance
-    this->fields.push_back(getCreateKeyObjectHandleFieldDefinition());
-
-  // Creates an export job
-    this->fields.push_back(getECKeyExportFieldDefinition());
+  // subtle API created from a simple jsi::Object
+  // because this FieldDefinition is only good for returning objects and too convoluted
+    this->fields.push_back(JSI_VALUE("webcrypto", {
+      return createWebCryptoObject(runtime);
+    }));
+        
 }
 
 }  // namespace margelo
