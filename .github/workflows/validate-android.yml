@@ -58,9 +58,9 @@ jobs:
         run: cd ../example/android && ./gradlew lint
 
       - name: Parse Gradle Lint Report
-        uses: yutailang0119/action-android-lint@v1.0.2
+        uses: yutailang0119/action-android-lint@v3
         with:
-          xml_path: example/android/app/build/reports/lint-results-debug.html
+          report-path: example/android/app/build/reports/lint-results-debug.html
   # ktlint:
   #   name: Kotlin Lint
   #   runs-on: ubuntu-latest
