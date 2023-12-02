@@ -296,7 +296,9 @@ export function randomUUID() {
   randomFillSync(buffer, 0, size);
 
   // Per 4.4, set bits for version and `clock_seq_hi_and_reserved`
+  // eslint-disable-next-line no-bitwise
   buffer[6] = (buffer[6]! & 0x0f) | 0x40;
+  // eslint-disable-next-line no-bitwise
   buffer[8] = (buffer[8]! & 0x3f) | 0x80;
 
   return (
