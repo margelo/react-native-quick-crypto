@@ -60,7 +60,8 @@ jobs:
       - name: Parse Gradle Lint Report
         uses: yutailang0119/action-android-lint@v3
         with:
-          report-path: example/android/app/build/reports/lint-results-debug.html
+          # ignore-warnings: true
+          report-path: example/android/app/build/reports/*.xml
   # ktlint:
   #   name: Kotlin Lint
   #   runs-on: ubuntu-latest
