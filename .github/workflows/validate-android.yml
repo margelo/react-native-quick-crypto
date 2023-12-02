@@ -23,10 +23,13 @@ jobs:
         working-directory: ./android
     steps:
       - uses: actions/checkout@v2
+
       - name: Setup JDK
-        uses: actions/setup-java@v1
+        uses: actions/setup-java@v3
         with:
+          distribution: zulu
           java-version: 11
+          cache: gradle
 
       - name: Get yarn cache directory path
         id: yarn-cache-dir-path
@@ -58,9 +61,10 @@ jobs:
         run: cd ../example/android && ./gradlew lint
 
       - name: Parse Gradle Lint Report
-        uses: yutailang0119/action-android-lint@v1.0.2
+        uses: yutailang0119/action-android-lint@v3
         with:
-          xml_path: example/android/app/build/reports/lint-results-debug.html
+          # ignore-warnings: true
+          report-path: example/android/app/build/reports/*.xml
   # ktlint:
   #   name: Kotlin Lint
   #   runs-on: ubuntu-latest
