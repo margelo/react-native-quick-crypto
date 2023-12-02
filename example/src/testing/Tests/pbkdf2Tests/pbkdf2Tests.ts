@@ -16,6 +16,7 @@ export const pbkdf2RegisterTests = () => {
   // https://stackoverflow.com/questions/15593184/pbkdf2-hmac-sha-512-test-vectors
   var { fixtures } = require('./fixtures');
 
+  // eslint-disable-next-line @typescript-eslint/no-shadow
   var Buffer = require('safe-buffer').Buffer;
 
   fixtures.invalid.push(

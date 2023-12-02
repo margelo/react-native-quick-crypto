@@ -156,9 +156,9 @@ export function registerRandomTests() {
     ].forEach((buf) => {
       const before = Buffer.from(buf.buffer).toString('hex');
 
-      crypto.randomFill(buf, (_err, buf) => {
+      crypto.randomFill(buf, (_err, buf2) => {
         try {
-          const after = Buffer.from(buf!.buffer).toString('hex');
+          const after = Buffer.from(buf2!.buffer).toString('hex');
           assert.notStrictEqual(before, after);
         } catch (e) {
           done(e);

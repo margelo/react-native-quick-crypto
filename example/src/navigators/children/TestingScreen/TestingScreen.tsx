@@ -55,7 +55,10 @@ export const TestingScreen: React.FC<TestingScreenProps> = ({
   }, [addRow, testRegistrators]);
 
   return (
-    <ScrollView style={styles.scroll} contentContainerStyle={{ padding: 5 }}>
+    <ScrollView
+      style={styles.scroll}
+      contentContainerStyle={styles.scrollContent}
+    >
       {rows.map((it) => {
         let InnerElement = <View />;
         if (it.type === 'correct') {
@@ -94,7 +97,9 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
   },
   scroll: {
-    // backgroundColor: 'blue',
     width: '100%',
+  },
+  scrollContent: {
+    padding: 5,
   },
 });

@@ -41,6 +41,7 @@ function getDSASignatureEncoding(options: any) {
 function getIntOption(name: string, options: any) {
   const value = options[name];
   if (value !== undefined) {
+    // eslint-disable-next-line no-bitwise
     if (value === value >> 0) {
       return value;
     }

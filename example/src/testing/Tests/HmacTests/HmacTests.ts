@@ -36,7 +36,7 @@ export function registerHmacTests() {
 
       // If the key is a Buffer, test Hmac with a key object as well.
       const keyWrappers = [
-        (key: any) => key,
+        (key2: any) => key2,
         //    ...(typeof key === 'string' ? [] : [crypto.createSecretKey]),
       ];
 
