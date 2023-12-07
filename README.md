@@ -122,10 +122,8 @@ It means you have a transitive dependency where two libraries depend on OpenSSL 
 
 ```groovy
 packagingOptions {
-  pickFirst '**/x86/libcrypto.so'
-  pickFirst '**/x86_64/libcrypto.so'
-  pickFirst '**/armeabi-v7a/libcrypto.so'
-  pickFirst '**/arm64-v8a/libcrypto.so'
+  // Should prevent clashes with other libraries that use OpenSSL
+  pickFirst '**/libcrypto.so'
 }
 ```
 
