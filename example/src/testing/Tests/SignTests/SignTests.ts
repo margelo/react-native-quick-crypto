@@ -59,6 +59,7 @@ export function registerSignTests() {
     const textBuffer = Buffer.from(textToSign, 'utf-8');
     const sign = crypto.createSign('SHA256');
     sign.update(textBuffer);
+
     const signature = sign.sign({
       key: privateKey,
       padding: crypto.constants.RSA_PKCS1_PSS_PADDING,
@@ -66,7 +67,9 @@ export function registerSignTests() {
     });
 
     const verify = crypto.createVerify('SHA256');
-    verify.update(textToSign);
+
+    verify.update(textToSign, 'utf-8');
+
     const matches = verify.verify(
       {
         key: publicKey,
