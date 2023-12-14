@@ -100,6 +100,15 @@ android {
     release {
       minifyEnabled false
     }
+    debug {
+      packagingOptions {
+        doNotStrip '**/*.so'
+      }
+      minifyEnabled false
+      debuggable true
+      jniDebuggable true
+      renderscriptDebuggable true
+    }
   }
 
   lintOptions {

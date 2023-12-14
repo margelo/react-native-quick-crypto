@@ -90,17 +90,17 @@ export function randomFillSync(buffer: any, offset: number = 0, size?: number) {
   return buffer;
 }
 
-export function randomBytes(size: number): ArrayBuffer;
+export function randomBytes(size: number): Buffer;
 
 export function randomBytes(
   size: number,
-  callback: (err: Error | null, buf?: ArrayBuffer) => void
+  callback: (err: Error | null, buf?: Buffer) => void
 ): void;
 
 export function randomBytes(
   size: number,
-  callback?: (err: Error | null, buf?: ArrayBuffer) => void
-): void | ArrayBuffer {
+  callback?: (err: Error | null, buf?: Buffer) => void
+): void | Buffer {
   const buf = new Buffer(size);
 
   if (callback === undefined) {
