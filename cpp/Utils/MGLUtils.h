@@ -24,12 +24,6 @@ namespace margelo {
 
 namespace jsi = facebook::jsi;
 
-struct StringOrBuffer {
-    bool isString;
-    std::string stringValue;
-    std::vector<unsigned char> vectorValue;
-};
-
 template <typename T, void (*function)(T*)>
 struct FunctionDeleter {
     void operator()(T* pointer) const { function(pointer); }
@@ -236,7 +230,7 @@ inline int PasswordCallback(char* buf, int size, int rwflag, void* u) {
         size_t len = passphrase->size();
         if (buflen < len) return -1;
         memcpy(buf, passphrase->data(), len);
-        return len;
+        return (int)len;
     }
 
     return -1;
@@ -252,6 +246,14 @@ inline void CheckEntropy() {
         if (RAND_poll() == 0) break;
     }
 }
+
+using JSVariant = std::variant<nullptr_t, bool, int, double, long, long long,
+                               std::string, ByteSource>;
+
+using OptionJSVariant = std::optional<JSVariant>;
+
+jsi::Value toJSI(jsi::Runtime& rt, OptionJSVariant& value);
+jsi::Value toJSI(jsi::Runtime& rt, JSVariant& value);
 
 }  // namespace margelo
 

@@ -14,6 +14,13 @@ export type Encoding =
 // TODO(osp) should buffer be part of the Encoding type?
 export type CipherEncoding = Encoding | 'buffer';
 
+type DOMName =
+  | string
+  | {
+      name: string;
+      cause: any;
+    };
+
 // Mimics node behavior for default global encoding
 let defaultEncoding: CipherEncoding = 'buffer';
 
@@ -252,3 +259,23 @@ export function validateUint32(
     );
   }
 }
+
+export function hasAnyNotIn(set: string[], checks: string[]) {
+  for (const s of set) {
+    if (!checks.includes(s)) {
+      return true;
+    }
+  }
+  return false;
+}
+
+export function lazyDOMException(message: string, domName: DOMName): Error {
+  let cause = '';
+  if (typeof domName !== 'string') {
+    cause = `\nCaused by: ${domName.cause}`;
+  }
+
+  return new Error(`[${domName}]: ${message}${cause}`);
+}
+
+export * from './Hashnames';

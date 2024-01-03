@@ -1,5 +1,10 @@
 import { NativeQuickCrypto } from './NativeQuickCrypto/NativeQuickCrypto';
-import { bufferLikeToArrayBuffer, type BufferLike } from './Utils';
+import {
+  bufferLikeToArrayBuffer,
+  type BufferLike,
+  type BinaryLike,
+  binaryLikeToArrayBuffer,
+} from './Utils';
 import {
   type ImportFormat,
   type SubtleAlgorithm,
@@ -79,9 +84,12 @@ import {
 // }
 
 function createECPublicKeyRaw(
-  namedCurve: NamedCurve,
+  namedCurve: NamedCurve | undefined,
   keyData: ArrayBuffer
 ): PublicKeyObject {
+  if (!namedCurve) {
+    throw new Error('Invalid namedCurve');
+  }
   const handle = NativeQuickCrypto.webcrypto.createKeyObjectHandle();
   if (!handle.initECRaw(kNamedCurveAliases[namedCurve], keyData)) {
     throw new Error('Invalid keyData');
@@ -164,7 +172,7 @@ export function ecExportKey(
 
 export function ecImportKey(
   format: ImportFormat,
-  keyData: BufferLike,
+  keyData: BufferLike | BinaryLike,
   algorithm: SubtleAlgorithm,
   extractable: boolean,
   keyUsages: KeyUsage[]
@@ -267,7 +275,10 @@ export function ecImportKey(
     // }
     case 'raw': {
       // verifyAcceptableEcKeyUse(name, true, usagesSet);
-      let buffer = bufferLikeToArrayBuffer(keyData);
+      let buffer =
+        typeof keyData === 'string'
+          ? binaryLikeToArrayBuffer(keyData)
+          : bufferLikeToArrayBuffer(keyData);
       keyObject = createECPublicKeyRaw(namedCurve, buffer);
       break;
     }

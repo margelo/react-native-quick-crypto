@@ -4,6 +4,7 @@ import {
   isStringOrBuffer,
 } from './Utils';
 import type { KeyObjectHandle } from './NativeQuickCrypto/webcrypto';
+import { NativeQuickCrypto } from './NativeQuickCrypto/NativeQuickCrypto';
 
 export const kNamedCurveAliases = {
   'P-256': 'prime256v1',
@@ -14,9 +15,16 @@ export const kNamedCurveAliases = {
 export type NamedCurve = 'P-256' | 'P-384' | 'P-521';
 
 export type ImportFormat = 'raw' | 'pkcs8' | 'spki' | 'jwk';
+export type HashAlgorithm = {
+  name: string;
+};
 export type SubtleAlgorithm = {
-  name: 'ECDSA' | 'ECDH';
-  namedCurve: NamedCurve;
+  name: 'ECDSA' | 'ECDH' | 'PBKDF2';
+  salt?: string;
+  iterations?: number;
+  hash?: HashAlgorithm;
+  namedCurve?: NamedCurve;
+  length?: number;
 };
 export type KeyUsage =
   | 'encrypt'
@@ -30,10 +38,17 @@ export type KeyUsage =
 
 // On node this value is defined on the native side, for now I'm just creating it here in JS
 // TODO(osp) move this into native side to make sure they always match
-enum KFormatType {
+export enum KFormatType {
   kKeyFormatDER,
   kKeyFormatPEM,
   kKeyFormatJWK,
+}
+
+// Same as KFormatType, this enum needs to be defined on the native side
+export enum KeyType {
+  Secret,
+  Public,
+  Private,
 }
 
 // Same as KFormatType, this enum needs to be defined on the native side
@@ -51,12 +66,24 @@ enum KeyInputContext {
   kCreatePrivate,
 }
 
-enum KeyEncoding {
+export enum KeyEncoding {
   kKeyEncodingPKCS1,
   kKeyEncodingPKCS8,
   kKeyEncodingSPKI,
   kKeyEncodingSEC1,
 }
+
+export type EncodingOptions = {
+  key: any;
+  type?: string;
+  encoding?: string;
+  format?: string;
+  padding?: number;
+  cipher?: string;
+  passphrase?: string;
+};
+
+export type AsymmetricKeyType = 'rsa' | 'rsa-pss' | 'dsa' | 'ec' | undefined;
 
 const encodingNames = {
   [KeyEncoding.kKeyEncodingPKCS1]: 'pkcs1',
@@ -118,14 +145,7 @@ function parseKeyType(
 }
 
 function parseKeyFormatAndType(
-  enc: {
-    key: any;
-    type?: string;
-    encoding?: string;
-    format?: string;
-    cipher?: string;
-    passphrase?: string;
-  },
+  enc: EncodingOptions,
   keyType: string | undefined,
   isPublic: boolean | undefined,
   objName: string | undefined
@@ -154,14 +174,7 @@ function parseKeyFormatAndType(
 }
 
 function parseKeyEncoding(
-  enc: {
-    key: any;
-    type?: string;
-    encoding?: string;
-    format?: string;
-    cipher?: string;
-    passphrase?: string;
-  },
+  enc: EncodingOptions,
   keyType: string | undefined,
   isPublic: boolean | undefined,
   objName?: string | undefined
@@ -280,17 +293,7 @@ function prepareAsymmetricKey(
 }
 
 // TODO(osp) any here is a node KeyObject
-export function preparePrivateKey(
-  key:
-    | BinaryLike
-    | {
-        key: any;
-        encoding?: string;
-        format?: any;
-        padding?: number;
-        passphrase?: string;
-      }
-) {
+export function preparePrivateKey(key: BinaryLike | EncodingOptions) {
   return prepareAsymmetricKey(key, KeyInputContext.kConsumePrivate);
 }
 
@@ -307,13 +310,7 @@ export function preparePublicOrPrivateKey(
 // when this is used to parse an input encoding and must be a valid key type if
 // used to parse an output encoding.
 export function parsePublicKeyEncoding(
-  enc: {
-    key: any;
-    encoding?: string;
-    format?: string;
-    cipher?: string;
-    passphrase?: string;
-  },
+  enc: EncodingOptions,
   keyType: string | undefined,
   objName?: string
 ) {
@@ -324,21 +321,52 @@ export function parsePublicKeyEncoding(
 // when this is used to parse an input encoding and must be a valid key type if
 // used to parse an output encoding.
 export function parsePrivateKeyEncoding(
-  enc: {
-    key: any;
-    encoding?: string;
-    format?: string;
-    cipher?: string;
-    passphrase?: string;
-  },
+  enc: EncodingOptions,
   keyType: string | undefined,
   objName?: string
 ) {
   return parseKeyEncoding(enc, keyType, false, objName);
 }
 
+function prepareSecretKey(
+  key: any, //KeyObject | CryptoKey | string,
+  encoding?: string,
+  bufferOnly = false
+): any {
+  if (!bufferOnly) {
+    // TODO: maybe use `key.constructor.name === 'KeyObject'` ?
+    if (key instanceof KeyObject) {
+      if (key.type !== 'secret')
+        throw new Error(
+          `invalid KeyObject type: ${key.type}, expected 'secret'`
+        );
+      return key.handle;
+    }
+    // TODO: maybe use `key.constructor.name === 'CryptoKey'` ?
+    else if (key instanceof CryptoKey) {
+      if (key.type !== 'secret')
+        throw new Error(
+          `invalid CryptoKey type: ${key.type}, expected 'secret'`
+        );
+      return key.keyObject.handle;
+    }
+  }
+  if (typeof key === 'string') {
+    return binaryLikeToArrayBuffer(key, encoding);
+  }
+  throw new Error(`invalid argument type 'key'`);
+}
+
+export function createSecretKey(key: any, encoding?: string) {
+  const k = prepareSecretKey(key, encoding, true);
+  const handle = NativeQuickCrypto.webcrypto.createKeyObjectHandle();
+  handle.init(KeyType.Secret, k);
+
+  return new SecretKeyObject(handle);
+}
+
 export class CryptoKey {
-  keyObject: PublicKeyObject;
+  keyObject: KeyObject;
   algorithm: SubtleAlgorithm;
   keyUsages: KeyUsage[];
   extractable: boolean;
@@ -356,7 +384,7 @@ export class CryptoKey {
   }
 
   inspect(_depth: number, _options: any): any {
-    throw new Error('NOT IMPLEMENTED');
+    throw new Error('CryptoKey.inspect is not implemented');
     // if (depth < 0) return this;
 
     // const opts = {
@@ -411,10 +439,13 @@ export class CryptoKey {
 class KeyObject {
   handle: KeyObjectHandle;
   type: 'public' | 'secret' | 'private' | 'unknown' = 'unknown';
+  export(_options?: EncodingOptions): ArrayBuffer {
+    return new ArrayBuffer(0);
+  }
 
   constructor(type: string, handle: KeyObjectHandle) {
     if (type !== 'secret' && type !== 'public' && type !== 'private')
-      throw new Error(`type: ${type}`);
+      throw new Error(`invalid KeyObject type: ${type}`);
     this.handle = handle;
     this.type = type;
   }
@@ -462,20 +493,15 @@ export class SecretKeyObject extends KeyObject {
   //   return this[kHandle].getSymmetricKeySize();
   // }
 
-  // export(options) {
-  //   if (options !== undefined) {
-  //     validateObject(options, 'options');
-  //     validateOneOf(options.format, 'options.format', [
-  //       undefined,
-  //       'buffer',
-  //       'jwk',
-  //     ]);
-  //     if (options.format === 'jwk') {
-  //       return this[kHandle].exportJwk({}, false);
-  //     }
-  //   }
-  //   return this[kHandle].export();
-  // }
+  export(options: EncodingOptions) {
+    if (options !== undefined) {
+      if (options.format === 'jwk') {
+        throw new Error('export for jwk is not implemented');
+        // return this.handle.exportJwk({}, false);
+      }
+    }
+    return this.handle.export();
+  }
 }
 
 // const kAsymmetricKeyType = Symbol('kAsymmetricKeyType');
@@ -498,12 +524,9 @@ class AsymmetricKeyObject extends KeyObject {
     super(type, handle);
   }
 
-  // get asymmetricKeyType() {
-  //   return (
-  //     this[kAsymmetricKeyType] ||
-  //     (this[kAsymmetricKeyType] = this[kHandle].getAsymmetricKeyType())
-  //   );
-  // }
+  get asymmetricKeyType(): AsymmetricKeyType {
+    return this.asymmetricKeyType || this.handle.getAsymmetricKeyType();
+  }
 
   // get asymmetricKeyDetails() {
   //   switch (this.asymmetricKeyType) {
@@ -528,16 +551,17 @@ export class PublicKeyObject extends AsymmetricKeyObject {
     super('public', handle);
   }
 
-  // export(options: any) {
-  //   if (options && options.format === 'jwk') {
-  //     return this[kHandle].exportJwk({}, false);
-  //   }
-  //   const { format, type } = parsePublicKeyEncoding(
-  //     options,
-  //     this.asymmetricKeyType
-  //   );
-  //   return this[kHandle].export(format, type);
-  // }
+  export(options: EncodingOptions) {
+    if (options?.format === 'jwk') {
+      throw new Error('export for jwk is not implemented');
+      // return this.handle.exportJwk({}, false);
+    }
+    const { format, type } = parsePublicKeyEncoding(
+      options,
+      this.asymmetricKeyType
+    );
+    return this.handle.export(format, type);
+  }
 }
 
 export class PrivateKeyObject extends AsymmetricKeyObject {
