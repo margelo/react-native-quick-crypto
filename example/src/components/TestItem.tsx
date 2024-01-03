@@ -17,13 +17,13 @@ export const TestItem: React.FC<TestItemProps> = ({
 }: TestItemProps) => {
   return (
     <View style={styles.container}>
-      <Text>{description}</Text>
       <Checkbox
         value={value}
         onValueChange={() => {
           onToggle(index);
         }}
       />
+      <Text style={styles.label}>{description}</Text>
     </View>
   );
 };
@@ -36,7 +36,12 @@ const styles = StyleSheet.create({
     alignContent: 'center',
     alignItems: 'center',
     justifyContent: 'space-evenly',
-    backgroundColor: '#99CCFF',
     marginTop: 10,
+    gap: 20,
+    borderBottomWidth: 1,
+    borderBottomColor: '#ccc',
+  },
+  label: {
+    flex: 1,
   },
 });

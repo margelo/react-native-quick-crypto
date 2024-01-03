@@ -9,8 +9,14 @@ import { registerConstantsTest } from './Tests/ConstantsTest/ConstantsTest';
 import { registerPublicCipherTests } from './Tests/CipherTests/PublicCipherTests';
 import { registerGenerateKeyPairTests } from './Tests/CipherTests/GenerateKeyPairTests';
 import { registerSignTests } from './Tests/SignTests/SignTests';
+import { webcryptoRegisterTests } from './Tests/webcryptoTests/webcryptoTests';
 
 export const TEST_LIST: Array<TestItemType> = [
+  {
+    description: 'webcrypto',
+    value: false,
+    registrator: webcryptoRegisterTests,
+  },
   {
     description: 'PBKDF2',
     value: false,

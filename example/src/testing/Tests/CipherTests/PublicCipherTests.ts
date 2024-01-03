@@ -50,7 +50,6 @@ export function registerPublicCipherTests() {
       const decrypted = privateKey.decrypt(encrypted);
       chai.expect(decrypted.toString('utf-8')).to.equal(clearText);
     } catch (e) {
-      console.warn('error', e);
       chai.assert.fail();
     }
   });

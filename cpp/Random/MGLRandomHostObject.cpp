@@ -41,6 +41,11 @@ MGLRandomHostObject::MGLRandomHostObject(
           throw std::runtime_error("First argument it not an array buffer");
       }
 
+      if (!arguments[0].isObject()
+        || !arguments[0].asObject(runtime).isArrayBuffer(runtime)) {
+          throw std::runtime_error("First argument it not an array buffer");
+      }
+
         auto result = arguments[0].asObject(runtime).getArrayBuffer(runtime);
         auto resultSize = result.size(runtime);
         auto *resultData = result.data(runtime);
