@@ -7,7 +7,7 @@
   resolved "https://registry.yarnpkg.com/@aashutoshrathi/word-wrap/-/word-wrap-1.2.6.tgz#bd9154aec9983f77b3a034ecaa015c2e4201f6cf"
   integrity sha512-1Yjs2SvM8TflER/OD3cOjhWWOZb58A2t7wpE2S9XfBYTiIl+XFhQG2bjy4Pu1I+EAlCNUzRDYDdFwFYUKvXcIA==
 
-"@actions/core@^1.2.6":
+"@actions/core@^1.10.0":
   version "1.10.1"
   resolved "https://registry.yarnpkg.com/@actions/core/-/core-1.10.1.tgz#61108e7ac40acae95ee36da074fa5850ca4ced8a"
   integrity sha512-3lBR9EDAY+iYIpTnTIXmWcNbX3T2kCkAEQGIQx4NVQ0575nk2k3GRZDTPQG+vVtS2izSLmINlxXf0uLtnrTP+g==
@@ -1276,12 +1276,12 @@
   resolved "https://registry.yarnpkg.com/@iarna/toml/-/toml-2.2.5.tgz#b32366c89b43c6f8cefbdefac778b9c828e3ba8c"
   integrity sha512-trnsAYxU3xnS1gPHPyU961coFyLkh4gAD/0zQ5mymY4yOZ+CYvsPqUbOFSw0aDM4y0tV7tiFxL/1XfXPNC6IPg==
 
-"@jamesacarr/eslint-formatter-github-actions@^0.1.0":
-  version "0.1.0"
-  resolved "https://registry.yarnpkg.com/@jamesacarr/eslint-formatter-github-actions/-/eslint-formatter-github-actions-0.1.0.tgz#d00814b5b8b309cf97d488773cfdb140edf00932"
-  integrity sha512-ysXRx5C5pPVJ0t3Q1DpsMLWLQw5Fj8erEM0WnGhaOIgjLwZkOLmEiIw+4b5UhPsVCaf6jbUgdZuH2StR3jW0Ug==
+"@jamesacarr/eslint-formatter-github-actions@^0.2.0":
+  version "0.2.0"
+  resolved "https://registry.yarnpkg.com/@jamesacarr/eslint-formatter-github-actions/-/eslint-formatter-github-actions-0.2.0.tgz#5b4a4fae22cd354b3cbb2bad4c972edbe04e8fef"
+  integrity sha512-/BMX+d6Pg36aHi7FmRsyCXUXCFQOVnJap1xl97kgglNE++d2HtqR6eHVxL56wXnXqC5wyI4T9Y3e2RccyubqQA==
   dependencies:
-    "@actions/core" "^1.2.6"
+    "@actions/core" "^1.10.0"
 
 "@jest/create-cache-key-function@^29.2.1":
   version "29.7.0"
