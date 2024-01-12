@@ -72,11 +72,39 @@ export function webcryptoRegisterTests() {
 
     const buf = await crypto.subtle.exportKey('spki', key);
     const spkiKey = arrayBufferToBase64(buf);
-    console.warn(spkiKey);
+    console.log('spkiKey', spkiKey);
     chai
       .expect(spkiKey)
       .to.equal(
         'MFkwEwYHKoZIzj0CAQYIKoZIzj0DAQcDQgAENlFpbMBNfCY6Lhj9A/clefyxJVIXGJ0y6CcZ/cbbyyebvN6T0aNPvpQyFdUwRtYvFHlYbqIZOM8AoqdPcnSMIA=='
       );
+  });
+
+  it('PBKDF2 importKey raw/deriveBits', async () => {
+    const key = await crypto.subtle.importKey(
+      'raw',
+      'password',
+      { name: 'PBKDF2' },
+      false,
+      ['deriveBits']
+    );
+
+    const bits = await crypto.subtle.deriveBits(
+      {
+        name: 'PBKDF2',
+        salt: 'salt',
+        iterations: 1,
+        hash: {
+          name: 'SHA-512',
+        },
+      },
+      key,
+      // eslint-disable-next-line no-bitwise
+      64 << 3
+    );
+    const pbkdf2Key = arrayBufferToBase64(bits);
+    chai
+      .expect(pbkdf2Key)
+      .to.equal('hn9wzxreAs/zdSWZo6U9xK80x6ZpgVrl1RNVThyM8lLALUcKKFoFAbrZmb/pQ8CPBQI119aLHaVeY/c7YKV/zg==');
   });
 }

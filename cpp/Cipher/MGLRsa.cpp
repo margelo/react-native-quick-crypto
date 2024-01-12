@@ -147,7 +147,7 @@ RsaKeyPairGenConfig prepareRsaKeyGenConfig(jsi::Runtime& runtime,
   return config;
 }
 
-std::pair<StringOrBuffer, StringOrBuffer> generateRSAKeyPair(
+std::pair<JSVariant, JSVariant> generateRSAKeyPair(
     jsi::Runtime& runtime, std::shared_ptr<RsaKeyPairGenConfig> config) {
   CheckEntropy();
 
@@ -165,10 +165,10 @@ std::pair<StringOrBuffer, StringOrBuffer> generateRSAKeyPair(
 
   config->key = ManagedEVPPKey(EVPKeyPointer(pkey));
 
-  std::optional<StringOrBuffer> publicBuffer =
+  OptionJSVariant publicBuffer =
       ManagedEVPPKey::ToEncodedPublicKey(runtime, std::move(config->key),
                                          config->public_key_encoding);
-  std::optional<StringOrBuffer> privateBuffer =
+  OptionJSVariant privateBuffer =
       ManagedEVPPKey::ToEncodedPrivateKey(runtime, std::move(config->key),
                                           config->private_key_encoding);
 
@@ -177,7 +177,7 @@ std::pair<StringOrBuffer, StringOrBuffer> generateRSAKeyPair(
                               "Failed to encode public and/or private key");
   }
 
-  return std::make_pair(publicBuffer.value(), privateBuffer.value());
+  return {std::move(publicBuffer.value()), std::move(privateBuffer.value())};
 }
 
 }  // namespace margelo

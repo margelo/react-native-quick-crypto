@@ -10,6 +10,7 @@
 #include <memory>
 #include <utility>
 #include "MGLKeys.h"
+#include "MGLUtils.h"
 #ifdef ANDROID
 #include "JSIUtils/MGLJSIMacros.h"
 #include "webcrypto/crypto_ec.h"
@@ -36,11 +37,11 @@ jsi::Value createWebCryptoObject(jsi::Runtime &rt) {
         std::shared_ptr<KeyObjectHandle> handle =
             std::static_pointer_cast<KeyObjectHandle>(
                 args[1].asObject(rt).getHostObject(rt));
-        std::shared_ptr<KeyObjectData> key_data = handle->data_;
+        std::shared_ptr<KeyObjectData> key_data = handle->Data();
         ECDH::doExport(rt, static_cast<WebCryptoKeyFormat>(args[0].asNumber()),
                                                             key_data, &out);
-        auto buffer = ByteSourceToArrayBuffer(rt, out);
-        return buffer;
+        JSVariant jsv = JSVariant(std::move(out));
+        return toJSI(rt, jsv);
     });
 
     obj.setProperty(rt,

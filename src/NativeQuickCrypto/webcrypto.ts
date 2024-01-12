@@ -1,4 +1,10 @@
-import type { KWebCryptoKeyFormat } from '../keys';
+import type {
+  AsymmetricKeyType,
+  KeyEncoding,
+  KeyType,
+  KFormatType,
+  KWebCryptoKeyFormat,
+} from '../keys';
 
 type ECExportKey = (
   format: KWebCryptoKeyFormat,
@@ -6,7 +12,15 @@ type ECExportKey = (
 ) => ArrayBuffer;
 
 export type KeyObjectHandle = {
+  export(
+    format?: KFormatType,
+    type?: KeyEncoding,
+    cipher?: string,
+    passphrase?: string
+  ): ArrayBuffer;
+  getAsymmetricKeyType(): AsymmetricKeyType;
   initECRaw(curveName: string, keyData: ArrayBuffer): boolean;
+  init(keyType: KeyType, key: any): boolean;
 };
 
 type CreateKeyObjectHandle = () => KeyObjectHandle;

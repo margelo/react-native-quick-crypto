@@ -58,32 +58,16 @@ FieldDefinition getGenerateKeyPairFieldDefinition(
                                  jsCallInvoker, config]() {
                     m.lock();
                     try {
-                      const auto keys = generateRSAKeyPair(runtime, config);
-                      jsCallInvoker->invokeAsync([&runtime, keys, jsCallInvoker,
+                      auto keys = generateRSAKeyPair(runtime, config);
+                      jsCallInvoker->invokeAsync([&runtime, &keys, jsCallInvoker,
                                                   resolve]() {
-                        if (keys.first.isString && keys.second.isString) {
-                          auto publicKey = jsi::String::createFromUtf8(
-                              runtime, keys.first.stringValue);
-                          auto privateKey = jsi::String::createFromUtf8(
-                              runtime, keys.second.stringValue);
-                          auto res = jsi::Array::createWithElements(
-                              runtime, jsi::Value::undefined(), publicKey,
-                              privateKey);
-                          resolve->asObject(runtime).asFunction(runtime).call(
-                              runtime, std::move(res));
-                        } else {
-                          MGLTypedArray<MGLTypedArrayKind::Uint8Array>
-                              publicKeyBuffer(runtime, keys.first.vectorValue);
-                          MGLTypedArray<MGLTypedArrayKind::Uint8Array>
-                              privateKeyBuffer(runtime,
-                                               keys.second.vectorValue);
-
-                          auto res = jsi::Array::createWithElements(
-                              runtime, jsi::Value::undefined(), publicKeyBuffer,
-                              privateKeyBuffer);
-                          resolve->asObject(runtime).asFunction(runtime).call(
-                              runtime, std::move(res));
-                        }
+                        auto publicKey = toJSI(runtime, keys.first);
+                        auto privateKey = toJSI(runtime, keys.second);
+                        auto res = jsi::Array::createWithElements(
+                            runtime, jsi::Value::undefined(), publicKey,
+                            privateKey);
+                        resolve->asObject(runtime).asFunction(runtime).call(
+                            runtime, std::move(res));
                       });
                     } catch (std::exception e) {
                       jsCallInvoker->invokeAsync(
