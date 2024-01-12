@@ -36,7 +36,7 @@ export function registerHmacTests() {
 
       // If the key is a Buffer, test Hmac with a key object as well.
       const keyWrappers = [
-        (key: any) => key,
+        (key2: any) => key2,
         //    ...(typeof key === 'string' ? [] : [crypto.createSecretKey]),
       ];
 
@@ -283,20 +283,20 @@ export function registerHmacTests() {
   ];
 
   for (let i = 0, l = rfc4231.length; i < l; i++) {
-    for (const hash in rfc4231[i].hmac) {
+    for (const hash in rfc4231[i]!.hmac) {
       it(`Test HMAC-${hash} rfc 4231 case ${i + 1}`, () => {
-        const str = crypto.createHmac(hash, rfc4231[i].key);
-        str.end(rfc4231[i].data);
+        const str = crypto.createHmac(hash, rfc4231[i]!.key);
+        str.end(rfc4231[i]!.data);
         let strRes = str.read().toString('hex');
         let actual = crypto
-          .createHmac(hash, rfc4231[i].key)
-          .update(rfc4231[i].data)
+          .createHmac(hash, rfc4231[i]!.key)
+          .update(rfc4231[i]!.data)
           .digest('hex');
-        if (rfc4231[i].truncate) {
+        if (rfc4231[i]!.truncate) {
           actual = actual.substr(0, 32); // first 128 bits == 32 hex chars
           strRes = strRes.substr(0, 32);
         }
-        const expected = (rfc4231[i].hmac as any)[hash];
+        const expected = (rfc4231[i]!.hmac as any)[hash];
         chai.expect(actual).to.be.eql(expected);
         chai.expect(actual).to.be.eql(strRes);
       });

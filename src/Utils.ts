@@ -1,5 +1,6 @@
 import { Buffer } from '@craftzdog/react-native-buffer';
 
+export type BufferLike = ArrayBuffer | Buffer | ArrayBufferView;
 export type BinaryLike = string | ArrayBuffer | Buffer;
 
 export type BinaryToTextEncoding = 'base64' | 'base64url' | 'hex' | 'binary';
@@ -104,9 +105,17 @@ export function toArrayBuffer(buf: Buffer): ArrayBuffer {
   const ab = new ArrayBuffer(buf.length);
   const view = new Uint8Array(ab);
   for (let i = 0; i < buf.length; ++i) {
-    view[i] = buf[i];
+    view[i] = buf[i]!;
   }
   return ab;
+}
+
+export function bufferLikeToArrayBuffer(buf: BufferLike): ArrayBuffer {
+  return Buffer.isBuffer(buf)
+    ? buf.buffer
+    : ArrayBuffer.isView(buf)
+    ? buf.buffer
+    : buf;
 }
 
 export function binaryLikeToArrayBuffer(
@@ -114,6 +123,12 @@ export function binaryLikeToArrayBuffer(
   encoding: string = 'utf-8'
 ): ArrayBuffer {
   if (typeof input === 'string') {
+    if (encoding === 'buffer') {
+      throw new Error(
+        'Cannot create a buffer from a string with a buffer encoding'
+      );
+    }
+
     const buffer = Buffer.from(input, encoding);
 
     return buffer.buffer.slice(
@@ -127,8 +142,8 @@ export function binaryLikeToArrayBuffer(
   }
 
   // TODO add further binary types to BinaryLike, UInt8Array and so for have this array as property
-  if ((input as any).buffer) {
-    return (input as any).buffer;
+  if (ArrayBuffer.isView(input)) {
+    return input.buffer;
   }
 
   if (!(input instanceof ArrayBuffer)) {
@@ -142,6 +157,7 @@ export function binaryLikeToArrayBuffer(
       throw 'error';
     }
   }
+
   return input;
 }
 

@@ -9,6 +9,7 @@
 
 #include <jsi/jsi.h>
 #include <openssl/bio.h>
+#include <openssl/ec.h>
 
 #include <algorithm>
 #include <optional>
@@ -20,11 +21,13 @@
 #include "JSIUtils/MGLJSIUtils.h"
 #include "JSIUtils/MGLTypedArray.h"
 #include "Utils/MGLUtils.h"
+#include "webcrypto/crypto_ec.h"
 #else
 #include "MGLJSIMacros.h"
 #include "MGLJSIUtils.h"
 #include "MGLTypedArray.h"
 #include "MGLUtils.h"
+#include "crypto_ec.h"
 #endif
 
 namespace margelo {
@@ -818,54 +821,36 @@ ManagedEVPPKey ManagedEVPPKey::GetParsedKey(jsi::Runtime& runtime,
 // symmetric_key_len_(symmetric_key_.size()),
 // asymmetric_key_() {}
 //
-// KeyObjectData::KeyObjectData(
-//                              KeyType type,
-//                              const ManagedEVPPKey& pkey)
-//: key_type_(type),
+KeyObjectData::KeyObjectData(KeyType type,
+                            const ManagedEVPPKey& pkey)
+: key_type_(type),
 // symmetric_key_(),
 // symmetric_key_len_(0),
-// asymmetric_key_{pkey} {}
-//
-// void KeyObjectData::MemoryInfo(MemoryTracker* tracker) const {
-//   switch (GetKeyType()) {
-//     case kKeyTypeSecret:
-//       tracker->TrackFieldWithSize("symmetric_key", symmetric_key_.size());
-//       break;
-//     case kKeyTypePrivate:
-//       // Fall through
-//     case kKeyTypePublic:
-//       tracker->TrackFieldWithSize("key", asymmetric_key_);
-//       break;
-//     default:
-//       UNREACHABLE();
-//   }
-// }
-//
+ asymmetric_key_{pkey} {}
+
 // std::shared_ptr<KeyObjectData> KeyObjectData::CreateSecret(ByteSource key)
 // {
 //   CHECK(key);
 //   return std::shared_ptr<KeyObjectData>(new KeyObjectData(std::move(key)));
 // }
-//
-// std::shared_ptr<KeyObjectData> KeyObjectData::CreateAsymmetric(
-//                                                                KeyType
-//                                                                key_type,
-//                                                                const
-//                                                                ManagedEVPPKey&
-//                                                                pkey) {
-//   CHECK(pkey);
-//   return std::shared_ptr<KeyObjectData>(new KeyObjectData(key_type, pkey));
-// }
-//
-// KeyType KeyObjectData::GetKeyType() const {
-//   return key_type_;
-// }
-//
-// ManagedEVPPKey KeyObjectData::GetAsymmetricKey() const {
+
+std::shared_ptr<KeyObjectData> KeyObjectData::CreateAsymmetric(
+  KeyType key_type,
+  const ManagedEVPPKey& pkey
+) {
+  CHECK(pkey);
+  return std::shared_ptr<KeyObjectData>(new KeyObjectData(key_type, pkey));
+}
+
+KeyType KeyObjectData::GetKeyType() const {
+  return key_type_;
+}
+
+ManagedEVPPKey KeyObjectData::GetAsymmetricKey() const {
 //   CHECK_NE(key_type_, kKeyTypeSecret);
-//   return asymmetric_key_;
-// }
-//
+  return asymmetric_key_;
+}
+
 // const char* KeyObjectData::GetSymmetricKey() const {
 //   CHECK_EQ(key_type_, kKeyTypeSecret);
 //   return symmetric_key_.data<char>();
@@ -1033,6 +1018,51 @@ ManagedEVPPKey ManagedEVPPKey::GetParsedKey(jsi::Runtime& runtime,
 //
 //  args.GetReturnValue().Set(key->data_->GetKeyType());
 //}
+
+jsi::Value KeyObjectHandle::get(
+  jsi::Runtime &rt,
+  const jsi::PropNameID &propNameID) {
+    auto name = propNameID.utf8(rt);
+
+    if (name == "initECRaw") {
+        return HOSTFN("initECRaw", 2) {
+            CHECK(args[0].isString());
+            std::string curveName = args[0].asString(rt).utf8(rt);
+            int id = OBJ_txt2nid(curveName.c_str());
+            ECKeyPointer eckey(EC_KEY_new_by_curve_name(id));
+            if (!eckey) {
+                return false;
+            }
+            // TODO(osp) add validation
+            auto buf = args[1].asObject(rt).getArrayBuffer(rt);
+
+            const EC_GROUP* group = EC_KEY_get0_group(eckey.get());
+            ECPointPointer pub(ECDH::BufferToPoint(rt, group, buf));
+
+            if (!pub ||
+                !eckey ||
+                !EC_KEY_set_public_key(eckey.get(), pub.get())) {
+                return false;
+            }
+
+            EVPKeyPointer pkey(EVP_PKEY_new());
+            if (!EVP_PKEY_assign_EC_KEY(pkey.get(), eckey.get())) {
+                return false;
+            }
+
+            eckey.release();  // Release ownership of the key
+
+            this->data_ =
+            KeyObjectData::CreateAsymmetric(
+                                            kKeyTypePublic,
+                                            ManagedEVPPKey(std::move(pkey)));
+
+            return true;
+        });
+    }
+    return {};
+}
+
 //
 // void KeyObjectHandle::InitECRaw(const FunctionCallbackInfo<Value>& args) {
 //  Environment* env = Environment::GetCurrent(args);
@@ -1456,4 +1486,5 @@ ManagedEVPPKey ManagedEVPPKey::GetParsedKey(jsi::Runtime& runtime,
 //  void RegisterExternalReferences(ExternalReferenceRegistry * registry) {
 //    KeyObjectHandle::RegisterExternalReferences(registry);
 //  }
+
 }  // namespace margelo

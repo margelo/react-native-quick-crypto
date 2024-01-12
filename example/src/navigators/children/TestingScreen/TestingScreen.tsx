@@ -55,40 +55,38 @@ export const TestingScreen: React.FC<TestingScreenProps> = ({
   }, [addRow, testRegistrators]);
 
   return (
-    <View style={styles.mainContainer}>
-      <ScrollView style={styles.scroll}>
-        {rows.map((it) => {
-          let InnerElement = <View />;
-          if (it.type === 'correct') {
-            InnerElement = <CorrectResultItem description={it.description} />;
-          }
-          if (it.type === 'incorrect') {
-            const errorMsg = it.errorMsg || ''; // Trick TS - How to do it as it should be? :)
-            InnerElement = (
-              <IncorrectResultItem
-                description={it.description}
-                errorMsg={errorMsg}
-              />
-            );
-          }
-          if (it.type === 'grouping') {
-            InnerElement = <Suite description={it.description} />;
-          }
-          return (
-            <Indentator key={it.key} indentation={it.indentation}>
-              {InnerElement}
-            </Indentator>
+    <ScrollView
+      style={styles.scroll}
+      contentContainerStyle={styles.scrollContent}
+    >
+      {rows.map((it) => {
+        let InnerElement = <View />;
+        if (it.type === 'correct') {
+          InnerElement = <CorrectResultItem description={it.description} />;
+        }
+        if (it.type === 'incorrect') {
+          const errorMsg = it.errorMsg || ''; // Trick TS - How to do it as it should be? :)
+          InnerElement = (
+            <IncorrectResultItem
+              description={it.description}
+              errorMsg={errorMsg}
+            />
           );
-        })}
-      </ScrollView>
-    </View>
+        }
+        if (it.type === 'grouping') {
+          InnerElement = <Suite description={it.description} />;
+        }
+        return (
+          <Indentator key={it.key} indentation={it.indentation}>
+            {InnerElement}
+          </Indentator>
+        );
+      })}
+    </ScrollView>
   );
 };
 
 const styles = StyleSheet.create({
-  mainContainer: {
-    flex: 1,
-  },
   testList: {
     flex: 9,
   },
@@ -98,5 +96,10 @@ const styles = StyleSheet.create({
     alignContent: 'center',
     justifyContent: 'center',
   },
-  scroll: {},
+  scroll: {
+    width: '100%',
+  },
+  scrollContent: {
+    padding: 5,
+  },
 });

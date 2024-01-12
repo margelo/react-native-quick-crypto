@@ -15,6 +15,7 @@ import { createSign, createVerify } from './sig';
 import { createHmac } from './Hmac';
 import { createHash } from './Hash';
 import { constants } from './constants';
+import { subtle } from './subtle';
 
 export const QuickCrypto = {
   createHmac,
@@ -32,6 +33,7 @@ export const QuickCrypto = {
   generateKeyPairSync,
   createSign,
   createVerify,
+  subtle,
   constants,
   ...pbkdf2,
   ...random,

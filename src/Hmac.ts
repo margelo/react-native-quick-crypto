@@ -2,9 +2,9 @@
 import { NativeQuickCrypto } from './NativeQuickCrypto/NativeQuickCrypto';
 import type { InternalHmac } from './NativeQuickCrypto/hmac';
 import {
-  Encoding,
+  type Encoding,
   toArrayBuffer,
-  BinaryLike,
+  type BinaryLike,
   binaryLikeToArrayBuffer,
 } from './Utils';
 import Stream from 'stream-browserify';

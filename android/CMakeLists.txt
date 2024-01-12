@@ -50,6 +50,8 @@ add_library(
         "../cpp/Sig/MGLSignInstaller.cpp"
         "../cpp/Sig/MGLVerifyInstaller.cpp"
         "../cpp/Sig/MGLSignHostObjects.cpp"
+        "../cpp/webcrypto/MGLWebCrypto.cpp"
+        "../cpp/webcrypto/crypto_ec.cpp"
 )
 
 set_target_properties(

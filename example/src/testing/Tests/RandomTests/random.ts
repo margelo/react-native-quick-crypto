@@ -156,9 +156,9 @@ export function registerRandomTests() {
     ].forEach((buf) => {
       const before = Buffer.from(buf.buffer).toString('hex');
 
-      crypto.randomFill(buf, (_err, buf) => {
+      crypto.randomFill(buf, (_err, buf2) => {
         try {
-          const after = Buffer.from(buf!.buffer).toString('hex');
+          const after = Buffer.from(buf2!.buffer).toString('hex');
           assert.notStrictEqual(before, after);
         } catch (e) {
           done(e);
@@ -173,7 +173,7 @@ export function registerRandomTests() {
 
   it('simple test (do sth) 8', (done: Done) => {
     let ctr = 0;
-    [new ArrayBuffer(10)].forEach((buf) => {
+    [new ArrayBuffer(10), new ArrayBuffer(10)].forEach((buf) => {
       const before = Buffer.from(buf).toString('hex');
       crypto.randomFill(buf, (_err, res) => {
         try {
@@ -368,10 +368,10 @@ export function registerRandomTests() {
     });
   }); */
 
-  ['pseudoRandomBytes', 'prng', 'rng'].forEach((f) => {
-    const name = f;
+  // TODO I suppose this is checking the functions are there, but why the configurable and enumerable checks?
+  ['pseudoRandomBytes', 'prng', 'rng'].forEach((name) => {
     it(name, () => {
-      const desc = Object.getOwnPropertyDescriptor(crypto, f);
+      const desc = Object.getOwnPropertyDescriptor(crypto, name);
       assert.ok(desc);
       assert.strictEqual(desc?.configurable, true);
       assert.strictEqual(desc?.enumerable, false);
