@@ -72,7 +72,6 @@ export function webcryptoRegisterTests() {
 
     const buf = await crypto.subtle.exportKey('spki', key);
     const spkiKey = arrayBufferToBase64(buf);
-    console.log('spkiKey', spkiKey);
     chai
       .expect(spkiKey)
       .to.equal(
@@ -105,6 +104,8 @@ export function webcryptoRegisterTests() {
     const pbkdf2Key = arrayBufferToBase64(bits);
     chai
       .expect(pbkdf2Key)
-      .to.equal('hn9wzxreAs/zdSWZo6U9xK80x6ZpgVrl1RNVThyM8lLALUcKKFoFAbrZmb/pQ8CPBQI119aLHaVeY/c7YKV/zg==');
+      .to.equal(
+        'hn9wzxreAs/zdSWZo6U9xK80x6ZpgVrl1RNVThyM8lLALUcKKFoFAbrZmb/pQ8CPBQI119aLHaVeY/c7YKV/zg=='
+      );
   });
 }

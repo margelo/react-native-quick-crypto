@@ -8,6 +8,9 @@ let mochaContext = rootSuite;
 let only = false;
 
 export const clearTests = () => {
+  rootSuite.suites.map((s) => {
+    s.tests = [];
+  });
   rootSuite.suites = [];
   rootSuite.tests = [];
   mochaContext = rootSuite;

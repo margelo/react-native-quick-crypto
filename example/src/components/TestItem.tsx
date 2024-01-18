@@ -5,6 +5,7 @@ import Checkbox from '@react-native-community/checkbox';
 type TestItemProps = {
   description: string;
   value: boolean;
+  count: number;
   index: number;
   onToggle: (index: number) => void;
 };
@@ -12,6 +13,7 @@ type TestItemProps = {
 export const TestItem: React.FC<TestItemProps> = ({
   description,
   value,
+  count,
   index,
   onToggle,
 }: TestItemProps) => {
@@ -24,6 +26,7 @@ export const TestItem: React.FC<TestItemProps> = ({
         }}
       />
       <Text style={styles.label}>{description}</Text>
+      <Text style={styles.count}>{count}</Text>
     </View>
   );
 };
@@ -43,5 +46,8 @@ const styles = StyleSheet.create({
   },
   label: {
     flex: 1,
+  },
+  count: {
+    alignSelf: 'flex-end',
   },
 });
