@@ -1,9 +1,8 @@
 project(react-native-quick-crypto)
-cmake_minimum_required(VERSION 3.9.0)
+cmake_minimum_required(VERSION 3.10.2)
 
 set(PACKAGE_NAME "reactnativequickcrypto")
 set(BUILD_DIR ${CMAKE_SOURCE_DIR}/build)
-set(CMAKE_CXX_STANDARD 17)
 
 # TODO(osp) remove before release
 # set (CMAKE_C_FLAGS_DEBUG "${CMAKE_C_FLAGS_DEBUG} -g")
