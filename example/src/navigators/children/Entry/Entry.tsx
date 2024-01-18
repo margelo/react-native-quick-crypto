@@ -9,12 +9,12 @@ import 'mocha';
 import { Button } from '../../../components/Button';
 import { useNavigation } from '@react-navigation/native';
 import { TestItem } from '../../../components/TestItem';
-import { useTests } from './useTests';
+import { useTestList } from '../../../hooks/useTestList';
 
 type EntryProps = NativeStackScreenProps<RootStackParamList, 'Entry'>;
 
 export const Entry: React.FC<EntryProps> = ({}: EntryProps) => {
-  const [tests, toggle, clearAll, checkAll, totalCount] = useTests();
+  const [tests, toggle, clearAll, checkAll, totalCount] = useTestList();
   const navigation =
     useNavigation<NativeStackNavigationProp<RootStackParamList, 'Entry'>>();
   return (

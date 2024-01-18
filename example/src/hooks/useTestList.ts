@@ -1,11 +1,11 @@
 /* eslint-disable @typescript-eslint/no-shadow */
 import { useState, useCallback } from 'react';
 import type * as MochaTypes from 'mocha';
-import type { TestItemType } from './TestItemType';
-import { TEST_LIST } from '../../../testing/TestList';
-import { clearTests, rootSuite } from '../../../testing/MochaRNAdapter';
+import type { TestItemType } from '../navigators/children/Entry/TestItemType';
+import { TEST_LIST } from '../testing/TestList';
+import { clearTests, rootSuite } from '../testing/MochaRNAdapter';
 
-export const useTests = (): [
+export const useTestList = (): [
   Array<TestItemType>,
   (index: number) => void,
   () => void,
@@ -59,7 +59,6 @@ const getTestList = () => {
     });
 
     totalCount += count;
-    console.log({ name: test.description, totalCount });
     return {
       ...test,
       count,
