@@ -10,11 +10,13 @@
 #include <memory>
 #include <utility>
 #include "MGLKeys.h"
-#include "MGLUtils.h"
+
 #ifdef ANDROID
 #include "JSIUtils/MGLJSIMacros.h"
 #include "webcrypto/crypto_ec.h"
+#include "Utils/MGLUtils.h"
 #else
+#include "MGLUtils.h"
 #include "MGLJSIMacros.h"
 #include "crypto_ec.h"
 #endif

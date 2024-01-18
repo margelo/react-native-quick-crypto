@@ -69,7 +69,10 @@ android {
       cmake {
         cppFlags "-O2 -frtti -fexceptions -Wall -fstack-protector-all -DON_ANDROID -DANDROID"
         abiFilters "x86", "x86_64", "armeabi-v7a", "arm64-v8a"
-        arguments '-DANDROID_STL=c++_shared'
+        arguments (
+          '-DANDROID_STL=c++_shared',
+          "-DANDROID_TOOLCHAIN=clang"
+        )
       }
     }
   }

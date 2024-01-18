@@ -46,7 +46,7 @@ FieldDefinition getGenerateKeyPairFieldDefinition(
             runtime,
             jsi::Function::createFromHostFunction(
                 runtime, jsi::PropNameID::forAscii(runtime, "executor"), 2,
-                [arguments, &jsCallInvoker, config](
+                [&jsCallInvoker, config](
                     jsi::Runtime &runtime, const jsi::Value &,
                     const jsi::Value *promiseArgs, size_t) -> jsi::Value {
                   auto resolve =
@@ -54,7 +54,7 @@ FieldDefinition getGenerateKeyPairFieldDefinition(
                   auto reject =
                       std::make_shared<jsi::Value>(runtime, promiseArgs[1]);
 
-                  std::thread t([&runtime, arguments, resolve, reject,
+                  std::thread t([&runtime, resolve, reject,
                                  jsCallInvoker, config]() {
                     m.lock();
                     try {
@@ -71,7 +71,7 @@ FieldDefinition getGenerateKeyPairFieldDefinition(
                       });
                     } catch (std::exception e) {
                       jsCallInvoker->invokeAsync(
-                          [&runtime, &jsCallInvoker, reject]() {
+                          [&runtime, reject]() {
                             reject->asObject(runtime).asFunction(runtime).call(
                                 runtime, jsi::String::createFromUtf8(
                                              runtime, "Error generating key"));
