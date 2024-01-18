@@ -73,7 +73,13 @@ export function pbkdf2(
   const normalizedDigest = normalizeHashName(digest, HashContext.Node);
 
   nativePbkdf2
-    .pbkdf2(sanitizedPassword, sanitizedSalt, iterations, keylen, normalizedDigest)
+    .pbkdf2(
+      sanitizedPassword,
+      sanitizedSalt,
+      iterations,
+      keylen,
+      normalizedDigest
+    )
     .then(
       (res: ArrayBuffer) => {
         callback!(null, Buffer.from(res));

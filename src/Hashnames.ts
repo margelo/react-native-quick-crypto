@@ -5,7 +5,7 @@ export enum HashContext {
   JwkRsaPss,
   JwkRsaOaep,
   JwkHmac,
-};
+}
 
 // WebCrypto and JWK use a bunch of different names for the
 // standard set of SHA-* digest algorithms... which is ... fun.
@@ -13,7 +13,7 @@ export enum HashContext {
 // make it easier in the code.
 
 type HashNames = {
-  [key: string]: { [key in HashContext as string]: string; };
+  [key: string]: { [key in HashContext as string]: string };
 };
 
 const kHashNames: HashNames = {
@@ -57,21 +57,22 @@ const kHashNames: HashNames = {
   for (let n: number = 0; n < keys.length; n++) {
     const contexts: string[] = Object.keys(kHashNames[keys[n]!]!);
     for (let i: number = 0; i < contexts.length; i++) {
-      const alias: string =
-        (kHashNames[keys[n]!]![contexts[i]!]!).toLowerCase();
+      const alias: string = kHashNames[keys[n]!]![contexts[i]!]!.toLowerCase();
       if (kHashNames[alias] === undefined)
         kHashNames[alias] = kHashNames[keys[n]!]!;
     }
   }
 }
 
-export function normalizeHashName(name: string, context: HashContext = HashContext.Node) {
-  if (typeof name !== 'string')
-    return name;
+export function normalizeHashName(
+  name: string,
+  context: HashContext = HashContext.Node
+) {
+  if (typeof name !== 'string') return name;
   name = name.toLowerCase();
   try {
     const alias = kHashNames[name]![context];
     return alias || name;
-  } catch(_e) {}
+  } catch (_e) {}
   return name;
 }
