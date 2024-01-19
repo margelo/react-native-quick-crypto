@@ -49,21 +49,27 @@ export const useTestList = (): [
 const getTestList = () => {
   let totalCount: number = 0;
   const testList = TEST_LIST.map((test) => {
+    // clear all tests and temporarily register one test from the list
     clearTests();
     test.registrator();
 
+    // now count each test and suite of tests
     const runner = new Mocha.Runner(rootSuite) as MochaTypes.Runner;
     let count = runner.suite.tests.length;
     runner.suite.suites.map((s) => {
       count += s.tests.length;
     });
 
+    // update totalCount and return modified test with count of tests within
     totalCount += count;
     return {
       ...test,
       count,
     };
   });
+
+  // clear out temporarily-registered tests and return count-enhanced list and
+  // totals
   clearTests();
   return { testList, totalCount };
 };

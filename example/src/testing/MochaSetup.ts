@@ -57,13 +57,13 @@ export function testLib(
         type: 'incorrect',
         errorMsg: err.message,
       });
-      console.log(
+      console.error(
         `${indent()}fail: ${test.fullTitle()} - error: ${err.message}`
       );
     })
     .once(EVENT_RUN_END, () => {});
 
-  testRegistrators.forEach((register) => {
+  testRegistrators.map((register) => {
     register();
   });
   runner.run();

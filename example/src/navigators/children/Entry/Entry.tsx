@@ -10,13 +10,16 @@ import { Button } from '../../../components/Button';
 import { useNavigation } from '@react-navigation/native';
 import { TestItem } from '../../../components/TestItem';
 import { useTestList } from '../../../hooks/useTestList';
+import { useRunTests } from '../../../hooks/useRunTests';
 
 type EntryProps = NativeStackScreenProps<RootStackParamList, 'Entry'>;
 
 export const Entry: React.FC<EntryProps> = ({}: EntryProps) => {
   const [tests, toggle, clearAll, checkAll, totalCount] = useTestList();
+  const [_results, runTests] = useRunTests(tests);
   const navigation =
     useNavigation<NativeStackNavigationProp<RootStackParamList, 'Entry'>>();
+
   return (
     <SafeAreaView style={styles.mainContainer}>
       <View style={styles.testList}>
@@ -45,11 +48,7 @@ export const Entry: React.FC<EntryProps> = ({}: EntryProps) => {
         <Button
           title="Run"
           onPress={() => {
-            navigation.navigate('TestingScreen', {
-              testRegistrators: tests
-                .filter((it) => it.value)
-                .map((it) => it.registrator),
-            });
+            runTests();
           }}
         />
         <Button

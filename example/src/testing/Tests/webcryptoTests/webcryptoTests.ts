@@ -1,7 +1,7 @@
 import chai from 'chai';
 import { atob, btoa } from 'react-native-quick-base64';
 import crypto from 'react-native-quick-crypto';
-import { it } from '../../MochaRNAdapter';
+import { describe, it } from '../../MochaRNAdapter';
 
 // Tests that a key pair can be used for encryption / decryption.
 // function testEncryptDecrypt(publicKey: any, privateKey: any) {
@@ -59,53 +59,55 @@ function arrayBufferToBase64(buffer: ArrayBuffer) {
 }
 
 export function webcryptoRegisterTests() {
-  it('EC import raw/export SPKI', async () => {
-    const key = await crypto.subtle.importKey(
-      'raw',
-      base64ToArrayBuffer(
-        'BDZRaWzATXwmOi4Y/QP3JXn8sSVSFxidMugnGf3G28snm7zek9GjT76UMhXVMEbWLxR5WG6iGTjPAKKnT3J0jCA='
-      ),
-      { name: 'ECDSA', namedCurve: 'P-256' },
-      true,
-      ['verify']
-    );
-
-    const buf = await crypto.subtle.exportKey('spki', key);
-    const spkiKey = arrayBufferToBase64(buf);
-    chai
-      .expect(spkiKey)
-      .to.equal(
-        'MFkwEwYHKoZIzj0CAQYIKoZIzj0DAQcDQgAENlFpbMBNfCY6Lhj9A/clefyxJVIXGJ0y6CcZ/cbbyyebvN6T0aNPvpQyFdUwRtYvFHlYbqIZOM8AoqdPcnSMIA=='
+  describe('webcrypto', () => {
+    it('EC import raw/export SPKI', async () => {
+      const key = await crypto.subtle.importKey(
+        'raw',
+        base64ToArrayBuffer(
+          'BDZRaWzATXwmOi4Y/QP3JXn8sSVSFxidMugnGf3G28snm7zek9GjT76UMhXVMEbWLxR5WG6iGTjPAKKnT3J0jCA='
+        ),
+        { name: 'ECDSA', namedCurve: 'P-256' },
+        true,
+        ['verify']
       );
-  });
 
-  it('PBKDF2 importKey raw/deriveBits', async () => {
-    const key = await crypto.subtle.importKey(
-      'raw',
-      'password',
-      { name: 'PBKDF2' },
-      false,
-      ['deriveBits']
-    );
+      const buf = await crypto.subtle.exportKey('spki', key);
+      const spkiKey = arrayBufferToBase64(buf);
+      chai
+        .expect(spkiKey)
+        .to.equal(
+          'MFkwEwYHKoZIzj0CAQYIKoZIzj0DAQcDQgAENlFpbMBNfCY6Lhj9A/clefyxJVIXGJ0y6CcZ/cbbyyebvN6T0aNPvpQyFdUwRtYvFHlYbqIZOM8AoqdPcnSMIA=='
+        );
+    });
 
-    const bits = await crypto.subtle.deriveBits(
-      {
-        name: 'PBKDF2',
-        salt: 'salt',
-        iterations: 1,
-        hash: {
-          name: 'SHA-512',
+    it('PBKDF2 importKey raw/deriveBits', async () => {
+      const key = await crypto.subtle.importKey(
+        'raw',
+        'password',
+        { name: 'PBKDF2' },
+        false,
+        ['deriveBits']
+      );
+
+      const bits = await crypto.subtle.deriveBits(
+        {
+          name: 'PBKDF2',
+          salt: 'salt',
+          iterations: 1,
+          hash: {
+            name: 'SHA-512',
+          },
         },
-      },
-      key,
-      // eslint-disable-next-line no-bitwise
-      64 << 3
-    );
-    const pbkdf2Key = arrayBufferToBase64(bits);
-    chai
-      .expect(pbkdf2Key)
-      .to.equal(
-        'hn9wzxreAs/zdSWZo6U9xK80x6ZpgVrl1RNVThyM8lLALUcKKFoFAbrZmb/pQ8CPBQI119aLHaVeY/c7YKV/zg=='
+        key,
+        // eslint-disable-next-line no-bitwise
+        64 << 3
       );
+      const pbkdf2Key = arrayBufferToBase64(bits);
+      chai
+        .expect(pbkdf2Key)
+        .to.equal(
+          'hn9wzxreAs/zdSWZo6U9xK80x6ZpgVrl1RNVThyM8lLALUcKKFoFAbrZmb/pQ8CPBQI119aLHaVeY/c7YKV/zg=='
+        );
+    });
   });
 }
