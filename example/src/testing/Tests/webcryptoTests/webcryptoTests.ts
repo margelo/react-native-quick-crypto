@@ -58,7 +58,8 @@ function arrayBufferToBase64(buffer: ArrayBuffer) {
   return btoa(binary);
 }
 
-export function webcryptoRegisterTests() {
+export const registerWebcryptoTests = () => {
+  // top-level test suite
   describe('webcrypto', () => {
     it('EC import raw/export SPKI', async () => {
       const key = await crypto.subtle.importKey(
@@ -99,8 +100,7 @@ export function webcryptoRegisterTests() {
           },
         },
         key,
-        // eslint-disable-next-line no-bitwise
-        64 << 3
+        512
       );
       const pbkdf2Key = arrayBufferToBase64(bits);
       chai
@@ -110,4 +110,4 @@ export function webcryptoRegisterTests() {
         );
     });
   });
-}
+};

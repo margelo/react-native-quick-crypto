@@ -2,7 +2,7 @@ import chai from 'chai';
 import crypto from 'react-native-quick-crypto';
 import { it } from '../../MochaRNAdapter';
 
-export function registerConstantsTest() {
+export function registerConstantsTests() {
   it('crypto constants are there', () => {
     chai.expect(crypto.constants).to.eql({
       OPENSSL_VERSION_NUMBER: 269488367,

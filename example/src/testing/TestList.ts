@@ -1,27 +1,27 @@
 import type { TestItemType } from '../navigators/children/Entry/TestItemType';
-import { pbkdf2RegisterTests } from './Tests/pbkdf2Tests/pbkdf2Tests';
+import { registerPbkdf2Tests } from './Tests/pbkdf2Tests/pbkdf2Tests';
 import { registerRandomTests } from './Tests/RandomTests/randomTests';
 import { registerHmacTests } from './Tests/HmacTests/HmacTests';
 import { registerHashTests } from './Tests/HashTests/HashTests';
 import { registerCipherTests1 } from './Tests/CipherTests/CipherTestFirst';
 import { registerCipherTests2 } from './Tests/CipherTests/CipherTestSecond';
-import { registerConstantsTest } from './Tests/ConstantsTest/ConstantsTest';
+import { registerConstantsTests } from './Tests/ConstantsTests/ConstantsTests';
 import { registerPublicCipherTests } from './Tests/CipherTests/PublicCipherTests';
 import { registerGenerateKeyPairTests } from './Tests/CipherTests/GenerateKeyPairTests';
 import { registerSignTests } from './Tests/SignTests/SignTests';
-import { webcryptoRegisterTests } from './Tests/webcryptoTests/webcryptoTests';
+import { registerWebcryptoTests } from './Tests/webcryptoTests/webcryptoTests';
 
 export const TEST_LIST: Array<TestItemType> = [
   {
     description: 'webcrypto',
     value: false,
-    registrator: webcryptoRegisterTests,
+    registrator: registerWebcryptoTests,
     count: 0,
   },
   {
     description: 'pbkdf2',
     value: false,
-    registrator: pbkdf2RegisterTests,
+    registrator: registerPbkdf2Tests,
     count: 0,
   },
   {
@@ -57,7 +57,7 @@ export const TEST_LIST: Array<TestItemType> = [
   {
     description: 'constants',
     value: false,
-    registrator: registerConstantsTest,
+    registrator: registerConstantsTests,
     count: 0,
   },
   {
