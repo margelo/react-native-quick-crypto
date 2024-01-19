@@ -1,3 +1,5 @@
+import type { RowItemType } from './RowItemType';
+
 export type TestingScreenProps = {
-  testRegistrators: Array<() => void>;
+  results: Array<RowItemType>;
 };
