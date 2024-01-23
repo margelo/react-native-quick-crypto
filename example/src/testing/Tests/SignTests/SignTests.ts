@@ -1,4 +1,4 @@
-import chai from 'chai';
+import { expect } from 'chai';
 import { Buffer } from '@craftzdog/react-native-buffer';
 import { it } from '../../MochaRNAdapter';
 import crypto from 'react-native-quick-crypto';
@@ -78,7 +78,7 @@ export function registerSignTests() {
       },
       signature
     );
-    chai.expect(matches).to.equal(true);
+    expect(matches).to.equal(true);
   });
 
   it('simple sscrypto sign/verify', async () => {
@@ -90,6 +90,6 @@ export function registerSignTests() {
       signature
     );
 
-    chai.expect(verified).to.equal(true);
+    expect(verified).to.equal(true);
   });
 }

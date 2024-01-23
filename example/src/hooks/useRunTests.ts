@@ -29,11 +29,12 @@ export const useRunTests = (
     [results]
   );
 
+  // this resets results to be empty, causing the useEffect to fire and run tests
   const runTests = () => {
     setResults([]);
   };
 
-  console.log({ results });
+  // console.log({ results });
   return [results, runTests];
 };
 
@@ -91,13 +92,13 @@ const run = (
         type: 'incorrect',
         errorMsg: err.message,
       });
-      console.error(
+      console.log(
         `${indent()}fail: ${test.fullTitle()} - error: ${err.message}`
       );
     })
     .once(EVENT_RUN_END, () => {});
 
-  testRegistrators.map((register) => {
+  testRegistrators.forEach((register) => {
     register();
   });
   runner.run();

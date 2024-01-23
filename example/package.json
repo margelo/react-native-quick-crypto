@@ -19,7 +19,7 @@
     "@react-navigation/native": "^6.1.6",
     "@react-navigation/native-stack": "^6.9.12",
     "buffer": "^6.0.3",
-    "chai": "^4.3.7",
+    "chai": "^5.0.0",
     "crypto-browserify": "^3.12.0",
     "eslint": "^8.4.1",
     "events": "^3.3.0",

@@ -1,10 +1,8 @@
 // copied from https://github.com/nodejs/node/blob/master/test/parallel/test-crypto-hash.js
 import crypto from 'react-native-quick-crypto';
 import { it } from '../../MochaRNAdapter';
-import chai from 'chai';
+import { assert } from 'chai';
 import { Buffer } from '@craftzdog/react-native-buffer';
-
-const assert = chai.assert;
 
 export function registerCipherTests2() {
   'use strict';

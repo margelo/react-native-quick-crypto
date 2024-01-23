@@ -24,10 +24,8 @@
 import crypto from 'react-native-quick-crypto';
 import { describe, it } from '../../MochaRNAdapter';
 import { Buffer } from '@craftzdog/react-native-buffer';
-import chai from 'chai';
+import { assert } from 'chai';
 import type { Done } from 'mocha';
-
-const assert = chai.assert;
 
 export function registerRandomTests() {
   describe('check args', () => {
@@ -470,147 +468,145 @@ export function registerRandomTests() {
       });
     }
   });
-  {
-    /* ['10', true, NaN, null, {}, []].forEach((i) => {
-      const invalidMinError = {
-        code: 'ERR_INVALID_ARG_TYPE',
-        name: 'TypeError',
-        message:
-          'The "min" argument must be a safe integer.' +
-          `${common.invalidArgTypeHelper(i)}`,
-      };
-      const invalidMaxError = {
-        code: 'ERR_INVALID_ARG_TYPE',
-        name: 'TypeError',
-        message:
-          'The "max" argument must be a safe integer.' +
-          `${common.invalidArgTypeHelper(i)}`,
-      };
 
-      assert.throws(() => crypto.randomInt(i, 100), invalidMinError);
-      assert.throws(
-        () => crypto.randomInt(i, 100, common.mustNotCall()),
-        invalidMinError
-      );
-      assert.throws(() => crypto.randomInt(i), invalidMaxError);
-      assert.throws(
-        () => crypto.randomInt(i, common.mustNotCall()),
-        invalidMaxError
-      );
-      assert.throws(
-        () => crypto.randomInt(0, i, common.mustNotCall()),
-        invalidMaxError
-      );
-      assert.throws(() => crypto.randomInt(0, i), invalidMaxError);
-    });
-
-    assert.throws(
-      () => crypto.randomInt(minInt - 1, minInt + 5, common.mustNotCall()),
-      {
-        code: 'ERR_INVALID_ARG_TYPE',
-        name: 'TypeError',
-        message:
-          'The "min" argument must be a safe integer.' +
-          `${common.invalidArgTypeHelper(minInt - 1)}`,
-      }
-    );
-
-    assert.throws(() => crypto.randomInt(maxInt + 1, common.mustNotCall()), {
+  /* ['10', true, NaN, null, {}, []].forEach((i) => {
+    const invalidMinError = {
+      code: 'ERR_INVALID_ARG_TYPE',
+      name: 'TypeError',
+      message:
+        'The "min" argument must be a safe integer.' +
+        `${common.invalidArgTypeHelper(i)}`,
+    };
+    const invalidMaxError = {
       code: 'ERR_INVALID_ARG_TYPE',
       name: 'TypeError',
       message:
         'The "max" argument must be a safe integer.' +
-        `${common.invalidArgTypeHelper(maxInt + 1)}`,
-    });*/
+        `${common.invalidArgTypeHelper(i)}`,
+    };
 
-    describe('ERR_OUT_OF_RANGE simple', () => {
-      for (const arg of [[0], [1, 1], [3, 2], [-5, -5], [11, -10]]) {
-        const interval = arg;
-        it('range' + interval.toString(), () => {
-          assert.throws(
-            () => crypto.randomInt(1, MAX_RANGE + 2, () => {}),
-            /ERR_OUT_OF_RANGE/,
-            'The value of "max" is out of range. It must be greater than ' +
-              `the value of "min" (${interval[interval.length - 2] || 0}). ` +
-              `Received ${interval[interval.length - 1]}`
-          );
-        });
-      }
-    });
+    assert.throws(() => crypto.randomInt(i, 100), invalidMinError);
+    assert.throws(
+      () => crypto.randomInt(i, 100, common.mustNotCall()),
+      invalidMinError
+    );
+    assert.throws(() => crypto.randomInt(i), invalidMaxError);
+    assert.throws(
+      () => crypto.randomInt(i, common.mustNotCall()),
+      invalidMaxError
+    );
+    assert.throws(
+      () => crypto.randomInt(0, i, common.mustNotCall()),
+      invalidMaxError
+    );
+    assert.throws(() => crypto.randomInt(0, i), invalidMaxError);
+  });
 
-    const MAX_RANGE = 0xffffffffffff;
-    describe('must succeed', () => {
-      const maxInt = Number.MAX_SAFE_INTEGER;
-      const minInt = Number.MIN_SAFE_INTEGER;
+  assert.throws(
+    () => crypto.randomInt(minInt - 1, minInt + 5, common.mustNotCall()),
+    {
+      code: 'ERR_INVALID_ARG_TYPE',
+      name: 'TypeError',
+      message:
+        'The "min" argument must be a safe integer.' +
+        `${common.invalidArgTypeHelper(minInt - 1)}`,
+    }
+  );
 
-      it('minInt, minInt + 5 ', (done: Done) => {
-        crypto.randomInt(minInt, minInt + 5, () => {
-          done();
-        });
-      });
+  assert.throws(() => crypto.randomInt(maxInt + 1, common.mustNotCall()), {
+    code: 'ERR_INVALID_ARG_TYPE',
+    name: 'TypeError',
+    message:
+      'The "max" argument must be a safe integer.' +
+      `${common.invalidArgTypeHelper(maxInt + 1)}`,
+  });*/
 
-      it('maxint - 5, maxint', (done: Done) => {
-        crypto.randomInt(maxInt - 5, maxInt, () => {
-          done();
-        });
-      });
-
-      it('1', (done: Done) => {
-        crypto.randomInt(1, () => {
-          done();
-        });
-      });
-
-      it('0 - 1', (done: Done) => {
-        crypto.randomInt(0, 1, () => {
-          done();
-        });
-      });
-
-      it('maxRange', (done: Done) => {
-        crypto.randomInt(MAX_RANGE, () => {
-          done();
-        });
-      });
-
-      it('maxRange move + 1', (done: Done) => {
-        crypto.randomInt(1, MAX_RANGE + 1, () => {
-          done();
-        });
-      });
-    });
-
-    it('ERR_OUT_OF_RANGE 1', () => {
-      assert.throws(
-        () => crypto.randomInt(1, MAX_RANGE + 2, () => {}),
-        /ERR_OUT_OF_RANGE/,
-        'The value of "max" is out of range. ' +
-          `It must be <= ${MAX_RANGE}. ` +
-          'Received 281_474_976_710_656'
-      );
-    });
-
-    it('ERR_OUT_OF_RANGE 2', () => {
-      assert.throws(
-        () => crypto.randomInt(MAX_RANGE + 1, () => {}),
-        /ERR_OUT_OF_RANGE/,
-        'The value of "max" is out of range. ' +
-          `It must be <= ${MAX_RANGE}. ` +
-          'Received 281_474_976_710_656'
-      );
-    });
-
-    [true, NaN, null, {}, [], 10].forEach((i) => {
-      const val = i;
-      it('expect type error', () => {
+  describe('ERR_OUT_OF_RANGE simple', () => {
+    for (const arg of [[0], [1, 1], [3, 2], [-5, -5], [11, -10]]) {
+      const interval = arg;
+      it('range' + interval.toString(), () => {
         assert.throws(
-          // @ts-expect-error
-          () => crypto.randomInt(0, 1, val),
-          /ERR_INVALID_ARG_TYPE/
+          () => crypto.randomInt(1, MAX_RANGE + 2, () => {}),
+          /ERR_OUT_OF_RANGE/,
+          'The value of "max" is out of range. It must be greater than ' +
+            `the value of "min" (${interval[interval.length - 2] || 0}). ` +
+            `Received ${interval[interval.length - 1]}`
         );
       });
+    }
+  });
+
+  const MAX_RANGE = 0xffffffffffff;
+  describe('must succeed', () => {
+    const maxInt = Number.MAX_SAFE_INTEGER;
+    const minInt = Number.MIN_SAFE_INTEGER;
+
+    it('minInt, minInt + 5 ', (done: Done) => {
+      crypto.randomInt(minInt, minInt + 5, () => {
+        done();
+      });
     });
-  }
+
+    it('maxint - 5, maxint', (done: Done) => {
+      crypto.randomInt(maxInt - 5, maxInt, () => {
+        done();
+      });
+    });
+
+    it('1', (done: Done) => {
+      crypto.randomInt(1, () => {
+        done();
+      });
+    });
+
+    it('0 - 1', (done: Done) => {
+      crypto.randomInt(0, 1, () => {
+        done();
+      });
+    });
+
+    it('maxRange', (done: Done) => {
+      crypto.randomInt(MAX_RANGE, () => {
+        done();
+      });
+    });
+
+    it('maxRange move + 1', (done: Done) => {
+      crypto.randomInt(1, MAX_RANGE + 1, () => {
+        done();
+      });
+    });
+  });
+
+  it('ERR_OUT_OF_RANGE 1', () => {
+    assert.throws(
+      () => crypto.randomInt(1, MAX_RANGE + 2, () => {}),
+      /ERR_OUT_OF_RANGE/,
+      'The value of "max" is out of range. ' +
+        `It must be <= ${MAX_RANGE}. ` +
+        'Received 281_474_976_710_657'
+    );
+  });
+
+  it('ERR_OUT_OF_RANGE 2', () => {
+    assert.throws(
+      () => crypto.randomInt(MAX_RANGE + 1, () => {}),
+      /ERR_OUT_OF_RANGE/,
+      'The value of "max" is out of range. ' +
+        `It must be <= ${MAX_RANGE}. ` +
+        'Received 281_474_976_710_656'
+    );
+  });
+
+  [true, NaN, null, {}, [], 10].forEach((val) => {
+    it(`expect type error: ${val}`, () => {
+      assert.throws(
+        // @ts-expect-error
+        () => crypto.randomInt(0, 1, val),
+        /callback must be a function or undefined/
+      );
+    });
+  });
 
   describe("Verify that it doesn't throw or abort", () => {
     it('int16', (done: Done) => {

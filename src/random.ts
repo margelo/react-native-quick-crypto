@@ -172,6 +172,9 @@ export function randomInt(
     min = arg1;
     max = arg2 as any as number;
   }
+  if (typeof callback !== 'undefined' && typeof callback !== 'function') {
+    throw new TypeError('callback must be a function or undefined');
+  }
 
   const isSync = typeof callback === 'undefined';
   if (!Number.isSafeInteger(min)) {

@@ -1,4 +1,4 @@
-import chai from 'chai';
+import { assert, expect } from 'chai';
 import { Buffer } from '@craftzdog/react-native-buffer';
 import { it } from '../../MochaRNAdapter';
 import crypto from 'react-native-quick-crypto';
@@ -11,7 +11,7 @@ function testEncryptDecrypt(publicKey: any, privateKey: any) {
   for (const key of [publicKey, privateKey]) {
     const ciphertext = crypto.publicEncrypt(key, plaintext);
     const received = crypto.privateDecrypt(privateKey, ciphertext);
-    chai.assert.strictEqual(received.toString('utf8'), message);
+    assert.strictEqual(received.toString('utf8'), message);
   }
 }
 
@@ -48,9 +48,9 @@ export function registerPublicCipherTests() {
       const privateKey = await PrivateKey.generate(1024);
       const encrypted = privateKey.encrypt(Buffer.from(clearText) as any);
       const decrypted = privateKey.decrypt(encrypted);
-      chai.expect(decrypted.toString('utf-8')).to.equal(clearText);
+      expect(decrypted.toString('utf-8')).to.equal(clearText);
     } catch (e) {
-      chai.assert.fail();
+      assert.fail();
     }
   });
 
@@ -110,7 +110,7 @@ export function registerPublicCipherTests() {
       ciphertext
     );
 
-    chai.expect(decrypted.toString('utf-8')).to.equal(message);
+    expect(decrypted.toString('utf-8')).to.equal(message);
   });
 
   it('passphrased private key without passphrase should throw', () => {
@@ -130,7 +130,7 @@ export function registerPublicCipherTests() {
 
     try {
       testEncryptDecrypt(publicKey, privateKey);
-      chai.assert.fail();
+      assert.fail();
     } catch (e) {
       // intentionally left blank
     }

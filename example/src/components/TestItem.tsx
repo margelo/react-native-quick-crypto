@@ -39,7 +39,6 @@ const styles = StyleSheet.create({
     alignContent: 'center',
     alignItems: 'center',
     justifyContent: 'space-evenly',
-    marginTop: 10,
     gap: 20,
     borderBottomWidth: 1,
     borderBottomColor: '#ccc',
@@ -47,7 +46,5 @@ const styles = StyleSheet.create({
   label: {
     flex: 1,
   },
-  count: {
-    alignSelf: 'flex-end',
-  },
+  count: {},
 });
