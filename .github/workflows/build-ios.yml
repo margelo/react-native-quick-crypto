@@ -62,9 +62,12 @@ jobs:
           restore-keys: |
             ${{ runner.os }}-pods-
       - name: Install Gems
-        run: gem install cocoapods xcpretty
-      - name: Pod Install
+        working-directory: example
+        run: bundle config set deployment 'true' && bundle install
+      - name: Install Pods
         run: bundle exec pod check || bundle exec pod install
+      - name: Install xcpretty
+        run: gem install xcpretty
       - name: Build App
         run: "set -o pipefail && xcodebuild \
           CC=clang CPLUSPLUS=clang++ LD=clang LDPLUSPLUS=clang++ \
