@@ -61,10 +61,10 @@ jobs:
           key: ${{ runner.os }}-pods-${{ hashFiles('**/Podfile.lock') }}
           restore-keys: |
             ${{ runner.os }}-pods-
-      - name: Install Pods
+      - name: Install Gems
+        run: gem install cocoapods xcpretty
+      - name: Pod Install
         run: bundle exec pod check || bundle exec pod install
-      - name: Install xcpretty
-        run: gem install xcpretty
       - name: Build App
         run: "set -o pipefail && xcodebuild \
           CC=clang CPLUSPLUS=clang++ LD=clang LDPLUSPLUS=clang++ \
