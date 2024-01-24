@@ -107,6 +107,12 @@ MGLQuickCryptoHostObject::MGLQuickCryptoHostObject(
     return jsi::Object::createFromHostObject(runtime, hostObject);
   }));
 
+  // createSign
+  this->fields.push_back(getSignFieldDefinition(jsCallInvoker, workerQueue));
+
+  // createVerify
+  this->fields.push_back(getVerifyFieldDefinition(jsCallInvoker, workerQueue));
+
   // subtle API created from a simple jsi::Object
   // because this FieldDefinition is only good for returning
   // objects and too convoluted

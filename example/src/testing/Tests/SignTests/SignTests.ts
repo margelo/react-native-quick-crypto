@@ -57,27 +57,28 @@ export function registerSignTests() {
 
     const textToSign = 'This text should be signed';
     const textBuffer = Buffer.from(textToSign, 'utf-8');
+    const padding = crypto.constants.RSA_PKCS1_PSS_PADDING;
+    const saltLength = crypto.constants.RSA_PSS_SALTLEN_MAX_SIGN;
+
     const sign = crypto.createSign('SHA256');
     sign.update(textBuffer);
-
     const signature = sign.sign({
       key: privateKey,
-      padding: crypto.constants.RSA_PKCS1_PSS_PADDING,
-      saltLength: crypto.constants.RSA_PSS_SALTLEN_MAX_SIGN,
+      padding,
+      saltLength,
     });
 
     const verify = crypto.createVerify('SHA256');
-
     verify.update(textToSign, 'utf-8');
-
     const matches = verify.verify(
       {
         key: publicKey,
-        padding: crypto.constants.RSA_PKCS1_PSS_PADDING,
-        saltLength: crypto.constants.RSA_PSS_SALTLEN_MAX_SIGN,
+        padding,
+        saltLength,
       },
       signature
     );
+
     expect(matches).to.equal(true);
   });
 
