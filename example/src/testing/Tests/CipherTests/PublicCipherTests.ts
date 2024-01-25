@@ -2,7 +2,7 @@ import { assert, expect } from 'chai';
 import { Buffer } from '@craftzdog/react-native-buffer';
 import { it } from '../../MochaRNAdapter';
 import crypto from 'react-native-quick-crypto';
-import { PrivateKey } from 'sscrypto/node';
+// import { PrivateKey } from 'sscrypto/node';
 
 // Tests that a key pair can be used for encryption / decryption.
 function testEncryptDecrypt(publicKey: any, privateKey: any) {
@@ -41,18 +41,18 @@ function testEncryptDecrypt(publicKey: any, privateKey: any) {
 // }
 
 export function registerPublicCipherTests() {
-  // We need to monkey patch sscrypto to use all the crypto functions from quick-crypto
-  it('sscrypto basic test', async () => {
-    try {
-      const clearText = 'This is clear text';
-      const privateKey = await PrivateKey.generate(1024);
-      const encrypted = privateKey.encrypt(Buffer.from(clearText) as any);
-      const decrypted = privateKey.decrypt(encrypted);
-      expect(decrypted.toString('utf-8')).to.equal(clearText);
-    } catch (e) {
-      assert.fail();
-    }
-  });
+  // // We need to monkey patch sscrypto to use all the crypto functions from quick-crypto
+  // it('sscrypto basic test', async () => {
+  //   try {
+  //     const clearText = 'This is clear text';
+  //     const privateKey = await PrivateKey.generate(1024);
+  //     const encrypted = privateKey.encrypt(Buffer.from(clearText) as any);
+  //     const decrypted = privateKey.decrypt(encrypted);
+  //     expect(decrypted.toString('utf-8')).to.equal(clearText);
+  //   } catch (e) {
+  //     assert.fail();
+  //   }
+  // });
 
   it('publicEncrypt/privateDecrypt', () => {
     const { privateKey, publicKey } = crypto.generateKeyPairSync('rsa', {

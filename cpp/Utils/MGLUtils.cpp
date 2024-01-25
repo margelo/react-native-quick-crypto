@@ -30,7 +30,7 @@ jsi::Value toJSI(jsi::Runtime& rt, OptionJSVariant& value) {
 
 jsi::Value toJSI(jsi::Runtime& rt, JSVariant& value) {
   if (std::holds_alternative<bool>(value)) {
-    return std::get<bool>(value);
+    return jsi::Value(std::get<bool>(value));
   } else if (std::holds_alternative<int>(value)) {
     return jsi::Value(std::get<int>(value));
   } else if (std::holds_alternative<long long>(value)) {
