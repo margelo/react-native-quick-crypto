@@ -4,23 +4,21 @@ import { Buffer } from '@craftzdog/react-native-buffer';
 import { describe, it } from '../../MochaRNAdapter';
 import { expect } from 'chai';
 
-export const registerHmacTests = () => {
-  describe('initialization', () => {
-    it('Hmac called directly', () => {
-      const Hmac = crypto.Hmac;
-      const instance = crypto.Hmac('sha256', 'Node');
-      expect(instance).to.instanceOf(Hmac);
-    });
+describe('hmac', () => {
+  it('Hmac called directly', () => {
+    const Hmac = crypto.Hmac;
+    const instance = crypto.Hmac('sha256', 'Node');
+    expect(instance).to.instanceOf(Hmac);
+  });
 
-    it('invalid arg1', () => {
-      // @ts-expect-error
-      expect(crypto.createHmac(null)).Throw(/ERR_INVALID_ARG_TYPE/);
-    });
+  it('invalid arg1', () => {
+    // @ts-expect-error
+    expect(crypto.createHmac(null)).Throw(/ERR_INVALID_ARG_TYPE/);
+  });
 
-    it('invalid arg type', () => {
-      // @ts-expect-error
-      expect(crypto.createHmac('sha1', null)).Throw(/ERR_INVALID_ARG_TYPE/);
-    });
+  it('invalid arg type', () => {
+    // @ts-expect-error
+    expect(crypto.createHmac('sha1', null)).Throw(/ERR_INVALID_ARG_TYPE/);
   });
 
   function testHmac(
@@ -478,4 +476,4 @@ export const registerHmacTests = () => {
   it('Invalid digest', () => {
     expect(crypto.createHmac('sha7', 'key')).throw(/Invalid digest/);
   });
-};
+});

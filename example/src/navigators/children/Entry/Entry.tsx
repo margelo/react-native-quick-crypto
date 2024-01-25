@@ -15,24 +15,25 @@ import { useRunTests } from '../../../hooks/useRunTests';
 type EntryProps = NativeStackScreenProps<RootStackParamList, 'Entry'>;
 
 export const Entry: React.FC<EntryProps> = ({}: EntryProps) => {
-  const [tests, toggle, clearAll, checkAll, totalCount] = useTestList();
-  const [_results, runTests] = useRunTests(tests);
+  const [tests, toggle, clearAll, checkAll] = useTestList();
+  const [results, runTests] = useRunTests();
   const navigation =
     useNavigation<NativeStackNavigationProp<RootStackParamList, 'Entry'>>();
+  let totalCount = 0;
 
   return (
     <SafeAreaView style={styles.mainContainer}>
       <View style={styles.testList}>
         <ScrollView style={styles.scrollView}>
-          {tests.map((test, index: number) => {
-            // console.log({ test });
+          {Object.entries(tests).map(([suiteName, suite]) => {
+            totalCount += suite.count;
             return (
               <TestItem
-                key={index.toString()}
-                index={index}
-                description={test.description}
-                value={test.value}
-                count={test.count}
+                key={suiteName}
+                description={suiteName}
+                value={suite.value}
+                count={suite.count}
+                results={results[suiteName]?.results || []}
                 onToggle={toggle}
               />
             );
@@ -48,7 +49,7 @@ export const Entry: React.FC<EntryProps> = ({}: EntryProps) => {
         <Button
           title="Run"
           onPress={() => {
-            runTests();
+            runTests(tests);
           }}
         />
         <Button

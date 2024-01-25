@@ -1,6 +1,6 @@
 import { assert, expect } from 'chai';
 import { Buffer } from '@craftzdog/react-native-buffer';
-import { it } from '../../MochaRNAdapter';
+import { describe, it } from '../../MochaRNAdapter';
 import crypto from 'react-native-quick-crypto';
 // import { PrivateKey } from 'sscrypto/node';
 
@@ -40,7 +40,7 @@ function testEncryptDecrypt(publicKey: any, privateKey: any) {
 //   }
 // }
 
-export function registerPublicCipherTests() {
+describe('publicCipher', () => {
   // // We need to monkey patch sscrypto to use all the crypto functions from quick-crypto
   // it('sscrypto basic test', async () => {
   //   try {
@@ -135,4 +135,4 @@ export function registerPublicCipherTests() {
       // intentionally left blank
     }
   });
-}
+});

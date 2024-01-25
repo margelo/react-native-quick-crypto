@@ -1,94 +1,115 @@
 import 'mocha';
 import type * as MochaTypes from 'mocha';
-import { useCallback, useEffect, useState } from 'react';
-import type { TestItemType } from '../navigators/children/Entry/TestItemType';
-import type { RowItemType } from '../navigators/children/TestingScreen/RowItemType';
-import { clearTests, rootSuite } from '../testing/MochaRNAdapter';
+import { useCallback, useState } from 'react';
+import type { Suites } from '../types/TestSuite';
+import type { Stats, SuiteResults, TestResult } from '../types/TestResults';
+import { rootSuite } from '../testing/MochaRNAdapter';
 
-export const useRunTests = (
-  tests: TestItemType[]
-): [RowItemType[], () => void] => {
-  const [results, setResults] = useState<RowItemType[]>([]);
+const defaultStats = {
+  start: new Date(),
+  end: new Date(),
+  duration: 0,
+  suites: 0,
+  tests: 0,
+  passes: 0,
+  pending: 0,
+  failures: 0,
+};
+
+export const useRunTests = (): [SuiteResults, (suites: Suites) => void] => {
+  const [results, setResults] = useState<SuiteResults>({});
 
   const addResult = useCallback(
-    (newResult: RowItemType) => {
-      setResults((prev) => [...prev, newResult]);
+    (newResult: TestResult) => {
+      setResults((prev) => {
+        if (!prev[newResult.suiteName]) {
+          prev[newResult.suiteName] = { results: [] };
+        }
+        prev[newResult.suiteName]?.results.push(newResult);
+        return { ...prev };
+      });
     },
     [setResults]
   );
 
-  useEffect(
-    () => {
-      if (results.length > 0) return; // already running tests
-      const testRegistrators: (() => void)[] = tests
-        .filter((t) => t.value)
-        .map((t) => t.registrator);
-      run(addResult, testRegistrators);
-    },
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-    [results]
-  );
-
-  // this resets results to be empty, causing the useEffect to fire and run tests
-  const runTests = () => {
-    setResults([]);
+  const runTests = (suites: Suites) => {
+    setResults({});
+    run(addResult, suites);
   };
 
-  // console.log({ results });
   return [results, runTests];
 };
 
 const run = (
-  addTestResult: (testResult: RowItemType) => void,
-  testRegistrators: Array<() => void> = []
+  addTestResult: (testResult: TestResult) => void,
+  tests: Suites = {}
 ) => {
-  // console.log('setting up mocha');
-
   const {
     EVENT_RUN_BEGIN,
     EVENT_RUN_END,
     EVENT_TEST_FAIL,
     EVENT_TEST_PASS,
+    EVENT_TEST_PENDING,
+    EVENT_TEST_END,
     EVENT_SUITE_BEGIN,
     EVENT_SUITE_END,
   } = Mocha.Runner.constants;
 
-  clearTests();
+  let stats: Stats = { ...defaultStats };
+
   var runner = new Mocha.Runner(rootSuite) as MochaTypes.Runner;
+  runner.stats = stats;
+
+  // enable/disable tests based on checkbox value
+  runner.suite.suites.map((s) => {
+    const suiteName = s.title;
+    if (!tests[suiteName]?.value) {
+      // console.log(`skipping '${suiteName}' suite`);
+      s.tests.map((t) => {
+        try {
+          t.skip();
+        } catch (e) {} // do nothing w error
+      });
+    } else {
+      // console.log(`will run '${suiteName}' suite`);
+      s.tests.map((t) => {
+        // @ts-expect-error - not sure why this is erroring
+        t.reset();
+      });
+    }
+  });
 
   let indents = -1;
   const indent = () => Array(indents).join('  ');
   runner
-    .once(EVENT_RUN_BEGIN, () => {})
+    .once(EVENT_RUN_BEGIN, () => {
+      stats.start = new Date();
+    })
     .on(EVENT_SUITE_BEGIN, (suite: MochaTypes.Suite) => {
-      const name = suite.fullTitle();
-      if (name !== '') {
-        addTestResult({
-          indentation: indents,
-          description: name,
-          key: Math.random().toString(),
-          type: 'grouping',
-        });
-      }
+      suite.root || stats.suites++;
       indents++;
     })
     .on(EVENT_SUITE_END, () => {
       indents--;
     })
     .on(EVENT_TEST_PASS, (test: MochaTypes.Runnable) => {
+      const name = test.parent?.title || '';
+      stats.passes++;
       addTestResult({
         indentation: indents,
         description: test.fullTitle(),
-        key: Math.random().toString(),
+        suiteName: name,
         type: 'correct',
       });
       console.log(`${indent()}pass: ${test.fullTitle()}`);
     })
     .on(EVENT_TEST_FAIL, (test: MochaTypes.Runnable, err: Error) => {
+      const name = test.parent?.title || '';
+      stats.failures++;
       addTestResult({
         indentation: indents,
         description: test.fullTitle(),
-        key: Math.random().toString(),
+        suiteName: name,
         type: 'incorrect',
         errorMsg: err.message,
       });
@@ -96,11 +117,18 @@ const run = (
         `${indent()}fail: ${test.fullTitle()} - error: ${err.message}`
       );
     })
-    .once(EVENT_RUN_END, () => {});
+    .on(EVENT_TEST_PENDING, function () {
+      stats.pending++;
+    })
+    .on(EVENT_TEST_END, function () {
+      stats.tests++;
+    })
+    .once(EVENT_RUN_END, () => {
+      stats.end = new Date();
+      stats.duration = stats.end.valueOf() - stats.start.valueOf();
+      console.log(JSON.stringify(runner.stats, null, 2));
+    });
 
-  testRegistrators.forEach((register) => {
-    register();
-  });
   runner.run();
 
   return () => {

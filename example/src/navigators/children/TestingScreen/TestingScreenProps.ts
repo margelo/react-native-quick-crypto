@@ -1,5 +1,5 @@
-import type { RowItemType } from './RowItemType';
+import type { TestResult } from '../../../types/TestResults';
 
 export type TestingScreenProps = {
-  results: Array<RowItemType>;
+  results: Array<TestResult>;
 };

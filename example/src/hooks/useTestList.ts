@@ -1,75 +1,69 @@
 /* eslint-disable @typescript-eslint/no-shadow */
 import { useState, useCallback } from 'react';
 import type * as MochaTypes from 'mocha';
-import type { TestItemType } from '../navigators/children/Entry/TestItemType';
-import { TEST_LIST } from '../testing/TestList';
-import { clearTests, rootSuite } from '../testing/MochaRNAdapter';
+import type { Suites } from '../types/TestSuite';
+import { rootSuite } from '../testing/MochaRNAdapter';
+
+import '../testing/Tests/pbkdf2Tests/pbkdf2Tests';
+import '../testing/Tests/RandomTests/randomTests';
+import '../testing/Tests/HmacTests/HmacTests';
+import '../testing/Tests/HashTests/HashTests';
+import '../testing/Tests/CipherTests/CipherTestFirst';
+import '../testing/Tests/CipherTests/CipherTestSecond';
+import '../testing/Tests/CipherTests/PublicCipherTests';
+import '../testing/Tests/CipherTests/GenerateKeyPairTests';
+import '../testing/Tests/ConstantsTests/ConstantsTests';
+import '../testing/Tests/SignTests/SignTests';
+import '../testing/Tests/webcryptoTests/webcryptoTests';
 
 export const useTestList = (): [
-  Array<TestItemType>,
-  (index: number) => void,
+  Suites,
+  (description: string) => void,
   () => void,
-  () => void,
-  number
+  () => void
 ] => {
-  const { testList, totalCount } = getTestList();
-  const [tests, setTests] = useState<Array<TestItemType>>(testList);
+  const [suites, setSuites] = useState<Suites>(getInitialSuites);
 
   const toggle = useCallback(
-    (index: number) => {
-      setTests((tests) => {
-        tests[index]!.value = !tests[index]!.value;
-        return [...tests];
+    (description: string) => {
+      setSuites((tests) => {
+        tests[description]!.value = !tests[description]!.value;
+        return tests;
       });
     },
-    [setTests]
+    [setSuites]
   );
 
   const clearAll = useCallback(() => {
-    setTests((tests) => {
-      return tests.map((it) => {
-        it.value = false;
-        return it;
+    setSuites((suites) => {
+      Object.entries(suites).forEach(([_, suite]) => {
+        suite.value = false;
       });
+      return { ...suites };
     });
-  }, [setTests]);
+  }, [setSuites]);
 
   const checkAll = useCallback(() => {
-    setTests((tests) => {
-      return tests.map((it) => {
-        it.value = true;
-        return it;
+    setSuites((suites) => {
+      Object.entries(suites).forEach(([_, suite]) => {
+        suite.value = true;
       });
+      return { ...suites };
     });
-  }, [setTests]);
+  }, [setSuites]);
 
-  return [tests, toggle, clearAll, checkAll, totalCount];
+  return [suites, toggle, clearAll, checkAll];
 };
 
-const getTestList = () => {
-  let totalCount: number = 0;
-  const testList = TEST_LIST.map((test) => {
-    // clear all tests and temporarily register one test from the list
-    clearTests();
-    test.registrator();
+const getInitialSuites = () => {
+  let suites: Suites = {};
 
-    // now count each test and suite of tests
-    const runner = new Mocha.Runner(rootSuite) as MochaTypes.Runner;
-    let count = runner.suite.tests.length;
-    runner.suite.suites.map((s) => {
-      count += s.tests.length;
-    });
-
-    // update totalCount and return modified test with count of tests within
-    totalCount += count;
-    return {
-      ...test,
-      count,
-    };
+  // interrogate the loaded mocha suites/tests via a temporary runner
+  const runner = new Mocha.Runner(rootSuite) as MochaTypes.Runner;
+  runner.suite.suites.map((s) => {
+    suites[s.title] = { value: false, count: s.total() };
   });
 
-  // clear out temporarily-registered tests and return count-enhanced list and
-  // totals
-  clearTests();
-  return { testList, totalCount };
+  // return count-enhanced list and totals
+  return suites;
 };

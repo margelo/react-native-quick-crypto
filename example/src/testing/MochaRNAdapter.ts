@@ -27,6 +27,7 @@ export const it = (
   }
 };
 
+// TODO: (boorad) needed anymore?
 export const itOnly = (
   name: string,
   f: MochaTypes.Func | MochaTypes.AsyncFunc

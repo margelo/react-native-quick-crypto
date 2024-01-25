@@ -1,32 +1,51 @@
 import React from 'react';
 import { View, Text, StyleSheet } from 'react-native';
 import Checkbox from '@react-native-community/checkbox';
+import type { TestResult } from '../types/TestResults';
 
 type TestItemProps = {
   description: string;
   value: boolean;
   count: number;
-  index: number;
-  onToggle: (index: number) => void;
+  results: TestResult[];
+  onToggle: (description: string) => void;
 };
 
 export const TestItem: React.FC<TestItemProps> = ({
   description,
   value,
   count,
-  index,
+  results,
   onToggle,
 }: TestItemProps) => {
+  // get pass/fail stats from results
+  let pass = 0;
+  let fail = 0;
+  results.map((r) => {
+    if (r.type === 'correct') pass++;
+    if (r.type === 'incorrect') fail++;
+  });
+
   return (
     <View style={styles.container}>
       <Checkbox
         value={value}
         onValueChange={() => {
-          onToggle(index);
+          onToggle(description);
         }}
       />
-      <Text style={styles.label}>{description}</Text>
-      <Text style={styles.count}>{count}</Text>
+      <Text style={styles.label} numberOfLines={1}>
+        {description}
+      </Text>
+      <Text style={[styles.pass, styles.count]} numberOfLines={1}>
+        {pass || ''}
+      </Text>
+      <Text style={[styles.fail, styles.count]} numberOfLines={1}>
+        {fail || ''}
+      </Text>
+      <Text style={styles.count} numberOfLines={1}>
+        {count}
+      </Text>
     </View>
   );
 };
@@ -39,12 +58,23 @@ const styles = StyleSheet.create({
     alignContent: 'center',
     alignItems: 'center',
     justifyContent: 'space-evenly',
-    gap: 20,
+    gap: 10,
     borderBottomWidth: 1,
     borderBottomColor: '#ccc',
   },
   label: {
-    flex: 1,
+    fontSize: 12,
+    flex: 8,
   },
-  count: {},
+  pass: {
+    color: 'green',
+  },
+  fail: {
+    color: 'red',
+  },
+  count: {
+    fontSize: 12,
+    flex: 1,
+    textAlign: 'right',
+  },
 });

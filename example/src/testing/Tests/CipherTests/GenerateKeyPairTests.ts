@@ -1,6 +1,6 @@
 import { assert, expect } from 'chai';
 import type { Buffer } from '@craftzdog/react-native-buffer';
-import { it } from '../../MochaRNAdapter';
+import { describe, it } from '../../MochaRNAdapter';
 import crypto from 'react-native-quick-crypto';
 
 // Constructs a regular expression for a PEM-encoded key with the given label.
@@ -38,7 +38,7 @@ const pkcs8EncExp = getRegExpForPEM('ENCRYPTED PRIVATE KEY');
 // const sec1Exp = getRegExpForPEM('EC PRIVATE KEY');
 // const sec1EncExp = (cipher) => getRegExpForPEM('EC PRIVATE KEY', cipher);
 
-export function registerGenerateKeyPairTests() {
+describe('generateKeyPair', () => {
   it('Sync RSA: spki - pkcs8/aes-256-cbc/passphrase', () => {
     const ret = crypto.generateKeyPairSync('rsa', {
       modulusLength: 4096,
@@ -131,4 +131,4 @@ export function registerGenerateKeyPairTests() {
       }
     );
   });
-}
+});

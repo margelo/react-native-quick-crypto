@@ -1,6 +1,6 @@
 import { expect } from 'chai';
 import { Buffer } from '@craftzdog/react-native-buffer';
-import { it } from '../../MochaRNAdapter';
+import { describe, it } from '../../MochaRNAdapter';
 import crypto from 'react-native-quick-crypto';
 // import { PrivateKey } from 'sscrypto/node';
 
@@ -40,7 +40,9 @@ import crypto from 'react-native-quick-crypto';
 //   }
 // }
 
-export function registerSignTests() {
+export const registerSignTests = () => {};
+
+describe('sign/verify', () => {
   it('basic sign/verify', async () => {
     const { publicKey, privateKey } = crypto.generateKeyPairSync('rsa', {
       modulusLength: 1024,
@@ -96,4 +98,4 @@ export function registerSignTests() {
   //   console.log(3);
   //   expect(verified).to.equal(true);
   // });
-}
+});
