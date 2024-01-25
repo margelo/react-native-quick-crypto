@@ -66,8 +66,7 @@ FieldDefinition getGenerateKeyPairFieldDefinition(
                           runtime,
                           jsi::Value::undefined(),
                           publicKey,
-                          privateKey
-                        );
+                          privateKey);
                         resolve->asObject(runtime).asFunction(runtime).call(
                             runtime, std::move(res));
                       });
@@ -79,8 +78,7 @@ FieldDefinition getGenerateKeyPairFieldDefinition(
                               jsi::String::createFromUtf8(
                                 runtime, "Error generating key"),
                               jsi::Value::undefined(),
-                              jsi::Value::undefined()
-                            );
+                              jsi::Value::undefined());
                             reject->asObject(runtime).asFunction(runtime).call(
                                 runtime, std::move(res));
                           });
