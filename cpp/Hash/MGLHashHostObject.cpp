@@ -67,7 +67,7 @@ void MGLHashHostObject::installMethods() {
     if (!arguments[0].isObject() ||
         !arguments[0].getObject(runtime).isArrayBuffer(runtime)) {
       throw jsi::JSError(runtime,
-                         "HmacHostObject::update: First argument ('message') "
+                         "HashHostObject::update: First argument ('message') "
                          "has to be of type ArrayBuffer!");
     }
     auto messageBuffer =
