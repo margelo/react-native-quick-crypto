@@ -40,7 +40,7 @@ export const TestingScreen: React.FC<TestingScreenProps> = ({
           InnerElement = <Suite description={it.description} />;
         }
         return (
-          <Indentator key={it.key} indentation={it.indentation}>
+          <Indentator key={it.description} indentation={it.indentation}>
             {InnerElement}
           </Indentator>
         );
