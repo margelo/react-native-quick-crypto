@@ -23,7 +23,7 @@ jobs:
     name: Build Android Example App
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v4
 
       - name: Setup JDK
         uses: actions/setup-java@v3
@@ -34,10 +34,10 @@ jobs:
 
       - name: Get yarn cache directory path
         id: yarn-cache-dir-path
-        run: echo "::set-output name=dir::$(yarn cache dir)"
+        run: echo "dir=$(yarn cache dir) >> $GITHUB_OUTPUT"
 
       - name: Restore node_modules from cache
-        uses: actions/cache@v2
+        uses: actions/cache@v4
         id: yarn-cache
         with:
           path: ${{ steps.yarn-cache-dir-path.outputs.dir }}
@@ -50,7 +50,7 @@ jobs:
         run: yarn install --frozen-lockfile --cwd example
 
       # - name: Restore Gradle cache
-      #   uses: actions/cache@v2
+      #   uses: actions/cache@v4
       #   with:
       #     path: |
       #       ~/.gradle/caches
