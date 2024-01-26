@@ -5,6 +5,8 @@ import { Buffer } from '@craftzdog/react-native-buffer';
 import type { Done } from 'mocha';
 import { fixtures } from './fixtures';
 
+type TestFixture = [string, string, number, number, string];
+
 function ab2str(buf: ArrayBuffer) {
   return Buffer.from(buf).toString('hex');
 }
@@ -16,16 +18,79 @@ function ab2str(buf: ArrayBuffer) {
 // https://stackoverflow.com/questions/15593184/pbkdf2-hmac-sha-512-test-vectors
 
 describe('pbkdf2', () => {
+  // RFC 6070 tests from Node.js
+  {
+    const test = (
+      pass: string,
+      salt: string,
+      iterations: number,
+      hash: string,
+      length: number,
+      expected: string,
+      done: Done
+    ) => {
+      QuickCrypto.pbkdf2(
+        pass,
+        salt,
+        iterations,
+        length,
+        hash,
+        function (err, result) {
+          try {
+            expect(err).to.eql(null);
+            expect(result).to.not.eql(null);
+            expect(ab2str(result as ArrayBuffer)).to.equal(expected);
+            done();
+          } catch (e) {
+            done(e);
+          }
+        }
+      );
+    };
+
+    const kTests: TestFixture[] = [
+      ['password', 'salt', 1, 20, '120fb6cffcf8b32c43e7225256c4f837a86548c9'],
+      ['password', 'salt', 2, 20, 'ae4d0c95af6b46d32d0adff928f06dd02a303f8e'],
+      [
+        'password',
+        'salt',
+        4096,
+        20,
+        'c5e478d59288c841aa530db6845c4c8d962893a0',
+      ],
+      [
+        'passwordPASSWORDpassword',
+        'saltSALTsaltSALTsaltSALTsaltSALTsalt',
+        4096,
+        25,
+        '348c89dbcbd32b2f32d814b8116e84cf2b17347ebc1800181c',
+      ],
+      ['pass\0word', 'sa\0lt', 4096, 16, '89b69d0516f829893c696226650a8687'],
+      [
+        'password',
+        'salt',
+        32,
+        32,
+        '64c486c55d30d4c5a079b8823b7d7cb37ff0556f537da8410233bcec330ed956',
+      ],
+    ];
+
+    kTests.forEach(([pass, salt, iterations, length, expected]) => {
+      const hash = 'sha256';
+      it(`RFC 6070 - ${pass} ${salt} ${iterations} ${hash} ${length}`, (done: Done) => {
+        test(pass, salt, iterations, hash, length, expected, done);
+      });
+    });
+  }
+
   // eslint-disable-next-line @typescript-eslint/no-shadow
   var Buffer = require('safe-buffer').Buffer;
 
   it(' defaults to sha1 and handles buffers', (done: Done) => {
     var resultSync = QuickCrypto.pbkdf2Sync('password', 'salt', 1, 32);
-    chai
-      .expect(ab2str(resultSync))
-      .to.eql(
-        '0c60c80f961f0e71f3a9b524af6012062fe037a6e0f0eb94fe8fc46bdc637164'
-      );
+    expect(ab2str(resultSync)).to.eql(
+      '0c60c80f961f0e71f3a9b524af6012062fe037a6e0f0eb94fe8fc46bdc637164'
+    );
 
     QuickCrypto.pbkdf2(
       Buffer.from('password'),
@@ -34,12 +99,10 @@ describe('pbkdf2', () => {
       32,
 
       function (_, result) {
-        chai
-          // @ts-expect-error
-          .expect(ab2str(result))
-          .to.eql(
-            '0c60c80f961f0e71f3a9b524af6012062fe037a6e0f0eb94fe8fc46bdc637164'
-          );
+        // @ts-expect-error
+        expect(ab2str(result)).to.eql(
+          '0c60c80f961f0e71f3a9b524af6012062fe037a6e0f0eb94fe8fc46bdc637164'
+        );
         done();
       }
     );
@@ -155,32 +218,30 @@ describe('pbkdf2', () => {
 
       it(' async w/ ' + description, function () {
         function noop() {}
-        chai
-          .expect(
-            QuickCrypto.pbkdf2(
-              f.key,
-              f.salt,
-              f.iterations,
-              f.dkLen,
-              f.algo,
-              noop
-            )
+        expect(
+          QuickCrypto.pbkdf2(
+            f.key,
+            f.salt,
+            f.iterations,
+            f.dkLen,
+            f.algo,
+            noop
           )
-          .to.throw(new RegExp(f.exception));
+        )
+        .to.throw(new RegExp(f.exception));
       });
 
       it(' sync w/' + description, function () {
-        chai
-          .expect(
-            QuickCrypto.pbkdf2Sync(
-              f.key,
-              f.salt,
-              f.iterations,
-              f.dkLen,
-              f.algo
-            )
+        expect(
+          QuickCrypto.pbkdf2Sync(
+            f.key,
+            f.salt,
+            f.iterations,
+            f.dkLen,
+            f.algo
           )
-          .to.throw(new RegExp(f.exception));
+        )
+        .to.throw(new RegExp(f.exception));
       });
     }); */
   });

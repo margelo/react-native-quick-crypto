@@ -22,7 +22,7 @@ export type SubtleAlgorithm = {
   name: 'ECDSA' | 'ECDH' | 'PBKDF2';
   salt?: string;
   iterations?: number;
-  hash?: HashAlgorithm;
+  hash?: HashAlgorithm | string;
   namedCurve?: NamedCurve;
   length?: number;
 };

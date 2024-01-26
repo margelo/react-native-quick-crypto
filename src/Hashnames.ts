@@ -1,3 +1,5 @@
+import type { HashAlgorithm } from './keys';
+
 export enum HashContext {
   Node,
   WebCrypto,
@@ -76,3 +78,16 @@ export function normalizeHashName(
   } catch (_e) {}
   return name;
 }
+
+// TODO: https://github.com/nodejs/node/blob/main/lib/internal/crypto/util.js#L303-L379 maybe?
+export const normalizeHash = (
+  hash: HashAlgorithm | string | undefined
+): HashAlgorithm => {
+  if (typeof hash === 'string') {
+    return { name: hash };
+  } else if (typeof hash === 'undefined') {
+    return { name: 'unknown' };
+  } else {
+    return hash;
+  }
+};
