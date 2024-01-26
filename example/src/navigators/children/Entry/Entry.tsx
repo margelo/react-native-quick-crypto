@@ -25,11 +25,11 @@ export const Entry: React.FC<EntryProps> = ({}: EntryProps) => {
     <SafeAreaView style={styles.mainContainer}>
       <View style={styles.testList}>
         <ScrollView style={styles.scrollView}>
-          {Object.entries(tests).map(([suiteName, suite]) => {
+          {Object.entries(tests).map(([suiteName, suite], index) => {
             totalCount += suite.count;
             return (
               <TestItem
-                key={suiteName}
+                key={index.toString()}
                 description={suiteName}
                 value={suite.value}
                 count={suite.count}

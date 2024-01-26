@@ -27,7 +27,10 @@ describe('hmac', () => {
     data: string | string[] | Buffer,
     expected: any
   ) {
-    it(`testHmac ${algo} ${key} ${data}`, () => {
+    const nameKey = key.toString().replace(/\s/g, '');
+    const nameData = data.toString().replace(/\s/g, '');
+
+    it(`testHmac ${algo} ${nameKey} ${nameData}`, () => {
       if (!Array.isArray(data)) data = [data] as any;
 
       // If the key is a Buffer, test Hmac with a key object as well.

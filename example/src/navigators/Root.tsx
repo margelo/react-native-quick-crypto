@@ -29,7 +29,7 @@ export const Root: React.FC = () => {
         <Stack.Screen
           name="TestingScreen"
           options={{
-            title: 'Testing Screen',
+            title: 'Tests',
           }}
           getComponent={() => {
             const {
