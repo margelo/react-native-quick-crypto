@@ -92,53 +92,53 @@ This document attempts to describe the implementation status of Crypto APIs/Inte
 | `X25519`   |  |
 | `X448`     |  |
 | `HKDF`     |  |
-| `PBKDF2`   | ✔ |
+| `PBKDF2`   | ✅ |
 
 ## `importKey`
 | Key Type            | `spki` | `pkcs8` | `jwk` | `raw` |
 | ------------------- | :----: | :-----: | :---: | :---: |
-| `AES-CBC`           |   |   | 𝑥 | 𝑥 |
-| `AES-CTR`           |   |   | 𝑥 | 𝑥 |
-| `AES-GCM`           |   |   | 𝑥 | 𝑥 |
-| `AES-KW`            |   |   | 𝑥 | 𝑥 |
-| `ECDH`              | 𝑥 | 𝑥 | 𝑥 | ✔ |
-| `X25519`            | 𝑥 | 𝑥 | 𝑥 | 𝑥 |
-| `X448`              | 𝑥 | 𝑥 | 𝑥 | 𝑥 |
-| `ECDSA`             | 𝑥 | 𝑥 | 𝑥 | ✔ |
-| `Ed25519`           | 𝑥 | 𝑥 | 𝑥 | 𝑥 |
-| `Ed448`             | 𝑥 | 𝑥 | 𝑥 | 𝑥 |
+| `AES-CBC`           |   |   | ❌ | ❌ |
+| `AES-CTR`           |   |   | ❌ | ❌ |
+| `AES-GCM`           |   |   | ❌ | ❌ |
+| `AES-KW`            |   |   | ❌ | ❌ |
+| `ECDH`              | ❌ | ❌ | ❌ | ✅ |
+| `X25519`            | ❌ | ❌ | ❌ | ❌ |
+| `X448`              | ❌ | ❌ | ❌ | ❌ |
+| `ECDSA`             | ❌ | ❌ | ❌ | ✅ |
+| `Ed25519`           | ❌ | ❌ | ❌ | ❌ |
+| `Ed448`             | ❌ | ❌ | ❌ | ❌ |
 | `HDKF`              |   |   |   |   |
-| `HMAC`              |   |   | 𝑥 | 𝑥 |
-| `PBKDF2`            |   |   |   | ✔ |
-| `RSA-OAEP`          | 𝑥 | 𝑥 | 𝑥 |   |
-| `RSA-PSS`           | 𝑥 | 𝑥 | 𝑥 |   |
-| `RSASSA-PKCS1-v1_5` | 𝑥 | 𝑥 | 𝑥 |   |
+| `HMAC`              |   |   | ❌ | ❌ |
+| `PBKDF2`            |   |   |   | ✅ |
+| `RSA-OAEP`          | ❌ | ❌ | ❌ |   |
+| `RSA-PSS`           | ❌ | ❌ | ❌ |   |
+| `RSASSA-PKCS1-v1_5` | ❌ | ❌ | ❌ |   |
 
 * ` ` - not implemented in Node
-* 𝑥 - implemented in Node, not RNQC
-* ✔ - implemented in Node and RNQC
+* ❌ - implemented in Node, not RNQC
+* ✅ - implemented in Node and RNQC
 
 ## `exportKey`
 | Key Type            | `spki` | `pkcs8` | `jwk` | `raw` |
 | ------------------- | :----: | :-----: | :---: | :---: |
-| `AES-CBC`           |   |   | 𝑥 | 𝑥 |
-| `AES-CTR`           |   |   | 𝑥 | 𝑥 |
-| `AES-GCM`           |   |   | 𝑥 | 𝑥 |
-| `AES-KW`            |   |   | 𝑥 | 𝑥 |
-| `ECDH`              | ✔ | 𝑥 | 𝑥 | 𝑥 |
-| `ECDSA`             | ✔ | 𝑥 | 𝑥 | 𝑥 |
-| `Ed25519`           | 𝑥 | 𝑥 | 𝑥 | 𝑥 |
-| `Ed448`             | 𝑥 | 𝑥 | 𝑥 | 𝑥 |
+| `AES-CBC`           |   |   | ❌ | ❌ |
+| `AES-CTR`           |   |   | ❌ | ❌ |
+| `AES-GCM`           |   |   | ❌ | ❌ |
+| `AES-KW`            |   |   | ❌ | ❌ |
+| `ECDH`              | ✅ | ❌ | ❌ | ❌ |
+| `ECDSA`             | ✅ | ❌ | ❌ | ❌ |
+| `Ed25519`           | ❌ | ❌ | ❌ | ❌ |
+| `Ed448`             | ❌ | ❌ | ❌ | ❌ |
 | `HDKF`              |   |   |   |   |
-| `HMAC`              |   |   | 𝑥 | 𝑥 |
+| `HMAC`              |   |   | ❌ | ❌ |
 | `PBKDF2`            |   |   |   |   |
-| `RSA-OAEP`          | 𝑥 | 𝑥 | 𝑥 |   |
-| `RSA-PSS`           | 𝑥 | 𝑥 | 𝑥 |   |
-| `RSASSA-PKCS1-v1_5` | 𝑥 | 𝑥 | 𝑥 |   |
+| `RSA-OAEP`          | ❌ | ❌ | ❌ |   |
+| `RSA-PSS`           | ❌ | ❌ | ❌ |   |
+| `RSASSA-PKCS1-v1_5` | ❌ | ❌ | ❌ |   |
 
 * ` ` - not implemented in Node
-* 𝑥 - implemented in Node, not RNQC
-* ✔ - implemented in Node and RNQC
+* ❌ - implemented in Node, not RNQC
+* ✅ - implemented in Node and RNQC
 
 ## `wrapKey`
 
