@@ -68,6 +68,10 @@ function arrayBufferToBase64(buffer: ArrayBuffer) {
   return btoa(binary);
 }
 
+function ab2str(buf: ArrayBuffer) {
+  return Buffer.from(buf).toString('hex');
+}
+
 export const registerWebcryptoTests = () => {};
 
 describe('webcrypto', () => {
@@ -117,7 +121,7 @@ describe('webcrypto', () => {
         key,
         length
       );
-      const pbkdf2Key = arrayBufferToBase64(bits);
+      const pbkdf2Key = ab2str(bits);
       expect(pbkdf2Key).to.equal(expected);
     };
 
