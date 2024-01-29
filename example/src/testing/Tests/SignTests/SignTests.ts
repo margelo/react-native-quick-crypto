@@ -40,8 +40,6 @@ import crypto from 'react-native-quick-crypto';
 //   }
 // }
 
-export const registerSignTests = () => {};
-
 describe('sign/verify', () => {
   it('basic sign/verify', async () => {
     const { publicKey, privateKey } = crypto.generateKeyPairSync('rsa', {

@@ -72,8 +72,6 @@ function ab2str(buf: ArrayBuffer) {
   return Buffer.from(buf).toString('hex');
 }
 
-export const registerWebcryptoTests = () => {};
-
 describe('webcrypto', () => {
   it('EC import raw/export SPKI', async () => {
     const key = await crypto.subtle.importKey(
