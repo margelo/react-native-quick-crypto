@@ -4,6 +4,7 @@ import QuickCrypto from 'react-native-quick-crypto';
 import { Buffer } from '@craftzdog/react-native-buffer';
 import type { Done } from 'mocha';
 import { fixtures } from './fixtures';
+import type { HashAlgorithm } from '../../../../../src/keys';
 
 type TestFixture = [string, string, number, number, string];
 
@@ -34,7 +35,7 @@ describe('pbkdf2', () => {
         salt,
         iterations,
         length,
-        hash,
+        hash as HashAlgorithm,
         function (err, result) {
           try {
             expect(err).to.eql(null);
@@ -187,7 +188,7 @@ describe('pbkdf2', () => {
           salt,
           f.iterations,
           f.dkLen,
-          algorithm,
+          algorithm as HashAlgorithm,
           function (err, result) {
             try {
               expect(err).to.eql(null);
@@ -207,7 +208,7 @@ describe('pbkdf2', () => {
           salt,
           f.iterations,
           f.dkLen,
-          algorithm
+          algorithm as HashAlgorithm
         );
         expect(ab2str(result)).to.equal(expected);
       });

@@ -1,4 +1,9 @@
-import type { HashAlgorithm } from './keys';
+import type {
+  HashAlgorithm,
+  KeyPairAlgorithm,
+  SecretKeyAlgorithm,
+  SubtleAlgorithm,
+} from './keys';
 
 export enum HashContext {
   Node,
@@ -67,27 +72,20 @@ const kHashNames: HashNames = {
 }
 
 export function normalizeHashName(
-  name: string,
+  algo:
+    | SubtleAlgorithm
+    | HashAlgorithm
+    | KeyPairAlgorithm
+    | SecretKeyAlgorithm
+    | undefined,
   context: HashContext = HashContext.Node
-) {
-  if (typeof name !== 'string') return name;
-  name = name.toLowerCase();
+): string {
+  if (typeof algo === 'undefined') return 'unknown';
+  if (typeof algo !== 'string') return algo.name;
+  const normAlgo = algo.toString().toLowerCase();
   try {
-    const alias = kHashNames[name]![context];
-    return alias || name;
+    const alias = kHashNames[normAlgo]![context];
+    return alias || algo;
   } catch (_e) {}
-  return name;
+  return algo;
 }
-
-// TODO: https://github.com/nodejs/node/blob/main/lib/internal/crypto/util.js#L303-L379 maybe?
-export const normalizeHash = (
-  hash: HashAlgorithm | string | undefined
-): HashAlgorithm => {
-  if (typeof hash === 'string') {
-    return { name: hash };
-  } else if (typeof hash === 'undefined') {
-    return { name: 'unknown' };
-  } else {
-    return hash;
-  }
-};

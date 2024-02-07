@@ -2,9 +2,19 @@
 import 'react-native';
 import { NativeQuickCrypto } from './NativeQuickCrypto/NativeQuickCrypto';
 import type { InternalHash } from './NativeQuickCrypto/hash';
-import { type Encoding, toArrayBuffer } from './Utils';
+import {
+  type Encoding,
+  toArrayBuffer,
+  validateMaxBufferLength,
+  normalizeHashName,
+  type BufferLike,
+  bufferLikeToArrayBuffer,
+} from './Utils';
 import Stream from 'stream-browserify';
 import { Buffer } from '@craftzdog/react-native-buffer';
+import { lazyDOMException } from './Utils';
+import type { SubtleAlgorithm } from './keys';
+
 interface HashOptionsBase extends Stream.TransformOptions {
   outputLength?: number | undefined;
 }
@@ -14,8 +24,6 @@ type HashOptions = null | undefined | HashOptionsBase;
 global.process.nextTick = setImmediate;
 
 const createInternalHash = NativeQuickCrypto.createHash;
-
-type BinaryLike = ArrayBuffer;
 
 export function createHash(algorithm: string, options?: HashOptions) {
   return new Hash(algorithm, options);
@@ -49,7 +57,7 @@ class Hash extends Stream.Transform {
    * @since v0.1.92
    * @param inputEncoding The `encoding` of the `data` string.
    */
-  update(data: string | BinaryLike, inputEncoding?: Encoding): Hash {
+  update(data: string | ArrayBuffer, inputEncoding?: Encoding): Hash {
     if (data instanceof ArrayBuffer) {
       this.internalHash.update(data);
       return this;
@@ -60,7 +68,7 @@ class Hash extends Stream.Transform {
   }
 
   _transform(
-    chunk: string | BinaryLike,
+    chunk: string | ArrayBuffer,
     encoding: Encoding,
     callback: () => void
   ) {
@@ -96,3 +104,31 @@ class Hash extends Stream.Transform {
     return Buffer.from(result);
   }
 }
+
+// Implementation for WebCrypto subtle.digest()
+
+export const asyncDigest = async (
+  algorithm: SubtleAlgorithm,
+  data: BufferLike
+): Promise<ArrayBuffer> => {
+  validateMaxBufferLength(data, 'data');
+
+  switch (algorithm.name) {
+    case 'SHA-1':
+    // Fall through
+    case 'SHA-256':
+    // Fall through
+    case 'SHA-384':
+    // Fall through
+    case 'SHA-512':
+      const normalizedHashName = normalizeHashName(algorithm.name);
+      const hash = new Hash(normalizedHashName);
+      hash.update(bufferLikeToArrayBuffer(data));
+      return hash.digest();
+  }
+
+  throw lazyDOMException(
+    `Unrecognized algorithm name: ${algorithm.name}`,
+    'NotSupportedError'
+  );
+};

@@ -5,10 +5,17 @@ import {
   CryptoKey,
   KWebCryptoKeyFormat,
   createSecretKey,
+  type AnyAlgorithm,
 } from './keys';
 import { ecImportKey, ecExportKey } from './ec';
-import { hasAnyNotIn, type BufferLike, type BinaryLike } from './Utils';
+import {
+  hasAnyNotIn,
+  type BufferLike,
+  type BinaryLike,
+  normalizeAlgorithm,
+} from './Utils';
 import { pbkdf2DeriveBits } from './pbkdf2';
+import { asyncDigest } from './Hash';
 
 const exportKeySpki = async (key: CryptoKey): Promise<ArrayBuffer | any> => {
   switch (key.algorithm.name) {
@@ -94,6 +101,14 @@ const importGenericSecretKey = async (
 };
 
 class Subtle {
+  async digest(
+    algorithm: SubtleAlgorithm | AnyAlgorithm,
+    data: BufferLike
+  ): Promise<ArrayBuffer> {
+    const normalizedAlgorithm = normalizeAlgorithm(algorithm, 'digest');
+    return asyncDigest(normalizedAlgorithm, data);
+  }
+
   async deriveBits(
     algorithm: SubtleAlgorithm,
     baseKey: CryptoKey,
