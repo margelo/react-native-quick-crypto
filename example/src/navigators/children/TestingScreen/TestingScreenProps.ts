@@ -1,3 +1,6 @@
+import type { TestResult } from '../../../types/TestResults';
+
 export type TestingScreenProps = {
-  testRegistrators: Array<() => void>;
+  results: TestResult[];
+  suiteName: string;
 };

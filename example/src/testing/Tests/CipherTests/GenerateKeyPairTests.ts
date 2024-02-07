@@ -1,6 +1,6 @@
-import chai from 'chai';
+import { assert, expect } from 'chai';
 import type { Buffer } from '@craftzdog/react-native-buffer';
-import { it } from '../../MochaRNAdapter';
+import { describe, it } from '../../MochaRNAdapter';
 import crypto from 'react-native-quick-crypto';
 
 // Constructs a regular expression for a PEM-encoded key with the given label.
@@ -19,11 +19,11 @@ function assertApproximateSize(key: 'string' | Buffer, expectedSize: number) {
   const u = typeof key === 'string' ? 'chars' : 'bytes';
   const min = Math.floor(0.9 * expectedSize);
   const max = Math.ceil(1.1 * expectedSize);
-  chai.assert(
+  assert(
     key.length >= min,
     `Key (${key.length} ${u}) is shorter than expected (${min} ${u})`
   );
-  chai.assert(
+  assert(
     key.length <= max,
     `Key (${key.length} ${u}) is longer than expected (${max} ${u})`
   );
@@ -38,7 +38,7 @@ const pkcs8EncExp = getRegExpForPEM('ENCRYPTED PRIVATE KEY');
 // const sec1Exp = getRegExpForPEM('EC PRIVATE KEY');
 // const sec1EncExp = (cipher) => getRegExpForPEM('EC PRIVATE KEY', cipher);
 
-export function registerGenerateKeyPairTests() {
+describe('generateKeyPair', () => {
   it('Sync RSA: spki - pkcs8/aes-256-cbc/passphrase', () => {
     const ret = crypto.generateKeyPairSync('rsa', {
       modulusLength: 4096,
@@ -54,16 +54,16 @@ export function registerGenerateKeyPairTests() {
       },
     });
 
-    chai.assert.strictEqual(Object.keys(ret).length, 2);
+    assert.strictEqual(Object.keys(ret).length, 2);
     const { publicKey, privateKey } = ret;
-    chai.expect(!!publicKey).to.equal(true);
-    chai.expect(!!privateKey).to.equal(true);
+    expect(!!publicKey).to.equal(true);
+    expect(!!privateKey).to.equal(true);
 
-    chai.assert.strictEqual(typeof publicKey, 'string');
-    chai.assert.match(publicKey as any, spkiExp);
+    assert.strictEqual(typeof publicKey, 'string');
+    assert.match(publicKey as any, spkiExp);
     assertApproximateSize(publicKey, 800);
-    chai.assert.strictEqual(typeof privateKey, 'string');
-    chai.assert.match(privateKey as any, pkcs8EncExp);
+    assert.strictEqual(typeof privateKey, 'string');
+    assert.match(privateKey as any, pkcs8EncExp);
     assertApproximateSize(privateKey, 3434);
   });
 
@@ -83,14 +83,14 @@ export function registerGenerateKeyPairTests() {
       },
     });
 
-    chai.assert.strictEqual(Object.keys(ret).length, 2);
+    assert.strictEqual(Object.keys(ret).length, 2);
     const { publicKey, privateKey } = ret;
 
-    chai.assert.strictEqual(typeof publicKey, 'string');
-    chai.assert.match(publicKey, pkcs1PubExp);
+    assert.strictEqual(typeof publicKey, 'string');
+    assert.match(publicKey, pkcs1PubExp);
     assertApproximateSize(publicKey, 162);
-    chai.assert.strictEqual(typeof privateKey, 'string');
-    chai.assert.match(privateKey, pkcs8Exp);
+    assert.strictEqual(typeof privateKey, 'string');
+    assert.match(privateKey, pkcs8Exp);
     assertApproximateSize(privateKey, 512);
   });
 
@@ -112,23 +112,23 @@ export function registerGenerateKeyPairTests() {
       },
       (err, publicKey, privateKey) => {
         if (err) {
-          chai.assert.fail((err as any).toString());
+          assert.fail((err as any).toString());
         }
-        chai.expect(!!publicKey).to.equal(true);
-        chai.expect(!!privateKey).to.equal(true);
+        expect(!!publicKey).to.equal(true);
+        expect(!!privateKey).to.equal(true);
 
-        // chai.assert.strictEqual(Object.keys(ret).length, 2);
+        // assert.strictEqual(Object.keys(ret).length, 2);
         // const { publicKey, privateKey } = ret;
 
-        chai.assert.strictEqual(typeof publicKey, 'string');
-        chai.assert.match(publicKey as any, spkiExp);
-        // chai.assertApproximateSize(publicKey, 162);
-        chai.assert.strictEqual(typeof privateKey, 'string');
-        chai.assert.match(privateKey as any, pkcs8EncExp);
-        // chai.assertApproximateSize(privateKey, 512);
+        assert.strictEqual(typeof publicKey, 'string');
+        assert.match(publicKey as any, spkiExp);
+        // assertApproximateSize(publicKey, 162);
+        assert.strictEqual(typeof privateKey, 'string');
+        assert.match(privateKey as any, pkcs8EncExp);
+        // assertApproximateSize(privateKey, 512);
 
         done();
       }
     );
   });
-}
+});

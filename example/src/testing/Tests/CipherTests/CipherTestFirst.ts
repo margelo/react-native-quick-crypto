@@ -1,12 +1,10 @@
 // copied from https://github.com/nodejs/node/blob/master/test/parallel/test-crypto-hash.js
 import { Buffer } from '@craftzdog/react-native-buffer';
-import chai from 'chai';
+import { assert } from 'chai';
 import crypto from 'react-native-quick-crypto';
-import { it } from '../../MochaRNAdapter';
+import { describe, it } from '../../MochaRNAdapter';
 
-const assert = chai.assert;
-
-export function registerCipherTests1() {
+describe('createCipher/createDecipher', () => {
   'use strict';
   function testCipher1(key: Buffer | string) {
     it('testCipher1 + ' + key, () => {
@@ -185,4 +183,4 @@ export function registerCipherTests1() {
     assert.strictEqual(decipher.setAuthTag(tagbuf), decipher);
     assert.strictEqual(decipher.setAAD(aadbuf), decipher);
   });
-}
+});

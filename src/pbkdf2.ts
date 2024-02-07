@@ -7,6 +7,7 @@ import {
   bufferLikeToArrayBuffer,
   normalizeHashName,
   HashContext,
+  normalizeHash,
 } from './Utils';
 import type { CryptoKey, SubtleAlgorithm } from './keys';
 import { promisify } from 'util';
@@ -73,7 +74,13 @@ export function pbkdf2(
   const normalizedDigest = normalizeHashName(digest, HashContext.Node);
 
   nativePbkdf2
-    .pbkdf2(sanitizedPassword, sanitizedSalt, iterations, keylen, normalizedDigest)
+    .pbkdf2(
+      sanitizedPassword,
+      sanitizedSalt,
+      iterations,
+      keylen,
+      normalizedDigest
+    )
     .then(
       (res: ArrayBuffer) => {
         callback!(null, Buffer.from(res));
@@ -124,7 +131,8 @@ export async function pbkdf2DeriveBits(
   length: number
 ): Promise<ArrayBuffer> {
   const { iterations, hash, salt } = algorithm;
-  if (!hash || !hash.name) {
+  const normalizedHash = normalizeHash(hash);
+  if (!normalizedHash || !normalizedHash.name) {
     throw lazyDOMException('hash cannot be blank', 'OperationError');
   }
   if (!iterations || iterations === 0) {
@@ -150,7 +158,7 @@ export async function pbkdf2DeriveBits(
     sanitizedSalt,
     iterations,
     length / 8,
-    hash.name
+    normalizedHash.name
   );
   if (!result) {
     throw lazyDOMException(

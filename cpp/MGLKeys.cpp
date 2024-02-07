@@ -986,7 +986,7 @@ jsi::Value KeyObjectHandle::Init(jsi::Runtime &rt) {
         break;
       }
       default:
-        throw jsi::JSError(rt, "invalid keytype for init(): " + type);
+        throw jsi::JSError(rt, "invalid keytype for init(): " + std::to_string(type));
     }
 
     return true;

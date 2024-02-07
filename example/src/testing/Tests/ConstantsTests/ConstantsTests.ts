@@ -1,10 +1,10 @@
-import chai from 'chai';
+import { expect } from 'chai';
 import crypto from 'react-native-quick-crypto';
-import { it } from '../../MochaRNAdapter';
+import { describe, it } from '../../MochaRNAdapter';
 
-export function registerConstantsTest() {
-  it('crypto constants are there', () => {
-    chai.expect(crypto.constants).to.eql({
+describe('constants', () => {
+  it('crypto constants are present', () => {
+    expect(crypto.constants).to.eql({
       OPENSSL_VERSION_NUMBER: 269488367,
       SSL_OP_ALL: 2147485780,
       SSL_OP_ALLOW_NO_DHE_KEX: 1024,
@@ -81,4 +81,4 @@ export function registerConstantsTest() {
       POINT_CONVERSION_HYBRID: 6,
     });
   });
-}
+});

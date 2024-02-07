@@ -1,12 +1,10 @@
 // copied from https://github.com/nodejs/node/blob/master/test/parallel/test-crypto-hash.js
 import crypto from 'react-native-quick-crypto';
-import { it } from '../../MochaRNAdapter';
-import chai from 'chai';
+import { describe, it } from '../../MochaRNAdapter';
+import { assert } from 'chai';
 import { Buffer } from '@craftzdog/react-native-buffer';
 
-const assert = chai.assert;
-
-export function registerCipherTests2() {
+describe('createCipheriv/createDecipheriv', () => {
   'use strict';
 
   function testCipher1(key: string | Buffer, iv: string | Buffer) {
@@ -104,4 +102,4 @@ export function registerCipherTests2() {
   testCipher1(Buffer.from('0123456789abcd0123456789'), '12345678');
   testCipher1(Buffer.from('0123456789abcd0123456789'), Buffer.from('12345678'));
   testCipher2(Buffer.from('0123456789abcd0123456789'), Buffer.from('12345678'));
-}
+});

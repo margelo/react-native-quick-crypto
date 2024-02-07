@@ -11,6 +11,9 @@ export const Root: React.FC = () => {
       <Stack.Navigator>
         <Stack.Screen
           name="Entry"
+          options={{
+            title: 'Test Suites',
+          }}
           getComponent={() => {
             const { Entry } = require('./children/Entry/Entry');
             return Entry;
@@ -25,6 +28,9 @@ export const Root: React.FC = () => {
         />
         <Stack.Screen
           name="TestingScreen"
+          options={{
+            title: 'Tests',
+          }}
           getComponent={() => {
             const {
               TestingScreen,

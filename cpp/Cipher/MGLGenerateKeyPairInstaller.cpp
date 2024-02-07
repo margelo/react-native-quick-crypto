@@ -46,7 +46,7 @@ FieldDefinition getGenerateKeyPairFieldDefinition(
             runtime,
             jsi::Function::createFromHostFunction(
                 runtime, jsi::PropNameID::forAscii(runtime, "executor"), 2,
-                [arguments, &jsCallInvoker, config](
+                [&jsCallInvoker, config](
                     jsi::Runtime &runtime, const jsi::Value &,
                     const jsi::Value *promiseArgs, size_t) -> jsi::Value {
                   auto resolve =
@@ -54,27 +54,33 @@ FieldDefinition getGenerateKeyPairFieldDefinition(
                   auto reject =
                       std::make_shared<jsi::Value>(runtime, promiseArgs[1]);
 
-                  std::thread t([&runtime, arguments, resolve, reject,
+                  std::thread t([&runtime, resolve, reject,
                                  jsCallInvoker, config]() {
                     m.lock();
                     try {
-                      auto keys = generateRSAKeyPair(runtime, config);
-                      jsCallInvoker->invokeAsync([&runtime, &keys, jsCallInvoker,
-                                                  resolve]() {
+                      jsCallInvoker->invokeAsync([&runtime, config, resolve]() {
+                        auto keys = generateRSAKeyPair(runtime, config);
                         auto publicKey = toJSI(runtime, keys.first);
                         auto privateKey = toJSI(runtime, keys.second);
                         auto res = jsi::Array::createWithElements(
-                            runtime, jsi::Value::undefined(), publicKey,
-                            privateKey);
+                          runtime,
+                          jsi::Value::undefined(),
+                          publicKey,
+                          privateKey);
                         resolve->asObject(runtime).asFunction(runtime).call(
                             runtime, std::move(res));
                       });
                     } catch (std::exception e) {
                       jsCallInvoker->invokeAsync(
-                          [&runtime, &jsCallInvoker, reject]() {
+                          [&runtime, reject]() {
+                            auto res = jsi::Array::createWithElements(
+                              runtime,
+                              jsi::String::createFromUtf8(
+                                runtime, "Error generating key"),
+                              jsi::Value::undefined(),
+                              jsi::Value::undefined());
                             reject->asObject(runtime).asFunction(runtime).call(
-                                runtime, jsi::String::createFromUtf8(
-                                             runtime, "Error generating key"));
+                                runtime, std::move(res));
                           });
                     }
                     m.unlock();
