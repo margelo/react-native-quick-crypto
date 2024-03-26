@@ -2,27 +2,23 @@
 import crypto from 'react-native-quick-crypto';
 import { Buffer } from '@craftzdog/react-native-buffer';
 import { describe, it } from '../../MochaRNAdapter';
-import chai, { expect } from 'chai';
+import { expect } from 'chai';
 
-export function registerHmacTests() {
-  describe('initialization', () => {
-    it('Hmac called directly', () => {
-      const Hmac = crypto.Hmac;
-      const instance = crypto.Hmac('sha256', 'Node');
-      chai.expect(instance).to.instanceOf(Hmac);
-    });
+describe('hmac', () => {
+  it('Hmac called directly', () => {
+    const Hmac = crypto.Hmac;
+    const instance = crypto.Hmac('sha256', 'Node');
+    expect(instance).to.instanceOf(Hmac);
+  });
 
-    it('invalid arg1', () => {
-      // @ts-expect-error
-      chai.expect(crypto.createHmac(null)).Throw(/ERR_INVALID_ARG_TYPE/);
-    });
+  it('invalid arg1', () => {
+    // @ts-expect-error
+    expect(crypto.createHmac(null)).Throw(/ERR_INVALID_ARG_TYPE/);
+  });
 
-    it('invalid arg type', () => {
-      chai
-        // @ts-expect-error
-        .expect(crypto.createHmac('sha1', null))
-        .Throw(/ERR_INVALID_ARG_TYPE/);
-    });
+  it('invalid arg type', () => {
+    // @ts-expect-error
+    expect(crypto.createHmac('sha1', null)).Throw(/ERR_INVALID_ARG_TYPE/);
   });
 
   function testHmac(
@@ -31,12 +27,15 @@ export function registerHmacTests() {
     data: string | string[] | Buffer,
     expected: any
   ) {
-    it(`testHmac ${algo} ${key} ${data}`, () => {
+    const nameKey = key.toString().replace(/\s/g, '');
+    const nameData = data.toString().replace(/\s/g, '');
+
+    it(`testHmac ${algo} ${nameKey} ${nameData}`, () => {
       if (!Array.isArray(data)) data = [data] as any;
 
       // If the key is a Buffer, test Hmac with a key object as well.
       const keyWrappers = [
-        (key: any) => key,
+        (key2: any) => key2,
         //    ...(typeof key === 'string' ? [] : [crypto.createSecretKey]),
       ];
 
@@ -46,7 +45,7 @@ export function registerHmacTests() {
           hmac.update(chunk as any);
         }
         const actual = hmac.digest('hex');
-        chai.expect(actual).to.be.eql(expected);
+        expect(actual).to.be.eql(expected);
       }
     });
   }
@@ -283,22 +282,22 @@ export function registerHmacTests() {
   ];
 
   for (let i = 0, l = rfc4231.length; i < l; i++) {
-    for (const hash in rfc4231[i].hmac) {
+    for (const hash in rfc4231[i]!.hmac) {
       it(`Test HMAC-${hash} rfc 4231 case ${i + 1}`, () => {
-        const str = crypto.createHmac(hash, rfc4231[i].key);
-        str.end(rfc4231[i].data);
+        const str = crypto.createHmac(hash, rfc4231[i]!.key);
+        str.end(rfc4231[i]!.data);
         let strRes = str.read().toString('hex');
         let actual = crypto
-          .createHmac(hash, rfc4231[i].key)
-          .update(rfc4231[i].data)
+          .createHmac(hash, rfc4231[i]!.key)
+          .update(rfc4231[i]!.data)
           .digest('hex');
-        if (rfc4231[i].truncate) {
+        if (rfc4231[i]!.truncate) {
           actual = actual.substr(0, 32); // first 128 bits == 32 hex chars
           strRes = strRes.substr(0, 32);
         }
-        const expected = (rfc4231[i].hmac as any)[hash];
-        chai.expect(actual).to.be.eql(expected);
-        chai.expect(actual).to.be.eql(strRes);
+        const expected = (rfc4231[i]!.hmac as any)[hash];
+        expect(actual).to.be.eql(expected);
+        expect(actual).to.be.eql(strRes);
       });
     }
   }
@@ -440,9 +439,9 @@ export function registerHmacTests() {
     testHmac('sha1', key, data, hmac);
 
   it('digest encoding', () => {
-    chai
-      .expect(crypto.createHmac('sha256', 'w00t').digest('ucs2'))
-      .to.be.eql(crypto.createHmac('sha256', 'w00t').digest().toString('ucs2'));
+    expect(crypto.createHmac('sha256', 'w00t').digest('ucs2')).to.be.eql(
+      crypto.createHmac('sha256', 'w00t').digest().toString('ucs2')
+    );
   });
 
   it('Check initialized -> uninitialized state transition after calling digest().', () => {
@@ -478,6 +477,6 @@ export function registerHmacTests() {
   });
 
   it('Invalid digest', () => {
-    chai.expect(crypto.createHmac('sha7', 'key')).throw(/Invalid digest/);
+    expect(crypto.createHmac('sha7', 'key')).throw(/Invalid digest/);
   });
-}
+});

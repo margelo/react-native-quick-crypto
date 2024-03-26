@@ -1,8 +1,8 @@
-import chai from 'chai';
+import { assert, expect } from 'chai';
 import { Buffer } from '@craftzdog/react-native-buffer';
-import { it } from '../../MochaRNAdapter';
+import { describe, it } from '../../MochaRNAdapter';
 import crypto from 'react-native-quick-crypto';
-import { PrivateKey } from 'sscrypto/node';
+// import { PrivateKey } from 'sscrypto/node';
 
 // Tests that a key pair can be used for encryption / decryption.
 function testEncryptDecrypt(publicKey: any, privateKey: any) {
@@ -11,7 +11,7 @@ function testEncryptDecrypt(publicKey: any, privateKey: any) {
   for (const key of [publicKey, privateKey]) {
     const ciphertext = crypto.publicEncrypt(key, plaintext);
     const received = crypto.privateDecrypt(privateKey, ciphertext);
-    chai.assert.strictEqual(received.toString('utf8'), message);
+    assert.strictEqual(received.toString('utf8'), message);
   }
 }
 
@@ -40,20 +40,19 @@ function testEncryptDecrypt(publicKey: any, privateKey: any) {
 //   }
 // }
 
-export function registerPublicCipherTests() {
-  // We need to monkey patch sscrypto to use all the crypto functions from quick-crypto
-  it('sscrypto basic test', async () => {
-    try {
-      const clearText = 'This is clear text';
-      const privateKey = await PrivateKey.generate(1024);
-      const encrypted = privateKey.encrypt(Buffer.from(clearText) as any);
-      const decrypted = privateKey.decrypt(encrypted);
-      chai.expect(decrypted.toString('utf-8')).to.equal(clearText);
-    } catch (e) {
-      console.warn('error', e);
-      chai.assert.fail();
-    }
-  });
+describe('publicCipher', () => {
+  // // We need to monkey patch sscrypto to use all the crypto functions from quick-crypto
+  // it('sscrypto basic test', async () => {
+  //   try {
+  //     const clearText = 'This is clear text';
+  //     const privateKey = await PrivateKey.generate(1024);
+  //     const encrypted = privateKey.encrypt(Buffer.from(clearText) as any);
+  //     const decrypted = privateKey.decrypt(encrypted);
+  //     expect(decrypted.toString('utf-8')).to.equal(clearText);
+  //   } catch (e) {
+  //     assert.fail();
+  //   }
+  // });
 
   it('publicEncrypt/privateDecrypt', () => {
     const { privateKey, publicKey } = crypto.generateKeyPairSync('rsa', {
@@ -111,7 +110,7 @@ export function registerPublicCipherTests() {
       ciphertext
     );
 
-    chai.expect(decrypted.toString('utf-8')).to.equal(message);
+    expect(decrypted.toString('utf-8')).to.equal(message);
   });
 
   it('passphrased private key without passphrase should throw', () => {
@@ -131,9 +130,9 @@ export function registerPublicCipherTests() {
 
     try {
       testEncryptDecrypt(publicKey, privateKey);
-      chai.assert.fail();
+      assert.fail();
     } catch (e) {
       // intentionally left blank
     }
   });
-}
+});

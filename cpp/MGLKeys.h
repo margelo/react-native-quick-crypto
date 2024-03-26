@@ -19,7 +19,10 @@
 #include "Utils/MGLUtils.h"
 #else
 #include "MGLUtils.h"
+#include "JSIUtils/MGLSmartHostObject.h"
 #endif
+
+// This file should roughly match https://github.com/nodejs/node/blob/main/src/crypto/crypto_keys.cc
 
 namespace margelo {
 
@@ -103,11 +106,11 @@ class ManagedEVPPKey {
                                             unsigned int *offset,
                                             bool allow_key_object);
 
-  static std::optional<StringOrBuffer> ToEncodedPublicKey(
+  static OptionJSVariant ToEncodedPublicKey(
       jsi::Runtime &runtime, ManagedEVPPKey key,
       const PublicKeyEncodingConfig &config);
 
-  static std::optional<StringOrBuffer> ToEncodedPrivateKey(
+  static OptionJSVariant ToEncodedPrivateKey(
       jsi::Runtime &runtime, ManagedEVPPKey key,
       const PrivateKeyEncodingConfig &config);
 
@@ -116,6 +119,61 @@ class ManagedEVPPKey {
   //  size_t size_of_public_key() const;
 
   EVPKeyPointer pkey_;
+};
+
+// Analogous to the KeyObjectData class on node
+// https://github.com/nodejs/node/blob/main/src/crypto/crypto_keys.h#L132
+class KeyObjectData {
+ public:
+  static std::shared_ptr<KeyObjectData> CreateSecret(ByteSource key);
+
+  static std::shared_ptr<KeyObjectData> CreateAsymmetric(
+      KeyType type,
+      const ManagedEVPPKey& pkey);
+
+  KeyType GetKeyType() const;
+
+  // These functions allow unprotected access to the raw key material and should
+  // only be used to implement cryptographic operations requiring the key.
+  ManagedEVPPKey GetAsymmetricKey() const;
+  const char* GetSymmetricKey() const;
+  size_t GetSymmetricKeySize() const;
+
+ private:
+ explicit KeyObjectData(ByteSource symmetric_key);
+
+  KeyObjectData(
+      KeyType type,
+      const ManagedEVPPKey& pkey);
+
+  const KeyType key_type_;
+  const ByteSource symmetric_key_;
+  const size_t symmetric_key_len_;
+  const ManagedEVPPKey asymmetric_key_;
+};
+
+// Analoguous to the KeyObjectHandle class in node
+// https://github.com/nodejs/node/blob/main/src/crypto/crypto_keys.h#L164
+class JSI_EXPORT KeyObjectHandle: public jsi::HostObject {
+ public:
+    KeyObjectHandle() {}
+    jsi::Value get(jsi::Runtime &rt, const jsi::PropNameID &propNameID);
+    const std::shared_ptr<KeyObjectData>& Data();
+
+ protected:
+    jsi::Value Init(jsi::Runtime &rt);
+    jsi::Value InitECRaw(jsi::Runtime &rt);
+    jsi::Value Export(jsi::Runtime &rt);
+    OptionJSVariant ExportSecretKey(jsi::Runtime& rt) const;
+    OptionJSVariant ExportPublicKey(
+      jsi::Runtime& rt,
+      const PublicKeyEncodingConfig& config) const;
+    OptionJSVariant ExportPrivateKey(
+      jsi::Runtime& rt,
+      const PrivateKeyEncodingConfig& config) const;
+
+ private:
+    std::shared_ptr<KeyObjectData> data_;
 };
 
 }  // namespace margelo

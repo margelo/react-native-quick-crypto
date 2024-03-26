@@ -1,97 +1,65 @@
-import React, { useState, useCallback } from 'react';
+import React from 'react';
 import type { RootStackParamList } from '../../RootProps';
 import type {
   NativeStackNavigationProp,
   NativeStackScreenProps,
 } from '@react-navigation/native-stack';
-import { View, ScrollView, StyleSheet } from 'react-native';
+import { Text, View, ScrollView, StyleSheet, SafeAreaView } from 'react-native';
+import 'mocha';
 import { Button } from '../../../components/Button';
 import { useNavigation } from '@react-navigation/native';
 import { TestItem } from '../../../components/TestItem';
-import type { TestItemType } from './TestItemType';
-import { TEST_LIST } from '../../../testing/TestList';
+import { useTestList } from '../../../hooks/useTestList';
+import { useRunTests } from '../../../hooks/useRunTests';
 
 type EntryProps = NativeStackScreenProps<RootStackParamList, 'Entry'>;
 
-const useTests = (): [
-  Array<TestItemType>,
-  (index: number) => void,
-  () => void,
-  () => void
-] => {
-  const [tests, setTests] = useState<Array<TestItemType>>(TEST_LIST);
-
-  const toggle = useCallback(
-    (index: number) => {
-      setTests((tests) => {
-        tests[index].value = !tests[index].value;
-        return [...tests];
-      });
-    },
-    [setTests]
-  );
-
-  const clearAll = useCallback(() => {
-    setTests((tests) => {
-      return tests.map((it) => {
-        it.value = false;
-        return it;
-      });
-    });
-  }, [setTests]);
-
-  const checkAll = useCallback(() => {
-    setTests((tests) => {
-      return tests.map((it) => {
-        it.value = true;
-        return it;
-      });
-    });
-  }, [setTests]);
-
-  return [tests, toggle, clearAll, checkAll];
-};
-
 export const Entry: React.FC<EntryProps> = ({}: EntryProps) => {
-  const [tests, toggle, clearAll, checkAll] = useTests();
+  const [tests, toggle, clearAll, checkAll] = useTestList();
+  const [results, runTests] = useRunTests();
   const navigation =
     useNavigation<NativeStackNavigationProp<RootStackParamList, 'Entry'>>();
+  let totalCount = 0;
+
   return (
-    <View style={styles.mainContainer}>
+    <SafeAreaView style={styles.mainContainer}>
       <View style={styles.testList}>
         <ScrollView style={styles.scrollView}>
-          {tests.map((test, index: number) => (
-            <TestItem
-              key={index.toString()}
-              index={index}
-              description={test.description}
-              value={test.value}
-              onToggle={toggle}
-            />
-          ))}
+          {Object.entries(tests).map(([suiteName, suite], index) => {
+            totalCount += suite.count;
+            return (
+              <TestItem
+                key={index.toString()}
+                description={suiteName}
+                value={suite.value}
+                count={suite.count}
+                results={results[suiteName]?.results || []}
+                onToggle={toggle}
+              />
+            );
+          })}
         </ScrollView>
       </View>
+      <View>
+        <Text style={styles.totalCount}>{totalCount}</Text>
+      </View>
       <View style={styles.menu}>
-        <Button title="checkAll" onPress={checkAll} />
-        <Button title="clearAll" onPress={clearAll} />
+        <Button title="Check All" onPress={checkAll} />
+        <Button title="Clear All" onPress={clearAll} />
         <Button
-          title="run"
+          title="Run"
           onPress={() => {
-            navigation.navigate('TestingScreen', {
-              testRegistrators: tests
-                .filter((it) => it.value)
-                .map((it) => it.registrator),
-            });
+            runTests(tests);
           }}
         />
         <Button
-          title="benchmarks"
+          title="Benchmarks"
           onPress={() => {
             navigation.navigate('Benchmarks');
           }}
         />
       </View>
-    </View>
+    </SafeAreaView>
   );
 };
 
@@ -111,5 +79,9 @@ const styles = StyleSheet.create({
   },
   scrollView: {
     paddingHorizontal: 10,
+  },
+  totalCount: {
+    alignSelf: 'flex-end',
+    paddingRight: 20,
   },
 });

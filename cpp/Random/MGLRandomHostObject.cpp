@@ -36,9 +36,17 @@ MGLRandomHostObject::MGLRandomHostObject(
           throw jsi::JSError(runtime,
                              "randomFill(..) expects exactly 4 arguments!");
         }
+          
+      if(!arguments[0].isObject() || !arguments[0].asObject(runtime).isArrayBuffer(runtime)) {
+          throw std::runtime_error("First argument it not an array buffer");
+      }
+
+      if (!arguments[0].isObject()
+        || !arguments[0].asObject(runtime).isArrayBuffer(runtime)) {
+          throw std::runtime_error("First argument it not an array buffer");
+      }
 
         auto result = arguments[0].asObject(runtime).getArrayBuffer(runtime);
-        auto resultSize = result.size(runtime);
         auto *resultData = result.data(runtime);
         auto resultPreventGC =
             std::make_shared<jsi::ArrayBuffer>(std::move(result));
@@ -72,7 +80,6 @@ MGLRandomHostObject::MGLRandomHostObject(
         }
 
         auto result = arguments[0].asObject(runtime).getArrayBuffer(runtime);
-        auto resultSize = result.size(runtime);
         auto *resultData = result.data(runtime);
         auto offset = (int)arguments[1].asNumber();
         auto size = arguments[2].asNumber();

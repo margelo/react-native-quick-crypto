@@ -35,7 +35,7 @@ enum RSAKeyVariant {
 // initialize the data in a generic manner this is to be later be used to
 // generate the keys in a thread-safe manner (I think) I'm however too dumb and
 // after ~4hrs I have given up on trying to replicate/extract the important
-// parts For now I'm storing a single config param, a generic abstractino is
+// parts For now I'm storing a single config param, a generic abstraction is
 // necessary for more schemes. this struct is just a very simplified version
 // meant to carry information around
 struct RsaKeyPairGenConfig {
@@ -55,9 +55,9 @@ struct RsaKeyPairGenConfig {
 };
 
 RsaKeyPairGenConfig prepareRsaKeyGenConfig(jsi::Runtime& runtime,
-                                           const jsi::Value* arguments);
+                                         const jsi::Value* arguments);
 
-std::pair<StringOrBuffer, StringOrBuffer> generateRSAKeyPair(
+std::pair<JSVariant, JSVariant> generateRSAKeyPair(
     jsi::Runtime& runtime, std::shared_ptr<RsaKeyPairGenConfig> config);
 
 }  // namespace margelo

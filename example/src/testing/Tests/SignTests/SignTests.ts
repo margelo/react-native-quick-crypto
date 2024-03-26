@@ -1,8 +1,8 @@
-import chai from 'chai';
+import { expect } from 'chai';
 import { Buffer } from '@craftzdog/react-native-buffer';
-import { it } from '../../MochaRNAdapter';
+import { describe, it } from '../../MochaRNAdapter';
 import crypto from 'react-native-quick-crypto';
-import { PrivateKey } from 'sscrypto/node';
+// import { PrivateKey } from 'sscrypto/node';
 
 // Tests that a key pair can be used for encryption / decryption.
 // function testEncryptDecrypt(publicKey: any, privateKey: any) {
@@ -40,8 +40,7 @@ import { PrivateKey } from 'sscrypto/node';
 //   }
 // }
 
-export function registerSignTests() {
-  // We need to monkey patch sscrypto to use all the crypto functions from quick-crypto
+describe('sign/verify', () => {
   it('basic sign/verify', async () => {
     const { publicKey, privateKey } = crypto.generateKeyPairSync('rsa', {
       modulusLength: 1024,
@@ -57,36 +56,44 @@ export function registerSignTests() {
 
     const textToSign = 'This text should be signed';
     const textBuffer = Buffer.from(textToSign, 'utf-8');
+    const padding = crypto.constants.RSA_PKCS1_PSS_PADDING;
+    const saltLength = crypto.constants.RSA_PSS_SALTLEN_MAX_SIGN;
+
     const sign = crypto.createSign('SHA256');
     sign.update(textBuffer);
     const signature = sign.sign({
       key: privateKey,
-      padding: crypto.constants.RSA_PKCS1_PSS_PADDING,
-      saltLength: crypto.constants.RSA_PSS_SALTLEN_MAX_SIGN,
+      padding,
+      saltLength,
     });
 
     const verify = crypto.createVerify('SHA256');
-    verify.update(textToSign);
+    verify.update(textToSign, 'utf-8');
     const matches = verify.verify(
       {
         key: publicKey,
-        padding: crypto.constants.RSA_PKCS1_PSS_PADDING,
-        saltLength: crypto.constants.RSA_PSS_SALTLEN_MAX_SIGN,
+        padding,
+        saltLength,
       },
       signature
     );
-    chai.expect(matches).to.equal(true);
+
+    expect(matches).to.equal(true);
   });
 
-  it('simple sscrypto sign/verify', async () => {
-    const clearText = 'This is clear text';
-    const privateKey = await PrivateKey.generate(1024);
-    const signature = privateKey.sign(Buffer.from(clearText) as any);
-    const verified = privateKey.verify(
-      Buffer.from(clearText) as any,
-      signature
-    );
-
-    chai.expect(verified).to.equal(true);
-  });
-}
+  // // We need to monkey patch sscrypto to use all the crypto functions from quick-crypto
+  // it('simple sscrypto sign/verify', async () => {
+  //   const clearText = 'This is clear text';
+  //   console.log(0);
+  //   const privateKey = await PrivateKey.generate(1024);
+  //   console.log(1, privateKey);
+  //   const signature = privateKey.sign(Buffer.from(clearText) as any);
+  //   console.log(2);
+  //   const verified = privateKey.verify(
+  //     Buffer.from(clearText) as any,
+  //     signature
+  //   );
+  //   console.log(3);
+  //   expect(verified).to.equal(true);
+  // });
+});

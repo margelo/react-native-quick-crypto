@@ -35,7 +35,7 @@ export function randomFill<T extends ArrayBufferView>(
 
 export function randomFill(buffer: any, ...rest: any[]): void {
   if (typeof rest[rest.length - 1] !== 'function') {
-    throw new Error('No callback provided to randomDill');
+    throw new Error('No callback provided to randomFill');
   }
 
   const callback = rest[rest.length - 1] as any as (
@@ -56,7 +56,15 @@ export function randomFill(buffer: any, ...rest: any[]): void {
   }
 
   random
-    .randomFill(Buffer.isBuffer(buffer) ? buffer.buffer : buffer, offset, size)
+    .randomFill(
+      Buffer.isBuffer(buffer)
+        ? buffer.buffer
+        : ArrayBuffer.isView(buffer)
+        ? buffer.buffer
+        : buffer,
+      offset,
+      size
+    )
     .then(
       () => {
         callback(null, buffer);
@@ -82,17 +90,17 @@ export function randomFillSync(buffer: any, offset: number = 0, size?: number) {
   return buffer;
 }
 
-export function randomBytes(size: number): ArrayBuffer;
+export function randomBytes(size: number): Buffer;
 
 export function randomBytes(
   size: number,
-  callback: (err: Error | null, buf?: ArrayBuffer) => void
+  callback: (err: Error | null, buf?: Buffer) => void
 ): void;
 
 export function randomBytes(
   size: number,
-  callback?: (err: Error | null, buf?: ArrayBuffer) => void
-): void | ArrayBuffer {
+  callback?: (err: Error | null, buf?: Buffer) => void
+): void | Buffer {
   const buf = new Buffer(size);
 
   if (callback === undefined) {
@@ -163,6 +171,9 @@ export function randomInt(
   } else {
     min = arg1;
     max = arg2 as any as number;
+  }
+  if (typeof callback !== 'undefined' && typeof callback !== 'function') {
+    throw new TypeError('callback must be a function or undefined');
   }
 
   const isSync = typeof callback === 'undefined';
@@ -288,29 +299,31 @@ export function randomUUID() {
   randomFillSync(buffer, 0, size);
 
   // Per 4.4, set bits for version and `clock_seq_hi_and_reserved`
-  buffer[6] = (buffer[6] & 0x0f) | 0x40;
-  buffer[8] = (buffer[8] & 0x3f) | 0x80;
+  // eslint-disable-next-line no-bitwise
+  buffer[6] = (buffer[6]! & 0x0f) | 0x40;
+  // eslint-disable-next-line no-bitwise
+  buffer[8] = (buffer[8]! & 0x3f) | 0x80;
 
   return (
-    byteToHex[buffer[0]] +
-    byteToHex[buffer[1]] +
-    byteToHex[buffer[2]] +
-    byteToHex[buffer[3]] +
+    byteToHex[buffer[0]!]! +
+    byteToHex[buffer[1]!] +
+    byteToHex[buffer[2]!] +
+    byteToHex[buffer[3]!] +
     '-' +
-    byteToHex[buffer[4]] +
-    byteToHex[buffer[5]] +
+    byteToHex[buffer[4]!] +
+    byteToHex[buffer[5]!] +
     '-' +
-    byteToHex[buffer[6]] +
-    byteToHex[buffer[7]] +
+    byteToHex[buffer[6]!] +
+    byteToHex[buffer[7]!] +
     '-' +
-    byteToHex[buffer[8]] +
-    byteToHex[buffer[9]] +
+    byteToHex[buffer[8]!] +
+    byteToHex[buffer[9]!] +
     '-' +
-    byteToHex[buffer[10]] +
-    byteToHex[buffer[11]] +
-    byteToHex[buffer[12]] +
-    byteToHex[buffer[13]] +
-    byteToHex[buffer[14]] +
-    byteToHex[buffer[15]]
+    byteToHex[buffer[10]!] +
+    byteToHex[buffer[11]!] +
+    byteToHex[buffer[12]!] +
+    byteToHex[buffer[13]!] +
+    byteToHex[buffer[14]!] +
+    byteToHex[buffer[15]!]
   ).toLowerCase();
 }

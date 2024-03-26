@@ -38,23 +38,10 @@ FieldDefinition getGenerateKeyPairSyncFieldDefinition(
         auto config = std::make_shared<RsaKeyPairGenConfig>(
             prepareRsaKeyGenConfig(runtime, arguments));
         auto keys = generateRSAKeyPair(runtime, std::move(config));
-        if (keys.first.isString && keys.second.isString) {
-          auto publicKey =
-              jsi::String::createFromUtf8(runtime, keys.first.stringValue);
-          auto privateKey =
-              jsi::String::createFromUtf8(runtime, keys.second.stringValue);
-          return jsi::Array::createWithElements(
-              runtime, jsi::Value::undefined(), publicKey, privateKey);
-        } else {
-          MGLTypedArray<MGLTypedArrayKind::Uint8Array> publicKeyBuffer(
-              runtime, keys.first.vectorValue);
-          MGLTypedArray<MGLTypedArrayKind::Uint8Array> privateKeyBuffer(
-              runtime, keys.second.vectorValue);
-
-          return jsi::Array::createWithElements(
-              runtime, jsi::Value::undefined(), publicKeyBuffer,
-              privateKeyBuffer);
-        }
+        auto publicKey = toJSI(runtime, keys.first);
+        auto privateKey = toJSI(runtime, keys.second);
+        return jsi::Array::createWithElements(
+            runtime, jsi::Value::undefined(), publicKey, privateKey);
       });
 }
 }  // namespace margelo

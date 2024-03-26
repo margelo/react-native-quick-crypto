@@ -11,27 +11,27 @@ export const IncorrectResultItem: React.FC<IncorrectResultItemProps> = ({
   errorMsg,
 }: IncorrectResultItemProps) => {
   const emoji = '❌';
-  const fullText = emoji + ' [' + description + '] ---> ' + errorMsg;
+  const title = emoji + ' [' + description + ']';
 
   return (
     <View style={styles.itemContainer}>
-      <Text style={[styles.text]}>{fullText}</Text>
+      <Text style={styles.text}>{title}</Text>
+      <Text style={styles.error}>{errorMsg}</Text>
     </View>
   );
 };
 
 const styles = StyleSheet.create({
-  scroll: {
-    flex: 1,
-  },
   itemContainer: {
     borderWidth: 1,
-    margin: 10,
-    flexDirection: 'column',
     borderRadius: 5,
     padding: 5,
+    marginVertical: 5,
   },
   text: {
     flexShrink: 1,
+  },
+  error: {
+    color: 'red',
   },
 });

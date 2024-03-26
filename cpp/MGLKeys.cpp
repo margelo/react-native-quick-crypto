@@ -9,6 +9,7 @@
 
 #include <jsi/jsi.h>
 #include <openssl/bio.h>
+#include <openssl/ec.h>
 
 #include <algorithm>
 #include <optional>
@@ -20,11 +21,13 @@
 #include "JSIUtils/MGLJSIUtils.h"
 #include "JSIUtils/MGLTypedArray.h"
 #include "Utils/MGLUtils.h"
+#include "webcrypto/crypto_ec.h"
 #else
 #include "MGLJSIMacros.h"
 #include "MGLJSIUtils.h"
 #include "MGLTypedArray.h"
 #include "MGLUtils.h"
+#include "crypto_ec.h"
 #endif
 
 namespace margelo {
@@ -245,28 +248,20 @@ ParseKeyResult ParsePrivateKey(EVPKeyPointer* pkey,
   return ParseKeyResult::kParseKeyFailed;
 }
 
-std::optional<StringOrBuffer> BIOToStringOrBuffer(BIO* bio,
-                                                  PKFormatType format) {
+OptionJSVariant BIOToStringOrBuffer(jsi::Runtime& rt, BIO* bio, PKFormatType format) {
   BUF_MEM* bptr;
   BIO_get_mem_ptr(bio, &bptr);
   if (format == kKeyFormatPEM) {
     // PEM is an ASCII format, so we will return it as a string.
-    return StringOrBuffer{
-        .isString = true,
-        .stringValue = std::string(bptr->data, bptr->length),
-    };
+    return JSVariant(std::string(bptr->data, bptr->length));
   } else {
     // CHECK_EQ(format, kKeyFormatDER);
     // DER is binary, return it as a buffer.
-    std::vector<unsigned char> vec(bptr->data, bptr->data + bptr->length);
-    return StringOrBuffer{
-        .isString = false,
-        .vectorValue = vec,
-    };
+    return JSVariant(ByteSource::Allocated(bptr->data, bptr->length));
   }
 }
 
-std::optional<StringOrBuffer> WritePrivateKey(
+OptionJSVariant WritePrivateKey(
     jsi::Runtime& runtime, EVP_PKEY* pkey,
     const PrivateKeyEncodingConfig& config) {
   BIOPointer bio(BIO_new(BIO_s_mem()));
@@ -294,7 +289,7 @@ std::optional<StringOrBuffer> WritePrivateKey(
     }
   }
 
-  bool err;
+  bool err = false;
 
   PKEncodingType encoding_type = config.type_.value();
   if (encoding_type == kKeyEncodingPKCS1) {
@@ -351,7 +346,7 @@ std::optional<StringOrBuffer> WritePrivateKey(
     throw jsi::JSError(runtime, "Failed to encode private key");
   }
 
-  return BIOToStringOrBuffer(bio.get(), config.format_);
+  return BIOToStringOrBuffer(runtime, bio.get(), config.format_);
 }
 
 bool WritePublicKeyInner(EVP_PKEY* pkey, const BIOPointer& bio,
@@ -381,7 +376,7 @@ bool WritePublicKeyInner(EVP_PKEY* pkey, const BIOPointer& bio,
   }
 }
 
-std::optional<StringOrBuffer> WritePublicKey(
+OptionJSVariant WritePublicKey(
     jsi::Runtime& runtime, EVP_PKEY* pkey,
     const PublicKeyEncodingConfig& config) {
   BIOPointer bio(BIO_new(BIO_s_mem()));
@@ -391,7 +386,7 @@ std::optional<StringOrBuffer> WritePublicKey(
     throw jsi::JSError(runtime, "Failed to encode public key");
   }
 
-  return BIOToStringOrBuffer(bio.get(), config.format_);
+  return BIOToStringOrBuffer(runtime, bio.get(), config.format_);
 }
 
 // Maybe<bool> ExportJWKSecretKey(
@@ -588,7 +583,7 @@ EVP_PKEY* ManagedEVPPKey::get() const { return pkey_.get(); }
 // }
 //
 
-std::optional<StringOrBuffer> ManagedEVPPKey::ToEncodedPublicKey(
+OptionJSVariant ManagedEVPPKey::ToEncodedPublicKey(
     jsi::Runtime& runtime, ManagedEVPPKey key,
     const PublicKeyEncodingConfig& config) {
   if (!key) return {};
@@ -610,7 +605,7 @@ std::optional<StringOrBuffer> ManagedEVPPKey::ToEncodedPublicKey(
   return WritePublicKey(runtime, key.get(), config);
 }
 
-std::optional<StringOrBuffer> ManagedEVPPKey::ToEncodedPrivateKey(
+OptionJSVariant ManagedEVPPKey::ToEncodedPrivateKey(
     jsi::Runtime& runtime, ManagedEVPPKey key,
     const PrivateKeyEncodingConfig& config) {
   if (!key) return {};
@@ -810,72 +805,73 @@ ManagedEVPPKey ManagedEVPPKey::GetParsedKey(jsi::Runtime& runtime,
 
   return ManagedEVPPKey(std::move(pkey));
 }
-//
-// KeyObjectData::KeyObjectData(
-//                              ByteSource symmetric_key)
-//: key_type_(KeyType::kKeyTypeSecret),
-// symmetric_key_(std::move(symmetric_key)),
-// symmetric_key_len_(symmetric_key_.size()),
-// asymmetric_key_() {}
-//
-// KeyObjectData::KeyObjectData(
-//                              KeyType type,
-//                              const ManagedEVPPKey& pkey)
-//: key_type_(type),
-// symmetric_key_(),
-// symmetric_key_len_(0),
-// asymmetric_key_{pkey} {}
-//
-// void KeyObjectData::MemoryInfo(MemoryTracker* tracker) const {
-//   switch (GetKeyType()) {
-//     case kKeyTypeSecret:
-//       tracker->TrackFieldWithSize("symmetric_key", symmetric_key_.size());
-//       break;
-//     case kKeyTypePrivate:
-//       // Fall through
-//     case kKeyTypePublic:
-//       tracker->TrackFieldWithSize("key", asymmetric_key_);
-//       break;
-//     default:
-//       UNREACHABLE();
-//   }
-// }
-//
-// std::shared_ptr<KeyObjectData> KeyObjectData::CreateSecret(ByteSource key)
-// {
-//   CHECK(key);
-//   return std::shared_ptr<KeyObjectData>(new KeyObjectData(std::move(key)));
-// }
-//
-// std::shared_ptr<KeyObjectData> KeyObjectData::CreateAsymmetric(
-//                                                                KeyType
-//                                                                key_type,
-//                                                                const
-//                                                                ManagedEVPPKey&
-//                                                                pkey) {
-//   CHECK(pkey);
-//   return std::shared_ptr<KeyObjectData>(new KeyObjectData(key_type, pkey));
-// }
-//
-// KeyType KeyObjectData::GetKeyType() const {
-//   return key_type_;
-// }
-//
-// ManagedEVPPKey KeyObjectData::GetAsymmetricKey() const {
-//   CHECK_NE(key_type_, kKeyTypeSecret);
-//   return asymmetric_key_;
-// }
-//
-// const char* KeyObjectData::GetSymmetricKey() const {
-//   CHECK_EQ(key_type_, kKeyTypeSecret);
-//   return symmetric_key_.data<char>();
-// }
-//
-// size_t KeyObjectData::GetSymmetricKeySize() const {
-//   CHECK_EQ(key_type_, kKeyTypeSecret);
-//   return symmetric_key_len_;
-// }
-//
+
+KeyObjectData::KeyObjectData(
+                             ByteSource symmetric_key)
+: key_type_(KeyType::kKeyTypeSecret),
+  symmetric_key_(std::move(symmetric_key)),
+  symmetric_key_len_(symmetric_key_.size()),
+  asymmetric_key_() {}
+
+KeyObjectData::KeyObjectData(KeyType type,
+                            const ManagedEVPPKey& pkey)
+: key_type_(type),
+  symmetric_key_(),
+  symmetric_key_len_(0),
+  asymmetric_key_{pkey} {}
+
+std::shared_ptr<KeyObjectData> KeyObjectData::CreateSecret(ByteSource key)
+{
+  CHECK(key);
+  return std::shared_ptr<KeyObjectData>(new KeyObjectData(std::move(key)));
+}
+
+std::shared_ptr<KeyObjectData> KeyObjectData::CreateAsymmetric(
+  KeyType key_type,
+  const ManagedEVPPKey& pkey
+) {
+  CHECK(pkey);
+  return std::shared_ptr<KeyObjectData>(new KeyObjectData(key_type, pkey));
+}
+
+KeyType KeyObjectData::GetKeyType() const {
+  return key_type_;
+}
+
+ManagedEVPPKey KeyObjectData::GetAsymmetricKey() const {
+  CHECK_NE(key_type_, kKeyTypeSecret);
+  return asymmetric_key_;
+}
+
+const char* KeyObjectData::GetSymmetricKey() const {
+  CHECK_EQ(key_type_, kKeyTypeSecret);
+  return symmetric_key_.data<char>();
+}
+
+size_t KeyObjectData::GetSymmetricKeySize() const {
+  CHECK_EQ(key_type_, kKeyTypeSecret);
+  return symmetric_key_len_;
+}
+
+
+jsi::Value KeyObjectHandle::get(
+  jsi::Runtime &rt,
+  const jsi::PropNameID &propNameID) {
+    auto name = propNameID.utf8(rt);
+
+    if (name == "initECRaw") {
+      return this-> InitECRaw(rt);
+    }
+    else if (name == "init") {
+      return this->Init(rt);
+    }
+    else if (name == "export") {
+      return this->Export(rt);
+    }
+
+    return {};
+}
+
 // v8::Local<v8::Function> KeyObjectHandle::Initialize(Environment* env) {
 //   Local<Function> templ = env->crypto_key_object_handle_constructor();
 //   if (!templ.IsEmpty()) {
@@ -936,9 +932,9 @@ ManagedEVPPKey ManagedEVPPKey::GetParsedKey(jsi::Runtime& runtime,
 //   return obj;
 // }
 //
-// const std::shared_ptr<KeyObjectData>& KeyObjectHandle::Data() {
-//   return data_;
-// }
+const std::shared_ptr<KeyObjectData>& KeyObjectHandle::Data() {
+  return this->data_;
+}
 //
 // void KeyObjectHandle::New(const FunctionCallbackInfo<Value>& args) {
 //   CHECK(args.IsConstructCall());
@@ -952,49 +948,51 @@ ManagedEVPPKey ManagedEVPPKey::GetParsedKey(jsi::Runtime& runtime,
 //  MakeWeak();
 //}
 //
-// void KeyObjectHandle::Init(const FunctionCallbackInfo<Value>& args) {
-//  KeyObjectHandle* key;
-//  ASSIGN_OR_RETURN_UNWRAP(&key, args.Holder());
-//  MarkPopErrorOnReturn mark_pop_error_on_return;
-//
-//  CHECK(args[0]->IsInt32());
-//  KeyType type = static_cast<KeyType>(args[0].As<Uint32>()->Value());
-//
-//  unsigned int offset;
-//  ManagedEVPPKey pkey;
-//
-//  switch (type) {
-//    case kKeyTypeSecret: {
-//      CHECK_EQ(args.Length(), 2);
-//      ArrayBufferOrViewContents<char> buf(args[1]);
-//      key->data_ = KeyObjectData::CreateSecret(buf.ToCopy());
-//      break;
-//    }
-//    case kKeyTypePublic: {
-//      CHECK_EQ(args.Length(), 5);
-//
-//      offset = 1;
-//      pkey = ManagedEVPPKey::GetPublicOrPrivateKeyFromJs(args, &offset);
-//      if (!pkey)
-//        return;
-//      key->data_ = KeyObjectData::CreateAsymmetric(type, pkey);
-//      break;
-//    }
-//    case kKeyTypePrivate: {
-//      CHECK_EQ(args.Length(), 5);
-//
-//      offset = 1;
-//      pkey = ManagedEVPPKey::GetPrivateKeyFromJs(args, &offset, false);
-//      if (!pkey)
-//        return;
-//      key->data_ = KeyObjectData::CreateAsymmetric(type, pkey);
-//      break;
-//    }
-//    default:
-//      UNREACHABLE();
-//  }
-//}
-//
+
+jsi::Value KeyObjectHandle::Init(jsi::Runtime &rt) {
+  return HOSTFN("init", 2) {
+    CHECK(args[0].isNumber());
+    KeyType type = static_cast<KeyType>((int32_t)args[0].asNumber());
+
+    unsigned int offset;
+    ManagedEVPPKey pkey;
+
+    switch (type) {
+      case kKeyTypeSecret: {
+        // CHECK_EQ(args.Length(), 2);
+
+        ByteSource key = ByteSource::FromStringOrBuffer(rt, args[1]);
+        this->data_ = KeyObjectData::CreateSecret(std::move(key));
+        break;
+      }
+      case kKeyTypePublic: {
+        // CHECK_EQ(args.Length(), 5);
+
+        offset = 1;
+        pkey = ManagedEVPPKey::GetPublicOrPrivateKeyFromJs(rt, args, &offset);
+        if (!pkey)
+          return false;
+        this->data_ = KeyObjectData::CreateAsymmetric(type, pkey);
+        break;
+      }
+      case kKeyTypePrivate: {
+        // CHECK_EQ(args.Length(), 5);
+
+        offset = 1;
+        pkey = ManagedEVPPKey::GetPrivateKeyFromJs(rt, args, &offset, false);
+        if (!pkey)
+          return false;
+        this->data_ = KeyObjectData::CreateAsymmetric(type, pkey);
+        break;
+      }
+      default:
+        throw jsi::JSError(rt, "invalid keytype for init(): " + std::to_string(type));
+    }
+
+    return true;
+  });
+}
+
 // void KeyObjectHandle::InitJWK(const FunctionCallbackInfo<Value>& args) {
 //  Environment* env = Environment::GetCurrent(args);
 //  KeyObjectHandle* key;
@@ -1033,45 +1031,44 @@ ManagedEVPPKey ManagedEVPPKey::GetParsedKey(jsi::Runtime& runtime,
 //
 //  args.GetReturnValue().Set(key->data_->GetKeyType());
 //}
-//
-// void KeyObjectHandle::InitECRaw(const FunctionCallbackInfo<Value>& args) {
-//  Environment* env = Environment::GetCurrent(args);
-//  KeyObjectHandle* key;
-//  ASSIGN_OR_RETURN_UNWRAP(&key, args.Holder());
-//
-//  CHECK(args[0]->IsString());
-//  Utf8Value name(env->isolate(), args[0]);
-//
-//  MarkPopErrorOnReturn mark_pop_error_on_return;
-//
-//  int id = OBJ_txt2nid(*name);
-//  ECKeyPointer eckey(EC_KEY_new_by_curve_name(id));
-//  if (!eckey)
-//    return args.GetReturnValue().Set(false);
-//
-//  const EC_GROUP* group = EC_KEY_get0_group(eckey.get());
-//  ECPointPointer pub(ECDH::BufferToPoint(env, group, args[1]));
-//
-//  if (!pub ||
-//      !eckey ||
-//      !EC_KEY_set_public_key(eckey.get(), pub.get())) {
-//    return args.GetReturnValue().Set(false);
-//  }
-//
-//  EVPKeyPointer pkey(EVP_PKEY_new());
-//  if (!EVP_PKEY_assign_EC_KEY(pkey.get(), eckey.get()))
-//    args.GetReturnValue().Set(false);
-//
-//  eckey.release();  // Release ownership of the key
-//
-//  key->data_ =
-//  KeyObjectData::CreateAsymmetric(
-//                                  kKeyTypePublic,
-//                                  ManagedEVPPKey(std::move(pkey)));
-//
-//  args.GetReturnValue().Set(true);
-//}
-//
+
+jsi::Value KeyObjectHandle::InitECRaw(jsi::Runtime &rt) {
+  return HOSTFN("initECRaw", 2) {
+      CHECK(args[0].isString());
+      std::string curveName = args[0].asString(rt).utf8(rt);
+      int id = OBJ_txt2nid(curveName.c_str());
+      ECKeyPointer eckey(EC_KEY_new_by_curve_name(id));
+      if (!eckey) {
+          return false;
+      }
+      // TODO(osp) add validation
+      auto buf = args[1].asObject(rt).getArrayBuffer(rt);
+
+      const EC_GROUP* group = EC_KEY_get0_group(eckey.get());
+      ECPointPointer pub(ECDH::BufferToPoint(rt, group, buf));
+
+      if (!pub ||
+          !eckey ||
+          !EC_KEY_set_public_key(eckey.get(), pub.get())) {
+          return false;
+      }
+
+      EVPKeyPointer pkey(EVP_PKEY_new());
+      if (!EVP_PKEY_assign_EC_KEY(pkey.get(), eckey.get())) {
+          return false;
+      }
+
+      eckey.release();  // Release ownership of the key
+
+      this->data_ =
+      KeyObjectData::CreateAsymmetric(
+                                      kKeyTypePublic,
+                                      ManagedEVPPKey(std::move(pkey)));
+
+      return true;
+  });
+}
+
 // void KeyObjectHandle::InitEDRaw(const FunctionCallbackInfo<Value>& args) {
 //  Environment* env = Environment::GetCurrent(args);
 //  KeyObjectHandle* key;
@@ -1234,67 +1231,57 @@ ManagedEVPPKey ManagedEVPPKey::GetParsedKey(jsi::Runtime& runtime,
 //  args.GetReturnValue().Set(
 //                            static_cast<uint32_t>(key->Data()->GetSymmetricKeySize()));
 //}
-//
-// void KeyObjectHandle::Export(const FunctionCallbackInfo<Value>& args) {
-//  KeyObjectHandle* key;
-//  ASSIGN_OR_RETURN_UNWRAP(&key, args.Holder());
-//
-//  KeyType type = key->Data()->GetKeyType();
-//
-//  MaybeLocal<Value> result;
-//  if (type == kKeyTypeSecret) {
-//    result = key->ExportSecretKey();
-//  } else if (type == kKeyTypePublic) {
-//    unsigned int offset = 0;
-//    PublicKeyEncodingConfig config =
-//    ManagedEVPPKey::GetPublicKeyEncodingFromJs(
-//                                               args, &offset,
-//                                               kKeyContextExport);
-//    CHECK_EQ(offset, static_cast<unsigned int>(args.Length()));
-//    result = key->ExportPublicKey(config);
-//  } else {
-//    CHECK_EQ(type, kKeyTypePrivate);
-//    unsigned int offset = 0;
-//    NonCopyableMaybe<PrivateKeyEncodingConfig> config =
-//    ManagedEVPPKey::GetPrivateKeyEncodingFromJs(
-//                                                args, &offset,
-//                                                kKeyContextExport);
-//    if (config.IsEmpty())
-//      return;
-//    CHECK_EQ(offset, static_cast<unsigned int>(args.Length()));
-//    result = key->ExportPrivateKey(config.Release());
-//  }
-//
-//  if (!result.IsEmpty())
-//    args.GetReturnValue().Set(result.FromMaybe(Local<Value>()));
-//}
-//
-// MaybeLocal<Value> KeyObjectHandle::ExportSecretKey() const {
-//  const char* buf = data_->GetSymmetricKey();
-//  unsigned int len = data_->GetSymmetricKeySize();
-//  return Buffer::Copy(env(), buf, len).FromMaybe(Local<Value>());
-//}
-//
-// MaybeLocal<Value> KeyObjectHandle::ExportPublicKey(
-//                                                   const
-//                                                   PublicKeyEncodingConfig&
-//                                                   config) const {
-//                                                     return
-//                                                     WritePublicKey(env(),
-//                                                     data_->GetAsymmetricKey().get(),
-//                                                     config);
-//                                                   }
-//
-// MaybeLocal<Value> KeyObjectHandle::ExportPrivateKey(
-//                                                    const
-//                                                    PrivateKeyEncodingConfig&
-//                                                    config) const {
-//                                                      return
-//                                                      WritePrivateKey(env(),
-//                                                      data_->GetAsymmetricKey().get(),
-//                                                      config);
-//                                                    }
-//
+
+jsi::Value KeyObjectHandle::Export(jsi::Runtime &rt) {
+  return HOSTFN("export", 2) {
+    KeyType type = this->data_->GetKeyType();
+    OptionJSVariant result;
+    if (type == kKeyTypeSecret) {
+      result = this->ExportSecretKey(rt);
+    }
+    else if (type == kKeyTypePublic) {
+      unsigned int offset = 0;
+      PublicKeyEncodingConfig config =
+          ManagedEVPPKey::GetPublicKeyEncodingFromJs(
+              rt, args, &offset, kKeyContextExport);
+      result = this->ExportPublicKey(rt, config);
+    }
+    else if (type == kKeyTypePrivate) {
+      unsigned int offset = 0;
+      NonCopyableMaybe<PrivateKeyEncodingConfig> config =
+          ManagedEVPPKey::GetPrivateKeyEncodingFromJs(
+              rt, args, &offset, kKeyContextExport);
+      if (!config.IsEmpty()) {
+        result = this->ExportPrivateKey(rt, config.Release());
+      }
+    }
+    return toJSI(rt, result);
+  });
+}
+
+OptionJSVariant KeyObjectHandle::ExportSecretKey(jsi::Runtime &rt) const {
+ const char* buf = data_->GetSymmetricKey();
+ size_t len = data_->GetSymmetricKeySize();
+ ByteSource source = ByteSource::Foreign(buf, len);
+ return JSVariant(std::move(source));
+}
+
+OptionJSVariant KeyObjectHandle::ExportPublicKey(
+    jsi::Runtime& rt,
+    const PublicKeyEncodingConfig& config) const {
+  return WritePublicKey(rt,
+    data_->GetAsymmetricKey().get(),
+    config);
+}
+
+OptionJSVariant KeyObjectHandle::ExportPrivateKey(
+    jsi::Runtime &rt,
+    const PrivateKeyEncodingConfig& config) const {
+  return WritePrivateKey(rt,
+    data_->GetAsymmetricKey().get(),
+    config);
+}
+
 // void KeyObjectHandle::ExportJWK(
 //                                const v8::FunctionCallbackInfo<v8::Value>&
 //                                args) {
@@ -1456,4 +1443,5 @@ ManagedEVPPKey ManagedEVPPKey::GetParsedKey(jsi::Runtime& runtime,
 //  void RegisterExternalReferences(ExternalReferenceRegistry * registry) {
 //    KeyObjectHandle::RegisterExternalReferences(registry);
 //  }
+
 }  // namespace margelo
