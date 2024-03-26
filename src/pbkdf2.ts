@@ -7,9 +7,8 @@ import {
   bufferLikeToArrayBuffer,
   normalizeHashName,
   HashContext,
-  normalizeHash,
 } from './Utils';
-import type { CryptoKey, SubtleAlgorithm } from './keys';
+import type { CryptoKey, HashAlgorithm, SubtleAlgorithm } from './keys';
 import { promisify } from 'util';
 
 const WRONG_PASS =
@@ -35,7 +34,7 @@ export function pbkdf2(
   salt: Salt,
   iterations: number,
   keylen: number,
-  digest: string,
+  digest: HashAlgorithm,
   callback: Pbkdf2Callback
 ): void;
 export function pbkdf2(
@@ -53,10 +52,10 @@ export function pbkdf2(
   arg0?: unknown,
   arg1?: unknown
 ): void {
-  let digest = 'sha1';
+  let digest: HashAlgorithm = 'SHA-1';
   let callback: undefined | Pbkdf2Callback;
   if (typeof arg0 === 'string') {
-    digest = arg0;
+    digest = arg0 as HashAlgorithm;
     if (typeof arg1 === 'function') {
       callback = arg1 as Pbkdf2Callback;
     }
@@ -96,7 +95,7 @@ export function pbkdf2Sync(
   salt: Salt,
   iterations: number,
   keylen: number,
-  digest?: string
+  digest?: HashAlgorithm
 ): ArrayBuffer {
   const sanitizedPassword = sanitizeInput(password, WRONG_PASS);
   const sanitizedSalt = sanitizeInput(salt, WRONG_SALT);
@@ -120,7 +119,7 @@ const pbkdf2WithDigest = (
   salt: Salt,
   iterations: number,
   keylen: number,
-  digest: string,
+  digest: HashAlgorithm,
   callback: Pbkdf2Callback
 ) => pbkdf2(password, salt, iterations, keylen, digest, callback);
 
@@ -131,8 +130,8 @@ export async function pbkdf2DeriveBits(
   length: number
 ): Promise<ArrayBuffer> {
   const { iterations, hash, salt } = algorithm;
-  const normalizedHash = normalizeHash(hash);
-  if (!normalizedHash || !normalizedHash.name) {
+  const normalizedHash = normalizeHashName(hash);
+  if (!normalizedHash) {
     throw lazyDOMException('hash cannot be blank', 'OperationError');
   }
   if (!iterations || iterations === 0) {
@@ -158,7 +157,7 @@ export async function pbkdf2DeriveBits(
     sanitizedSalt,
     iterations,
     length / 8,
-    normalizedHash.name
+    normalizedHash as HashAlgorithm
   );
   if (!result) {
     throw lazyDOMException(

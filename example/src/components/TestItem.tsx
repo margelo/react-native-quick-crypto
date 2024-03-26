@@ -39,6 +39,7 @@ export const TestItem: React.FC<TestItemProps> = ({
         onValueChange={() => {
           onToggle(description);
         }}
+        style={styles.checkbox}
       />
       <TouchableOpacity
         style={styles.touchable}
@@ -69,7 +70,7 @@ export const TestItem: React.FC<TestItemProps> = ({
 const styles = StyleSheet.create({
   container: {
     width: '100%',
-    padding: 10,
+    paddingVertical: 5,
     flexDirection: 'row',
     alignContent: 'center',
     alignItems: 'center',
@@ -77,6 +78,9 @@ const styles = StyleSheet.create({
     gap: 10,
     borderBottomWidth: 1,
     borderBottomColor: '#ccc',
+  },
+  checkbox: {
+    transform: [{ scaleX: 0.8 }, { scaleY: 0.8 }],
   },
   label: {
     fontSize: 12,

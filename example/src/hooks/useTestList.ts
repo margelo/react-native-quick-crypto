@@ -14,7 +14,9 @@ import '../testing/Tests/CipherTests/PublicCipherTests';
 import '../testing/Tests/CipherTests/GenerateKeyPairTests';
 import '../testing/Tests/ConstantsTests/ConstantsTests';
 import '../testing/Tests/SignTests/SignTests';
-import '../testing/Tests/webcryptoTests/webcryptoTests';
+import '../testing/Tests/webcryptoTests/exportKey';
+import '../testing/Tests/webcryptoTests/deriveBits';
+import '../testing/Tests/webcryptoTests/digest';
 
 export const useTestList = (): [
   Suites,

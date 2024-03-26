@@ -47,10 +47,10 @@ This document attempts to describe the implementation status of Crypto APIs/Inte
 ## `digest`
 | Algorithm  | Status |
 | ---------  | :----: |
-| `SHA-1`    |  |
-| `SHA-256`  |  |
-| `SHA-384`  |  |
-| `SHA-512`  |  |
+| `SHA-1`    | ✅ |
+| `SHA-256`  | ✅ |
+| `SHA-384`  | ✅ |
+| `SHA-512`  | ✅ |
 
 ## `generateKey`
 

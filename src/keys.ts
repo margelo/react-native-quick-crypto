@@ -15,17 +15,67 @@ export const kNamedCurveAliases = {
 export type NamedCurve = 'P-256' | 'P-384' | 'P-521';
 
 export type ImportFormat = 'raw' | 'pkcs8' | 'spki' | 'jwk';
-export type HashAlgorithm = {
-  name: string;
-};
+
+export type AnyAlgorithm =
+  | HashAlgorithm
+  | KeyPairAlgorithm
+  | SecretKeyAlgorithm
+  | SignVerifyAlgorithm
+  | DeriveBitsAlgorithm
+  | EncryptDecryptAlgorithm
+  | 'PBKDF2'
+  | 'HKDF';
+
+export type HashAlgorithm = 'SHA-1' | 'SHA-256' | 'SHA-384' | 'SHA-512';
+
+export type KeyPairAlgorithm =
+  | 'ECDSA'
+  | 'ECDH'
+  | 'Ed25519'
+  | 'Ed448'
+  | 'RSASSA-PKCS1-v1_5'
+  | 'RSA-PSS'
+  | 'RSA-OAEP'
+  | 'X25519'
+  | 'X448';
+
+export type SecretKeyAlgorithm =
+  | 'HMAC'
+  | 'AES-CTR'
+  | 'AES-CBC'
+  | 'AES-GCM'
+  | 'AES-KW';
+
+export type SignVerifyAlgorithm =
+  | 'RSASSA-PKCS1-v1_5'
+  | 'RSA-PSS'
+  | 'ECDSA'
+  | 'HMAC'
+  | 'Ed25519'
+  | 'Ed448';
+
+export type DeriveBitsAlgorithm =
+  | 'PBKDF2'
+  | 'HKDF'
+  | 'ECDH'
+  | 'X25519'
+  | 'X448';
+
+export type EncryptDecryptAlgorithm =
+  | 'RSA-OAEP'
+  | 'AES-CTR'
+  | 'AES-CBC'
+  | 'AES-GCM';
+
 export type SubtleAlgorithm = {
-  name: 'ECDSA' | 'ECDH' | 'PBKDF2';
+  name: AnyAlgorithm;
   salt?: string;
   iterations?: number;
-  hash?: HashAlgorithm | string;
+  hash?: HashAlgorithm;
   namedCurve?: NamedCurve;
   length?: number;
 };
+
 export type KeyUsage =
   | 'encrypt'
   | 'decrypt'
