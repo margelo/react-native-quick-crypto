@@ -5,6 +5,7 @@ import type {
   EncryptDecryptAlgorithm,
   HashAlgorithm,
   KeyPairAlgorithm,
+  KeyUsage,
   SecretKeyAlgorithm,
   SignVerifyAlgorithm,
   SubtleAlgorithm,
@@ -549,6 +550,87 @@ export const normalizeAlgorithm = (
   // }
 
   // return normalizedAlgorithm;
+};
+
+export const validateBitLength = (
+  length: number,
+  name: string,
+  required: boolean = false
+) => {
+  if (length !== undefined || required) {
+    // validateNumber(length, name);
+    if (length < 0) throw new Error(`${name} > 0`);
+    if (length % 8) {
+      throw lazyDOMException(
+        `${name}'s length (${length}) must be a multiple of 8`,
+        'InvalidArgument'
+      );
+    }
+  }
+};
+
+export const validateByteLength = (
+  buf: BufferLike,
+  name: string,
+  target: number
+) => {
+  if (buf.byteLength !== target) {
+    throw lazyDOMException(
+      `${name} must contain exactly ${target} bytes`,
+      'OperationError'
+    );
+  }
+};
+
+const kKeyOps: {
+  [key in KeyUsage]: number;
+} = {
+  sign: 1,
+  verify: 2,
+  encrypt: 3,
+  decrypt: 4,
+  wrapKey: 5,
+  unwrapKey: 6,
+  deriveKey: 7,
+  deriveBits: 8,
+};
+
+export const validateKeyOps = (
+  keyOps: KeyUsage[] | undefined,
+  usagesSet: KeyUsage[]
+) => {
+  if (keyOps === undefined) return;
+  if (!Array.isArray(keyOps)) {
+    throw lazyDOMException('keyData.key_ops', 'InvalidArgument');
+  }
+  let flags = 0;
+  for (let n = 0; n < keyOps.length; n++) {
+    const op: KeyUsage = keyOps[n] as KeyUsage;
+    const op_flag = kKeyOps[op];
+    // Skipping unknown key ops
+    if (op_flag === undefined) continue;
+    // Have we seen it already? if so, error
+    // eslint-disable-next-line no-bitwise
+    if (flags & (1 << op_flag))
+      throw lazyDOMException('Duplicate key operation', 'DataError');
+    // eslint-disable-next-line no-bitwise
+    flags |= 1 << op_flag;
+
+    // TODO(@jasnell): RFC7517 section 4.3 strong recommends validating
+    // key usage combinations. Specifically, it says that unrelated key
+    // ops SHOULD NOT be used together. We're not yet validating that here.
+  }
+
+  if (usagesSet !== undefined) {
+    for (const use of usagesSet) {
+      if (!keyOps.includes(use)) {
+        throw lazyDOMException(
+          'Key operations and usage mismatch',
+          'DataError'
+        );
+      }
+    }
+  }
 };
 
 export * from './Hashnames';

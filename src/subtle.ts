@@ -6,16 +6,22 @@ import {
   KWebCryptoKeyFormat,
   createSecretKey,
   type AnyAlgorithm,
+  type JWK,
 } from './keys';
-import { ecImportKey, ecExportKey } from './ec';
 import {
   hasAnyNotIn,
   type BufferLike,
   type BinaryLike,
   normalizeAlgorithm,
+  lazyDOMException,
+  normalizeHashName,
+  HashContext,
 } from './Utils';
+import { ecImportKey, ecExportKey } from './ec';
 import { pbkdf2DeriveBits } from './pbkdf2';
 import { asyncDigest } from './Hash';
+import { aesImportKey, getAlgorithmName } from './aes';
+import { rsaImportKey } from './rsa';
 
 const exportKeySpki = async (key: CryptoKey): Promise<ArrayBuffer | any> => {
   switch (key.algorithm.name) {
@@ -56,6 +62,102 @@ const exportKeySpki = async (key: CryptoKey): Promise<ArrayBuffer | any> => {
 
   throw new Error(
     `Unable to export a raw ${key.algorithm.name} ${key.type} key`
+  );
+};
+
+const exportKeyRaw = (key: CryptoKey): ArrayBuffer | any => {
+  switch (key.algorithm.name) {
+    case 'ECDSA':
+    // Fall through
+    case 'ECDH':
+      if (key.type === 'public') {
+        return ecExportKey(key, KWebCryptoKeyFormat.kWebCryptoKeyFormatRaw);
+      }
+      break;
+    // case 'Ed25519':
+    //   // Fall through
+    // case 'Ed448':
+    //   // Fall through
+    // case 'X25519':
+    //   // Fall through
+    // case 'X448':
+    //   if (key.type === 'public') {
+    //     return require('internal/crypto/cfrg')
+    //       .cfrgExportKey(key, kWebCryptoKeyFormatRaw);
+    //   }
+    //   break;
+    case 'AES-CTR':
+    // Fall through
+    case 'AES-CBC':
+    // Fall through
+    case 'AES-GCM':
+    // Fall through
+    case 'AES-KW':
+    // Fall through
+    case 'HMAC':
+      return key.keyObject.export();
+  }
+
+  throw lazyDOMException(
+    `Unable to export a raw ${key.algorithm.name} ${key.type} key`,
+    'InvalidAccessError'
+  );
+};
+
+const exportKeyJWK = (key: CryptoKey): ArrayBuffer | any => {
+  const jwk = key.keyObject.handle.exportJwk(
+    {
+      key_ops: key.usages,
+      ext: key.extractable,
+    },
+    true
+  );
+  switch (key.algorithm.name) {
+    case 'RSASSA-PKCS1-v1_5':
+      jwk.alg = normalizeHashName(key.algorithm.hash, HashContext.JwkRsa);
+      return jwk;
+    case 'RSA-PSS':
+      jwk.alg = normalizeHashName(key.algorithm.hash, HashContext.JwkRsaPss);
+      return jwk;
+    case 'RSA-OAEP':
+      jwk.alg = normalizeHashName(key.algorithm.hash, HashContext.JwkRsaOaep);
+      return jwk;
+    case 'ECDSA':
+    // Fall through
+    case 'ECDH':
+      jwk.crv ||= key.algorithm.namedCurve;
+      return jwk;
+    // case 'X25519':
+    //   // Fall through
+    // case 'X448':
+    //   jwk.crv ||= key.algorithm.name;
+    //   return jwk;
+    // case 'Ed25519':
+    //   // Fall through
+    // case 'Ed448':
+    //   jwk.crv ||= key.algorithm.name;
+    //   return jwk;
+    case 'AES-CTR':
+    // Fall through
+    case 'AES-CBC':
+    // Fall through
+    case 'AES-GCM':
+    // Fall through
+    case 'AES-KW':
+      jwk.alg = getAlgorithmName(key.algorithm.name, key.algorithm.length);
+      return jwk;
+    // case 'HMAC':
+    //   jwk.alg = normalizeHashName(
+    //     key.algorithm.hash.name,
+    //     normalizeHashName.kContextJwkHmac);
+    //   return jwk;
+    default:
+    // Fall through
+  }
+
+  throw lazyDOMException(
+    `JWK export not yet supported: ${key.algorithm.name}`,
+    'NotSupportedError'
   );
 };
 
@@ -140,36 +242,30 @@ class Subtle {
 
   async importKey(
     format: ImportFormat,
-    data: BufferLike | BinaryLike,
+    data: BufferLike | BinaryLike | JWK,
     algorithm: SubtleAlgorithm,
     extractable: boolean,
     keyUsages: KeyUsage[]
   ): Promise<CryptoKey> {
     let result: CryptoKey;
     switch (algorithm.name) {
-      // case 'RSASSA-PKCS1-v1_5':
-      // // Fall through
-      // case 'RSA-PSS':
-      // // Fall through
-      // case 'RSA-OAEP':
-      //   result = await require('internal/crypto/rsa').rsaImportKey(
-      //     format,
-      //     keyData,
-      //     algorithm,
-      //     extractable,
-      //     keyUsages
-      //   );
-      //   break;
-      case 'ECDSA':
+      case 'RSASSA-PKCS1-v1_5':
       // Fall through
-      case 'ECDH':
-        result = await ecImportKey(
+      case 'RSA-PSS':
+      // Fall through
+      case 'RSA-OAEP':
+        result = rsaImportKey(
           format,
-          data,
+          data as BufferLike | JWK,
           algorithm,
           extractable,
           keyUsages
         );
+        break;
+      case 'ECDSA':
+      // Fall through
+      case 'ECDH':
+        result = ecImportKey(format, data, algorithm, extractable, keyUsages);
         break;
       // case 'Ed25519':
       // // Fall through
@@ -195,28 +291,28 @@ class Subtle {
       //     keyUsages
       //   );
       //   break;
-      // case 'AES-CTR':
-      // // Fall through
-      // case 'AES-CBC':
-      // // Fall through
-      // case 'AES-GCM':
-      // // Fall through
-      // case 'AES-KW':
-      //   result = await require('internal/crypto/aes').aesImportKey(
-      //     algorithm,
-      //     format,
-      //     keyData,
-      //     extractable,
-      //     keyUsages
-      //   );
-      //   break;
+      case 'AES-CTR':
+      // Fall through
+      case 'AES-CBC':
+      // Fall through
+      case 'AES-GCM':
+      // Fall through
+      case 'AES-KW':
+        result = await aesImportKey(
+          algorithm,
+          format,
+          data as BufferLike | JWK,
+          extractable,
+          keyUsages
+        );
+        break;
       // case 'HKDF':
       // // Fall through
       case 'PBKDF2':
         result = await importGenericSecretKey(
           algorithm,
           format,
-          data,
+          data as BufferLike | BinaryLike,
           extractable,
           keyUsages
         );
@@ -227,14 +323,14 @@ class Subtle {
         );
     }
 
-    // if (
-    //   (result.type === 'secret' || result.type === 'private') &&
-    //   result.usages.length === 0
-    // ) {
-    //   throw new Error(
-    //     `Usages cannot be empty when importing a ${result.type} key.`
-    //   );
-    // }
+    if (
+      (result.type === 'secret' || result.type === 'private') &&
+      result.usages.length === 0
+    ) {
+      throw new Error(
+        `Usages cannot be empty when importing a ${result.type} key.`
+      );
+    }
 
     return result;
   }
@@ -248,10 +344,12 @@ class Subtle {
     switch (format) {
       case 'spki':
         return await exportKeySpki(key);
-      // case 'jwk':
-      //   return exportKeyJWK(key);
-      // case 'raw':
-      //   return exportKeyRaw(key);
+      // case 'pkcs8':
+      //   return await exportKeyPkcs8(key);
+      case 'jwk':
+        return exportKeyJWK(key);
+      case 'raw':
+        return exportKeyRaw(key);
     }
     throw new Error(`'subtle.exportKey()' is not implemented for ${format}`);
   }

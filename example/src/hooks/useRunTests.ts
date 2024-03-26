@@ -97,25 +97,23 @@ const run = (
       stats.passes++;
       addTestResult({
         indentation: indents,
-        description: test.fullTitle(),
+        description: test.title,
         suiteName: name,
         type: 'correct',
       });
-      console.log(`${indent()}pass: ${test.fullTitle()}`);
+      console.log(`${indent()}pass: ${test.title}`);
     })
     .on(EVENT_TEST_FAIL, (test: MochaTypes.Runnable, err: Error) => {
       const name = test.parent?.title || '';
       stats.failures++;
       addTestResult({
         indentation: indents,
-        description: test.fullTitle(),
+        description: test.title,
         suiteName: name,
         type: 'incorrect',
         errorMsg: err.message,
       });
-      console.log(
-        `${indent()}fail: ${test.fullTitle()} - error: ${err.message}`
-      );
+      console.log(`${indent()}fail: ${test.title} - error: ${err.message}`);
     })
     .on(EVENT_TEST_PENDING, function () {
       stats.pending++;

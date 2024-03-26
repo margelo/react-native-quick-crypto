@@ -8,7 +8,7 @@ const { subtle } = crypto;
 
 type TestFixture = [string, string, number, HashAlgorithm, number, string];
 
-describe('subtle.deriveBits()', () => {
+describe('subtle - deriveBits', () => {
   // pbkdf2 deriveBits()
   // {
   const test = async (

@@ -82,7 +82,7 @@ std::optional<jsi::Value> MGLPublicCipher::Cipher(jsi::Runtime& runtime,
     void* label = OPENSSL_memdup(oaep_label_buffer.data(runtime),
                                  oaep_label_buffer.size(runtime));
     if (label == nullptr) {
-      throw new jsi::JSError(runtime, "Error openSSL memdump oaep label");
+      throw jsi::JSError(runtime, "Error openSSL memdump oaep label");
     }
 
     if (0 >= EVP_PKEY_CTX_set0_rsa_oaep_label(

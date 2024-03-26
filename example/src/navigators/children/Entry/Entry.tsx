@@ -81,7 +81,9 @@ const styles = StyleSheet.create({
     paddingHorizontal: 10,
   },
   totalCount: {
+    fontSize: 12,
+    fontWeight: 'bold',
     alignSelf: 'flex-end',
-    paddingRight: 20,
+    paddingRight: 9,
   },
 });
