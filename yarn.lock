@@ -7855,14 +7855,15 @@ react-native-builder-bob@^0.23.2:
     which "^2.0.2"
     yargs "^17.5.1"
 
-react-native-quick-base64@../react-native-quick-base64:
+react-native-quick-base64@^2.0.5:
   version "2.1.0"
+  resolved "https://codeload.github.com/boorad/react-native-quick-base64/tar.gz/dd6164dd81942bb79c7a53f703aa9e0bbe6be65b"
   dependencies:
     base64-js "^1.5.1"
 
-react-native-quick-base64@^2.0.5:
+react-native-quick-base64@boorad/react-native-quick-base64#feat/heifner-version:
   version "2.1.0"
-  resolved "../react-native-quick-base64/"
+  resolved "https://codeload.github.com/boorad/react-native-quick-base64/tar.gz/dd6164dd81942bb79c7a53f703aa9e0bbe6be65b"
   dependencies:
     base64-js "^1.5.1"
 

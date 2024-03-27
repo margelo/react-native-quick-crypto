@@ -541,29 +541,29 @@ describe('subtle - importKey / exportKey', () => {
           extractable,
           privateUsages
         ),
-        // subtle.importKey(
-        //   'jwk',
-        //   {
-        //     alg: name === 'ECDSA' ? keyData[namedCurve].jwsAlg : 'ECDH-ES',
-        //     kty: jwk.kty,
-        //     crv: jwk.crv,
-        //     x: jwk.x,
-        //     y: jwk.y,
-        //   },
-        //   { name, namedCurve },
-        //   extractable,
-        //   publicUsages
-        // ),
-        // subtle.importKey(
-        //   'jwk',
-        //   {
-        //     ...jwk,
-        //     alg: name === 'ECDSA' ? keyData[namedCurve].jwsAlg : 'ECDH-ES',
-        //   },
-        //   { name, namedCurve },
-        //   extractable,
-        //   privateUsages
-        // ),
+        subtle.importKey(
+          'jwk',
+          {
+            alg: name === 'ECDSA' ? keyData[namedCurve].jwsAlg : 'ECDH-ES',
+            kty: jwk.kty,
+            crv: jwk.crv,
+            x: jwk.x,
+            y: jwk.y,
+          },
+          { name, namedCurve },
+          extractable,
+          publicUsages
+        ),
+        subtle.importKey(
+          'jwk',
+          {
+            ...jwk,
+            alg: name === 'ECDSA' ? keyData[namedCurve].jwsAlg : 'ECDH-ES',
+          },
+          { name, namedCurve },
+          extractable,
+          privateUsages
+        ),
       ]);
 
       expect(publicKey.type).to.equal('public');
