@@ -19,6 +19,7 @@ include_directories(
         "${NODE_MODULES_DIR}/react-native/ReactCommon/jsi"
         "${NODE_MODULES_DIR}/react-native/ReactCommon/turbomodule/core"
         "${NODE_MODULES_DIR}/react-native/ReactCommon/react/nativemodule/core"
+        "${NODE_MODULES_DIR}/react-native-quick-base64/cpp"
 )
 
 add_library(

@@ -160,7 +160,7 @@ WebCryptoKeyExportStatus EC_Raw_Export(KeyObjectData* key_data,
         fn = EVP_PKEY_get_raw_public_key;
         break;
       case kKeyTypeSecret:
-        // UNREACHABLE();
+        throw std::runtime_error("unreachable code in EC_Raw_Export");
     }
     CHECK_NOT_NULL(fn);
     // Get the size of the raw key data

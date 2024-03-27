@@ -1143,7 +1143,7 @@ jsi::Value KeyObjectHandle::GetKeyDetail(jsi::Runtime &rt) {
         return GetAsymmetricKeyDetail(rt, data);
         break;
       default:
-        // unreachable
+        throw jsi::JSError(rt, "unreachable code in GetKeyDetail");
     }
   });
 }

@@ -157,9 +157,9 @@ ByteSource ByteSource::FromEncodedString(jsi::Runtime &rt,
   ByteSource out;
 
   switch (enc) {
-    case BASE64URL:
-      // fallthrough
     case BASE64:
+      // fallthrough
+    case BASE64URL:
       decoded = DecodeBase64(key);
       out = FromString(decoded);
       break;
