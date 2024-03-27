@@ -6,6 +6,8 @@
 #include <optional>
 #include <string>
 
+#include "base64.h"
+
 #ifdef ANDROID
 #include "JSIUtils/MGLJSIMacros.h"
 #else
@@ -148,24 +150,26 @@ ByteSource ByteSource::FromBIO(const BIOPointer& bio) {
   return std::move(out).release();
 }
 
-// ByteSource ByteSource::FromEncodedString(Environment* env,
-//                                          Local<String> key,
-//                                          enum encoding enc) {
-//   size_t length = 0;
-//   ByteSource out;
-//
-//   if (StringBytes::Size(env->isolate(), key, enc).To(&length) && length >
-//   0)
-//   {
-//     ByteSource::Builder buf(length);
-//     size_t actual =
-//     StringBytes::Write(env->isolate(), buf.data<char>(), length, key, enc);
-//     out = std::move(buf).release(actual);
-//   }
-//
-//   return out;
-// }
-//
+ByteSource ByteSource::FromEncodedString(jsi::Runtime &rt,
+                                         const std::string key,
+                                         enum encoding enc) {
+  std::string decoded;
+  ByteSource out;
+
+  switch (enc) {
+    case BASE64:
+      // fallthrough
+    case BASE64URL:
+      decoded = DecodeBase64(key);
+      out = FromString(decoded);
+      break;
+    default:
+      throw jsi::JSError(rt, "Encoding not supported");
+  }
+
+  return out;
+}
+
 ByteSource ByteSource::FromStringOrBuffer(jsi::Runtime& runtime,
                                           const jsi::Value& value) {
   return value.isString()
@@ -180,10 +184,6 @@ ByteSource ByteSource::FromString(std::string str, bool ntc) {
   size_t size = str.size();
   size_t alloc_size = ntc ? size + 1 : size;
   ByteSource::Builder out(alloc_size);
-  //   int opts = String::NO_OPTIONS;
-  //   if (!ntc) opts |= String::NO_NULL_TERMINATION;
-  //   str->WriteUtf8(env->isolate(), out.data<char>(), alloc_size, nullptr,
-  //   opts);
   if (ntc) {
     strcpy(out.data<char>(), str.data());
   } else {
@@ -232,6 +232,27 @@ ByteSource ByteSource::Allocated(void* data, size_t size) {
 
 ByteSource ByteSource::Foreign(const void* data, size_t size) {
   return ByteSource(data, nullptr, size);
+}
+
+std::string EncodeBignum(const BIGNUM* bn,
+                         int size,
+                         bool url) {
+  if (size == 0)
+    size = BN_num_bytes(bn);
+  std::vector<uint8_t> buf(size);
+  CHECK_EQ(BN_bn2binpad(bn, buf.data(), size), size);
+  std::string data = (char *) buf.data();
+  return EncodeBase64(data, size, url);
+}
+
+std::string EncodeBase64(const std::string &data, size_t len, bool url) {
+  return base64_encode(reinterpret_cast<const unsigned char *>(data.c_str()),
+                       len,
+                       url);
+}
+
+std::string DecodeBase64(const std::string &in, bool remove_linebreaks) {
+  return base64_decode(in, remove_linebreaks);
 }
 
 }  // namespace margelo

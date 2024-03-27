@@ -60,6 +60,16 @@ RsaKeyPairGenConfig prepareRsaKeyGenConfig(jsi::Runtime& runtime,
 std::pair<JSVariant, JSVariant> generateRSAKeyPair(
     jsi::Runtime& runtime, std::shared_ptr<RsaKeyPairGenConfig> config);
 
+jsi::Value ExportJWKRsaKey(jsi::Runtime &rt,
+                           std::shared_ptr<KeyObjectData> key,
+                           jsi::Object &target);
+
+std::shared_ptr<KeyObjectData> ImportJWKRsaKey(jsi::Runtime &rt,
+                                               jsi::Object &jwk);
+
+jsi::Value GetRsaKeyDetail(jsi::Runtime &rt,
+                           std::shared_ptr<KeyObjectData> key);
+
 }  // namespace margelo
 
 #endif /* MGLRsa_hpp */

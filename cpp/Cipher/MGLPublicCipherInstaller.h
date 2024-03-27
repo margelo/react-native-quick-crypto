@@ -57,18 +57,18 @@ FieldDefinition getPublicCipherFieldDefinition(
             runtime, arguments, &offset);
 
         if (!pkey) {
-          throw new jsi::JSError(runtime, "Could not generate key");
+          throw jsi::JSError(runtime, "Could not generate key");
         }
 
         auto buf = arguments[offset].asObject(runtime).getArrayBuffer(runtime);
         if (!CheckSizeInt32(runtime, buf)) {
-          throw new jsi::JSError(runtime, "Data buffer is too long");
+          throw jsi::JSError(runtime, "Data buffer is too long");
         }
 
         uint32_t padding =
             static_cast<uint32_t>(arguments[offset + 1].getNumber());
         if (!padding) {
-          throw new jsi::JSError(runtime, "Invalid padding");
+          throw jsi::JSError(runtime, "Invalid padding");
         }
 
         const EVP_MD* digest = nullptr;
@@ -78,7 +78,7 @@ FieldDefinition getPublicCipherFieldDefinition(
 
           digest = EVP_get_digestbyname(oaep_str.c_str());
           if (digest == nullptr) {
-            throw new jsi::JSError(runtime, "Invalid digest (oaep_str)");
+            throw jsi::JSError(runtime, "Invalid digest (oaep_str)");
           }
         }
 
@@ -86,7 +86,7 @@ FieldDefinition getPublicCipherFieldDefinition(
           auto oaep_label_buffer =
               arguments[offset + 3].getObject(runtime).getArrayBuffer(runtime);
           if (!CheckSizeInt32(runtime, oaep_label_buffer)) {
-            throw new jsi::JSError(runtime, "oaep_label buffer is too long");
+            throw jsi::JSError(runtime, "oaep_label buffer is too long");
           }
         }
 
@@ -96,7 +96,7 @@ FieldDefinition getPublicCipherFieldDefinition(
                 runtime, pkey, padding, digest, arguments[offset + 3], buf);
 
         if (!out.has_value()) {
-          throw new jsi::JSError(runtime, "Failed to decrypt");
+          throw jsi::JSError(runtime, "Failed to decrypt");
         }
 
         return out.value().getObject(runtime);

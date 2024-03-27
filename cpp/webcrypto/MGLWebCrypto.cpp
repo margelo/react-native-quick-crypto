@@ -40,8 +40,14 @@ jsi::Value createWebCryptoObject(jsi::Runtime &rt) {
             std::static_pointer_cast<KeyObjectHandle>(
                 args[1].asObject(rt).getHostObject(rt));
         std::shared_ptr<KeyObjectData> key_data = handle->Data();
-        ECDH::doExport(rt, static_cast<WebCryptoKeyFormat>(args[0].asNumber()),
-                                                            key_data, &out);
+        WebCryptoKeyExportStatus status = ECDH::doExport(rt,
+                                                         key_data,
+                                                         static_cast<WebCryptoKeyFormat>(args[0].asNumber()),
+                                                         {}, // blank params
+                                                         &out);
+        if (status != WebCryptoKeyExportStatus::OK) {
+            throw jsi::JSError(rt, "error exporting key, status: " + std::to_string(static_cast<int>(status)));
+        }
         JSVariant jsv = JSVariant(std::move(out));
         return toJSI(rt, jsv);
     });

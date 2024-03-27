@@ -10,7 +10,7 @@ const { subtle } = crypto;
 
 type Test = [HashAlgorithm, string, number];
 
-describe('subtle.digest()', () => {
+describe('subtle - digest', () => {
   it('empty hash just works, not checking result', async () => {
     await subtle.digest('SHA-512', Buffer.alloc(0));
   });
