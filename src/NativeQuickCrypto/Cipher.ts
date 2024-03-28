@@ -19,6 +19,7 @@ export type InternalCipher = {
   }) => InternalCipher;
   setAutoPadding: (autoPad: boolean) => boolean;
   setAuthTag: (tag: ArrayBuffer) => boolean;
+  getAuthTag: () => ArrayBuffer;
 };
 
 export type CreateCipherMethod = (params: {

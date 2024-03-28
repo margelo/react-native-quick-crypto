@@ -204,9 +204,9 @@ class CipherCommon extends Stream.Transform {
     return this;
   }
 
-  // protected getAuthTag(): Buffer {
-  //   return Buffer.from(this.internal.getAuthTag());
-  // }
+  protected getAuthTag(): ArrayBuffer {
+    return this.internal.getAuthTag();
+  }
 
   public setAuthTag(tag: Buffer): this {
     this.internal.setAuthTag(tag.buffer);
