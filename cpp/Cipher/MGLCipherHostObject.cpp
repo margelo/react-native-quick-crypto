@@ -329,10 +329,12 @@ void MGLCipherHostObject::installMethods() {
       ok = EVP_CipherFinal_ex(ctx_, out.getBuffer(runtime).data(runtime),
                               &out_len) == 1;
 
+      // Additional operations for authenticated modes
       if (ok && isCipher_ && IsAuthenticatedMode()) {
-        // In GCM mode, the authentication tag length can be specified in
-        // advance, but defaults to 16 bytes when encrypting. In CCM and OCB
-        // mode, it must always be given by the user.
+        // In GCM mode: default to 16 bytes.
+        // In CCM, OCB mode: must be provided by user.
+        
+        // Logic for default auth tag length
         if (auth_tag_len_ == kNoAuthTagLength) {
           // TODO(osp) check
           // CHECK(mode == EVP_CIPH_GCM_MODE);
@@ -445,6 +447,28 @@ void MGLCipherHostObject::installMethods() {
 
     return EVP_CIPHER_CTX_set_padding(ctx_, arguments[0].getBool());
   }));
+
+
+  // getAuthTag
+  this->fields.push_back(buildPair(
+    "getAuthTag", JSIF([this]) {
+        if (ctx_) {
+          throw jsi::JSError(runtime, "Cannot getAuthTag while encryption in progress.");
+        }
+        if (!isCipher_) {
+          throw jsi::JSError(runtime, "Cannot getAuthTag in decryption mode.");
+        }
+        if (auth_tag_len_ == kNoAuthTagLength) {
+          throw jsi::JSError(runtime, "Authentication tag not set or not available. Make sure to call 'final' before getting the authentication tag.");
+        }
+
+        MGLTypedArray<MGLTypedArrayKind::Uint8Array> authTagArray(runtime, auth_tag_len_);
+        auto buffer = authTagArray.getBuffer(runtime);  
+        auto dataPtr = buffer.data(runtime);            
+        std::memcpy(dataPtr, auth_tag_, auth_tag_len_);
+
+        return authTagArray;
+    }));
 
   // setAuthTag
   this->fields.push_back(buildPair(
