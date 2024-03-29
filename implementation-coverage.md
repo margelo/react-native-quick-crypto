@@ -2,7 +2,28 @@
 This document attempts to describe the implementation status of Crypto APIs/Interfaces from Node.js in the `react-native-quick-crypto` library.
 
 # `Crypto`
-> TODO
+> 🚧 needs to be filled out completely
+
+## `encrypt`
+| Algorithm  | Status |
+| ---------  | :----: |
+| `AES-CBC`  |  |
+| `AES-CCM`  |  |
+| `AES-CTR`  |  |
+| `AES-GCM`  | ✅ |
+| `chacha20` |  |
+| `chacha20-poly1305` |  |
+
+## `decrypt`
+| Algorithm  | Status |
+| ---------  | :----: |
+| `AES-CBC`  |  |
+| `AES-CCM`  |  |
+| `AES-CTR`  |  |
+| `AES-GCM`  | ✅ |
+| `chacha20` |  |
+| `chacha20-poly1305` |  |
+
 
 # `SubtleCrypto`
 
