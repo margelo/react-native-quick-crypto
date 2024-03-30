@@ -21,6 +21,12 @@
 #include <vector>
 #include <variant>
 
+#ifdef ANDROID
+#include "Utils/node.h"
+#else
+#include "node.h"
+#endif
+
 namespace margelo {
 
 namespace jsi = facebook::jsi;
@@ -39,7 +45,7 @@ using PKCS8Pointer = DeleteFnPtr<PKCS8_PRIV_KEY_INFO, PKCS8_PRIV_KEY_INFO_free>;
 using EVPKeyCtxPointer = DeleteFnPtr<EVP_PKEY_CTX, EVP_PKEY_CTX_free>;
 using EVPKeyPointer = DeleteFnPtr<EVP_PKEY, EVP_PKEY_free>;
 using BignumPointer = DeleteFnPtr<BIGNUM, BN_free>;
-using RSAPointer = DeleteFnPtr<RSA, RSA_free>;
+using RsaPointer = DeleteFnPtr<RSA, RSA_free>;
 using EVPMDPointer = DeleteFnPtr<EVP_MD_CTX, EVP_MD_CTX_free>;
 using ECDSASigPointer = DeleteFnPtr<ECDSA_SIG, ECDSA_SIG_free>;
 using ECKeyPointer = DeleteFnPtr<EC_KEY, EC_KEY_free>;
@@ -154,9 +160,9 @@ class ByteSource {
 
     operator bool() const { return data_ != nullptr; }
 
-    // BignumPointer ToBN() const {
-    // return BignumPointer(BN_bin2bn(data<unsigned char>(), size(), nullptr));
-    //  }
+    BignumPointer ToBN() const {
+      return BignumPointer(BN_bin2bn(data<unsigned char>(), size(), nullptr));
+    }
 
     // Creates a v8::BackingStore that takes over responsibility for
     // any allocated data. The ByteSource will be reset with size = 0
@@ -170,10 +176,10 @@ class ByteSource {
     static ByteSource Allocated(void* data, size_t size);
     static ByteSource Foreign(const void* data, size_t size);
 
-    //  static ByteSource FromEncodedString(Environment* env,
-    //                                      v8::Local<v8::String> value,
-    //                                      enum encoding enc = BASE64);
-    //
+     static ByteSource FromEncodedString(jsi::Runtime &rt,
+                                         std::string value,
+                                         enum encoding enc = BASE64);
+
     static ByteSource FromStringOrBuffer(jsi::Runtime& runtime,
                                          const jsi::Value& value);
 
@@ -210,9 +216,6 @@ ByteSource ArrayBufferToByteSource(jsi::Runtime& runtime,
 ByteSource ArrayBufferToNTCByteSource(jsi::Runtime& runtime,
                                       const jsi::ArrayBuffer& buffer);
 
-jsi::Object ByteSourceToArrayBuffer(jsi::Runtime &runtime,
-                                         ByteSource &source);
-
 // Originally part of the ArrayBufferContentOrView class
 inline ByteSource ToNullTerminatedByteSource(jsi::Runtime& runtime,
                                              jsi::ArrayBuffer& buffer) {
@@ -248,6 +251,11 @@ inline void CheckEntropy() {
     }
 }
 
+std::string StringBytesWrite(jsi::Runtime &rt,
+                        const std::string val,
+                        enum encoding encoding);
+
+
 using JSVariant = std::variant<nullptr_t, bool, int, double, long, long long,
                                std::string, ByteSource>;
 
@@ -255,6 +263,13 @@ using OptionJSVariant = std::optional<JSVariant>;
 
 jsi::Value toJSI(jsi::Runtime& rt, OptionJSVariant& value);
 jsi::Value toJSI(jsi::Runtime& rt, JSVariant& value);
+
+std::string EncodeBignum(const BIGNUM* bn,
+                         int size,
+                         bool url = false);
+
+std::string EncodeBase64(const std::string &data, size_t len, bool url = false);
+std::string DecodeBase64(const std::string &in, bool remove_linebreaks = false);
 
 }  // namespace margelo
 

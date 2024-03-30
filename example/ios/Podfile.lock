@@ -317,10 +317,10 @@ PODS:
   - React-jsinspector (0.72.7)
   - React-logger (0.72.7):
     - glog
-  - react-native-quick-base64 (2.0.7):
+  - react-native-quick-base64 (2.1.0):
     - React-Core
   - react-native-quick-crypto (0.6.1):
-    - OpenSSL-Universal
+    - OpenSSL-Universal (~> 1.1.2200)
     - React
     - React-callinvoker
     - React-Core
@@ -634,8 +634,8 @@ SPEC CHECKSUMS:
   React-jsiexecutor: c49502e5d02112247ee4526bc3ccfc891ae3eb9b
   React-jsinspector: 8baadae51f01d867c3921213a25ab78ab4fbcd91
   React-logger: 8edc785c47c8686c7962199a307015e2ce9a0e4f
-  react-native-quick-base64: a5dbe4528f1453e662fcf7351029500b8b63e7bb
-  react-native-quick-crypto: 82eedfdbd352c8fa861512f80f07d069c411c9b8
+  react-native-quick-base64: 825de692915d4c6fec53c7949d52b1204d99643e
+  react-native-quick-crypto: 62ec693f7683c9cd21e6b9727abd7a31c598b9c4
   react-native-safe-area-context: 2cd91d532de12acdb0a9cbc8d43ac72a8e4c897c
   React-NativeModulesApple: b6868ee904013a7923128892ee4a032498a1024a
   React-perflogger: 31ea61077185eb1428baf60c0db6e2886f141a5a

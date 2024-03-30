@@ -17,9 +17,10 @@
 
 #ifdef ANDROID
 #include "Utils/MGLUtils.h"
+#include "JSIUtils/MGLSmartHostObject.h"
 #else
 #include "MGLUtils.h"
-#include "JSIUtils/MGLSmartHostObject.h"
+#include "MGLSmartHostObject.h"
 #endif
 
 // This file should roughly match https://github.com/nodejs/node/blob/main/src/crypto/crypto_keys.cc
@@ -54,6 +55,12 @@ enum class ParseKeyResult {
   kParseKeyNotRecognized,
   kParseKeyNeedPassphrase,
   kParseKeyFailed
+};
+
+enum class WebCryptoKeyExportStatus {
+  OK,
+  INVALID_KEY_TYPE,
+  FAILED
 };
 
 struct AsymmetricKeyEncodingConfig {
@@ -161,16 +168,19 @@ class JSI_EXPORT KeyObjectHandle: public jsi::HostObject {
     const std::shared_ptr<KeyObjectData>& Data();
 
  protected:
-    jsi::Value Init(jsi::Runtime &rt);
-    jsi::Value InitECRaw(jsi::Runtime &rt);
     jsi::Value Export(jsi::Runtime &rt);
-    OptionJSVariant ExportSecretKey(jsi::Runtime& rt) const;
+    jsi::Value ExportJWK(jsi::Runtime &rt);
     OptionJSVariant ExportPublicKey(
       jsi::Runtime& rt,
       const PublicKeyEncodingConfig& config) const;
     OptionJSVariant ExportPrivateKey(
       jsi::Runtime& rt,
       const PrivateKeyEncodingConfig& config) const;
+    OptionJSVariant ExportSecretKey(jsi::Runtime& rt) const;
+    jsi::Value Init(jsi::Runtime &rt);
+    jsi::Value InitECRaw(jsi::Runtime &rt);
+    jsi::Value InitJWK(jsi::Runtime &rt);
+    jsi::Value GetKeyDetail(jsi::Runtime &rt);
 
  private:
     std::shared_ptr<KeyObjectData> data_;

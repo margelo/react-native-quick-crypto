@@ -50,6 +50,7 @@ add_library(
         "../cpp/Sig/MGLSignHostObjects.cpp"
         "../cpp/webcrypto/MGLWebCrypto.cpp"
         "../cpp/webcrypto/crypto_ec.cpp"
+        "../node_modules/react-native-quick-base64/cpp"
 )
 
 set_target_properties(

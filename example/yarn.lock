@@ -4964,10 +4964,15 @@ react-is@^17.0.1:
   resolved "https://registry.yarnpkg.com/react-is/-/react-is-17.0.2.tgz#e691d4a8e9c789365655539ab372762b0efb54f0"
   integrity sha512-w2GsyukL62IJnlaff/nRegPQR94C/XXamvMWmSHRJ4y7Ts/4ocGRmTHvOs8PSE6pB3dWOrD/nueuU5sduBsQ4w==
 
-react-native-quick-base64@^2.0.5, react-native-quick-base64@^2.0.7:
-  version "2.0.7"
-  resolved "https://registry.yarnpkg.com/react-native-quick-base64/-/react-native-quick-base64-2.0.7.tgz#70ec863fb5dba8cd858a262f6b901dbbfbfdd3df"
-  integrity sha512-QmOon3zXAWFi3KvQVCJjCC7N66rwfl1R4nLPuJ+OVs8nWysvKlaU8mKxe2BV4Ud1nB3nTDgyi2VCJFpjtjJxKw==
+react-native-quick-base64@^2.0.5:
+  version "2.1.0"
+  resolved "https://codeload.github.com/boorad/react-native-quick-base64/tar.gz/dd6164dd81942bb79c7a53f703aa9e0bbe6be65b"
+  dependencies:
+    base64-js "^1.5.1"
+
+react-native-quick-base64@boorad/react-native-quick-base64#feat/heifner-version:
+  version "2.1.0"
+  resolved "https://codeload.github.com/boorad/react-native-quick-base64/tar.gz/dd6164dd81942bb79c7a53f703aa9e0bbe6be65b"
   dependencies:
     base64-js "^1.5.1"
 

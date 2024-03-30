@@ -98,6 +98,7 @@ const styles = StyleSheet.create({
   },
   count: {
     fontSize: 12,
+    fontWeight: 'bold',
     flex: 1,
     textAlign: 'right',
   },

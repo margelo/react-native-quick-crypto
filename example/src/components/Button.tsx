@@ -13,7 +13,7 @@ export const Button: React.FC<ButtonProps> = ({
   return (
     <View>
       <TouchableOpacity style={styles.container} onPress={onPress}>
-        <Text>{title}</Text>
+        <Text style={styles.label}>{title}</Text>
       </TouchableOpacity>
     </View>
   );
@@ -21,12 +21,13 @@ export const Button: React.FC<ButtonProps> = ({
 
 const styles = StyleSheet.create({
   container: {
-    backgroundColor: '#99FFFF',
+    backgroundColor: '#1976d2',
     padding: 10,
     borderRadius: 5,
     alignContent: 'center',
     justifyContent: 'center',
-    borderWidth: 1,
-    borderColor: 'black',
+  },
+  label: {
+    color: 'white',
   },
 });

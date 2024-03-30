@@ -12,17 +12,20 @@
 #include <openssl/ec.h>
 
 #include <algorithm>
+#include <iostream>
 #include <optional>
 #include <utility>
 #include <vector>
 
 #ifdef ANDROID
+#include "Cipher/MGLRsa.h"
 #include "JSIUtils/MGLJSIMacros.h"
 #include "JSIUtils/MGLJSIUtils.h"
 #include "JSIUtils/MGLTypedArray.h"
 #include "Utils/MGLUtils.h"
 #include "webcrypto/crypto_ec.h"
 #else
+#include "MGLRsa.h"
 #include "MGLJSIMacros.h"
 #include "MGLJSIUtils.h"
 #include "MGLTypedArray.h"
@@ -296,7 +299,7 @@ OptionJSVariant WritePrivateKey(
     // PKCS#1 is only permitted for RSA keys.
     //    CHECK_EQ(EVP_PKEY_id(pkey), EVP_PKEY_RSA);
 
-    RSAPointer rsa(EVP_PKEY_get1_RSA(pkey));
+    RsaPointer rsa(EVP_PKEY_get1_RSA(pkey));
     if (config.format_ == kKeyFormatPEM) {
       // Encode PKCS#1 as PEM.
       err = PEM_write_bio_RSAPrivateKey(bio.get(), rsa.get(), config.cipher_,
@@ -354,7 +357,7 @@ bool WritePublicKeyInner(EVP_PKEY* pkey, const BIOPointer& bio,
   if (config.type_.value() == kKeyEncodingPKCS1) {
     // PKCS#1 is only valid for RSA keys.
     //    CHECK_EQ(EVP_PKEY_id(pkey), EVP_PKEY_RSA);
-    RSAPointer rsa(EVP_PKEY_get1_RSA(pkey));
+    RsaPointer rsa(EVP_PKEY_get1_RSA(pkey));
     if (config.format_ == kKeyFormatPEM) {
       // Encode PKCS#1 as PEM.
       return PEM_write_bio_RSAPublicKey(bio.get(), rsa.get()) == 1;
@@ -389,135 +392,102 @@ OptionJSVariant WritePublicKey(
   return BIOToStringOrBuffer(runtime, bio.get(), config.format_);
 }
 
-// Maybe<bool> ExportJWKSecretKey(
-//                               Environment* env,
-//                               std::shared_ptr<KeyObjectData> key,
-//                               Local<Object> target) {
-//  CHECK_EQ(key->GetKeyType(), kKeyTypeSecret);
-//
-//  Local<Value> error;
-//  Local<Value> raw;
-//  MaybeLocal<Value> key_data =
-//  StringBytes::Encode(
-//                      env->isolate(),
-//                      key->GetSymmetricKey(),
-//                      key->GetSymmetricKeySize(),
-//                      BASE64URL,
-//                      &error);
-//  if (key_data.IsEmpty()) {
-//    CHECK(!error.IsEmpty());
-//    env->isolate()->ThrowException(error);
-//    return Nothing<bool>();
-//  }
-//  if (!key_data.ToLocal(&raw))
-//    return Nothing<bool>();
-//
-//  if (target->Set(
-//                  env->context(),
-//                  env->jwk_kty_string(),
-//                  env->jwk_oct_string()).IsNothing() ||
-//      target->Set(
-//                  env->context(),
-//                  env->jwk_k_string(),
-//                  raw).IsNothing()) {
-//                    return Nothing<bool>();
-//                  }
-//
-//  return Just(true);
-//}
-//
-// std::shared_ptr<KeyObjectData> ImportJWKSecretKey(
-//                                                  Environment* env,
-//                                                  Local<Object> jwk) {
-//  Local<Value> key;
-//  if (!jwk->Get(env->context(), env->jwk_k_string()).ToLocal(&key) ||
-//      !key->IsString()) {
-//    THROW_ERR_CRYPTO_INVALID_JWK(env, "Invalid JWK secret key format");
-//    return std::shared_ptr<KeyObjectData>();
-//  }
-//
-//  ByteSource key_data = ByteSource::FromEncodedString(env,
-//  key.As<String>()); if (key_data.size() > INT_MAX) {
-//    THROW_ERR_CRYPTO_INVALID_KEYLEN(env);
-//    return std::shared_ptr<KeyObjectData>();
-//  }
-//
-//  return KeyObjectData::CreateSecret(std::move(key_data));
-//}
-//
-// Maybe<bool> ExportJWKAsymmetricKey(
-//                                   Environment* env,
-//                                   std::shared_ptr<KeyObjectData> key,
-//                                   Local<Object> target,
-//                                   bool handleRsaPss) {
-//  switch (EVP_PKEY_id(key->GetAsymmetricKey().get())) {
-//    case EVP_PKEY_RSA_PSS: {
-//      if (handleRsaPss) return ExportJWKRsaKey(env, key, target);
-//      break;
-//    }
-//    case EVP_PKEY_RSA: return ExportJWKRsaKey(env, key, target);
-//    case EVP_PKEY_EC: return ExportJWKEcKey(env, key, target).IsJust() ?
-//      Just(true) : Nothing<bool>();
-//    case EVP_PKEY_ED25519:
-//      // Fall through
-//    case EVP_PKEY_ED448:
-//      // Fall through
-//    case EVP_PKEY_X25519:
-//      // Fall through
-//    case EVP_PKEY_X448: return ExportJWKEdKey(env, key, target);
-//  }
-//  THROW_ERR_CRYPTO_JWK_UNSUPPORTED_KEY_TYPE(env);
-//  return Just(false);
-//}
-//
-// std::shared_ptr<KeyObjectData> ImportJWKAsymmetricKey(
-//                                                      Environment* env,
-//                                                      Local<Object> jwk,
-//                                                      const char* kty,
-//                                                      const
-//                                                      FunctionCallbackInfo<Value>&
-//                                                      args, unsigned int
-//                                                      offset) {
-//  if (strcmp(kty, "RSA") == 0) {
-//    return ImportJWKRsaKey(env, jwk, args, offset);
-//  } else if (strcmp(kty, "EC") == 0) {
-//    return ImportJWKEcKey(env, jwk, args, offset);
-//  }
-//
-//  THROW_ERR_CRYPTO_INVALID_JWK(env, "%s is not a supported JWK key type",
-//  kty); return std::shared_ptr<KeyObjectData>();
-//}
-//
-// Maybe<bool> GetSecretKeyDetail(
-//                               Environment* env,
-//                               std::shared_ptr<KeyObjectData> key,
-//                               Local<Object> target) {
-//  // For the secret key detail, all we care about is the length,
-//  // converted to bits.
-//
-//  size_t length = key->GetSymmetricKeySize() * CHAR_BIT;
-//  return target->Set(env->context(),
-//                     env->length_string(),
-//                     Number::New(env->isolate(),
-//                     static_cast<double>(length)));
-//}
-//
-// Maybe<bool> GetAsymmetricKeyDetail(
-//                                   Environment* env,
-//                                   std::shared_ptr<KeyObjectData> key,
-//                                   Local<Object> target) {
-//  switch (EVP_PKEY_id(key->GetAsymmetricKey().get())) {
-//    case EVP_PKEY_RSA:
-//      // Fall through
-//    case EVP_PKEY_RSA_PSS: return GetRsaKeyDetail(env, key, target);
-//    case EVP_PKEY_DSA: return GetDsaKeyDetail(env, key, target);
-//    case EVP_PKEY_EC: return GetEcKeyDetail(env, key, target);
-//    case EVP_PKEY_DH: return GetDhKeyDetail(env, key, target);
-//  }
-//  THROW_ERR_CRYPTO_INVALID_KEYTYPE(env);
-//  return Nothing<bool>();
-//}
-//}  // namespace
+jsi::Value ExportJWKSecretKey(jsi::Runtime &rt,
+                              std::shared_ptr<KeyObjectData> key,
+                              jsi::Object &result) {
+  CHECK_EQ(key->GetKeyType(), kKeyTypeSecret);
+
+  std::string data = (char *) key->GetSymmetricKey();
+  std::string key_data = EncodeBase64(data, key->GetSymmetricKeySize(), true);
+
+  result.setProperty(rt, "kty", "oct");
+  result.setProperty(rt, "k", key_data);
+  return std::move(result);
+}
+
+std::shared_ptr<KeyObjectData> ImportJWKSecretKey(jsi::Runtime &rt,
+                                                  jsi::Object &jwk) {
+  std::string key = jwk
+    .getProperty(rt, "k")
+    .asString(rt)
+    .utf8(rt);
+
+  // TODO: when adding tests, trap errors like below (i.e. no `k` property, undefined)
+  //  Local<Value> key;
+  //  if (!jwk->Get(env->context(), env->jwk_k_string()).ToLocal(&key) ||
+  //      !key->IsString()) {
+  //    THROW_ERR_CRYPTO_INVALID_JWK(env, "Invalid JWK secret key format");
+  //    return std::shared_ptr<KeyObjectData>();
+  //  }
+
+  ByteSource key_data = ByteSource::FromEncodedString(rt, key, encoding::BASE64URL);
+  if (key_data.size() > INT_MAX) {
+    throw jsi::JSError(rt, "Invalid crypto key length");
+    return std::shared_ptr<KeyObjectData>();
+  }
+
+  return KeyObjectData::CreateSecret(std::move(key_data));
+}
+
+jsi::Value ExportJWKAsymmetricKey(jsi::Runtime &rt,
+                                  std::shared_ptr<KeyObjectData> key,
+                                  jsi::Object &target,
+                                  bool handleRsaPss) {
+  switch (EVP_PKEY_id(key->GetAsymmetricKey().get())) {
+    case EVP_PKEY_RSA_PSS: {
+      if (handleRsaPss) return ExportJWKRsaKey(rt, key, target);
+      break;
+    }
+    case EVP_PKEY_RSA: return ExportJWKRsaKey(rt, key, target);
+    case EVP_PKEY_EC: return ExportJWKEcKey(rt, key, target);
+    // case EVP_PKEY_ED25519:
+    //   // Fall through
+    // case EVP_PKEY_ED448:
+    //   // Fall through
+    // case EVP_PKEY_X25519:
+    //   // Fall through
+    // case EVP_PKEY_X448: return ExportJWKEdKey(rt, key, target);
+  }
+  throw jsi::JSError(rt, "Unsupported JWK asymmetric key type");
+}
+
+std::shared_ptr<KeyObjectData> ImportJWKAsymmetricKey(jsi::Runtime &rt,
+                                                      jsi::Object &jwk,
+                                                      std::string kty,
+                                                      jsi::Value &namedCurve) {
+  if (kty.compare("RSA") == 0) {
+    return ImportJWKRsaKey(rt, jwk);
+  } else if (kty.compare("EC") == 0) {
+    return ImportJWKEcKey(rt, jwk, namedCurve);
+  }
+
+  throw jsi::JSError(rt, "%s is not a supported JWK key type", kty);
+  return std::shared_ptr<KeyObjectData>();
+}
+
+jsi::Value GetSecretKeyDetail(jsi::Runtime &rt,
+                              std::shared_ptr<KeyObjectData> key) {
+  jsi::Object target = jsi::Object(rt);
+  // For the secret key detail, all we care about is the length,
+  // converted to bits.
+  size_t length = key->GetSymmetricKeySize() * CHAR_BIT;
+  target.setProperty(rt, "length", static_cast<double>(length));
+  return std::move(target);
+}
+
+jsi::Value GetAsymmetricKeyDetail(jsi::Runtime &rt,
+                                  std::shared_ptr<KeyObjectData> key) {
+  switch (EVP_PKEY_id(key->GetAsymmetricKey().get())) {
+    case EVP_PKEY_RSA:
+      // Fall through
+    case EVP_PKEY_RSA_PSS: return GetRsaKeyDetail(rt, key);
+    // case EVP_PKEY_DSA: return GetDsaKeyDetail(env, key);
+    case EVP_PKEY_EC: return GetEcKeyDetail(rt, key);
+    // case EVP_PKEY_DH: return GetDhKeyDetail(env, key);
+  }
+  throw jsi::JSError(rt, "Invalid Key Type");
+  return false;
+}
 
 ManagedEVPPKey::ManagedEVPPKey(EVPKeyPointer&& pkey) : pkey_(std::move(pkey)) {}
 
@@ -563,25 +533,22 @@ EVP_PKEY* ManagedEVPPKey::get() const { return pkey_.get(); }
 //                                               pkey_.get(), nullptr, &len)
 //                                               == 1) ? len : 0;
 //}
-//
-// Maybe<bool> ExportJWKInner(Environment* env,
-//                            std::shared_ptr<KeyObjectData> key,
-//                            Local<Value> result,
-//                            bool handleRsaPss) {
-//   switch (key->GetKeyType()) {
-//     case kKeyTypeSecret:
-//       return ExportJWKSecretKey(env, key, result.As<Object>());
-//     case kKeyTypePublic:
-//       // Fall through
-//     case kKeyTypePrivate:
-//       return ExportJWKAsymmetricKey(
-//                                     env, key, result.As<Object>(),
-//                                     handleRsaPss);
-//     default:
-//       UNREACHABLE();
-//   }
-// }
-//
+
+jsi::Value ExportJWKInner(jsi::Runtime &rt,
+                          std::shared_ptr<KeyObjectData> key,
+                          jsi::Object &result,
+                          bool handleRsaPss) {
+  switch (key->GetKeyType()) {
+    case kKeyTypeSecret:
+      return ExportJWKSecretKey(rt, key, result);
+    case kKeyTypePublic:
+      // Fall through
+    case kKeyTypePrivate:
+      return ExportJWKAsymmetricKey(rt, key, result, handleRsaPss);
+    default:
+      // UNREACHABLE();
+  }
+}
 
 OptionJSVariant ManagedEVPPKey::ToEncodedPublicKey(
     jsi::Runtime& runtime, ManagedEVPPKey key,
@@ -758,7 +725,7 @@ ManagedEVPPKey ManagedEVPPKey::GetPublicOrPrivateKeyFromJs(
           is_public = false;
           break;
         default:
-          throw new jsi::JSError(runtime, "Invalid key encoding type");
+          throw jsi::JSError(runtime, "Invalid key encoding type");
       }
 
       if (is_public) {
@@ -775,7 +742,7 @@ ManagedEVPPKey ManagedEVPPKey::GetPublicOrPrivateKeyFromJs(
     return ManagedEVPPKey::GetParsedKey(runtime, std::move(pkey), ret,
                                         "Failed to read asymmetric key");
   } else {
-    throw new jsi::JSError(
+    throw jsi::JSError(
         runtime, "public encrypt only supports ArrayBuffer at the moment");
     //    CHECK(args[*offset]->IsObject());
     //    KeyObjectHandle* key =
@@ -796,25 +763,23 @@ ManagedEVPPKey ManagedEVPPKey::GetParsedKey(jsi::Runtime& runtime,
       //       CHECK(pkey);
       break;
     case ParseKeyResult::kParseKeyNeedPassphrase:
-      throw jsi::JSError(runtime,
-                                "Passphrase required for encrypted key");
+      throw jsi::JSError(runtime, "Passphrase required for encrypted key");
       break;
     default:
-      throw new jsi::JSError(runtime, default_msg);
+      throw jsi::JSError(runtime, default_msg);
   }
 
   return ManagedEVPPKey(std::move(pkey));
 }
 
-KeyObjectData::KeyObjectData(
-                             ByteSource symmetric_key)
+KeyObjectData::KeyObjectData(ByteSource symmetric_key)
 : key_type_(KeyType::kKeyTypeSecret),
   symmetric_key_(std::move(symmetric_key)),
   symmetric_key_len_(symmetric_key_.size()),
   asymmetric_key_() {}
 
 KeyObjectData::KeyObjectData(KeyType type,
-                            const ManagedEVPPKey& pkey)
+                             const ManagedEVPPKey& pkey)
 : key_type_(type),
   symmetric_key_(),
   symmetric_key_len_(0),
@@ -859,14 +824,18 @@ jsi::Value KeyObjectHandle::get(
   const jsi::PropNameID &propNameID) {
     auto name = propNameID.utf8(rt);
 
-    if (name == "initECRaw") {
-      return this-> InitECRaw(rt);
-    }
-    else if (name == "init") {
-      return this->Init(rt);
-    }
-    else if (name == "export") {
+    if (name == "export") {
       return this->Export(rt);
+    } else if (name == "exportJwk") {
+      return this->ExportJWK(rt);
+    } else if (name == "initECRaw") {
+      return this-> InitECRaw(rt);
+    } else if (name == "init") {
+      return this->Init(rt);
+    } else if (name == "initJwk") {
+      return this->InitJWK(rt);
+    } else if (name == "keyDetail") {
+      return this->GetKeyDetail(rt);
     }
 
     return {};
@@ -993,44 +962,40 @@ jsi::Value KeyObjectHandle::Init(jsi::Runtime &rt) {
   });
 }
 
-// void KeyObjectHandle::InitJWK(const FunctionCallbackInfo<Value>& args) {
-//  Environment* env = Environment::GetCurrent(args);
-//  KeyObjectHandle* key;
-//  ASSIGN_OR_RETURN_UNWRAP(&key, args.Holder());
-//  MarkPopErrorOnReturn mark_pop_error_on_return;
-//
-//  // The argument must be a JavaScript object that we will inspect
-//  // to get the JWK properties from.
-//  CHECK(args[0]->IsObject());
-//
-//  // Step one, Secret key or not?
-//  Local<Object> input = args[0].As<Object>();
-//
-//  Local<Value> kty;
-//  if (!input->Get(env->context(), env->jwk_kty_string()).ToLocal(&kty) ||
-//      !kty->IsString()) {
-//    return THROW_ERR_CRYPTO_INVALID_JWK(env);
-//  }
-//
-//  Utf8Value kty_string(env->isolate(), kty);
-//
-//  if (strcmp(*kty_string, "oct") == 0) {
-//    // Secret key
-//    key->data_ = ImportJWKSecretKey(env, input);
-//    if (!key->data_) {
-//      // ImportJWKSecretKey is responsible for throwing an appropriate error
-//      return;
-//    }
-//  } else {
-//    key->data_ = ImportJWKAsymmetricKey(env, input, *kty_string, args, 1);
-//    if (!key->data_) {
-//      // ImportJWKAsymmetricKey is responsible for throwing an appropriate
-//      error return;
-//    }
-//  }
-//
-//  args.GetReturnValue().Set(key->data_->GetKeyType());
-//}
+jsi::Value KeyObjectHandle::InitJWK(jsi::Runtime &rt) {
+  return HOSTFN("initJwk", 2) {
+    // The argument must be a JavaScript object that we will inspect
+    // to get the JWK properties from.
+    jsi::Object jwk = jsi::Object(jsi::Value(rt, args[0]).asObject(rt));
+    jsi::Value namedCurve;
+    if (count == 2)
+      namedCurve = jsi::Value(rt, args[1]);
+
+    // Step one, Secret key or not?
+    std::string kty = jwk
+      .getProperty(rt, "kty")
+      .asString(rt)
+      .utf8(rt);
+
+    if (kty.compare("oct") == 0) {
+      // Secret key
+      this->data_ = ImportJWKSecretKey(rt, jwk);
+      if (!this->data_) {
+        // ImportJWKSecretKey is responsible for throwing an appropriate error
+        return jsi::Value::undefined();
+      }
+    } else {
+      this->data_ = ImportJWKAsymmetricKey(rt, jwk, kty, namedCurve);
+      if (!this->data_) {
+        // ImportJWKAsymmetricKey is responsible for throwing an appropriate
+        // error
+       return jsi::Value::undefined();
+      }
+    }
+
+    return static_cast<int>(this->data_->GetKeyType());
+  });
+}
 
 jsi::Value KeyObjectHandle::InitECRaw(jsi::Runtime &rt) {
   return HOSTFN("initECRaw", 2) {
@@ -1041,7 +1006,13 @@ jsi::Value KeyObjectHandle::InitECRaw(jsi::Runtime &rt) {
       if (!eckey) {
           return false;
       }
-      // TODO(osp) add validation
+
+      CHECK(args[1].isObject());
+      if (!args[1].getObject(rt).isArrayBuffer(rt)) {
+        throw jsi::JSError(rt,
+                          "KeyObjectHandle::InitECRaw: second argument "
+                          "has to be of type ArrayBuffer!");
+      }
       auto buf = args[1].asObject(rt).getArrayBuffer(rt);
 
       const EC_GROUP* group = EC_KEY_get0_group(eckey.get());
@@ -1157,36 +1128,26 @@ jsi::Value KeyObjectHandle::InitECRaw(jsi::Runtime &rt) {
 //
 //  args.GetReturnValue().Set(ret);
 //}
-//
-// void KeyObjectHandle::GetKeyDetail(const FunctionCallbackInfo<Value>& args)
-// {
-//  Environment* env = Environment::GetCurrent(args);
-//  KeyObjectHandle* key;
-//  ASSIGN_OR_RETURN_UNWRAP(&key, args.Holder());
-//
-//  CHECK(args[0]->IsObject());
-//
-//  std::shared_ptr<KeyObjectData> data = key->Data();
-//
-//  switch (data->GetKeyType()) {
-//    case kKeyTypeSecret:
-//      if (GetSecretKeyDetail(env, data, args[0].As<Object>()).IsNothing())
-//        return;
-//      break;
-//    case kKeyTypePublic:
-//      // Fall through
-//    case kKeyTypePrivate:
-//      if (GetAsymmetricKeyDetail(env, data,
-//      args[0].As<Object>()).IsNothing())
-//        return;
-//      break;
-//    default:
-//      UNREACHABLE();
-//  }
-//
-//  args.GetReturnValue().Set(args[0]);
-//}
-//
+
+jsi::Value KeyObjectHandle::GetKeyDetail(jsi::Runtime &rt) {
+  return HOSTFN("keyDetail", 0) {
+    std::shared_ptr<KeyObjectData> data = this->Data();
+
+    switch (data->GetKeyType()) {
+      case kKeyTypeSecret:
+        return GetSecretKeyDetail(rt, data);
+        break;
+      case kKeyTypePublic:
+        // Fall through
+      case kKeyTypePrivate:
+        return GetAsymmetricKeyDetail(rt, data);
+        break;
+      default:
+        throw jsi::JSError(rt, "unreachable code in GetKeyDetail");
+    }
+  });
+}
+
 // Local<Value> KeyObjectHandle::GetAsymmetricKeyType() const {
 //  const ManagedEVPPKey& key = data_->GetAsymmetricKey();
 //  switch (EVP_PKEY_id(key.get())) {
@@ -1282,21 +1243,16 @@ OptionJSVariant KeyObjectHandle::ExportPrivateKey(
     config);
 }
 
-// void KeyObjectHandle::ExportJWK(
-//                                const v8::FunctionCallbackInfo<v8::Value>&
-//                                args) {
-//  Environment* env = Environment::GetCurrent(args);
-//  KeyObjectHandle* key;
-//  ASSIGN_OR_RETURN_UNWRAP(&key, args.Holder());
-//
-//  CHECK(args[0]->IsObject());
-//  CHECK(args[1]->IsBoolean());
-//
-//  ExportJWKInner(env, key->Data(), args[0], args[1]->IsTrue());
-//
-//  args.GetReturnValue().Set(args[0]);
-//}
-//
+jsi::Value KeyObjectHandle::ExportJWK(jsi::Runtime &rt) {
+  return HOSTFN("exportJwk", 2) {
+    CHECK(args[0].isObject());
+    CHECK(args[1].isBool());
+    std::shared_ptr<KeyObjectData> data = this->Data();
+    jsi::Object result = args[0].asObject(rt);
+    return ExportJWKInner(rt, data, result, args[1].asBool());
+  });
+}
+
 // void NativeKeyObject::Initialize(Environment* env, Local<Object> target) {
 //  env->SetMethod(target, "createNativeKeyObjectClass",
 //                 NativeKeyObject::CreateNativeKeyObjectClass);

@@ -6,7 +6,13 @@
 //
 
 #include "MGLRsa.h"
+#ifdef ANDROID
+#include "JSIUtils/MGLJSIMacros.h"
+#else
+#include "MGLJSIMacros.h"
+#endif
 
+#include <string>
 #include <utility>
 
 namespace margelo {
@@ -108,7 +114,7 @@ RsaKeyPairGenConfig prepareRsaKeyGenConfig(jsi::Runtime& runtime,
           arguments[offset].asString(runtime).utf8(runtime).c_str());
 
       if (config.md == nullptr) {
-        throw new jsi::JSError(runtime, "invalid digest");
+        throw jsi::JSError(runtime, "invalid digest");
       }
     }
 
@@ -118,7 +124,7 @@ RsaKeyPairGenConfig prepareRsaKeyGenConfig(jsi::Runtime& runtime,
           arguments[offset + 1].asString(runtime).utf8(runtime).c_str());
 
       if (config.mgf1_md == nullptr) {
-        throw new jsi::JSError(runtime, "invalid digest");
+        throw jsi::JSError(runtime, "invalid digest");
       }
     }
 
@@ -127,7 +133,7 @@ RsaKeyPairGenConfig prepareRsaKeyGenConfig(jsi::Runtime& runtime,
       config.saltlen = static_cast<int>(arguments[offset + 2].asNumber());
 
       if (config.saltlen < 0) {
-        throw new jsi::JSError(runtime, "salt length is out of range");
+        throw jsi::JSError(runtime, "salt length is out of range");
       }
     }
 
@@ -154,13 +160,13 @@ std::pair<JSVariant, JSVariant> generateRSAKeyPair(
   EVPKeyCtxPointer ctx = setup(config);
 
   if (!ctx) {
-    throw new jsi::JSError(runtime, "Error on key generation job");
+    throw jsi::JSError(runtime, "Error on key generation job");
   }
 
   // Generate the key
   EVP_PKEY* pkey = nullptr;
   if (!EVP_PKEY_keygen(ctx.get(), &pkey)) {
-    throw new jsi::JSError(runtime, "Error generating key");
+    throw jsi::JSError(runtime, "Error generating key");
   }
 
   config->key = ManagedEVPPKey(EVPKeyPointer(pkey));
@@ -173,11 +179,217 @@ std::pair<JSVariant, JSVariant> generateRSAKeyPair(
                                           config->private_key_encoding);
 
   if (!publicBuffer.has_value() || !privateBuffer.has_value()) {
-    throw jsi::JSError(runtime,
-                              "Failed to encode public and/or private key");
+    throw jsi::JSError(runtime, "Failed to encode public and/or private key");
   }
 
   return {std::move(publicBuffer.value()), std::move(privateBuffer.value())};
+}
+
+jsi::Value ExportJWKRsaKey(jsi::Runtime &rt,
+                           std::shared_ptr<KeyObjectData> key,
+                           jsi::Object &target) {
+  ManagedEVPPKey m_pkey = key->GetAsymmetricKey();
+  // std::scoped_lock lock(*m_pkey.mutex()); // TODO: mutex/lock required?
+  int type = EVP_PKEY_id(m_pkey.get());
+  CHECK(type == EVP_PKEY_RSA || type == EVP_PKEY_RSA_PSS);
+
+  // TODO(tniessen): Remove the "else" branch once we drop support for OpenSSL
+  // versions older than 1.1.1e via FIPS / dynamic linking.
+  const RSA* rsa;
+  if (OpenSSL_version_num() >= 0x1010105fL) {
+    rsa = EVP_PKEY_get0_RSA(m_pkey.get());
+  } else {
+    rsa = static_cast<const RSA*>(EVP_PKEY_get0(m_pkey.get()));
+  }
+  CHECK_NOT_NULL(rsa);
+
+  const BIGNUM* n;
+  const BIGNUM* e;
+  const BIGNUM* d;
+  const BIGNUM* p;
+  const BIGNUM* q;
+  const BIGNUM* dp;
+  const BIGNUM* dq;
+  const BIGNUM* qi;
+  RSA_get0_key(rsa, &n, &e, &d);
+
+  target.setProperty(rt, "kty", "RSA");
+  target.setProperty(rt, "n", EncodeBignum(n, 0, true));
+  target.setProperty(rt, "e", EncodeBignum(e, 0, true));
+
+  if (key->GetKeyType() == kKeyTypePrivate) {
+    RSA_get0_factors(rsa, &p, &q);
+    RSA_get0_crt_params(rsa, &dp, &dq, &qi);
+    target.setProperty(rt, "d", EncodeBignum(d, 0, true));
+    target.setProperty(rt, "p", EncodeBignum(p, 0, true));
+    target.setProperty(rt, "q", EncodeBignum(q, 0, true));
+    target.setProperty(rt, "dp", EncodeBignum(dp, 0, true));
+    target.setProperty(rt, "dq", EncodeBignum(dq, 0, true));
+    target.setProperty(rt, "qi", EncodeBignum(qi, 0, true));
+  }
+
+  return std::move(target);
+}
+
+std::shared_ptr<KeyObjectData> ImportJWKRsaKey(jsi::Runtime &rt,
+                                               jsi::Object &jwk) {
+  jsi::Value n_value = jwk.getProperty(rt, "n");
+  jsi::Value e_value = jwk.getProperty(rt, "e");
+  jsi::Value d_value = jwk.getProperty(rt, "d");
+
+  if (!n_value.isString() ||
+      !e_value.isString()) {
+    throw jsi::JSError(rt, "Invalid JWK RSA key");
+    return std::shared_ptr<KeyObjectData>();
+  }
+
+  if (!d_value.isUndefined() && !d_value.isString()) {
+    throw jsi::JSError(rt, "Invalid JWK RSA key");
+    return std::shared_ptr<KeyObjectData>();
+  }
+
+  KeyType type = d_value.isString() ? kKeyTypePrivate : kKeyTypePublic;
+
+  RsaPointer rsa(RSA_new());
+
+  ByteSource n = ByteSource::FromEncodedString(rt, n_value.asString(rt).utf8(rt));
+  ByteSource e = ByteSource::FromEncodedString(rt, e_value.asString(rt).utf8(rt));
+
+  if (!RSA_set0_key(
+          rsa.get(),
+          n.ToBN().release(),
+          e.ToBN().release(),
+          nullptr)) {
+    throw jsi::JSError(rt, "Invalid JWK RSA key");
+    return std::shared_ptr<KeyObjectData>();
+  }
+
+  if (type == kKeyTypePrivate) {
+    jsi::Value p_value = jwk.getProperty(rt, "p");
+    jsi::Value q_value = jwk.getProperty(rt, "q");
+    jsi::Value dp_value = jwk.getProperty(rt, "dp");
+    jsi::Value dq_value = jwk.getProperty(rt, "dq");
+    jsi::Value qi_value = jwk.getProperty(rt, "qi");
+
+    if (!p_value.isString() ||
+        !q_value.isString() ||
+        !dp_value.isString() ||
+        !dq_value.isString() ||
+        !qi_value.isString()) {
+      throw jsi::JSError(rt, "Invalid JWK RSA key");
+      return std::shared_ptr<KeyObjectData>();
+    }
+
+    ByteSource d = ByteSource::FromEncodedString(rt, d_value.asString(rt).utf8(rt));
+    ByteSource q = ByteSource::FromEncodedString(rt, q_value.asString(rt).utf8(rt));
+    ByteSource p = ByteSource::FromEncodedString(rt, p_value.asString(rt).utf8(rt));
+    ByteSource dp = ByteSource::FromEncodedString(rt, dp_value.asString(rt).utf8(rt));
+    ByteSource dq = ByteSource::FromEncodedString(rt, dq_value.asString(rt).utf8(rt));
+    ByteSource qi = ByteSource::FromEncodedString(rt, qi_value.asString(rt).utf8(rt));
+
+    if (!RSA_set0_key(rsa.get(), nullptr, nullptr, d.ToBN().release()) ||
+        !RSA_set0_factors(rsa.get(), p.ToBN().release(), q.ToBN().release()) ||
+        !RSA_set0_crt_params(
+            rsa.get(),
+            dp.ToBN().release(),
+            dq.ToBN().release(),
+            qi.ToBN().release())) {
+      throw jsi::JSError(rt, "Invalid JWK RSA key");
+      return std::shared_ptr<KeyObjectData>();
+    }
+  }
+
+  EVPKeyPointer pkey(EVP_PKEY_new());
+  CHECK_EQ(EVP_PKEY_set1_RSA(pkey.get(), rsa.get()), 1);
+
+  return KeyObjectData::CreateAsymmetric(type, ManagedEVPPKey(std::move(pkey)));
+}
+
+jsi::Value GetRsaKeyDetail(jsi::Runtime &rt,
+                           std::shared_ptr<KeyObjectData> key) {
+  jsi::Object target = jsi::Object(rt);
+  const BIGNUM* e;  // Public Exponent
+  const BIGNUM* n;  // Modulus
+
+  ManagedEVPPKey m_pkey = key->GetAsymmetricKey();
+  // std::scoped_lock lock(*m_pkey.mutex()); // TODO: mutex/lock required?
+  int type = EVP_PKEY_id(m_pkey.get());
+  CHECK(type == EVP_PKEY_RSA || type == EVP_PKEY_RSA_PSS);
+
+  // TODO(tniessen): Remove the "else" branch once we drop support for OpenSSL
+  // versions older than 1.1.1e via FIPS / dynamic linking.
+  const RSA* rsa;
+  if (OpenSSL_version_num() >= 0x1010105fL) {
+    rsa = EVP_PKEY_get0_RSA(m_pkey.get());
+  } else {
+    rsa = static_cast<const RSA*>(EVP_PKEY_get0(m_pkey.get()));
+  }
+  CHECK_NOT_NULL(rsa);
+
+  RSA_get0_key(rsa, &n, &e, nullptr);
+
+  size_t modulus_length = BN_num_bits(n);
+  // TODO: should this be modulusLength or n?
+  target.setProperty(rt, "modulusLength", static_cast<double>(modulus_length));
+
+  size_t exp_size = BN_num_bytes(e);
+  // TODO: should this be publicExponent or e?
+  target.setProperty(rt, "publicExponent", EncodeBignum(e, exp_size, true));
+
+  if (type == EVP_PKEY_RSA_PSS) {
+    // Due to the way ASN.1 encoding works, default values are omitted when
+    // encoding the data structure. However, there are also RSA-PSS keys for
+    // which no parameters are set. In that case, the ASN.1 RSASSA-PSS-params
+    // sequence will be missing entirely and RSA_get0_pss_params will return
+    // nullptr. If parameters are present but all parameters are set to their
+    // default values, an empty sequence will be stored in the ASN.1 structure.
+    // In that case, RSA_get0_pss_params does not return nullptr but all fields
+    // of the returned RSA_PSS_PARAMS will be set to nullptr.
+
+    const RSA_PSS_PARAMS* params = RSA_get0_pss_params(rsa);
+    if (params != nullptr) {
+      int hash_nid = NID_sha1;
+      int mgf_nid = NID_mgf1;
+      int mgf1_hash_nid = NID_sha1;
+      int64_t salt_length = 20;
+
+      if (params->hashAlgorithm != nullptr) {
+        const ASN1_OBJECT* hash_obj;
+        X509_ALGOR_get0(&hash_obj, nullptr, nullptr, params->hashAlgorithm);
+        hash_nid = OBJ_obj2nid(hash_obj);
+      }
+
+      target.setProperty(rt, "hashAlgorithm", std::string(OBJ_nid2ln(hash_nid)));
+
+      if (params->maskGenAlgorithm != nullptr) {
+        const ASN1_OBJECT* mgf_obj;
+        X509_ALGOR_get0(&mgf_obj, nullptr, nullptr, params->maskGenAlgorithm);
+        mgf_nid = OBJ_obj2nid(mgf_obj);
+        if (mgf_nid == NID_mgf1) {
+          const ASN1_OBJECT* mgf1_hash_obj;
+          X509_ALGOR_get0(&mgf1_hash_obj, nullptr, nullptr, params->maskHash);
+          mgf1_hash_nid = OBJ_obj2nid(mgf1_hash_obj);
+        }
+      }
+
+      // If, for some reason, the MGF is not MGF1, then the MGF1 hash function
+      // is intentionally not added to the object.
+      if (mgf_nid == NID_mgf1) {
+        target.setProperty(rt, "mgf1HashAlgorithm", std::string(OBJ_nid2ln(mgf1_hash_nid)));
+      }
+
+      if (params->saltLength != nullptr) {
+        if (ASN1_INTEGER_get_int64(&salt_length, params->saltLength) != 1) {
+          throw jsi::JSError(rt, "ASN1_INTEGER_get_in64 error: " + ERR_get_error());
+          return target;
+        }
+      }
+
+      target.setProperty(rt, "saltLength", static_cast<double>(salt_length));
+    }
+  }
+
+  return target;
 }
 
 }  // namespace margelo
