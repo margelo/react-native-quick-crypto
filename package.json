@@ -169,5 +169,8 @@
     "readable-stream": "^4.5.2",
     "string_decoder": "^1.3.0",
     "util": "^0.12.5"
+  },
+  "resolutions": {
+    "browserify-sign": "4.2.2"
   }
 }
