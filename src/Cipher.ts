@@ -209,7 +209,7 @@ class CipherCommon extends Stream.Transform {
   }
 
   public setAuthTag(tag: Buffer): this {
-    this.internal.setAuthTag(tag.buffer);
+    this.internal.setAuthTag(binaryLikeToArrayBuffer(tag));
     return this;
   }
 }
