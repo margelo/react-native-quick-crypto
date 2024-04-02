@@ -1,6 +1,6 @@
 import { NativeQuickCrypto } from './NativeQuickCrypto/NativeQuickCrypto';
 import type { InternalSign, InternalVerify } from './NativeQuickCrypto/sig';
-import Stream from 'stream-browserify';
+import Stream from 'readable-stream';
 
 // TODO(osp) same as publicCipher on node this are defined on C++ and exposed to node
 // Do the same here

@@ -2,13 +2,13 @@
   "compilerOptions": {
     "rootDir": ".",
     "paths": {
-      "react-native-quick-crypto": ["./src/index"]
+      "react-native-quick-crypto": ["./src/index"],
     },
     "allowUnreachableCode": false,
     "allowUnusedLabels": false,
     "esModuleInterop": true,
     "forceConsistentCasingInFileNames": true,
-    "jsx": "react",
+    "jsx": "react-native",
     "lib": ["esnext"],
     "module": "esnext",
     "moduleResolution": "node",
@@ -24,5 +24,16 @@
     "strict": true,
     "target": "esnext",
     "verbatimModuleSyntax": true
-  }
+  },
+  "include": [
+    "src",
+    ".eslintrc.js",
+    "babel.config.js",
+  ],
+  "exclude": [
+    "node_modules",
+    "lib",
+    "docs",
+    "example",
+  ]
 }

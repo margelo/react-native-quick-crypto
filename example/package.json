@@ -20,7 +20,6 @@
     "@react-navigation/native-stack": "^6.9.12",
     "buffer": "^6.0.3",
     "chai": "^5.0.0",
-    "crypto-browserify": "^3.12.0",
     "eslint": "^8.4.1",
     "events": "^3.3.0",
     "mocha": "^10.2.0",
@@ -29,8 +28,8 @@
     "react-native-quick-base64": "boorad/react-native-quick-base64#feat/heifner-version",
     "react-native-safe-area-context": "^4.5.0",
     "react-native-screens": "^3.20.0",
+    "readable-stream": "^4.5.2",
     "sscrypto": "^1.1.1",
-    "stream-browserify": "^3.0.0",
     "util": "^0.12.5"
   },
   "devDependencies": {
@@ -44,6 +43,7 @@
     "@types/mocha": "^10.0.1",
     "@types/react": "^18.0.24",
     "@types/react-test-renderer": "^18.0.0",
+    "@types/readable-stream": "^4.0.11",
     "babel-plugin-module-resolver": "^5.0.0",
     "metro-react-native-babel-preset": "0.76.8",
     "prettier": "^2.4.1"
