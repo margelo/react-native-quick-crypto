@@ -15,7 +15,7 @@ on:
       - '.editorconfig'
 
 jobs:
-  lint:
+  validate_android:
     name: Gradle Lint
     runs-on: ubuntu-latest
     defaults:
@@ -28,12 +28,21 @@ jobs:
         uses: actions/setup-java@v4
         with:
           distribution: zulu
-          java-version: 11
+          java-version: 17
           cache: gradle
+
+      - name: Setup Android SDK
+        uses: android-actions/setup-android@v3
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+      - run: corepack enable
 
       - name: Get yarn cache directory path
         id: yarn-cache-dir-path
         run: echo "dir=$(yarn cache dir)" >> $GITHUB_OUTPUT
+
       - name: Restore node_modules from cache
         uses: actions/cache@v4
         id: yarn-cache
@@ -47,15 +56,15 @@ jobs:
       - name: Install node_modules for example/
         run: yarn install --frozen-lockfile --cwd ../example
 
-      # - name: Restore Gradle cache
-      #   uses: actions/cache@v4
-      #   with:
-      #     path: |
-      #       ~/.gradle/caches
-      #       ~/.gradle/wrapper
-      #     key: ${{ runner.os }}-gradle-${{ hashFiles('**/*.gradle*', '**/gradle-wrapper.properties') }}
-      #     restore-keys: |
-      #       ${{ runner.os }}-gradle-
+      - name: Restore Gradle cache
+        uses: actions/cache@v4
+        with:
+          path: |
+            ~/.gradle/caches
+            ~/.gradle/wrapper
+          key: ${{ runner.os }}-gradle-${{ hashFiles('**/*.gradle*', '**/gradle-wrapper.properties') }}
+          restore-keys: |
+            ${{ runner.os }}-gradle-
 
       - name: Run Gradle Lint
         run: cd ../example/android && ./gradlew lint

@@ -317,8 +317,6 @@ PODS:
   - React-jsinspector (0.72.7)
   - React-logger (0.72.7):
     - glog
-  - react-native-quick-base64 (2.1.0):
-    - React-Core
   - react-native-quick-crypto (0.6.1):
     - OpenSSL-Universal (~> 1.1.2200)
     - React
@@ -485,7 +483,6 @@ DEPENDENCIES:
   - React-jsiexecutor (from `../node_modules/react-native/ReactCommon/jsiexecutor`)
   - React-jsinspector (from `../node_modules/react-native/ReactCommon/jsinspector`)
   - React-logger (from `../node_modules/react-native/ReactCommon/logger`)
-  - react-native-quick-base64 (from `../node_modules/react-native-quick-base64`)
   - react-native-quick-crypto (from `../..`)
   - react-native-safe-area-context (from `../node_modules/react-native-safe-area-context`)
   - React-NativeModulesApple (from `../node_modules/react-native/ReactCommon/react/nativemodule/core/platform/ios`)
@@ -561,8 +558,6 @@ EXTERNAL SOURCES:
     :path: "../node_modules/react-native/ReactCommon/jsinspector"
   React-logger:
     :path: "../node_modules/react-native/ReactCommon/logger"
-  react-native-quick-base64:
-    :path: "../node_modules/react-native-quick-base64"
   react-native-quick-crypto:
     :path: "../.."
   react-native-safe-area-context:
@@ -634,8 +629,7 @@ SPEC CHECKSUMS:
   React-jsiexecutor: c49502e5d02112247ee4526bc3ccfc891ae3eb9b
   React-jsinspector: 8baadae51f01d867c3921213a25ab78ab4fbcd91
   React-logger: 8edc785c47c8686c7962199a307015e2ce9a0e4f
-  react-native-quick-base64: 825de692915d4c6fec53c7949d52b1204d99643e
-  react-native-quick-crypto: 62ec693f7683c9cd21e6b9727abd7a31c598b9c4
+  react-native-quick-crypto: df05bd02bce06c6e60f07d96dc80223c09b9bfad
   react-native-safe-area-context: 2cd91d532de12acdb0a9cbc8d43ac72a8e4c897c
   React-NativeModulesApple: b6868ee904013a7923128892ee4a032498a1024a
   React-perflogger: 31ea61077185eb1428baf60c0db6e2886f141a5a
@@ -659,6 +653,6 @@ SPEC CHECKSUMS:
   SocketRocket: f32cd54efbe0f095c4d7594881e52619cfe80b17
   Yoga: 4c3aa327e4a6a23eeacd71f61c81df1bcdf677d5
 
-PODFILE CHECKSUM: 50dd8e47b3ecade8a64d05a35069875c72371690
+PODFILE CHECKSUM: 30ab9429092ec565227295256b9d60fd5f0ad0ed
 
 COCOAPODS: 1.12.0

@@ -65,7 +65,7 @@ describe('subtle - importKey / exportKey', () => {
           async () =>
             // @ts-expect-error
             await subtle.importKey(format, keyData, {}, false, ['wrapKey']),
-          `'subtle.importKey()' is not implemented for undefined`
+          '"subtle.importKey()" is not implemented for undefined'
         )
     );
     await assertThrowsAsync(
@@ -78,7 +78,7 @@ describe('subtle - importKey / exportKey', () => {
           false,
           ['wrapKey']
         ),
-      `Unsupported key usage for a PBKDF2 key`
+      'Unsupported key usage for a PBKDF2 key'
     );
     await assertThrowsAsync(
       async () =>
@@ -86,7 +86,7 @@ describe('subtle - importKey / exportKey', () => {
         await subtle.importKey('raw', 1, { name: 'PBKDF2' }, false, [
           'deriveBits',
         ]),
-      `invalid argument type 'key'`
+      'invalid argument type "key"'
     );
     await assertThrowsAsync(
       async () =>
@@ -99,7 +99,7 @@ describe('subtle - importKey / exportKey', () => {
           false,
           ['sign', 'verify']
         ),
-      `'subtle.importKey()' is not implemented for HMAC`
+      '"subtle.importKey()" is not implemented for HMAC'
       // TODO: will be ERR_MISSING_OPTION or similar
     );
     await assertThrowsAsync(
@@ -114,7 +114,7 @@ describe('subtle - importKey / exportKey', () => {
           false,
           ['deriveBits']
         ),
-      `'subtle.importKey()' is not implemented for HMAC`
+      '"subtle.importKey()" is not implemented for HMAC'
       // TODO: will be 'Unsupported key usage for an HMAC key'
     );
     await assertThrowsAsync(
@@ -130,7 +130,7 @@ describe('subtle - importKey / exportKey', () => {
           false,
           ['sign', 'verify']
         ),
-      `'subtle.importKey()' is not implemented for HMAC`
+      '"subtle.importKey()" is not implemented for HMAC'
       // TODO: will be 'Zero-length key is not supported'
     );
     await assertThrowsAsync(
@@ -146,7 +146,7 @@ describe('subtle - importKey / exportKey', () => {
           false,
           ['sign', 'verify']
         ),
-      `'subtle.importKey()' is not implemented for HMAC`
+      '"subtle.importKey()" is not implemented for HMAC'
       // TODO: will be 'Invalid key length'
     );
     await assertThrowsAsync(
@@ -162,7 +162,7 @@ describe('subtle - importKey / exportKey', () => {
           false,
           ['sign', 'verify']
         ),
-      `'subtle.importKey()' is not implemented for HMAC`
+      '"subtle.importKey()" is not implemented for HMAC'
       // TODO: will be 'Invalid keyData'
     );
   });
@@ -315,7 +315,6 @@ describe('subtle - importKey / exportKey', () => {
   // });
 
   // from Node.js https://github.com/nodejs/node/blob/main/test/parallel/test-webcrypto-export-import-ec.js
-  // eslint-disable-next-line no-lone-blocks
   {
     type TestKeyData = {
       [key in NamedCurve]: TestKeyDatum;

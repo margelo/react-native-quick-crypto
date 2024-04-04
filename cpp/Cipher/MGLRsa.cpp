@@ -380,7 +380,8 @@ jsi::Value GetRsaKeyDetail(jsi::Runtime &rt,
 
       if (params->saltLength != nullptr) {
         if (ASN1_INTEGER_get_int64(&salt_length, params->saltLength) != 1) {
-          throw jsi::JSError(rt, "ASN1_INTEGER_get_in64 error: " + ERR_get_error());
+          throw jsi::JSError(rt, "ASN1_INTEGER_get_in64 error: " +
+            std::to_string(ERR_get_error()));
           return target;
         }
       }

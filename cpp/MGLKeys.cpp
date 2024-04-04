@@ -546,7 +546,7 @@ jsi::Value ExportJWKInner(jsi::Runtime &rt,
     case kKeyTypePrivate:
       return ExportJWKAsymmetricKey(rt, key, result, handleRsaPss);
     default:
-      // UNREACHABLE();
+      throw jsi::JSError(rt, "unreachable code in ExportJWKInner");
   }
 }
 
@@ -1075,7 +1075,7 @@ jsi::Value KeyObjectHandle::InitECRaw(jsi::Runtime &rt) {
 //      break;
 //    }
 //    default:
-//      UNREACHABLE();
+//      throw jsi::JSError(rt, "unreachable code in InitEDRaw");
 //  }
 //
 //  args.GetReturnValue().Set(true);
@@ -1123,7 +1123,7 @@ jsi::Value KeyObjectHandle::InitECRaw(jsi::Runtime &rt) {
 //      break;
 //    }
 //    default:
-//      UNREACHABLE("unsupported key type");
+//        throw jsi::JSError(rt, "unreachable code in Equals");
 //  }
 //
 //  args.GetReturnValue().Set(ret);

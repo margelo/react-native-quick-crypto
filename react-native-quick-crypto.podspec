@@ -18,7 +18,8 @@ Pod::Spec.new do |s|
   s.source_files = [
     "ios/**/*.{h,m,mm}",
     "cpp/**/*.{h,c,cpp}",
-    "ios/QuickCryptoModule.h"
+    "ios/QuickCryptoModule.h",
+    "node_modules/react-native-quick-base64/cpp/base64.h"
   ]
   # Any private headers that are not globally unique should be mentioned here.
   # Otherwise there will be a nameclash, since CocoaPods flattens out any header directories
