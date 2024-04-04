@@ -28,8 +28,12 @@ export const TestItem: React.FC<TestItemProps> = ({
   let pass = 0;
   let fail = 0;
   results.map((r) => {
-    if (r.type === 'correct') pass++;
-    if (r.type === 'incorrect') fail++;
+    if (r.type === 'correct') {
+      pass++;
+    }
+    if (r.type === 'incorrect') {
+      fail++;
+    }
   });
 
   return (
