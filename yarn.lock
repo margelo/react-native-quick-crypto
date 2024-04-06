@@ -8432,10 +8432,9 @@ react-native-builder-bob@^0.23.2:
     which "^2.0.2"
     yargs "^17.5.1"
 
-react-native-quick-base64@^2.0.5, react-native-quick-base64@^2.1.0:
-  version "2.1.0"
-  resolved "https://registry.yarnpkg.com/react-native-quick-base64/-/react-native-quick-base64-2.1.0.tgz#6759a9f9b94b2b7c951917ce7d1970afdf62865d"
-  integrity sha512-5T5qhEuHcqeP/GGAOaeNsz0c5jZsMemy2svlgRc7PfUQSH6ABakwTT0tYNZ1XImJZWc8najYgVG8mrJgml5DNw==
+react-native-quick-base64@^2.0.5, react-native-quick-base64@boorad/react-native-quick-base64#feat/expose-url-flag-for-encoding:
+  version "2.1.1"
+  resolved "https://codeload.github.com/boorad/react-native-quick-base64/tar.gz/3c0f5fdb6c60d4ce6b855717be3121b2ce03c901"
   dependencies:
     base64-js "^1.5.1"
 

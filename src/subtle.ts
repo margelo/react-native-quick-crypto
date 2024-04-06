@@ -319,7 +319,7 @@ class Subtle {
         break;
       default:
         throw new Error(
-          `'subtle.importKey()' is not implemented for ${algorithm.name}`
+          `"subtle.importKey()" is not implemented for ${algorithm.name}`
         );
     }
 

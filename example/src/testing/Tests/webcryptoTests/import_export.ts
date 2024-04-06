@@ -1,6 +1,10 @@
 import { expect } from 'chai';
 import { Buffer } from '@craftzdog/react-native-buffer';
-import { fromByteArray, toByteArray } from 'react-native-quick-base64';
+import {
+  fromByteArray,
+  toByteArray,
+  trimBase64Padding,
+} from 'react-native-quick-base64';
 import crypto from 'react-native-quick-crypto';
 import { describe, it } from '../../MochaRNAdapter';
 import { ab2str, binaryLikeToArrayBuffer } from '../../../../../src/Utils';
@@ -50,9 +54,10 @@ function base64ToArrayBuffer(val: string): ArrayBuffer {
   return arr.buffer;
 }
 
-function arrayBufferToBase64(buffer: ArrayBuffer) {
+// TODO: add in `url` from react-native-quick-base64 when 2.1.1 is released
+function arrayBufferToBase64(buffer: ArrayBuffer, urlSafe: boolean = false) {
   var bytes = new Uint8Array(buffer);
-  return fromByteArray(bytes);
+  return fromByteArray(bytes, urlSafe);
 }
 
 describe('subtle - importKey / exportKey', () => {
@@ -168,52 +173,94 @@ describe('subtle - importKey / exportKey', () => {
   });
 
   // Import/Export AES Secret Key
-  it('AES import raw / export raw, jwk', async () => {
-    const rawKeyData = crypto.getRandomValues(new Uint8Array(32));
-    const keyData = binaryLikeToArrayBuffer(rawKeyData);
+  {
+    it('AES import raw / export raw', async () => {
+      const rawKeyData = crypto.getRandomValues(new Uint8Array(32));
+      const keyData = binaryLikeToArrayBuffer(rawKeyData);
 
-    // import raw
-    const key = await subtle.importKey(
-      'raw',
-      keyData,
-      { name: 'AES-CTR', length: 256 },
-      true,
-      ['encrypt', 'decrypt']
-    );
+      // import raw
+      const key = await subtle.importKey(
+        'raw',
+        keyData,
+        { name: 'AES-CTR', length: 256 },
+        true,
+        ['encrypt', 'decrypt']
+      );
 
-    // export raw
-    const raw = await subtle.exportKey('raw', key);
-    const rawStr = ab2str(raw, 'hex');
-    expect(ab2str(keyData, 'hex')).to.equal(rawStr, 'import raw, export raw');
+      // export raw
+      const raw = await subtle.exportKey('raw', key);
+      const rawStr = ab2str(raw, 'hex');
+      expect(ab2str(keyData, 'hex')).to.equal(rawStr, 'import raw, export raw');
+    });
 
-    // export jwk
-    const jwk = await subtle.exportKey('jwk', key);
-    expect(jwk.key_ops).to.have.all.members(['encrypt', 'decrypt']);
-    expect(jwk.ext);
-    expect(jwk.kty).to.equal('oct');
-    const actual = Buffer.from(jwk.k, 'base64').toString('hex');
-    // console.log({ actual, rawStr });
-    expect(actual).to.equal(rawStr, 'import raw, export jwk');
+    const test = (rawKeyData: Uint8Array, descr: string): void => {
+      it(`AES import raw / export jwk (${descr})`, async () => {
+        const keyData = binaryLikeToArrayBuffer(rawKeyData);
+        const keyB64 = arrayBufferToBase64(keyData, true);
 
-    // error, no usages
-    await assertThrowsAsync(
-      async () =>
-        await subtle.importKey(
+        // import raw
+        const key = await subtle.importKey(
           'raw',
           keyData,
-          { name: 'AES-GCM', length: 256 },
+          { name: 'AES-CTR', length: 256 },
           true,
-          [
-            // empty usages
-          ]
-        ),
-      'Usages cannot be empty when importing a secret key'
-    );
-  });
+          ['encrypt', 'decrypt']
+        );
+
+        // export raw
+        const raw = await subtle.exportKey('raw', key);
+        const rawStr = ab2str(raw, 'hex');
+        expect(ab2str(keyData, 'hex')).to.equal(
+          rawStr,
+          'import raw, export raw'
+        );
+
+        // export jwk
+        const jwk = await subtle.exportKey('jwk', key);
+        expect(jwk.key_ops).to.have.all.members(['encrypt', 'decrypt']);
+        expect(jwk.ext);
+        expect(jwk.kty).to.equal('oct');
+        const actual = ab2str(base64ToArrayBuffer(jwk.k));
+        const expected = rawStr;
+        if (actual !== expected) {
+          console.log('raw key ', rawKeyData);
+          console.log('actual  ', actual);
+          console.log('expected', expected);
+          console.log('keyB64  ', keyB64);
+          console.log('jwk.k   ', jwk.k);
+        }
+        expect(actual).to.equal(expected, 'import raw, export jwk');
+
+        // error, no usages
+        await assertThrowsAsync(
+          async () =>
+            await subtle.importKey(
+              'raw',
+              keyData,
+              { name: 'AES-GCM', length: 256 },
+              true,
+              [
+                // empty usages
+              ]
+            ),
+          'Usages cannot be empty when importing a secret key'
+        );
+      });
+    };
+
+    // test random Uint8Array
+    const random = crypto.getRandomValues(new Uint8Array(32));
+    test(random, 'random');
+
+    // test while ensuring at least one of the elements is zero
+    const withZero = crypto.getRandomValues(new Uint8Array(32));
+    withZero[4] = 0;
+    test(withZero, 'with zero');
+  }
 
   // from https://gist.github.com/pedrouid/b4056fd1f754918ddae86b32cf7d803e#aes-gcm---importkey
   it('AES import jwk / export jwk', async () => {
-    const origKey: string = 'Y0zt37HgOx-BY7SQjYVmrqhPkO44Ii2Jcb9yydUDPfE';
+    const origKey: string = 'Y0zt37HgOx-BY7SQjYVmrqhPkO44Ii2Jcb9yydUDPfE.';
     const origJwk: JWK = {
       kty: 'oct',
       k: origKey,
@@ -235,8 +282,12 @@ describe('subtle - importKey / exportKey', () => {
     expect(jwk.key_ops).to.have.all.members(['encrypt', 'decrypt']);
     expect(jwk.ext);
     expect(jwk.kty).to.equal('oct');
-    const actual = Buffer.from(jwk.k, 'base64').toString('hex');
-    const expected = Buffer.from(origKey, 'base64').toString('hex');
+    const actual = trimBase64Padding(ab2str(base64ToArrayBuffer(jwk.k)));
+    const expected = trimBase64Padding(ab2str(base64ToArrayBuffer(origKey)));
+    // if (actual !== expected) {
+    //   console.log('actual  ', actual);
+    //   console.log('expected', expected);
+    // }
     expect(actual).to.equal(expected, 'import jwk, export jwk');
   });
 
@@ -783,6 +834,7 @@ describe('subtle - importKey / exportKey', () => {
   // expect(jwk.kty, 'oct');
 
   // expect(
+  // TODO: gonna be ab2str(base64toArrayBuffer(jwk.k)) like above ^^^^
   //   Buffer.from(jwk.k, 'base64').toString('hex')).to.equal(
   //   Buffer.from(raw).toString('hex'));
 

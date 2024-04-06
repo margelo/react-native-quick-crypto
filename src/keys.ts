@@ -443,7 +443,7 @@ function prepareSecretKey(
     return binaryLikeToArrayBuffer(key, encoding);
   }
 
-  throw new Error(`invalid argument type 'key'`);
+  throw new Error('invalid argument type "key"');
 }
 
 export function createSecretKey(key: any, encoding?: string) {

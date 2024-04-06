@@ -7,6 +7,7 @@ import {
   lazyDOMException,
   validateKeyOps,
   hasAnyNotIn,
+  ab2str,
 } from './Utils';
 import {
   type ImportFormat,
@@ -106,6 +107,7 @@ function createECPublicKeyRaw(
   }
   const handle = NativeQuickCrypto.webcrypto.createKeyObjectHandle();
   if (!handle.initECRaw(kNamedCurveAliases[namedCurve], keyData)) {
+    console.log('keyData', ab2str(keyData));
     throw new Error('Invalid keyData 1');
   }
 
