@@ -397,8 +397,7 @@ jsi::Value ExportJWKSecretKey(jsi::Runtime &rt,
                               jsi::Object &result) {
   CHECK_EQ(key->GetKeyType(), kKeyTypeSecret);
 
-  std::string data = (char *) key->GetSymmetricKey();
-  std::string key_data = EncodeBase64(data, key->GetSymmetricKeySize(), true);
+  std::string key_data = EncodeBase64(key->GetSymmetricKey(), true);
 
   result.setProperty(rt, "kty", "oct");
   result.setProperty(rt, "k", key_data);
@@ -808,9 +807,12 @@ ManagedEVPPKey KeyObjectData::GetAsymmetricKey() const {
   return asymmetric_key_;
 }
 
-const char* KeyObjectData::GetSymmetricKey() const {
+/** Gets the symmetric key value
+ * binary data stored in string, tolerates \0 characters
+ */
+std::string KeyObjectData::GetSymmetricKey() const {
   CHECK_EQ(key_type_, kKeyTypeSecret);
-  return symmetric_key_.data<char>();
+  return symmetric_key_.ToString();
 }
 
 size_t KeyObjectData::GetSymmetricKeySize() const {
@@ -1221,10 +1223,8 @@ jsi::Value KeyObjectHandle::Export(jsi::Runtime &rt) {
 }
 
 OptionJSVariant KeyObjectHandle::ExportSecretKey(jsi::Runtime &rt) const {
- const char* buf = data_->GetSymmetricKey();
- size_t len = data_->GetSymmetricKeySize();
- ByteSource source = ByteSource::Foreign(buf, len);
- return JSVariant(std::move(source));
+  std::string ret = data_->GetSymmetricKey();
+  return JSVariant(ByteSource::FromString(ret));
 }
 
 OptionJSVariant KeyObjectHandle::ExportPublicKey(

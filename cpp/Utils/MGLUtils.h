@@ -160,8 +160,19 @@ class ByteSource {
 
     operator bool() const { return data_ != nullptr; }
 
-    BignumPointer ToBN() const {
-      return BignumPointer(BN_bin2bn(data<unsigned char>(), size(), nullptr));
+    inline BignumPointer ToBN() const {
+        return BignumPointer(BN_bin2bn(data<unsigned char>(), (int)size(), nullptr));
+    }
+
+    // inline ByteSource Get() const {
+    //     return FromString(ToString());
+    // }
+
+    inline std::string ToString() const {
+        std::vector<uint8_t> buf(size_);
+        std::memcpy(&buf[0], data_, size_);
+        std::string ret(buf.begin(), buf.end());
+        return ret;
     }
 
     // Creates a v8::BackingStore that takes over responsibility for
@@ -268,7 +279,7 @@ std::string EncodeBignum(const BIGNUM* bn,
                          int size,
                          bool url = false);
 
-std::string EncodeBase64(const std::string &data, size_t len, bool url = false);
+std::string EncodeBase64(const std::string data, bool url = false);
 std::string DecodeBase64(const std::string &in, bool remove_linebreaks = false);
 
 }  // namespace margelo

@@ -189,8 +189,15 @@ describe('subtle - importKey / exportKey', () => {
 
       // export raw
       const raw = await subtle.exportKey('raw', key);
-      const rawStr = ab2str(raw, 'hex');
-      expect(ab2str(keyData, 'hex')).to.equal(rawStr, 'import raw, export raw');
+      const actual = ab2str(raw, 'hex');
+
+      // test results
+      const expected = ab2str(keyData, 'hex');
+      if (actual !== expected) {
+        console.log('actual  ', actual);
+        console.log('expected', expected);
+      }
+      expect(actual).to.equal(expected, 'import raw, export raw');
     });
 
     const test = (rawKeyData: Uint8Array, descr: string): void => {
@@ -207,23 +214,16 @@ describe('subtle - importKey / exportKey', () => {
           ['encrypt', 'decrypt']
         );
 
-        // export raw
-        const raw = await subtle.exportKey('raw', key);
-        const rawStr = ab2str(raw, 'hex');
-        expect(ab2str(keyData, 'hex')).to.equal(
-          rawStr,
-          'import raw, export raw'
-        );
-
         // export jwk
         const jwk = await subtle.exportKey('jwk', key);
         expect(jwk.key_ops).to.have.all.members(['encrypt', 'decrypt']);
         expect(jwk.ext);
         expect(jwk.kty).to.equal('oct');
         const actual = ab2str(base64ToArrayBuffer(jwk.k));
-        const expected = rawStr;
+
+        // test results
+        const expected = ab2str(keyData, 'hex');
         if (actual !== expected) {
-          console.log('raw key ', rawKeyData);
           console.log('actual  ', actual);
           console.log('expected', expected);
           console.log('keyB64  ', keyB64);

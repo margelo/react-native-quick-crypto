@@ -233,7 +233,7 @@ std::string EncodeBignum(const BIGNUM* bn,
   std::vector<uint8_t> buf(size);
   CHECK_EQ(BN_bn2binpad(bn, buf.data(), size), size);
   std::string data(buf.begin(), buf.end());
-  return EncodeBase64(data, size, url);
+  return EncodeBase64(data, url);
 }
 
 // loosely based on Node src/string_bytes.cc - StringBytes::Write()
@@ -255,10 +255,8 @@ std::string StringBytesWrite(jsi::Runtime &rt,
   return result;
 }
 
-std::string EncodeBase64(const std::string &data, size_t len, bool url) {
-  return base64_encode(reinterpret_cast<const unsigned char *>(data.c_str()),
-                       len,
-                       url);
+std::string EncodeBase64(const std::string data, bool url) {
+  return base64_encode(data, url);
 }
 
 std::string DecodeBase64(const std::string &in, bool remove_linebreaks) {
