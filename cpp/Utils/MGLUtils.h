@@ -164,10 +164,6 @@ class ByteSource {
         return BignumPointer(BN_bin2bn(data<unsigned char>(), (int)size(), nullptr));
     }
 
-    // inline ByteSource Get() const {
-    //     return FromString(ToString());
-    // }
-
     inline std::string ToString() const {
         std::vector<uint8_t> buf(size_);
         std::memcpy(&buf[0], data_, size_);
