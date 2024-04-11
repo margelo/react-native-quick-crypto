@@ -138,7 +138,7 @@ export type EncodingOptions = {
   format?: string;
   padding?: number;
   cipher?: string;
-  passphrase?: string;
+  passphrase?: string | ArrayBuffer;
 };
 
 export type AsymmetricKeyType = 'rsa' | 'rsa-pss' | 'dsa' | 'ec' | undefined;
@@ -201,7 +201,7 @@ function parseKeyType(
   keyType: string | undefined,
   isPublic: boolean | undefined,
   optionName: string
-) {
+): KeyEncoding | undefined {
   if (typeStr === undefined && !required) {
     return undefined;
   } else if (typeStr === 'pkcs1') {
@@ -229,9 +229,9 @@ function parseKeyType(
 
 function parseKeyFormatAndType(
   enc: EncodingOptions,
-  keyType: string | undefined,
-  isPublic: boolean | undefined,
-  objName: string | undefined
+  keyType?: string,
+  isPublic?: boolean,
+  objName?: string
 ) {
   const { format: formatStr, type: typeStr } = enc;
 
@@ -258,9 +258,9 @@ function parseKeyFormatAndType(
 
 function parseKeyEncoding(
   enc: EncodingOptions,
-  keyType: string | undefined,
-  isPublic: boolean | undefined,
-  objName?: string | undefined
+  keyType?: string,
+  isPublic?: boolean,
+  objName?: string
 ) {
   // validateObject(enc, 'options');
 
@@ -318,13 +318,18 @@ function parseKeyEncoding(
 function prepareAsymmetricKey(
   key:
     | BinaryLike
-    | { key: any; encoding?: string; format?: any; passphrase?: string },
+    | {
+        key: any;
+        encoding?: string;
+        format?: any;
+        passphrase?: string | ArrayBuffer;
+      },
   ctx: KeyInputContext
 ): {
   format: KFormatType;
   data: ArrayBuffer;
-  type?: any;
-  passphrase?: any;
+  type?: KeyEncoding;
+  passphrase?: string | ArrayBuffer;
 } {
   // TODO(osp) check, KeyObject some node object
   // if (isKeyObject(key)) {
@@ -581,7 +586,7 @@ export class SecretKeyObject extends KeyObject {
   export(options: EncodingOptions) {
     if (options !== undefined) {
       if (options.format === 'jwk') {
-        throw new Error('export for jwk is not implemented');
+        throw new Error('SecretKey export for jwk is not implemented');
         // return this.handle.exportJwk({}, false);
       }
     }
@@ -654,20 +659,18 @@ export class PrivateKeyObject extends AsymmetricKeyObject {
     super('private', handle);
   }
 
-  // export(options) {
-  //   if (options && options.format === 'jwk') {
-  //     if (options.passphrase !== undefined) {
-  //       throw new ERR_CRYPTO_INCOMPATIBLE_KEY_OPTIONS(
-  //         'jwk',
-  //         'does not support encryption'
-  //       );
-  //     }
-  //     return this[kHandle].exportJwk({}, false);
-  //   }
-  //   const { format, type, cipher, passphrase } = parsePrivateKeyEncoding(
-  //     options,
-  //     this.asymmetricKeyType
-  //   );
-  //   return this[kHandle].export(format, type, cipher, passphrase);
-  // }
+  export(options: EncodingOptions) {
+    if (options?.format === 'jwk') {
+      if (options.passphrase !== undefined) {
+        throw new Error('jwk does not support encryption');
+      }
+      throw new Error('PrivateKey export for jwk is not implemented');
+      // return this.handle.exportJwk({}, false);
+    }
+    const { format, type, cipher, passphrase } = parsePrivateKeyEncoding(
+      options,
+      this.asymmetricKeyType
+    );
+    return this.handle.export(format, type, cipher, passphrase);
+  }
 }

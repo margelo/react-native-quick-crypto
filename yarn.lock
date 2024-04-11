@@ -8432,9 +8432,10 @@ react-native-builder-bob@^0.23.2:
     which "^2.0.2"
     yargs "^17.5.1"
 
-react-native-quick-base64@^2.0.5, react-native-quick-base64@boorad/react-native-quick-base64#feat/expose-url-flag-for-encoding:
+react-native-quick-base64@^2.0.5, react-native-quick-base64@^2.1.1:
   version "2.1.1"
-  resolved "https://codeload.github.com/boorad/react-native-quick-base64/tar.gz/3c0f5fdb6c60d4ce6b855717be3121b2ce03c901"
+  resolved "https://registry.yarnpkg.com/react-native-quick-base64/-/react-native-quick-base64-2.1.1.tgz#1fa72713e1da4b35e6f1f7b780e8a0328f0d3bf4"
+  integrity sha512-/L+SaapDLcLcHA3Kj0/cvEhFS/oLXyD6DUXwdckTR/75bzUjqf1FrusUTvJho/lzXnCR1VtBGn+EEvrLmkDTmw==
   dependencies:
     base64-js "^1.5.1"
 
@@ -9671,10 +9672,10 @@ typedarray@^0.0.6:
   resolved "https://registry.yarnpkg.com/typedarray/-/typedarray-0.0.6.tgz#867ac74e3864187b1d3d47d996a78ec5c8830777"
   integrity sha512-/aCDEGatGvZ2BIk+HmLf4ifCJFwvKFNb9/JeZPMulfgFracn9QFcAf5GO8B/mweUjSoblS5In0cWhqpfs/5PQA==
 
-typescript@<5.2.0:
-  version "5.1.6"
-  resolved "https://registry.yarnpkg.com/typescript/-/typescript-5.1.6.tgz#02f8ac202b6dad2c0dd5e0913745b47a37998274"
-  integrity sha512-zaWCozRZ6DLEWAWFrVDz1H6FVXzUSfTy5FUMWsQlU8Ym5JP9eO4xkTIROFCQvhQf61z6O/G6ugw3SgAnvvm+HA==
+typescript@^5.1.6:
+  version "5.4.4"
+  resolved "https://registry.yarnpkg.com/typescript/-/typescript-5.4.4.tgz#eb2471e7b0a5f1377523700a21669dce30c2d952"
+  integrity sha512-dGE2Vv8cpVvw28v8HCPqyb08EzbBURxDpuhJvTrusShUfGnhHBafDsLdS1EhhxyL6BJQE+2cT3dDPAv+MQ6oLw==
 
 uglify-es@^3.1.9:
   version "3.3.9"

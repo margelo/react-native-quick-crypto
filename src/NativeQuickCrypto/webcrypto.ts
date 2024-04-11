@@ -28,7 +28,7 @@ export type KeyObjectHandle = {
     format?: KFormatType,
     type?: KeyEncoding,
     cipher?: string,
-    passphrase?: string
+    passphrase?: ArrayBuffer
   ): ArrayBuffer;
   exportJwk(key: JWK, handleRsaPss: boolean): JWK;
   getAsymmetricKeyType(): AsymmetricKeyType;
