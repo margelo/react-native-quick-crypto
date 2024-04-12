@@ -15,8 +15,8 @@ on:
       - 'android/src/main/cpp/**'
 
 jobs:
-  lint:
-    name: cpplint
+  validate_cpp:
+    name: C++ Lint
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4

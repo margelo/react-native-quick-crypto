@@ -6,10 +6,20 @@
 //
 
 #include "crypto_ec.h"
+#include <iostream>
 #include <openssl/ec.h>
+#include <string>
+#include <utility>
 
 namespace margelo {
 namespace jsi = facebook::jsi;
+
+int GetCurveFromName(const char* name) {
+  int nid = EC_curve_nist2nid(name);
+  if (nid == NID_undef)
+    nid = OBJ_sn2nid(name);
+  return nid;
+}
 
 ECPointPointer ECDH::BufferToPoint(jsi::Runtime &rt,
                                    const EC_GROUP* group,
@@ -35,53 +45,39 @@ ECPointPointer ECDH::BufferToPoint(jsi::Runtime &rt,
                            buf.size(rt),
                            nullptr);
 
-    if (!r)
-        return ECPointPointer();
-
+    if (!r) {
+      return ECPointPointer();
+    }
     return pub;
 }
 
-void PKEY_SPKI_Export(
-                      KeyObjectData* key_data,
-                      ByteSource* out) {
-    CHECK_EQ(key_data->GetKeyType(), kKeyTypePublic);
-    ManagedEVPPKey m_pkey = key_data->GetAsymmetricKey();
-    //                    Mutex::ScopedLock lock(*m_pkey.mutex());
-    BIOPointer bio(BIO_new(BIO_s_mem()));
-    CHECK(bio);
-    if (!i2d_PUBKEY_bio(bio.get(), m_pkey.get()))
-        throw std::runtime_error("Failed to export key");
-
-    *out = ByteSource::FromBIO(bio);
-}
-
-void ECDH::doExport(jsi::Runtime &rt,
-                    WebCryptoKeyFormat format,
-                    std::shared_ptr<KeyObjectData> key_data,
-                    ByteSource* out) {
-    //    CHECK_NE(key_data->GetKeyType(), kKeyTypeSecret);
+WebCryptoKeyExportStatus ECDH::doExport(jsi::Runtime &rt,
+                                        std::shared_ptr<KeyObjectData> key_data,
+                                        WebCryptoKeyFormat format,
+                                        const ECKeyExportConfig& params,
+                                        ByteSource* out) {
+    CHECK_NE(key_data->GetKeyType(), kKeyTypeSecret);
 
     switch (format) {
-            //        case kWebCryptoKeyFormatRaw:
-            //            return EC_Raw_Export(key_data.get(), params, out);
-            //        case kWebCryptoKeyFormatPKCS8:
-            //            if (key_data->GetKeyType() != kKeyTypePrivate)
-            //                return WebCryptoKeyExportStatus::INVALID_KEY_TYPE;
-            //            return PKEY_PKCS8_Export(key_data.get(), out);
+        case kWebCryptoKeyFormatRaw:
+            return EC_Raw_Export(key_data.get(), params, out);
+        // case kWebCryptoKeyFormatPKCS8:
+        //     if (key_data->GetKeyType() != kKeyTypePrivate)
+        //         return WebCryptoKeyExportStatus::INVALID_KEY_TYPE;
+        //     return PKEY_PKCS8_Export(key_data.get(), out);
         case kWebCryptoKeyFormatSPKI: {
             if (key_data->GetKeyType() != kKeyTypePublic)
                 throw std::runtime_error("Invalid type public to be exported");
 
             ManagedEVPPKey m_pkey = key_data->GetAsymmetricKey();
             if (EVP_PKEY_id(m_pkey.get()) != EVP_PKEY_EC) {
-                PKEY_SPKI_Export(key_data.get(), out);
-                return;
+                return PKEY_SPKI_Export(key_data.get(), out);
             } else {
-        // Ensure exported key is in uncompressed point format.
-        // The temporary EC key is so we can have i2d_PUBKEY_bio() write out
-        // the header but it is a somewhat silly hoop to jump through because
-        // the header is for all practical purposes a static 26 byte sequence
-        // where only the second byte changes.
+                // Ensure exported key is in uncompressed point format.
+                // The temporary EC key is so we can have i2d_PUBKEY_bio() write out
+                // the header but it is a somewhat silly hoop to jump through because
+                // the header is for all practical purposes a static 26 byte sequence
+                // where only the second byte changes.
 
                 const EC_KEY* ec_key = EVP_PKEY_get0_EC_KEY(m_pkey.get());
                 const EC_GROUP* group = EC_KEY_get0_group(ec_key);
@@ -118,12 +114,221 @@ void ECDH::doExport(jsi::Runtime &rt,
                     throw std::runtime_error("Failed to export EC key");
                 }
                 *out = ByteSource::FromBIO(bio);
-                return;
+                return WebCryptoKeyExportStatus::OK;
             }
         }
         default:
-            throw std::runtime_error("Un-reachable export code");;
+            throw std::runtime_error("Un-reachable export code");
     }
+}
+
+WebCryptoKeyExportStatus PKEY_SPKI_Export(KeyObjectData* key_data,
+                                          ByteSource* out) {
+    CHECK_EQ(key_data->GetKeyType(), kKeyTypePublic);
+    ManagedEVPPKey m_pkey = key_data->GetAsymmetricKey();
+    // Mutex::ScopedLock lock(*m_pkey.mutex());
+    BIOPointer bio(BIO_new(BIO_s_mem()));
+    CHECK(bio);
+    if (!i2d_PUBKEY_bio(bio.get(), m_pkey.get())) {
+        throw std::runtime_error("Failed to export key");
+        return WebCryptoKeyExportStatus::FAILED;
+    }
+
+    *out = ByteSource::FromBIO(bio);
+    return WebCryptoKeyExportStatus::OK;
+}
+
+WebCryptoKeyExportStatus EC_Raw_Export(KeyObjectData* key_data,
+                                       const ECKeyExportConfig& params,
+                                       ByteSource* out) {
+  ManagedEVPPKey m_pkey = key_data->GetAsymmetricKey();
+  CHECK(m_pkey);
+  // std::scoped_lock lock(*m_pkey.mutex()); // TODO: mutex/lock required?
+
+  const EC_KEY* ec_key = EVP_PKEY_get0_EC_KEY(m_pkey.get());
+
+  size_t len = 0;
+
+  if (ec_key == nullptr) {
+    typedef int (*export_fn)(const EVP_PKEY*, unsigned char*, size_t* len);
+    export_fn fn = nullptr;
+    switch (key_data->GetKeyType()) {
+      case kKeyTypePrivate:
+        fn = EVP_PKEY_get_raw_private_key;
+        break;
+      case kKeyTypePublic:
+        fn = EVP_PKEY_get_raw_public_key;
+        break;
+      case kKeyTypeSecret:
+        throw std::runtime_error("unreachable code in EC_Raw_Export");
+    }
+    CHECK_NOT_NULL(fn);
+    // Get the size of the raw key data
+    if (fn(m_pkey.get(), nullptr, &len) == 0)
+      return WebCryptoKeyExportStatus::INVALID_KEY_TYPE;
+    ByteSource::Builder data(len);
+    if (fn(m_pkey.get(), data.data<unsigned char>(), &len) == 0)
+      return WebCryptoKeyExportStatus::INVALID_KEY_TYPE;
+    *out = std::move(data).release(len);
+  } else {
+    if (key_data->GetKeyType() != kKeyTypePublic)
+      return WebCryptoKeyExportStatus::INVALID_KEY_TYPE;
+    const EC_GROUP* group = EC_KEY_get0_group(ec_key);
+    const EC_POINT* point = EC_KEY_get0_public_key(ec_key);
+    point_conversion_form_t form = POINT_CONVERSION_UNCOMPRESSED;
+
+    // Get the allocated data size...
+    len = EC_POINT_point2oct(group, point, form, nullptr, 0, nullptr);
+    if (len == 0)
+      return WebCryptoKeyExportStatus::FAILED;
+    ByteSource::Builder data(len);
+    size_t check_len = EC_POINT_point2oct(
+        group, point, form, data.data<unsigned char>(), len, nullptr);
+    if (check_len == 0)
+      return WebCryptoKeyExportStatus::FAILED;
+
+    CHECK_EQ(len, check_len);
+    *out = std::move(data).release();
+  }
+
+  return WebCryptoKeyExportStatus::OK;
+}
+
+jsi::Value ExportJWKEcKey(jsi::Runtime &rt,
+                          std::shared_ptr<KeyObjectData> key,
+                          jsi::Object &target) {
+  ManagedEVPPKey m_pkey = key->GetAsymmetricKey();
+  // std::scoped_lock lock(*m_pkey.mutex()); // TODO: mutex/lock required?
+  CHECK_EQ(EVP_PKEY_id(m_pkey.get()), EVP_PKEY_EC);
+
+  const EC_KEY* ec = EVP_PKEY_get0_EC_KEY(m_pkey.get());
+  CHECK_NOT_NULL(ec);
+
+  const EC_POINT* pub = EC_KEY_get0_public_key(ec);
+  const EC_GROUP* group = EC_KEY_get0_group(ec);
+
+  int degree_bits = EC_GROUP_get_degree(group);
+  int degree_bytes =
+    (degree_bits / CHAR_BIT) + (7 + (degree_bits % CHAR_BIT)) / 8;
+
+  BignumPointer x(BN_new());
+  BignumPointer y(BN_new());
+
+  if (!EC_POINT_get_affine_coordinates(group, pub, x.get(), y.get(), nullptr)) {
+    throw jsi::JSError(rt, "Failed to get elliptic-curve point coordinates");
+  }
+
+  target.setProperty(rt, "kty", "EC");
+  target.setProperty(rt, "x", EncodeBignum(x.get(), degree_bytes, true));
+  target.setProperty(rt, "y", EncodeBignum(y.get(), degree_bytes, true));
+
+  std::string crv_name;
+  const int nid = EC_GROUP_get_curve_name(group);
+  switch (nid) {
+    case NID_X9_62_prime256v1:
+      crv_name = "P-256";
+      break;
+    case NID_secp256k1:
+      crv_name = "secp256k1";
+      break;
+    case NID_secp384r1:
+      crv_name = "P-384";
+      break;
+    case NID_secp521r1:
+      crv_name = "P-521";
+      break;
+    default: {
+      throw jsi::JSError(rt, "Unsupported JWK EC curve: %s.", OBJ_nid2sn(nid));
+      return jsi::Value::undefined();
+    }
+  }
+  target.setProperty(rt, "crv", crv_name);
+
+  if (key->GetKeyType() == kKeyTypePrivate) {
+    const BIGNUM* pvt = EC_KEY_get0_private_key(ec);
+    target.setProperty(rt, "d", EncodeBignum(pvt, degree_bytes, true));
+  }
+
+  return std::move(target);
+}
+
+std::shared_ptr<KeyObjectData> ImportJWKEcKey(jsi::Runtime &rt,
+                                              jsi::Object &jwk,
+                                              jsi::Value &namedCurve) {
+  // curve name
+  if (namedCurve.isUndefined()) {
+    throw jsi::JSError(rt, "Invalid Named Curve");
+    return std::shared_ptr<KeyObjectData>();
+  }
+  std::string curve = namedCurve.asString(rt).utf8(rt);
+
+  int nid = GetCurveFromName(curve.c_str());
+  if (nid == NID_undef) {  // Unknown curve
+    throw jsi::JSError(rt, "Invalid Named Curve: " + curve);
+    return std::shared_ptr<KeyObjectData>();
+  }
+
+  jsi::Value x_value = jwk.getProperty(rt, "x");
+  jsi::Value y_value = jwk.getProperty(rt, "y");
+  jsi::Value d_value = jwk.getProperty(rt, "d");
+
+  if (!x_value.isString() ||
+      !y_value.isString() ||
+      (!d_value.isUndefined() && !d_value.isString())) {
+    throw jsi::JSError(rt, "Invalid JWK EC key 0");
+  }
+
+  KeyType type = d_value.isString() ? kKeyTypePrivate : kKeyTypePublic;
+
+  ECKeyPointer ec(EC_KEY_new_by_curve_name(nid));
+  if (!ec) {
+    throw jsi::JSError(rt, "Invalid JWK EC key 1");
+  }
+
+  ByteSource x = ByteSource::FromEncodedString(rt,
+                                               x_value.asString(rt).utf8(rt),
+                                               encoding::BASE64URL);
+  ByteSource y = ByteSource::FromEncodedString(rt,
+                                               y_value.asString(rt).utf8(rt),
+                                               encoding::BASE64URL);
+
+  int r = EC_KEY_set_public_key_affine_coordinates(ec.get(),
+                                                  x.ToBN().get(),
+                                                  y.ToBN().get());
+  if (!r) {
+    throw jsi::JSError(rt, "Invalid JWK EC key 2");
+  }
+
+  if (type == kKeyTypePrivate) {
+    ByteSource d = ByteSource::FromEncodedString(rt, d_value.asString(rt).utf8(rt));
+    if (!EC_KEY_set_private_key(ec.get(), d.ToBN().get())) {
+      throw jsi::JSError(rt, "Invalid JWK EC key 3");
+      return std::shared_ptr<KeyObjectData>();
+    }
+  }
+
+  EVPKeyPointer pkey(EVP_PKEY_new());
+  CHECK_EQ(EVP_PKEY_set1_EC_KEY(pkey.get(), ec.get()), 1);
+
+  return KeyObjectData::CreateAsymmetric(type, ManagedEVPPKey(std::move(pkey)));
+}
+
+jsi::Value GetEcKeyDetail(jsi::Runtime &rt,
+                          std::shared_ptr<KeyObjectData> key) {
+  jsi::Object target = jsi::Object(rt);
+  ManagedEVPPKey m_pkey = key->GetAsymmetricKey();
+  // std::scoped_lock lock(*m_pkey.mutex()); // TODO: mutex/lock required?
+  CHECK_EQ(EVP_PKEY_id(m_pkey.get()), EVP_PKEY_EC);
+
+  const EC_KEY* ec = EVP_PKEY_get0_EC_KEY(m_pkey.get());
+  CHECK_NOT_NULL(ec);
+
+  const EC_GROUP* group = EC_KEY_get0_group(ec);
+  int nid = EC_GROUP_get_curve_name(group);
+
+  jsi::String value = jsi::String::createFromUtf8(rt, OBJ_nid2sn(nid));
+  target.setProperty(rt, "namedCurve", value);
+  return target;
 }
 
 } // namespace margelo

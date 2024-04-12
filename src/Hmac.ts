@@ -7,7 +7,7 @@ import {
   type BinaryLike,
   binaryLikeToArrayBuffer,
 } from './Utils';
-import Stream from 'stream-browserify';
+import Stream from 'readable-stream';
 import { Buffer } from '@craftzdog/react-native-buffer';
 
 const createInternalHmac = NativeQuickCrypto.createHmac;

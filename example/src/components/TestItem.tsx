@@ -28,8 +28,12 @@ export const TestItem: React.FC<TestItemProps> = ({
   let pass = 0;
   let fail = 0;
   results.map((r) => {
-    if (r.type === 'correct') pass++;
-    if (r.type === 'incorrect') fail++;
+    if (r.type === 'correct') {
+      pass++;
+    }
+    if (r.type === 'incorrect') {
+      fail++;
+    }
   });
 
   return (
@@ -98,6 +102,7 @@ const styles = StyleSheet.create({
   },
   count: {
     fontSize: 12,
+    fontWeight: 'bold',
     flex: 1,
     textAlign: 'right',
   },

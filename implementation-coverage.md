@@ -97,22 +97,22 @@ This document attempts to describe the implementation status of Crypto APIs/Inte
 ## `importKey`
 | Key Type            | `spki` | `pkcs8` | `jwk` | `raw` |
 | ------------------- | :----: | :-----: | :---: | :---: |
-| `AES-CBC`           |   |   | ❌ | ❌ |
-| `AES-CTR`           |   |   | ❌ | ❌ |
-| `AES-GCM`           |   |   | ❌ | ❌ |
-| `AES-KW`            |   |   | ❌ | ❌ |
-| `ECDH`              | ❌ | ❌ | ❌ | ✅ |
+| `AES-CBC`           |   |   | ✅ | ✅ |
+| `AES-CTR`           |   |   | ✅ | ✅ |
+| `AES-GCM`           |   |   | ✅ | ✅ |
+| `AES-KW`            |   |   | ✅ | ✅ |
+| `ECDH`              | ❌ | ❌ | ✅ | ✅ |
 | `X25519`            | ❌ | ❌ | ❌ | ❌ |
 | `X448`              | ❌ | ❌ | ❌ | ❌ |
-| `ECDSA`             | ❌ | ❌ | ❌ | ✅ |
+| `ECDSA`             | ❌ | ❌ | ✅ | ✅ |
 | `Ed25519`           | ❌ | ❌ | ❌ | ❌ |
 | `Ed448`             | ❌ | ❌ | ❌ | ❌ |
 | `HDKF`              |   |   |   |   |
 | `HMAC`              |   |   | ❌ | ❌ |
 | `PBKDF2`            |   |   |   | ✅ |
-| `RSA-OAEP`          | ❌ | ❌ | ❌ |   |
-| `RSA-PSS`           | ❌ | ❌ | ❌ |   |
-| `RSASSA-PKCS1-v1_5` | ❌ | ❌ | ❌ |   |
+| `RSA-OAEP`          | ❌ | ❌ | ✅ |   |
+| `RSA-PSS`           | ❌ | ❌ | ✅ |   |
+| `RSASSA-PKCS1-v1_5` | ❌ | ❌ | ✅ |   |
 
 * ` ` - not implemented in Node
 * ❌ - implemented in Node, not RNQC
@@ -121,20 +121,20 @@ This document attempts to describe the implementation status of Crypto APIs/Inte
 ## `exportKey`
 | Key Type            | `spki` | `pkcs8` | `jwk` | `raw` |
 | ------------------- | :----: | :-----: | :---: | :---: |
-| `AES-CBC`           |   |   | ❌ | ❌ |
-| `AES-CTR`           |   |   | ❌ | ❌ |
-| `AES-GCM`           |   |   | ❌ | ❌ |
-| `AES-KW`            |   |   | ❌ | ❌ |
-| `ECDH`              | ✅ | ❌ | ❌ | ❌ |
-| `ECDSA`             | ✅ | ❌ | ❌ | ❌ |
+| `AES-CBC`           |   |   | ✅ | ✅ |
+| `AES-CTR`           |   |   | ✅ | ✅ |
+| `AES-GCM`           |   |   | ✅ | ✅ |
+| `AES-KW`            |   |   | ✅ | ✅ |
+| `ECDH`              | ✅ | ❌ | ✅ | ✅ |
+| `ECDSA`             | ✅ | ❌ | ✅ | ✅ |
 | `Ed25519`           | ❌ | ❌ | ❌ | ❌ |
 | `Ed448`             | ❌ | ❌ | ❌ | ❌ |
 | `HDKF`              |   |   |   |   |
 | `HMAC`              |   |   | ❌ | ❌ |
 | `PBKDF2`            |   |   |   |   |
-| `RSA-OAEP`          | ❌ | ❌ | ❌ |   |
-| `RSA-PSS`           | ❌ | ❌ | ❌ |   |
-| `RSASSA-PKCS1-v1_5` | ❌ | ❌ | ❌ |   |
+| `RSA-OAEP`          | ❌ | ❌ | ✅ |   |
+| `RSA-PSS`           | ❌ | ❌ | ✅ |   |
+| `RSASSA-PKCS1-v1_5` | ❌ | ❌ | ✅ |   |
 
 * ` ` - not implemented in Node
 * ❌ - implemented in Node, not RNQC

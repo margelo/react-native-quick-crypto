@@ -103,7 +103,7 @@ module.exports = {
 +     {
 +       alias: {
 +         'crypto': 'react-native-quick-crypto',
-+         'stream': 'stream-browserify',
++         'stream': 'readable-stream',
 +         'buffer': '@craftzdog/react-native-buffer',
 +       },
 +     },

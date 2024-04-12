@@ -31,7 +31,9 @@ describe('hmac', () => {
     const nameData = data.toString().replace(/\s/g, '');
 
     it(`testHmac ${algo} ${nameKey} ${nameData}`, () => {
-      if (!Array.isArray(data)) data = [data] as any;
+      if (!Array.isArray(data)) {
+        data = [data] as any;
+      }
 
       // If the key is a Buffer, test Hmac with a key object as well.
       const keyWrappers = [
@@ -111,7 +113,9 @@ describe('hmac', () => {
   ];
 
   for (const { key, data, hmac } of wikipedia) {
-    for (const hash in hmac) testHmac(hash, key, data, (hmac as any)[hash]);
+    for (const hash in hmac) {
+      testHmac(hash, key, data, (hmac as any)[hash]);
+    }
   }
 
   // Test HMAC-SHA-* (rfc 4231 Test Cases)
@@ -367,8 +371,9 @@ describe('hmac', () => {
     },
   ];
 
-  for (const { key, data, hmac } of rfc2202_md5)
+  for (const { key, data, hmac } of rfc2202_md5) {
     testHmac('md5', key, data, hmac);
+  }
 
   const rfc2202_sha1 = [
     {
@@ -435,8 +440,9 @@ describe('hmac', () => {
     },
   ];
 
-  for (const { key, data, hmac } of rfc2202_sha1)
+  for (const { key, data, hmac } of rfc2202_sha1) {
     testHmac('sha1', key, data, hmac);
+  }
 
   it('digest encoding', () => {
     expect(crypto.createHmac('sha256', 'w00t').digest('ucs2')).to.be.eql(

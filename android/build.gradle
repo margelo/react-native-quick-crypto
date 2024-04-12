@@ -1,19 +1,31 @@
+import java.nio.file.Paths
+import com.android.Version
+
+def agpVersion = com.android.Version.ANDROID_GRADLE_PLUGIN_VERSION
+def agpVersionMajor = agpVersion.tokenize('.')[0].toInteger()
+def agpVersionMinor = agpVersion.tokenize('.')[1].toInteger()
+
 buildscript {
   repositories {
-    google()
+    maven {
+      url "https://plugins.gradle.org/m2/"
+    }
     mavenCentral()
+    google()
   }
 
   dependencies {
-    classpath("com.android.tools.build:gradle:7.2.1")
+    classpath("com.android.tools.build:gradle:8.3.1")
   }
 }
 
 def isNewArchitectureEnabled() {
-  return rootProject.hasProperty("newArchEnabled") && rootProject.getProperty("newArchEnabled") == "true"
+  // To opt-in for the New Architecture, you can either:
+  // - Set `newArchEnabled` to true inside the `gradle.properties` file
+  // - Invoke gradle with `-newArchEnabled=true`
+  // - Set an environment variable `ORG_GRADLE_PROJECT_newArchEnabled=true`
+  return project.hasProperty("newArchEnabled") && project.newArchEnabled == "true"
 }
-
-apply plugin: 'com.android.library'
 
 def resolveBuildType() {
     Gradle gradle = getGradle()
@@ -25,26 +37,44 @@ def resolveBuildType() {
 if (isNewArchitectureEnabled()) {
   apply plugin: "com.facebook.react"
 }
+apply plugin: 'com.android.library'
 
-def getExtOrDefault(name) {
-  return rootProject.ext.has(name) ? rootProject.ext.get(name) : project.properties['QuickCrypto_' + name]
+def safeExtGet(prop, fallback) {
+  rootProject.ext.has(prop) ? rootProject.ext.get(prop) : fallback
 }
 
-def getExtOrIntegerDefault(name) {
-  return rootProject.ext.has(name) ? rootProject.ext.get(name) : (project.properties['QuickCrypto_' + name]).toInteger()
+def reactNativeArchitectures() {
+  def value = project.getProperties().get("reactNativeArchitectures")
+  return value ? value.split(",") : ["armeabi-v7a", "x86", "x86_64", "arm64-v8a"]
 }
 
-def supportsNamespace() {
-  def parsed = com.android.Version.ANDROID_GRADLE_PLUGIN_VERSION.tokenize('.')
-  def major = parsed[0].toInteger()
-  def minor = parsed[1].toInteger()
+// static def findNodeModules(baseDir) {
+//   def basePath = baseDir.toPath().normalize()
+//   // Node's module resolution algorithm searches up to the root directory,
+//   // after which the base path will be null
+//   while (basePath) {
+//     def nodeModulesPath = Paths.get(basePath.toString(), "node_modules")
+//     def reactNativePath = Paths.get(nodeModulesPath.toString(), "react-native")
+//     if (nodeModulesPath.toFile().exists() && reactNativePath.toFile().exists()) {
+//       return nodeModulesPath.toString()
+//     }
+//     basePath = basePath.getParent()
+//   }
+//   throw new GradleException("react-native-quick-crypto: Failed to find node_modules/ path!")
+// }
 
-  // Namespace support was added in 7.3.0
-  return (major == 7 && minor >= 3) || major >= 8
+// def nodeModules = findNodeModules(projectDir)
+
+repositories {
+  google()
+  mavenCentral()
 }
 
 android {
-  if (supportsNamespace()) {
+  compileSdkVersion safeExtGet("compileSdkVersion", 31)
+
+  if ((agpVersionMajor == 7 && agpVersionMinor >= 3) || agpVersionMajor >= 8) {
+    // Namespace support was added in 7.3.0
     namespace "com.margelo.quickcrypto"
 
     sourceSets {
@@ -54,25 +84,36 @@ android {
     }
   }
 
-  ndkVersion getExtOrDefault('ndkVersion')
-  compileSdkVersion getExtOrIntegerDefault('compileSdkVersion')
-  
+  if (agpVersionMajor >= 8) {
+      buildFeatures {
+          buildConfig = true
+      }
+  }
+
+  // Used to override the NDK path/version on internal CI or by allowing
+  // users to customize the NDK path/version from their root project (e.g. for M1 support)
+  if (rootProject.hasProperty("ndkPath")) {
+    ndkPath rootProject.ext.ndkPath
+  }
+  if (rootProject.hasProperty("ndkVersion")) {
+    ndkVersion rootProject.ext.ndkVersion
+  }
+
   buildFeatures {
     prefab true
   }
 
   defaultConfig {
-    minSdkVersion getExtOrIntegerDefault("minSdkVersion")
-    targetSdkVersion getExtOrIntegerDefault("targetSdkVersion")
-
+    minSdkVersion safeExtGet('minSdkVersion', 23)
+    targetSdkVersion safeExtGet('targetSdkVersion', 31)
+    versionCode 1
+    versionName "1.0"
+    buildConfigField "boolean", "IS_NEW_ARCHITECTURE_ENABLED", isNewArchitectureEnabled().toString()
     externalNativeBuild {
       cmake {
-        cppFlags "-O2 -frtti -fexceptions -Wall -fstack-protector-all -DON_ANDROID -DANDROID"
-        abiFilters "x86", "x86_64", "armeabi-v7a", "arm64-v8a"
-        arguments (
-          '-DANDROID_STL=c++_shared',
-          "-DANDROID_TOOLCHAIN=clang"
-        )
+        cppFlags "-O2 -frtti -fexceptions -Wall -Wno-unused-variable -fstack-protector-all"
+        arguments '-DANDROID_STL=c++_shared' //, "-DNODE_MODULES_DIR=${nodeModules}",
+        abiFilters (*reactNativeArchitectures())
       }
     }
   }
@@ -94,9 +135,6 @@ android {
             "**/libturbomodulejsijni.so",
             "**/MANIFEST.MF",
     ]
-    // Setting pickFirst on this level does nothing
-    // pickFirst should be added on the app/build.gradle
-    // pickFirst '**/libcrypto.so'
   }
 
   buildTypes {
@@ -122,9 +160,6 @@ android {
     targetCompatibility JavaVersion.VERSION_1_8
   }
 
-  buildFeatures {
-    prefab true
-  }
 }
 
 repositories {
@@ -134,7 +169,7 @@ repositories {
 
 dependencies {
   //noinspection GradleDynamicVersion
-  implementation "com.facebook.react:react-native:+"
+  implementation "com.facebook.react:react-android:+"
   // https://mvnrepository.com/artifact/com.android.ndk.thirdparty/openssl
   implementation 'com.android.ndk.thirdparty:openssl:1.1.1q-beta-1'
 }
