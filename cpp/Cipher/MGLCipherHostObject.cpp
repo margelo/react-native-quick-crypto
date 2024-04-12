@@ -333,7 +333,7 @@ void MGLCipherHostObject::installMethods() {
       if (ok && isCipher_ && IsAuthenticatedMode()) {
         // In GCM mode: default to 16 bytes.
         // In CCM, OCB mode: must be provided by user.
-        
+
         // Logic for default auth tag length
         if (auth_tag_len_ == kNoAuthTagLength) {
           // TODO(osp) check
@@ -463,8 +463,8 @@ void MGLCipherHostObject::installMethods() {
         }
 
         MGLTypedArray<MGLTypedArrayKind::Uint8Array> authTagArray(runtime, auth_tag_len_);
-        auto buffer = authTagArray.getBuffer(runtime);  
-        auto dataPtr = buffer.data(runtime);            
+        auto buffer = authTagArray.getBuffer(runtime);
+        auto dataPtr = buffer.data(runtime);
         std::memcpy(dataPtr, auth_tag_, auth_tag_len_);
 
         return authTagArray;
