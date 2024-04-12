@@ -159,7 +159,7 @@ class KeyObjectData {
   const ManagedEVPPKey asymmetric_key_;
 };
 
-// Analoguous to the KeyObjectHandle class in node
+// Analogous to the KeyObjectHandle class in node
 // https://github.com/nodejs/node/blob/main/src/crypto/crypto_keys.h#L164
 class JSI_EXPORT KeyObjectHandle: public jsi::HostObject {
  public:

@@ -633,7 +633,7 @@ ManagedEVPPKey::GetPrivateKeyEncodingFromJs(jsi::Runtime& runtime,
       if (needs_passphrase &&
           (arguments[*offset].isNull() || arguments[*offset].isUndefined())) {
         throw jsi::JSError(
-            runtime, "passphrase is null or unfedined but it is required");
+            runtime, "passphrase is null or undefined but it is required");
       }
     }
   }
