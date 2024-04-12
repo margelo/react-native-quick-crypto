@@ -1,0 +1,17 @@
+{
+  "extends": "../tsconfig.json",
+  "compilerOptions": {
+    "paths": {
+      "react-native-quick-crypto": ["../src/index"],
+    },
+    "resolveJsonModule": true,
+  },
+  "include": [
+    "src",
+    "index.js",
+    ".eslintrc.js",
+  ],
+  "exclude": [
+    "node_modules",
+  ],
+}

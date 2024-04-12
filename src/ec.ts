@@ -4,6 +4,10 @@ import {
   type BufferLike,
   type BinaryLike,
   binaryLikeToArrayBuffer,
+  lazyDOMException,
+  validateKeyOps,
+  hasAnyNotIn,
+  ab2str,
 } from './Utils';
 import {
   type ImportFormat,
@@ -14,6 +18,10 @@ import {
   PublicKeyObject,
   KWebCryptoKeyFormat,
   CryptoKey,
+  type JWK,
+  type AnyAlgorithm,
+  PrivateKeyObject,
+  KeyType,
 } from './keys';
 
 // const {
@@ -63,25 +71,32 @@ import {
 
 // const generateKeyPair = promisify(_generateKeyPair);
 
-// function verifyAcceptableEcKeyUse(name, isPublic, usages) {
-//   let checkSet;
-//   switch (name) {
-//     case 'ECDH':
-//       checkSet = isPublic ? [] : ['deriveKey', 'deriveBits'];
-//       break;
-//     case 'ECDSA':
-//       checkSet = isPublic ? ['verify'] : ['sign'];
-//       break;
-//     default:
-//       throw lazyDOMException(
-//         'The algorithm is not supported', 'NotSupportedError');
-//   }
-//   if (hasAnyNotIn(usages, checkSet)) {
-//     throw lazyDOMException(
-//       `Unsupported key usage for a ${name} key`,
-//       'SyntaxError');
-//   }
-// }
+function verifyAcceptableEcKeyUse(
+  name: AnyAlgorithm,
+  isPublic: boolean,
+  usages: KeyUsage[]
+): void {
+  let checkSet;
+  switch (name) {
+    case 'ECDH':
+      checkSet = isPublic ? [] : ['deriveKey', 'deriveBits'];
+      break;
+    case 'ECDSA':
+      checkSet = isPublic ? ['verify'] : ['sign'];
+      break;
+    default:
+      throw lazyDOMException(
+        'The algorithm is not supported',
+        'NotSupportedError'
+      );
+  }
+  if (hasAnyNotIn(usages, checkSet)) {
+    throw lazyDOMException(
+      `Unsupported key usage for a ${name} key`,
+      'SyntaxError'
+    );
+  }
+}
 
 function createECPublicKeyRaw(
   namedCurve: NamedCurve | undefined,
@@ -92,7 +107,8 @@ function createECPublicKeyRaw(
   }
   const handle = NativeQuickCrypto.webcrypto.createKeyObjectHandle();
   if (!handle.initECRaw(kNamedCurveAliases[namedCurve], keyData)) {
-    throw new Error('Invalid keyData');
+    console.log('keyData', ab2str(keyData));
+    throw new Error('Invalid keyData 1');
   }
 
   return new PublicKeyObject(handle);
@@ -172,11 +188,11 @@ export function ecExportKey(
 
 export function ecImportKey(
   format: ImportFormat,
-  keyData: BufferLike | BinaryLike,
+  keyData: BufferLike | BinaryLike | JWK,
   algorithm: SubtleAlgorithm,
   extractable: boolean,
   keyUsages: KeyUsage[]
-) {
+): CryptoKey {
   const { name, namedCurve } = algorithm;
 
   // if (!ArrayPrototypeIncludes(ObjectKeys(kNamedCurveAliases), namedCurve)) {
@@ -195,7 +211,7 @@ export function ecImportKey(
     //       type: 'spki',
     //     });
     //   } catch (err) {
-    //     throw new Error(`Invalid keyData: ${err}`);
+    //     throw new Error(`Invalid keyData 2: ${err}`);
     //   }
     //   break;
     // }
@@ -208,82 +224,85 @@ export function ecImportKey(
     //       type: 'pkcs8',
     //     });
     //   } catch (err) {
-    //     throw new Error(`Invalid keyData ${err}`);
+    //     throw new Error(`Invalid keyData 3 ${err}`);
     //   }
     //   break;
     // }
-    // case 'jwk': {
-    //   if (!keyData.kty) throw lazyDOMException('Invalid keyData', 'DataError');
-    //   if (keyData.kty !== 'EC')
-    //     throw lazyDOMException('Invalid JWK "kty" Parameter', 'DataError');
-    //   if (keyData.crv !== namedCurve)
-    //     throw lazyDOMException(
-    //       'JWK "crv" does not match the requested algorithm',
-    //       'DataError'
-    //     );
+    case 'jwk': {
+      const data = keyData as JWK;
 
-    //   verifyAcceptableEcKeyUse(name, keyData.d === undefined, usagesSet);
+      if (!data.kty) throw lazyDOMException('Invalid keyData 4', 'DataError');
+      if (data.kty !== 'EC')
+        throw lazyDOMException('Invalid JWK "kty" Parameter', 'DataError');
+      if (data.crv !== namedCurve)
+        throw lazyDOMException(
+          'JWK "crv" does not match the requested algorithm',
+          'DataError'
+        );
 
-    //   if (usagesSet.size > 0 && keyData.use !== undefined) {
-    //     const checkUse = name === 'ECDH' ? 'enc' : 'sig';
-    //     if (keyData.use !== checkUse)
-    //       throw lazyDOMException('Invalid JWK "use" Parameter', 'DataError');
-    //   }
+      verifyAcceptableEcKeyUse(name, data.d === undefined, keyUsages);
 
-    //   validateKeyOps(keyData.key_ops, usagesSet);
+      if (keyUsages.length > 0 && data.use !== undefined) {
+        const checkUse = name === 'ECDH' ? 'enc' : 'sig';
+        if (data.use !== checkUse)
+          throw lazyDOMException('Invalid JWK "use" Parameter', 'DataError');
+      }
 
-    //   if (
-    //     keyData.ext !== undefined &&
-    //     keyData.ext === false &&
-    //     extractable === true
-    //   ) {
-    //     throw lazyDOMException(
-    //       'JWK "ext" Parameter and extractable mismatch',
-    //       'DataError'
-    //     );
-    //   }
+      validateKeyOps(data.key_ops, keyUsages);
 
-    //   if (algorithm.name === 'ECDSA' && keyData.alg !== undefined) {
-    //     let algNamedCurve;
-    //     switch (keyData.alg) {
-    //       case 'ES256':
-    //         algNamedCurve = 'P-256';
-    //         break;
-    //       case 'ES384':
-    //         algNamedCurve = 'P-384';
-    //         break;
-    //       case 'ES512':
-    //         algNamedCurve = 'P-521';
-    //         break;
-    //     }
-    //     if (algNamedCurve !== namedCurve)
-    //       throw lazyDOMException(
-    //         'JWK "alg" does not match the requested algorithm',
-    //         'DataError'
-    //       );
-    //   }
+      if (
+        data.ext !== undefined &&
+        data.ext === false &&
+        extractable === true
+      ) {
+        throw lazyDOMException(
+          'JWK "ext" Parameter and extractable mismatch',
+          'DataError'
+        );
+      }
 
-    //   const handle = new KeyObjectHandle();
-    //   const type = handle.initJwk(keyData, namedCurve);
-    //   if (type === undefined)
-    //     throw lazyDOMException('Invalid JWK', 'DataError');
-    //   keyObject =
-    //     type === kKeyTypePrivate
-    //       ? new PrivateKeyObject(handle)
-    //       : new PublicKeyObject(handle);
-    //   break;
-    // }
+      if (algorithm.name === 'ECDSA' && data.alg !== undefined) {
+        let algNamedCurve;
+        switch (data.alg) {
+          case 'ES256':
+            algNamedCurve = 'P-256';
+            break;
+          case 'ES384':
+            algNamedCurve = 'P-384';
+            break;
+          case 'ES512':
+            algNamedCurve = 'P-521';
+            break;
+        }
+        if (algNamedCurve !== namedCurve)
+          throw lazyDOMException(
+            'JWK "alg" does not match the requested algorithm',
+            'DataError'
+          );
+      }
+
+      const handle = NativeQuickCrypto.webcrypto.createKeyObjectHandle();
+      const type = handle.initJwk(data, namedCurve);
+      if (type === undefined)
+        throw lazyDOMException('Invalid JWK', 'DataError');
+      keyObject =
+        type === KeyType.Private
+          ? new PrivateKeyObject(handle)
+          : new PublicKeyObject(handle);
+      break;
+    }
     case 'raw': {
-      // verifyAcceptableEcKeyUse(name, true, usagesSet);
+      const data = keyData as BufferLike | BinaryLike;
+      verifyAcceptableEcKeyUse(name, true, keyUsages);
       let buffer =
-        typeof keyData === 'string'
-          ? binaryLikeToArrayBuffer(keyData)
-          : bufferLikeToArrayBuffer(keyData);
+        typeof data === 'string'
+          ? binaryLikeToArrayBuffer(data)
+          : bufferLikeToArrayBuffer(data);
       keyObject = createECPublicKeyRaw(namedCurve, buffer);
       break;
     }
     default: {
-      throw new Error('Unknown format');
+      throw new Error(`Unknown EC import format: ${format}`);
     }
   }
 
@@ -297,7 +316,7 @@ export function ecImportKey(
   }
 
   // if (!keyObject[kHandle].checkEcKeyData()) {
-  //   throw new Error('Invalid keyData');
+  //   throw new Error('Invalid keyData 5');
   // }
 
   // const { namedCurve: checkNamedCurve } = keyObject[kHandle].keyDetail({});

@@ -433,7 +433,7 @@ void SignBase::InstallMethods(mode mode) {
               this->SignFinal(runtime, key, padding, salt_len, dsa_sig_enc);
 
           if (ret.error != kSignOk) {
-            throw new jsi::JSError(runtime, "Error signing");
+            throw jsi::JSError(runtime, "Error signing");
           }
 
           return std::move(ret.signature.value());

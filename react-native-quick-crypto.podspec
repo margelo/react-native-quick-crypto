@@ -18,7 +18,8 @@ Pod::Spec.new do |s|
   s.source_files = [
     "ios/**/*.{h,m,mm}",
     "cpp/**/*.{h,c,cpp}",
-    "ios/QuickCryptoModule.h"
+    "ios/QuickCryptoModule.h",
+    "node_modules/react-native-quick-base64/cpp/base64.h"
   ]
   # Any private headers that are not globally unique should be mentioned here.
   # Otherwise there will be a nameclash, since CocoaPods flattens out any header directories
@@ -33,11 +34,10 @@ Pod::Spec.new do |s|
     "HEADER_SEARCH_PATHS" => "\"$(PODS_TARGET_SRCROOT)/ReactCommon\" \"$(PODS_TARGET_SRCROOT)\"  \"$(PODS_ROOT)/boost\" \"$(PODS_ROOT)/boost-for-react-native\" \"$(PODS_ROOT)/DoubleConversion\" \"$(PODS_ROOT)/Headers/Private/React-Core\" "
   }
   s.xcconfig               = {
-    "CLANG_CXX_LANGUAGE_STANDARD" => "c++17",
     "HEADER_SEARCH_PATHS" => "\"$(PODS_ROOT)/boost\" \"$(PODS_ROOT)/boost-for-react-native\" \"$(PODS_ROOT)/glog\"  \"${PODS_ROOT}/Headers/Public/React-hermes\" \"${PODS_ROOT}/Headers/Public/hermes-engine\""
   }
 
-  s.dependency "OpenSSL-Universal"
+  s.dependency "OpenSSL-Universal", "~> 1.1.2200"
   s.dependency "React-Core"
   s.dependency "React"
   s.dependency "React-callinvoker"

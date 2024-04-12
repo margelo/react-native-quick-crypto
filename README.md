@@ -14,7 +14,7 @@ QuickCrypto can be used as a drop-in replacement for your Web3/Crypto apps to sp
 - 🧪 Well tested in JS and C++ (OpenSSL)
 - 💰 Made for crypto apps and Wallets
 - 🔢 Secure native compiled cryptography
-- 🔁 Easy drop-in replacement for [crypto-browserify](https://github.com/crypto-browserify/crypto-browserify) or [react-native-crypto](https://github.com/tradle/react-native-crypto)
+- 🔁 Easy drop-in replacement for [crypto-browserify](https://github.com/browserify/crypto-browserify) or [react-native-crypto](https://github.com/tradle/react-native-crypto)
 
 For example, creating a Wallet using ethers.js uses complex algorithms to generate a private-key/mnemonic-phrase pair:
 
@@ -103,7 +103,7 @@ module.exports = {
 +     {
 +       alias: {
 +         'crypto': 'react-native-quick-crypto',
-+         'stream': 'stream-browserify',
++         'stream': 'readable-stream',
 +         'buffer': '@craftzdog/react-native-buffer',
 +       },
 +     },

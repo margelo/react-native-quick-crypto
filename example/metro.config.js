@@ -5,7 +5,6 @@ const escape = require('escape-string-regexp');
 const pak = require('../package.json');
 
 const root = path.resolve(__dirname, '..');
-
 const modules = Object.keys({ ...pak.peerDependencies });
 
 const config = {
@@ -26,9 +25,7 @@ const config = {
         acc[name] = path.join(__dirname, 'node_modules', name);
         return acc;
       }, {}),
-      // crypto: require.resolve('react-native-quick-crypto'),
-      // stream: require.resolve('stream-browserify'),
-      // buffer: require.resolve('@craftzdog/react-native-buffer'),
+      stream: require.resolve('readable-stream'),
     },
   },
 

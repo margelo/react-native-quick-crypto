@@ -10,7 +10,7 @@ import {
   type BufferLike,
   bufferLikeToArrayBuffer,
 } from './Utils';
-import Stream from 'stream-browserify';
+import Stream from 'readable-stream';
 import { Buffer } from '@craftzdog/react-native-buffer';
 import { lazyDOMException } from './Utils';
 import type { SubtleAlgorithm } from './keys';

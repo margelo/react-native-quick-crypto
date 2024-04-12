@@ -1,10 +1,22 @@
 import type {
   AsymmetricKeyType,
+  JWK,
   KeyEncoding,
   KeyType,
   KFormatType,
   KWebCryptoKeyFormat,
+  NamedCurve,
 } from '../keys';
+
+type KeyDetail = {
+  length?: number;
+  publicExponent?: number;
+  modulusLength?: number;
+  hashAlgorithm?: string;
+  mgf1HashAlgorithm?: string;
+  saltLength?: number;
+  namedCurve?: string;
+};
 
 type ECExportKey = (
   format: KWebCryptoKeyFormat,
@@ -16,11 +28,14 @@ export type KeyObjectHandle = {
     format?: KFormatType,
     type?: KeyEncoding,
     cipher?: string,
-    passphrase?: string
+    passphrase?: ArrayBuffer
   ): ArrayBuffer;
+  exportJwk(key: JWK, handleRsaPss: boolean): JWK;
   getAsymmetricKeyType(): AsymmetricKeyType;
-  initECRaw(curveName: string, keyData: ArrayBuffer): boolean;
   init(keyType: KeyType, key: any): boolean;
+  initECRaw(curveName: string, keyData: ArrayBuffer): boolean;
+  initJwk(keyData: JWK, namedCurve?: NamedCurve): KeyType | undefined;
+  keyDetail(): KeyDetail;
 };
 
 type CreateKeyObjectHandle = () => KeyObjectHandle;

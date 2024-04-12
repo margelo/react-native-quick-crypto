@@ -29,11 +29,16 @@ on:
       - 'example/*.tsx'
 
 jobs:
-  compile:
+  compile_js:
     name: Compile JS (tsc)
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+      - run: corepack enable
 
       - name: Install reviewdog
         uses: reviewdog/action-setup@v1
@@ -41,6 +46,7 @@ jobs:
       - name: Get yarn cache directory path
         id: yarn-cache-dir-path
         run: echo "dir=$(yarn cache dir)" >> $GITHUB_OUTPUT
+
       - name: Restore node_modules from cache
         uses: actions/cache@v4
         id: yarn-cache
@@ -52,6 +58,7 @@ jobs:
 
       - name: Install node_modules
         run: yarn install --frozen-lockfile
+
       - name: Install node_modules (example/)
         run: yarn install --frozen-lockfile --cwd example
 
@@ -67,15 +74,21 @@ jobs:
         env:
           REVIEWDOG_GITHUB_API_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
-  lint:
-    name: Lint JS (eslint, prettier)
+  lint_js:
+    name: JS Lint (eslint, prettier)
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
 
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+      - run: corepack enable
+
       - name: Get yarn cache directory path
         id: yarn-cache-dir-path
         run: echo "dir=$(yarn cache dir)" >> $GITHUB_OUTPUT
+
       - name: Restore node_modules from cache
         uses: actions/cache@v4
         id: yarn-cache
@@ -87,6 +100,7 @@ jobs:
 
       - name: Install node_modules
         run: yarn install --frozen-lockfile
+        
       - name: Install node_modules (example/)
         run: yarn install --frozen-lockfile --cwd example
 
