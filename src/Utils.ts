@@ -139,7 +139,7 @@ export function bufferLikeToArrayBuffer(buf: BufferLike): ArrayBuffer {
 }
 
 export function binaryLikeToArrayBuffer(
-  input: BinaryLike | CipherKey, // CipherKey adds compat with node types
+  input: BinaryLikeNode, // CipherKey adds compat with node types
   encoding: string = 'utf-8'
 ): ArrayBuffer {
   if (typeof input === 'string') {
