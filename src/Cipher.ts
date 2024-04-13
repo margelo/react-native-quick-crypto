@@ -15,19 +15,21 @@ import {
   validateInt32,
 } from './Utils';
 import { type InternalCipher, RSAKeyVariant } from './NativeQuickCrypto/Cipher';
-// TODO(osp) re-enable type specific constructors
-// They are nice to have but not absolutely necessary
-// import type {
-//   CipherCCMOptions,
-//   CipherCCMTypes,
-//   CipherGCMTypes,
-//   CipherGCMOptions,
-//   // CipherKey,
-//   // KeyObject,
-//   // TODO(Szymon) This types seem to be missing? Where did you get this definitions from?
-//   // CipherOCBTypes,
-//   // CipherOCBOptions,
-// } from 'crypto'; // Node crypto typings
+import type {
+  CipherCCMOptions,
+  CipherCCMTypes,
+  CipherGCMTypes,
+  CipherGCMOptions,
+  CipherOCBOptions,
+  CipherOCBTypes,
+  DecipherGCM,
+  DecipherOCB,
+  DecipherCCM,
+  CipherKey,
+  CipherCCM,
+  CipherOCB,
+  CipherGCM,
+} from 'crypto'; // @types/node
 import { StringDecoder } from 'string_decoder';
 import { Buffer } from '@craftzdog/react-native-buffer';
 import { Buffer as SBuffer } from 'safe-buffer';
@@ -106,7 +108,7 @@ class CipherCommon extends Stream.Transform {
 
   constructor(
     cipherType: string,
-    cipherKey: BinaryLike,
+    cipherKey: CipherKey,
     isCipher: boolean,
     options: Record<string, any> = {},
     iv?: BinaryLike | null
@@ -217,7 +219,7 @@ class CipherCommon extends Stream.Transform {
 class Cipher extends CipherCommon {
   constructor(
     cipherType: string,
-    cipherKey: BinaryLike,
+    cipherKey: CipherKey,
     options: Record<string, any> = {},
     iv?: BinaryLike | null
   ) {
@@ -231,7 +233,7 @@ class Cipher extends CipherCommon {
 class Decipher extends CipherCommon {
   constructor(
     cipherType: string,
-    cipherKey: BinaryLike,
+    cipherKey: CipherKey,
     options: Record<string, any> = {},
     iv?: BinaryLike | null
   ) {
@@ -243,66 +245,101 @@ class Decipher extends CipherCommon {
   }
 }
 
-// TODO(osp) This definitions cause typescript errors when using the API
-// export function createDecipher(
-//   algorithm: CipherCCMTypes,
-//   password: BinaryLike,
-//   options: CipherCCMOptions
-// ): Decipher;
-// export function createDecipher(
-//   algorithm: CipherGCMTypes,
-//   password: BinaryLike,
-//   options?: CipherGCMOptions
-// ): Decipher;
+export function createDecipher(
+  algorithm: CipherCCMTypes,
+  password: CipherKey,
+  options: CipherCCMOptions
+): DecipherCCM;
+export function createDecipher(
+  algorithm: CipherGCMTypes,
+  password: CipherKey,
+  options?: CipherGCMOptions
+): DecipherGCM;
 export function createDecipher(
   algorithm: string,
-  password: BinaryLike,
-  options?: Record<string, unknown> | Stream.TransformOptions
-): Decipher {
+  password: CipherKey,
+  options?: CipherCCMOptions | CipherGCMOptions | Stream.TransformOptions
+): DecipherCCM | DecipherGCM | Decipher {
   return new Decipher(algorithm, password, options);
 }
 
-// function createDecipheriv(algorithm: CipherCCMTypes, key: CipherKey, iv: BinaryLike, options: CipherCCMOptions): DecipherCCM;
-// function createDecipheriv(algorithm: CipherOCBTypes, key: CipherKey, iv: BinaryLike, options: CipherOCBOptions): DecipherOCB;
-// function createDecipheriv(algorithm: CipherGCMTypes, key: CipherKey, iv: BinaryLike, options?: CipherGCMOptions): DecipherGCM;
+export function createDecipheriv(
+  algorithm: CipherCCMTypes,
+  key: CipherKey,
+  iv: BinaryLike,
+  options: CipherCCMOptions
+): DecipherCCM;
+export function createDecipheriv(
+  algorithm: CipherOCBTypes,
+  key: CipherKey,
+  iv: BinaryLike,
+  options: CipherOCBOptions
+): DecipherOCB;
+export function createDecipheriv(
+  algorithm: CipherGCMTypes,
+  key: CipherKey,
+  iv: BinaryLike,
+  options?: CipherGCMOptions
+): DecipherGCM;
 export function createDecipheriv(
   algorithm: string,
-  key: BinaryLike,
+  key: CipherKey,
   iv: BinaryLike | null,
-  options?: Record<string, unknown> | Stream.TransformOptions
-): Decipher {
+  options?:
+    | CipherCCMOptions
+    | CipherOCBOptions
+    | CipherGCMOptions
+    | Stream.TransformOptions
+): DecipherCCM | DecipherOCB | DecipherGCM | Decipher {
   return new Decipher(algorithm, key, options, iv);
 }
 
-// TODO(osp) This definitions cause typescript errors when using the API
-// commenting them out for now
-// export function createCipher(
-//   algorithm: CipherCCMTypes,
-//   password: BinaryLike,
-//   options: CipherCCMOptions
-// ): Cipher;
-// export function createCipher(
-//   algorithm: CipherGCMTypes,
-//   password: BinaryLike,
-//   options?: CipherGCMOptions
-// ): Cipher;
+export function createCipher(
+  algorithm: CipherCCMTypes,
+  password: CipherKey,
+  options: CipherCCMOptions
+): CipherCCM;
+export function createCipher(
+  algorithm: CipherGCMTypes,
+  password: CipherKey,
+  options?: CipherGCMOptions
+): CipherGCM;
 export function createCipher(
   algorithm: string,
-  password: BinaryLike,
-  options?: Record<string, unknown> | Stream.TransformOptions
-): Cipher {
+  password: CipherKey,
+  options?: CipherGCMOptions | CipherCCMOptions | Stream.TransformOptions
+): CipherCCM | CipherGCM | Cipher {
   return new Cipher(algorithm, password, options);
 }
 
-// export function createCipheriv(algorithm: CipherCCMTypes, key: CipherKey, iv: BinaryLike, options: CipherCCMOptions): CipherCCM;
-// export function createCipheriv(algorithm: CipherOCBTypes, key: CipherKey, iv: BinaryLike, options: CipherOCBOptions): CipherOCB;
-// export function createCipheriv(algorithm: CipherGCMTypes, key: CipherKey, iv: BinaryLike, options?: CipherGCMOptions): CipherGCM;
+export function createCipheriv(
+  algorithm: CipherCCMTypes,
+  key: CipherKey,
+  iv: BinaryLike,
+  options: CipherCCMOptions
+): CipherCCM;
+export function createCipheriv(
+  algorithm: CipherOCBTypes,
+  key: CipherKey,
+  iv: BinaryLike,
+  options: CipherOCBOptions
+): CipherOCB;
+export function createCipheriv(
+  algorithm: CipherGCMTypes,
+  key: CipherKey,
+  iv: BinaryLike,
+  options?: CipherGCMOptions
+): CipherGCM;
 export function createCipheriv(
   algorithm: string,
-  key: BinaryLike,
+  key: CipherKey,
   iv: BinaryLike | null,
-  options?: Record<string, unknown> | Stream.TransformOptions
-): Cipher {
+  options?:
+    | CipherCCMOptions
+    | CipherOCBOptions
+    | CipherGCMOptions
+    | Stream.TransformOptions
+): CipherCCM | CipherOCB | CipherGCM | Cipher {
   return new Cipher(algorithm, key, options, iv);
 }
 

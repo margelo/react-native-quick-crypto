@@ -10,6 +10,7 @@ import type {
   SignVerifyAlgorithm,
   SubtleAlgorithm,
 } from './keys';
+import type { CipherKey } from 'crypto'; // @types/node
 
 export type BufferLike = ArrayBuffer | Buffer | ArrayBufferView;
 export type BinaryLike = string | ArrayBuffer | Buffer;
@@ -137,7 +138,7 @@ export function bufferLikeToArrayBuffer(buf: BufferLike): ArrayBuffer {
 }
 
 export function binaryLikeToArrayBuffer(
-  input: BinaryLike,
+  input: BinaryLike | CipherKey, // CipherKey adds compat with node types
   encoding: string = 'utf-8'
 ): ArrayBuffer {
   if (typeof input === 'string') {
@@ -166,6 +167,9 @@ export function binaryLikeToArrayBuffer(
 
   if (!(input instanceof ArrayBuffer)) {
     try {
+      // this is a strange fallback case and input is unknown at this point
+      // in Node it could be of type KeyObject but in this env we never pass that
+      // @ts-expect-error
       const buffer = Buffer.from(input);
       return buffer.buffer.slice(
         buffer.byteOffset,
