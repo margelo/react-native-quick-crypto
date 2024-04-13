@@ -204,12 +204,12 @@ class CipherCommon extends Stream.Transform {
     return this;
   }
 
-  // protected getAuthTag(): Buffer {
-  //   return Buffer.from(this.internal.getAuthTag());
-  // }
+  public getAuthTag(): ArrayBuffer {
+    return this.internal.getAuthTag();
+  }
 
   public setAuthTag(tag: Buffer): this {
-    this.internal.setAuthTag(tag.buffer);
+    this.internal.setAuthTag(binaryLikeToArrayBuffer(tag));
     return this;
   }
 }
@@ -257,35 +257,19 @@ class Decipher extends CipherCommon {
 export function createDecipher(
   algorithm: string,
   password: BinaryLike,
-  options?: Stream.TransformOptions
+  options?: Record<string, unknown> | Stream.TransformOptions
 ): Decipher {
   return new Decipher(algorithm, password, options);
 }
 
-// TODO(osp) This definitions cause typescript errors when using the API
-// export function createDecipheriv(
-//   algorithm: CipherCCMTypes,
-//   key: BinaryLike,
-//   iv: BinaryLike,
-//   options: CipherCCMOptions
-// ): Decipher;
-// export function createDecipheriv(
-//   algorithm: CipherOCBTypes,
-//   key: BinaryLike,
-//   iv: BinaryLike,
-//   options: CipherOCBOptions
-// ): DecipherOCB;
-// export function createDecipheriv(
-//   algorithm: CipherGCMTypes,
-//   key: BinaryLike,
-//   iv: BinaryLike,
-//   options?: CipherGCMOptions
-// ): Decipher;
+// function createDecipheriv(algorithm: CipherCCMTypes, key: CipherKey, iv: BinaryLike, options: CipherCCMOptions): DecipherCCM;
+// function createDecipheriv(algorithm: CipherOCBTypes, key: CipherKey, iv: BinaryLike, options: CipherOCBOptions): DecipherOCB;
+// function createDecipheriv(algorithm: CipherGCMTypes, key: CipherKey, iv: BinaryLike, options?: CipherGCMOptions): DecipherGCM;
 export function createDecipheriv(
   algorithm: string,
   key: BinaryLike,
   iv: BinaryLike | null,
-  options?: Stream.TransformOptions
+  options?: Record<string, unknown> | Stream.TransformOptions
 ): Decipher {
   return new Decipher(algorithm, key, options, iv);
 }
@@ -305,37 +289,19 @@ export function createDecipheriv(
 export function createCipher(
   algorithm: string,
   password: BinaryLike,
-  options?: Stream.TransformOptions
+  options?: Record<string, unknown> | Stream.TransformOptions
 ): Cipher {
   return new Cipher(algorithm, password, options);
 }
 
-// TODO(osp) on all the createCipheriv methods, node seems to use a "KeyObject" is seems to be a thread safe
-// object that creates keys and what not. Not sure if we should support it.
-// Fow now I replaced all of them to BinaryLike
-// export function createCipheriv(
-//   algorithm: CipherCCMTypes,
-//   key: BinaryLike,
-//   iv: BinaryLike,
-//   options: CipherCCMOptions
-// ): Cipher;
-// export function createCipheriv(
-//   algorithm: CipherOCBTypes,
-//   key: BinaryLike,
-//   iv: BinaryLike,
-//   options: CipherOCBOptions
-// ): CipherOCB;
-// export function createCipheriv(
-//   algorithm: CipherGCMTypes,
-//   key: BinaryLike,
-//   iv: BinaryLike,
-//   options?: CipherGCMOptions
-// ): Cipher;
+// export function createCipheriv(algorithm: CipherCCMTypes, key: CipherKey, iv: BinaryLike, options: CipherCCMOptions): CipherCCM;
+// export function createCipheriv(algorithm: CipherOCBTypes, key: CipherKey, iv: BinaryLike, options: CipherOCBOptions): CipherOCB;
+// export function createCipheriv(algorithm: CipherGCMTypes, key: CipherKey, iv: BinaryLike, options?: CipherGCMOptions): CipherGCM;
 export function createCipheriv(
   algorithm: string,
   key: BinaryLike,
   iv: BinaryLike | null,
-  options?: Stream.TransformOptions
+  options?: Record<string, unknown> | Stream.TransformOptions
 ): Cipher {
   return new Cipher(algorithm, key, options, iv);
 }

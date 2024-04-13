@@ -72,34 +72,45 @@ describe('createCipheriv/createDecipheriv', () => {
     });
   }
 
-  // function testCipher3(key: string, iv: string) {
-  //   it('test3 + ' + key + ' + ' + iv, () => {
-  //     // Test encryption and decryption with explicit key and iv.
-  //     // AES Key Wrap test vector comes from RFC3394
-  //     const plaintext = Buffer.from('00112233445566778899AABBCCDDEEFF', 'hex');
+  function testAESGCM(key: Buffer, iv: Buffer) {
+    it('AES-GCM with key and iv ', () => {
+      const plaintext = 'Hello, world!';
 
-  //     const cipher = crypto.createCipheriv('id-aes128-wrap', key, iv);
-  //     let ciph = cipher.update(plaintext, 'utf8', 'buffer');
-  //     ciph = Buffer.concat([ciph, cipher.final('buffer')]);
-  //     const ciph2 = Buffer.from(
-  //       '1FA68B0A8112B447AEF34BD8FB5A7B829D3E862371D2CFE5',
-  //       'hex'
-  //     );
-  //     assert(ciph.equals(ciph2));
-  //     const decipher = crypto.createDecipheriv('id-aes128-wrap', key, iv);
-  //     let deciph = decipher.update(ciph, 'buffer');
-  //     deciph = Buffer.concat([deciph, decipher.final()]);
+      // Encryption
+      const cipher = crypto.createCipheriv('aes-256-gcm', key, iv, {
+        // using an uncommon auth tag length for corner case checking. default is usually 16.
+        authTagLength: 4,
+      });
+      let encrypted = cipher.update(plaintext, 'utf8', 'hex');
+      encrypted += cipher.final('hex');
+      const authTag = cipher.getAuthTag();
+      assert.strictEqual(Buffer.from(authTag).length, 4);
 
-  //     assert(
-  //       deciph.equals(plaintext),
-  //       `encryption/decryption with key ${key} and iv ${iv}`
-  //     );
-  //   });
-  // }
+      // Decryption
+      const decipher = crypto.createDecipheriv('aes-256-gcm', key, iv, {
+        // using an uncommon auth tag length for corner case checking. default is usually 16.
+        authTagLength: 4,
+      });
+      decipher.setAuthTag(Buffer.from(authTag));
+      let decrypted = decipher.update(encrypted, 'hex', 'utf8');
+      decrypted += decipher.final('utf8');
+
+      assert.strictEqual(
+        decrypted,
+        plaintext,
+        'Decrypted text should match the original plaintext'
+      );
+    });
+  }
 
   testCipher1('0123456789abcd0123456789', '12345678');
   testCipher1('0123456789abcd0123456789', Buffer.from('12345678'));
   testCipher1(Buffer.from('0123456789abcd0123456789'), '12345678');
   testCipher1(Buffer.from('0123456789abcd0123456789'), Buffer.from('12345678'));
   testCipher2(Buffer.from('0123456789abcd0123456789'), Buffer.from('12345678'));
+
+  // Key and IV generation for AES-GCM
+  const key = crypto.randomBytes(32);
+  const iv = crypto.randomBytes(12);
+  testAESGCM(key, iv);
 });
