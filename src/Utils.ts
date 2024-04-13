@@ -10,7 +10,7 @@ import type {
   SignVerifyAlgorithm,
   SubtleAlgorithm,
 } from './keys';
-import { KeyObject, type CipherKey } from 'crypto'; // @types/node
+import { type CipherKey } from 'crypto'; // @types/node
 
 export type BufferLike = ArrayBuffer | Buffer | ArrayBufferView;
 export type BinaryLike = string | ArrayBuffer | Buffer;
@@ -165,17 +165,10 @@ export function binaryLikeToArrayBuffer(
     return input.buffer;
   }
 
-  // Node has a new class called KeyObject. Our types have to support it
-  // to stay compatible with Node's types. But we don't support it yet.
-  if (input instanceof KeyObject) {
-    throw new Error(
-      'The node KeyObject class is not yet supported by react-native-quick-crypto'
-    );
-  }
-
   if (!(input instanceof ArrayBuffer)) {
     try {
       // this is a strange fallback case and input is unknown at this point
+      // @ts-expect-error
       const buffer = Buffer.from(input);
       return buffer.buffer.slice(
         buffer.byteOffset,
@@ -185,6 +178,8 @@ export function binaryLikeToArrayBuffer(
       throw 'error';
     }
   }
+
+  // TODO: handle if input is KeyObject?
 
   return input;
 }
