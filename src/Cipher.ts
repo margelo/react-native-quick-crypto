@@ -13,6 +13,7 @@ import {
   validateString,
   validateUint32,
   validateInt32,
+  type BinaryLikeNode,
 } from './Utils';
 import { type InternalCipher, RSAKeyVariant } from './NativeQuickCrypto/Cipher';
 import type {
@@ -25,7 +26,6 @@ import type {
   DecipherGCM,
   DecipherOCB,
   DecipherCCM,
-  CipherKey,
   CipherCCM,
   CipherOCB,
   CipherGCM,
@@ -108,7 +108,7 @@ class CipherCommon extends Stream.Transform {
 
   constructor(
     cipherType: string,
-    cipherKey: CipherKey,
+    cipherKey: BinaryLikeNode,
     isCipher: boolean,
     options: Record<string, any> = {},
     iv?: BinaryLike | null
@@ -219,7 +219,7 @@ class CipherCommon extends Stream.Transform {
 class Cipher extends CipherCommon {
   constructor(
     cipherType: string,
-    cipherKey: CipherKey,
+    cipherKey: BinaryLikeNode,
     options: Record<string, any> = {},
     iv?: BinaryLike | null
   ) {
@@ -233,7 +233,7 @@ class Cipher extends CipherCommon {
 class Decipher extends CipherCommon {
   constructor(
     cipherType: string,
-    cipherKey: CipherKey,
+    cipherKey: BinaryLikeNode,
     options: Record<string, any> = {},
     iv?: BinaryLike | null
   ) {
@@ -247,17 +247,17 @@ class Decipher extends CipherCommon {
 
 export function createDecipher(
   algorithm: CipherCCMTypes,
-  password: CipherKey,
+  password: BinaryLikeNode,
   options: CipherCCMOptions
 ): DecipherCCM;
 export function createDecipher(
   algorithm: CipherGCMTypes,
-  password: CipherKey,
+  password: BinaryLikeNode,
   options?: CipherGCMOptions
 ): DecipherGCM;
 export function createDecipher(
   algorithm: string,
-  password: CipherKey,
+  password: BinaryLikeNode,
   options?: CipherCCMOptions | CipherGCMOptions | Stream.TransformOptions
 ): DecipherCCM | DecipherGCM | Decipher {
   return new Decipher(algorithm, password, options);
@@ -265,25 +265,25 @@ export function createDecipher(
 
 export function createDecipheriv(
   algorithm: CipherCCMTypes,
-  key: CipherKey,
+  key: BinaryLikeNode,
   iv: BinaryLike,
   options: CipherCCMOptions
 ): DecipherCCM;
 export function createDecipheriv(
   algorithm: CipherOCBTypes,
-  key: CipherKey,
+  key: BinaryLikeNode,
   iv: BinaryLike,
   options: CipherOCBOptions
 ): DecipherOCB;
 export function createDecipheriv(
   algorithm: CipherGCMTypes,
-  key: CipherKey,
+  key: BinaryLikeNode,
   iv: BinaryLike,
   options?: CipherGCMOptions
 ): DecipherGCM;
 export function createDecipheriv(
   algorithm: string,
-  key: CipherKey,
+  key: BinaryLikeNode,
   iv: BinaryLike | null,
   options?:
     | CipherCCMOptions
@@ -296,17 +296,17 @@ export function createDecipheriv(
 
 export function createCipher(
   algorithm: CipherCCMTypes,
-  password: CipherKey,
+  password: BinaryLikeNode,
   options: CipherCCMOptions
 ): CipherCCM;
 export function createCipher(
   algorithm: CipherGCMTypes,
-  password: CipherKey,
+  password: BinaryLikeNode,
   options?: CipherGCMOptions
 ): CipherGCM;
 export function createCipher(
   algorithm: string,
-  password: CipherKey,
+  password: BinaryLikeNode,
   options?: CipherGCMOptions | CipherCCMOptions | Stream.TransformOptions
 ): CipherCCM | CipherGCM | Cipher {
   return new Cipher(algorithm, password, options);
@@ -314,25 +314,25 @@ export function createCipher(
 
 export function createCipheriv(
   algorithm: CipherCCMTypes,
-  key: CipherKey,
+  key: BinaryLikeNode,
   iv: BinaryLike,
   options: CipherCCMOptions
 ): CipherCCM;
 export function createCipheriv(
   algorithm: CipherOCBTypes,
-  key: CipherKey,
+  key: BinaryLikeNode,
   iv: BinaryLike,
   options: CipherOCBOptions
 ): CipherOCB;
 export function createCipheriv(
   algorithm: CipherGCMTypes,
-  key: CipherKey,
+  key: BinaryLikeNode,
   iv: BinaryLike,
   options?: CipherGCMOptions
 ): CipherGCM;
 export function createCipheriv(
   algorithm: string,
-  key: CipherKey,
+  key: BinaryLikeNode,
   iv: BinaryLike | null,
   options?:
     | CipherCCMOptions

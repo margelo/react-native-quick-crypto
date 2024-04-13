@@ -14,6 +14,7 @@ import { type CipherKey } from 'crypto'; // @types/node
 
 export type BufferLike = ArrayBuffer | Buffer | ArrayBufferView;
 export type BinaryLike = string | ArrayBuffer | Buffer;
+export type BinaryLikeNode = CipherKey | BinaryLike;
 
 export type BinaryToTextEncoding = 'base64' | 'base64url' | 'hex' | 'binary';
 export type CharacterEncoding = 'utf8' | 'utf-8' | 'utf16le' | 'latin1';
