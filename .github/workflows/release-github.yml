@@ -1,4 +1,4 @@
-name: Create release
+name: Create Github Release
 
 on:
   push:
@@ -9,11 +9,11 @@ permissions:
   contents: write
 
 jobs:
-  release:
+  release_github:
     name: Release pushed tag
     runs-on: ubuntu-latest
     steps:
-      - name: Create release
+      - name: Create Github Release
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           tag_name: ${{ github.ref_name }}
