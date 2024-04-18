@@ -60,8 +60,8 @@ export function randomFill(buffer: any, ...rest: any[]): void {
       Buffer.isBuffer(buffer)
         ? buffer.buffer
         : ArrayBuffer.isView(buffer)
-        ? buffer.buffer
-        : buffer,
+          ? buffer.buffer
+          : buffer,
       offset,
       size
     )
