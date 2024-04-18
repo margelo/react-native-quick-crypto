@@ -134,8 +134,8 @@ export function bufferLikeToArrayBuffer(buf: BufferLike): ArrayBuffer {
   return Buffer.isBuffer(buf)
     ? buf.buffer
     : ArrayBuffer.isView(buf)
-    ? buf.buffer
-    : buf;
+      ? buf.buffer
+      : buf;
 }
 
 export function binaryLikeToArrayBuffer(

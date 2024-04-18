@@ -22,7 +22,7 @@ export const useTestList = (): [
   Suites,
   (description: string) => void,
   () => void,
-  () => void
+  () => void,
 ] => {
   const [suites, setSuites] = useState<Suites>(getInitialSuites());
 
