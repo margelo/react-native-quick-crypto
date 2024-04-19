@@ -601,8 +601,6 @@ bool MGLCipherHostObject::InitAuthenticated(const char *cipher_type, int iv_len,
     // TODO(tniessen) Support CCM decryption in FIPS mode
 
 #if OPENSSL_VERSION_MAJOR >= 3
-    // TODO: not sure where kind_ comes from in next line, but as we bump
-    // OpenSSL version we will need to look at Node.js code and figure it out.
     if (mode == EVP_CIPH_CCM_MODE && !isCipher_ &&
         EVP_default_properties_is_fips_enabled(nullptr)) {
 #else
