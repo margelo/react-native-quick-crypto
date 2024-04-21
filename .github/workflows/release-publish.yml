@@ -61,6 +61,5 @@ jobs:
 
       - name: release-it
         run:
-          VERSION_ARG=$([ -n $VERSION_BUMP ] && echo "$VERSION_BUMP" || echo "")
           PRE_RELEASE_ARG=$([ -n $PRE_RELEASE ] && echo "--preRelease=$PRE_RELEASE" || echo "")
           yarn release $VERSION_BUMP $PRE_RELEASE_ARG --ci
