@@ -639,7 +639,7 @@ export const validateKeyOps = (
   }
 };
 
-// TODO: these used to be shipped by crypto-browserify in quickcrypto v6.x
+// TODO: these used to be shipped by crypto-browserify in quickcrypto v0.6
 // could instead fetch from OpenSSL if needed and handle breaking changes
 export const getHashes = () => [
   'sha1',
@@ -681,7 +681,7 @@ export const getHashes = () => [
   'RSA-MD5',
 ];
 
-// TODO: these used to be shipped by crypto-browserify in quickcrypto v6.x
+// TODO: these used to be shipped by crypto-browserify in quickcrypto v0.6
 // could instead fetch from OpenSSL if needed and handle breaking changes
 export const getCiphers = () => [
   'des-ecb',
