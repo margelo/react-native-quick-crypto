@@ -7696,7 +7696,7 @@ regjsparser@^0.9.1:
   dependencies:
     jsesc "~0.5.0"
 
-release-it@^17.0.0:
+release-it@^17.2.0:
   version "17.2.0"
   resolved "https://registry.yarnpkg.com/release-it/-/release-it-17.2.0.tgz#30b25364ec1bff247fe03e7fb76de51f988af667"
   integrity sha512-Cidaq5W4apZSpdEDQd2TJhH7GZAwfaG+ewe60p7B7+txyCHYR/T6lGvkKinJmePpdHsM0fzA05yGGXKCiHJHmA==
