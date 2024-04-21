@@ -5,6 +5,7 @@ on:
       bump:
         description: Version Bump
         type: choice
+        default: ''
         options:
         - major
         - minor
