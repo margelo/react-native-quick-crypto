@@ -16,6 +16,7 @@ import { createHmac } from './Hmac';
 import { createHash } from './Hash';
 import { constants } from './constants';
 import { subtle } from './subtle';
+import { getCiphers, getHashes } from './Utils';
 
 export const QuickCrypto = {
   createHmac,
@@ -37,4 +38,6 @@ export const QuickCrypto = {
   constants,
   ...pbkdf2,
   ...random,
+  getCiphers,
+  getHashes,
 };
