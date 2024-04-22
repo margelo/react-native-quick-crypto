@@ -2025,10 +2025,15 @@
     eslint-plugin-react-hooks "^4.6.0"
     eslint-plugin-react-native "^4.0.0"
 
-"@react-native/eslint-plugin@0.75.0-main", "@react-native/eslint-plugin@^0.75.0-main":
+"@react-native/eslint-plugin@0.75.0-main":
   version "0.75.0-main"
   resolved "https://registry.yarnpkg.com/@react-native/eslint-plugin/-/eslint-plugin-0.75.0-main.tgz#a186da15837ea313b805a27fa629926b809cadc6"
   integrity sha512-r5JICIq8TCPMkbbJwAgOdE4wIAsELQX+NhaPfB6LMvxCYwsGc41UZG8ZAoCnaCLVtHA/p9xtmJNMVAODiArASA==
+
+"@react-native/eslint-plugin@^0.75.0-main":
+  version "0.75.0-nightly-20240421-03a51da72"
+  resolved "https://registry.yarnpkg.com/@react-native/eslint-plugin/-/eslint-plugin-0.75.0-nightly-20240421-03a51da72.tgz#1929ce8472fa663ef7b1ebbfe3405c3b039f35fb"
+  integrity sha512-DYZPuN3w6c5iSSlETF9tJPg8wlVaXZla6ZMuFSMAuaZackvIp6GHwfDsDNj0J5Y19m7zJIRmUJPgWnTKlVVyxQ==
 
 "@react-native/gradle-plugin@^0.72.11":
   version "0.72.11"
