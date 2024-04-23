@@ -73,13 +73,17 @@ describe('createCipheriv/createDecipheriv', () => {
   }
 
   function testAESGCM(key: Buffer, iv: Buffer) {
-    it('AES-GCM with key and iv ', () => {
-      const plaintext = 'Hello, world!';
+    const plaintext = 'Hello, world!';
 
+    it('AES-GCM with key and iv - default AuthTag length', async () => {
       const defaultCipher = crypto.createCipheriv('aes-256-gcm', key, iv);
+      defaultCipher.update(plaintext, 'utf8', 'hex');
+      defaultCipher.final('hex');
       const defaultAuthTag = defaultCipher.getAuthTag();
       assert.strictEqual(Buffer.from(defaultAuthTag).length, 16);
+    });
 
+    it('AES-GCM with key and iv ', () => {
       // Encryption
       const cipher = crypto.createCipheriv('aes-256-gcm', key, iv, {
         // using an uncommon auth tag length for corner case checking. default is usually 16.
