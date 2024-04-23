@@ -62,4 +62,4 @@ jobs:
       - name: release-it
         run:
           PRE_RELEASE_ARG=$([ -n $PRE_RELEASE ] && echo "--preRelease=$PRE_RELEASE" || echo "")
-          yarn release $VERSION_BUMP $PRE_RELEASE_ARG --ci
+          yarn release $VERSION_BUMP $PRE_RELEASE_ARG --ci --npm.skipChecks
