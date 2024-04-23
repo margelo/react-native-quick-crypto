@@ -7,5 +7,4 @@ global.Buffer = Buffer;
 // @ts-expect-error subtle isn't full implemented and Cryptokey is missing
 global.crypto = QuickCrypto;
 
-module.exports = crypto;
-export default crypto;
+export default QuickCrypto;
