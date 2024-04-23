@@ -72,7 +72,6 @@ describe('createCipheriv/createDecipheriv', () => {
     });
   }
 
-
   function testAESGCM(key: Buffer, iv: Buffer) {
     const plaintext = 'Hello, world!';
 
