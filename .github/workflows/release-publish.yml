@@ -60,7 +60,8 @@ jobs:
           git config user.email "${GITHUB_ACTOR}@users.noreply.github.com"
 
       - name: release-it
-        run:
+        shell: bash
+        run: |
           PRE_RELEASE_ARG=[[ -n "${PRE_RELEASE}" ]] && "--preRelease=${PRE_RELEASE}" || ""
           CMD="yarn release ${VERSION_BUMP} ${PRE_RELEASE_ARG} --ci --npm.skipChecks"
           echo "${CMD}"
