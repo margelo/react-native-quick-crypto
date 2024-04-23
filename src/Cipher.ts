@@ -116,7 +116,9 @@ class CipherCommon extends Stream.Transform {
     super(options);
     const cipherKeyBuffer = binaryLikeToArrayBuffer(cipherKey);
     // defaults to 16 bytes
-    const authTagLength = getUIntOption(options, 'authTagLength') !== -1 ? getUIntOption(options, 'authTagLength') : 16;
+    const authTagLength =
+      getUIntOption(options, 'authTagLength') !== -1
+        ? getUIntOption(options, 'authTagLength')
     const args = {
       cipher_type: cipherType,
       cipher_key: cipherKeyBuffer,
