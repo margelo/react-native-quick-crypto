@@ -76,6 +76,10 @@ describe('createCipheriv/createDecipheriv', () => {
     it('AES-GCM with key and iv ', () => {
       const plaintext = 'Hello, world!';
 
+      const defaultCipher = crypto.createCipheriv('aes-256-gcm', key, iv);
+      const defaultAuthTag = defaultCipher.getAuthTag();
+      assert.strictEqual(Buffer.from(defaultAuthTag).length, 16);
+
       // Encryption
       const cipher = crypto.createCipheriv('aes-256-gcm', key, iv, {
         // using an uncommon auth tag length for corner case checking. default is usually 16.
