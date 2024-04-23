@@ -64,8 +64,6 @@ jobs:
         run: |
           if [[ -n "${PRE_RELEASE}" ]]; then
             PRE_RELEASE_ARG="--preRelease=${PRE_RELEASE}"
-          else
-            PRE_RELEASE_ARG=""
           fi
           CMD="yarn release ${VERSION_BUMP} ${PRE_RELEASE_ARG} --ci --npm.skipChecks"
           echo "${CMD}"
