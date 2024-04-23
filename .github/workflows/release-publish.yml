@@ -61,6 +61,6 @@ jobs:
 
       - name: release-it
         run:
-          PRE_RELEASE_ARG=$([ "${PRE_RELEASE}" != "" ] && echo "--preRelease=${PRE_RELEASE}" || echo "")
+          PRE_RELEASE_ARG=[[ -n "${PRE_RELEASE}" ]] && "--preRelease=${PRE_RELEASE}" || ""
           CMD="yarn release ${VERSION_BUMP} ${PRE_RELEASE_ARG} --ci --npm.skipChecks"
-          echo ${CMD}
+          echo "${CMD}"
