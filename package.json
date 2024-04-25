@@ -41,7 +41,10 @@
     "fast",
     "web3"
   ],
-  "repository": "https://github.com/margelo/react-native-quick-crypto",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/margelo/react-native-quick-crypto.git"
+  },
   "authors": "Szymon Kapała (szymon20000@gmail.com) & Marc Rousavy <me@mrousavy.com> (https://github.com/mrousavy)",
   "license": "MIT",
   "bugs": {
