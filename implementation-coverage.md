@@ -147,19 +147,19 @@ This document attempts to describe the implementation status of Crypto APIs/Inte
 
 # `WebCrypto`
 
-* ❌ Class: `Crypto`
-  * ❌ `crypto.subtle`
-  * ❌ `crypto.getRandomValues(typedArray)`
-  * ❌ `crypto.randomUUID()`
-* ❌ Class: `CryptoKey`
-  * ❌ `cryptoKey.algorithm`
-  * ❌ `cryptoKey.extractable`
-  * ❌ `cryptoKey.type`
-  * ❌ `cryptoKey.usages`
+* 🚧 Class: `Crypto`
+  * 🚧 `crypto.subtle`
+  * ✅ `crypto.getRandomValues(typedArray)`
+  * ✅ `crypto.randomUUID()`
+* ✅ Class: `CryptoKey`
+  * ✅ `cryptoKey.algorithm`
+  * ✅ `cryptoKey.extractable`
+  * ✅ `cryptoKey.type`
+  * ✅ `cryptoKey.usages`
 * ❌ Class: `CryptoKeyPair`
   * ❌ `cryptoKeyPair.privateKey`
   * ❌ `cryptoKeyPair.publicKey`
-* ❌ Class: `CryptoSubtle`
+* 🚧 Class: `CryptoSubtle`
   * (see below)
 
 # `SubtleCrypto`
