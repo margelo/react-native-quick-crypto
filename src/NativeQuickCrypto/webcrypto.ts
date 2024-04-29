@@ -7,6 +7,7 @@ import type {
   KWebCryptoKeyFormat,
   NamedCurve,
 } from '../keys';
+import type { SignVerify } from './sig';
 
 type KeyDetail = {
   length?: number;
@@ -43,4 +44,5 @@ type CreateKeyObjectHandle = () => KeyObjectHandle;
 export type webcrypto = {
   ecExportKey: ECExportKey;
   createKeyObjectHandle: CreateKeyObjectHandle;
+  signVerify: SignVerify;
 };
