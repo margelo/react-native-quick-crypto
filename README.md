@@ -141,12 +141,40 @@ Execution failed for task ':app:mergeDebugNativeLibs'.
 
 It means you have a transitive dependency where two libraries depend on OpenSSL and are generating a `libcrypto.so` file. You can get around this issue by adding the following in your `app/build.gradle`:
 
+<h4>
+  React Native  <a href="#"><img src="./img/react-native.png" height="15" /></a>
+</h4>
+
+`android/app/build.gradle` file
 ```groovy
 packagingOptions {
   // Should prevent clashes with other libraries that use OpenSSL
   pickFirst '**/libcrypto.so'
 }
 ```
+
+<h4>
+  Expo  <a href="#"><img src="./img/expo.png" height="12" /></a>
+</h4>
+
+`app.json` file
+```diff
+...
+  plugins: [
+    ...
++   [
++     'expo-build-properties',
++     {
++       android: {
++         packagingOptions: {
++           pickFirst: ['**/libcrypto.so'],
++         },
++       },
++     },
++   ],
+  ],
+```
+
 
 > This caused by flipper which also depends on OpenSSL
 
