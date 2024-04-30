@@ -243,12 +243,13 @@ class Subtle {
   async importKey(
     format: ImportFormat,
     data: BufferLike | BinaryLike | JWK,
-    algorithm: SubtleAlgorithm,
+    algorithm: SubtleAlgorithm | AnyAlgorithm,
     extractable: boolean,
     keyUsages: KeyUsage[]
   ): Promise<CryptoKey> {
+    const normalizedAlgorithm = normalizeAlgorithm(algorithm, 'importKey');
     let result: CryptoKey;
-    switch (algorithm.name) {
+    switch (normalizedAlgorithm.name) {
       case 'RSASSA-PKCS1-v1_5':
       // Fall through
       case 'RSA-PSS':
@@ -257,7 +258,7 @@ class Subtle {
         result = rsaImportKey(
           format,
           data as BufferLike | JWK,
-          algorithm,
+          normalizedAlgorithm,
           extractable,
           keyUsages
         );
@@ -265,7 +266,13 @@ class Subtle {
       case 'ECDSA':
       // Fall through
       case 'ECDH':
-        result = ecImportKey(format, data, algorithm, extractable, keyUsages);
+        result = ecImportKey(
+          format,
+          data,
+          normalizedAlgorithm,
+          extractable,
+          keyUsages
+        );
         break;
       // case 'Ed25519':
       // // Fall through
@@ -299,7 +306,7 @@ class Subtle {
       // Fall through
       case 'AES-KW':
         result = await aesImportKey(
-          algorithm,
+          normalizedAlgorithm,
           format,
           data as BufferLike | JWK,
           extractable,
@@ -310,7 +317,7 @@ class Subtle {
       // // Fall through
       case 'PBKDF2':
         result = await importGenericSecretKey(
-          algorithm,
+          normalizedAlgorithm,
           format,
           data as BufferLike | BinaryLike,
           extractable,
@@ -319,7 +326,7 @@ class Subtle {
         break;
       default:
         throw new Error(
-          `"subtle.importKey()" is not implemented for ${algorithm.name}`
+          `"subtle.importKey()" is not implemented for ${normalizedAlgorithm.name}`
         );
     }
 
