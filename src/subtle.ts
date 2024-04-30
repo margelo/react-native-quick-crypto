@@ -7,6 +7,7 @@ import {
   createSecretKey,
   type AnyAlgorithm,
   type JWK,
+  type CryptoKeyPair,
 } from './keys';
 import {
   hasAnyNotIn,
@@ -17,7 +18,7 @@ import {
   normalizeHashName,
   HashContext,
 } from './Utils';
-import { ecImportKey, ecExportKey } from './ec';
+import { ecImportKey, ecExportKey, ecGenerateKey } from './ec';
 import { pbkdf2DeriveBits } from './pbkdf2';
 import { asyncDigest } from './Hash';
 import { aesImportKey, getAlgorithmName } from './aes';
@@ -202,6 +203,27 @@ const importGenericSecretKey = async (
   throw new Error(`Unable to import ${name} key with format ${format}`);
 };
 
+// const checkCryptoKeyUsages = (key: CryptoKey) => {
+//   if (
+//     (key.type === 'secret' || key.type === 'private') &&
+//     key.usages.length === 0
+//   ) {
+//     throw lazyDOMException(
+//       'Usages cannot be empty when creating a key.',
+//       'SyntaxError'
+//     );
+//   }
+// };
+
+const checkCryptoKeyPairUsages = (pair: CryptoKeyPair) => {
+  if (pair.privateKey.usages.length === 0) {
+    throw lazyDOMException(
+      'Usages cannot be empty when creating a key.',
+      'SyntaxError'
+    );
+  }
+};
+
 class Subtle {
   async digest(
     algorithm: SubtleAlgorithm | AnyAlgorithm,
@@ -359,6 +381,62 @@ class Subtle {
         return exportKeyRaw(key);
     }
     throw new Error(`'subtle.exportKey()' is not implemented for ${format}`);
+  }
+
+  async generateKey(
+    algorithm: SubtleAlgorithm,
+    extractable: boolean,
+    keyUsages: KeyUsage[]
+  ): Promise<CryptoKey | CryptoKeyPair> {
+    algorithm = normalizeAlgorithm(algorithm, 'generateKey');
+    let result: CryptoKey | CryptoKeyPair;
+    switch (algorithm.name) {
+      // case 'RSASSA-PKCS1-v1_5':
+      // // Fall through
+      // case 'RSA-PSS':
+      // // Fall through
+      // case 'RSA-OAEP':
+      //   resultType = 'CryptoKeyPair';
+      //   result = await rsaKeyGenerate(algorithm, extractable, keyUsages);
+      //   break;
+      // case 'Ed25519':
+      // // Fall through
+      // case 'Ed448':
+      // // Fall through
+      // case 'X25519':
+      // // Fall through
+      // case 'X448':
+      //   resultType = 'CryptoKeyPair';
+      //   result = await cfrgGenerateKey(algorithm, extractable, keyUsages);
+      //   break;
+      case 'ECDSA':
+      // Fall through
+      case 'ECDH':
+        result = await ecGenerateKey(algorithm, extractable, keyUsages);
+        checkCryptoKeyPairUsages(result);
+        break;
+      // case 'HMAC':
+      //   resultType = 'CryptoKey';
+      //   result = await hmacGenerateKey(algorithm, extractable, keyUsages);
+      //   break;
+      // case 'AES-CTR':
+      // // Fall through
+      // case 'AES-CBC':
+      // // Fall through
+      // case 'AES-GCM':
+      // // Fall through
+      // case 'AES-KW':
+      //   resultType = 'CryptoKey';
+      //   result = await aesGenerateKey(algorithm, extractable, keyUsages);
+      //   break;
+      default:
+        throw lazyDOMException(
+          `Unrecognized algorithm name '$${algorithm}'`,
+          'NotSupportedError'
+        );
+    }
+
+    return result;
   }
 }
 

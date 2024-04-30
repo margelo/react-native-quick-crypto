@@ -38,7 +38,13 @@ import {
   parsePublicKeyEncoding,
   preparePrivateKey,
   preparePublicOrPrivateKey,
+  type CryptoKeyPair,
 } from './keys';
+
+enum ECCurve {
+  OPENSSL_EC_EXPLICIT_CURVE,
+  OPENSSL_EC_NAMED_CURVE,
+}
 
 // make sure that nextTick is there
 global.process.nextTick = setImmediate;
@@ -428,8 +434,8 @@ export const privateDecrypt = rsaFunctionFor(
 //   \__, |\___|_| |_|\___|_|  \__,_|\__\___|_|\_\___|\__, |_|   \__,_|_|_|
 //    __/ |                                            __/ |
 //   |___/                                            |___/
-type GenerateKeyPairOptions = {
-  modulusLength: number; // Key size in bits (RSA, DSA).
+export type GenerateKeyPairOptions = {
+  modulusLength?: number; // Key size in bits (RSA, DSA).
   publicExponent?: number; // Public exponent (RSA). Default: 0x10001.
   hashAlgorithm?: string; // Name of the message digest (RSA-PSS).
   mgf1HashAlgorithm?: string; // string Name of the message digest used by MGF1 (RSA-PSS).
@@ -520,11 +526,11 @@ function internalGenerateKeyPair(
 
   switch (type) {
     case 'rsa-pss':
-    case 'rsa': {
+    // fallthrough
+    case 'rsa':
       validateObject<GenerateKeyPairOptions>(options, 'options');
       const { modulusLength } = options!;
-      validateUint32(modulusLength, 'options.modulusLength');
-
+      validateUint32(modulusLength as number, 'options.modulusLength');
       let { publicExponent } = options!;
       if (publicExponent == null) {
         publicExponent = 0x10001;
@@ -536,7 +542,7 @@ function internalGenerateKeyPair(
         if (isAsync) {
           NativeQuickCrypto.generateKeyPair(
             RSAKeyVariant.kKeyVariantRSA_SSA_PKCS1_v1_5,
-            modulusLength,
+            modulusLength as number,
             publicExponent,
             ...encoding
           )
@@ -557,7 +563,7 @@ function internalGenerateKeyPair(
           let [err, publicKey, privateKey] =
             NativeQuickCrypto.generateKeyPairSync(
               RSAKeyVariant.kKeyVariantRSA_SSA_PKCS1_v1_5,
-              modulusLength,
+              modulusLength as number,
               publicExponent,
               ...encoding
             );
@@ -610,14 +616,14 @@ function internalGenerateKeyPair(
 
       return NativeQuickCrypto.generateKeyPairSync(
         RSAKeyVariant.kKeyVariantRSA_PSS,
-        modulusLength,
+        modulusLength as number,
         publicExponent,
         hashAlgorithm || hash,
         mgf1HashAlgorithm || mgf1Hash,
         saltLength,
         ...encoding
       );
-    }
+
     // case 'dsa': {
     //   validateObject(options, 'options');
     //   const { modulusLength } = options!;
@@ -634,21 +640,23 @@ function internalGenerateKeyPair(
     //   //   divisorLength,
     //   //   ...encoding);
     // }
-    // case 'ec': {
-    //   validateObject(options, 'options');
-    //   const { namedCurve } = options!;
-    //   validateString(namedCurve, 'options.namedCurve');
-    //   let { paramEncoding } = options!;
-    //   if (paramEncoding == null || paramEncoding === 'named')
-    //     paramEncoding = OPENSSL_EC_NAMED_CURVE;
-    //   else if (paramEncoding === 'explicit')
-    //     paramEncoding = OPENSSL_EC_EXPLICIT_CURVE;
-    //   else
-    //   throw new Error(`Invalid Argument options.paramEncoding ${paramEncoding}`);
-    //     // throw new ERR_INVALID_ARG_VALUE('options.paramEncoding', paramEncoding);
 
-    //   // return new EcKeyPairGenJob(mode, namedCurve, paramEncoding, ...encoding);
-    // }
+    case 'ec':
+      validateObject(options, 'options');
+      const { namedCurve } = options!;
+      validateString(namedCurve, 'options.namedCurve');
+      let paramEncodingFlag = ECCurve.OPENSSL_EC_NAMED_CURVE;
+      const { paramEncoding } = options!;
+      if (paramEncoding == null || paramEncoding === 'named')
+        paramEncodingFlag = ECCurve.OPENSSL_EC_NAMED_CURVE;
+      else if (paramEncoding === 'explicit')
+        paramEncodingFlag = ECCurve.OPENSSL_EC_EXPLICIT_CURVE;
+      else
+        throw new Error(
+          `Invalid Argument options.paramEncoding ${paramEncoding}`
+        );
+      return new EcKeyPairGenJob(mode, namedCurve, paramEncodingFlag, ...encoding);
+
     // case 'ed25519':
     // case 'ed448':
     // case 'x25519':
@@ -718,20 +726,21 @@ function internalGenerateKeyPair(
 }
 
 // TODO(osp) put correct types (e.g. type -> 'rsa', etc..)
-export function generateKeyPair(
-  type: string,
-  callback: GenerateKeyPairCallback
-): void;
-export function generateKeyPair(
-  type: string,
-  options: GenerateKeyPairOptions,
-  callback: GenerateKeyPairCallback
-): void;
-export function generateKeyPair(
+// export async function generateKeyPair(
+//   type: string,
+//   callback: GenerateKeyPairCallback
+// ): Promise<CryptoKeyPair>;
+// export async function generateKeyPair(
+//   type: string,
+//   options: GenerateKeyPairOptions,
+//   callback: GenerateKeyPairCallback
+// ): Promise<CryptoKeyPair>;
+
+export const generateKeyPair = (
   type: string,
   options?: GenerateKeyPairCallback | GenerateKeyPairOptions,
   callback?: GenerateKeyPairCallback
-) {
+): Promise<CryptoKeyPair> => {
   if (typeof options === 'function') {
     callback = options;
     options = undefined;

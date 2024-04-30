@@ -1,3 +1,4 @@
+import { generateKeyPair, type GenerateKeyPairOptions } from './Cipher';
 import { NativeQuickCrypto } from './NativeQuickCrypto/NativeQuickCrypto';
 import {
   bufferLikeToArrayBuffer,
@@ -22,6 +23,7 @@ import {
   type AnyAlgorithm,
   PrivateKeyObject,
   KeyType,
+  type CryptoKeyPair,
 } from './keys';
 
 // const {
@@ -349,3 +351,78 @@ export function ecImportKey(
 //     kSigEncP1363,
 //     signature));
 // }
+
+export const ecGenerateKey = async (
+  algorithm: SubtleAlgorithm,
+  extractable: boolean,
+  keyUsages: KeyUsage[]
+): Promise<CryptoKeyPair> => {
+  const { name, namedCurve } = algorithm;
+
+  if (!Object.keys(kNamedCurveAliases).includes(namedCurve || '')) {
+    throw lazyDOMException(
+      `Unrecognized namedCurve '${namedCurve}'`,
+      'NotSupportedError'
+    );
+  }
+
+  // const usageSet = new SafeSet(keyUsages);
+  switch (name) {
+    case 'ECDSA':
+      const checkUsages = ['sign', 'verify'];
+      if (hasAnyNotIn(keyUsages, checkUsages)) {
+        throw lazyDOMException(
+          'Unsupported key usage for an ECDSA key',
+          'SyntaxError'
+        );
+      }
+      break;
+    case 'ECDH':
+      if (hasAnyNotIn(keyUsages, ['deriveKey', 'deriveBits'])) {
+        throw lazyDOMException(
+          'Unsupported key usage for an ECDH key',
+          'SyntaxError'
+        );
+      }
+    // Fall through
+  }
+
+  const options: GenerateKeyPairOptions = { namedCurve };
+  const keypair = generateKeyPair('ec', options, (err) => {
+    throw lazyDOMException(
+      'The operation failed for an operation-specific reason',
+      { name: 'OperationError', cause: err }
+    );
+  });
+
+  let publicUsages;
+  let privateUsages;
+  switch (name) {
+    case 'ECDSA':
+      publicUsages = getUsagesUnion(usageSet, 'verify');
+      privateUsages = getUsagesUnion(usageSet, 'sign');
+      break;
+    case 'ECDH':
+      publicUsages = [];
+      privateUsages = getUsagesUnion(usageSet, 'deriveKey', 'deriveBits');
+      break;
+  }
+
+  const keyAlgorithm = { name, namedCurve };
+
+  const publicKey =
+    new InternalCryptoKey(
+      keypair.publicKey,
+      keyAlgorithm,
+      publicUsages,
+      true);
+
+  const privateKey =
+    new InternalCryptoKey(
+      keypair.privateKey,
+      keyAlgorithm,
+      privateUsages,
+      extractable);
+
+  return { publicKey, privateKey };
+};

@@ -175,6 +175,11 @@ const encodingNames = {
   [KeyEncoding.kKeyEncodingSEC1]: 'sec1',
 };
 
+export type CryptoKeyPair = {
+  publicKey: any;
+  privateKey: any;
+};
+
 function option(name: string, objName: string | undefined) {
   return objName === undefined
     ? `options.${name}`
