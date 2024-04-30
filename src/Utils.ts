@@ -439,25 +439,29 @@ const kSupportedAlgorithms: SupportedAlgorithms = {
   },
 };
 
-// const simpleAlgorithmDictionaries = {
-//   AesGcmParams: { iv: 'BufferSource', additionalData: 'BufferSource' },
-//   RsaHashedKeyGenParams: { hash: 'HashAlgorithmIdentifier' },
-//   EcKeyGenParams: {},
-//   HmacKeyGenParams: { hash: 'HashAlgorithmIdentifier' },
-//   RsaPssParams: {},
-//   EcdsaParams: { hash: 'HashAlgorithmIdentifier' },
-//   HmacImportParams: { hash: 'HashAlgorithmIdentifier' },
-//   HkdfParams: {
-//     hash: 'HashAlgorithmIdentifier',
-//     salt: 'BufferSource',
-//     info: 'BufferSource',
-//   },
-//   Ed448Params: { context: 'BufferSource' },
-//   Pbkdf2Params: { hash: 'HashAlgorithmIdentifier', salt: 'BufferSource' },
-//   RsaOaepParams: { label: 'BufferSource' },
-//   RsaHashedImportParams: { hash: 'HashAlgorithmIdentifier' },
-//   EcKeyImportParams: {},
-// };
+type AlgorithmDictionaries = {
+  [key in string]: Object;
+};
+
+const simpleAlgorithmDictionaries: AlgorithmDictionaries = {
+  AesGcmParams: { iv: 'BufferSource', additionalData: 'BufferSource' },
+  RsaHashedKeyGenParams: { hash: 'HashAlgorithmIdentifier' },
+  EcKeyGenParams: {},
+  HmacKeyGenParams: { hash: 'HashAlgorithmIdentifier' },
+  RsaPssParams: {},
+  EcdsaParams: { hash: 'HashAlgorithmIdentifier' },
+  HmacImportParams: { hash: 'HashAlgorithmIdentifier' },
+  HkdfParams: {
+    hash: 'HashAlgorithmIdentifier',
+    salt: 'BufferSource',
+    info: 'BufferSource',
+  },
+  Ed448Params: { context: 'BufferSource' },
+  Pbkdf2Params: { hash: 'HashAlgorithmIdentifier', salt: 'BufferSource' },
+  RsaOaepParams: { label: 'BufferSource' },
+  RsaHashedImportParams: { hash: 'HashAlgorithmIdentifier' },
+  EcKeyImportParams: {},
+};
 
 export const validateMaxBufferLength = (
   data: BinaryLike | BufferLike,
@@ -512,50 +516,47 @@ export const normalizeAlgorithm = (
   // Fast path everything below if the registered dictionary is null
   if (desiredType === null) return { name: algName };
 
-  throw lazyDOMException(
-    `normalizeAlgorithm() not implemented for ${op} / ${algName} / ${desiredType}`,
-    'NotSupportedError'
-  );
-  // TODO: implement these below when needed
-
-  // // 8.
-  // const normalizedAlgorithm = webidl.converters[desiredType](algorithm, {
+  // 6.
+  const normalizedAlgorithm = algorithm;
+  // TODO: implement this?  Maybe via typescript?
+  // webidl.converters[desiredType](algorithm, {
   //   prefix: 'Failed to normalize algorithm',
   //   context: 'passed algorithm',
   // });
-  // // 9.
-  // normalizedAlgorithm.name = algName;
+  // 7.
+  normalizedAlgorithm.name = algName;
 
-  // // 9.
-  // const dict = simpleAlgorithmDictionaries[desiredType];
-  // // 10.
-  // const dictKeys = dict ? Object.keys(dict) : [];
-  // for (let i = 0; i < dictKeys.length; i++) {
-  //   const member = dictKeys[i];
-  //   if (!dict.hasOwnProperty(member)) continue;
-  //   const idlType = dict[member];
-  //   const idlValue = normalizedAlgorithm[member];
-  //   // 3.
-  //   if (idlType === 'BufferSource' && idlValue) {
-  //     const isView = ArrayBufferIsView(idlValue);
-  //     normalizedAlgorithm[member] = TypedArrayPrototypeSlice(
-  //       new Uint8Array(
-  //         isView ? getDataViewOrTypedArrayBuffer(idlValue) : idlValue,
-  //         isView ? getDataViewOrTypedArrayByteOffset(idlValue) : 0,
-  //         isView
-  //           ? getDataViewOrTypedArrayByteLength(idlValue)
-  //           : ArrayBufferPrototypeGetByteLength(idlValue)
-  //       )
-  //     );
-  //   } else if (idlType === 'HashAlgorithmIdentifier') {
-  //     normalizedAlgorithm[member] = normalizeAlgorithm(idlValue, 'digest');
-  //   } else if (idlType === 'AlgorithmIdentifier') {
-  //     // This extension point is not used by any supported algorithm (yet?)
-  //     throw lazyDOMException('Not implemented.', 'NotSupportedError');
-  //   }
-  // }
+  // 9.
+  const dict = simpleAlgorithmDictionaries[desiredType];
+  // 10.
+  const dictKeys = dict ? Object.keys(dict) : [];
+  for (let i = 0; i < dictKeys.length; i++) {
+    const member = dictKeys[i] || '';
+    if (!dict?.hasOwnProperty(member)) continue;
+    // TODO: implement this?  Maybe via typescript?
+    // const idlType = dict[member];
+    // const idlValue = normalizedAlgorithm[member];
+    // 3.
+    // if (idlType === 'BufferSource' && idlValue) {
+    //   const isView = ArrayBufferIsView(idlValue);
+    //   normalizedAlgorithm[member] = TypedArrayPrototypeSlice(
+    //     new Uint8Array(
+    //       isView ? getDataViewOrTypedArrayBuffer(idlValue) : idlValue,
+    //       isView ? getDataViewOrTypedArrayByteOffset(idlValue) : 0,
+    //       isView
+    //         ? getDataViewOrTypedArrayByteLength(idlValue)
+    //         : ArrayBufferPrototypeGetByteLength(idlValue)
+    //     )
+    //   );
+    // } else if (idlType === 'HashAlgorithmIdentifier') {
+    //   normalizedAlgorithm[member] = normalizeAlgorithm(idlValue, 'digest');
+    // } else if (idlType === 'AlgorithmIdentifier') {
+    //   // This extension point is not used by any supported algorithm (yet?)
+    //   throw lazyDOMException('Not implemented.', 'NotSupportedError');
+    // }
+  }
 
-  // return normalizedAlgorithm;
+  return normalizedAlgorithm;
 };
 
 export const validateBitLength = (

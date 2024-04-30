@@ -200,6 +200,22 @@ describe('subtle - importKey / exportKey', () => {
       expect(actual).to.equal(expected, 'import raw, export raw');
     });
 
+    it('importKey, raw, AES-GCM string algo', async () => {
+      const rawKeyData = crypto.getRandomValues(new Uint8Array(32));
+      const keyData = binaryLikeToArrayBuffer(rawKeyData);
+
+      const key = await subtle.importKey(
+        'raw',
+        keyData,
+        'AES-GCM',
+        false,
+        // eslint-disable-next-line prettier/prettier
+        ['encrypt', 'decrypt'],
+      );
+      expect(key.keyAlgorithm.name).to.equal('AES-GCM');
+      expect(key.keyAlgorithm.length).to.equal(256);
+    });
+
     const test = (rawKeyData: Uint8Array, descr: string): void => {
       it(`AES import raw / export jwk (${descr})`, async () => {
         const keyData = binaryLikeToArrayBuffer(rawKeyData);
