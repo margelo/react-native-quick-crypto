@@ -48,7 +48,7 @@ add_library(
 )
 
 include_directories(
-  "../node_modules/react-native-quick-base64/cpp"
+  "../../../node_modules/react-native-quick-base64/cpp"
 )
 
 target_include_directories(
