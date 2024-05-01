@@ -417,7 +417,7 @@ export function parsePrivateKeyEncoding(
 }
 
 function prepareSecretKey(
-  key: any, //KeyObject | CryptoKey | string,
+  key: ArrayBuffer | KeyObject | CryptoKey | string,
   encoding?: string,
   bufferOnly = false
 ): any {
@@ -448,7 +448,9 @@ function prepareSecretKey(
     return binaryLikeToArrayBuffer(key, encoding);
   }
 
-  throw new Error('invalid argument type "key"');
+  throw new Error(
+    'Invalid argument type for "key". Need ArrayBuffer, KeyObject, CryptoKey, string'
+  );
 }
 
 export function createSecretKey(key: any, encoding?: string) {
