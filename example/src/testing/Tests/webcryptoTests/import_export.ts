@@ -91,7 +91,7 @@ describe('subtle - importKey / exportKey', () => {
         await subtle.importKey('raw', 1, { name: 'PBKDF2' }, false, [
           'deriveBits',
         ]),
-      'invalid argument type "key"'
+      'Invalid argument type for "key". Need ArrayBuffer, KeyObject, CryptoKey, string'
     );
     await assertThrowsAsync(
       async () =>

@@ -5,7 +5,6 @@ set(PACKAGE_NAME "reactnativequickcrypto")
 set(BUILD_DIR ${CMAKE_SOURCE_DIR}/build)
 set(CMAKE_VERBOSE_MAKEFILE ON)
 set(CMAKE_CXX_STANDARD 17)
-set(NODE_MODULES_DIR "${CMAKE_CURRENT_SOURCE_DIR}/../node_modules")
 
 # set (CMAKE_C_FLAGS_DEBUG "${CMAKE_C_FLAGS_DEBUG} -g")
 # set (CMAKE_CXX_FLAGS_DEBUG "${CMAKE_CXX_FLAGS_DEBUG} -g")
@@ -48,7 +47,7 @@ add_library(
 )
 
 include_directories(
-  "../node_modules/react-native-quick-base64/cpp"
+  "${NODE_MODULES_DIR}/react-native-quick-base64/cpp"
 )
 
 target_include_directories(
