@@ -39,9 +39,11 @@ import {
   preparePrivateKey,
   preparePublicOrPrivateKey,
   type CryptoKeyPair,
+  type KeyPairType,
+  type NamedCurve,
 } from './keys';
 
-enum ECCurve {
+export enum ECCurve {
   OPENSSL_EC_EXPLICIT_CURVE,
   OPENSSL_EC_NAMED_CURVE,
 }
@@ -513,10 +515,10 @@ function parseKeyEncoding(
 
 function internalGenerateKeyPair(
   isAsync: boolean,
-  type: string,
+  type: KeyPairType,
   options: GenerateKeyPairOptions | undefined,
   callback: GenerateKeyPairCallback | undefined
-) {
+): [error: unknown, publicBuffer: any, privateBuffer: any] {
   // On node a very complex "job" chain is created, we are going for a far simpler approach and calling
   // an internal function that basically executes the same byte shuffling on the native side
   const encoding = parseKeyEncoding(type, options);
@@ -540,7 +542,7 @@ function internalGenerateKeyPair(
 
       if (type === 'rsa') {
         if (isAsync) {
-          NativeQuickCrypto.generateKeyPair(
+          NativeQuickCrypto.generateKeyPairRSA(
             RSAKeyVariant.kKeyVariantRSA_SSA_PKCS1_v1_5,
             modulusLength as number,
             publicExponent,
@@ -553,15 +555,14 @@ function internalGenerateKeyPair(
               if (typeof privateKey === 'object') {
                 privateKey = Buffer.from(privateKey);
               }
-              callback?.(err, publicKey, privateKey);
+              return callback?.(err, publicKey, privateKey);
             })
             .catch((err) => {
-              callback?.(err, undefined, undefined);
+              return callback?.(err, undefined, undefined);
             });
-          return;
         } else {
           let [err, publicKey, privateKey] =
-            NativeQuickCrypto.generateKeyPairSync(
+            NativeQuickCrypto.generateKeyPairSyncRSA(
               RSAKeyVariant.kKeyVariantRSA_SSA_PKCS1_v1_5,
               modulusLength as number,
               publicExponent,
@@ -614,7 +615,7 @@ function internalGenerateKeyPair(
         }
       }
 
-      return NativeQuickCrypto.generateKeyPairSync(
+      return NativeQuickCrypto.generateKeyPairSyncRSA(
         RSAKeyVariant.kKeyVariantRSA_PSS,
         modulusLength as number,
         publicExponent,
@@ -642,7 +643,7 @@ function internalGenerateKeyPair(
     // }
 
     case 'ec':
-      validateObject(options, 'options');
+      validateObject<GenerateKeyPairOptions>(options, 'options');
       const { namedCurve } = options!;
       validateString(namedCurve, 'options.namedCurve');
       let paramEncodingFlag = ECCurve.OPENSSL_EC_NAMED_CURVE;
@@ -655,7 +656,42 @@ function internalGenerateKeyPair(
         throw new Error(
           `Invalid Argument options.paramEncoding ${paramEncoding}`
         );
-      return new EcKeyPairGenJob(mode, namedCurve, paramEncodingFlag, ...encoding);
+
+      if (isAsync) {
+        NativeQuickCrypto.generateKeyPairEC(
+          namedCurve as NamedCurve,
+          paramEncodingFlag,
+          ...encoding
+        )
+          .then(([err, publicKey, privateKey]) => {
+            if (typeof publicKey === 'object') {
+              publicKey = Buffer.from(publicKey);
+            }
+            if (typeof privateKey === 'object') {
+              privateKey = Buffer.from(privateKey);
+            }
+            return callback?.(err, publicKey, privateKey);
+          })
+          .catch((err) => {
+            return callback?.(err, undefined, undefined);
+          });
+      } else {
+        let [err, publicKey, privateKey] =
+          NativeQuickCrypto.generateKeyPairSyncEC(
+            namedCurve as NamedCurve,
+            paramEncodingFlag,
+            ...encoding
+          );
+        if (typeof publicKey === 'object') {
+          publicKey = Buffer.from(publicKey);
+        }
+        if (typeof privateKey === 'object') {
+          privateKey = Buffer.from(privateKey);
+        }
+
+        return [err, publicKey, privateKey];
+      }
+      break;
 
     // case 'ed25519':
     // case 'ed448':
@@ -720,24 +756,15 @@ function internalGenerateKeyPair(
     default:
     // Fall through
   }
-  throw new Error(
-    `Invalid Argument options: ${type} scheme not supported. Currently not all encryption methods are supported in quick-crypto!`
-  );
+  throw new Error(`
+    Invalid Argument options: '${type}' scheme not supported for generateKey().
+    Currently not all encryption methods are supported in quick-crypto.  Check
+    implementation_coverage.md for status.
+  `);
 }
 
-// TODO(osp) put correct types (e.g. type -> 'rsa', etc..)
-// export async function generateKeyPair(
-//   type: string,
-//   callback: GenerateKeyPairCallback
-// ): Promise<CryptoKeyPair>;
-// export async function generateKeyPair(
-//   type: string,
-//   options: GenerateKeyPairOptions,
-//   callback: GenerateKeyPairCallback
-// ): Promise<CryptoKeyPair>;
-
-export const generateKeyPair = (
-  type: string,
+export const generateKeyPair = async (
+  type: KeyPairType,
   options?: GenerateKeyPairCallback | GenerateKeyPairOptions,
   callback?: GenerateKeyPairCallback
 ): Promise<CryptoKeyPair> => {
@@ -748,21 +775,28 @@ export const generateKeyPair = (
 
   validateFunction(callback);
 
-  internalGenerateKeyPair(true, type, options, callback);
-}
+  const [_, publicKey, privateKey] = internalGenerateKeyPair(
+    true,
+    type,
+    options,
+    callback
+  );
 
-export function generateKeyPairSync(type: string): {
-  publicKey: any;
-  privateKey: any;
+  return {
+    publicKey,
+    privateKey,
+  };
 };
+
+export function generateKeyPairSync(type: KeyPairType): CryptoKeyPair;
 export function generateKeyPairSync(
-  type: string,
+  type: KeyPairType,
   options: GenerateKeyPairOptions
-): { publicKey: any; privateKey: any };
+): CryptoKeyPair;
 export function generateKeyPairSync(
-  type: string,
+  type: KeyPairType,
   options?: GenerateKeyPairOptions
-): { publicKey: any; privateKey: any } {
+): CryptoKeyPair {
   const [_, publicKey, privateKey] = internalGenerateKeyPair(
     false,
     type,

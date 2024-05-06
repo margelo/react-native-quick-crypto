@@ -28,16 +28,16 @@ export type AnyAlgorithm =
 
 export type HashAlgorithm = 'SHA-1' | 'SHA-256' | 'SHA-384' | 'SHA-512';
 
+export type KeyPairType = 'rsa' | 'rsa-pss' | 'ec';
+
+export type RSAKeyPairAlgorithm = 'RSASSA-PKCS1-v1_5' | 'RSA-PSS' | 'RSA-OAEP';
+export type ECKeyPairAlgorithm = 'ECDSA' | 'ECDH';
+export type CFRGKeyPairAlgorithm = 'Ed25519' | 'Ed448' | 'X25519' | 'X448';
+
 export type KeyPairAlgorithm =
-  | 'ECDSA'
-  | 'ECDH'
-  | 'Ed25519'
-  | 'Ed448'
-  | 'RSASSA-PKCS1-v1_5'
-  | 'RSA-PSS'
-  | 'RSA-OAEP'
-  | 'X25519'
-  | 'X448';
+  | RSAKeyPairAlgorithm
+  | ECKeyPairAlgorithm
+  | CFRGKeyPairAlgorithm;
 
 export type SecretKeyAlgorithm =
   | 'HMAC'

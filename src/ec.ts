@@ -9,6 +9,7 @@ import {
   validateKeyOps,
   hasAnyNotIn,
   ab2str,
+  getUsagesUnion,
 } from './Utils';
 import {
   type ImportFormat,
@@ -388,41 +389,41 @@ export const ecGenerateKey = async (
   }
 
   const options: GenerateKeyPairOptions = { namedCurve };
-  const keypair = generateKeyPair('ec', options, (err) => {
+  const keypair = await generateKeyPair('ec', options, (err) => {
     throw lazyDOMException(
       'The operation failed for an operation-specific reason',
       { name: 'OperationError', cause: err }
     );
   });
 
-  let publicUsages;
-  let privateUsages;
+  let publicUsages: KeyUsage[] = [];
+  let privateUsages: KeyUsage[] = [];
   switch (name) {
     case 'ECDSA':
-      publicUsages = getUsagesUnion(usageSet, 'verify');
-      privateUsages = getUsagesUnion(usageSet, 'sign');
+      publicUsages = getUsagesUnion(keyUsages, 'verify');
+      privateUsages = getUsagesUnion(keyUsages, 'sign');
       break;
     case 'ECDH':
       publicUsages = [];
-      privateUsages = getUsagesUnion(usageSet, 'deriveKey', 'deriveBits');
+      privateUsages = getUsagesUnion(keyUsages, 'deriveKey', 'deriveBits');
       break;
   }
 
   const keyAlgorithm = { name, namedCurve };
 
-  const publicKey =
-    new InternalCryptoKey(
-      keypair.publicKey,
-      keyAlgorithm,
-      publicUsages,
-      true);
+  const publicKey = new CryptoKey(
+    keypair.publicKey,
+    keyAlgorithm,
+    publicUsages,
+    true
+  );
 
-  const privateKey =
-    new InternalCryptoKey(
-      keypair.privateKey,
-      keyAlgorithm,
-      privateUsages,
-      extractable);
+  const privateKey = new CryptoKey(
+    keypair.privateKey,
+    keyAlgorithm,
+    privateUsages,
+    extractable
+  );
 
   return { publicKey, privateKey };
 };

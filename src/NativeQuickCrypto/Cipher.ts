@@ -1,5 +1,7 @@
 import type { BinaryLike } from '../Utils';
 import type { Buffer } from '@craftzdog/react-native-buffer';
+import type { NamedCurve } from '../keys';
+import type { ECCurve } from '../Cipher';
 
 // TODO(osp) on node this is defined on the native side
 // Need to do the same so that values are always in sync
@@ -55,16 +57,28 @@ export type PrivateDecryptMethod = (
   oaepLabel: any
 ) => Buffer;
 
-export type GenerateKeyPairMethod = (
+export type RSAGenerateKeyPairMethod = (
   keyVariant: RSAKeyVariant,
   modulusLength: number,
   publicExponent: number,
   ...rest: any[]
 ) => Promise<[error: unknown, publicBuffer: any, privateBuffer: any]>;
 
-export type GenerateKeyPairSyncMethod = (
+export type RSAGenerateKeyPairSyncMethod = (
   keyVariant: RSAKeyVariant,
   modulusLength: number,
   publicExponent: number,
+  ...rest: any[]
+) => [error: unknown, publicBuffer: any, privateBuffer: any];
+
+export type ECGenerateKeyPairMethod = (
+  namedCurve: NamedCurve,
+  paramEncodingFlag: ECCurve,
+  ...rest: any[]
+) => Promise<[error: unknown, publicBuffer: any, privateBuffer: any]>;
+
+export type ECGenerateKeyPairSyncMethod = (
+  namedCurve: NamedCurve,
+  paramEncodingFlag: ECCurve,
   ...rest: any[]
 ) => [error: unknown, publicBuffer: any, privateBuffer: any];

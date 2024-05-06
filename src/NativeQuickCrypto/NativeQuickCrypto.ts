@@ -8,8 +8,10 @@ import type {
   CreateDecipherMethod,
   PublicEncryptMethod,
   PrivateDecryptMethod,
-  GenerateKeyPairMethod,
-  GenerateKeyPairSyncMethod,
+  RSAGenerateKeyPairMethod,
+  RSAGenerateKeyPairSyncMethod,
+  ECGenerateKeyPairMethod,
+  ECGenerateKeyPairSyncMethod,
 } from './Cipher';
 import type { CreateSignMethod, CreateVerifyMethod } from './sig';
 import type { webcrypto } from './webcrypto';
@@ -24,8 +26,10 @@ interface NativeQuickCryptoSpec {
   publicEncrypt: PublicEncryptMethod;
   publicDecrypt: PublicEncryptMethod;
   privateDecrypt: PrivateDecryptMethod;
-  generateKeyPair: GenerateKeyPairMethod;
-  generateKeyPairSync: GenerateKeyPairSyncMethod;
+  generateKeyPairRSA: RSAGenerateKeyPairMethod;
+  generateKeyPairSyncRSA: RSAGenerateKeyPairSyncMethod;
+  generateKeyPairEC: ECGenerateKeyPairMethod;
+  generateKeyPairSyncEC: ECGenerateKeyPairSyncMethod;
   createSign: CreateSignMethod;
   createVerify: CreateVerifyMethod;
   webcrypto: webcrypto;

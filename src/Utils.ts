@@ -600,6 +600,16 @@ export const validateByteLength = (
   }
 };
 
+export const getUsagesUnion = (usageSet: KeyUsage[], ...usages: KeyUsage[]) => {
+  const newset: KeyUsage[] = [];
+  for (let n = 0; n < usages.length; n++) {
+    if (!usages[n] || usages[n] === undefined) continue;
+    if (usageSet.includes(usages[n] as KeyUsage))
+      newset.push(usages[n] as KeyUsage);
+  }
+  return newset;
+};
+
 const kKeyOps: {
   [key in KeyUsage]: number;
 } = {
