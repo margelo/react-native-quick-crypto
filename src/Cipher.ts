@@ -14,7 +14,7 @@ import {
   validateInt32,
   type BinaryLikeNode,
 } from './Utils';
-import { type InternalCipher, RSAKeyVariant } from './NativeQuickCrypto/Cipher';
+import { type InternalCipher, KeyVariant } from './NativeQuickCrypto/Cipher';
 import type {
   CipherCCMOptions,
   CipherCCMTypes,
@@ -542,8 +542,8 @@ function internalGenerateKeyPair(
 
       if (type === 'rsa') {
         if (isAsync) {
-          NativeQuickCrypto.generateKeyPairRSA(
-            RSAKeyVariant.kKeyVariantRSA_SSA_PKCS1_v1_5,
+          NativeQuickCrypto.generateKeyPair(
+            KeyVariant.RSA_SSA_PKCS1_v1_5,
             modulusLength as number,
             publicExponent,
             ...encoding
@@ -562,8 +562,8 @@ function internalGenerateKeyPair(
             });
         } else {
           let [err, publicKey, privateKey] =
-            NativeQuickCrypto.generateKeyPairSyncRSA(
-              RSAKeyVariant.kKeyVariantRSA_SSA_PKCS1_v1_5,
+            NativeQuickCrypto.generateKeyPairSync(
+              KeyVariant.RSA_SSA_PKCS1_v1_5,
               modulusLength as number,
               publicExponent,
               ...encoding
@@ -615,8 +615,8 @@ function internalGenerateKeyPair(
         }
       }
 
-      return NativeQuickCrypto.generateKeyPairSyncRSA(
-        RSAKeyVariant.kKeyVariantRSA_PSS,
+      return NativeQuickCrypto.generateKeyPairSync(
+        KeyVariant.RSA_PSS,
         modulusLength as number,
         publicExponent,
         hashAlgorithm || hash,
@@ -658,7 +658,8 @@ function internalGenerateKeyPair(
         );
 
       if (isAsync) {
-        NativeQuickCrypto.generateKeyPairEC(
+        NativeQuickCrypto.generateKeyPair(
+          KeyVariant.EC,
           namedCurve as NamedCurve,
           paramEncodingFlag,
           ...encoding
@@ -677,7 +678,8 @@ function internalGenerateKeyPair(
           });
       } else {
         let [err, publicKey, privateKey] =
-          NativeQuickCrypto.generateKeyPairSyncEC(
+          NativeQuickCrypto.generateKeyPairSync(
+            KeyVariant.EC,
             namedCurve as NamedCurve,
             paramEncodingFlag,
             ...encoding
