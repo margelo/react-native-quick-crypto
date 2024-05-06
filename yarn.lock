@@ -2244,9 +2244,9 @@
     csstype "^3.0.2"
 
 "@types/readable-stream@^4.0.11":
-  version "4.0.11"
-  resolved "https://registry.yarnpkg.com/@types/readable-stream/-/readable-stream-4.0.11.tgz#684f1e947c90cb6a8ad3904523d650bb66cdbb84"
-  integrity sha512-R3eUMUTTKoIoaz7UpYLxvZCrOmCRPRbAmoDDHKcimTEySltaJhF8hLzj4+EzyDifiX5eK6oDQGSfmNnXjxZzYQ==
+  version "4.0.12"
+  resolved "https://registry.yarnpkg.com/@types/readable-stream/-/readable-stream-4.0.12.tgz#9a683715338313a30b3d7f2527e09414098f7c44"
+  integrity sha512-SCaw+bs9o/HCX1eTa3glTcQgW1oPxof49mqP2Qikik3xzTimNv2M4p43BQHhBuf7CwOJdQW0s1SrWU3MZxz6lw==
   dependencies:
     "@types/node" "*"
     safe-buffer "~5.1.1"
