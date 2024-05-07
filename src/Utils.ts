@@ -508,6 +508,8 @@ export const normalizeAlgorithm = (
 
   // 4.
   let algName = algorithm.name;
+  // @ts-expect-error
+  if (algName === undefined) return { name: undefined };
 
   // 5.
   let desiredType: string | null | undefined;

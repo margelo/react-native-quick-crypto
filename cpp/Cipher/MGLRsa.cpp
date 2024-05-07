@@ -97,9 +97,9 @@ RsaKeyPairGenConfig prepareRsaKeyGenConfig(jsi::Runtime& runtime,
       static_cast<KeyVariant>((int)arguments[offset].asNumber());
 
   // TODO(osp)
-  //    CHECK_IMPLIES(params->params.variant != RSA_PSS,
+  //    CHECK_IMPLIES(params->params.variant != kvRSA_PSS,
   //                  args.Length() == 10);
-  //    CHECK_IMPLIES(params->params.variant == RSA_PSS,
+  //    CHECK_IMPLIES(params->params.variant == kvRSA_PSS,
   //                  args.Length() == 13);
   config.modulus_bits =
       static_cast<unsigned int>(arguments[offset + 1].asNumber());

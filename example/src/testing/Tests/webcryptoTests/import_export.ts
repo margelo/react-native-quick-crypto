@@ -285,12 +285,12 @@ describe('subtle - importKey / exportKey', () => {
 
     // test random Uint8Array
     const random = crypto.getRandomValues(new Uint8Array(32));
-    test(random, 'random');
+    test(random as Uint8Array, 'random');
 
     // test while ensuring at least one of the elements is zero
     const withZero = crypto.getRandomValues(new Uint8Array(32));
     withZero[4] = 0;
-    test(withZero, 'with zero');
+    test(withZero as Uint8Array, 'with zero');
   }
 
   // from https://gist.github.com/pedrouid/b4056fd1f754918ddae86b32cf7d803e#aes-gcm---importkey

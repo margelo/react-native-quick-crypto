@@ -758,11 +758,12 @@ function internalGenerateKeyPair(
     default:
     // Fall through
   }
-  throw new Error(`
-    Invalid Argument options: '${type}' scheme not supported for generateKey().
-    Currently not all encryption methods are supported in quick-crypto.  Check
-    implementation_coverage.md for status.
-  `);
+  const err = new Error(`
+      Invalid Argument options: '${type}' scheme not supported for generateKey().
+      Currently not all encryption methods are supported in quick-crypto.  Check
+      implementation_coverage.md for status.
+    `);
+  return [err, undefined, undefined];
 }
 
 export const generateKeyPair = async (

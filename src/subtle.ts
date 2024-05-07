@@ -431,7 +431,7 @@ class Subtle {
       //   break;
       default:
         throw lazyDOMException(
-          `Unrecognized algorithm name '$${algorithm}'`,
+          `Unrecognized algorithm name '${algorithm.name}'`,
           'NotSupportedError'
         );
     }
