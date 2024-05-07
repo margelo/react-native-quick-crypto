@@ -278,6 +278,17 @@ std::string EncodeBignum(const BIGNUM* bn,
 std::string EncodeBase64(const std::string data, bool url = false);
 std::string DecodeBase64(const std::string &in, bool remove_linebreaks = false);
 
+// TODO: until shared, keep in sync with JS side (src/NativeQuickCrypto/Cipher.ts)
+enum KeyVariant {
+  kvRSA_SSA_PKCS1_v1_5,
+  kvRSA_PSS,
+  kvRSA_OAEP,
+  kvDSA,
+  kvEC,
+  kvNID,
+  kvDH,
+};
+
 }  // namespace margelo
 
 #endif /* MGLUtils_h */

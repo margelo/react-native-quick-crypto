@@ -21,7 +21,7 @@ namespace jsi = facebook::jsi;
 
 EVPKeyCtxPointer setup(std::shared_ptr<RsaKeyPairGenConfig> config) {
   EVPKeyCtxPointer ctx(EVP_PKEY_CTX_new_id(
-      config->variant == kKeyVariantRSA_PSS ? EVP_PKEY_RSA_PSS : EVP_PKEY_RSA,
+      config->variant == kvRSA_PSS ? EVP_PKEY_RSA_PSS : EVP_PKEY_RSA,
       nullptr));
 
   if (EVP_PKEY_keygen_init(ctx.get()) <= 0) return EVPKeyCtxPointer();
@@ -43,7 +43,7 @@ EVPKeyCtxPointer setup(std::shared_ptr<RsaKeyPairGenConfig> config) {
     bn.release();
   }
 
-  if (config->variant == kKeyVariantRSA_PSS) {
+  if (config->variant == kvRSA_PSS) {
     if (config->md != nullptr &&
         EVP_PKEY_CTX_set_rsa_pss_keygen_md(ctx.get(), config->md) <= 0) {
       return EVPKeyCtxPointer();
@@ -94,12 +94,12 @@ RsaKeyPairGenConfig prepareRsaKeyGenConfig(jsi::Runtime& runtime,
   //    CHECK(args[*offset + 1]->IsUint32());  // Modulus bits
   //    CHECK(args[*offset + 2]->IsUint32());  // Exponent
   config.variant =
-      static_cast<RSAKeyVariant>((int)arguments[offset].asNumber());
+      static_cast<KeyVariant>((int)arguments[offset].asNumber());
 
   // TODO(osp)
-  //    CHECK_IMPLIES(params->params.variant != kKeyVariantRSA_PSS,
+  //    CHECK_IMPLIES(params->params.variant != RSA_PSS,
   //                  args.Length() == 10);
-  //    CHECK_IMPLIES(params->params.variant == kKeyVariantRSA_PSS,
+  //    CHECK_IMPLIES(params->params.variant == RSA_PSS,
   //                  args.Length() == 13);
   config.modulus_bits =
       static_cast<unsigned int>(arguments[offset + 1].asNumber());
@@ -107,7 +107,7 @@ RsaKeyPairGenConfig prepareRsaKeyGenConfig(jsi::Runtime& runtime,
 
   offset += 3;
 
-  if (config.variant == kKeyVariantRSA_PSS) {
+  if (config.variant == kvRSA_PSS) {
     if (!arguments[offset].isUndefined()) {
       // TODO(osp) CHECK(string)
       config.md = EVP_get_digestbyname(
@@ -153,8 +153,9 @@ RsaKeyPairGenConfig prepareRsaKeyGenConfig(jsi::Runtime& runtime,
   return config;
 }
 
-std::pair<JSVariant, JSVariant> generateRSAKeyPair(
+std::pair<JSVariant, JSVariant> generateRsaKeyPair(
     jsi::Runtime& runtime, std::shared_ptr<RsaKeyPairGenConfig> config) {
+  // TODO: this is all copied into crypto_ec.cpp - template it up like Node
   CheckEntropy();
 
   EVPKeyCtxPointer ctx = setup(config);

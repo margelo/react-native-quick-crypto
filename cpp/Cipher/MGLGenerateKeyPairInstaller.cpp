@@ -18,9 +18,11 @@
 #ifdef ANDROID
 #include "JSIUtils/MGLJSIMacros.h"
 #include "JSIUtils/MGLTypedArray.h"
+#include "webcrypto/crypto_ec.h"
 #else
 #include "MGLJSIMacros.h"
 #include "MGLTypedArray.h"
+#include "crypto_ec.h"
 #endif
 
 using namespace facebook;
@@ -29,16 +31,11 @@ namespace margelo {
 
 std::mutex m;
 
-// Current implementation only supports RSA schemes (check line config.variant =
-// ) As more encryption schemes are added this will require an abstraction that
-// supports more schemes
 FieldDefinition getGenerateKeyPairFieldDefinition(
     std::shared_ptr<react::CallInvoker> jsCallInvoker,
     std::shared_ptr<DispatchQueue::dispatch_queue> workerQueue) {
   return buildPair(
       "generateKeyPair", JSIF([=]) {
-        auto config = std::make_shared<RsaKeyPairGenConfig>(
-            prepareRsaKeyGenConfig(runtime, arguments));
         auto promiseConstructor =
             runtime.global().getPropertyAsFunction(runtime, "Promise");
 
@@ -46,7 +43,7 @@ FieldDefinition getGenerateKeyPairFieldDefinition(
             runtime,
             jsi::Function::createFromHostFunction(
                 runtime, jsi::PropNameID::forAscii(runtime, "executor"), 2,
-                [&jsCallInvoker, config](
+                [&jsCallInvoker, arguments](
                     jsi::Runtime &runtime, const jsi::Value &,
                     const jsi::Value *promiseArgs, size_t) -> jsi::Value {
                   auto resolve =
@@ -55,11 +52,31 @@ FieldDefinition getGenerateKeyPairFieldDefinition(
                       std::make_shared<jsi::Value>(runtime, promiseArgs[1]);
 
                   std::thread t([&runtime, resolve, reject,
-                                 jsCallInvoker, config]() {
+                                 jsCallInvoker, arguments]() {
                     m.lock();
                     try {
-                      jsCallInvoker->invokeAsync([&runtime, config, resolve]() {
-                        auto keys = generateRSAKeyPair(runtime, config);
+                      jsCallInvoker->invokeAsync([&runtime, arguments, resolve]() {
+                        std::pair<JSVariant, JSVariant> keys;
+                        KeyVariant variant =
+                          static_cast<KeyVariant>((int)arguments[0].asNumber());
+
+                        // switch on variant to get proper config/genKeyPair
+                        if (variant == kvRSA_SSA_PKCS1_v1_5 ||
+                            variant == kvRSA_PSS ||
+                            variant == kvRSA_OAEP
+                        ) {
+                          auto config = std::make_shared<RsaKeyPairGenConfig>(
+                            prepareRsaKeyGenConfig(runtime, arguments));
+                          keys = generateRsaKeyPair(runtime, config);
+                        } else
+                        if (variant == kvEC) {
+                          auto config = std::make_shared<EcKeyPairGenConfig>(
+                            prepareEcKeyGenConfig(runtime, arguments));
+                          keys = generateEcKeyPair(runtime, config);
+                        } else {
+                          throw std::runtime_error("KeyVariant not implemented: " + variant);
+                        }
+
                         auto publicKey = toJSI(runtime, keys.first);
                         auto privateKey = toJSI(runtime, keys.second);
                         auto res = jsi::Array::createWithElements(

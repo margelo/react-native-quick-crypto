@@ -10,9 +10,14 @@
 #include <openssl/ec.h>
 #include <string>
 #include <utility>
+#include <MGLJSIUtils.h>
 
 namespace margelo {
 namespace jsi = facebook::jsi;
+
+int GetCurveFromName(std::string name) {
+  return GetCurveFromName(name.c_str());
+}
 
 int GetCurveFromName(const char* name) {
   int nid = EC_curve_nist2nid(name);
@@ -329,6 +334,113 @@ jsi::Value GetEcKeyDetail(jsi::Runtime &rt,
   jsi::String value = jsi::String::createFromUtf8(rt, OBJ_nid2sn(nid));
   target.setProperty(rt, "namedCurve", value);
   return target;
+}
+
+EcKeyPairGenConfig prepareEcKeyGenConfig(jsi::Runtime &rt,
+                                       const jsi::Value *args)
+{
+  EcKeyPairGenConfig config = EcKeyPairGenConfig();
+
+  // curve name
+  std::string curveName = args[1].asString(rt).utf8(rt);
+  config.curve_nid = GetCurveFromName(curveName);
+
+  // encoding
+  if (CheckIsInt32(args[2].asNumber())) {
+    int encoding = static_cast<int>(args[2].asNumber());
+    if (encoding != OPENSSL_EC_NAMED_CURVE &&
+        encoding != OPENSSL_EC_EXPLICIT_CURVE) {
+      throw jsi::JSError(rt, "Invalid param_encoding specified");
+    } else {
+      config.param_encoding = encoding;
+    }
+  } else {
+    throw jsi::JSError(rt, "Invalid param_encoding specified (not int)");
+  }
+
+  // rest of args for encoding
+  unsigned int offset = 3;
+
+  config.public_key_encoding = ManagedEVPPKey::GetPublicKeyEncodingFromJs(
+      rt, args, &offset, kKeyContextGenerate);
+
+  auto private_key_encoding = ManagedEVPPKey::GetPrivateKeyEncodingFromJs(
+      rt, args, &offset, kKeyContextGenerate);
+
+  if (!private_key_encoding.IsEmpty()) {
+    config.private_key_encoding = private_key_encoding.Release();
+  }
+
+  return config;
+}
+
+EVPKeyCtxPointer setup(std::shared_ptr<EcKeyPairGenConfig> config) {
+  EVPKeyCtxPointer key_ctx;
+  switch (config->curve_nid) {
+    case EVP_PKEY_ED25519:
+      // Fall through
+    case EVP_PKEY_ED448:
+      // Fall through
+    case EVP_PKEY_X25519:
+      // Fall through
+    case EVP_PKEY_X448:
+      key_ctx.reset(EVP_PKEY_CTX_new_id(config->curve_nid, nullptr));
+      break;
+    default: {
+      EVPKeyCtxPointer param_ctx(EVP_PKEY_CTX_new_id(EVP_PKEY_EC, nullptr));
+      EVP_PKEY* raw_params = nullptr;
+      if (!param_ctx ||
+          EVP_PKEY_paramgen_init(param_ctx.get()) <= 0 ||
+          EVP_PKEY_CTX_set_ec_paramgen_curve_nid(
+              param_ctx.get(), config->curve_nid) <= 0 ||
+          EVP_PKEY_CTX_set_ec_param_enc(
+              param_ctx.get(), config->param_encoding) <= 0 ||
+          EVP_PKEY_paramgen(param_ctx.get(), &raw_params) <= 0) {
+        return EVPKeyCtxPointer();
+      }
+      EVPKeyPointer key_params(raw_params);
+      key_ctx.reset(EVP_PKEY_CTX_new(key_params.get(), nullptr));
+    }
+  }
+
+  if (key_ctx && EVP_PKEY_keygen_init(key_ctx.get()) <= 0)
+    key_ctx.reset();
+
+  return key_ctx;
+}
+
+std::pair<JSVariant, JSVariant> generateEcKeyPair(jsi::Runtime& runtime,
+                                                  std::shared_ptr<EcKeyPairGenConfig> config)
+{
+  // TODO: this is all copied from MGLRsa.cpp - template it up like Node
+  
+  EVPKeyCtxPointer ctx = setup(config);
+
+  if (!ctx) {
+    throw jsi::JSError(runtime, "Error on key generation job");
+  }
+
+  // Generate the key
+  EVP_PKEY* pkey = nullptr;
+  if (!EVP_PKEY_keygen(ctx.get(), &pkey)) {
+    throw jsi::JSError(runtime, "Error generating key");
+  }
+
+  config->key = ManagedEVPPKey(EVPKeyPointer(pkey));
+
+  OptionJSVariant publicBuffer =
+      ManagedEVPPKey::ToEncodedPublicKey(runtime, std::move(config->key),
+                                         config->public_key_encoding);
+  OptionJSVariant privateBuffer =
+      ManagedEVPPKey::ToEncodedPrivateKey(runtime, std::move(config->key),
+                                          config->private_key_encoding);
+
+  if (!publicBuffer.has_value() || !privateBuffer.has_value()) {
+    throw jsi::JSError(runtime, "Failed to encode public and/or private key");
+  }
+
+  return {std::move(publicBuffer.value()), std::move(privateBuffer.value())};
+
 }
 
 } // namespace margelo
