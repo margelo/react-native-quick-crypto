@@ -1,7 +1,7 @@
 import { assert, expect } from 'chai';
 import type { Buffer } from '@craftzdog/react-native-buffer';
 import { describe, it } from '../../MochaRNAdapter';
-import crypto from 'react-native-quick-crypto';
+import { QuickCrypto } from 'react-native-quick-crypto';
 
 // Constructs a regular expression for a PEM-encoded key with the given label.
 function getRegExpForPEM(label: string, cipher?: string | null) {
@@ -40,7 +40,7 @@ const pkcs8EncExp = getRegExpForPEM('ENCRYPTED PRIVATE KEY');
 
 describe('generateKeyPair', () => {
   it('Sync RSA: spki - pkcs8/aes-256-cbc/passphrase', () => {
-    const ret = crypto.generateKeyPairSync('rsa', {
+    const ret = QuickCrypto.generateKeyPairSync('rsa', {
       modulusLength: 4096,
       publicKeyEncoding: {
         type: 'spki',
@@ -70,7 +70,7 @@ describe('generateKeyPair', () => {
   it('Sync RSA: pkcs1/pkcs8', () => {
     // To make the test faster, we will only test sync key generation once and
     // with a relatively small key.
-    const ret = crypto.generateKeyPairSync('rsa', {
+    const ret = QuickCrypto.generateKeyPairSync('rsa', {
       publicExponent: 3,
       modulusLength: 512,
       publicKeyEncoding: {
@@ -95,7 +95,7 @@ describe('generateKeyPair', () => {
   });
 
   it('Async RSA: spki - pkcs8/aes-256-cbc/passphrase', (done) => {
-    crypto.generateKeyPair(
+    QuickCrypto.generateKeyPair(
       'rsa',
       {
         modulusLength: 4096,

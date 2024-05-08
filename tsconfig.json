@@ -1,8 +1,7 @@
 {
   "compilerOptions": {
-    "rootDir": ".",
     "paths": {
-      "react-native-quick-crypto": ["./src/index"],
+      "react-native-quick-crypto": ["./src/index"]
     },
     "allowUnreachableCode": false,
     "allowUnusedLabels": false,
@@ -28,16 +27,6 @@
     "declarationMap": true,
     "sourceMap": true
   },
-  "include": [
-    "src",
-    ".eslintrc.js",
-    "babel.config.js",
-    "react-native.config.js",
-  ],
-  "exclude": [
-    "node_modules",
-    "lib",
-    "docs",
-    "example",
-  ],
+  "include": ["src"],
+  "exclude": ["node_modules", "lib", "docs", "example"]
 }

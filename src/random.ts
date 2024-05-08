@@ -271,14 +271,14 @@ function asyncRefillRandomIntCache() {
 // additional limitation that the input buffer is
 // not allowed to exceed 65536 bytes, and can only
 // be an integer-type TypedArray.
-type DataType =
+export type RandomTypedArrays =
   | Int8Array
   | Int16Array
   | Int32Array
   | Uint8Array
   | Uint16Array
   | Uint32Array;
-export function getRandomValues(data: DataType) {
+export function getRandomValues(data: RandomTypedArrays) {
   if (data.byteLength > 65536) {
     throw new Error('The requested length exceeds 65,536 bytes');
   }

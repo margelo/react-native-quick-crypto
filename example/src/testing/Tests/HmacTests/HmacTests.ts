@@ -1,24 +1,24 @@
 // copied from https://github.com/nodejs/node/blob/master/test/parallel/test-crypto-hmac.js
-import crypto from 'react-native-quick-crypto';
+import { QuickCrypto } from 'react-native-quick-crypto';
 import { Buffer } from '@craftzdog/react-native-buffer';
 import { describe, it } from '../../MochaRNAdapter';
 import { expect } from 'chai';
 
 describe('hmac', () => {
   it('Hmac called directly', () => {
-    const Hmac = crypto.Hmac;
-    const instance = crypto.Hmac('sha256', 'Node');
+    const Hmac = QuickCrypto.Hmac;
+    const instance = QuickCrypto.Hmac('sha256', 'Node');
     expect(instance).to.instanceOf(Hmac);
   });
 
   it('invalid arg1', () => {
     // @ts-expect-error
-    expect(crypto.createHmac(null)).Throw(/ERR_INVALID_ARG_TYPE/);
+    expect(QuickCrypto.createHmac(null)).Throw(/ERR_INVALID_ARG_TYPE/);
   });
 
   it('invalid arg type', () => {
     // @ts-expect-error
-    expect(crypto.createHmac('sha1', null)).Throw(/ERR_INVALID_ARG_TYPE/);
+    expect(QuickCrypto.createHmac('sha1', null)).Throw(/ERR_INVALID_ARG_TYPE/);
   });
 
   function testHmac(
@@ -42,7 +42,7 @@ describe('hmac', () => {
       ];
 
       for (const keyWrapper of keyWrappers) {
-        const hmac = crypto.createHmac(algo, keyWrapper(key));
+        const hmac = QuickCrypto.createHmac(algo, keyWrapper(key));
         for (const chunk of data) {
           hmac.update(chunk as any);
         }
@@ -288,11 +288,10 @@ describe('hmac', () => {
   for (let i = 0, l = rfc4231.length; i < l; i++) {
     for (const hash in rfc4231[i]!.hmac) {
       it(`Test HMAC-${hash} rfc 4231 case ${i + 1}`, () => {
-        const str = crypto.createHmac(hash, rfc4231[i]!.key);
+        const str = QuickCrypto.createHmac(hash, rfc4231[i]!.key);
         str.end(rfc4231[i]!.data);
         let strRes = str.read().toString('hex');
-        let actual = crypto
-          .createHmac(hash, rfc4231[i]!.key)
+        let actual = QuickCrypto.createHmac(hash, rfc4231[i]!.key)
           .update(rfc4231[i]!.data)
           .digest('hex');
         if (rfc4231[i]!.truncate) {
@@ -445,8 +444,8 @@ describe('hmac', () => {
   }
 
   it('digest encoding', () => {
-    expect(crypto.createHmac('sha256', 'w00t').digest('ucs2')).to.be.eql(
-      crypto.createHmac('sha256', 'w00t').digest().toString('ucs2')
+    expect(QuickCrypto.createHmac('sha256', 'w00t').digest('ucs2')).to.be.eql(
+      QuickCrypto.createHmac('sha256', 'w00t').digest().toString('ucs2')
     );
   });
 
@@ -455,12 +454,12 @@ describe('hmac', () => {
       '\u0010\u0041\u0052\u00c5\u00bf\u00dc\u00a0\u007b\u00c6\u0033' +
       '\u00ee\u00bd\u0046\u0019\u009f\u0002\u0055\u00c9\u00f4\u009d';
     {
-      const h = crypto.createHmac('sha1', 'key').update('data');
+      const h = QuickCrypto.createHmac('sha1', 'key').update('data');
       expect(h.digest('buffer')).to.deep.equal(Buffer.from(expected, 'latin1'));
       expect(h.digest('buffer')).to.deep.equal(Buffer.from(''));
     }
     {
-      const h = crypto.createHmac('sha1', 'key').update('data');
+      const h = QuickCrypto.createHmac('sha1', 'key').update('data');
       expect(h.digest('latin1')).to.equal(expected);
       expect(h.digest('latin1')).to.equal('');
     }
@@ -471,18 +470,18 @@ describe('hmac', () => {
       '\u00f4\u002b\u00b0\u00ee\u00b0\u0018\u00eb\u00bd\u0045\u0097' +
       '\u00ae\u0072\u0013\u0071\u001e\u00c6\u0007\u0060\u0084\u003f';
     {
-      const h = crypto.createHmac('sha1', 'key');
+      const h = QuickCrypto.createHmac('sha1', 'key');
       expect(h.digest('buffer')).to.deep.equal(Buffer.from(expected, 'latin1'));
       expect(h.digest('buffer')).to.deep.equal(Buffer.from(''));
     }
     {
-      const h = crypto.createHmac('sha1', 'key');
+      const h = QuickCrypto.createHmac('sha1', 'key');
       expect(h.digest('latin1')).to.equal(expected);
       expect(h.digest('latin1')).to.equal('');
     }
   });
 
   it('Invalid digest', () => {
-    expect(crypto.createHmac('sha7', 'key')).throw(/Invalid digest/);
+    expect(QuickCrypto.createHmac('sha7', 'key')).throw(/Invalid digest/);
   });
 });

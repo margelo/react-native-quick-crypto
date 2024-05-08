@@ -1,6 +1,6 @@
 import { describe, it } from '../../MochaRNAdapter';
 import { expect } from 'chai';
-import QuickCrypto from 'react-native-quick-crypto';
+import { QuickCrypto } from 'react-native-quick-crypto';
 import { Buffer } from '@craftzdog/react-native-buffer';
 import type { Done } from 'mocha';
 import { fixtures } from './fixtures';
@@ -220,7 +220,7 @@ describe('pbkdf2', () => {
       it(' async w/ ' + description, function () {
         function noop() {}
         expect(
-          QuickCrypto.pbkdf2(
+          crypto.pbkdf2(
             f.key,
             f.salt,
             f.iterations,
@@ -234,7 +234,7 @@ describe('pbkdf2', () => {
 
       it(' sync w/' + description, function () {
         expect(
-          QuickCrypto.pbkdf2Sync(
+          crypto.pbkdf2Sync(
             f.key,
             f.salt,
             f.iterations,

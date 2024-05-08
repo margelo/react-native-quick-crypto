@@ -5,13 +5,14 @@ import {
   toByteArray,
   trimBase64Padding,
 } from 'react-native-quick-base64';
-import crypto from 'react-native-quick-crypto';
+import { QuickCrypto } from 'react-native-quick-crypto';
 import { describe, it } from '../../MochaRNAdapter';
 import { ab2str, binaryLikeToArrayBuffer } from '../../../../../src/Utils';
 import { assertThrowsAsync } from '../util';
 import type { JWK, KeyUsage, NamedCurve } from '../../../../../src/keys';
+import type { RandomTypedArrays } from '../../../../../src/random';
 
-const { subtle } = crypto;
+const { subtle } = QuickCrypto;
 
 // Tests that a key pair can be used for encryption / decryption.
 // function testEncryptDecrypt(publicKey: any, privateKey: any) {
@@ -63,7 +64,7 @@ function arrayBufferToBase64(buffer: ArrayBuffer, urlSafe: boolean = false) {
 describe('subtle - importKey / exportKey', () => {
   // Import/Export test bad inputs
   it('Bad inputs', async () => {
-    const keyData = crypto.getRandomValues(new Uint8Array(32));
+    const keyData = QuickCrypto.getRandomValues(new Uint8Array(32));
     [1, null, undefined, {}, []].map(
       async (format) =>
         await assertThrowsAsync(
@@ -175,7 +176,7 @@ describe('subtle - importKey / exportKey', () => {
   // Import/Export AES Secret Key
   {
     it('AES import raw / export raw', async () => {
-      const rawKeyData = crypto.getRandomValues(new Uint8Array(32));
+      const rawKeyData = QuickCrypto.getRandomValues(new Uint8Array(32));
       const keyData = binaryLikeToArrayBuffer(rawKeyData);
 
       // import raw
@@ -201,7 +202,7 @@ describe('subtle - importKey / exportKey', () => {
     });
 
     it('importKey, raw, AES-GCM string algo', async () => {
-      const rawKeyData = crypto.getRandomValues(new Uint8Array(32));
+      const rawKeyData = QuickCrypto.getRandomValues(new Uint8Array(32));
       const keyData = binaryLikeToArrayBuffer(rawKeyData);
 
       const key = await subtle.importKey(
@@ -210,13 +211,13 @@ describe('subtle - importKey / exportKey', () => {
         'AES-GCM',
         false,
         // eslint-disable-next-line prettier/prettier
-        ['encrypt', 'decrypt'],
+        ['encrypt', 'decrypt']
       );
       expect(key.keyAlgorithm.name).to.equal('AES-GCM');
       expect(key.keyAlgorithm.length).to.equal(256);
     });
 
-    const test = (rawKeyData: Uint8Array, descr: string): void => {
+    const test = (rawKeyData: RandomTypedArrays, descr: string): void => {
       it(`AES import raw / export jwk (${descr})`, async () => {
         const keyData = binaryLikeToArrayBuffer(rawKeyData);
         const keyB64 = arrayBufferToBase64(keyData, true);
@@ -265,11 +266,11 @@ describe('subtle - importKey / exportKey', () => {
     };
 
     // test random Uint8Array
-    const random = crypto.getRandomValues(new Uint8Array(32));
+    const random = QuickCrypto.getRandomValues(new Uint8Array(32));
     test(random, 'random');
 
     // test while ensuring at least one of the elements is zero
-    const withZero = crypto.getRandomValues(new Uint8Array(32));
+    const withZero = QuickCrypto.getRandomValues(new Uint8Array(32));
     withZero[4] = 0;
     test(withZero, 'with zero');
   }

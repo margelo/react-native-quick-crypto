@@ -1,7 +1,7 @@
 // copied from https://github.com/nodejs/node/blob/master/test/parallel/test-crypto-hash.js
 import { Buffer } from '@craftzdog/react-native-buffer';
 import { assert, expect } from 'chai';
-import crypto from 'react-native-quick-crypto';
+import { QuickCrypto } from 'react-native-quick-crypto';
 import { describe, it } from '../../MochaRNAdapter';
 
 describe('hash', () => {
@@ -11,35 +11,41 @@ describe('hash', () => {
   let digest;
 
   it('Test hashing', () => {
-    const a1 = crypto.createHash('sha1').update('Test123').digest('hex');
-    const a2 = crypto.createHash('sha256').update('Test123').digest('base64');
-    const a3 = crypto.createHash('sha512').update('Test123').digest(); // buffer
-    const a4 = crypto.createHash('sha1').update('Test123').digest('buffer');
+    const a1 = QuickCrypto.createHash('sha1').update('Test123').digest('hex');
+    const a2 = QuickCrypto.createHash('sha256')
+      .update('Test123')
+      .digest('base64');
+    const a3 = QuickCrypto.createHash('sha512').update('Test123').digest(); // buffer
+    const a4 = QuickCrypto.createHash('sha1')
+      .update('Test123')
+      .digest('buffer');
 
     // stream interface
-    let a5 = crypto.createHash('sha512');
+    let a5 = QuickCrypto.createHash('sha512');
     a5.end('Test123');
     a5 = a5.read();
 
-    let a6 = crypto.createHash('sha512');
+    let a6 = QuickCrypto.createHash('sha512');
     a6.write('Te');
     a6.write('st');
     a6.write('123');
     a6.end();
     a6 = a6.read();
 
-    let a7 = crypto.createHash('sha512');
+    let a7 = QuickCrypto.createHash('sha512');
     a7.end();
     a7 = a7.read();
 
-    let a8 = crypto.createHash('sha512');
+    let a8 = QuickCrypto.createHash('sha512');
     a8.write('');
     a8.end();
     a8 = a8.read();
 
     cryptoType = 'md5';
     digest = 'latin1' as 'latin1';
-    const a0 = crypto.createHash(cryptoType).update('Test123').digest(digest);
+    const a0 = QuickCrypto.createHash(cryptoType)
+      .update('Test123')
+      .digest(digest);
     assert.strictEqual(
       a0,
       'h\u00ea\u00cb\u0097\u00d8o\fF!\u00fa+\u000e\u0017\u00ca\u00bd\u008c',
@@ -91,9 +97,8 @@ describe('hash', () => {
   });
 
   it('Test multiple updates to same hash', () => {
-    const h1 = crypto.createHash('sha1').update('Test123').digest('hex');
-    const h2 = crypto
-      .createHash('sha1')
+    const h1 = QuickCrypto.createHash('sha1').update('Test123').digest('hex');
+    const h2 = QuickCrypto.createHash('sha1')
       .update('Test')
       .update('123')
       .digest('hex');
@@ -121,7 +126,7 @@ describe('hash', () => {
   // Issue https://github.com/nodejs/node-v0.x-archive/issues/2227: unknown digest
   it('method should throw an error.', () => {
     assert.throws(function () {
-      crypto.createHash('xyzzy');
+      QuickCrypto.createHash('xyzzy');
     }, /Exception in HostFunction: Invalid Hash/);
   });
 
@@ -129,7 +134,7 @@ describe('hash', () => {
   it('segfault.', () => {
     assert.throws(
       () =>
-        crypto.createHash('sha256').digest({
+        QuickCrypto.createHash('sha256').digest({
           toString: () => {
             throw new Error('boom');
           },
@@ -143,15 +148,14 @@ describe('hash', () => {
   it('arg type to update method should include all possible types.', () => {
     assert.throws(
       // @ts-expect-error
-      () => crypto.createHash('sha256').update(),
+      () => QuickCrypto.createHash('sha256').update(),
       /The first argument must be one of/,
       'TypeError'
     );
   });
 
   it('Default UTF-8 encoding', () => {
-    const hutf8 = crypto
-      .createHash('sha512')
+    const hutf8 = QuickCrypto.createHash('sha512')
       .update('УТФ-8 text')
       .digest('hex');
     assert.strictEqual(
@@ -161,35 +165,37 @@ describe('hash', () => {
     );
     assert.notStrictEqual(
       hutf8,
-      crypto.createHash('sha512').update('УТФ-8 text', 'latin1').digest('hex')
+      QuickCrypto.createHash('sha512')
+        .update('УТФ-8 text', 'latin1')
+        .digest('hex')
     );
   });
 
   it('h3 ', () => {
-    const h3 = crypto.createHash('sha256');
+    const h3 = QuickCrypto.createHash('sha256');
     digest = h3.digest();
     assert.throws(() => h3.update('foo'), /ERR_CRYPTO_HASH_FINALIZED/, 'Error');
   });
 
   it('shas ucs2', () => {
     assert.strictEqual(
-      crypto.createHash('sha256').update('test').digest('ucs2'),
-      crypto.createHash('sha256').update('test').digest().toString('ucs2')
+      QuickCrypto.createHash('sha256').update('test').digest('ucs2'),
+      QuickCrypto.createHash('sha256').update('test').digest().toString('ucs2')
     );
   });
 
   it('empty call', () => {
     assert.throws(
       // @ts-expect-error
-      () => crypto.createHash(),
+      () => QuickCrypto.createHash(),
       /Value is undefined, expected a String/,
       'The "algorithm" argument must be of type string. ' + 'Received undefined'
     );
   });
 
   it('Hash without new', () => {
-    const Hash = crypto.Hash;
-    const instance = crypto.Hash('sha256');
+    const Hash = QuickCrypto.Hash;
+    const instance = QuickCrypto.Hash('sha256');
     assert(
       instance instanceof Hash,
       'Hash is expected to return a new instance' + ' when called without `new`'
@@ -198,20 +204,19 @@ describe('hash', () => {
 
   it('Default outputLengths.', () => {
     assert.strictEqual(
-      crypto.createHash('shake128').digest('hex'),
+      QuickCrypto.createHash('shake128').digest('hex'),
       '7f9c2ba4e88f827d616045507605853e'
     );
     assert.strictEqual(
-      crypto.createHash('shake128', null).digest('hex'),
+      QuickCrypto.createHash('shake128', null).digest('hex'),
       '7f9c2ba4e88f827d616045507605853e'
     );
     assert.strictEqual(
-      crypto.createHash('shake256').digest('hex'),
+      QuickCrypto.createHash('shake256').digest('hex'),
       '46b9dd2b0ba88d13233b3feb743eeb24' + '3fcd52ea62b81b82b50c27646ed5762f'
     );
     assert.strictEqual(
-      crypto
-        .createHash('shake256', { outputLength: 0 })
+      QuickCrypto.createHash('shake256', { outputLength: 0 })
         .copy() // Default outputLength.
         .digest('hex'),
       '46b9dd2b0ba88d13233b3feb743eeb24' + '3fcd52ea62b81b82b50c27646ed5762f'
@@ -220,40 +225,38 @@ describe('hash', () => {
 
   it('Short outputLengths.', () => {
     assert.strictEqual(
-      crypto.createHash('shake128', { outputLength: 0 }).digest('hex'),
+      QuickCrypto.createHash('shake128', { outputLength: 0 }).digest('hex'),
       ''
     );
     assert.strictEqual(
-      crypto
-        .createHash('shake128', { outputLength: 5 })
+      QuickCrypto.createHash('shake128', { outputLength: 5 })
         .copy({ outputLength: 0 })
         .digest('hex'),
       ''
     );
     assert.strictEqual(
-      crypto.createHash('shake128', { outputLength: 5 }).digest('hex'),
+      QuickCrypto.createHash('shake128', { outputLength: 5 }).digest('hex'),
       '7f9c2ba4e8'
     );
     assert.strictEqual(
-      crypto
-        .createHash('shake128', { outputLength: 0 })
+      QuickCrypto.createHash('shake128', { outputLength: 0 })
         .copy({ outputLength: 5 })
         .digest('hex'),
       '7f9c2ba4e8'
     );
     assert.strictEqual(
-      crypto.createHash('shake128', { outputLength: 15 }).digest('hex'),
+      QuickCrypto.createHash('shake128', { outputLength: 15 }).digest('hex'),
       '7f9c2ba4e88f827d61604550760585'
     );
     assert.strictEqual(
-      crypto.createHash('shake256', { outputLength: 16 }).digest('hex'),
+      QuickCrypto.createHash('shake256', { outputLength: 16 }).digest('hex'),
       '46b9dd2b0ba88d13233b3feb743eeb24'
     );
   });
 
   it('Large outputLengths.', () => {
     assert.strictEqual(
-      crypto.createHash('shake128', { outputLength: 128 }).digest('hex'),
+      QuickCrypto.createHash('shake128', { outputLength: 128 }).digest('hex'),
       '7f9c2ba4e88f827d616045507605853e' +
         'd73b8093f6efbc88eb1a6eacfa66ef26' +
         '3cb1eea988004b93103cfb0aeefd2a68' +
@@ -263,10 +266,9 @@ describe('hash', () => {
         'badfd6dfaac359a5efbb7bcc4b59d538' +
         'df9a04302e10c8bc1cbf1a0b3a5120ea'
     );
-    const superLongHash = crypto
-      .createHash('shake256', {
-        outputLength: 1024 * 1024,
-      })
+    const superLongHash = QuickCrypto.createHash('shake256', {
+      outputLength: 1024 * 1024,
+    })
       .update('The message is shorter than the hash!')
       .digest('hex');
     assert.strictEqual(superLongHash.length, 2 * 1024 * 1024);
@@ -276,44 +278,44 @@ describe('hash', () => {
 
   it('Non-XOF hash functions should accept valid outputLength options as well.', () => {
     assert.strictEqual(
-      crypto.createHash('sha224', { outputLength: 28 }).digest('hex'),
+      QuickCrypto.createHash('sha224', { outputLength: 28 }).digest('hex'),
       'd14a028c2a3a2bc9476102bb288234c4' + '15a2b01f828ea62ac5b3e42f'
     );
   });
 
   it('Passing invalid sizes should throw during creation.', () => {
     assert.throws(() => {
-      crypto.createHash('sha256', { outputLength: 28 });
+      QuickCrypto.createHash('sha256', { outputLength: 28 });
     }, /ERR_OSSL_EVP_NOT_XOF_OR_INVALID_LENGTH/);
 
     for (const outputLength of [null, {}, 'foo', false]) {
       assert.throws(
         // @ts-expect-error
-        () => crypto.createHash('sha256', { outputLength }),
+        () => QuickCrypto.createHash('sha256', { outputLength }),
         /ERR_INVALID_ARG_TYPE/
       );
     }
 
     for (const outputLength of [-1, 0.5, Infinity, 2 ** 90]) {
       assert.throws(
-        () => crypto.createHash('sha256', { outputLength }),
+        () => QuickCrypto.createHash('sha256', { outputLength }),
         /ERR_OUT_OF_RANGE/
       );
     }
   });
 
   it('no name 1', () => {
-    const h = crypto.createHash('sha512');
+    const h = QuickCrypto.createHash('sha512');
     h.digest();
     assert.throws(() => h.copy(), /ERR_CRYPTO_HASH_FINALIZED/);
     assert.throws(() => h.digest(), /ERR_CRYPTO_HASH_FINALIZED/);
   });
 
   it('no name 2', () => {
-    const a = crypto.createHash('sha512').update('abc');
+    const a = QuickCrypto.createHash('sha512').update('abc');
     const b = a.copy();
     const c = b.copy().update('def');
-    const d = crypto.createHash('sha512').update('abcdef');
+    const d = QuickCrypto.createHash('sha512').update('abcdef');
     assert.strictEqual(a.digest('hex'), b.digest('hex'));
     assert.strictEqual(c.digest('hex'), d.digest('hex'));
   });

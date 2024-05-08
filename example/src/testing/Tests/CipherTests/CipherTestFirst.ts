@@ -1,7 +1,7 @@
 // copied from https://github.com/nodejs/node/blob/master/test/parallel/test-crypto-hash.js
 import { Buffer } from '@craftzdog/react-native-buffer';
 import { assert } from 'chai';
-import crypto from 'react-native-quick-crypto';
+import { QuickCrypto } from 'react-native-quick-crypto';
 import { describe, it } from '../../MochaRNAdapter';
 
 describe('createCipher/createDecipher', () => {
@@ -11,7 +11,7 @@ describe('createCipher/createDecipher', () => {
       // Test encryption and decryption
       const plaintext =
         'Keep this a secret? No! Tell everyone about quick-crypto!';
-      const cipher = crypto.createCipher('aes192', key);
+      const cipher = QuickCrypto.createCipher('aes192', key);
 
       // Encrypt plaintext which is in utf8 format
       // to a ciphertext which will be in hex
@@ -19,7 +19,7 @@ describe('createCipher/createDecipher', () => {
       // Only use binary or hex, not base64.
       ciph += cipher.final('hex');
 
-      const decipher = crypto.createDecipher('aes192', key);
+      const decipher = QuickCrypto.createDecipher('aes192', key);
       let txt = decipher.update(ciph, 'hex', 'utf-8');
       txt += decipher.final('utf-8');
 
@@ -29,11 +29,11 @@ describe('createCipher/createDecipher', () => {
       // NB: In real life, it's not guaranteed that you can get all of it
       // in a single read() like this.  But in this case, we know it's
       // quite small, so there's no harm.
-      const cStream = crypto.createCipher('aes192', key);
+      const cStream = QuickCrypto.createCipher('aes192', key);
       cStream.end(plaintext);
       ciph = cStream.read();
 
-      const dStream = crypto.createDecipher('aes192', key);
+      const dStream = QuickCrypto.createDecipher('aes192', key);
       dStream.end(ciph);
       txt = dStream.read().toString('utf8');
       assert.strictEqual(txt, plaintext);
@@ -48,14 +48,14 @@ describe('createCipher/createDecipher', () => {
         '32|RmVZZkFUVmpRRkp0TmJaUm56ZU9qcnJkaXNNWVNpTTU*|iXmckfRWZBGWWELw' +
         'eCBsThSsfUHLeRe0KCsK8ooHgxie0zOINpXxfZi/oNG7uq9JWFVCk70gfzQH8ZUJ' +
         'jAfaFg**';
-      const cipher = crypto.createCipher('aes256', key);
+      const cipher = QuickCrypto.createCipher('aes256', key);
 
       // Encrypt plaintext which is in utf8 format to a ciphertext which will be in
       // Base64.
       let ciph = cipher.update(plaintext, 'utf8', 'base64');
       ciph += cipher.final('base64');
 
-      const decipher = crypto.createDecipher('aes256', key);
+      const decipher = QuickCrypto.createDecipher('aes256', key);
       let txt = decipher.update(ciph, 'base64', 'utf8');
       txt += decipher.final('utf8');
 
@@ -71,7 +71,7 @@ describe('createCipher/createDecipher', () => {
 
   it('#createCipher with invalid algorithm should throw', () => {
     try {
-      crypto.createCipher('blah', 'secret');
+      QuickCrypto.createCipher('blah', 'secret');
       assert.fail('createCipher with invalid algo did not throw');
     } catch {
       // Intentionally left blank
@@ -79,13 +79,13 @@ describe('createCipher/createDecipher', () => {
   });
 
   it('Base64 padding regression test', () => {
-    const c = crypto.createCipher('aes-256-cbc', 'secret');
+    const c = QuickCrypto.createCipher('aes-256-cbc', 'secret');
     const s = c.update('test', 'utf8', 'base64') + c.final('base64');
     assert.strictEqual(s, '375oxUQCIocvxmC5At+rvA==');
   });
 
   it('Calling Cipher.final() or Decipher.final() twice should error', () => {
-    const c = crypto.createCipher('aes-256-cbc', 'secret');
+    const c = QuickCrypto.createCipher('aes-256-cbc', 'secret');
     try {
       // @ts-expect-error
       c.final('xxx');
@@ -104,7 +104,7 @@ describe('createCipher/createDecipher', () => {
     } catch {
       /* Ignore. */
     }
-    const d = crypto.createDecipher('aes-256-cbc', 'secret');
+    const d = QuickCrypto.createDecipher('aes-256-cbc', 'secret');
     try {
       // @ts-expect-error
       d.final('xxx');
@@ -126,22 +126,22 @@ describe('createCipher/createDecipher', () => {
   });
 
   it('string to Cipher#update() should not assert.', () => {
-    const c = crypto.createCipher('aes192', '0123456789abcdef');
+    const c = QuickCrypto.createCipher('aes192', '0123456789abcdef');
     c.update('update');
     c.final();
   });
 
   it("'utf-8' and 'utf8' are identical.", () => {
-    let c = crypto.createCipher('aes192', '0123456789abcdef');
+    let c = QuickCrypto.createCipher('aes192', '0123456789abcdef');
     // @ts-expect-error
     c.update('update', ''); // Defaults to "utf8".
     c.final('utf-8'); // Should not throw.
 
-    c = crypto.createCipher('aes192', '0123456789abcdef');
+    c = QuickCrypto.createCipher('aes192', '0123456789abcdef');
     c.update('update', 'utf8');
     c.final('utf-8'); // Should not throw.
 
-    c = crypto.createCipher('aes192', '0123456789abcdef');
+    c = QuickCrypto.createCipher('aes192', '0123456789abcdef');
     c.update('update', 'utf-8');
     c.final('utf8'); // Should not throw.
   });
@@ -149,23 +149,23 @@ describe('createCipher/createDecipher', () => {
   it('Regression tests for https://github.com/nodejs/node/issues/8236', () => {
     const key = '0123456789abcdef';
     const plaintext = 'Top secret!!!';
-    const c = crypto.createCipher('aes192', key);
+    const c = QuickCrypto.createCipher('aes192', key);
     let ciph = c.update(plaintext, 'utf16le', 'base64');
     ciph += c.final('base64');
 
-    let decipher = crypto.createDecipher('aes192', key);
+    let decipher = QuickCrypto.createDecipher('aes192', key);
 
     let txt;
     txt = decipher.update(ciph, 'base64', 'ucs2');
     txt += decipher.final('ucs2');
     assert.strictEqual(txt, plaintext);
 
-    decipher = crypto.createDecipher('aes192', key);
+    decipher = QuickCrypto.createDecipher('aes192', key);
     txt = decipher.update(ciph, 'base64', 'ucs-2');
     txt += decipher.final('ucs-2');
     assert.strictEqual(txt, plaintext);
 
-    decipher = crypto.createDecipher('aes192', key);
+    decipher = QuickCrypto.createDecipher('aes192', key);
     // @ts-expect-error
     txt = decipher.update(ciph, 'base64', 'utf-16le');
     // @ts-expect-error
@@ -177,7 +177,7 @@ describe('createCipher/createDecipher', () => {
     const key = '0123456789';
     const tagbuf = Buffer.from('auth_tag');
     const aadbuf = Buffer.from('aadbuf');
-    const decipher = crypto.createDecipher('aes-256-gcm', key);
+    const decipher = QuickCrypto.createDecipher('aes-256-gcm', key);
 
     assert.strictEqual(decipher.setAutoPadding(), decipher);
     assert.strictEqual(decipher.setAuthTag(tagbuf), decipher);

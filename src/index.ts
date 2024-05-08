@@ -22,7 +22,7 @@ import { getCiphers, getHashes } from './Utils';
 /**
  * Loosesly matches Node.js {crypto} with some unimplemented functionality
  */
-export const crypto = {
+export const QuickCrypto = {
   createHmac,
   Hmac: createHmac,
   Hash: createHash,
@@ -54,5 +54,5 @@ export const install = () => {
   global.Buffer = Buffer;
 
   // @ts-expect-error subtle isn't full implemented and Cryptokey is missing
-  global.crypto = crypto;
+  global.crypto = QuickCrypto;
 };

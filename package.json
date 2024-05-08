@@ -4,7 +4,7 @@
   "description": "A fast implementation of Node's `crypto` module written in C/C++ JSI",
   "main": "lib/commonjs/index",
   "module": "lib/module/index",
-  "types": "lib/typescript/src/index.d.ts",
+  "types": "lib/typescript/index.d.ts",
   "react-native": "lib/module/index",
   "source": "src/index",
   "files": [
@@ -25,7 +25,8 @@
     "!**/__mocks__"
   ],
   "scripts": {
-    "typescript": "tsc --noEmit",
+    "tsc": "tsc --noEmit; tsc --noEmit --project example/tsconfig.json",
+    "typescript": "tsc --noEmit; tsc --noEmit --project example/tsconfig.json",
     "lint": "eslint \"**/*.{js,ts,tsx}\"",
     "prepare": "bob build",
     "release": "release-it",
