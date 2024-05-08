@@ -1,5 +1,6 @@
-import { Buffer } from 'buffer';
-global.Buffer = Buffer;
+import { install } from 'react-native-quick-crypto';
+
+install();
 global.process.cwd = () => 'sxsx';
 global.process.env = { NODE_ENV: 'production' };
 global.location = {};
