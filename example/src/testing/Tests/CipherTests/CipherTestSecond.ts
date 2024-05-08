@@ -1,5 +1,5 @@
 // copied from https://github.com/nodejs/node/blob/master/test/parallel/test-crypto-hash.js
-import { QuickCrypto } from 'react-native-quick-crypto';
+import QuickCrypto from 'react-native-quick-crypto';
 import { describe, it } from '../../MochaRNAdapter';
 import { assert } from 'chai';
 import { Buffer } from '@craftzdog/react-native-buffer';

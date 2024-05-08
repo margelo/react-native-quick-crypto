@@ -128,7 +128,7 @@ Then restart your bundler using `yarn start --reset-cache`.
 For example, to hash a string with SHA256 you can do the following:
 
 ```ts
-import { QuickCrypto } from 'react-native-quick-crypto';
+import QuickCrypto from 'react-native-quick-crypto';
 
 const hashed = QuickCrypto.createHash('sha256')
   .update('Damn, Margelo writes hella good software!')

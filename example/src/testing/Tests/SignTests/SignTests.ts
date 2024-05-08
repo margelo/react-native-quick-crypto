@@ -1,7 +1,7 @@
 import { expect } from 'chai';
 import { Buffer } from '@craftzdog/react-native-buffer';
 import { describe, it } from '../../MochaRNAdapter';
-import { QuickCrypto } from 'react-native-quick-crypto';
+import QuickCrypto from 'react-native-quick-crypto';
 // import { PrivateKey } from 'sscrypto/node';
 
 // Tests that a key pair can be used for encryption / decryption.

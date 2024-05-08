@@ -1,7 +1,7 @@
 import { assert, expect } from 'chai';
 import type { Buffer } from '@craftzdog/react-native-buffer';
 import { describe, it } from '../../MochaRNAdapter';
-import { QuickCrypto } from 'react-native-quick-crypto';
+import QuickCrypto from 'react-native-quick-crypto';
 
 // Constructs a regular expression for a PEM-encoded key with the given label.
 function getRegExpForPEM(label: string, cipher?: string | null) {

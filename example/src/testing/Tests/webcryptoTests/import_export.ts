@@ -5,7 +5,7 @@ import {
   toByteArray,
   trimBase64Padding,
 } from 'react-native-quick-base64';
-import { QuickCrypto } from 'react-native-quick-crypto';
+import QuickCrypto from 'react-native-quick-crypto';
 import { describe, it } from '../../MochaRNAdapter';
 import { ab2str, binaryLikeToArrayBuffer } from '../../../../../src/Utils';
 import { assertThrowsAsync } from '../util';
