@@ -19,6 +19,8 @@ interface HashOptionsBase extends Stream.TransformOptions {
 
 type HashOptions = null | undefined | HashOptionsBase;
 
+global.process.nextTick = setImmediate;
+
 const createInternalHash = NativeQuickCrypto.createHash;
 
 export function createHash(algorithm: string, options?: HashOptions) {
