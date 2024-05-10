@@ -3,8 +3,7 @@
   "compilerOptions": {
     "paths": {
       "react-native-quick-crypto": ["../src/index"]
-    },
-    "noEmit": true
+    }
   },
   "include": ["src", "index.js"],
   "exclude": ["node_modules"]
