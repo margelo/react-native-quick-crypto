@@ -101,7 +101,8 @@ class ManagedEVPPKey {
       KeyEncodingContext context);
   //
   static ManagedEVPPKey GetParsedKey(jsi::Runtime &runtime,
-                                     EVPKeyPointer &&pkey, ParseKeyResult ret,
+                                     EVPKeyPointer &&pkey,
+                                     ParseKeyResult ret,
                                      const char *default_msg);
 
   static ManagedEVPPKey GetPublicOrPrivateKeyFromJs(jsi::Runtime &runtime,
@@ -113,17 +114,17 @@ class ManagedEVPPKey {
                                             unsigned int *offset,
                                             bool allow_key_object);
 
-  static OptionJSVariant ToEncodedPublicKey(
-      jsi::Runtime &runtime, ManagedEVPPKey key,
-      const PublicKeyEncodingConfig &config);
+  static OptionJSVariant ToEncodedPublicKey(jsi::Runtime &runtime,
+                                            ManagedEVPPKey key,
+                                            const PublicKeyEncodingConfig &config);
 
-  static OptionJSVariant ToEncodedPrivateKey(
-      jsi::Runtime &runtime, ManagedEVPPKey key,
-      const PrivateKeyEncodingConfig &config);
+  static OptionJSVariant ToEncodedPrivateKey(jsi::Runtime &runtime,
+                                             ManagedEVPPKey key,
+                                             const PrivateKeyEncodingConfig &config);
 
  private:
-  //  size_t size_of_private_key() const;
-  //  size_t size_of_public_key() const;
+   size_t size_of_private_key() const;
+   size_t size_of_public_key() const;
 
   EVPKeyPointer pkey_;
 };
@@ -166,6 +167,9 @@ class JSI_EXPORT KeyObjectHandle: public jsi::HostObject {
     KeyObjectHandle() {}
     jsi::Value get(jsi::Runtime &rt, const jsi::PropNameID &propNameID);
     const std::shared_ptr<KeyObjectData>& Data();
+
+    // static KeyObjectHandle Create(jsi::Runtime &rt,
+    //                               std::shared_ptr<KeyObjectData> data);
 
  protected:
     jsi::Value Export(jsi::Runtime &rt);

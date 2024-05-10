@@ -15,10 +15,6 @@
 namespace margelo {
 namespace jsi = facebook::jsi;
 
-int GetCurveFromName(std::string name) {
-  return GetCurveFromName(name.c_str());
-}
-
 int GetCurveFromName(const char* name) {
   int nid = EC_curve_nist2nid(name);
   if (nid == NID_undef)
@@ -343,7 +339,7 @@ EcKeyPairGenConfig prepareEcKeyGenConfig(jsi::Runtime &rt,
 
   // curve name
   std::string curveName = args[1].asString(rt).utf8(rt);
-  config.curve_nid = GetCurveFromName(curveName);
+  config.curve_nid = GetCurveFromName(curveName.c_str());
 
   // encoding
   if (CheckIsInt32(args[2].asNumber())) {
@@ -413,7 +409,7 @@ std::pair<JSVariant, JSVariant> generateEcKeyPair(jsi::Runtime& runtime,
                                                   std::shared_ptr<EcKeyPairGenConfig> config)
 {
   // TODO: this is all copied from MGLRsa.cpp - template it up like Node
-  
+
   EVPKeyCtxPointer ctx = setup(config);
 
   if (!ctx) {
