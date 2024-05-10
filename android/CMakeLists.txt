@@ -46,10 +46,6 @@ add_library(
   "../cpp/webcrypto/crypto_ec.cpp"
 )
 
-include_directories(
-  "${NODE_MODULES_DIR}/react-native-quick-base64/cpp"
-)
-
 target_include_directories(
   ${PACKAGE_NAME}
   PRIVATE

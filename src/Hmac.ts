@@ -1,4 +1,3 @@
-/* eslint-disable no-dupe-class-members */
 import { NativeQuickCrypto } from './NativeQuickCrypto/NativeQuickCrypto';
 import type { InternalHmac } from './NativeQuickCrypto/hmac';
 import {
