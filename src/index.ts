@@ -57,4 +57,5 @@ export const install = () => {
   global.crypto = QuickCrypto;
 };
 
+module.exports = QuickCrypto;
 export default QuickCrypto;
