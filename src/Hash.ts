@@ -1,5 +1,3 @@
-/* eslint-disable no-dupe-class-members */
-import 'react-native';
 import { NativeQuickCrypto } from './NativeQuickCrypto/NativeQuickCrypto';
 import type { InternalHash } from './NativeQuickCrypto/hash';
 import {
@@ -20,8 +18,6 @@ interface HashOptionsBase extends Stream.TransformOptions {
 }
 
 type HashOptions = null | undefined | HashOptionsBase;
-
-global.process.nextTick = setImmediate;
 
 const createInternalHash = NativeQuickCrypto.createHash;
 

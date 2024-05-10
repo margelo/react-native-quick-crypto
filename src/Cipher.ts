@@ -1,4 +1,3 @@
-/* eslint-disable no-dupe-class-members */
 import { NativeQuickCrypto } from './NativeQuickCrypto/NativeQuickCrypto';
 import Stream from 'readable-stream';
 import {
@@ -40,9 +39,6 @@ import {
   preparePrivateKey,
   preparePublicOrPrivateKey,
 } from './keys';
-
-// make sure that nextTick is there
-global.process.nextTick = setImmediate;
 
 const createInternalCipher = NativeQuickCrypto.createCipher;
 const createInternalDecipher = NativeQuickCrypto.createDecipher;
