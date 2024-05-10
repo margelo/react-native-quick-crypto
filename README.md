@@ -47,7 +47,6 @@ Creating a Wallet took 289 ms
 
 ```sh
 yarn add react-native-quick-crypto
-yarn add react-native-quick-base64
 cd ios && pod install
 ```
 
@@ -57,8 +56,15 @@ cd ios && pod install
 
 ```sh
 expo install react-native-quick-crypto
-expo install react-native-quick-base64
 expo prebuild
+```
+
+Optional: override `global.Buffer` and `global.crypto` in your application as early as possible for example in index.js.
+
+```ts
+import { install } from 'react-native-quick-crypto';
+
+install();
 ```
 
 ## Replace `crypto-browserify`
@@ -120,9 +126,9 @@ Then restart your bundler using `yarn start --reset-cache`.
 For example, to hash a string with SHA256 you can do the following:
 
 ```ts
-import Crypto from 'react-native-quick-crypto';
+import QuickCrypto from 'react-native-quick-crypto';
 
-const hashed = Crypto.createHash('sha256')
+const hashed = QuickCrypto.createHash('sha256')
   .update('Damn, Margelo writes hella good software!')
   .digest('hex');
 ```
@@ -146,6 +152,7 @@ It means you have a transitive dependency where two libraries depend on OpenSSL 
 </h4>
 
 `android/app/build.gradle` file
+
 ```groovy
 packagingOptions {
   // Should prevent clashes with other libraries that use OpenSSL
@@ -158,6 +165,7 @@ packagingOptions {
 </h4>
 
 `app.json` file
+
 ```diff
 ...
   plugins: [
@@ -174,7 +182,6 @@ packagingOptions {
 +   ],
   ],
 ```
-
 
 > This caused by flipper which also depends on OpenSSL
 

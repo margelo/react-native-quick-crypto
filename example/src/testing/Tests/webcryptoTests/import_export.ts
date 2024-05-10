@@ -10,6 +10,7 @@ import { describe, it } from '../../MochaRNAdapter';
 import { ab2str, binaryLikeToArrayBuffer } from '../../../../../src/Utils';
 import { assertThrowsAsync } from '../util';
 import type { JWK, KeyUsage, NamedCurve } from '../../../../../src/keys';
+import type { RandomTypedArrays } from '../../../../../src/random';
 
 const { subtle } = crypto;
 
@@ -204,19 +205,15 @@ describe('subtle - importKey / exportKey', () => {
       const rawKeyData = crypto.getRandomValues(new Uint8Array(32));
       const keyData = binaryLikeToArrayBuffer(rawKeyData);
 
-      const key = await subtle.importKey(
-        'raw',
-        keyData,
-        'AES-GCM',
-        false,
-        // eslint-disable-next-line prettier/prettier
-        ['encrypt', 'decrypt'],
-      );
+      const key = await subtle.importKey('raw', keyData, 'AES-GCM', false, [
+        'encrypt',
+        'decrypt',
+      ]);
       expect(key.keyAlgorithm.name).to.equal('AES-GCM');
       expect(key.keyAlgorithm.length).to.equal(256);
     });
 
-    const test = (rawKeyData: Uint8Array, descr: string): void => {
+    const test = (rawKeyData: RandomTypedArrays, descr: string): void => {
       it(`AES import raw / export jwk (${descr})`, async () => {
         const keyData = binaryLikeToArrayBuffer(rawKeyData);
         const keyB64 = arrayBufferToBase64(keyData, true);

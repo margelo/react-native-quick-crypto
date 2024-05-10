@@ -13,31 +13,28 @@ Pod::Spec.new do |s|
   s.platforms    = { :ios => "12.4", :tvos => "12.0", :osx => "10.14" }
   s.source       = { :git => "https://github.com/mrousavy/react-native-quick-crypto.git", :tag => "#{s.version}" }
 
-  # All source files that should be publicly visible
-  # Note how this does not include headers, since those can nameclash.
   s.source_files = [
     "ios/**/*.{h,m,mm}",
     "cpp/**/*.{h,c,cpp}",
-    "ios/QuickCryptoModule.h",
-    "node_modules/react-native-quick-base64/cpp/base64.h"
   ]
-  # Any private headers that are not globally unique should be mentioned here.
-  # Otherwise there will be a nameclash, since CocoaPods flattens out any header directories
-  # See https://github.com/firebase/firebase-ios-sdk/issues/4035 for more details.
-  # s.preserve_paths = [
-  #   'ios/**/*.h',
-  #   'cpp/**/*.h'
-  # ]
-
-  s.pod_target_xcconfig    = {
-    "USE_HEADERMAP" => "YES",
-    "CLANG_CXX_LANGUAGE_STANDARD" => "c++20",
-    "HEADER_SEARCH_PATHS" => "\"$(PODS_TARGET_SRCROOT)/ReactCommon\" \"$(PODS_TARGET_SRCROOT)\"  \"$(PODS_ROOT)/boost\" \"$(PODS_ROOT)/boost-for-react-native\" \"$(PODS_ROOT)/DoubleConversion\" \"$(PODS_ROOT)/Headers/Private/React-Core\" "
-  }
 
   s.dependency "OpenSSL-Universal"
-  s.dependency "React-Core"
-  s.dependency "React"
-  s.dependency "React-callinvoker"
-  s.dependency "ReactCommon"
+
+  # Use install_modules_dependencies helper to install the dependencies if React Native version >=0.71.0.
+  # See https://github.com/facebook/react-native/blob/febf6b7f33fdb4904669f99d795eba4c0f95d7bf/scripts/cocoapods/new_architecture.rb#L79
+  if defined?(install_modules_dependencies()) != nil
+    install_modules_dependencies(s)
+    s.dependency "React" # remove after migrating breaking changes to remove explicit dep on React
+  else
+    # Old React Native versions
+    s.pod_target_xcconfig    = {
+      "USE_HEADERMAP" => "YES",
+      "CLANG_CXX_LANGUAGE_STANDARD" => "c++20",
+      "HEADER_SEARCH_PATHS" => "\"$(PODS_TARGET_SRCROOT)/ReactCommon\" \"$(PODS_TARGET_SRCROOT)\"  \"$(PODS_ROOT)/boost\" \"$(PODS_ROOT)/boost-for-react-native\" \"$(PODS_ROOT)/DoubleConversion\" \"$(PODS_ROOT)/Headers/Private/React-Core\" "
+    }
+    s.dependency "React"
+    s.dependency "React-Core"
+    s.dependency "React-callinvoker"
+    s.dependency "ReactCommon"
+  end
 end

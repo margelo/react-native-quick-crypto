@@ -1,5 +1,3 @@
-/* eslint-disable no-dupe-class-members */
-import 'react-native';
 import { NativeQuickCrypto } from './NativeQuickCrypto/NativeQuickCrypto';
 import type { InternalHash } from './NativeQuickCrypto/hash';
 import {

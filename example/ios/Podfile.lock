@@ -322,10 +322,9 @@ PODS:
     - React-Core
   - react-native-quick-crypto (0.7.0-rc.4):
     - OpenSSL-Universal
+    - RCT-Folly (= 2021.07.22.00)
     - React
-    - React-callinvoker
     - React-Core
-    - ReactCommon
   - react-native-safe-area-context (4.7.4):
     - React-Core
   - React-NativeModulesApple (0.72.7):
@@ -418,21 +417,6 @@ PODS:
     - glog
     - RCT-Folly (= 2021.07.22.00)
     - React-debug
-  - ReactCommon (0.72.7):
-    - React-logger (= 0.72.7)
-    - ReactCommon/turbomodule (= 0.72.7)
-  - ReactCommon/turbomodule (0.72.7):
-    - DoubleConversion
-    - glog
-    - hermes-engine
-    - RCT-Folly (= 2021.07.22.00)
-    - React-callinvoker (= 0.72.7)
-    - React-cxxreact (= 0.72.7)
-    - React-jsi (= 0.72.7)
-    - React-logger (= 0.72.7)
-    - React-perflogger (= 0.72.7)
-    - ReactCommon/turbomodule/bridging (= 0.72.7)
-    - ReactCommon/turbomodule/core (= 0.72.7)
   - ReactCommon/turbomodule/bridging (0.72.7):
     - DoubleConversion
     - glog
@@ -636,7 +620,7 @@ SPEC CHECKSUMS:
   React-jsinspector: 8baadae51f01d867c3921213a25ab78ab4fbcd91
   React-logger: 8edc785c47c8686c7962199a307015e2ce9a0e4f
   react-native-quick-base64: 61228d753294ae643294a75fece8e0e80b7558a6
-  react-native-quick-crypto: 416e74d9a364587b3b79972e0f0d7f2c653c7fb3
+  react-native-quick-crypto: 80bd167c74302d8495ab4c7ea2c9f55ee93522f2
   react-native-safe-area-context: 2cd91d532de12acdb0a9cbc8d43ac72a8e4c897c
   React-NativeModulesApple: b6868ee904013a7923128892ee4a032498a1024a
   React-perflogger: 31ea61077185eb1428baf60c0db6e2886f141a5a
@@ -660,6 +644,6 @@ SPEC CHECKSUMS:
   SocketRocket: f32cd54efbe0f095c4d7594881e52619cfe80b17
   Yoga: 4c3aa327e4a6a23eeacd71f61c81df1bcdf677d5
 
-PODFILE CHECKSUM: 4b8ef648d24cdbd7239cbba1d6ce7b01de528f30
+PODFILE CHECKSUM: ea612356143ee29fbd229949d6dc93d401df50ca
 
 COCOAPODS: 1.15.2
