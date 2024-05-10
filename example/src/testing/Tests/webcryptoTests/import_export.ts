@@ -205,14 +205,10 @@ describe('subtle - importKey / exportKey', () => {
       const rawKeyData = crypto.getRandomValues(new Uint8Array(32));
       const keyData = binaryLikeToArrayBuffer(rawKeyData);
 
-      const key = await subtle.importKey(
-        'raw',
-        keyData,
-        'AES-GCM',
-        false,
-        // eslint-disable-next-line prettier/prettier
-        ['encrypt', 'decrypt']
-      );
+      const key = await subtle.importKey('raw', keyData, 'AES-GCM', false, [
+        'encrypt',
+        'decrypt',
+      ]);
       expect(key.keyAlgorithm.name).to.equal('AES-GCM');
       expect(key.keyAlgorithm.length).to.equal(256);
     });
