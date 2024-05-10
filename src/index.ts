@@ -53,7 +53,7 @@ export const install = () => {
   // @ts-expect-error copyBytesFrom and poolSizets are missing from react-native-buffer
   global.Buffer = Buffer;
 
-  // @ts-expect-error subtle isn't full implemented and Cryptokey is missing
+  // @ts-expect-error subtle isn't fully implemented and Cryptokey is missing
   global.crypto = QuickCrypto;
 };
 
