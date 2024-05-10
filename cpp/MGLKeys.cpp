@@ -258,7 +258,7 @@ OptionJSVariant BIOToStringOrBuffer(jsi::Runtime& rt, BIO* bio, PKFormatType for
     // PEM is an ASCII format, so we will return it as a string.
     return JSVariant(std::string(bptr->data, bptr->length));
   } else {
-    // CHECK_EQ(format, kKeyFormatDER);
+    CHECK_EQ(format, kKeyFormatDER);
     // DER is binary, return it as a buffer.
     return JSVariant(ByteSource::Allocated(bptr->data, bptr->length));
   }
@@ -268,7 +268,7 @@ OptionJSVariant WritePrivateKey(
     jsi::Runtime& runtime, EVP_PKEY* pkey,
     const PrivateKeyEncodingConfig& config) {
   BIOPointer bio(BIO_new(BIO_s_mem()));
-  //  CHECK(bio);
+  CHECK(bio);
 
   // If an empty string was passed as the passphrase, the ByteSource might
   // contain a null pointer, which OpenSSL will ignore, causing it to invoke its
@@ -293,8 +293,15 @@ OptionJSVariant WritePrivateKey(
   }
 
   bool err = false;
+  PKEncodingType encoding_type;
 
-  PKEncodingType encoding_type = config.type_.value();
+  if (config.type_.has_value()) {
+    encoding_type = config.type_.value();
+  } else {
+    // default for no value in std::option `config.type_`
+    encoding_type = kKeyEncodingSEC1;
+  }
+
   if (encoding_type == kKeyEncodingPKCS1) {
     // PKCS#1 is only permitted for RSA keys.
     //    CHECK_EQ(EVP_PKEY_id(pkey), EVP_PKEY_RSA);
@@ -307,8 +314,8 @@ OptionJSVariant WritePrivateKey(
                                         pass_len, nullptr, nullptr) != 1;
     } else {
       // Encode PKCS#1 as DER. This does not permit encryption.
-      //      CHECK_EQ(config.format_, kKeyFormatDER);
-      //      CHECK_NULL(config.cipher_);
+      CHECK_EQ(config.format_, kKeyFormatDER);
+      CHECK_NULL(config.cipher_);
       err = i2d_RSAPrivateKey_bio(bio.get(), rsa.get()) != 1;
     }
   } else if (encoding_type == kKeyEncodingPKCS8) {
@@ -318,31 +325,28 @@ OptionJSVariant WritePrivateKey(
                                           pass_len, nullptr, nullptr) != 1;
     } else {
       // Encode PKCS#8 as DER.
-      //      CHECK_EQ(config.format_, kKeyFormatDER);
+      CHECK_EQ(config.format_, kKeyFormatDER);
       err = i2d_PKCS8PrivateKey_bio(bio.get(), pkey, config.cipher_, pass,
                                     pass_len, nullptr, nullptr) != 1;
     }
   } else {
-    //    CHECK_EQ(encoding_type, kKeyEncodingSEC1);
+    CHECK_EQ(encoding_type, kKeyEncodingSEC1);
 
     // SEC1 is only permitted for EC keys.
-    //    CHECK_EQ(EVP_PKEY_id(pkey), EVP_PKEY_EC);
+    CHECK_EQ(EVP_PKEY_id(pkey), EVP_PKEY_EC);
 
-    //    ECKeyPointer ec_key(EVP_PKEY_get1_EC_KEY(pkey));
-    //    if (config.format_ == kKeyFormatPEM) {
-    //      // Encode SEC1 as PEM.
-    //      err = PEM_write_bio_ECPrivateKey(
-    //                                       bio.get(), ec_key.get(),
-    //                                       config.cipher_,
-    //                                       reinterpret_cast<unsigned
-    //                                       char*>(pass), pass_len, nullptr,
-    //                                       nullptr) != 1;
-    //    } else {
-    //      // Encode SEC1 as DER. This does not permit encryption.
-    //      CHECK_EQ(config.format_, kKeyFormatDER);
-    //      CHECK_NULL(config.cipher_);
-    //      err = i2d_ECPrivateKey_bio(bio.get(), ec_key.get()) != 1;
-    //    }
+    ECKeyPointer ec_key(EVP_PKEY_get1_EC_KEY(pkey));
+    if (config.format_ == kKeyFormatPEM) {
+      // Encode SEC1 as PEM.
+      err = PEM_write_bio_ECPrivateKey(bio.get(),ec_key.get(), config.cipher_,
+                                       reinterpret_cast<unsigned char*>(pass),
+                                       pass_len, nullptr, nullptr) != 1;
+    } else {
+      // Encode SEC1 as DER. This does not permit encryption.
+      CHECK_EQ(config.format_, kKeyFormatDER);
+      // CHECK_NULL(config.cipher_);
+      err = i2d_ECPrivateKey_bio(bio.get(), ec_key.get()) != 1;
+    }
   }
 
   if (err) {
@@ -354,26 +358,26 @@ OptionJSVariant WritePrivateKey(
 
 bool WritePublicKeyInner(EVP_PKEY* pkey, const BIOPointer& bio,
                          const PublicKeyEncodingConfig& config) {
-  if (config.type_.value() == kKeyEncodingPKCS1) {
+  if (config.type_.has_value() && config.type_.value() == kKeyEncodingPKCS1) {
     // PKCS#1 is only valid for RSA keys.
-    //    CHECK_EQ(EVP_PKEY_id(pkey), EVP_PKEY_RSA);
+    CHECK_EQ(EVP_PKEY_id(pkey), EVP_PKEY_RSA);
     RsaPointer rsa(EVP_PKEY_get1_RSA(pkey));
     if (config.format_ == kKeyFormatPEM) {
       // Encode PKCS#1 as PEM.
       return PEM_write_bio_RSAPublicKey(bio.get(), rsa.get()) == 1;
     } else {
       // Encode PKCS#1 as DER.
-      //      CHECK_EQ(config.format_, kKeyFormatDER);
+      CHECK_EQ(config.format_, kKeyFormatDER);
       return i2d_RSAPublicKey_bio(bio.get(), rsa.get()) == 1;
     }
   } else {
-    //    CHECK_EQ(config.type_.ToChecked(), kKeyEncodingSPKI);
+    //  CHECK_EQ(config.type_.ToChecked(), kKeyEncodingSPKI);
     if (config.format_ == kKeyFormatPEM) {
       // Encode SPKI as PEM.
       return PEM_write_bio_PUBKEY(bio.get(), pkey) == 1;
     } else {
       // Encode SPKI as DER.
-      //      CHECK_EQ(config.format_, kKeyFormatDER);
+      CHECK_EQ(config.format_, kKeyFormatDER);
       return i2d_PUBKEY_bio(bio.get(), pkey) == 1;
     }
   }
@@ -383,7 +387,7 @@ OptionJSVariant WritePublicKey(
     jsi::Runtime& runtime, EVP_PKEY* pkey,
     const PublicKeyEncodingConfig& config) {
   BIOPointer bio(BIO_new(BIO_s_mem()));
-  //  CHECK(bio);
+  CHECK(bio);
 
   if (!WritePublicKeyInner(pkey, bio, config)) {
     throw jsi::JSError(runtime, "Failed to encode public key");
@@ -551,18 +555,20 @@ OptionJSVariant ManagedEVPPKey::ToEncodedPublicKey(jsi::Runtime& runtime,
                                                    ManagedEVPPKey key,
                                                    const PublicKeyEncodingConfig& config) {
   if (!key) return {};
-  if (config.output_key_object_) {
+  // if (config.output_key_object_) {
     // Note that this has the downside of containing sensitive data of the
     // private key.
-    std::shared_ptr<KeyObjectData> data =
-      KeyObjectData::CreateAsymmetric(kKeyTypePublic, std::move(key));
-    ByteSource out;
-    auto status = EC_Raw_Export(data.get(), ECKeyExportConfig{}, &out);
-    if (status != WebCryptoKeyExportStatus::OK) {
-      throw std::runtime_error("error exporting raw EC public key");
-    }
-    return JSVariant(std::move(out));
-  } else if (config.format_ == kKeyFormatJWK) {
+
+    // std::shared_ptr<KeyObjectData> data =
+    //   KeyObjectData::CreateAsymmetric(kKeyTypePublic, std::move(key));
+    // ByteSource out;
+    // auto status = EC_Raw_Export(data.get(), ECKeyExportConfig{}, &out);
+    // if (status != WebCryptoKeyExportStatus::OK) {
+    //   throw std::runtime_error("error exporting raw EC public key");
+    // }
+    // return JSVariant(std::move(out));
+  // } else
+  if (config.format_ == kKeyFormatJWK) {
     throw std::runtime_error("ToEncodedPublicKey 2 (JWK) not implemented from node");
     // std::shared_ptr<KeyObjectData> data =
     // KeyObjectData::CreateAsymmetric(kKeyTypePublic, std::move(key));
@@ -577,16 +583,17 @@ OptionJSVariant ManagedEVPPKey::ToEncodedPrivateKey(jsi::Runtime& runtime,
                                                     ManagedEVPPKey key,
                                                     const PrivateKeyEncodingConfig& config) {
   if (!key) return {};
-  if (config.output_key_object_) {
-    std::shared_ptr<KeyObjectData> data =
-      KeyObjectData::CreateAsymmetric(kKeyTypePrivate, std::move(key));
-    ByteSource out;
-    auto status = EC_Raw_Export(data.get(), ECKeyExportConfig{}, &out);
-    if (status != WebCryptoKeyExportStatus::OK) {
-      throw std::runtime_error("error exporting raw EC private key");
-    }
-    return JSVariant(std::move(out));
-  } else if (config.format_ == kKeyFormatJWK) {
+  // if (config.output_key_object_) {
+    // std::shared_ptr<KeyObjectData> data =
+    //   KeyObjectData::CreateAsymmetric(kKeyTypePrivate, std::move(key));
+    // ByteSource out;
+    // auto status = EC_Raw_Export(data.get(), ECKeyExportConfig{}, &out);
+    // if (status != WebCryptoKeyExportStatus::OK) {
+    //   throw std::runtime_error("error exporting raw EC private key");
+    // }
+    // return JSVariant(std::move(out));
+  // } else
+  if (config.format_ == kKeyFormatJWK) {
     throw std::runtime_error("ToEncodedPrivateKey 2 (JWK) not implemented from node");
     // std::shared_ptr<KeyObjectData> data =
     // KeyObjectData::CreateAsymmetric(kKeyTypePrivate, std::move(key));
