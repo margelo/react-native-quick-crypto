@@ -220,7 +220,7 @@ describe('pbkdf2', () => {
       it(' async w/ ' + description, function () {
         function noop() {}
         expect(
-          crypto.pbkdf2(
+          QuickCrypto.pbkdf2(
             f.key,
             f.salt,
             f.iterations,
@@ -234,7 +234,7 @@ describe('pbkdf2', () => {
 
       it(' sync w/' + description, function () {
         expect(
-          crypto.pbkdf2Sync(
+          QuickCrypto.pbkdf2Sync(
             f.key,
             f.salt,
             f.iterations,

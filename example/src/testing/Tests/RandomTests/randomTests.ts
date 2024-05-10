@@ -21,7 +21,7 @@
 // USE OR OTHER DEALINGS IN THE SOFTWARE.
 
 // Flags: --pending-deprecation
-import QuickCrypto from 'react-native-quick-crypto';
+import crypto from 'react-native-quick-crypto';
 import { describe, it } from '../../MochaRNAdapter';
 import { Buffer } from '@craftzdog/react-native-buffer';
 import { assert } from 'chai';
@@ -29,7 +29,7 @@ import type { Done } from 'mocha';
 
 describe('random', () => {
   // TODO (Szymon)
-  [QuickCrypto.randomBytes, QuickCrypto.pseudoRandomBytes].forEach((f) => {
+  [crypto.randomBytes, crypto.pseudoRandomBytes].forEach((f) => {
     /*  [undefined, null, false, true, {}, []].forEach((value) => {
       const errObj = {
         code: 'ERR_INVALID_ARG_TYPE',
@@ -75,14 +75,14 @@ describe('random', () => {
   it('simple test (do sth)', () => {
     const buf = Buffer.alloc(10);
     const before = buf.toString('hex');
-    const after = QuickCrypto.randomFillSync(buf).toString('hex');
+    const after = crypto.randomFillSync(buf).toString('hex');
     assert.notStrictEqual(before, after);
   });
 
   it('simple test (do sth) 2', () => {
     const buf = new Uint8Array(new Array(10).fill(0));
     const before = Buffer.from(buf).toString('hex');
-    QuickCrypto.randomFillSync(buf);
+    crypto.randomFillSync(buf);
     const after = Buffer.from(buf).toString('hex');
     assert.notStrictEqual(before, after);
   });
@@ -96,7 +96,7 @@ describe('random', () => {
       new DataView(new ArrayBuffer(10)),
     ].forEach((buf) => {
       const before = Buffer.from(buf.buffer).toString('hex');
-      QuickCrypto.randomFillSync(buf);
+      crypto.randomFillSync(buf);
       const after = Buffer.from(buf.buffer).toString('hex');
       assert.notStrictEqual(before, after);
     });
@@ -105,7 +105,7 @@ describe('random', () => {
   it('simple test (do sth) 4 - random Fill Sync AB', () => {
     [new ArrayBuffer(10), new ArrayBuffer(10)].forEach((buf) => {
       const before = Buffer.from(buf).toString('hex');
-      QuickCrypto.randomFillSync(buf);
+      crypto.randomFillSync(buf);
       const after = Buffer.from(buf).toString('hex');
       assert.notStrictEqual(before, after);
     });
@@ -115,7 +115,7 @@ describe('random', () => {
     const buf = Buffer.alloc(10);
     const before = buf.toString('hex');
 
-    QuickCrypto.randomFill(buf, (_, res) => {
+    crypto.randomFill(buf, (_, res) => {
       try {
         const after = res?.toString('hex');
         assert.notStrictEqual(before, after);
@@ -130,7 +130,7 @@ describe('random', () => {
     const buf = new Uint8Array(new Array(10).fill(0));
     const before = Buffer.from(buf).toString('hex');
 
-    QuickCrypto.randomFill(buf, (_, res) => {
+    crypto.randomFill(buf, (_, res) => {
       try {
         const after = Buffer.from(res).toString('hex');
         assert.notStrictEqual(before, after);
@@ -152,7 +152,7 @@ describe('random', () => {
     ].forEach((buf) => {
       const before = Buffer.from(buf.buffer).toString('hex');
 
-      QuickCrypto.randomFill(buf, (_err, buf2) => {
+      crypto.randomFill(buf, (_err, buf2) => {
         try {
           const after = Buffer.from(buf2!.buffer).toString('hex');
           assert.notStrictEqual(before, after);
@@ -171,7 +171,7 @@ describe('random', () => {
     let ctr = 0;
     [new ArrayBuffer(10), new ArrayBuffer(10)].forEach((buf) => {
       const before = Buffer.from(buf).toString('hex');
-      QuickCrypto.randomFill(buf, (_err, res) => {
+      crypto.randomFill(buf, (_err, res) => {
         try {
           const after = Buffer.from(res).toString('hex');
           assert.notStrictEqual(before, after);
@@ -189,7 +189,7 @@ describe('random', () => {
   it('randomFillSync - deepStringEqual - Buffer', () => {
     const buf = Buffer.alloc(10);
     const before = buf.toString('hex');
-    QuickCrypto.randomFillSync(buf, 5, 5);
+    crypto.randomFillSync(buf, 5, 5);
     const after = buf.toString('hex');
     assert.notStrictEqual(before, after);
     assert.deepStrictEqual(before.slice(0, 5), after.slice(0, 5));
@@ -198,7 +198,7 @@ describe('random', () => {
   it('randomFillSync - deepStringEqual - Uint8Array', () => {
     const buf = new Uint8Array(new Array(10).fill(0));
     const before = Buffer.from(buf).toString('hex');
-    QuickCrypto.randomFillSync(buf, 5, 5);
+    crypto.randomFillSync(buf, 5, 5);
     const after = Buffer.from(buf).toString('hex');
     assert.notStrictEqual(before, after);
     assert.deepStrictEqual(before.slice(0, 5), after.slice(0, 5));
@@ -207,7 +207,7 @@ describe('random', () => {
   it('randomFillSync - deepStringEqual - Buffer no size', () => {
     const buf = Buffer.alloc(10);
     const before = buf.toString('hex');
-    QuickCrypto.randomFillSync(buf, 5);
+    crypto.randomFillSync(buf, 5);
     const after = buf.toString('hex');
     assert.notStrictEqual(before, after);
     assert.deepStrictEqual(before.slice(0, 5), after.slice(0, 5));
@@ -217,7 +217,7 @@ describe('random', () => {
     const buf = Buffer.alloc(10);
     const before = buf.toString('hex');
 
-    QuickCrypto.randomFill(buf, 5, 5, (_err, res) => {
+    crypto.randomFill(buf, 5, 5, (_err, res) => {
       try {
         const after = res.toString('hex');
         assert.notStrictEqual(before, after);
@@ -232,7 +232,7 @@ describe('random', () => {
   it('randomFill - deepStringEqual - Uint8Array', (done: Done) => {
     const buf = new Uint8Array(new Array(10).fill(0));
     const before = Buffer.from(buf).toString('hex');
-    QuickCrypto.randomFill(buf, 5, 5, (_err, res) => {
+    crypto.randomFill(buf, 5, 5, (_err, res) => {
       try {
         const after = Buffer.from(res).toString('hex');
         assert.notStrictEqual(before, after);
@@ -367,7 +367,7 @@ describe('random', () => {
   // TODO I suppose this is checking the functions are there, but why the configurable and enumerable checks?
   ['pseudoRandomBytes', 'prng', 'rng'].forEach((name) => {
     it(name, () => {
-      const desc = Object.getOwnPropertyDescriptor(QuickCrypto, name);
+      const desc = Object.getOwnPropertyDescriptor(crypto, name);
       assert.ok(desc);
       assert.strictEqual(desc?.configurable, true);
       assert.strictEqual(desc?.enumerable, false);
@@ -378,7 +378,7 @@ describe('random', () => {
     const randomInts: number[] = [];
     let failed = false;
     for (let i = 0; i < 100; i++) {
-      QuickCrypto.randomInt(3, (_, n) => {
+      crypto.randomInt(3, (_, n) => {
         try {
           assert.ok(n >= 0);
           assert.ok(n < 3);
@@ -404,7 +404,7 @@ describe('random', () => {
   it('randomInt - Synchronous API', () => {
     const randomInts = [];
     for (let i = 0; i < 100; i++) {
-      const n = QuickCrypto.randomInt(3);
+      const n = crypto.randomInt(3);
       assert.ok(n >= 0);
       assert.ok(n < 3);
       randomInts.push(n);
@@ -421,7 +421,7 @@ describe('random', () => {
     const randomInts: number[] = [];
     let failed = false;
     for (let i = 0; i < 100; i++) {
-      QuickCrypto.randomInt(1, 3, (_, n) => {
+      crypto.randomInt(1, 3, (_, n) => {
         try {
           assert.ok(n >= 1);
           assert.ok(n < 3);
@@ -445,7 +445,7 @@ describe('random', () => {
     const randomInts: number[] = [];
     let failed = false;
     for (let i = 0; i < 100; i++) {
-      QuickCrypto.randomInt(-10, -8, (_, n) => {
+      crypto.randomInt(-10, -8, (_, n) => {
         try {
           assert.ok(n >= -10);
           assert.ok(n < -8);
@@ -523,7 +523,7 @@ describe('random', () => {
     const interval = arg;
     it('range' + interval.toString(), () => {
       assert.throws(
-        () => QuickCrypto.randomInt(1, MAX_RANGE + 2, () => {}),
+        () => crypto.randomInt(1, MAX_RANGE + 2, () => {}),
         /ERR_OUT_OF_RANGE/,
         'The value of "max" is out of range. It must be greater than ' +
           `the value of "min" (${interval[interval.length - 2] || 0}). ` +
@@ -537,44 +537,44 @@ describe('random', () => {
   const minInt = Number.MIN_SAFE_INTEGER;
 
   it('minInt, minInt + 5 ', (done: Done) => {
-    QuickCrypto.randomInt(minInt, minInt + 5, () => {
+    crypto.randomInt(minInt, minInt + 5, () => {
       done();
     });
   });
 
   it('maxint - 5, maxint', (done: Done) => {
-    QuickCrypto.randomInt(maxInt - 5, maxInt, () => {
+    crypto.randomInt(maxInt - 5, maxInt, () => {
       done();
     });
   });
 
   it('1', (done: Done) => {
-    QuickCrypto.randomInt(1, () => {
+    crypto.randomInt(1, () => {
       done();
     });
   });
 
   it('0 - 1', (done: Done) => {
-    QuickCrypto.randomInt(0, 1, () => {
+    crypto.randomInt(0, 1, () => {
       done();
     });
   });
 
   it('maxRange', (done: Done) => {
-    QuickCrypto.randomInt(MAX_RANGE, () => {
+    crypto.randomInt(MAX_RANGE, () => {
       done();
     });
   });
 
   it('maxRange move + 1', (done: Done) => {
-    QuickCrypto.randomInt(1, MAX_RANGE + 1, () => {
+    crypto.randomInt(1, MAX_RANGE + 1, () => {
       done();
     });
   });
 
   it('ERR_OUT_OF_RANGE 1', () => {
     assert.throws(
-      () => QuickCrypto.randomInt(1, MAX_RANGE + 2, () => {}),
+      () => crypto.randomInt(1, MAX_RANGE + 2, () => {}),
       /ERR_OUT_OF_RANGE/,
       'The value of "max" is out of range. ' +
         `It must be <= ${MAX_RANGE}. ` +
@@ -584,7 +584,7 @@ describe('random', () => {
 
   it('ERR_OUT_OF_RANGE 2', () => {
     assert.throws(
-      () => QuickCrypto.randomInt(MAX_RANGE + 1, () => {}),
+      () => crypto.randomInt(MAX_RANGE + 1, () => {}),
       /ERR_OUT_OF_RANGE/,
       'The value of "max" is out of range. ' +
         `It must be <= ${MAX_RANGE}. ` +
@@ -596,24 +596,24 @@ describe('random', () => {
     it(`expect type error: ${val}`, () => {
       assert.throws(
         // @ts-expect-error
-        () => QuickCrypto.randomInt(0, 1, val),
+        () => crypto.randomInt(0, 1, val),
         /callback must be a function or undefined/
       );
     });
   });
 
   it('int16', (done: Done) => {
-    QuickCrypto.randomFill(new Uint16Array(10), 0, () => {
+    crypto.randomFill(new Uint16Array(10), 0, () => {
       done();
     });
   });
   it('int32', (done: Done) => {
-    QuickCrypto.randomFill(new Uint32Array(10), 0, () => {
+    crypto.randomFill(new Uint32Array(10), 0, () => {
       done();
     });
   });
   it('int32, 1', (done: Done) => {
-    QuickCrypto.randomFill(new Uint32Array(10), 0, 1, () => {
+    crypto.randomFill(new Uint32Array(10), 0, 1, () => {
       done();
     });
   });

@@ -1,7 +1,7 @@
 import { assert, expect } from 'chai';
 import { Buffer } from '@craftzdog/react-native-buffer';
 import { describe, it } from '../../MochaRNAdapter';
-import QuickCrypto from 'react-native-quick-crypto';
+import crypto from 'react-native-quick-crypto';
 // import { PrivateKey } from 'sscrypto/node';
 
 // Tests that a key pair can be used for encryption / decryption.
@@ -9,8 +9,8 @@ function testEncryptDecrypt(publicKey: any, privateKey: any) {
   const message = 'Hello Node.js world!';
   const plaintext = Buffer.from(message, 'utf8');
   for (const key of [publicKey, privateKey]) {
-    const ciphertext = QuickCrypto.publicEncrypt(key, plaintext);
-    const received = QuickCrypto.privateDecrypt(privateKey, ciphertext);
+    const ciphertext = crypto.publicEncrypt(key, plaintext);
+    const received = crypto.privateDecrypt(privateKey, ciphertext);
     assert.strictEqual(received.toString('utf8'), message);
   }
 }
@@ -55,7 +55,7 @@ describe('publicCipher', () => {
   // });
 
   it('publicEncrypt/privateDecrypt', () => {
-    const { privateKey, publicKey } = QuickCrypto.generateKeyPairSync('rsa', {
+    const { privateKey, publicKey } = crypto.generateKeyPairSync('rsa', {
       modulusLength: 512,
       publicKeyEncoding: {
         type: 'pkcs1',
@@ -71,7 +71,7 @@ describe('publicCipher', () => {
   });
 
   it('publicEncrypt/privateDecrypt with non-common exponent', () => {
-    const { privateKey, publicKey } = QuickCrypto.generateKeyPairSync('rsa', {
+    const { privateKey, publicKey } = crypto.generateKeyPairSync('rsa', {
       publicExponent: 3,
       modulusLength: 512,
       publicKeyEncoding: {
@@ -88,7 +88,7 @@ describe('publicCipher', () => {
   });
 
   it('publicEncrypt/privateDecrypt with passphrase', () => {
-    const { privateKey, publicKey } = QuickCrypto.generateKeyPairSync('rsa', {
+    const { privateKey, publicKey } = crypto.generateKeyPairSync('rsa', {
       modulusLength: 4096,
       publicKeyEncoding: {
         type: 'spki',
@@ -104,8 +104,8 @@ describe('publicCipher', () => {
 
     const message = 'Hello RN world!';
     const plaintext = Buffer.from(message, 'utf8');
-    const ciphertext = QuickCrypto.publicEncrypt(publicKey, plaintext);
-    const decrypted = QuickCrypto.privateDecrypt(
+    const ciphertext = crypto.publicEncrypt(publicKey, plaintext);
+    const decrypted = crypto.privateDecrypt(
       { key: privateKey, passphrase: 'top secret' },
       ciphertext
     );
@@ -114,7 +114,7 @@ describe('publicCipher', () => {
   });
 
   it('passphrased private key without passphrase should throw', () => {
-    const { privateKey, publicKey } = QuickCrypto.generateKeyPairSync('rsa', {
+    const { privateKey, publicKey } = crypto.generateKeyPairSync('rsa', {
       modulusLength: 4096,
       publicKeyEncoding: {
         type: 'spki',

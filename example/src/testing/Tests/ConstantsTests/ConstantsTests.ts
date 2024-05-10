@@ -1,10 +1,10 @@
 import { expect } from 'chai';
-import QuickCrypto from 'react-native-quick-crypto';
+import crypto from 'react-native-quick-crypto';
 import { describe, it } from '../../MochaRNAdapter';
 
 describe('constants', () => {
   it('crypto constants are present', () => {
-    expect(QuickCrypto.constants).to.eql({
+    expect(crypto.constants).to.eql({
       OPENSSL_VERSION_NUMBER: 269488367,
       SSL_OP_ALL: 2147485780,
       SSL_OP_ALLOW_NO_DHE_KEX: 1024,
