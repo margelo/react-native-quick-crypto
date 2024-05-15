@@ -1,3 +1,4 @@
+import type { GenerateKeyPairReturn } from '../Cipher';
 import type { BinaryLike } from '../Utils';
 import type { Buffer } from '@craftzdog/react-native-buffer';
 
@@ -61,9 +62,9 @@ export type PrivateDecryptMethod = (
 export type GenerateKeyPairMethod = (
   keyVariant: KeyVariant,
   ...rest: any[]
-) => Promise<[error: unknown, publicBuffer: any, privateBuffer: any]>;
+) => Promise<GenerateKeyPairReturn>;
 
 export type GenerateKeyPairSyncMethod = (
   keyVariant: KeyVariant,
   ...rest: any[]
-) => [error: unknown, publicBuffer: any, privateBuffer: any];
+) => GenerateKeyPairReturn;

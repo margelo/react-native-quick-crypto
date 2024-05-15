@@ -430,9 +430,9 @@ class Subtle {
       //   result = await aesGenerateKey(algorithm, extractable, keyUsages);
       //   break;
       default:
-        throw lazyDOMException(
-          `Unrecognized algorithm name '${algorithm.name}'`,
-          'NotSupportedError'
+        throw new Error(
+          `'subtle.generateKey()' is not implemented for ${algorithm.name}.
+            Unrecognized algorithm name`
         );
     }
 

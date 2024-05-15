@@ -260,7 +260,9 @@ OptionJSVariant BIOToStringOrBuffer(jsi::Runtime& rt, BIO* bio, PKFormatType for
   } else {
     CHECK_EQ(format, kKeyFormatDER);
     // DER is binary, return it as a buffer.
-    return JSVariant(ByteSource::Allocated(bptr->data, bptr->length));
+    ByteSource::Builder out(bptr->length);
+    memcpy(out.data<void>(), bptr->data, bptr->length);
+    return std::move(out).release();
   }
 }
 
@@ -551,23 +553,17 @@ jsi::Value ExportJWKInner(jsi::Runtime &rt,
   }
 }
 
-OptionJSVariant ManagedEVPPKey::ToEncodedPublicKey(jsi::Runtime& runtime,
+OptionJSVariant ManagedEVPPKey::ToEncodedPublicKey(jsi::Runtime& rt,
                                                    ManagedEVPPKey key,
                                                    const PublicKeyEncodingConfig& config) {
   if (!key) return {};
-  // if (config.output_key_object_) {
+  if (config.output_key_object_) {
     // Note that this has the downside of containing sensitive data of the
     // private key.
-
-    // std::shared_ptr<KeyObjectData> data =
-    //   KeyObjectData::CreateAsymmetric(kKeyTypePublic, std::move(key));
-    // ByteSource out;
-    // auto status = EC_Raw_Export(data.get(), ECKeyExportConfig{}, &out);
-    // if (status != WebCryptoKeyExportStatus::OK) {
-    //   throw std::runtime_error("error exporting raw EC public key");
-    // }
-    // return JSVariant(std::move(out));
-  // } else
+    auto data = KeyObjectData::CreateAsymmetric(kKeyTypePublic, std::move(key));
+    auto out = KeyObjectHandle::Create(rt, data);
+    return JSVariant(out);
+  } else
   if (config.format_ == kKeyFormatJWK) {
     throw std::runtime_error("ToEncodedPublicKey 2 (JWK) not implemented from node");
     // std::shared_ptr<KeyObjectData> data =
@@ -576,23 +572,18 @@ OptionJSVariant ManagedEVPPKey::ToEncodedPublicKey(jsi::Runtime& runtime,
     // return ExportJWKInner(env, data, *out, false);
   }
 
-  return WritePublicKey(runtime, key.get(), config);
+  return WritePublicKey(rt, key.get(), config);
 }
 
-OptionJSVariant ManagedEVPPKey::ToEncodedPrivateKey(jsi::Runtime& runtime,
+OptionJSVariant ManagedEVPPKey::ToEncodedPrivateKey(jsi::Runtime& rt,
                                                     ManagedEVPPKey key,
                                                     const PrivateKeyEncodingConfig& config) {
   if (!key) return {};
-  // if (config.output_key_object_) {
-    // std::shared_ptr<KeyObjectData> data =
-    //   KeyObjectData::CreateAsymmetric(kKeyTypePrivate, std::move(key));
-    // ByteSource out;
-    // auto status = EC_Raw_Export(data.get(), ECKeyExportConfig{}, &out);
-    // if (status != WebCryptoKeyExportStatus::OK) {
-    //   throw std::runtime_error("error exporting raw EC private key");
-    // }
-    // return JSVariant(std::move(out));
-  // } else
+  if (config.output_key_object_) {
+    auto data = KeyObjectData::CreateAsymmetric(kKeyTypePrivate, std::move(key));
+    auto out = KeyObjectHandle::Create(rt, data);
+    return JSVariant(out);
+  } else
   if (config.format_ == kKeyFormatJWK) {
     throw std::runtime_error("ToEncodedPrivateKey 2 (JWK) not implemented from node");
     // std::shared_ptr<KeyObjectData> data =
@@ -601,7 +592,7 @@ OptionJSVariant ManagedEVPPKey::ToEncodedPrivateKey(jsi::Runtime& runtime,
     // return ExportJWKInner(env, data, *out, false);
   }
 
-  return WritePrivateKey(runtime, key.get(), config);
+  return WritePrivateKey(rt, key.get(), config);
 }
 
 NonCopyableMaybe<PrivateKeyEncodingConfig>
@@ -901,16 +892,12 @@ jsi::Value KeyObjectHandle::get(
 //   registry->Register(Equals);
 // }
 
-// jsi::Object KeyObjectHandle::Create(jsi::Runtime &rt,
-//                                         std::shared_ptr<KeyObjectData> data) {
-//   KeyObjectHandle *key = new KeyObjectHandle();
-//   key->data_ = data;
-
-//   jsi::Function handle_ctor =
-//     rt.global().getPropertyAsFunction(rt, "KeyObjectHandle");
-//   jsi::Object o = handle_ctor.callAsConstructor(rt, )
-//   return std::move(obj);
-// }
+KeyObjectHandle* KeyObjectHandle::Create(jsi::Runtime &rt,
+                                   std::shared_ptr<KeyObjectData> data) {
+  KeyObjectHandle* handle = new KeyObjectHandle();
+  handle->data_ = data;
+  return handle;
+}
 
 const std::shared_ptr<KeyObjectData>& KeyObjectHandle::Data() {
   return this->data_;

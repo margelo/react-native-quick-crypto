@@ -1,4 +1,5 @@
-import { generateKeyPair, type GenerateKeyPairOptions } from './Cipher';
+import { KeyObject } from 'crypto';
+import { generateKeyPairPromise, type GenerateKeyPairOptions } from './Cipher';
 import { NativeQuickCrypto } from './NativeQuickCrypto/NativeQuickCrypto';
 import {
   bufferLikeToArrayBuffer,
@@ -26,6 +27,7 @@ import {
   KeyType,
   type CryptoKeyPair,
 } from './keys';
+import type { KeyObjectHandle } from './NativeQuickCrypto/webcrypto';
 
 // const {
 //   ArrayPrototypeIncludes,
@@ -116,71 +118,6 @@ function createECPublicKeyRaw(
 
   return new PublicKeyObject(handle);
 }
-
-// async function ecGenerateKey(algorithm, extractable, keyUsages) {
-//   const { name, namedCurve } = algorithm;
-
-//   if (!ArrayPrototypeIncludes(ObjectKeys(kNamedCurveAliases), namedCurve)) {
-//     throw lazyDOMException(
-//       'Unrecognized namedCurve',
-//       'NotSupportedError');
-//   }
-
-//   const usageSet = new SafeSet(keyUsages);
-//   switch (name) {
-//     case 'ECDSA':
-//       if (hasAnyNotIn(usageSet, ['sign', 'verify'])) {
-//         throw lazyDOMException(
-//           'Unsupported key usage for an ECDSA key',
-//           'SyntaxError');
-//       }
-//       break;
-//     case 'ECDH':
-//       if (hasAnyNotIn(usageSet, ['deriveKey', 'deriveBits'])) {
-//         throw lazyDOMException(
-//           'Unsupported key usage for an ECDH key',
-//           'SyntaxError');
-//       }
-//       // Fall through
-//   }
-
-//   const keypair = await generateKeyPair('ec', { namedCurve }).catch((err) => {
-//     throw lazyDOMException(
-//       'The operation failed for an operation-specific reason',
-//       { name: 'OperationError', cause: err });
-//   });
-
-//   let publicUsages;
-//   let privateUsages;
-//   switch (name) {
-//     case 'ECDSA':
-//       publicUsages = getUsagesUnion(usageSet, 'verify');
-//       privateUsages = getUsagesUnion(usageSet, 'sign');
-//       break;
-//     case 'ECDH':
-//       publicUsages = [];
-//       privateUsages = getUsagesUnion(usageSet, 'deriveKey', 'deriveBits');
-//       break;
-//   }
-
-//   const keyAlgorithm = { name, namedCurve };
-
-//   const publicKey =
-//     new InternalCryptoKey(
-//       keypair.publicKey,
-//       keyAlgorithm,
-//       publicUsages,
-//       true);
-
-//   const privateKey =
-//     new InternalCryptoKey(
-//       keypair.privateKey,
-//       keyAlgorithm,
-//       privateUsages,
-//       extractable);
-
-//   return { __proto__: null, publicKey, privateKey };
-// }
 
 export function ecExportKey(
   key: CryptoKey,
@@ -389,12 +326,14 @@ export const ecGenerateKey = async (
   }
 
   const options: GenerateKeyPairOptions = { namedCurve };
-  const keypair = await generateKeyPair('ec', options, (err) => {
-    throw lazyDOMException(
-      'The operation failed for an operation-specific reason',
-      { name: 'OperationError', cause: err }
-    );
-  });
+  const [err, keypair] = await generateKeyPairPromise('ec', options);
+
+  if (err) {
+    throw lazyDOMException('ecGenerateKey (generateKeyPairPromise) failed', {
+      name: 'OperationError',
+      cause: err,
+    });
+  }
 
   let publicUsages: KeyUsage[] = [];
   let privateUsages: KeyUsage[] = [];
@@ -411,15 +350,16 @@ export const ecGenerateKey = async (
 
   const keyAlgorithm = { name, namedCurve };
 
-  const publicKey = new CryptoKey(
-    keypair.publicKey,
+  const publicKey = new InternalCryptoKey(
+    keypair.publicKey as KeyObjectHandle,
     keyAlgorithm,
     publicUsages,
     true
   );
+  // const publicKey = new PublicKeyObject(pub as KeyObjectHandle);
 
-  const privateKey = new CryptoKey(
-    keypair.privateKey,
+  const privateKey = new InternalCryptoKey(
+    keypair.privateKey as KeyObjectHandle,
     keyAlgorithm,
     privateUsages,
     extractable
@@ -427,3 +367,17 @@ export const ecGenerateKey = async (
 
   return { publicKey, privateKey };
 };
+
+//   const publicKey =
+//     new InternalCryptoKey(
+//       keypair.publicKey,
+//       keyAlgorithm,
+//       publicUsages,
+//       true);
+
+//   const privateKey =
+//     new InternalCryptoKey(
+//       keypair.privateKey,
+//       keyAlgorithm,
+//       privateUsages,
+//       extractable);
