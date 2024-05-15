@@ -111,7 +111,7 @@ android {
     buildConfigField "boolean", "IS_NEW_ARCHITECTURE_ENABLED", isNewArchitectureEnabled().toString()
     externalNativeBuild {
       cmake {
-        cppFlags "-O2 -frtti -fexceptions -Wall -Wno-unused-variable -fstack-protector-all"
+        cppFlags "-O2 -frtti -fexceptions -Wall -Wno-unused-variable -fstack-protector-all -DANDROID"
         arguments "-DANDROID_STL=c++_shared", "-DNODE_MODULES_DIR=${nodeModules}"
         abiFilters (*reactNativeArchitectures())
       }
