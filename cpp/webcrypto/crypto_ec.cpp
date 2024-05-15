@@ -405,8 +405,8 @@ EVPKeyCtxPointer setup(std::shared_ptr<EcKeyPairGenConfig> config) {
   return key_ctx;
 }
 
-std::pair<JSVariant, JSVariant> generateEcKeyPair(jsi::Runtime& runtime,
-                                                  std::shared_ptr<EcKeyPairGenConfig> config)
+std::pair<jsi::Value, jsi::Value> generateEcKeyPair(jsi::Runtime& runtime,
+                                                    std::shared_ptr<EcKeyPairGenConfig> config)
 {
   // TODO: this is all copied from MGLRsa.cpp - template it up like Node
 
@@ -424,19 +424,18 @@ std::pair<JSVariant, JSVariant> generateEcKeyPair(jsi::Runtime& runtime,
 
   config->key = ManagedEVPPKey(EVPKeyPointer(pkey));
 
-  OptionJSVariant publicBuffer =
+  jsi::Value publicBuffer =
       ManagedEVPPKey::ToEncodedPublicKey(runtime, std::move(config->key),
                                          config->public_key_encoding);
-  OptionJSVariant privateBuffer =
+  jsi::Value privateBuffer =
       ManagedEVPPKey::ToEncodedPrivateKey(runtime, std::move(config->key),
                                           config->private_key_encoding);
 
-  if (!publicBuffer.has_value() || !privateBuffer.has_value()) {
+  if (!publicBuffer.isUndefined() || !privateBuffer.isUndefined()) {
     throw jsi::JSError(runtime, "Failed to encode public and/or private key");
   }
 
-  return {std::move(publicBuffer.value()), std::move(privateBuffer.value())};
-
+  return {publicBuffer, privateBuffer};
 }
 
 } // namespace margelo

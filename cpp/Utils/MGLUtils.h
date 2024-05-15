@@ -263,13 +263,23 @@ std::string StringBytesWrite(jsi::Runtime &rt,
                         enum encoding encoding);
 
 
-using JSVariant = std::variant<nullptr_t, bool, int, double, long, long long,
-                               std::string, ByteSource>;
+inline jsi::Value toJSI(jsi::Runtime& rt, std::string value) {
+  return jsi::String::createFromUtf8(rt, value);
+}
 
-using OptionJSVariant = std::optional<JSVariant>;
-
-jsi::Value toJSI(jsi::Runtime& rt, OptionJSVariant& value);
-jsi::Value toJSI(jsi::Runtime& rt, JSVariant& value);
+inline jsi::Value toJSI(jsi::Runtime& rt, ByteSource value) {
+    jsi::Function array_buffer_ctor =
+        rt.global().getPropertyAsFunction(rt, "ArrayBuffer");
+    jsi::Object o = array_buffer_ctor.callAsConstructor(rt, (int)value.size())
+                        .getObject(rt);
+    jsi::ArrayBuffer buf = o.getArrayBuffer(rt);
+    // You cannot share raw memory between native and JS
+    // always copy the data
+    // see https://github.com/facebook/hermes/pull/419 and
+    // https://github.com/facebook/hermes/issues/564.
+    memcpy(buf.data(rt), value.data(), value.size());
+    return o;
+}
 
 std::string EncodeBignum(const BIGNUM* bn,
                          int size,

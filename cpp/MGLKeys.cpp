@@ -251,22 +251,22 @@ ParseKeyResult ParsePrivateKey(EVPKeyPointer* pkey,
   return ParseKeyResult::kParseKeyFailed;
 }
 
-OptionJSVariant BIOToStringOrBuffer(jsi::Runtime& rt, BIO* bio, PKFormatType format) {
+jsi::Value BIOToStringOrBuffer(jsi::Runtime& rt, BIO* bio, PKFormatType format) {
   BUF_MEM* bptr;
   BIO_get_mem_ptr(bio, &bptr);
   if (format == kKeyFormatPEM) {
     // PEM is an ASCII format, so we will return it as a string.
-    return JSVariant(std::string(bptr->data, bptr->length));
+    return toJSI(rt, std::string(bptr->data, bptr->length));
   } else {
     CHECK_EQ(format, kKeyFormatDER);
     // DER is binary, return it as a buffer.
     ByteSource::Builder out(bptr->length);
     memcpy(out.data<void>(), bptr->data, bptr->length);
-    return std::move(out).release();
+    return toJSI(rt, std::move(out).release());
   }
 }
 
-OptionJSVariant WritePrivateKey(
+jsi::Value WritePrivateKey(
     jsi::Runtime& runtime, EVP_PKEY* pkey,
     const PrivateKeyEncodingConfig& config) {
   BIOPointer bio(BIO_new(BIO_s_mem()));
@@ -385,7 +385,7 @@ bool WritePublicKeyInner(EVP_PKEY* pkey, const BIOPointer& bio,
   }
 }
 
-OptionJSVariant WritePublicKey(
+jsi::Value WritePublicKey(
     jsi::Runtime& runtime, EVP_PKEY* pkey,
     const PublicKeyEncodingConfig& config) {
   BIOPointer bio(BIO_new(BIO_s_mem()));
@@ -553,7 +553,7 @@ jsi::Value ExportJWKInner(jsi::Runtime &rt,
   }
 }
 
-OptionJSVariant ManagedEVPPKey::ToEncodedPublicKey(jsi::Runtime& rt,
+jsi::Value ManagedEVPPKey::ToEncodedPublicKey(jsi::Runtime& rt,
                                                    ManagedEVPPKey key,
                                                    const PublicKeyEncodingConfig& config) {
   if (!key) return {};
@@ -562,7 +562,7 @@ OptionJSVariant ManagedEVPPKey::ToEncodedPublicKey(jsi::Runtime& rt,
     // private key.
     auto data = KeyObjectData::CreateAsymmetric(kKeyTypePublic, std::move(key));
     auto out = KeyObjectHandle::Create(rt, data);
-    return JSVariant(out);
+    return toJSI(rt, out);
   } else
   if (config.format_ == kKeyFormatJWK) {
     throw std::runtime_error("ToEncodedPublicKey 2 (JWK) not implemented from node");
@@ -575,14 +575,14 @@ OptionJSVariant ManagedEVPPKey::ToEncodedPublicKey(jsi::Runtime& rt,
   return WritePublicKey(rt, key.get(), config);
 }
 
-OptionJSVariant ManagedEVPPKey::ToEncodedPrivateKey(jsi::Runtime& rt,
+jsi::Value ManagedEVPPKey::ToEncodedPrivateKey(jsi::Runtime& rt,
                                                     ManagedEVPPKey key,
                                                     const PrivateKeyEncodingConfig& config) {
   if (!key) return {};
   if (config.output_key_object_) {
     auto data = KeyObjectData::CreateAsymmetric(kKeyTypePrivate, std::move(key));
     auto out = KeyObjectHandle::Create(rt, data);
-    return JSVariant(out);
+    return toJSI(rt, out);
   } else
   if (config.format_ == kKeyFormatJWK) {
     throw std::runtime_error("ToEncodedPrivateKey 2 (JWK) not implemented from node");
@@ -1194,7 +1194,7 @@ jsi::Value KeyObjectHandle::GetKeyDetail(jsi::Runtime &rt) {
 jsi::Value KeyObjectHandle::Export(jsi::Runtime &rt) {
   return HOSTFN("export", 2) {
     KeyType type = this->data_->GetKeyType();
-    OptionJSVariant result;
+    jsi::Value result;
     if (type == kKeyTypeSecret) {
       result = this->ExportSecretKey(rt);
     }
@@ -1214,16 +1214,16 @@ jsi::Value KeyObjectHandle::Export(jsi::Runtime &rt) {
         result = this->ExportPrivateKey(rt, config.Release());
       }
     }
-    return toJSI(rt, result);
+    return result;
   });
 }
 
-OptionJSVariant KeyObjectHandle::ExportSecretKey(jsi::Runtime &rt) const {
+jsi::Value KeyObjectHandle::ExportSecretKey(jsi::Runtime &rt) const {
   std::string ret = data_->GetSymmetricKey();
-  return JSVariant(ByteSource::FromString(ret));
+  return toJSI(rt, ByteSource::FromString(ret));
 }
 
-OptionJSVariant KeyObjectHandle::ExportPublicKey(
+jsi::Value KeyObjectHandle::ExportPublicKey(
     jsi::Runtime& rt,
     const PublicKeyEncodingConfig& config) const {
   return WritePublicKey(rt,
@@ -1231,7 +1231,7 @@ OptionJSVariant KeyObjectHandle::ExportPublicKey(
     config);
 }
 
-OptionJSVariant KeyObjectHandle::ExportPrivateKey(
+jsi::Value KeyObjectHandle::ExportPrivateKey(
     jsi::Runtime &rt,
     const PrivateKeyEncodingConfig& config) const {
   return WritePrivateKey(rt,

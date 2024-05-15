@@ -37,7 +37,7 @@ FieldDefinition getGenerateKeyPairSyncFieldDefinition(
     std::shared_ptr<DispatchQueue::dispatch_queue> workerQueue) {
   return buildPair(
       "generateKeyPairSync", JSIF([=]) {
-        std::pair<JSVariant, JSVariant> keys;
+        std::pair<jsi::Value, jsi::Value> keys;
         KeyVariant variant =
             static_cast<KeyVariant>((int)arguments[0].asNumber());
 
@@ -57,11 +57,9 @@ FieldDefinition getGenerateKeyPairSyncFieldDefinition(
             } else {
                 throw std::runtime_error("KeyVariant not implemented: " + variant);
             }
-
-        auto publicKey = toJSI(runtime, keys.first);
-        auto privateKey = toJSI(runtime, keys.second);
+        // keys.first = publicKey   keys.second = privateKey
         return jsi::Array::createWithElements(
-            runtime, jsi::Value::undefined(), publicKey, privateKey);
+            runtime, jsi::Value::undefined(), keys.first, keys.second);
       });
 }
 }  // namespace margelo

@@ -153,7 +153,7 @@ RsaKeyPairGenConfig prepareRsaKeyGenConfig(jsi::Runtime& runtime,
   return config;
 }
 
-std::pair<JSVariant, JSVariant> generateRsaKeyPair(
+std::pair<jsi::Value, jsi::Value> generateRsaKeyPair(
     jsi::Runtime& runtime, std::shared_ptr<RsaKeyPairGenConfig> config) {
   // TODO: this is all copied into crypto_ec.cpp - template it up like Node
   CheckEntropy();
@@ -172,18 +172,18 @@ std::pair<JSVariant, JSVariant> generateRsaKeyPair(
 
   config->key = ManagedEVPPKey(EVPKeyPointer(pkey));
 
-  OptionJSVariant publicBuffer =
+  jsi::Value publicBuffer =
       ManagedEVPPKey::ToEncodedPublicKey(runtime, std::move(config->key),
                                          config->public_key_encoding);
-  OptionJSVariant privateBuffer =
+  jsi::Value privateBuffer =
       ManagedEVPPKey::ToEncodedPrivateKey(runtime, std::move(config->key),
                                           config->private_key_encoding);
 
-  if (!publicBuffer.has_value() || !privateBuffer.has_value()) {
+  if (!publicBuffer.isUndefined() || !privateBuffer.isUndefined()) {
     throw jsi::JSError(runtime, "Failed to encode public and/or private key");
   }
 
-  return {std::move(publicBuffer.value()), std::move(privateBuffer.value())};
+  return {publicBuffer, privateBuffer};
 }
 
 jsi::Value ExportJWKRsaKey(jsi::Runtime &rt,

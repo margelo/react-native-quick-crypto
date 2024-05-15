@@ -114,13 +114,13 @@ class ManagedEVPPKey {
                                             unsigned int *offset,
                                             bool allow_key_object);
 
-  static OptionJSVariant ToEncodedPublicKey(jsi::Runtime &runtime,
-                                            ManagedEVPPKey key,
-                                            const PublicKeyEncodingConfig &config);
+  static jsi::Value ToEncodedPublicKey(jsi::Runtime &runtime,
+                                       ManagedEVPPKey key,
+                                       const PublicKeyEncodingConfig &config);
 
-  static OptionJSVariant ToEncodedPrivateKey(jsi::Runtime &runtime,
-                                             ManagedEVPPKey key,
-                                             const PrivateKeyEncodingConfig &config);
+  static jsi::Value ToEncodedPrivateKey(jsi::Runtime &runtime,
+                                        ManagedEVPPKey key,
+                                        const PrivateKeyEncodingConfig &config);
 
  private:
    size_t size_of_private_key() const;
@@ -174,13 +174,13 @@ class JSI_EXPORT KeyObjectHandle: public jsi::HostObject {
  protected:
     jsi::Value Export(jsi::Runtime &rt);
     jsi::Value ExportJWK(jsi::Runtime &rt);
-    OptionJSVariant ExportPublicKey(
+    jsi::Value ExportPublicKey(
       jsi::Runtime& rt,
       const PublicKeyEncodingConfig& config) const;
-    OptionJSVariant ExportPrivateKey(
+    jsi::Value ExportPrivateKey(
       jsi::Runtime& rt,
       const PrivateKeyEncodingConfig& config) const;
-    OptionJSVariant ExportSecretKey(jsi::Runtime& rt) const;
+    jsi::Value ExportSecretKey(jsi::Runtime& rt) const;
     jsi::Value Init(jsi::Runtime &rt);
     jsi::Value InitECRaw(jsi::Runtime &rt);
     jsi::Value InitJWK(jsi::Runtime &rt);
@@ -189,6 +189,17 @@ class JSI_EXPORT KeyObjectHandle: public jsi::HostObject {
  private:
     std::shared_ptr<KeyObjectData> data_;
 };
+
+// Convert KeyObjectHandle to jsi::Value for shipping back to JS side.
+//
+// Note: This `toJSI()` is in MGLKeys for access to KeyObjectHandle. The rest of the `toJSI()` functions are in MGLUtils.
+inline jsi::Value toJSI(jsi::Runtime& rt, KeyObjectHandle* value) {
+  jsi::Function handle_ctor =
+    rt.global().getPropertyAsFunction(rt, "KeyObjectHandle");
+  jsi::Object o =
+    handle_ctor.callAsConstructor(rt, std::move(value)).getObject(rt);
+  return o;
+}
 
 }  // namespace margelo
 

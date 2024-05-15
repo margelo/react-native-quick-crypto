@@ -51,7 +51,7 @@ struct RsaKeyPairGenConfig {
 RsaKeyPairGenConfig prepareRsaKeyGenConfig(jsi::Runtime& runtime,
                                          const jsi::Value* arguments);
 
-std::pair<JSVariant, JSVariant> generateRsaKeyPair(
+std::pair<jsi::Value, jsi::Value> generateRsaKeyPair(
     jsi::Runtime& runtime, std::shared_ptr<RsaKeyPairGenConfig> config);
 
 jsi::Value ExportJWKRsaKey(jsi::Runtime &rt,

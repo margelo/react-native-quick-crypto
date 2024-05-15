@@ -83,7 +83,7 @@ FieldDefinition getGenerateKeyPairFieldDefinition(
                     try {
                       jsCallInvoker->invokeAsync([&runtime, resolve,
                           variant, rsaConfig, ecConfig]() {
-                        std::pair<JSVariant, JSVariant> keys;
+                        std::pair<jsi::Value, jsi::Value> keys;
 
                         // switch on variant to get proper generateKeyPair
                         if (variant == kvRSA_SSA_PKCS1_v1_5 ||
@@ -99,13 +99,11 @@ FieldDefinition getGenerateKeyPairFieldDefinition(
                             + std::to_string((int)variant));
                         }
 
-                        auto publicKey = toJSI(runtime, keys.first);
-                        auto privateKey = toJSI(runtime, keys.second);
                         auto res = jsi::Array::createWithElements(
                           runtime,
                           jsi::Value::undefined(),
-                          publicKey,
-                          privateKey);
+                          keys.first,
+                          keys.second);
                         resolve->asObject(runtime).asFunction(runtime).call(
                             runtime, std::move(res));
                       });

@@ -72,8 +72,8 @@ struct EcKeyPairGenConfig {
 EcKeyPairGenConfig prepareEcKeyGenConfig(jsi::Runtime& runtime,
                                        const jsi::Value* arguments);
 
-std::pair<JSVariant, JSVariant> generateEcKeyPair(jsi::Runtime& runtime,
-                                                  std::shared_ptr<EcKeyPairGenConfig> config);
+std::pair<jsi::Value, jsi::Value> generateEcKeyPair(jsi::Runtime& runtime,
+                                                    std::shared_ptr<EcKeyPairGenConfig> config);
 
 
 } // namespace margelo

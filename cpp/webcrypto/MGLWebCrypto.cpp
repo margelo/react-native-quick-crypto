@@ -48,8 +48,7 @@ jsi::Value createWebCryptoObject(jsi::Runtime &rt) {
         if (status != WebCryptoKeyExportStatus::OK) {
             throw jsi::JSError(rt, "error exporting key, status: " + std::to_string(static_cast<int>(status)));
         }
-        JSVariant jsv = JSVariant(std::move(out));
-        return toJSI(rt, jsv);
+        return toJSI(rt, std::move(out));
     });
 
     obj.setProperty(rt,

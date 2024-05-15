@@ -18,47 +18,6 @@ namespace margelo {
 
 namespace jsi = facebook::jsi;
 
-jsi::Value toJSI(jsi::Runtime& rt, OptionJSVariant& value) {
-  if (!value.has_value()) {
-    return jsi::Value::null();
-  }
-  try {
-    return toJSI(rt, value.value());
-  } catch (const std::bad_optional_access& e) {
-    std::cout << e.what() << '\n';
-  }
-  return jsi::Value::null();
-}
-
-jsi::Value toJSI(jsi::Runtime& rt, JSVariant& value) {
-  if (std::holds_alternative<bool>(value)) {
-    return jsi::Value(std::get<bool>(value));
-  } else if (std::holds_alternative<int>(value)) {
-    return jsi::Value(std::get<int>(value));
-  } else if (std::holds_alternative<long long>(value)) {
-    return jsi::Value(static_cast<double>(std::get<long long>(value)));
-  } else if (std::holds_alternative<double>(value)) {
-    return jsi::Value(std::get<double>(value));
-  } else if (std::holds_alternative<std::string>(value)) {
-    return jsi::String::createFromUtf8(rt, std::get<std::string>(value));
-  } else if (std::holds_alternative<ByteSource>(value)) {
-    ByteSource& source = std::get<ByteSource>(value);
-    jsi::Function array_buffer_ctor =
-        rt.global().getPropertyAsFunction(rt, "ArrayBuffer");
-    jsi::Object o = array_buffer_ctor.callAsConstructor(rt, (int)source.size())
-                        .getObject(rt);
-    jsi::ArrayBuffer buf = o.getArrayBuffer(rt);
-    // You cannot share raw memory between native and JS
-    // always copy the data
-    // see https://github.com/facebook/hermes/pull/419 and
-    // https://github.com/facebook/hermes/issues/564.
-    memcpy(buf.data(rt), source.data(), source.size());
-    return o;
-  }
-
-  return jsi::Value::null();
-}
-
 ByteSource ArrayBufferToByteSource(jsi::Runtime& runtime,
                                    const jsi::ArrayBuffer& buffer) {
   if (buffer.size(runtime) == 0) return ByteSource();
