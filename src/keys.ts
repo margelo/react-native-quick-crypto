@@ -417,7 +417,7 @@ export function parsePrivateKeyEncoding(
 }
 
 function prepareSecretKey(
-  key: ArrayBuffer | KeyObject | CryptoKey | string,
+  key: ArrayBuffer | KeyObject | CryptoKey | Uint8Array | string,
   encoding?: string,
   bufferOnly = false
 ): any {
