@@ -448,6 +448,10 @@ function prepareSecretKey(
     return binaryLikeToArrayBuffer(key, encoding);
   }
 
+  if (key instanceof Uint8Array) {
+    return key.buffer;
+  }
+
   throw new Error(
     'Invalid argument type for "key". Need ArrayBuffer, KeyObject, CryptoKey, string'
   );
