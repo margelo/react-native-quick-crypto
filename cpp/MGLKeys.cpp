@@ -561,8 +561,9 @@ jsi::Value ManagedEVPPKey::ToEncodedPublicKey(jsi::Runtime& rt,
     // Note that this has the downside of containing sensitive data of the
     // private key.
     auto data = KeyObjectData::CreateAsymmetric(kKeyTypePublic, std::move(key));
-    auto out = KeyObjectHandle::Create(rt, data);
-    return toJSI(rt, out);
+    auto handle = KeyObjectHandle::Create(rt, data);
+    auto out = jsi::Object::createFromHostObject(rt, handle);
+    return jsi::Value(std::move(out));
   } else
   if (config.format_ == kKeyFormatJWK) {
     throw std::runtime_error("ToEncodedPublicKey 2 (JWK) not implemented from node");
@@ -581,8 +582,9 @@ jsi::Value ManagedEVPPKey::ToEncodedPrivateKey(jsi::Runtime& rt,
   if (!key) return {};
   if (config.output_key_object_) {
     auto data = KeyObjectData::CreateAsymmetric(kKeyTypePrivate, std::move(key));
-    auto out = KeyObjectHandle::Create(rt, data);
-    return toJSI(rt, out);
+    auto handle = KeyObjectHandle::Create(rt, data);
+    auto out = jsi::Object::createFromHostObject(rt, handle);
+    return jsi::Value(std::move(out));
   } else
   if (config.format_ == kKeyFormatJWK) {
     throw std::runtime_error("ToEncodedPrivateKey 2 (JWK) not implemented from node");
@@ -892,9 +894,9 @@ jsi::Value KeyObjectHandle::get(
 //   registry->Register(Equals);
 // }
 
-KeyObjectHandle* KeyObjectHandle::Create(jsi::Runtime &rt,
-                                   std::shared_ptr<KeyObjectData> data) {
-  KeyObjectHandle* handle = new KeyObjectHandle();
+std::shared_ptr<KeyObjectHandle> KeyObjectHandle::Create(jsi::Runtime &rt,
+                                                         std::shared_ptr<KeyObjectData> data) {
+  auto handle = std::make_shared<KeyObjectHandle>();
   handle->data_ = data;
   return handle;
 }

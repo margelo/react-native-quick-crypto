@@ -168,8 +168,8 @@ class JSI_EXPORT KeyObjectHandle: public jsi::HostObject {
     jsi::Value get(jsi::Runtime &rt, const jsi::PropNameID &propNameID);
     const std::shared_ptr<KeyObjectData>& Data();
 
-    static KeyObjectHandle* Create(jsi::Runtime &rt,
-                                   std::shared_ptr<KeyObjectData> data);
+    static std::shared_ptr<KeyObjectHandle> Create(jsi::Runtime &rt,
+                                                   std::shared_ptr<KeyObjectData> data);
 
  protected:
     jsi::Value Export(jsi::Runtime &rt);
@@ -189,17 +189,6 @@ class JSI_EXPORT KeyObjectHandle: public jsi::HostObject {
  private:
     std::shared_ptr<KeyObjectData> data_;
 };
-
-// Convert KeyObjectHandle to jsi::Value for shipping back to JS side.
-//
-// Note: This `toJSI()` is in MGLKeys for access to KeyObjectHandle. The rest of the `toJSI()` functions are in MGLUtils.
-inline jsi::Value toJSI(jsi::Runtime& rt, KeyObjectHandle* value) {
-  jsi::Function handle_ctor =
-    rt.global().getPropertyAsFunction(rt, "KeyObjectHandle");
-  jsi::Object o =
-    handle_ctor.callAsConstructor(rt, std::move(value)).getObject(rt);
-  return o;
-}
 
 }  // namespace margelo
 

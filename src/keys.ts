@@ -522,18 +522,6 @@ export class CryptoKey {
   }
 }
 
-// ObjectDefineProperties(CryptoKey.prototype, {
-//   type: kEnumerableProperty,
-//   extractable: kEnumerableProperty,
-//   algorithm: kEnumerableProperty,
-//   usages: kEnumerableProperty,
-//   [SymbolToStringTag]: {
-//     __proto__: null,
-//     configurable: true,
-//     value: 'CryptoKey',
-//   },
-// });
-
 class KeyObject {
   handle: KeyObjectHandle;
   type: 'public' | 'secret' | 'private' | 'unknown' = 'unknown';
@@ -573,14 +561,6 @@ class KeyObject {
   //   );
   // }
 }
-
-// ObjectDefineProperties(KeyObject.prototype, {
-//   [SymbolToStringTag]: {
-//     __proto__: null,
-//     configurable: true,
-//     value: 'KeyObject',
-//   },
-// });
 
 export class SecretKeyObject extends KeyObject {
   constructor(handle: KeyObjectHandle) {

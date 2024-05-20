@@ -431,11 +431,11 @@ std::pair<jsi::Value, jsi::Value> generateEcKeyPair(jsi::Runtime& runtime,
       ManagedEVPPKey::ToEncodedPrivateKey(runtime, std::move(config->key),
                                           config->private_key_encoding);
 
-  if (!publicBuffer.isUndefined() || !privateBuffer.isUndefined()) {
-    throw jsi::JSError(runtime, "Failed to encode public and/or private key");
+  if (publicBuffer.isUndefined() || privateBuffer.isUndefined()) {
+    throw jsi::JSError(runtime, "Failed to encode public and/or private key (EC)");
   }
 
-  return {publicBuffer, privateBuffer};
+  return {std::move(publicBuffer), std::move(privateBuffer)};
 }
 
 } // namespace margelo

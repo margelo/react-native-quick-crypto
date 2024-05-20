@@ -1,4 +1,3 @@
-import { KeyObject } from 'crypto';
 import { generateKeyPairPromise, type GenerateKeyPairOptions } from './Cipher';
 import { NativeQuickCrypto } from './NativeQuickCrypto/NativeQuickCrypto';
 import {
@@ -350,16 +349,12 @@ export const ecGenerateKey = async (
 
   const keyAlgorithm = { name, namedCurve };
 
-  const publicKey = new InternalCryptoKey(
-    keypair.publicKey as KeyObjectHandle,
-    keyAlgorithm,
-    publicUsages,
-    true
-  );
-  // const publicKey = new PublicKeyObject(pub as KeyObjectHandle);
+  const pub = new PublicKeyObject(keypair?.publicKey as KeyObjectHandle);
+  const publicKey = new CryptoKey(pub, keyAlgorithm, publicUsages, true);
 
-  const privateKey = new InternalCryptoKey(
-    keypair.privateKey as KeyObjectHandle,
+  const priv = new PrivateKeyObject(keypair?.privateKey as KeyObjectHandle);
+  const privateKey = new CryptoKey(
+    priv,
     keyAlgorithm,
     privateUsages,
     extractable
@@ -367,17 +362,3 @@ export const ecGenerateKey = async (
 
   return { publicKey, privateKey };
 };
-
-//   const publicKey =
-//     new InternalCryptoKey(
-//       keypair.publicKey,
-//       keyAlgorithm,
-//       publicUsages,
-//       true);
-
-//   const privateKey =
-//     new InternalCryptoKey(
-//       keypair.privateKey,
-//       keyAlgorithm,
-//       privateUsages,
-//       extractable);
