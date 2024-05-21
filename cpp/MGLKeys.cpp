@@ -360,7 +360,8 @@ jsi::Value WritePrivateKey(
 
 bool WritePublicKeyInner(EVP_PKEY* pkey, const BIOPointer& bio,
                          const PublicKeyEncodingConfig& config) {
-  if (config.type_.has_value() && config.type_.value() == kKeyEncodingPKCS1) {
+  if (!config.type_.has_value()) return false;
+  if (config.type_.value() == kKeyEncodingPKCS1) {
     // PKCS#1 is only valid for RSA keys.
     CHECK_EQ(EVP_PKEY_id(pkey), EVP_PKEY_RSA);
     RsaPointer rsa(EVP_PKEY_get1_RSA(pkey));
@@ -373,7 +374,7 @@ bool WritePublicKeyInner(EVP_PKEY* pkey, const BIOPointer& bio,
       return i2d_RSAPublicKey_bio(bio.get(), rsa.get()) == 1;
     }
   } else {
-    //  CHECK_EQ(config.type_.ToChecked(), kKeyEncodingSPKI);
+    CHECK_EQ(config.type_.value(), kKeyEncodingSPKI);
     if (config.format_ == kKeyFormatPEM) {
       // Encode SPKI as PEM.
       return PEM_write_bio_PUBKEY(bio.get(), pkey) == 1;
@@ -554,8 +555,8 @@ jsi::Value ExportJWKInner(jsi::Runtime &rt,
 }
 
 jsi::Value ManagedEVPPKey::ToEncodedPublicKey(jsi::Runtime& rt,
-                                                   ManagedEVPPKey key,
-                                                   const PublicKeyEncodingConfig& config) {
+                                              ManagedEVPPKey key,
+                                              const PublicKeyEncodingConfig& config) {
   if (!key) return {};
   if (config.output_key_object_) {
     // Note that this has the downside of containing sensitive data of the

@@ -155,7 +155,7 @@ RsaKeyPairGenConfig prepareRsaKeyGenConfig(jsi::Runtime& runtime,
 
 std::pair<jsi::Value, jsi::Value> generateRsaKeyPair(
     jsi::Runtime& runtime, std::shared_ptr<RsaKeyPairGenConfig> config) {
-  // TODO: this is all copied into crypto_ec.cpp - template it up like Node
+  // TODO: this is all copied into crypto_ec.cpp - template it up like Node?
   CheckEntropy();
 
   EVPKeyCtxPointer ctx = setup(config);

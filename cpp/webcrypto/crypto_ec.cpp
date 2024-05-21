@@ -408,7 +408,7 @@ EVPKeyCtxPointer setup(std::shared_ptr<EcKeyPairGenConfig> config) {
 std::pair<jsi::Value, jsi::Value> generateEcKeyPair(jsi::Runtime& runtime,
                                                     std::shared_ptr<EcKeyPairGenConfig> config)
 {
-  // TODO: this is all copied from MGLRsa.cpp - template it up like Node
+  // TODO: this is all copied from MGLRsa.cpp - template it up like Node?
 
   EVPKeyCtxPointer ctx = setup(config);
 

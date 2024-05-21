@@ -662,3 +662,7 @@ export class PrivateKeyObject extends AsymmetricKeyObject {
     return this.handle.export(format, type, cipher, passphrase);
   }
 }
+
+export const isCryptoKey = (obj: any): boolean => {
+  return obj !== null && obj?.keyObject !== undefined;
+};

@@ -10,6 +10,7 @@ import type {
   KeyUsage,
   NamedCurve,
 } from '../../../../../src/keys';
+import { isCryptoKey } from '../../../../../src/keys';
 
 const { subtle } = crypto;
 
@@ -458,13 +459,10 @@ describe('subtle - generateKey', () => {
 
         expect(publicKey).is.not.undefined;
         expect(privateKey).is.not.undefined;
-        // expect(isCryptoKey(publicKey));
-        // expect(isCryptoKey(privateKey));
-
-        // expect(publicKey.type).to.equal('public');
-        // expect(privateKey.type).to.equal('private');
-        // expect(publicKey.toString()).to.equal('[object CryptoKey]');
-        // expect(privateKey.toString()).to.equal('[object CryptoKey]');
+        expect(isCryptoKey(publicKey));
+        expect(isCryptoKey(privateKey));
+        expect(publicKey.type).to.equal('public');
+        expect(privateKey.type).to.equal('private');
         expect(publicKey.keyExtractable).to.equal(true);
         expect(privateKey.keyExtractable).to.equal(true);
         expect(publicKey.keyUsages).to.deep.equal(publicUsages);
