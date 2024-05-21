@@ -15,9 +15,11 @@
 #ifdef ANDROID
 #include "Utils/MGLUtils.h"
 #include "webcrypto/MGLWebCrypto.h"
+#include "JSIUtils/MGLJSIUtils.h"
 #else
 #include "MGLUtils.h"
 #include "MGLWebCrypto.h"
+#include "MGLJSIUtils.h"
 #endif
 
 

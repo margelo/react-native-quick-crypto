@@ -10,7 +10,6 @@
 #include <openssl/ec.h>
 #include <string>
 #include <utility>
-#include <MGLJSIUtils.h>
 
 namespace margelo {
 namespace jsi = facebook::jsi;
