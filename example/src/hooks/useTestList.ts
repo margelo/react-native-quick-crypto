@@ -17,7 +17,7 @@ import '../testing/Tests/SignTests/SignTests';
 import '../testing/Tests/webcryptoTests/import_export';
 import '../testing/Tests/webcryptoTests/deriveBits';
 import '../testing/Tests/webcryptoTests/digest';
-import '../testing/Tests/SmokeTests/cjsTests';
+import '../testing/Tests/SmokeTests/bundlerTests';
 
 export const useTestList = (): [
   Suites,
