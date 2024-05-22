@@ -58,3 +58,8 @@ export const install = () => {
 };
 
 export default QuickCrypto;
+
+// Additional exports for CommonJS compatibility
+module.exports = QuickCrypto;
+module.exports.default = QuickCrypto;
+module.exports.install = install;
