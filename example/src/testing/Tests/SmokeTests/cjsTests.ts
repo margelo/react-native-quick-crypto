@@ -55,14 +55,14 @@ describe('bundler smoke tests', () => {
     expect(install).to.be.a('function');
   });
 
-  it('using esm work with an async import and the default import', async function () {
+  it('using esm with an async import work with the default import', async function () {
     const crypto = (await import('react-native-quick-crypto')).default;
     expect(crypto).to.be.an('object');
     const hashes = crypto.getHashes();
     expect(hashes).to.be.an('array');
   });
 
-  it('using esm work with the install function', async function () {
+  it('using esm with an async import work with the install function', async function () {
     const install = (await import('react-native-quick-crypto')).install;
     expect(install).to.be.a('function');
   });
