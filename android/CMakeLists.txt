@@ -53,6 +53,7 @@ add_library(
   "../cpp/Sig/MGLSignHostObjects.cpp"
   "../cpp/webcrypto/MGLWebCrypto.cpp"
   "../cpp/webcrypto/crypto_ec.cpp"
+  "../cpp/RNTQuickCryptoCxx.cpp"
 )
 
 target_include_directories(
