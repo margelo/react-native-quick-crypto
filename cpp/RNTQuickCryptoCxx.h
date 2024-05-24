@@ -20,15 +20,19 @@
 #include <string>
 #include <vector>
 
+
 namespace facebook::react {
+
+namespace margelo {
 
 #pragma mark - implementation
 class RNTQuickCryptoCxx : public NativeQuickCryptoCxxCxxSpec<RNTQuickCryptoCxx> {
- public:
-  RNTQuickCryptoCxx(std::shared_ptr<CallInvoker> jsInvoker);
-  virtual ~RNTQuickCryptoCxx() = default;
+public:
+    RNTQuickCryptoCxx(std::shared_ptr<CallInvoker> jsInvoker);
+    virtual ~RNTQuickCryptoCxx() = default;
     
-  double install(jsi::Runtime &rt, double a, double b);
+    double install(jsi::Runtime &rt);
 };
-
+}
 } // namespace facebook::react
+

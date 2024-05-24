@@ -11,6 +11,8 @@ module.exports = {
         alias: {
           [pak.name]: path.join(__dirname, '..', pak.source),
           crypto: 'react-native-quick-crypto',
+          'stream': 'readable-stream',
+          'buffer': '@craftzdog/react-native-buffer',
         },
       },
     ],

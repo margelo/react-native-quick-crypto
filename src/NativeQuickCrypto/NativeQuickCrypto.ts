@@ -1,3 +1,5 @@
+import CryptoCxx from '../NativeQuickCryptoCxx';
+
 import { NativeModules, Platform } from 'react-native';
 import type { CreateHmacMethod } from './hmac';
 import type { CreateHashMethod } from './hash';
@@ -40,7 +42,7 @@ declare global {
 // Check if the constructor exists. If not, try installing the JSI bindings.
 if (global.__QuickCryptoProxy == null) {
   // Get the native QuickCrypto ReactModule
-  const QuickCryptoModule = NativeModules.QuickCrypto;
+  const QuickCryptoModule = CryptoCxx;
   if (QuickCryptoModule == null) {
     let message =
       'Failed to install react-native-quick-crypto: The native `QuickCrypto` Module could not be found.';
@@ -72,7 +74,7 @@ if (global.__QuickCryptoProxy == null) {
   }
 
   // Check if we are running on-device (JSI)
-  if (global.nativeCallSyncHook == null || QuickCryptoModule.install == null) {
+  if (QuickCryptoModule.install == null) {
     throw new Error(
       'Failed to install react-native-quick-crypto: React Native is not running on-device. QuickCrypto can only be used when synchronous method invocations (JSI) are possible. If you are using a remote debugger (e.g. Chrome), switch to an on-device debugger (e.g. Flipper) instead.'
     );
@@ -80,7 +82,7 @@ if (global.__QuickCryptoProxy == null) {
 
   // Call the synchronous blocking install() function
   const result = QuickCryptoModule.install();
-  if (result !== true)
+  if (result !== 1)
     throw new Error(
       `Failed to install react-native-quick-crypto: The native QuickCrypto Module could not be installed! Looks like something went wrong when installing JSI bindings: ${result}`
     );
