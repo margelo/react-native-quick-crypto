@@ -31,9 +31,9 @@
     "lint": "eslint \"**/*.{js,ts,tsx}\"",
     "prepare": "bob build",
     "release": "release-it",
-    "example": "yarn --cwd example",
-    "pods": "cd example && yarn pods",
-    "bootstrap": "yarn example && yarn && yarn pods",
+    "example": "yarn --cwd FabricExample",
+    "pods": "cd FabricExample && yarn pods",
+    "bootstrap": "bundle install && yarn example && yarn &&  && RCT_NEW_ARCH_ENABLED=1 bundle exec pod install",
     "test": "jest"
   },
   "keywords": [
