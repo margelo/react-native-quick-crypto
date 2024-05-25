@@ -1,10 +1,20 @@
 project(ReactNativeQuickCrypto)
-cmake_minimum_required(VERSION 3.10.2)
+cmake_minimum_required(VERSION 3.13)
 
 set(PACKAGE_NAME "reactnativequickcrypto")
 set(BUILD_DIR ${CMAKE_SOURCE_DIR}/build)
 set(CMAKE_VERBOSE_MAKEFILE ON)
 set(CMAKE_CXX_STANDARD 17)
+
+
+
+add_compile_options(
+        -fexceptions
+        -frtti
+        -Wall
+        -Wpedantic
+        -DFOLLY_NO_CONFIG=1
+        -DLOG_TAG=\"ReactNative\")
 
 # set (CMAKE_C_FLAGS_DEBUG "${CMAKE_C_FLAGS_DEBUG} -g")
 # set (CMAKE_CXX_FLAGS_DEBUG "${CMAKE_CXX_FLAGS_DEBUG} -g")
@@ -44,6 +54,8 @@ add_library(
   "../cpp/Sig/MGLSignHostObjects.cpp"
   "../cpp/webcrypto/MGLWebCrypto.cpp"
   "../cpp/webcrypto/crypto_ec.cpp"
+  "../cpp/RNTQuickCryptoCxx.cpp"
+  "./build/generated/source/codegen/jni/react/renderer/components/RTNQuickCryptoCxxSpec/RTNQuickCryptoCxxSpecJSI-generated.cpp"
 )
 
 target_include_directories(
@@ -51,15 +63,11 @@ target_include_directories(
   PRIVATE
   "../cpp"
   "src/main/cpp"
-  "${NODE_MODULES_DIR}/react-native/ReactCommon"
-  "${NODE_MODULES_DIR}/react-native/ReactCommon/callinvoker"
-  "${NODE_MODULES_DIR}/react-native/ReactAndroid/src/main/jni/react/turbomodule"
-  "${NODE_MODULES_DIR}/react-native/ReactCommon/jsi"
-  "${NODE_MODULES_DIR}/react-native/ReactCommon/turbomodule/core"
-  "${NODE_MODULES_DIR}/react-native/ReactCommon/react/nativemodule/core"
+  "./build/generated/source/codegen/jni"
 )
 
 #file(GLOB LIBRN_DIR "${BUILD_DIR}/react-native-0*/jni/${ANDROID_ABI}")
+
 
 target_link_libraries(
   ${PACKAGE_NAME}
@@ -71,4 +79,7 @@ target_link_libraries(
   ReactAndroid::react_nativemodule_core  # <-- RN: React Native native module core
   android                                # <-- Android JNI core
   openssl::crypto                        # <-- OpenSSL (Crypto)
+  #react_codegen_RTNQuickCryptoCxxSpec 
 )
+
+
