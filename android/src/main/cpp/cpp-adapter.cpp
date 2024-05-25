@@ -3,10 +3,8 @@
 #include <jni.h>
 #include <jsi/jsi.h>
 
-#import <React/RCTUtils.h>
-#import <ReactCommon/RCTTurboModule.h>
-#import "RNTQuickCryptoCxx.h"
-#import <ReactCommon/CxxTurboModuleUtils.h>
+#include "RNTQuickCryptoCxx.h"
+#include <ReactCommon/CxxTurboModuleUtils.h>
 
 using namespace facebook;
 

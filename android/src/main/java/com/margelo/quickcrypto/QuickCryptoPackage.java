@@ -11,6 +11,11 @@ import java.util.Collections;
 import java.util.List;
 
 public class QuickCryptoPackage implements ReactPackage {
+
+  static {
+    System.loadLibrary("reactnativequickcrypto");
+  }
+
   @NonNull
   @Override
   public List<NativeModule> createNativeModules(@NonNull ReactApplicationContext reactContext) {

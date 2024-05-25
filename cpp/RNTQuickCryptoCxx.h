@@ -7,11 +7,9 @@
 
 #pragma once
 
-#if __has_include(<ReactCodegen/AppSpecsJSI.h>) // CocoaPod headers on Apple
-#include <ReactCodegen/AppSpecsJSI.h>
-#elif __has_include("AppSpecsJSI.h") // Cmake headers on Android
-#include "AppSpecsJSI.h"
-#else // BUCK headers
+#if __has_include(<react/renderer/components/RTNQuickCryptoCxxSpec/RTNQuickCryptoCxxSpecJSI.h>) // android
+#include <react/renderer/components/RTNQuickCryptoCxxSpec/RTNQuickCryptoCxxSpecJSI.h>
+#else // iOS
 #include "RTNQuickCryptoCxxSpecJSI.h"
 #endif
 #include <memory>

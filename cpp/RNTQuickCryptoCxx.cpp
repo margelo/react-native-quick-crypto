@@ -1,5 +1,5 @@
 #include "RNTQuickCryptoCxx.h"
-#import "MGLQuickCryptoHostObject.h"
+#include "MGLQuickCryptoHostObject.h"
 namespace facebook::react {
 namespace margelo {
 
