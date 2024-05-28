@@ -440,20 +440,15 @@ function prepareSecretKey(
     }
   }
 
-  if (key instanceof ArrayBuffer) {
-    return key;
-  }
-
-  if (typeof key === 'string') {
+  /**
+   * We should exclude both `CryptoKey` and `KeyObject` because they are not supported by `binaryLikeToArrayBuffer`.
+   */
+  if (!(key instanceof CryptoKey) && !(key instanceof KeyObject)) {
     return binaryLikeToArrayBuffer(key, encoding);
   }
 
-  if (key instanceof Uint8Array) {
-    return key.buffer;
-  }
-
   throw new Error(
-    'Invalid argument type for "key". Need ArrayBuffer, KeyObject, CryptoKey, string'
+    'Invalid argument type for "key". Need ArrayBuffer, TypedArray, KeyObject, CryptoKey, string'
   );
 }
 
