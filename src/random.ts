@@ -1,18 +1,9 @@
 import { NativeQuickCrypto } from './NativeQuickCrypto/NativeQuickCrypto';
 import { Buffer } from '@craftzdog/react-native-buffer';
+import type { TypedArray } from './Utils';
 
 const random = NativeQuickCrypto.random;
 
-type TypedArray =
-  | Uint8Array
-  | Uint8ClampedArray
-  | Uint16Array
-  | Uint32Array
-  | Int8Array
-  | Int16Array
-  | Int32Array
-  | Float32Array
-  | Float64Array;
 type ArrayBufferView = TypedArray | DataView | ArrayBufferLike | Buffer;
 
 export function randomFill<T extends ArrayBufferView>(
@@ -266,19 +257,7 @@ function asyncRefillRandomIntCache() {
   });
 }
 
-// Really just the Web Crypto API alternative
-// to require('crypto').randomFillSync() with an
-// additional limitation that the input buffer is
-// not allowed to exceed 65536 bytes, and can only
-// be an integer-type TypedArray.
-export type RandomTypedArrays =
-  | Int8Array
-  | Int16Array
-  | Int32Array
-  | Uint8Array
-  | Uint16Array
-  | Uint32Array;
-export function getRandomValues(data: RandomTypedArrays) {
+export function getRandomValues(data: TypedArray) {
   if (data.byteLength > 65536) {
     throw new Error('The requested length exceeds 65,536 bytes');
   }

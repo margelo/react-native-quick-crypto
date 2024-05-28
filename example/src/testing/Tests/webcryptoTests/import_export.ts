@@ -7,10 +7,13 @@ import {
 } from 'react-native-quick-base64';
 import crypto from 'react-native-quick-crypto';
 import { describe, it } from '../../MochaRNAdapter';
-import { ab2str, binaryLikeToArrayBuffer } from '../../../../../src/Utils';
+import {
+  ab2str,
+  binaryLikeToArrayBuffer,
+  type TypedArray,
+} from '../../../../../src/Utils';
 import { assertThrowsAsync } from '../util';
 import type { JWK, KeyUsage, NamedCurve } from '../../../../../src/keys';
-import type { RandomTypedArrays } from '../../../../../src/random';
 
 const { subtle } = crypto;
 
@@ -235,7 +238,7 @@ describe('subtle - importKey / exportKey', () => {
       expect(key.keyAlgorithm.length).to.equal(256);
     });
 
-    const test = (rawKeyData: RandomTypedArrays, descr: string): void => {
+    const test = (rawKeyData: TypedArray, descr: string): void => {
       it(`AES import raw / export jwk (${descr})`, async () => {
         const keyData = binaryLikeToArrayBuffer(rawKeyData);
         const keyB64 = arrayBufferToBase64(keyData, true);
