@@ -440,10 +440,11 @@ function prepareSecretKey(
     }
   }
 
-  /**
-   * We should exclude both `CryptoKey` and `KeyObject` because they are not supported by `binaryLikeToArrayBuffer`.
-   */
-  if (!(key instanceof CryptoKey) && !(key instanceof KeyObject)) {
+  if (key instanceof ArrayBuffer) {
+    return key;
+  }
+
+  if (typeof key === 'string' || key instanceof Uint8Array) {
     return binaryLikeToArrayBuffer(key, encoding);
   }
 
