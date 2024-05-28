@@ -5,6 +5,7 @@ import {
 } from './Utils';
 import type { KeyObjectHandle } from './NativeQuickCrypto/webcrypto';
 import { NativeQuickCrypto } from './NativeQuickCrypto/NativeQuickCrypto';
+import type { RandomTypedArrays } from './random';
 
 export const kNamedCurveAliases = {
   'P-256': 'prime256v1',
@@ -417,7 +418,7 @@ export function parsePrivateKeyEncoding(
 }
 
 function prepareSecretKey(
-  key: ArrayBuffer | KeyObject | CryptoKey | Uint8Array | string,
+  key: ArrayBuffer | KeyObject | CryptoKey | RandomTypedArrays | string,
   encoding?: string,
   bufferOnly = false
 ): any {
