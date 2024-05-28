@@ -92,7 +92,7 @@ describe('subtle - importKey / exportKey', () => {
         await subtle.importKey('raw', 1, { name: 'PBKDF2' }, false, [
           'deriveBits',
         ]),
-      'Invalid argument type for "key". Need ArrayBuffer, KeyObject, CryptoKey, string'
+      'Invalid argument type for "key". Need ArrayBuffer, TypedArray, KeyObject, CryptoKey, string'
     );
     await assertThrowsAsync(
       async () =>
@@ -170,6 +170,28 @@ describe('subtle - importKey / exportKey', () => {
         ),
       '"subtle.importKey()" is not implemented for HMAC'
       // TODO: will be 'Invalid keyData'
+    );
+  });
+
+  it('Good Input - Uint8Array', async () => {
+    await subtle.importKey(
+      'raw',
+      new Uint8Array([
+        117, 110, 102, 97, 105, 114, 32, 99, 117, 108, 116, 117, 114, 101, 32,
+        115, 117, 105, 116, 32, 112, 97, 116, 104, 32, 119, 111, 114, 108, 100,
+        32, 104, 105, 103, 104, 32, 116, 111, 109, 111, 114, 114, 111, 119, 32,
+        118, 105, 100, 101, 111, 32, 114, 101, 99, 105, 112, 101, 32, 99, 114,
+        105, 109, 101, 32, 101, 110, 103, 105, 110, 101, 32, 119, 105, 100, 116,
+        104, 32, 111, 102, 116, 101, 110, 32, 116, 97, 112, 101, 32, 116, 114,
+        101, 110, 100, 32, 99, 111, 112, 112, 101, 114, 32, 100, 111, 117, 98,
+        108, 101, 32, 103, 108, 111, 114, 121, 32, 100, 111, 99, 116, 111, 114,
+        32, 101, 110, 101, 114, 103, 121, 32, 103, 111, 111, 115, 101, 32, 115,
+        101, 99, 111, 110, 100, 32, 97, 98, 115, 116, 114, 97, 99, 116, 32, 107,
+        110, 111, 99, 107,
+      ]),
+      { name: 'PBKDF2' },
+      false,
+      ['deriveBits']
     );
   });
 
