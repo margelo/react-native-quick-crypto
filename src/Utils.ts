@@ -13,7 +13,7 @@ import type {
 import { type CipherKey } from 'crypto'; // @types/node
 
 export type BufferLike = ArrayBuffer | Buffer | ArrayBufferView;
-export type BinaryLike = string | ArrayBuffer | Buffer;
+export type BinaryLike = string | ArrayBuffer | Buffer | TypedArray;
 export type BinaryLikeNode = CipherKey | BinaryLike;
 
 export type BinaryToTextEncoding = 'base64' | 'base64url' | 'hex' | 'binary';
@@ -26,6 +26,17 @@ export type Encoding =
 
 // TODO(osp) should buffer be part of the Encoding type?
 export type CipherEncoding = Encoding | 'buffer';
+
+export type TypedArray =
+  | Uint8Array
+  | Uint8ClampedArray
+  | Uint16Array
+  | Uint32Array
+  | Int8Array
+  | Int16Array
+  | Int32Array
+  | Float32Array
+  | Float64Array;
 
 type DOMName =
   | string

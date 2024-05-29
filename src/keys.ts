@@ -417,40 +417,41 @@ export function parsePrivateKeyEncoding(
 }
 
 function prepareSecretKey(
-  key: ArrayBuffer | KeyObject | CryptoKey | string,
+  key: BinaryLike,
   encoding?: string,
   bufferOnly = false
 ): any {
-  if (!bufferOnly) {
-    // TODO: maybe use `key.constructor.name === 'KeyObject'` ?
-    if (key instanceof KeyObject) {
-      if (key.type !== 'secret')
-        throw new Error(
-          `invalid KeyObject type: ${key.type}, expected 'secret'`
-        );
-      return key.handle;
+  try {
+    if (!bufferOnly) {
+      // TODO: maybe use `key.constructor.name === 'KeyObject'` ?
+      if (key instanceof KeyObject) {
+        if (key.type !== 'secret')
+          throw new Error(
+            `invalid KeyObject type: ${key.type}, expected 'secret'`
+          );
+        return key.handle;
+      }
+      // TODO: maybe use `key.constructor.name === 'CryptoKey'` ?
+      else if (key instanceof CryptoKey) {
+        if (key.type !== 'secret')
+          throw new Error(
+            `invalid CryptoKey type: ${key.type}, expected 'secret'`
+          );
+        return key.keyObject.handle;
+      }
     }
-    // TODO: maybe use `key.constructor.name === 'CryptoKey'` ?
-    else if (key instanceof CryptoKey) {
-      if (key.type !== 'secret')
-        throw new Error(
-          `invalid CryptoKey type: ${key.type}, expected 'secret'`
-        );
-      return key.keyObject.handle;
+
+    if (key instanceof ArrayBuffer) {
+      return key;
     }
-  }
 
-  if (key instanceof ArrayBuffer) {
-    return key;
-  }
-
-  if (typeof key === 'string') {
     return binaryLikeToArrayBuffer(key, encoding);
+  } catch (error) {
+    throw new Error(
+      'Invalid argument type for "key". Need ArrayBuffer, TypedArray, KeyObject, CryptoKey, string',
+      { cause: error }
+    );
   }
-
-  throw new Error(
-    'Invalid argument type for "key". Need ArrayBuffer, KeyObject, CryptoKey, string'
-  );
 }
 
 export function createSecretKey(key: any, encoding?: string) {
