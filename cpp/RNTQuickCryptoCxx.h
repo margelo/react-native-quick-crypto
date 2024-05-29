@@ -7,11 +7,7 @@
 
 #pragma once
 
-#if __has_include(<react/renderer/components/RTNQuickCryptoCxxSpec/RTNQuickCryptoCxxSpecJSI.h>) // android
-#include <react/renderer/components/RTNQuickCryptoCxxSpec/RTNQuickCryptoCxxSpecJSI.h>
-#else // iOS
 #include "RTNQuickCryptoCxxSpecJSI.h"
-#endif
 #include <memory>
 #include <optional>
 #include <set>

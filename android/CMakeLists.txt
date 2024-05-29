@@ -63,7 +63,7 @@ target_include_directories(
   PRIVATE
   "../cpp"
   "src/main/cpp"
-  "./build/generated/source/codegen/jni"
+  "./build/generated/source/codegen/jni/react/renderer/components/RTNQuickCryptoCxxSpec"
 )
 
 #file(GLOB LIBRN_DIR "${BUILD_DIR}/react-native-0*/jni/${ANDROID_ABI}")
@@ -81,5 +81,3 @@ target_link_libraries(
   openssl::crypto                        # <-- OpenSSL (Crypto)
   #react_codegen_RTNQuickCryptoCxxSpec 
 )
-
-
