@@ -257,7 +257,18 @@ function asyncRefillRandomIntCache() {
   });
 }
 
-export function getRandomValues(data: TypedArray) {
+// to require('crypto').randomFillSync() with an
+// additional limitation that the input buffer is
+// not allowed to exceed 65536 bytes, and can only
+// be an integer-type TypedArray.
+export type RandomTypedArrays =
+  | Int8Array
+  | Int16Array
+  | Int32Array
+  | Uint8Array
+  | Uint16Array
+  | Uint32Array;
+export function getRandomValues(data: RandomTypedArrays) {
   if (data.byteLength > 65536) {
     throw new Error('The requested length exceeds 65,536 bytes');
   }
