@@ -1,12 +1,16 @@
+import type { GenerateKeyPairReturn } from '../Cipher';
 import type { BinaryLike } from '../Utils';
 import type { Buffer } from '@craftzdog/react-native-buffer';
 
-// TODO(osp) on node this is defined on the native side
-// Need to do the same so that values are always in sync
-export enum RSAKeyVariant {
-  kKeyVariantRSA_SSA_PKCS1_v1_5,
-  kKeyVariantRSA_PSS,
-  kKeyVariantRSA_OAEP,
+// TODO: until shared, keep in sync with C++ side (cpp/Utils/MGLUtils.h)
+export enum KeyVariant {
+  RSA_SSA_PKCS1_v1_5,
+  RSA_PSS,
+  RSA_OAEP,
+  DSA,
+  EC,
+  NID,
+  DH,
 }
 
 export type InternalCipher = {
@@ -56,15 +60,11 @@ export type PrivateDecryptMethod = (
 ) => Buffer;
 
 export type GenerateKeyPairMethod = (
-  keyVariant: RSAKeyVariant,
-  modulusLength: number,
-  publicExponent: number,
+  keyVariant: KeyVariant,
   ...rest: any[]
-) => Promise<[error: unknown, publicBuffer: any, privateBuffer: any]>;
+) => Promise<GenerateKeyPairReturn>;
 
 export type GenerateKeyPairSyncMethod = (
-  keyVariant: RSAKeyVariant,
-  modulusLength: number,
-  publicExponent: number,
+  keyVariant: KeyVariant,
   ...rest: any[]
-) => [error: unknown, publicBuffer: any, privateBuffer: any];
+) => GenerateKeyPairReturn;

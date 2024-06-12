@@ -15,7 +15,7 @@
   },
   "dependencies": {
     "@craftzdog/react-native-buffer": "^6.0.5",
-    "@react-native-community/checkbox": "^0.5.16",
+    "@react-native-community/checkbox": "^0.5.17",
     "@react-navigation/native": "^6.1.6",
     "@react-navigation/native-stack": "^6.9.12",
     "buffer": "^6.0.3",

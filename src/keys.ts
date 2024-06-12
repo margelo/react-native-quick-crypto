@@ -28,16 +28,16 @@ export type AnyAlgorithm =
 
 export type HashAlgorithm = 'SHA-1' | 'SHA-256' | 'SHA-384' | 'SHA-512';
 
+export type KeyPairType = 'rsa' | 'rsa-pss' | 'ec';
+
+export type RSAKeyPairAlgorithm = 'RSASSA-PKCS1-v1_5' | 'RSA-PSS' | 'RSA-OAEP';
+export type ECKeyPairAlgorithm = 'ECDSA' | 'ECDH';
+export type CFRGKeyPairAlgorithm = 'Ed25519' | 'Ed448' | 'X25519' | 'X448';
+
 export type KeyPairAlgorithm =
-  | 'ECDSA'
-  | 'ECDH'
-  | 'Ed25519'
-  | 'Ed448'
-  | 'RSASSA-PKCS1-v1_5'
-  | 'RSA-PSS'
-  | 'RSA-OAEP'
-  | 'X25519'
-  | 'X448';
+  | RSAKeyPairAlgorithm
+  | ECKeyPairAlgorithm
+  | CFRGKeyPairAlgorithm;
 
 export type SecretKeyAlgorithm =
   | 'HMAC'
@@ -173,6 +173,11 @@ const encodingNames = {
   [KeyEncoding.kKeyEncodingPKCS8]: 'pkcs8',
   [KeyEncoding.kKeyEncodingSPKI]: 'spki',
   [KeyEncoding.kKeyEncodingSEC1]: 'sec1',
+};
+
+export type CryptoKeyPair = {
+  publicKey: any;
+  privateKey: any;
 };
 
 function option(name: string, objName: string | undefined) {
@@ -517,18 +522,6 @@ export class CryptoKey {
   }
 }
 
-// ObjectDefineProperties(CryptoKey.prototype, {
-//   type: kEnumerableProperty,
-//   extractable: kEnumerableProperty,
-//   algorithm: kEnumerableProperty,
-//   usages: kEnumerableProperty,
-//   [SymbolToStringTag]: {
-//     __proto__: null,
-//     configurable: true,
-//     value: 'CryptoKey',
-//   },
-// });
-
 class KeyObject {
   handle: KeyObjectHandle;
   type: 'public' | 'secret' | 'private' | 'unknown' = 'unknown';
@@ -568,14 +561,6 @@ class KeyObject {
   //   );
   // }
 }
-
-// ObjectDefineProperties(KeyObject.prototype, {
-//   [SymbolToStringTag]: {
-//     __proto__: null,
-//     configurable: true,
-//     value: 'KeyObject',
-//   },
-// });
 
 export class SecretKeyObject extends KeyObject {
   constructor(handle: KeyObjectHandle) {
@@ -677,3 +662,7 @@ export class PrivateKeyObject extends AsymmetricKeyObject {
     return this.handle.export(format, type, cipher, passphrase);
   }
 }
+
+export const isCryptoKey = (obj: any): boolean => {
+  return obj !== null && obj?.keyObject !== undefined;
+};

@@ -14,7 +14,7 @@ import {
   validateInt32,
   type BinaryLikeNode,
 } from './Utils';
-import { type InternalCipher, RSAKeyVariant } from './NativeQuickCrypto/Cipher';
+import { type InternalCipher, KeyVariant } from './NativeQuickCrypto/Cipher';
 import type {
   CipherCCMOptions,
   CipherCCMTypes,
@@ -38,7 +38,16 @@ import {
   parsePublicKeyEncoding,
   preparePrivateKey,
   preparePublicOrPrivateKey,
+  type CryptoKeyPair,
+  type KeyPairType,
+  type NamedCurve,
 } from './keys';
+import type { KeyObjectHandle } from './NativeQuickCrypto/webcrypto';
+
+export enum ECCurve {
+  OPENSSL_EC_EXPLICIT_CURVE,
+  OPENSSL_EC_NAMED_CURVE,
+}
 
 // make sure that nextTick is there
 global.process.nextTick = setImmediate;
@@ -428,8 +437,8 @@ export const privateDecrypt = rsaFunctionFor(
 //   \__, |\___|_| |_|\___|_|  \__,_|\__\___|_|\_\___|\__, |_|   \__,_|_|_|
 //    __/ |                                            __/ |
 //   |___/                                            |___/
-type GenerateKeyPairOptions = {
-  modulusLength: number; // Key size in bits (RSA, DSA).
+export type GenerateKeyPairOptions = {
+  modulusLength?: number; // Key size in bits (RSA, DSA).
   publicExponent?: number; // Public exponent (RSA). Default: 0x10001.
   hashAlgorithm?: string; // Name of the message digest (RSA-PSS).
   mgf1HashAlgorithm?: string; // string Name of the message digest used by MGF1 (RSA-PSS).
@@ -446,11 +455,25 @@ type GenerateKeyPairOptions = {
   hash?: any;
   mgf1Hash?: any;
 };
-type GenerateKeyPairCallback = (
-  error: unknown | null,
-  publicKey?: Buffer,
-  privateKey?: Buffer
-) => void;
+
+export type GenerateKeyPairReturn = [
+  error?: Error,
+  privateKey?: Buffer | KeyObjectHandle,
+  publicKey?: Buffer | KeyObjectHandle,
+];
+
+export type GenerateKeyPairCallback = (
+  error?: Error,
+  publicKey?: Buffer | KeyObjectHandle,
+  privateKey?: Buffer | KeyObjectHandle
+) => GenerateKeyPairReturn | void;
+
+export type KeyPair = {
+  publicKey?: Buffer | KeyObjectHandle;
+  privateKey?: Buffer | KeyObjectHandle;
+};
+
+export type GenerateKeyPairPromiseReturn = [error?: Error, keypair?: KeyPair];
 
 function parseKeyEncoding(
   keyType: string,
@@ -505,14 +528,15 @@ function parseKeyEncoding(
   ];
 }
 
+/** On node a very complex "job" chain is created, we are going for a far simpler approach and calling
+ *  an internal function that basically executes the same byte shuffling on the native side
+ */
 function internalGenerateKeyPair(
   isAsync: boolean,
-  type: string,
+  type: KeyPairType,
   options: GenerateKeyPairOptions | undefined,
-  callback: GenerateKeyPairCallback | undefined
-) {
-  // On node a very complex "job" chain is created, we are going for a far simpler approach and calling
-  // an internal function that basically executes the same byte shuffling on the native side
+  callback?: GenerateKeyPairCallback
+): GenerateKeyPairReturn | void {
   const encoding = parseKeyEncoding(type, options);
 
   // if (options !== undefined)
@@ -520,11 +544,11 @@ function internalGenerateKeyPair(
 
   switch (type) {
     case 'rsa-pss':
-    case 'rsa': {
+    // fallthrough
+    case 'rsa':
       validateObject<GenerateKeyPairOptions>(options, 'options');
       const { modulusLength } = options!;
-      validateUint32(modulusLength, 'options.modulusLength');
-
+      validateUint32(modulusLength as number, 'options.modulusLength');
       let { publicExponent } = options!;
       if (publicExponent == null) {
         publicExponent = 0x10001;
@@ -535,37 +559,36 @@ function internalGenerateKeyPair(
       if (type === 'rsa') {
         if (isAsync) {
           NativeQuickCrypto.generateKeyPair(
-            RSAKeyVariant.kKeyVariantRSA_SSA_PKCS1_v1_5,
-            modulusLength,
+            KeyVariant.RSA_SSA_PKCS1_v1_5,
+            modulusLength as number,
             publicExponent,
             ...encoding
           )
             .then(([err, publicKey, privateKey]) => {
-              if (typeof publicKey === 'object') {
+              if (publicKey instanceof Buffer) {
                 publicKey = Buffer.from(publicKey);
               }
-              if (typeof privateKey === 'object') {
+              if (privateKey instanceof Buffer) {
                 privateKey = Buffer.from(privateKey);
               }
-              callback?.(err, publicKey, privateKey);
+              callback!(err, publicKey, privateKey);
             })
             .catch((err) => {
-              callback?.(err, undefined, undefined);
+              callback!(err, undefined, undefined);
             });
-          return;
         } else {
           let [err, publicKey, privateKey] =
             NativeQuickCrypto.generateKeyPairSync(
-              RSAKeyVariant.kKeyVariantRSA_SSA_PKCS1_v1_5,
-              modulusLength,
+              KeyVariant.RSA_SSA_PKCS1_v1_5,
+              modulusLength as number,
               publicExponent,
               ...encoding
             );
 
-          if (typeof publicKey === 'object') {
+          if (publicKey instanceof Buffer) {
             publicKey = Buffer.from(publicKey);
           }
-          if (typeof privateKey === 'object') {
+          if (privateKey instanceof Buffer) {
             privateKey = Buffer.from(privateKey);
           }
 
@@ -609,15 +632,15 @@ function internalGenerateKeyPair(
       }
 
       return NativeQuickCrypto.generateKeyPairSync(
-        RSAKeyVariant.kKeyVariantRSA_PSS,
-        modulusLength,
+        KeyVariant.RSA_PSS,
+        modulusLength as number,
         publicExponent,
         hashAlgorithm || hash,
         mgf1HashAlgorithm || mgf1Hash,
         saltLength,
         ...encoding
       );
-    }
+
     // case 'dsa': {
     //   validateObject(options, 'options');
     //   const { modulusLength } = options!;
@@ -634,21 +657,57 @@ function internalGenerateKeyPair(
     //   //   divisorLength,
     //   //   ...encoding);
     // }
-    // case 'ec': {
-    //   validateObject(options, 'options');
-    //   const { namedCurve } = options!;
-    //   validateString(namedCurve, 'options.namedCurve');
-    //   let { paramEncoding } = options!;
-    //   if (paramEncoding == null || paramEncoding === 'named')
-    //     paramEncoding = OPENSSL_EC_NAMED_CURVE;
-    //   else if (paramEncoding === 'explicit')
-    //     paramEncoding = OPENSSL_EC_EXPLICIT_CURVE;
-    //   else
-    //   throw new Error(`Invalid Argument options.paramEncoding ${paramEncoding}`);
-    //     // throw new ERR_INVALID_ARG_VALUE('options.paramEncoding', paramEncoding);
 
-    //   // return new EcKeyPairGenJob(mode, namedCurve, paramEncoding, ...encoding);
-    // }
+    case 'ec':
+      validateObject<GenerateKeyPairOptions>(options, 'options');
+      const { namedCurve } = options!;
+      validateString(namedCurve, 'options.namedCurve');
+      let paramEncodingFlag = ECCurve.OPENSSL_EC_NAMED_CURVE;
+      const { paramEncoding } = options!;
+      if (paramEncoding == null || paramEncoding === 'named')
+        paramEncodingFlag = ECCurve.OPENSSL_EC_NAMED_CURVE;
+      else if (paramEncoding === 'explicit')
+        paramEncodingFlag = ECCurve.OPENSSL_EC_EXPLICIT_CURVE;
+      else
+        throw new Error(
+          `Invalid Argument options.paramEncoding ${paramEncoding}`
+        );
+
+      if (isAsync) {
+        NativeQuickCrypto.generateKeyPair(
+          KeyVariant.EC,
+          namedCurve as NamedCurve,
+          paramEncodingFlag,
+          ...encoding
+        )
+          .then(([err, publicKey, privateKey]) => {
+            if (publicKey instanceof Buffer) {
+              publicKey = Buffer.from(publicKey);
+            }
+            if (privateKey instanceof Buffer) {
+              privateKey = Buffer.from(privateKey);
+            }
+            callback?.(err, publicKey, privateKey);
+          })
+          .catch((err) => {
+            callback?.(err, undefined, undefined);
+          });
+      }
+
+      let [err, publicKey, privateKey] = NativeQuickCrypto.generateKeyPairSync(
+        KeyVariant.EC,
+        namedCurve as NamedCurve,
+        paramEncodingFlag,
+        ...encoding
+      );
+      if (publicKey instanceof Buffer) {
+        publicKey = Buffer.from(publicKey);
+      }
+      if (privateKey instanceof Buffer) {
+        privateKey = Buffer.from(privateKey);
+      }
+      return [err, publicKey, privateKey];
+
     // case 'ed25519':
     // case 'ed448':
     // case 'x25519':
@@ -712,48 +771,50 @@ function internalGenerateKeyPair(
     default:
     // Fall through
   }
-  throw new Error(
-    `Invalid Argument options: ${type} scheme not supported. Currently not all encryption methods are supported in quick-crypto!`
-  );
+  const err = new Error(`
+      Invalid Argument options: '${type}' scheme not supported for generateKey().
+      Currently not all encryption methods are supported in quick-crypto.  Check
+      implementation_coverage.md for status.
+    `);
+  return [err, undefined, undefined];
 }
 
-// TODO(osp) put correct types (e.g. type -> 'rsa', etc..)
-export function generateKeyPair(
-  type: string,
-  callback: GenerateKeyPairCallback
-): void;
-export function generateKeyPair(
-  type: string,
+export const generateKeyPair = (
+  type: KeyPairType,
   options: GenerateKeyPairOptions,
   callback: GenerateKeyPairCallback
-): void;
-export function generateKeyPair(
-  type: string,
-  options?: GenerateKeyPairCallback | GenerateKeyPairOptions,
-  callback?: GenerateKeyPairCallback
-) {
-  if (typeof options === 'function') {
-    callback = options;
-    options = undefined;
-  }
-
+): void => {
   validateFunction(callback);
-
   internalGenerateKeyPair(true, type, options, callback);
-}
-
-export function generateKeyPairSync(type: string): {
-  publicKey: any;
-  privateKey: any;
 };
-export function generateKeyPairSync(
-  type: string,
+
+// Promisify generateKeyPair
+// (attempted to use util.promisify, to no avail)
+export const generateKeyPairPromise = (
+  type: KeyPairType,
   options: GenerateKeyPairOptions
-): { publicKey: any; privateKey: any };
+): Promise<GenerateKeyPairPromiseReturn> => {
+  return new Promise((resolve, reject) => {
+    generateKeyPair(type, options, (err, publicKey, privateKey) => {
+      if (err) {
+        reject([err, undefined]);
+      } else {
+        resolve([undefined, { publicKey, privateKey }]);
+      }
+    });
+  });
+};
+
+// generateKeyPairSync
+export function generateKeyPairSync(type: KeyPairType): CryptoKeyPair;
 export function generateKeyPairSync(
-  type: string,
+  type: KeyPairType,
+  options: GenerateKeyPairOptions
+): CryptoKeyPair;
+export function generateKeyPairSync(
+  type: KeyPairType,
   options?: GenerateKeyPairOptions
-): { publicKey: any; privateKey: any } {
+): CryptoKeyPair {
   const [_, publicKey, privateKey] = internalGenerateKeyPair(
     false,
     type,

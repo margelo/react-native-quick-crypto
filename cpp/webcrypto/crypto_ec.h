@@ -15,9 +15,11 @@
 #ifdef ANDROID
 #include "Utils/MGLUtils.h"
 #include "webcrypto/MGLWebCrypto.h"
+#include "JSIUtils/MGLJSIUtils.h"
 #else
 #include "MGLUtils.h"
 #include "MGLWebCrypto.h"
+#include "MGLJSIUtils.h"
 #endif
 
 
@@ -59,6 +61,22 @@ std::shared_ptr<KeyObjectData> ImportJWKEcKey(jsi::Runtime &rt,
 
 jsi::Value GetEcKeyDetail(jsi::Runtime &rt,
                           std::shared_ptr<KeyObjectData> key);
+
+struct EcKeyPairGenConfig {
+  PublicKeyEncodingConfig public_key_encoding;
+  PrivateKeyEncodingConfig private_key_encoding;
+  ManagedEVPPKey key;
+
+  int curve_nid;
+  int param_encoding;
+};
+
+EcKeyPairGenConfig prepareEcKeyGenConfig(jsi::Runtime& runtime,
+                                       const jsi::Value* arguments);
+
+std::pair<jsi::Value, jsi::Value> generateEcKeyPair(jsi::Runtime& runtime,
+                                                    std::shared_ptr<EcKeyPairGenConfig> config);
+
 
 } // namespace margelo
 

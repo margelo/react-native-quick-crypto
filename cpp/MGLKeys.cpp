@@ -251,24 +251,26 @@ ParseKeyResult ParsePrivateKey(EVPKeyPointer* pkey,
   return ParseKeyResult::kParseKeyFailed;
 }
 
-OptionJSVariant BIOToStringOrBuffer(jsi::Runtime& rt, BIO* bio, PKFormatType format) {
+jsi::Value BIOToStringOrBuffer(jsi::Runtime& rt, BIO* bio, PKFormatType format) {
   BUF_MEM* bptr;
   BIO_get_mem_ptr(bio, &bptr);
   if (format == kKeyFormatPEM) {
     // PEM is an ASCII format, so we will return it as a string.
-    return JSVariant(std::string(bptr->data, bptr->length));
+    return toJSI(rt, std::string(bptr->data, bptr->length));
   } else {
-    // CHECK_EQ(format, kKeyFormatDER);
+    CHECK_EQ(format, kKeyFormatDER);
     // DER is binary, return it as a buffer.
-    return JSVariant(ByteSource::Allocated(bptr->data, bptr->length));
+    ByteSource::Builder out(bptr->length);
+    memcpy(out.data<void>(), bptr->data, bptr->length);
+    return toJSI(rt, std::move(out).release());
   }
 }
 
-OptionJSVariant WritePrivateKey(
+jsi::Value WritePrivateKey(
     jsi::Runtime& runtime, EVP_PKEY* pkey,
     const PrivateKeyEncodingConfig& config) {
   BIOPointer bio(BIO_new(BIO_s_mem()));
-  //  CHECK(bio);
+  CHECK(bio);
 
   // If an empty string was passed as the passphrase, the ByteSource might
   // contain a null pointer, which OpenSSL will ignore, causing it to invoke its
@@ -293,8 +295,15 @@ OptionJSVariant WritePrivateKey(
   }
 
   bool err = false;
+  PKEncodingType encoding_type;
 
-  PKEncodingType encoding_type = config.type_.value();
+  if (config.type_.has_value()) {
+    encoding_type = config.type_.value();
+  } else {
+    // default for no value in std::option `config.type_`
+    encoding_type = kKeyEncodingSEC1;
+  }
+
   if (encoding_type == kKeyEncodingPKCS1) {
     // PKCS#1 is only permitted for RSA keys.
     //    CHECK_EQ(EVP_PKEY_id(pkey), EVP_PKEY_RSA);
@@ -307,8 +316,8 @@ OptionJSVariant WritePrivateKey(
                                         pass_len, nullptr, nullptr) != 1;
     } else {
       // Encode PKCS#1 as DER. This does not permit encryption.
-      //      CHECK_EQ(config.format_, kKeyFormatDER);
-      //      CHECK_NULL(config.cipher_);
+      CHECK_EQ(config.format_, kKeyFormatDER);
+      CHECK_NULL(config.cipher_);
       err = i2d_RSAPrivateKey_bio(bio.get(), rsa.get()) != 1;
     }
   } else if (encoding_type == kKeyEncodingPKCS8) {
@@ -318,31 +327,28 @@ OptionJSVariant WritePrivateKey(
                                           pass_len, nullptr, nullptr) != 1;
     } else {
       // Encode PKCS#8 as DER.
-      //      CHECK_EQ(config.format_, kKeyFormatDER);
+      CHECK_EQ(config.format_, kKeyFormatDER);
       err = i2d_PKCS8PrivateKey_bio(bio.get(), pkey, config.cipher_, pass,
                                     pass_len, nullptr, nullptr) != 1;
     }
   } else {
-    //    CHECK_EQ(encoding_type, kKeyEncodingSEC1);
+    CHECK_EQ(encoding_type, kKeyEncodingSEC1);
 
     // SEC1 is only permitted for EC keys.
-    //    CHECK_EQ(EVP_PKEY_id(pkey), EVP_PKEY_EC);
+    CHECK_EQ(EVP_PKEY_id(pkey), EVP_PKEY_EC);
 
-    //    ECKeyPointer ec_key(EVP_PKEY_get1_EC_KEY(pkey));
-    //    if (config.format_ == kKeyFormatPEM) {
-    //      // Encode SEC1 as PEM.
-    //      err = PEM_write_bio_ECPrivateKey(
-    //                                       bio.get(), ec_key.get(),
-    //                                       config.cipher_,
-    //                                       reinterpret_cast<unsigned
-    //                                       char*>(pass), pass_len, nullptr,
-    //                                       nullptr) != 1;
-    //    } else {
-    //      // Encode SEC1 as DER. This does not permit encryption.
-    //      CHECK_EQ(config.format_, kKeyFormatDER);
-    //      CHECK_NULL(config.cipher_);
-    //      err = i2d_ECPrivateKey_bio(bio.get(), ec_key.get()) != 1;
-    //    }
+    ECKeyPointer ec_key(EVP_PKEY_get1_EC_KEY(pkey));
+    if (config.format_ == kKeyFormatPEM) {
+      // Encode SEC1 as PEM.
+      err = PEM_write_bio_ECPrivateKey(bio.get(),ec_key.get(), config.cipher_,
+                                       reinterpret_cast<unsigned char*>(pass),
+                                       pass_len, nullptr, nullptr) != 1;
+    } else {
+      // Encode SEC1 as DER. This does not permit encryption.
+      CHECK_EQ(config.format_, kKeyFormatDER);
+      // CHECK_NULL(config.cipher_);
+      err = i2d_ECPrivateKey_bio(bio.get(), ec_key.get()) != 1;
+    }
   }
 
   if (err) {
@@ -354,36 +360,37 @@ OptionJSVariant WritePrivateKey(
 
 bool WritePublicKeyInner(EVP_PKEY* pkey, const BIOPointer& bio,
                          const PublicKeyEncodingConfig& config) {
+  if (!config.type_.has_value()) return false;
   if (config.type_.value() == kKeyEncodingPKCS1) {
     // PKCS#1 is only valid for RSA keys.
-    //    CHECK_EQ(EVP_PKEY_id(pkey), EVP_PKEY_RSA);
+    CHECK_EQ(EVP_PKEY_id(pkey), EVP_PKEY_RSA);
     RsaPointer rsa(EVP_PKEY_get1_RSA(pkey));
     if (config.format_ == kKeyFormatPEM) {
       // Encode PKCS#1 as PEM.
       return PEM_write_bio_RSAPublicKey(bio.get(), rsa.get()) == 1;
     } else {
       // Encode PKCS#1 as DER.
-      //      CHECK_EQ(config.format_, kKeyFormatDER);
+      CHECK_EQ(config.format_, kKeyFormatDER);
       return i2d_RSAPublicKey_bio(bio.get(), rsa.get()) == 1;
     }
   } else {
-    //    CHECK_EQ(config.type_.ToChecked(), kKeyEncodingSPKI);
+    CHECK_EQ(config.type_.value(), kKeyEncodingSPKI);
     if (config.format_ == kKeyFormatPEM) {
       // Encode SPKI as PEM.
       return PEM_write_bio_PUBKEY(bio.get(), pkey) == 1;
     } else {
       // Encode SPKI as DER.
-      //      CHECK_EQ(config.format_, kKeyFormatDER);
+      CHECK_EQ(config.format_, kKeyFormatDER);
       return i2d_PUBKEY_bio(bio.get(), pkey) == 1;
     }
   }
 }
 
-OptionJSVariant WritePublicKey(
+jsi::Value WritePublicKey(
     jsi::Runtime& runtime, EVP_PKEY* pkey,
     const PublicKeyEncodingConfig& config) {
   BIOPointer bio(BIO_new(BIO_s_mem()));
-  //  CHECK(bio);
+  CHECK(bio);
 
   if (!WritePublicKeyInner(pkey, bio, config)) {
     throw jsi::JSError(runtime, "Failed to encode public key");
@@ -518,20 +525,18 @@ EVP_PKEY* ManagedEVPPKey::get() const { return pkey_.get(); }
 //                              size_of_private_key() +
 //                              size_of_public_key());
 //}
-//
-// size_t ManagedEVPPKey::size_of_private_key() const {
-//  size_t len = 0;
-//  return (pkey_ && EVP_PKEY_get_raw_private_key(
-//                                                pkey_.get(), nullptr, &len)
-//                                                == 1) ? len : 0;
-//}
-//
-// size_t ManagedEVPPKey::size_of_public_key() const {
-//  size_t len = 0;
-//  return (pkey_ && EVP_PKEY_get_raw_public_key(
-//                                               pkey_.get(), nullptr, &len)
-//                                               == 1) ? len : 0;
-//}
+
+size_t ManagedEVPPKey::size_of_private_key() const {
+ size_t len = 0;
+ return (pkey_ && EVP_PKEY_get_raw_private_key(pkey_.get(), nullptr, &len) == 1)
+  ? len : 0;
+}
+
+size_t ManagedEVPPKey::size_of_public_key() const {
+ size_t len = 0;
+ return (pkey_ && EVP_PKEY_get_raw_public_key(pkey_.get(), nullptr, &len) == 1)
+  ? len : 0;
+}
 
 jsi::Value ExportJWKInner(jsi::Runtime &rt,
                           std::shared_ptr<KeyObjectData> key,
@@ -549,45 +554,48 @@ jsi::Value ExportJWKInner(jsi::Runtime &rt,
   }
 }
 
-OptionJSVariant ManagedEVPPKey::ToEncodedPublicKey(
-    jsi::Runtime& runtime, ManagedEVPPKey key,
-    const PublicKeyEncodingConfig& config) {
+jsi::Value ManagedEVPPKey::ToEncodedPublicKey(jsi::Runtime& rt,
+                                              ManagedEVPPKey key,
+                                              const PublicKeyEncodingConfig& config) {
   if (!key) return {};
-  // TODO(osp) ignore all this for now
-  //   if (config.output_key_object_) {
-  //     // Note that this has the downside of containing sensitive data of the
-  //     // private key.
-  //     std::shared_ptr<KeyObjectData> data =
-  //     KeyObjectData::CreateAsymmetric(kKeyTypePublic, std::move(key));
-  // TODO(osp) Replaced tristate for std::optional
-  //     return Tristate(KeyObjectHandle::Create(env, data).ToLocal(out));
-  //   } else if (config.format_ == kKeyFormatJWK) {
-  //     std::shared_ptr<KeyObjectData> data =
-  //     KeyObjectData::CreateAsymmetric(kKeyTypePublic, std::move(key));
-  //     *out = Object::New(env->isolate());
-  //     return ExportJWKInner(env, data, *out, false);
-  //   }
+  if (config.output_key_object_) {
+    // Note that this has the downside of containing sensitive data of the
+    // private key.
+    auto data = KeyObjectData::CreateAsymmetric(kKeyTypePublic, std::move(key));
+    auto handle = KeyObjectHandle::Create(rt, data);
+    auto out = jsi::Object::createFromHostObject(rt, handle);
+    return jsi::Value(std::move(out));
+  } else
+  if (config.format_ == kKeyFormatJWK) {
+    throw std::runtime_error("ToEncodedPublicKey 2 (JWK) not implemented from node");
+    // std::shared_ptr<KeyObjectData> data =
+    // KeyObjectData::CreateAsymmetric(kKeyTypePublic, std::move(key));
+    // *out = Object::New(env->isolate());
+    // return ExportJWKInner(env, data, *out, false);
+  }
 
-  return WritePublicKey(runtime, key.get(), config);
+  return WritePublicKey(rt, key.get(), config);
 }
 
-OptionJSVariant ManagedEVPPKey::ToEncodedPrivateKey(
-    jsi::Runtime& runtime, ManagedEVPPKey key,
-    const PrivateKeyEncodingConfig& config) {
+jsi::Value ManagedEVPPKey::ToEncodedPrivateKey(jsi::Runtime& rt,
+                                                    ManagedEVPPKey key,
+                                                    const PrivateKeyEncodingConfig& config) {
   if (!key) return {};
-  //   if (config.output_key_object_) {
-  //     std::shared_ptr<KeyObjectData> data =
-  //     KeyObjectData::CreateAsymmetric(kKeyTypePrivate, std::move(key));
-  // TODO(osp) replaced tristate for std::optional
-  //     return Tristate(KeyObjectHandle::Create(env, data).ToLocal(out));
-  //   } else if (config.format_ == kKeyFormatJWK) {
-  //     std::shared_ptr<KeyObjectData> data =
-  //     KeyObjectData::CreateAsymmetric(kKeyTypePrivate, std::move(key));
-  //     *out = Object::New(env->isolate());
-  //     return ExportJWKInner(env, data, *out, false);
-  //   }
+  if (config.output_key_object_) {
+    auto data = KeyObjectData::CreateAsymmetric(kKeyTypePrivate, std::move(key));
+    auto handle = KeyObjectHandle::Create(rt, data);
+    auto out = jsi::Object::createFromHostObject(rt, handle);
+    return jsi::Value(std::move(out));
+  } else
+  if (config.format_ == kKeyFormatJWK) {
+    throw std::runtime_error("ToEncodedPrivateKey 2 (JWK) not implemented from node");
+    // std::shared_ptr<KeyObjectData> data =
+    // KeyObjectData::CreateAsymmetric(kKeyTypePrivate, std::move(key));
+    // *out = Object::New(env->isolate());
+    // return ExportJWKInner(env, data, *out, false);
+  }
 
-  return WritePrivateKey(runtime, key.get(), config);
+  return WritePrivateKey(rt, key.get(), config);
 }
 
 NonCopyableMaybe<PrivateKeyEncodingConfig>
@@ -886,23 +894,14 @@ jsi::Value KeyObjectHandle::get(
 //   registry->Register(GetKeyDetail);
 //   registry->Register(Equals);
 // }
-//
-// MaybeLocal<Object> KeyObjectHandle::Create(
-//                                            Environment* env,
-//                                            std::shared_ptr<KeyObjectData>
-//                                            data) {
-//   Local<Object> obj;
-//   Local<Function> ctor = KeyObjectHandle::Initialize(env);
-//   CHECK(!env->crypto_key_object_handle_constructor().IsEmpty());
-//   if (!ctor->NewInstance(env->context(), 0, nullptr).ToLocal(&obj))
-//     return MaybeLocal<Object>();
-//
-//   KeyObjectHandle* key = Unwrap<KeyObjectHandle>(obj);
-//   CHECK_NOT_NULL(key);
-//   key->data_ = data;
-//   return obj;
-// }
-//
+
+std::shared_ptr<KeyObjectHandle> KeyObjectHandle::Create(jsi::Runtime &rt,
+                                                         std::shared_ptr<KeyObjectData> data) {
+  auto handle = std::make_shared<KeyObjectHandle>();
+  handle->data_ = data;
+  return handle;
+}
+
 const std::shared_ptr<KeyObjectData>& KeyObjectHandle::Data() {
   return this->data_;
 }
@@ -1198,7 +1197,7 @@ jsi::Value KeyObjectHandle::GetKeyDetail(jsi::Runtime &rt) {
 jsi::Value KeyObjectHandle::Export(jsi::Runtime &rt) {
   return HOSTFN("export", 2) {
     KeyType type = this->data_->GetKeyType();
-    OptionJSVariant result;
+    jsi::Value result;
     if (type == kKeyTypeSecret) {
       result = this->ExportSecretKey(rt);
     }
@@ -1218,16 +1217,16 @@ jsi::Value KeyObjectHandle::Export(jsi::Runtime &rt) {
         result = this->ExportPrivateKey(rt, config.Release());
       }
     }
-    return toJSI(rt, result);
+    return result;
   });
 }
 
-OptionJSVariant KeyObjectHandle::ExportSecretKey(jsi::Runtime &rt) const {
+jsi::Value KeyObjectHandle::ExportSecretKey(jsi::Runtime &rt) const {
   std::string ret = data_->GetSymmetricKey();
-  return JSVariant(ByteSource::FromString(ret));
+  return toJSI(rt, ByteSource::FromString(ret));
 }
 
-OptionJSVariant KeyObjectHandle::ExportPublicKey(
+jsi::Value KeyObjectHandle::ExportPublicKey(
     jsi::Runtime& rt,
     const PublicKeyEncodingConfig& config) const {
   return WritePublicKey(rt,
@@ -1235,7 +1234,7 @@ OptionJSVariant KeyObjectHandle::ExportPublicKey(
     config);
 }
 
-OptionJSVariant KeyObjectHandle::ExportPrivateKey(
+jsi::Value KeyObjectHandle::ExportPrivateKey(
     jsi::Runtime &rt,
     const PrivateKeyEncodingConfig& config) const {
   return WritePrivateKey(rt,

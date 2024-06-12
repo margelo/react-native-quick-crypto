@@ -508,6 +508,8 @@ export const normalizeAlgorithm = (
 
   // 4.
   let algName = algorithm.name;
+  // @ts-expect-error
+  if (algName === undefined) return { name: undefined };
 
   // 5.
   let desiredType: string | null | undefined;
@@ -598,6 +600,16 @@ export const validateByteLength = (
       'OperationError'
     );
   }
+};
+
+export const getUsagesUnion = (usageSet: KeyUsage[], ...usages: KeyUsage[]) => {
+  const newset: KeyUsage[] = [];
+  for (let n = 0; n < usages.length; n++) {
+    if (!usages[n] || usages[n] === undefined) continue;
+    if (usageSet.includes(usages[n] as KeyUsage))
+      newset.push(usages[n] as KeyUsage);
+  }
+  return newset;
 };
 
 const kKeyOps: {

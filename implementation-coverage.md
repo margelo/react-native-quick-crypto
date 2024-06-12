@@ -109,8 +109,8 @@ This document attempts to describe the implementation status of Crypto APIs/Inte
   * ❌ `crypto.diffieHellman(options)`
   * ❌ `crypto.hash(algorithm, data[, outputEncoding])`
   * ❌ `crypto.generateKey(type, options, callback)`
-  * ✅ `crypto.generateKeyPair(type, options, callback)`
-  * ✅ `crypto.generateKeyPairSync(type, options)`
+  * 🚧 `crypto.generateKeyPair(type, options, callback)`
+  * 🚧 `crypto.generateKeyPairSync(type, options)`
   * ❌ `crypto.generateKeySync(type, options)`
   * ❌ `crypto.generatePrime(size[, options[, callback]])`
   * ❌ `crypto.generatePrimeSync(size[, options])`
@@ -145,6 +145,47 @@ This document attempts to describe the implementation status of Crypto APIs/Inte
   * ❌ `crypto.verify(algorithm, data, key, signature[, callback])`
   * 🚧 `crypto.webcrypto` (see below)
 
+🚧 Details below still a work in progress 🚧
+
+## `crypto.generateKey`
+| type       | Status |
+| ---------  | :----: |
+| `aes`      | ❌ |
+| `hmac`     | ❌ |
+
+## `crypto.generateKeyPair`
+| type      | Status |
+| --------- | :----: |
+| `rsa`     | ✅ |
+| `rsa-pss` | ✅ |
+| `dsa`     | ❌ |
+| `ec`      | ✅ |
+| `ed25519` | ❌ |
+| `ed448`   | ❌ |
+| `x25519`  | ❌ |
+| `x448`    | ❌ |
+| `dh`      | ❌ |
+
+## `crypto.generateKeyPairSync`
+| type      | Status |
+| --------- | :----: |
+| `rsa`     | ✅ |
+| `rsa-pss` | ✅ |
+| `dsa`     | ❌ |
+| `ec`      | ✅ |
+| `ed25519` | ❌ |
+| `ed448`   | ❌ |
+| `x25519`  | ❌ |
+| `x448`    | ❌ |
+| `dh`      | ❌ |
+
+## `crypto.generateKeySync`
+| type       | Status |
+| ---------  | :----: |
+| `aes`      | ❌ |
+| `hmac`     | ❌ |
+
+
 # `WebCrypto`
 
 * 🚧 Class: `Crypto`
@@ -171,14 +212,14 @@ This document attempts to describe the implementation status of Crypto APIs/Inte
   * ✅ `subtle.digest(algorithm, data)`
   * ❌ `subtle.encrypt(algorithm, key, data)`
   * 🚧 `subtle.exportKey(format, key)`
-  * ❌ `subtle.generateKey(algorithm, extractable, keyUsages)`
+  * 🚧 `subtle.generateKey(algorithm, extractable, keyUsages)`
   * 🚧 `subtle.importKey(format, keyData, algorithm, extractable, keyUsages)`
   * ❌ `subtle.sign(algorithm, key, data)`
   * ❌ `subtle.unwrapKey(format, wrappedKey, unwrappingKey, unwrapAlgo, unwrappedKeyAlgo, extractable, keyUsages)`
   * ❌ `subtle.verify(algorithm, key, signature, data)`
   * ❌ `subtle.wrapKey(format, key, wrappingKey, wrapAlgo)`
 
-## `encrypt`
+## `subtle.decrypt`
 | Algorithm  | Status |
 | ---------  | :----: |
 | `RSA-OAEP` |  |
@@ -186,76 +227,7 @@ This document attempts to describe the implementation status of Crypto APIs/Inte
 | `AES-CBC`  |  |
 | `AES-GCM`  |  |
 
-## `decrypt`
-| Algorithm  | Status |
-| ---------  | :----: |
-| `RSA-OAEP` |  |
-| `AES-CTR`  |  |
-| `AES-CBC`  |  |
-| `AES-GCM`  |  |
-
-## `sign`
-| Algorithm           | Status |
-| ---------           | :----: |
-| `RSASSA-PKCS1-v1_5` |  |
-| `RSA-PSS`           |  |
-| `ECDSA`             |  |
-| `Ed25519`           |  |
-| `Ed448`             |  |
-| `HMAC`              |  |
-
-## `verify`
-| Algorithm           | Status |
-| ---------           | :----: |
-| `RSASSA-PKCS1-v1_5` |  |
-| `RSA-PSS`           |  |
-| `ECDSA`             |  |
-| `Ed25519`           |  |
-| `Ed448`             |  |
-| `HMAC`              |  |
-
-## `digest`
-| Algorithm  | Status |
-| ---------  | :----: |
-| `SHA-1`    | ✅ |
-| `SHA-256`  | ✅ |
-| `SHA-384`  | ✅ |
-| `SHA-512`  | ✅ |
-
-## `generateKey`
-
-### `CryptoKeyPair` algorithms
-| Algorithm           | Status |
-| ---------           | :----: |
-| `RSASSA-PKCS1-v1_5` |  |
-| `RSA-PSS`           |  |
-| `RSA-OAEP`          |  |
-| `ECDSA`             |  |
-| `Ed25519`           |  |
-| `Ed448`             |  |
-| `ECDH`              |  |
-| `X25519`            |  |
-| `X448`              |  |
-
-### `CryptoKey` algorithms
-| Algorithm    | Status |
-| ---------    | :----: |
-| `HMAC`       |  |
-| `AES-CTR`    |  |
-| `AES-CBC`    |  |
-| `AES-GCM`    |  |
-| `AES-KW`     |  |
-
-## `deriveKey`
-| Algorithm  | Status |
-| ---------  | :----: |
-| `ECDH`     |  |
-| `X25519`   |  |
-| `X448`     |  |
-| `HKDF`     |  |
-| `PBKDF2`   |  |
-
-## `deriveBits`
+## `subtle.deriveBits`
 | Algorithm  | Status |
 | ---------  | :----: |
 | `ECDH`     |  |
@@ -264,7 +236,78 @@ This document attempts to describe the implementation status of Crypto APIs/Inte
 | `HKDF`     |  |
 | `PBKDF2`   | ✅ |
 
-## `importKey`
+## `subtle.deriveKey`
+| Algorithm  | Status |
+| ---------  | :----: |
+| `ECDH`     |  |
+| `X25519`   |  |
+| `X448`     |  |
+| `HKDF`     |  |
+| `PBKDF2`   |  |
+
+## `subtle.digest`
+| Algorithm  | Status |
+| ---------  | :----: |
+| `SHA-1`    | ✅ |
+| `SHA-256`  | ✅ |
+| `SHA-384`  | ✅ |
+| `SHA-512`  | ✅ |
+
+## `subtle.encrypt`
+| Algorithm  | Status |
+| ---------  | :----: |
+| `RSA-OAEP` |  |
+| `AES-CTR`  |  |
+| `AES-CBC`  |  |
+| `AES-GCM`  |  |
+
+## `subtle.exportKey`
+| Key Type            | `spki` | `pkcs8` | `jwk` | `raw` |
+| ------------------- | :----: | :-----: | :---: | :---: |
+| `AES-CBC`           |   |   | ✅ | ✅ |
+| `AES-CTR`           |   |   | ✅ | ✅ |
+| `AES-GCM`           |   |   | ✅ | ✅ |
+| `AES-KW`            |   |   | ✅ | ✅ |
+| `ECDH`              | ✅ | ❌ | ✅ | ✅ |
+| `ECDSA`             | ✅ | ❌ | ✅ | ✅ |
+| `Ed25519`           | ❌ | ❌ | ❌ | ❌ |
+| `Ed448`             | ❌ | ❌ | ❌ | ❌ |
+| `HDKF`              |   |   |   |   |
+| `HMAC`              |   |   | ❌ | ❌ |
+| `PBKDF2`            |   |   |   |   |
+| `RSA-OAEP`          | ❌ | ❌ | ✅ |   |
+| `RSA-PSS`           | ❌ | ❌ | ✅ |   |
+| `RSASSA-PKCS1-v1_5` | ❌ | ❌ | ✅ |   |
+
+* ` ` - not implemented in Node
+* ❌ - implemented in Node, not RNQC
+* ✅ - implemented in Node and RNQC
+
+## `subtle.generateKey`
+
+### `CryptoKeyPair` algorithms
+| Algorithm           | Status |
+| ---------           | :----: |
+| `RSASSA-PKCS1-v1_5` |  |
+| `RSA-PSS`           |  |
+| `RSA-OAEP`          |  |
+| `ECDSA`             | ✅ |
+| `Ed25519`           | ✅ |
+| `Ed448`             |  |
+| `ECDH`              |  |
+| `X25519`            |  |
+| `X448`              |  |
+
+### `CryptoKey` algorithms
+| Algorithm  | Status |
+| ---------  | :----: |
+| `HMAC`     |  |
+| `AES-CTR`  |  |
+| `AES-CBC`  |  |
+| `AES-GCM`  |  |
+| `AES-KW`   |  |
+
+## `subtle.importKey`
 | Key Type            | `spki` | `pkcs8` | `jwk` | `raw` |
 | ------------------- | :----: | :-----: | :---: | :---: |
 | `AES-CBC`           |   |   | ✅ | ✅ |
@@ -288,40 +331,17 @@ This document attempts to describe the implementation status of Crypto APIs/Inte
 * ❌ - implemented in Node, not RNQC
 * ✅ - implemented in Node and RNQC
 
-## `exportKey`
-| Key Type            | `spki` | `pkcs8` | `jwk` | `raw` |
-| ------------------- | :----: | :-----: | :---: | :---: |
-| `AES-CBC`           |   |   | ✅ | ✅ |
-| `AES-CTR`           |   |   | ✅ | ✅ |
-| `AES-GCM`           |   |   | ✅ | ✅ |
-| `AES-KW`            |   |   | ✅ | ✅ |
-| `ECDH`              | ✅ | ❌ | ✅ | ✅ |
-| `ECDSA`             | ✅ | ❌ | ✅ | ✅ |
-| `Ed25519`           | ❌ | ❌ | ❌ | ❌ |
-| `Ed448`             | ❌ | ❌ | ❌ | ❌ |
-| `HDKF`              |   |   |   |   |
-| `HMAC`              |   |   | ❌ | ❌ |
-| `PBKDF2`            |   |   |   |   |
-| `RSA-OAEP`          | ❌ | ❌ | ✅ |   |
-| `RSA-PSS`           | ❌ | ❌ | ✅ |   |
-| `RSASSA-PKCS1-v1_5` | ❌ | ❌ | ✅ |   |
+## `subtle.sign`
+| Algorithm           | Status |
+| ---------           | :----: |
+| `RSASSA-PKCS1-v1_5` |  |
+| `RSA-PSS`           |  |
+| `ECDSA`             |  |
+| `Ed25519`           |  |
+| `Ed448`             |  |
+| `HMAC`              |  |
 
-* ` ` - not implemented in Node
-* ❌ - implemented in Node, not RNQC
-* ✅ - implemented in Node and RNQC
-
-## `wrapKey`
-
-### wrapping algorithms
-| Algorithm  | Status |
-| ---------  | :----: |
-| `RSA-OAEP` |  |
-| `AES-CTR`  |  |
-| `AES-CBC`  |  |
-| `AES-GCM`  |  |
-| `AES-KW`   |  |
-
-## `unwrapKey`
+## `subtle.unwrapKey`
 
 ### wrapping algorithms
 | Algorithm  | Status |
@@ -349,3 +369,24 @@ This document attempts to describe the implementation status of Crypto APIs/Inte
 | `AES-CBC`           |  |
 | `AES-GCM`           |  |
 | `AES-KW`            |  |
+
+## `subtle.verify`
+| Algorithm           | Status |
+| ---------           | :----: |
+| `RSASSA-PKCS1-v1_5` |  |
+| `RSA-PSS`           |  |
+| `ECDSA`             |  |
+| `Ed25519`           |  |
+| `Ed448`             |  |
+| `HMAC`              |  |
+
+## `subtle.wrapKey`
+
+### wrapping algorithms
+| Algorithm  | Status |
+| ---------  | :----: |
+| `RSA-OAEP` |  |
+| `AES-CTR`  |  |
+| `AES-CBC`  |  |
+| `AES-GCM`  |  |
+| `AES-KW`   |  |

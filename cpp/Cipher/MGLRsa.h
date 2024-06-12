@@ -25,12 +25,6 @@ namespace margelo {
 
 namespace jsi = facebook::jsi;
 
-enum RSAKeyVariant {
-  kKeyVariantRSA_SSA_PKCS1_v1_5,
-  kKeyVariantRSA_PSS,
-  kKeyVariantRSA_OAEP
-};
-
 // On node there is a complete madness of structs/classes that encapsulate and
 // initialize the data in a generic manner this is to be later be used to
 // generate the keys in a thread-safe manner (I think) I'm however too dumb and
@@ -43,7 +37,7 @@ struct RsaKeyPairGenConfig {
   PrivateKeyEncodingConfig private_key_encoding;
   ManagedEVPPKey key;
 
-  RSAKeyVariant variant;
+  KeyVariant variant;
   unsigned int modulus_bits;
   unsigned int exponent;
 
@@ -57,7 +51,7 @@ struct RsaKeyPairGenConfig {
 RsaKeyPairGenConfig prepareRsaKeyGenConfig(jsi::Runtime& runtime,
                                          const jsi::Value* arguments);
 
-std::pair<JSVariant, JSVariant> generateRSAKeyPair(
+std::pair<jsi::Value, jsi::Value> generateRsaKeyPair(
     jsi::Runtime& runtime, std::shared_ptr<RsaKeyPairGenConfig> config);
 
 jsi::Value ExportJWKRsaKey(jsi::Runtime &rt,

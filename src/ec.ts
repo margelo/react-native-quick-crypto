@@ -1,3 +1,4 @@
+import { generateKeyPairPromise, type GenerateKeyPairOptions } from './Cipher';
 import { NativeQuickCrypto } from './NativeQuickCrypto/NativeQuickCrypto';
 import {
   bufferLikeToArrayBuffer,
@@ -8,6 +9,7 @@ import {
   validateKeyOps,
   hasAnyNotIn,
   ab2str,
+  getUsagesUnion,
 } from './Utils';
 import {
   type ImportFormat,
@@ -22,7 +24,9 @@ import {
   type AnyAlgorithm,
   PrivateKeyObject,
   KeyType,
+  type CryptoKeyPair,
 } from './keys';
+import type { KeyObjectHandle } from './NativeQuickCrypto/webcrypto';
 
 // const {
 //   ArrayPrototypeIncludes,
@@ -113,71 +117,6 @@ function createECPublicKeyRaw(
 
   return new PublicKeyObject(handle);
 }
-
-// async function ecGenerateKey(algorithm, extractable, keyUsages) {
-//   const { name, namedCurve } = algorithm;
-
-//   if (!ArrayPrototypeIncludes(ObjectKeys(kNamedCurveAliases), namedCurve)) {
-//     throw lazyDOMException(
-//       'Unrecognized namedCurve',
-//       'NotSupportedError');
-//   }
-
-//   const usageSet = new SafeSet(keyUsages);
-//   switch (name) {
-//     case 'ECDSA':
-//       if (hasAnyNotIn(usageSet, ['sign', 'verify'])) {
-//         throw lazyDOMException(
-//           'Unsupported key usage for an ECDSA key',
-//           'SyntaxError');
-//       }
-//       break;
-//     case 'ECDH':
-//       if (hasAnyNotIn(usageSet, ['deriveKey', 'deriveBits'])) {
-//         throw lazyDOMException(
-//           'Unsupported key usage for an ECDH key',
-//           'SyntaxError');
-//       }
-//       // Fall through
-//   }
-
-//   const keypair = await generateKeyPair('ec', { namedCurve }).catch((err) => {
-//     throw lazyDOMException(
-//       'The operation failed for an operation-specific reason',
-//       { name: 'OperationError', cause: err });
-//   });
-
-//   let publicUsages;
-//   let privateUsages;
-//   switch (name) {
-//     case 'ECDSA':
-//       publicUsages = getUsagesUnion(usageSet, 'verify');
-//       privateUsages = getUsagesUnion(usageSet, 'sign');
-//       break;
-//     case 'ECDH':
-//       publicUsages = [];
-//       privateUsages = getUsagesUnion(usageSet, 'deriveKey', 'deriveBits');
-//       break;
-//   }
-
-//   const keyAlgorithm = { name, namedCurve };
-
-//   const publicKey =
-//     new InternalCryptoKey(
-//       keypair.publicKey,
-//       keyAlgorithm,
-//       publicUsages,
-//       true);
-
-//   const privateKey =
-//     new InternalCryptoKey(
-//       keypair.privateKey,
-//       keyAlgorithm,
-//       privateUsages,
-//       extractable);
-
-//   return { __proto__: null, publicKey, privateKey };
-// }
 
 export function ecExportKey(
   key: CryptoKey,
@@ -349,3 +288,77 @@ export function ecImportKey(
 //     kSigEncP1363,
 //     signature));
 // }
+
+export const ecGenerateKey = async (
+  algorithm: SubtleAlgorithm,
+  extractable: boolean,
+  keyUsages: KeyUsage[]
+): Promise<CryptoKeyPair> => {
+  const { name, namedCurve } = algorithm;
+
+  if (!Object.keys(kNamedCurveAliases).includes(namedCurve || '')) {
+    throw lazyDOMException(
+      `Unrecognized namedCurve '${namedCurve}'`,
+      'NotSupportedError'
+    );
+  }
+
+  // const usageSet = new SafeSet(keyUsages);
+  switch (name) {
+    case 'ECDSA':
+      const checkUsages = ['sign', 'verify'];
+      if (hasAnyNotIn(keyUsages, checkUsages)) {
+        throw lazyDOMException(
+          'Unsupported key usage for an ECDSA key',
+          'SyntaxError'
+        );
+      }
+      break;
+    case 'ECDH':
+      if (hasAnyNotIn(keyUsages, ['deriveKey', 'deriveBits'])) {
+        throw lazyDOMException(
+          'Unsupported key usage for an ECDH key',
+          'SyntaxError'
+        );
+      }
+    // Fall through
+  }
+
+  const options: GenerateKeyPairOptions = { namedCurve };
+  const [err, keypair] = await generateKeyPairPromise('ec', options);
+
+  if (err) {
+    throw lazyDOMException('ecGenerateKey (generateKeyPairPromise) failed', {
+      name: 'OperationError',
+      cause: err,
+    });
+  }
+
+  let publicUsages: KeyUsage[] = [];
+  let privateUsages: KeyUsage[] = [];
+  switch (name) {
+    case 'ECDSA':
+      publicUsages = getUsagesUnion(keyUsages, 'verify');
+      privateUsages = getUsagesUnion(keyUsages, 'sign');
+      break;
+    case 'ECDH':
+      publicUsages = [];
+      privateUsages = getUsagesUnion(keyUsages, 'deriveKey', 'deriveBits');
+      break;
+  }
+
+  const keyAlgorithm = { name, namedCurve };
+
+  const pub = new PublicKeyObject(keypair?.publicKey as KeyObjectHandle);
+  const publicKey = new CryptoKey(pub, keyAlgorithm, publicUsages, true);
+
+  const priv = new PrivateKeyObject(keypair?.privateKey as KeyObjectHandle);
+  const privateKey = new CryptoKey(
+    priv,
+    keyAlgorithm,
+    privateUsages,
+    extractable
+  );
+
+  return { publicKey, privateKey };
+};
