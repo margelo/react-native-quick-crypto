@@ -17,8 +17,9 @@ import {
   lazyDOMException,
   normalizeHashName,
   HashContext,
+  type Operation,
 } from './Utils';
-import { ecImportKey, ecExportKey, ecGenerateKey } from './ec';
+import { ecImportKey, ecExportKey, ecGenerateKey, ecdsaSignVerify } from './ec';
 import { pbkdf2DeriveBits } from './pbkdf2';
 import { asyncDigest } from './Hash';
 import { aesImportKey, getAlgorithmName } from './aes';
@@ -216,12 +217,72 @@ const importGenericSecretKey = async (
 // };
 
 const checkCryptoKeyPairUsages = (pair: CryptoKeyPair) => {
-  if (pair.privateKey.usages.length === 0) {
+  if (
+    !(pair.privateKey instanceof Buffer) &&
+    pair.privateKey &&
+    pair.privateKey.hasOwnProperty('keyUsages')
+  ) {
+    const priv = pair.privateKey as CryptoKey;
+    if (priv.usages.length > 0) {
+      return;
+    }
+  }
+  console.log(pair.privateKey);
+  throw lazyDOMException(
+    'Usages cannot be empty when creating a key.',
+    'SyntaxError'
+  );
+};
+
+const signVerify = (
+  algorithm: SubtleAlgorithm,
+  key: CryptoKey,
+  data: BufferLike,
+  signature?: BufferLike
+): ArrayBuffer | boolean => {
+  const usage: Operation = signature === undefined ? 'sign' : 'verify';
+  algorithm = normalizeAlgorithm(algorithm, usage);
+
+  if (!key.usages.includes(usage) || algorithm.name !== key.algorithm.name) {
     throw lazyDOMException(
-      'Usages cannot be empty when creating a key.',
-      'SyntaxError'
+      `Unable to use this key to ${usage}`,
+      'InvalidAccessError'
     );
   }
+
+  switch (algorithm.name) {
+    // case 'RSA-PSS':
+    // // Fall through
+    // case 'RSASSA-PKCS1-v1_5':
+    //   return require('internal/crypto/rsa').rsaSignVerify(
+    //     key,
+    //     data,
+    //     algorithm,
+    //     signature
+    //   );
+    case 'ECDSA':
+      return ecdsaSignVerify(key, data, algorithm, signature);
+    // case 'Ed25519':
+    // // Fall through
+    // case 'Ed448':
+    //   return require('internal/crypto/cfrg').eddsaSignVerify(
+    //     key,
+    //     data,
+    //     algorithm,
+    //     signature
+    //   );
+    // case 'HMAC':
+    //   return require('internal/crypto/mac').hmacSignVerify(
+    //     key,
+    //     data,
+    //     algorithm,
+    //     signature
+    //   );
+  }
+  throw lazyDOMException(
+    `Unrecognized algorithm name '${algorithm}' for '${usage}'`,
+    'NotSupportedError'
+  );
 };
 
 class Subtle {
@@ -437,6 +498,23 @@ class Subtle {
     }
 
     return result;
+  }
+
+  async sign(
+    algorithm: SubtleAlgorithm,
+    key: CryptoKey,
+    data: BufferLike
+  ): Promise<ArrayBuffer> {
+    return signVerify(algorithm, key, data) as ArrayBuffer;
+  }
+
+  async verify(
+    algorithm: SubtleAlgorithm,
+    key: CryptoKey,
+    signature: BufferLike,
+    data: BufferLike
+  ): Promise<ArrayBuffer> {
+    return signVerify(algorithm, key, data, signature) as ArrayBuffer;
   }
 }
 

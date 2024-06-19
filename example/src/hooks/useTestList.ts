@@ -19,6 +19,7 @@ import '../testing/Tests/webcryptoTests/deriveBits';
 import '../testing/Tests/webcryptoTests/digest';
 import '../testing/Tests/webcryptoTests/generateKey';
 import '../testing/Tests/webcryptoTests/import_export';
+import '../testing/Tests/webcryptoTests/sign_verify';
 
 export const useTestList = (): [
   Suites,

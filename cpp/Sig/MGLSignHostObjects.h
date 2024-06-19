@@ -69,6 +69,46 @@ class SignBase : public MGLSmartHostObject {
   EVPMDPointer mdctx_;
 };
 
+struct SignConfiguration final {  //  : public MemoryRetainer
+  enum Mode {
+    kSign,
+    kVerify
+  };
+  enum Flags {
+    kHasNone = 0,
+    kHasSaltLength = 1,
+    kHasPadding = 2
+  };
+
+  // CryptoJobMode job_mode;  // all async for now
+  Mode mode;
+  ManagedEVPPKey key;
+  ByteSource data;
+  ByteSource signature;
+  const EVP_MD* digest = nullptr;
+  int flags = SignConfiguration::kHasNone;
+  int padding = 0;
+  int salt_length = 0;
+  DSASigEnc dsa_encoding = kSigEncDER;
+
+  SignConfiguration() = default;
+
+  // explicit SignConfiguration(SignConfiguration&& other) noexcept;
+
+  // SignConfiguration& operator=(SignConfiguration&& other) noexcept;
+
+  // void MemoryInfo(MemoryTracker* tracker) const override;
+  // SET_MEMORY_INFO_NAME(SignConfiguration)
+  // SET_SELF_SIZE(SignConfiguration)
+};
+
+class SubtleSignVerify {
+  public:
+    SignConfiguration GetParamsFromJS(jsi::Runtime &rt, const jsi::Value *args);
+    void DoSignVerify(jsi::Runtime &rt, const SignConfiguration &params, ByteSource &out);
+    jsi::Value EncodeOutput(jsi::Runtime &rt,const SignConfiguration &params, ByteSource &out);
+};
+
 class MGLSignHostObject : public SignBase {
  public:
   explicit MGLSignHostObject(

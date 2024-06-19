@@ -13,11 +13,13 @@
 
 #ifdef ANDROID
 #include "JSIUtils/MGLJSIMacros.h"
-#include "webcrypto/crypto_ec.h"
+#include "Sig/MGLSignHostObjects.h"
 #include "Utils/MGLUtils.h"
+#include "webcrypto/crypto_ec.h"
 #else
-#include "MGLUtils.h"
 #include "MGLJSIMacros.h"
+#include "MGLSignHostObjects.h"
+#include "MGLUtils.h"
 #include "crypto_ec.h"
 #endif
 
@@ -51,10 +53,19 @@ jsi::Value createWebCryptoObject(jsi::Runtime &rt) {
         return toJSI(rt, std::move(out));
     });
 
+    auto signVerify = HOSTFN("signVerify", 4) {
+      auto ssv = SubtleSignVerify();
+      auto params = ssv.GetParamsFromJS(rt, args);
+      ByteSource out;
+      ssv.DoSignVerify(rt, params, out);
+      return ssv.EncodeOutput(rt, params, out);
+    });
+
     obj.setProperty(rt,
                     "createKeyObjectHandle",
                     std::move(createKeyObjectHandle));
     obj.setProperty(rt, "ecExportKey", std::move(ecExportKey));
+    obj.setProperty(rt, "signVerify", std::move(signVerify));
     return obj;
 };
 

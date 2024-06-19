@@ -1,5 +1,6 @@
 import { generateKeyPairPromise, type GenerateKeyPairOptions } from './Cipher';
 import { NativeQuickCrypto } from './NativeQuickCrypto/NativeQuickCrypto';
+import { DSASigEnc, SignMode } from './NativeQuickCrypto/sig';
 import {
   bufferLikeToArrayBuffer,
   type BufferLike,
@@ -10,6 +11,7 @@ import {
   hasAnyNotIn,
   ab2str,
   getUsagesUnion,
+  normalizeHashName,
 } from './Utils';
 import {
   type ImportFormat,
@@ -249,8 +251,8 @@ export function ecImportKey(
     case 'ECDSA':
     // Fall through
     case 'ECDH':
-      // if (keyObject.asymmetricKeyType !== 'ec')
-      //   throw new Error('Invalid key type');
+      if (keyObject.asymmetricKeyType !== 'ec')
+        throw new Error('Invalid key type');
       break;
   }
 
@@ -265,29 +267,38 @@ export function ecImportKey(
   return new CryptoKey(keyObject, { name, namedCurve }, keyUsages, extractable);
 }
 
-// function ecdsaSignVerify(key, data, { name, hash }, signature) {
-//   const mode = signature === undefined ? kSignJobModeSign : kSignJobModeVerify;
-//   const type = mode === kSignJobModeSign ? 'private' : 'public';
+export const ecdsaSignVerify = (
+  key: CryptoKey,
+  data: BufferLike,
+  { hash }: SubtleAlgorithm,
+  signature?: BufferLike
+) => {
+  const mode: SignMode =
+    signature === undefined
+      ? SignMode.kSignJobModeSign
+      : SignMode.kSignJobModeVerify;
+  const type = mode === SignMode.kSignJobModeSign ? 'private' : 'public';
 
-//   if (key.type !== type)
-//     throw lazyDOMException(`Key must be a ${type} key`, 'InvalidAccessError');
+  if (key.type !== type)
+    throw lazyDOMException(`Key must be a ${type} key`, 'InvalidAccessError');
 
-//   const hashname = normalizeHashName(hash.name);
+  const hashname = normalizeHashName(hash);
 
-//   return jobPromise(() => new SignJob(
-//     kCryptoJobAsync,
-//     mode,
-//     key[kKeyObject][kHandle],
-//     undefined,
-//     undefined,
-//     undefined,
-//     data,
-//     hashname,
-//     undefined,  // Salt length, not used with ECDSA
-//     undefined,  // PSS Padding, not used with ECDSA
-//     kSigEncP1363,
-//     signature));
-// }
+  return NativeQuickCrypto.webcrypto.signVerify(
+    mode,
+    key.keyObject.handle,
+    // three undefined args because C++ uses `GetPublicOrPrivateKeyFromJs` & friends
+    undefined,
+    undefined,
+    undefined,
+    bufferLikeToArrayBuffer(data),
+    hashname,
+    undefined, // salt length, not used with ECDSA
+    undefined, // pss padding, not used with ECDSA
+    DSASigEnc.kSigEncP1363,
+    bufferLikeToArrayBuffer(signature || new ArrayBuffer(0))
+  );
+};
 
 export const ecGenerateKey = async (
   algorithm: SubtleAlgorithm,

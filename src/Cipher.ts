@@ -34,6 +34,7 @@ import { Buffer } from '@craftzdog/react-native-buffer';
 import { Buffer as SBuffer } from 'safe-buffer';
 import { constants } from './constants';
 import {
+  CryptoKey,
   parsePrivateKeyEncoding,
   parsePublicKeyEncoding,
   preparePrivateKey,
@@ -456,21 +457,23 @@ export type GenerateKeyPairOptions = {
   mgf1Hash?: any;
 };
 
+export type KeyPairKey = Buffer | KeyObjectHandle | CryptoKey | undefined;
+
 export type GenerateKeyPairReturn = [
   error?: Error,
-  privateKey?: Buffer | KeyObjectHandle,
-  publicKey?: Buffer | KeyObjectHandle,
+  privateKey?: KeyPairKey,
+  publicKey?: KeyPairKey,
 ];
 
 export type GenerateKeyPairCallback = (
   error?: Error,
-  publicKey?: Buffer | KeyObjectHandle,
-  privateKey?: Buffer | KeyObjectHandle
+  publicKey?: KeyPairKey,
+  privateKey?: KeyPairKey
 ) => GenerateKeyPairReturn | void;
 
 export type KeyPair = {
-  publicKey?: Buffer | KeyObjectHandle;
-  privateKey?: Buffer | KeyObjectHandle;
+  publicKey?: KeyPairKey;
+  privateKey?: KeyPairKey;
 };
 
 export type GenerateKeyPairPromiseReturn = [error?: Error, keypair?: KeyPair];

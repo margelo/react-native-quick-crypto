@@ -676,19 +676,25 @@ ManagedEVPPKey ManagedEVPPKey::GetPrivateKeyFromJs(jsi::Runtime& runtime,
     return GetParsedKey(runtime, std::move(pkey), ret,
                         "Failed to read private key");
   } else {
-    //    CHECK(args[*offset]->IsObject() && allow_key_object);
-    //    KeyObjectHandle* key;
-    //    ASSIGN_OR_RETURN_UNWRAP(&key, args[*offset].As<Object>(),
-    //    ManagedEVPPKey()); CHECK_EQ(key->Data()->GetKeyType(),
-    //    kKeyTypePrivate);
-    //    (*offset) += 4;
-    //    return key->Data()->GetAsymmetricKey();
-    throw jsi::JSError(runtime, "KeyObject are not currently supported");
+    if( !(args[*offset].isObject() && allow_key_object)) {
+      throw jsi::JSError(runtime,
+                         "ManagedEVPPKey::GetPrivateKeyFromJs: First argument "
+                         "must be object (CryptoKey) and caller must pass "
+                         "allow_key_object as true");
+    }
+    std::shared_ptr<KeyObjectHandle> handle =
+      std::static_pointer_cast<KeyObjectHandle>(
+        args[*offset].asObject(runtime).getHostObject(runtime));
+    CHECK_EQ(handle->Data()->GetKeyType(), kKeyTypePrivate);
+    (*offset) += 4;
+    return handle->Data()->GetAsymmetricKey();
   }
 }
 
 ManagedEVPPKey ManagedEVPPKey::GetPublicOrPrivateKeyFromJs(
-    jsi::Runtime& runtime, const jsi::Value* args, unsigned int* offset) {
+    jsi::Runtime& runtime,
+    const jsi::Value* args,
+    unsigned int* offset) {
   if (args[*offset].asObject(runtime).isArrayBuffer(runtime)) {
     auto dataArrayBuffer =
         args[(*offset)++].asObject(runtime).getArrayBuffer(runtime);
@@ -749,15 +755,19 @@ ManagedEVPPKey ManagedEVPPKey::GetPublicOrPrivateKeyFromJs(
     return ManagedEVPPKey::GetParsedKey(runtime, std::move(pkey), ret,
                                         "Failed to read asymmetric key");
   } else {
-    throw jsi::JSError(
-        runtime, "public encrypt only supports ArrayBuffer at the moment");
-    //    CHECK(args[*offset]->IsObject());
-    //    KeyObjectHandle* key =
-    //    Unwrap<KeyObjectHandle>(args[*offset].As<Object>());
-    //    CHECK_NOT_NULL(key);
-    //    CHECK_NE(key->Data()->GetKeyType(), kKeyTypeSecret);
-    //    (*offset) += 4;
-    //    return key->Data()->GetAsymmetricKey();
+    if( !(args[*offset].isObject()) ) {
+      throw jsi::JSError(runtime,
+                         "ManagedEVPPKey::GetPublicOrPrivateKeyFromJs: First "
+                         "argument not ArrayBuffer or object (CryptoKey)");
+    }
+    std::shared_ptr<KeyObjectHandle> handle =
+      std::static_pointer_cast<KeyObjectHandle>(
+        args[*offset].asObject(runtime).getHostObject(runtime));
+    // note: below check is kKeyTypeSecret in Node.js
+    //       but kKeyTypePublic in RNQC when testing verify() on ECDSA
+    CHECK_EQ(handle->Data()->GetKeyType(), kKeyTypePublic);
+    (*offset) += 4;
+    return handle->Data()->GetAsymmetricKey();
   }
 }
 
@@ -846,6 +856,8 @@ jsi::Value KeyObjectHandle::get(
       return this->InitJWK(rt);
     } else if (name == "keyDetail") {
       return this->GetKeyDetail(rt);
+    } else if (name == "getAsymmetricKeyType") {
+      return this->GetAsymmetricKeyType(rt);
     }
 
     return {};
@@ -1149,31 +1161,45 @@ jsi::Value KeyObjectHandle::GetKeyDetail(jsi::Runtime &rt) {
   });
 }
 
-// Local<Value> KeyObjectHandle::GetAsymmetricKeyType() const {
-//  const ManagedEVPPKey& key = data_->GetAsymmetricKey();
-//  switch (EVP_PKEY_id(key.get())) {
-//    case EVP_PKEY_RSA:
-//      return env()->crypto_rsa_string();
-//    case EVP_PKEY_RSA_PSS:
-//      return env()->crypto_rsa_pss_string();
-//    case EVP_PKEY_DSA:
-//      return env()->crypto_dsa_string();
-//    case EVP_PKEY_DH:
-//      return env()->crypto_dh_string();
-//    case EVP_PKEY_EC:
-//      return env()->crypto_ec_string();
-//    case EVP_PKEY_ED25519:
-//      return env()->crypto_ed25519_string();
-//    case EVP_PKEY_ED448:
-//      return env()->crypto_ed448_string();
-//    case EVP_PKEY_X25519:
-//      return env()->crypto_x25519_string();
-//    case EVP_PKEY_X448:
-//      return env()->crypto_x448_string();
-//    default:
-//      return Undefined(env()->isolate());
-//  }
-//}
+jsi::Value KeyObjectHandle::GetAsymmetricKeyType(jsi::Runtime &rt) const {
+  return HOSTFN("getAsymmetricKeyType", 0) {
+    const ManagedEVPPKey& key = this->data_->GetAsymmetricKey();
+    std::string ret;
+    switch (EVP_PKEY_id(key.get())) {
+      case EVP_PKEY_RSA:
+        ret = "rss";
+        break;
+      case EVP_PKEY_RSA_PSS:
+        ret = "rsa_pss";
+        break;
+      case EVP_PKEY_DSA:
+        ret = "dsa";
+        break;
+      case EVP_PKEY_DH:
+        ret = "dh";
+        break;
+      case EVP_PKEY_EC:
+        ret = "ec";
+        break;
+      case EVP_PKEY_ED25519:
+        ret = "ed25519";
+        break;
+      case EVP_PKEY_ED448:
+        ret = "ed448";
+        break;
+      case EVP_PKEY_X25519:
+        ret = "x25519";
+        break;
+      case EVP_PKEY_X448:
+        ret = "x448";
+        break;
+      default:
+        throw jsi::JSError(rt, "unknown KeyType in GetAsymmetricKeyType");
+    }
+    return jsi::String::createFromUtf8(rt, ret);
+  });
+}
+
 //
 // void KeyObjectHandle::GetAsymmetricKeyType(
 //                                           const
