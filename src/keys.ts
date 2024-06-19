@@ -2,6 +2,8 @@ import {
   type BinaryLike,
   binaryLikeToArrayBuffer,
   isStringOrBuffer,
+  type BufferLike,
+  type TypedArray,
 } from './Utils';
 import type { KeyObjectHandle } from './NativeQuickCrypto/webcrypto';
 import { NativeQuickCrypto } from './NativeQuickCrypto/NativeQuickCrypto';
@@ -34,18 +36,14 @@ export type KeyPairType = 'rsa' | 'rsa-pss' | 'ec';
 export type RSAKeyPairAlgorithm = 'RSASSA-PKCS1-v1_5' | 'RSA-PSS' | 'RSA-OAEP';
 export type ECKeyPairAlgorithm = 'ECDSA' | 'ECDH';
 export type CFRGKeyPairAlgorithm = 'Ed25519' | 'Ed448' | 'X25519' | 'X448';
+export type AESAlgorithm = 'AES-CTR' | 'AES-CBC' | 'AES-GCM' | 'AES-KW';
 
 export type KeyPairAlgorithm =
   | RSAKeyPairAlgorithm
   | ECKeyPairAlgorithm
   | CFRGKeyPairAlgorithm;
 
-export type SecretKeyAlgorithm =
-  | 'HMAC'
-  | 'AES-CTR'
-  | 'AES-CBC'
-  | 'AES-GCM'
-  | 'AES-KW';
+export type SecretKeyAlgorithm = 'HMAC' | AESAlgorithm;
 
 export type SignVerifyAlgorithm =
   | 'RSASSA-PKCS1-v1_5'
@@ -61,6 +59,44 @@ export type DeriveBitsAlgorithm =
   | 'ECDH'
   | 'X25519'
   | 'X448';
+
+export type RsaOaepParams = {
+  name: 'RSA-OAEP';
+  label?: BufferLike;
+};
+
+export type AesCbcParams = {
+  name: 'AES-CBC';
+  iv: BufferLike;
+};
+
+export type AesCtrParams = {
+  name: 'AES-CTR';
+  counter: TypedArray;
+  length: number;
+};
+
+export type AesGcmParams = {
+  name: 'AES-GCM';
+  iv: BufferLike;
+  additionalData?: BufferLike;
+  tagLength?: TagLength;
+};
+
+export type AesKwParams = {
+  name: 'AES-KW';
+  wrappingKey?: BufferLike;
+};
+
+export type TagLength = 32 | 64 | 96 | 104 | 112 | 120 | 128;
+
+export type AESLength = 128 | 192 | 256;
+
+export type EncryptDecryptParams =
+  | AesCbcParams
+  | AesCtrParams
+  | AesGcmParams
+  | RsaOaepParams;
 
 export type EncryptDecryptAlgorithm =
   | 'RSA-OAEP'
@@ -180,6 +216,13 @@ export type CryptoKeyPair = {
   publicKey: KeyPairKey;
   privateKey: KeyPairKey;
 };
+
+export enum CipherOrWrapMode {
+  kWebCryptoCipherEncrypt,
+  kWebCryptoCipherDecrypt,
+  // kWebCryptoWrapKey,
+  // kWebCryptoUnwrapKey,
+}
 
 function option(name: string, objName: string | undefined) {
   return objName === undefined

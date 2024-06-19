@@ -3,6 +3,7 @@ import type {
   AnyAlgorithm,
   DeriveBitsAlgorithm,
   EncryptDecryptAlgorithm,
+  EncryptDecryptParams,
   HashAlgorithm,
   KeyPairAlgorithm,
   KeyUsage,
@@ -491,9 +492,9 @@ export const validateMaxBufferLength = (
 // adapted for Node.js from Deno's implementation
 // https://github.com/denoland/deno/blob/v1.29.1/ext/crypto/00_crypto.js#L195
 export const normalizeAlgorithm = (
-  algorithm: SubtleAlgorithm | AnyAlgorithm,
+  algorithm: SubtleAlgorithm | EncryptDecryptParams | AnyAlgorithm,
   op: Operation
-): SubtleAlgorithm => {
+): SubtleAlgorithm | EncryptDecryptParams => {
   if (typeof algorithm === 'string')
     return normalizeAlgorithm({ name: algorithm }, op);
 

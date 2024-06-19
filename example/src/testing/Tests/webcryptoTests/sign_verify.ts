@@ -164,4 +164,10 @@ describe('subtle - sign / verify', () => {
 
   //   test('hello world').then(common.mustCall());
   // }
+
+  // TODO: when other algorithms are implemented, add the tests in
+  //  * test-webcrypto-sign-verify-ecdsa.js
+  //  * test-webcrypto-sign-verify-eddsa.js
+  //  * test-webcrypto-sign-verify-hmac.js
+  //  * test-webcrypto-sign-verify-rsa.js
 });

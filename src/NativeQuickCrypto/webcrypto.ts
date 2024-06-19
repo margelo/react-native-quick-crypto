@@ -1,3 +1,4 @@
+import type { AESCipher } from './aes';
 import type {
   AsymmetricKeyType,
   JWK,
@@ -42,7 +43,8 @@ export type KeyObjectHandle = {
 type CreateKeyObjectHandle = () => KeyObjectHandle;
 
 export type webcrypto = {
-  ecExportKey: ECExportKey;
+  aesCipher: AESCipher;
   createKeyObjectHandle: CreateKeyObjectHandle;
+  ecExportKey: ECExportKey;
   signVerify: SignVerify;
 };

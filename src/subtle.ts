@@ -8,6 +8,8 @@ import {
   type AnyAlgorithm,
   type JWK,
   type CryptoKeyPair,
+  CipherOrWrapMode,
+  type EncryptDecryptParams,
 } from './keys';
 import {
   hasAnyNotIn,
@@ -18,11 +20,13 @@ import {
   normalizeHashName,
   HashContext,
   type Operation,
+  validateMaxBufferLength,
+  bufferLikeToArrayBuffer,
 } from './Utils';
 import { ecImportKey, ecExportKey, ecGenerateKey, ecdsaSignVerify } from './ec';
 import { pbkdf2DeriveBits } from './pbkdf2';
 import { asyncDigest } from './Hash';
-import { aesImportKey, getAlgorithmName } from './aes';
+import { aesCipher, aesImportKey, getAlgorithmName } from './aes';
 import { rsaImportKey } from './rsa';
 
 const exportKeySpki = async (key: CryptoKey): Promise<ArrayBuffer | any> => {
@@ -285,7 +289,62 @@ const signVerify = (
   );
 };
 
+const cipherOrWrap = async (
+  mode: CipherOrWrapMode,
+  algorithm: EncryptDecryptParams, // | WrapUnwrapParams,
+  key: CryptoKey,
+  data: ArrayBuffer,
+  op: Operation
+): Promise<ArrayBuffer> => {
+  // We use a Node.js style error here instead of a DOMException because
+  // the WebCrypto spec is not specific what kind of error is to be thrown
+  // in this case. Both Firefox and Chrome throw simple TypeErrors here.
+  // The key algorithm and cipher algorithm must match, and the
+  // key must have the proper usage.
+  if (
+    key.algorithm.name !== algorithm.name ||
+    key.usages.includes(op as KeyUsage)
+  ) {
+    throw lazyDOMException(
+      'The requested operation is not valid for the provided key',
+      'InvalidAccessError'
+    );
+  }
+
+  // While WebCrypto allows for larger input buffer sizes, we limit
+  // those to sizes that can fit within uint32_t because of limitations
+  // in the OpenSSL API.
+  validateMaxBufferLength(data, 'data');
+
+  switch (algorithm.name) {
+    // case 'RSA-OAEP':
+    //   return rsaCipher(mode, key, data, algorithm);
+    case 'AES-CTR':
+    // Fall through
+    case 'AES-CBC':
+    // Fall through
+    case 'AES-GCM':
+      return aesCipher(mode, key, data, algorithm);
+    // case 'AES-KW':
+    //   if (op === 'wrapKey' || op === 'unwrapKey') {
+    //     return aesCipher(mode, key, data, algorithm);
+    //   }
+  }
+  throw lazyDOMException(
+    `Unrecognized algorithm name '${algorithm}' for '${op}'`,
+    'NotSupportedError'
+  );
+};
+
 class Subtle {
+  async decrypt(
+    _algorithm: EncryptDecryptParams,
+    _key: CryptoKey,
+    _data: BufferLike
+  ): Promise<ArrayBuffer> {
+    throw new Error('subtle.decrypt() is not implemented');
+  }
+
   async digest(
     algorithm: SubtleAlgorithm | AnyAlgorithm,
     data: BufferLike
@@ -320,6 +379,21 @@ class Subtle {
     }
     throw new Error(
       `'subtle.deriveBits()' for ${algorithm.name} is not implemented.`
+    );
+  }
+
+  async encrypt(
+    algorithm: EncryptDecryptParams,
+    key: CryptoKey,
+    data: BufferLike
+  ): Promise<ArrayBuffer> {
+    const normalizedAlgorithm = normalizeAlgorithm(algorithm, 'encrypt');
+    return cipherOrWrap(
+      CipherOrWrapMode.kWebCryptoCipherEncrypt,
+      normalizedAlgorithm as EncryptDecryptParams,
+      key,
+      bufferLikeToArrayBuffer(data),
+      'encrypt'
     );
   }
 

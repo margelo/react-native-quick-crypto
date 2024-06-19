@@ -4,6 +4,8 @@ import {
   type BufferLike,
   hasAnyNotIn,
   validateKeyOps,
+  validateByteLength,
+  validateMaxBufferLength,
 } from './Utils';
 import {
   type ImportFormat,
@@ -13,6 +15,14 @@ import {
   createSecretKey,
   SecretKeyObject,
   type JWK,
+  type AESAlgorithm,
+  CipherOrWrapMode,
+  type EncryptDecryptParams,
+  type AesGcmParams,
+  type AesCbcParams,
+  type AesCtrParams,
+  type TagLength,
+  type AESLength,
 } from './keys';
 
 // const {
@@ -26,25 +36,21 @@ import {
 //   TypedArrayPrototypeSlice,
 // } = primordials;
 
-// const {
-//   AESCipherJob,
-//   KeyObjectHandle,
-//   kCryptoJobAsync,
-//   kKeyVariantAES_CTR_128,
-//   kKeyVariantAES_CBC_128,
-//   kKeyVariantAES_GCM_128,
-//   kKeyVariantAES_KW_128,
-//   kKeyVariantAES_CTR_192,
-//   kKeyVariantAES_CBC_192,
-//   kKeyVariantAES_GCM_192,
-//   kKeyVariantAES_KW_192,
-//   kKeyVariantAES_CTR_256,
-//   kKeyVariantAES_CBC_256,
-//   kKeyVariantAES_GCM_256,
-//   kKeyVariantAES_KW_256,
-//   kWebCryptoCipherDecrypt,
-//   kWebCryptoCipherEncrypt,
-// } = internalBinding('crypto');
+// TODO: assign values?
+export enum AESKeyVariant {
+  AES_CTR_128,
+  AES_CBC_128,
+  AES_GCM_128,
+  AES_KW_128,
+  AES_CTR_192,
+  AES_CBC_192,
+  AES_GCM_192,
+  AES_KW_192,
+  AES_CTR_256,
+  AES_CBC_256,
+  AES_GCM_256,
+  AES_KW_256,
+}
 
 // const {
 //   hasAnyNotIn,
@@ -74,9 +80,10 @@ import {
 //   generateKey: _generateKey,
 // } = require('internal/crypto/keygen');
 
-// const kMaxCounterLength = 128;
-// const kTagLengths = [32, 64, 96, 104, 112, 120, 128];
 // const generateKey = promisify(_generateKey);
+
+const kMaxCounterLength = 128;
+const kTagLengths: TagLength[] = [32, 64, 96, 104, 112, 120, 128];
 
 export const getAlgorithmName = (name: string, length?: number) => {
   if (length === undefined)
@@ -103,141 +110,192 @@ function validateKeyLength(length?: number) {
     throw lazyDOMException(`Invalid key length: ${length}`, 'DataError');
 }
 
-// function getVariant(name, length) {
-//   switch (name) {
-//     case 'AES-CBC':
-//       switch (length) {
-//         case 128: return kKeyVariantAES_CBC_128;
-//         case 192: return kKeyVariantAES_CBC_192;
-//         case 256: return kKeyVariantAES_CBC_256;
-//       }
-//       break;
-//     case 'AES-CTR':
-//       switch (length) {
-//         case 128: return kKeyVariantAES_CTR_128;
-//         case 192: return kKeyVariantAES_CTR_192;
-//         case 256: return kKeyVariantAES_CTR_256;
-//       }
-//       break;
-//     case 'AES-GCM':
-//       switch (length) {
-//         case 128: return kKeyVariantAES_GCM_128;
-//         case 192: return kKeyVariantAES_GCM_192;
-//         case 256: return kKeyVariantAES_GCM_256;
-//       }
-//       break;
-//     case 'AES-KW':
-//       switch (length) {
-//         case 128: return kKeyVariantAES_KW_128;
-//         case 192: return kKeyVariantAES_KW_192;
-//         case 256: return kKeyVariantAES_KW_256;
-//       }
-//       break;
-//   }
-// }
+function getVariant(name: AESAlgorithm, length: AESLength): AESKeyVariant {
+  switch (name) {
+    case 'AES-CBC':
+      switch (length) {
+        case 128:
+          return AESKeyVariant.AES_CBC_128;
+        case 192:
+          return AESKeyVariant.AES_CBC_192;
+        case 256:
+          return AESKeyVariant.AES_CBC_256;
+      }
+      // @ts-ignore
+      break;
+    case 'AES-CTR':
+      switch (length) {
+        case 128:
+          return AESKeyVariant.AES_CTR_128;
+        case 192:
+          return AESKeyVariant.AES_CTR_192;
+        case 256:
+          return AESKeyVariant.AES_CTR_256;
+      }
+      // @ts-ignore
+      break;
+    case 'AES-GCM':
+      switch (length) {
+        case 128:
+          return AESKeyVariant.AES_GCM_128;
+        case 192:
+          return AESKeyVariant.AES_GCM_192;
+        case 256:
+          return AESKeyVariant.AES_GCM_256;
+      }
+      // @ts-ignore
+      break;
+    case 'AES-KW':
+      switch (length) {
+        case 128:
+          return AESKeyVariant.AES_KW_128;
+        case 192:
+          return AESKeyVariant.AES_KW_192;
+        case 256:
+          return AESKeyVariant.AES_KW_256;
+      }
+      // @ts-ignore
+      break;
+  }
 
-// function asyncAesCtrCipher(mode, key, data, { counter, length }) {
-//   validateByteLength(counter, 'algorithm.counter', 16);
-//   // The length must specify an integer between 1 and 128. While
-//   // there is no default, this should typically be 64.
-//   if (length === 0 || length > kMaxCounterLength) {
-//     throw lazyDOMException(
-//       'AES-CTR algorithm.length must be between 1 and 128',
-//       'OperationError');
-//   }
+  // @ts-ignore
+  throw lazyDOMException(
+    `Error getting variant ${name} at length: ${length}`,
+    'DataError'
+  );
+}
 
-//   return jobPromise(() => new AESCipherJob(
-//     kCryptoJobAsync,
+function asyncAesCtrCipher(
+  mode: CipherOrWrapMode,
+  key: CryptoKey,
+  data: ArrayBuffer,
+  { counter, length }: AesCtrParams
+): Promise<ArrayBuffer> {
+  validateByteLength(counter, 'algorithm.counter', 16);
+  // The length must specify an integer between 1 and 128. While
+  // there is no default, this should typically be 64.
+  if (length === 0 || length > kMaxCounterLength) {
+    throw lazyDOMException(
+      'AES-CTR algorithm.length must be between 1 and 128',
+      'OperationError'
+    );
+  }
+
+  return NativeQuickCrypto.webcrypto.aesCipher(
+    mode,
+    key.keyObject.handle,
+    data,
+    getVariant('AES-CTR', key.algorithm.length as AESLength),
+    counter,
+    length
+  );
+}
+
+function asyncAesCbcCipher(
+  mode: CipherOrWrapMode,
+  key: CryptoKey,
+  data: ArrayBuffer,
+  { iv }: AesCbcParams
+): Promise<ArrayBuffer> {
+  validateByteLength(iv, 'algorithm.iv', 16);
+  return NativeQuickCrypto.webcrypto.aesCipher(
+    mode,
+    key.keyObject.handle,
+    data,
+    getVariant('AES-CBC', key.algorithm.length as AESLength),
+    iv
+  );
+}
+
+// function asyncAesKwCipher(
+//   mode: CipherOrWrapMode,
+//   key: CryptoKey,
+//   data: BufferLike
+// ): Promise<ArrayBuffer> {
+//   return NativeQuickCrypto.webcrypto.aesCipher(
 //     mode,
-//     key[kKeyObject][kHandle],
+//     key.keyObject.handle,
 //     data,
-//     getVariant('AES-CTR', key.algorithm.length),
-//     counter,
-//     length));
+//     getVariant('AES-KW', key.algorithm.length)
+//   );
 // }
 
-// function asyncAesCbcCipher(mode, key, data, { iv }) {
-//   validateByteLength(iv, 'algorithm.iv', 16);
-//   return jobPromise(() => new AESCipherJob(
-//     kCryptoJobAsync,
-//     mode,
-//     key[kKeyObject][kHandle],
-//     data,
-//     getVariant('AES-CBC', key.algorithm.length),
-//     iv));
-// }
+function asyncAesGcmCipher(
+  mode: CipherOrWrapMode,
+  key: CryptoKey,
+  data: ArrayBuffer,
+  { iv, additionalData, tagLength = 128 }: AesGcmParams
+) {
+  if (!kTagLengths.includes(tagLength)) {
+    throw lazyDOMException(
+      `${tagLength} is not a valid AES-GCM tag length`,
+      'OperationError'
+    );
+  }
 
-// function asyncAesKwCipher(mode, key, data) {
-//   return jobPromise(() => new AESCipherJob(
-//     kCryptoJobAsync,
-//     mode,
-//     key[kKeyObject][kHandle],
-//     data,
-//     getVariant('AES-KW', key.algorithm.length)));
-// }
+  validateMaxBufferLength(iv, 'algorithm.iv');
 
-// function asyncAesGcmCipher(
-//   mode,
-//   key,
-//   data,
-//   { iv, additionalData, tagLength = 128 }) {
-//   if (!ArrayPrototypeIncludes(kTagLengths, tagLength)) {
-//     return PromiseReject(lazyDOMException(
-//       `${tagLength} is not a valid AES-GCM tag length`,
-//       'OperationError'));
-//   }
+  if (additionalData !== undefined) {
+    validateMaxBufferLength(additionalData, 'algorithm.additionalData');
+  }
 
-//   validateMaxBufferLength(iv, 'algorithm.iv');
+  const tagByteLength = Math.floor(tagLength / 8);
+  let tag;
+  switch (mode) {
+    case CipherOrWrapMode.kWebCryptoCipherDecrypt: {
+      // const slice = ArrayBuffer.isView(data)
+      //   ? DataView.prototype.buffer.slice
+      //   : ArrayBuffer.prototype.slice;
+      tag = data.slice(-tagByteLength);
 
-//   if (additionalData !== undefined) {
-//     validateMaxBufferLength(additionalData, 'algorithm.additionalData');
-//   }
+      // Refs: https://www.w3.org/TR/WebCryptoAPI/#aes-gcm-operations
+      //
+      // > If *plaintext* has a length less than *tagLength* bits, then `throw`
+      // > an `OperationError`.
+      if (tagByteLength > tag.byteLength) {
+        throw lazyDOMException(
+          'The provided data is too small.',
+          'OperationError'
+        );
+      }
 
-//   const tagByteLength = MathFloor(tagLength / 8);
-//   let tag;
-//   switch (mode) {
-//     case kWebCryptoCipherDecrypt: {
-//       const slice = ArrayBufferIsView(data) ?
-//         TypedArrayPrototypeSlice : ArrayBufferPrototypeSlice;
-//       tag = slice(data, -tagByteLength);
+      data = data.slice(0, -tagByteLength);
+      break;
+    }
+    case CipherOrWrapMode.kWebCryptoCipherEncrypt:
+      tag = tagByteLength;
+      break;
+  }
 
-//       // Refs: https://www.w3.org/TR/WebCryptoAPI/#aes-gcm-operations
-//       //
-//       // > If *plaintext* has a length less than *tagLength* bits, then `throw`
-//       // > an `OperationError`.
-//       if (tagByteLength > tag.byteLength) {
-//         return PromiseReject(lazyDOMException(
-//           'The provided data is too small.',
-//           'OperationError'));
-//       }
+  return NativeQuickCrypto.webcrypto.aesCipher(
+    mode,
+    key.keyObject.handle,
+    data,
+    getVariant('AES-GCM', key.algorithm.length as AESLength),
+    iv,
+    tag,
+    additionalData
+  );
+}
 
-//       data = slice(data, 0, -tagByteLength);
-//       break;
-//     }
-//     case kWebCryptoCipherEncrypt:
-//       tag = tagByteLength;
-//       break;
-//   }
-
-//   return jobPromise(() => new AESCipherJob(
-//     kCryptoJobAsync,
-//     mode,
-//     key[kKeyObject][kHandle],
-//     data,
-//     getVariant('AES-GCM', key.algorithm.length),
-//     iv,
-//     tag,
-//     additionalData));
-// }
-
-// export const aesCipher = (mode, key, data, algorithm) => {
-//   switch (algorithm.name) {
-//     case 'AES-CTR': return asyncAesCtrCipher(mode, key, data, algorithm);
-//     case 'AES-CBC': return asyncAesCbcCipher(mode, key, data, algorithm);
-//     case 'AES-GCM': return asyncAesGcmCipher(mode, key, data, algorithm);
-//     case 'AES-KW': return asyncAesKwCipher(mode, key, data);
-//   }
-// };
+export const aesCipher = (
+  mode: CipherOrWrapMode,
+  key: CryptoKey,
+  data: ArrayBuffer,
+  algorithm: EncryptDecryptParams // | WrapUnwrapParams
+): Promise<ArrayBuffer> => {
+  switch (algorithm.name) {
+    case 'AES-CTR':
+      return asyncAesCtrCipher(mode, key, data, algorithm);
+    case 'AES-CBC':
+      return asyncAesCbcCipher(mode, key, data, algorithm);
+    case 'AES-GCM':
+      return asyncAesGcmCipher(mode, key, data, algorithm);
+    // case 'AES-KW':
+    //   return asyncAesKwCipher(mode, key, data);
+  }
+  throw new Error(`aesCipher: Unknown algorithm ${algorithm.name}`);
+};
 
 // export const aesGenerateKey = async (algorithm, extractable, keyUsages)  => {
 //   const { name, length } = algorithm;
