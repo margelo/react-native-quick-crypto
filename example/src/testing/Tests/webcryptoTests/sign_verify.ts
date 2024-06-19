@@ -1,4 +1,4 @@
-import type { CryptoKeyPair } from '../../../../../src/keys';
+import type { CryptoKey, CryptoKeyPair } from '../../../../../src/keys';
 import crypto from 'react-native-quick-crypto';
 import { describe, it } from '../../MochaRNAdapter';
 import { expect } from 'chai';
@@ -80,7 +80,7 @@ describe('subtle - sign / verify', () => {
           name: 'ECDSA',
           hash: 'SHA-384',
         },
-        privateKey,
+        privateKey as CryptoKey,
         ec.encode(data)
       );
 
@@ -90,7 +90,7 @@ describe('subtle - sign / verify', () => {
             name: 'ECDSA',
             hash: 'SHA-384',
           },
-          publicKey,
+          publicKey as CryptoKey,
           signature,
           ec.encode(data)
         )

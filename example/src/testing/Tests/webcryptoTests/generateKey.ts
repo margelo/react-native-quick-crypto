@@ -5,6 +5,7 @@ import crypto from 'react-native-quick-crypto';
 import { assertThrowsAsync } from '../util';
 import type {
   AnyAlgorithm,
+  CryptoKey,
   CryptoKeyPair,
   KeyUsage,
   NamedCurve,
@@ -449,21 +450,23 @@ describe('subtle - generateKey', () => {
           usages
         );
         const { publicKey, privateKey } = pair as CryptoKeyPair;
+        const pub = publicKey as CryptoKey;
+        const priv = privateKey as CryptoKey;
 
-        expect(publicKey).is.not.undefined;
-        expect(privateKey).is.not.undefined;
-        expect(isCryptoKey(publicKey));
-        expect(isCryptoKey(privateKey));
-        expect(publicKey.type).to.equal('public');
-        expect(privateKey.type).to.equal('private');
-        expect(publicKey.keyExtractable).to.equal(true);
-        expect(privateKey.keyExtractable).to.equal(true);
-        expect(publicKey.keyUsages).to.deep.equal(publicUsages);
-        expect(privateKey.keyUsages).to.deep.equal(privateUsages);
-        expect(publicKey.algorithm.name, name);
-        expect(privateKey.algorithm.name, name);
-        expect(publicKey.algorithm.namedCurve, namedCurve);
-        expect(privateKey.algorithm.namedCurve, namedCurve);
+        expect(pub).is.not.undefined;
+        expect(priv).is.not.undefined;
+        expect(isCryptoKey(pub));
+        expect(isCryptoKey(priv));
+        expect(pub.type).to.equal('public');
+        expect(priv.type).to.equal('private');
+        expect(pub.keyExtractable).to.equal(true);
+        expect(priv.keyExtractable).to.equal(true);
+        expect(pub.keyUsages).to.deep.equal(publicUsages);
+        expect(priv.keyUsages).to.deep.equal(privateUsages);
+        expect(pub.algorithm.name, name);
+        expect(priv.algorithm.name, name);
+        expect(pub.algorithm.namedCurve, namedCurve);
+        expect(priv.algorithm.namedCurve, namedCurve);
 
         // Invalid parameters
         [1, true, {}, [], null].forEach(async (curve) => {

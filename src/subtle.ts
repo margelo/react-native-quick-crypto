@@ -218,21 +218,20 @@ const importGenericSecretKey = async (
 
 const checkCryptoKeyPairUsages = (pair: CryptoKeyPair) => {
   if (
-    pair.privateKey instanceof Buffer ||
-    !pair.privateKey?.hasOwnProperty('usages')
+    !(pair.privateKey instanceof Buffer) &&
+    pair.privateKey &&
+    pair.privateKey.hasOwnProperty('keyUsages')
   ) {
-    throw lazyDOMException(
-      'PrivateKey in pair is not a CryptoKey',
-      'SyntaxError'
-    );
+    const priv = pair.privateKey as CryptoKey;
+    if (priv.usages.length > 0) {
+      return;
+    }
   }
-  const priv = pair.privateKey as CryptoKey;
-  if (priv.usages.length === 0) {
-    throw lazyDOMException(
-      'Usages cannot be empty when creating a key.',
-      'SyntaxError'
-    );
-  }
+  console.log(pair.privateKey);
+  throw lazyDOMException(
+    'Usages cannot be empty when creating a key.',
+    'SyntaxError'
+  );
 };
 
 const signVerify = (
