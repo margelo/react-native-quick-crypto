@@ -338,11 +338,18 @@ const cipherOrWrap = async (
 
 class Subtle {
   async decrypt(
-    _algorithm: EncryptDecryptParams,
-    _key: CryptoKey,
-    _data: BufferLike
+    algorithm: EncryptDecryptParams,
+    key: CryptoKey,
+    data: BufferLike
   ): Promise<ArrayBuffer> {
-    throw new Error('subtle.decrypt() is not implemented');
+    const normalizedAlgorithm = normalizeAlgorithm(algorithm, 'decrypt');
+    return cipherOrWrap(
+      CipherOrWrapMode.kWebCryptoCipherDecrypt,
+      normalizedAlgorithm as EncryptDecryptParams,
+      key,
+      bufferLikeToArrayBuffer(data),
+      'decrypt'
+    );
   }
 
   async digest(
