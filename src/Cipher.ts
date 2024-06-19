@@ -457,21 +457,23 @@ export type GenerateKeyPairOptions = {
   mgf1Hash?: any;
 };
 
+export type KeyPairKey = Buffer | KeyObjectHandle | CryptoKey | undefined;
+
 export type GenerateKeyPairReturn = [
   error?: Error,
-  privateKey?: Buffer | KeyObjectHandle | CryptoKey,
-  publicKey?: Buffer | KeyObjectHandle | CryptoKey,
+  privateKey?: KeyPairKey,
+  publicKey?: KeyPairKey,
 ];
 
 export type GenerateKeyPairCallback = (
   error?: Error,
-  publicKey?: Buffer | KeyObjectHandle | CryptoKey,
-  privateKey?: Buffer | KeyObjectHandle | CryptoKey
+  publicKey?: KeyPairKey,
+  privateKey?: KeyPairKey
 ) => GenerateKeyPairReturn | void;
 
 export type KeyPair = {
-  publicKey?: Buffer | KeyObjectHandle | CryptoKey;
-  privateKey?: Buffer | KeyObjectHandle | CryptoKey;
+  publicKey?: KeyPairKey;
+  privateKey?: KeyPairKey;
 };
 
 export type GenerateKeyPairPromiseReturn = [error?: Error, keypair?: KeyPair];

@@ -5,6 +5,7 @@ import {
 } from './Utils';
 import type { KeyObjectHandle } from './NativeQuickCrypto/webcrypto';
 import { NativeQuickCrypto } from './NativeQuickCrypto/NativeQuickCrypto';
+import type { KeyPairKey } from './Cipher';
 
 export const kNamedCurveAliases = {
   'P-256': 'prime256v1',
@@ -176,8 +177,8 @@ const encodingNames = {
 };
 
 export type CryptoKeyPair = {
-  publicKey: CryptoKey;
-  privateKey: CryptoKey;
+  publicKey: KeyPairKey;
+  privateKey: KeyPairKey;
 };
 
 function option(name: string, objName: string | undefined) {
