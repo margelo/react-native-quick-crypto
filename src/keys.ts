@@ -176,8 +176,8 @@ const encodingNames = {
 };
 
 export type CryptoKeyPair = {
-  publicKey: any;
-  privateKey: any;
+  publicKey: CryptoKey;
+  privateKey: CryptoKey;
 };
 
 function option(name: string, objName: string | undefined) {
@@ -602,12 +602,17 @@ class AsymmetricKeyObject extends KeyObject {
     super(type, handle);
   }
 
+  private _asymmetricKeyType?: AsymmetricKeyType;
+
   get asymmetricKeyType(): AsymmetricKeyType {
-    return this.asymmetricKeyType || this.handle.getAsymmetricKeyType();
+    if (!this._asymmetricKeyType) {
+      this._asymmetricKeyType = this.handle.getAsymmetricKeyType();
+    }
+    return this._asymmetricKeyType;
   }
 
   // get asymmetricKeyDetails() {
-  //   switch (this.asymmetricKeyType) {
+  //   switch (this._asymmetricKeyType) {
   //     case 'rsa':
   //     case 'rsa-pss':
   //     case 'dsa':

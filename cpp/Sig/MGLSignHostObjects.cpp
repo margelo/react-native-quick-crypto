@@ -494,18 +494,6 @@ void SignBase::InstallMethods(mode mode) {
   }
 }
 
-SubtleSignVerify::SubtleSignVerify(std::shared_ptr<react::CallInvoker> jsCallInvoker,
-                                   std::shared_ptr<DispatchQueue::dispatch_queue> workerQueue)
-    : MGLSmartHostObject(jsCallInvoker, workerQueue)
-{
-  this->fields.push_back(buildPair(
-      "signVerify", JSIF([=]) {
-        auto params = this->GetParamsFromJS(runtime, arguments);
-        ByteSource out = this->DoSignVerify(runtime, params);
-        return this->EncodeOutput(runtime, params, out);
-      }));
-};
-
 // SignConfiguration::SignConfiguration(SignConfiguration&& other) noexcept
 //: job_mode(other.job_mode),
 // mode(other.mode),
@@ -560,6 +548,10 @@ SignConfiguration SubtleSignVerify::GetParamsFromJS(jsi::Runtime &rt,
   offset = 5;
 
   // data
+  if (!args[offset].isObject() || !args[offset].asObject(rt).isArrayBuffer(rt)) {
+    throw jsi::JSError(rt, "data is not an array buffer");
+    return params;
+  }
   ByteSource data = ByteSource::FromStringOrBuffer(rt, args[offset]);
   if (data.size() > INT_MAX) {
     throw jsi::JSError(rt, "data is too big (> int32)");
@@ -628,9 +620,11 @@ SignConfiguration SubtleSignVerify::GetParamsFromJS(jsi::Runtime &rt,
   return params;
 }
 
-ByteSource SubtleSignVerify::DoSignVerify(jsi::Runtime &rt,
-                                          const SignConfiguration &params) {
-  ByteSource out;
+// Subtle Sign/Verify
+
+void SubtleSignVerify::DoSignVerify(jsi::Runtime &rt,
+                                    const SignConfiguration &params,
+                                    ByteSource &out) {
 
   EVPMDPointer context(EVP_MD_CTX_new());
   EVP_PKEY_CTX* ctx = nullptr;
@@ -733,19 +727,19 @@ ByteSource SubtleSignVerify::DoSignVerify(jsi::Runtime &rt,
     }
   }
 
-  return out;
+  // return out;
 }
 
 jsi::Value SubtleSignVerify::EncodeOutput(jsi::Runtime &rt,
                                           const SignConfiguration &params,
-                                          ByteSource &out) {
-  JSVariant result;
+                                          ByteSource &output) {
+  jsi::Value result;
   switch (params.mode) {
     case SignConfiguration::kSign:
-      result = JSVariant(std::move(out));
+      result = toJSI(rt, std::move(output));
       break;
     case SignConfiguration::kVerify:
-      result = JSVariant(out.data<char>()[0] == 1);
+      result = jsi::Value(output.data<char>()[0] == 1);
       break;
     default:
       throw jsi::JSError(rt, "unreachable code in SubtleSignVerify::EncodeOutput");

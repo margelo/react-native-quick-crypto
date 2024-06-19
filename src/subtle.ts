@@ -491,12 +491,21 @@ class Subtle {
     return result;
   }
 
-  sign(
+  async sign(
     algorithm: SubtleAlgorithm,
     key: CryptoKey,
     data: BufferLike
-  ): ArrayBuffer {
+  ): Promise<ArrayBuffer> {
     return signVerify(algorithm, key, data) as ArrayBuffer;
+  }
+
+  async verify(
+    algorithm: SubtleAlgorithm,
+    key: CryptoKey,
+    signature: BufferLike,
+    data: BufferLike
+  ): Promise<ArrayBuffer> {
+    return signVerify(algorithm, key, data, signature) as ArrayBuffer;
   }
 }
 

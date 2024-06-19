@@ -5,7 +5,6 @@ import crypto from 'react-native-quick-crypto';
 import { assertThrowsAsync } from '../util';
 import type {
   AnyAlgorithm,
-  CryptoKey,
   CryptoKeyPair,
   KeyUsage,
   NamedCurve,
@@ -427,11 +426,6 @@ describe('subtle - generateKey', () => {
   }
   */
 
-  type CryptoKeysInPair = {
-    publicKey: CryptoKey;
-    privateKey: CryptoKey;
-  };
-
   // Test EC Key Generation
   {
     async function testECKeyGen(
@@ -454,8 +448,7 @@ describe('subtle - generateKey', () => {
           true,
           usages
         );
-        const { publicKey, privateKey }: CryptoKeysInPair =
-          pair as CryptoKeyPair;
+        const { publicKey, privateKey } = pair as CryptoKeyPair;
 
         expect(publicKey).is.not.undefined;
         expect(privateKey).is.not.undefined;

@@ -214,9 +214,9 @@ This document attempts to describe the implementation status of Crypto APIs/Inte
   * 🚧 `subtle.exportKey(format, key)`
   * 🚧 `subtle.generateKey(algorithm, extractable, keyUsages)`
   * 🚧 `subtle.importKey(format, keyData, algorithm, extractable, keyUsages)`
-  * ❌ `subtle.sign(algorithm, key, data)`
+  * 🚧 `subtle.sign(algorithm, key, data)`
   * ❌ `subtle.unwrapKey(format, wrappedKey, unwrappingKey, unwrapAlgo, unwrappedKeyAlgo, extractable, keyUsages)`
-  * ❌ `subtle.verify(algorithm, key, signature, data)`
+  * 🚧 `subtle.verify(algorithm, key, signature, data)`
   * ❌ `subtle.wrapKey(format, key, wrappingKey, wrapAlgo)`
 
 ## `subtle.decrypt`
@@ -336,7 +336,7 @@ This document attempts to describe the implementation status of Crypto APIs/Inte
 | ---------           | :----: |
 | `RSASSA-PKCS1-v1_5` |  |
 | `RSA-PSS`           |  |
-| `ECDSA`             |  |
+| `ECDSA`             | ✅ |
 | `Ed25519`           |  |
 | `Ed448`             |  |
 | `HMAC`              |  |
@@ -375,7 +375,7 @@ This document attempts to describe the implementation status of Crypto APIs/Inte
 | ---------           | :----: |
 | `RSASSA-PKCS1-v1_5` |  |
 | `RSA-PSS`           |  |
-| `ECDSA`             |  |
+| `ECDSA`             | ✅ |
 | `Ed25519`           |  |
 | `Ed448`             |  |
 | `HMAC`              |  |

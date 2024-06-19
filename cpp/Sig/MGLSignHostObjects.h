@@ -102,19 +102,11 @@ struct SignConfiguration final {  //  : public MemoryRetainer
   // SET_SELF_SIZE(SignConfiguration)
 };
 
-class SubtleSignVerify : public MGLSmartHostObject {
+class SubtleSignVerify {
   public:
-    SubtleSignVerify(std::shared_ptr<react::CallInvoker> jsCallInvoker,
-                     std::shared_ptr<DispatchQueue::dispatch_queue> workerQueue);
-
     SignConfiguration GetParamsFromJS(jsi::Runtime &rt, const jsi::Value *args);
-
-    ByteSource SubtleSignVerify::DoSignVerify(jsi::Runtime &rt,
-                                              const SignConfiguration &params);
-
-    jsi::Value SubtleSignVerify::EncodeOutput(jsi::Runtime &rt,
-                                              const SignConfiguration &params,
-                                              ByteSource &out);
+    void DoSignVerify(jsi::Runtime &rt, const SignConfiguration &params, ByteSource &out);
+    jsi::Value EncodeOutput(jsi::Runtime &rt,const SignConfiguration &params, ByteSource &out);
 };
 
 class MGLSignHostObject : public SignBase {

@@ -251,8 +251,8 @@ export function ecImportKey(
     case 'ECDSA':
     // Fall through
     case 'ECDH':
-      // if (keyObject.asymmetricKeyType !== 'ec')
-      //   throw new Error('Invalid key type');
+      if (keyObject.asymmetricKeyType !== 'ec')
+        throw new Error('Invalid key type');
       break;
   }
 
@@ -291,12 +291,12 @@ export const ecdsaSignVerify = (
     undefined,
     undefined,
     undefined,
-    data,
+    bufferLikeToArrayBuffer(data),
     hashname,
     undefined, // salt length, not used with ECDSA
     undefined, // pss padding, not used with ECDSA
     DSASigEnc.kSigEncP1363,
-    signature
+    bufferLikeToArrayBuffer(signature || new ArrayBuffer(0))
   );
 };
 

@@ -74,7 +74,7 @@ export const TestItem: React.FC<TestItemProps> = ({
 const styles = StyleSheet.create({
   container: {
     width: '100%',
-    paddingVertical: 5,
+    paddingVertical: 2,
     flexDirection: 'row',
     alignContent: 'center',
     alignItems: 'center',

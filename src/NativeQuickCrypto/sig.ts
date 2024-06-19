@@ -1,6 +1,5 @@
 // TODO Add real types to sign/verify, the problem is that because of encryption schemes
 
-import type { BufferLike } from '../Utils';
 import type { KeyObjectHandle } from './webcrypto';
 
 // they will have variable amount of parameters
@@ -36,10 +35,10 @@ export type SignVerify = (
   unused1: undefined,
   unused2: undefined,
   unused3: undefined,
-  data: BufferLike,
+  data: ArrayBuffer,
   digest: string | undefined,
   salt_length: number | undefined,
   padding: number | undefined,
   dsa_encoding: DSASigEnc | undefined,
-  signature: BufferLike | undefined
+  signature: ArrayBuffer | undefined
 ) => ArrayBuffer | boolean;

@@ -181,10 +181,11 @@ class JSI_EXPORT KeyObjectHandle: public jsi::HostObject {
       jsi::Runtime& rt,
       const PrivateKeyEncodingConfig& config) const;
     jsi::Value ExportSecretKey(jsi::Runtime& rt) const;
+    jsi::Value GetKeyDetail(jsi::Runtime &rt);
+    jsi::Value GetAsymmetricKeyType(jsi::Runtime &rt) const;
     jsi::Value Init(jsi::Runtime &rt);
     jsi::Value InitECRaw(jsi::Runtime &rt);
     jsi::Value InitJWK(jsi::Runtime &rt);
-    jsi::Value GetKeyDetail(jsi::Runtime &rt);
 
  private:
     std::shared_ptr<KeyObjectData> data_;

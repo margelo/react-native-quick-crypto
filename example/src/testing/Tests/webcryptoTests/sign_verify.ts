@@ -1,7 +1,13 @@
+import type { CryptoKeyPair } from '../../../../../src/keys';
 import crypto from 'react-native-quick-crypto';
 import { describe, it } from '../../MochaRNAdapter';
 import { expect } from 'chai';
 
+// polyfill encoders
+// @ts-expect-error
+import { polyfillGlobal } from 'react-native/Libraries/Utilities/PolyfillFunctions';
+import RNFE from 'react-native-fast-encoder';
+polyfillGlobal('TextEncoder', () => RNFE);
 
 const { subtle } = crypto;
 
@@ -59,7 +65,7 @@ describe('subtle - sign / verify', () => {
   {
     async function test(data: string) {
       const ec = new TextEncoder();
-      const { publicKey, privateKey } = await subtle.generateKey(
+      const pair = await subtle.generateKey(
         {
           name: 'ECDSA',
           namedCurve: 'P-384',
@@ -67,6 +73,7 @@ describe('subtle - sign / verify', () => {
         true,
         ['sign', 'verify']
       );
+      const { publicKey, privateKey } = pair as CryptoKeyPair;
 
       const signature = await subtle.sign(
         {
@@ -90,8 +97,8 @@ describe('subtle - sign / verify', () => {
       ).to.equal(true);
     }
 
-    it('ECDSA', () => {
-      test('hello world');
+    it('ECDSA', async () => {
+      await test('hello world');
     });
   }
 
