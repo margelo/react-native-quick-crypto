@@ -15,11 +15,13 @@
 #include "JSIUtils/MGLJSIMacros.h"
 #include "Sig/MGLSignHostObjects.h"
 #include "Utils/MGLUtils.h"
+#include "webcrypto/crypto_aes.h"
 #include "webcrypto/crypto_ec.h"
 #else
 #include "MGLJSIMacros.h"
 #include "MGLSignHostObjects.h"
 #include "MGLUtils.h"
+#include "crypto_aes.h"
 #include "crypto_ec.h"
 #endif
 
@@ -29,6 +31,18 @@ namespace react = facebook::react;
 
 jsi::Value createWebCryptoObject(jsi::Runtime &rt) {
     auto obj = jsi::Object(rt);
+
+    auto aesCipher = HOSTFN("aesCipher", 4) {
+        auto aes = AESCipher();
+        auto params = aes.GetParamsFromJS(rt, args);
+        ByteSource out;
+        WebCryptoCipherStatus status = aes.DoCipher(params, &out);
+        if (status != WebCryptoCipherStatus::OK) {
+            throw jsi::JSError(rt, "error in DoCipher, status: " +
+                std::to_string(static_cast<int>(status)));
+        }
+        return toJSI(rt, std::move(out));
+    });
 
     auto createKeyObjectHandle = HOSTFN("createKeyObjectHandle", 0) {
         auto keyObjectHandleHostObject =
