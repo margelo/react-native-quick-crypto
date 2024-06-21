@@ -347,17 +347,18 @@ bool ValidateCounter(
 bool ValidateAuthTag(
     jsi::Runtime &rt,
     AESCipherConfig::Mode cipher_mode,
-    const jsi::Value &value,
+    const jsi::Value &value_len,
+    const jsi::Value &value_auth_tag,
     AESCipherConfig *params) {
-  ByteSource tag = GetByteSourceFromJS(rt, value, "tag");
   switch (cipher_mode) {
     case AESCipherConfig::Mode::kDecrypt: {
+      ByteSource tag = GetByteSourceFromJS(rt, value_auth_tag, "auth_tag");
       params->tag = std::move(tag);
       break;
     }
     case AESCipherConfig::Mode::kEncrypt: {
-      CHECK(CheckIsUint32(value)); // Length
-      params->length = tag.size();
+      CHECK(CheckIsUint32(value_len)); // Length
+      params->length = (uint32_t)value_len.asNumber();
       if (params->length > 128) {
         throw std::runtime_error("Invalid tag length (AES)");
         return false;
@@ -412,7 +413,7 @@ AESCipherConfig AESCipher::GetParamsFromJS(jsi::Runtime &rt,
   if (CheckIsInt32(args[offset])) {
     params.variant = static_cast<AESKeyVariant>(args[offset].asNumber());
   }
-  offset++;
+  // offset++; // The below variant-dependent params advance offset themselves
 
   // cipher
   int cipher_nid;
@@ -468,24 +469,24 @@ AESCipherConfig AESCipher::GetParamsFromJS(jsi::Runtime &rt,
       break;
     case kKeyVariantAES_GCM_128:
       if (!ValidateIV(rt, args[offset + 1], &params) ||
-          !ValidateAuthTag(rt, mode, args[offset + 2], &params) ||
-          !ValidateAdditionalData(rt, args[offset + 3], &params)) {
+          !ValidateAuthTag(rt, mode, args[offset + 2], args[offset + 3], &params) ||
+          !ValidateAdditionalData(rt, args[offset + 4], &params)) {
         return params;
       }
       cipher_nid = NID_aes_128_gcm;
       break;
     case kKeyVariantAES_GCM_192:
       if (!ValidateIV(rt, args[offset + 1], &params) ||
-          !ValidateAuthTag(rt, mode, args[offset + 2], &params) ||
-          !ValidateAdditionalData(rt, args[offset + 3], &params)) {
+          !ValidateAuthTag(rt, mode, args[offset + 2], args[offset + 3], &params) ||
+          !ValidateAdditionalData(rt, args[offset + 4], &params)) {
         return params;
       }
       cipher_nid = NID_aes_192_gcm;
       break;
     case kKeyVariantAES_GCM_256:
       if (!ValidateIV(rt, args[offset + 1], &params) ||
-          !ValidateAuthTag(rt, mode, args[offset + 2], &params) ||
-          !ValidateAdditionalData(rt, args[offset + 3], &params)) {
+          !ValidateAuthTag(rt, mode, args[offset + 2], args[offset + 3], &params) ||
+          !ValidateAdditionalData(rt, args[offset + 4], &params)) {
         return params;
       }
       cipher_nid = NID_aes_256_gcm;

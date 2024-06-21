@@ -57,10 +57,10 @@ struct AESCipherConfig final {
   std::shared_ptr<KeyObjectData> key; // TODO: ManagedEVPPKey?
   ByteSource data;
   const EVP_CIPHER* cipher;
-  size_t length;
   ByteSource iv;  // Used for both iv or counter
-  ByteSource additional_data;
+  size_t length;
   ByteSource tag;  // Used only for authenticated modes (GCM)
+  ByteSource additional_data;
 
   AESCipherConfig() = default;
 

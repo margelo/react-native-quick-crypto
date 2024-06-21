@@ -7,7 +7,8 @@ export type AESCipher = (
   handle: KeyObjectHandle,
   data: ArrayBuffer,
   variant: AESKeyVariant,
-  param1?: any,
-  param2?: any,
-  param3?: any
+  iv_or_counter?: ArrayBuffer,
+  length?: number,
+  authTag?: ArrayBuffer,
+  additionalData?: ArrayBuffer
 ) => Promise<ArrayBuffer>;

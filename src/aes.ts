@@ -6,6 +6,7 @@ import {
   validateKeyOps,
   validateByteLength,
   validateMaxBufferLength,
+  bufferLikeToArrayBuffer,
 } from './Utils';
 import {
   type ImportFormat,
@@ -25,17 +26,6 @@ import {
   type AESLength,
 } from './keys';
 
-// const {
-//   ArrayBufferIsView,
-//   ArrayBufferPrototypeSlice,
-//   ArrayFrom,
-//   ArrayPrototypeIncludes,
-//   ArrayPrototypePush,
-//   MathFloor,
-//   SafeSet,
-//   TypedArrayPrototypeSlice,
-// } = primordials;
-
 // TODO: assign values?
 export enum AESKeyVariant {
   AES_CTR_128,
@@ -51,36 +41,6 @@ export enum AESKeyVariant {
   AES_GCM_256,
   AES_KW_256,
 }
-
-// const {
-//   hasAnyNotIn,
-//   jobPromise,
-//   validateByteLength,
-//   validateKeyOps,
-//   validateMaxBufferLength,
-//   kAesKeyLengths,
-//   kHandle,
-//   kKeyObject,
-// } = require('internal/crypto/util');
-
-// const {
-//   lazyDOMException,
-//   promisify,
-// } = require('internal/util');
-
-// const { PromiseReject } = primordials;
-
-// const {
-//   InternalCryptoKey,
-//   SecretKeyObject,
-//   createSecretKey,
-// } = require('internal/crypto/keys');
-
-// const {
-//   generateKey: _generateKey,
-// } = require('internal/crypto/keygen');
-
-// const generateKey = promisify(_generateKey);
 
 const kMaxCounterLength = 128;
 const kTagLengths: TagLength[] = [32, 64, 96, 104, 112, 120, 128];
@@ -203,7 +163,7 @@ function asyncAesCbcCipher(
     key.keyObject.handle,
     data,
     getVariant('AES-CBC', key.algorithm.length as AESLength),
-    iv
+    bufferLikeToArrayBuffer(iv)
   );
 }
 
@@ -240,7 +200,8 @@ function asyncAesGcmCipher(
   }
 
   const tagByteLength = Math.floor(tagLength / 8);
-  let tag;
+  let length: number | undefined;
+  let tag = new ArrayBuffer(0);
   switch (mode) {
     case CipherOrWrapMode.kWebCryptoCipherDecrypt: {
       // const slice = ArrayBuffer.isView(data)
@@ -263,7 +224,7 @@ function asyncAesGcmCipher(
       break;
     }
     case CipherOrWrapMode.kWebCryptoCipherEncrypt:
-      tag = tagByteLength;
+      length = tagByteLength;
       break;
   }
 
@@ -272,9 +233,10 @@ function asyncAesGcmCipher(
     key.keyObject.handle,
     data,
     getVariant('AES-GCM', key.algorithm.length as AESLength),
-    iv,
-    tag,
-    additionalData
+    bufferLikeToArrayBuffer(iv),
+    length,
+    bufferLikeToArrayBuffer(tag),
+    bufferLikeToArrayBuffer(additionalData)
   );
 }
 
@@ -296,6 +258,8 @@ export const aesCipher = (
   }
   throw new Error(`aesCipher: Unknown algorithm ${algorithm.name}`);
 };
+
+// const generateKey = promisify(_generateKey);
 
 // export const aesGenerateKey = async (algorithm, extractable, keyUsages)  => {
 //   const { name, length } = algorithm;

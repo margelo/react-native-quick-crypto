@@ -79,8 +79,8 @@ export type AesCtrParams = {
 export type AesGcmParams = {
   name: 'AES-GCM';
   iv: BufferLike;
-  additionalData?: BufferLike;
-  tagLength?: TagLength;
+  tagLength: TagLength;
+  additionalData: BufferLike;
 };
 
 export type AesKwParams = {
