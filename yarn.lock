@@ -1305,10 +1305,10 @@
   resolved "https://registry.yarnpkg.com/@iarna/toml/-/toml-2.2.5.tgz#b32366c89b43c6f8cefbdefac778b9c828e3ba8c"
   integrity sha512-trnsAYxU3xnS1gPHPyU961coFyLkh4gAD/0zQ5mymY4yOZ+CYvsPqUbOFSw0aDM4y0tV7tiFxL/1XfXPNC6IPg==
 
-"@inquirer/figures@^1.0.2":
-  version "1.0.2"
-  resolved "https://registry.yarnpkg.com/@inquirer/figures/-/figures-1.0.2.tgz#a6af5e9f9969efb9ed3469130566315c36506b8a"
-  integrity sha512-4F1MBwVr3c/m4bAUef6LgkvBfSjzwH+OfldgHqcuacWwSUetFebM2wi58WfG9uk1rR98U6GwLed4asLJbwdV5w==
+"@inquirer/figures@^1.0.3":
+  version "1.0.3"
+  resolved "https://registry.yarnpkg.com/@inquirer/figures/-/figures-1.0.3.tgz#1227cc980f88e6d6ab85abadbf164f5038041edd"
+  integrity sha512-ErXXzENMH5pJt5/ssXV0DfWUZqly8nGzf0UcBV9xTnP+KyffE2mqyxIMBrZ8ijQck2nU0TQm40EQB53YreyWHw==
 
 "@istanbuljs/load-nyc-config@^1.0.0":
   version "1.1.0"
@@ -5036,12 +5036,12 @@ ini@^1.3.4, ini@~1.3.0:
   resolved "https://registry.yarnpkg.com/ini/-/ini-1.3.8.tgz#a29da425b48806f34767a4efce397269af28432c"
   integrity sha512-JV/yugV2uzW5iMRSiZAyDtQd+nxtUnjeLt0acNdw98kKLrvuRVyB80tsREOE7yvGVgalhZ6RNXCmEHkUKBKxew==
 
-inquirer@9.2.22:
-  version "9.2.22"
-  resolved "https://registry.yarnpkg.com/inquirer/-/inquirer-9.2.22.tgz#718cb4153f0d35176aab27d495f8e358d1e2008f"
-  integrity sha512-SqLLa/Oe5rZUagTR9z+Zd6izyatHglbmbvVofo1KzuVB54YHleWzeHNLoR7FOICGOeQSqeLh1cordb3MzhGcEw==
+inquirer@9.2.23:
+  version "9.2.23"
+  resolved "https://registry.yarnpkg.com/inquirer/-/inquirer-9.2.23.tgz#cd2fe34edca12315b624fbc3c8cb99b1c4f61f90"
+  integrity sha512-kod5s+FBPIDM2xiy9fu+6wdU/SkK5le5GS9lh4FEBjBHqiMgD9lLFbCbuqFNAjNL2ZOy9Wd9F694IOzN9pZHBA==
   dependencies:
-    "@inquirer/figures" "^1.0.2"
+    "@inquirer/figures" "^1.0.3"
     "@ljharb/through" "^2.3.13"
     ansi-escapes "^4.3.2"
     chalk "^5.3.0"
@@ -5472,10 +5472,10 @@ isobject@^3.0.1:
   resolved "https://registry.yarnpkg.com/isobject/-/isobject-3.0.1.tgz#4e431e92b11a9731636aa1f9c8d1ccbcfdab78df"
   integrity sha512-WhB9zCku7EGTj/HQQRz5aUQEUeoQZH2bWcltRErOpymJ4boYE6wL9Tbr23krRPSZ+C5zqNSrSw+Cc7sZZ4b7vg==
 
-issue-parser@7.0.0:
-  version "7.0.0"
-  resolved "https://registry.yarnpkg.com/issue-parser/-/issue-parser-7.0.0.tgz#27b832c5f5967da897e08ca1949d188e98873b1a"
-  integrity sha512-jgAw78HO3gs9UrKqJNQvfDj9Ouy8Mhu40fbEJ8yXff4MW8+/Fcn9iFjyWUQ6SKbX8ipPk3X5A3AyfYHRu6uVLw==
+issue-parser@7.0.1:
+  version "7.0.1"
+  resolved "https://registry.yarnpkg.com/issue-parser/-/issue-parser-7.0.1.tgz#8a053e5a4952c75bb216204e454b4fc7d4cc9637"
+  integrity sha512-3YZcUUR2Wt1WsapF+S/WiA2WmlW0cWAoPccMqne7AxEBhCdFeTPjfv/Axb8V2gyCgY3nRw+ksZ3xSUX+R47iAg==
   dependencies:
     lodash.capitalize "^4.2.1"
     lodash.escaperegexp "^4.1.2"
@@ -7683,9 +7683,9 @@ regjsparser@^0.9.1:
     jsesc "~0.5.0"
 
 release-it@^17.2.0:
-  version "17.3.0"
-  resolved "https://registry.yarnpkg.com/release-it/-/release-it-17.3.0.tgz#6174f82ac21d1c50c894327ad9aebfec4a604d6b"
-  integrity sha512-7t9a2WEwqQKCdteshZUrO/3RX60plS5CzYAFr5+4Zj8qvRx1pFOFVglJSz4BeFAEd2yejpPxfI60+qRUzLEDZw==
+  version "17.4.0"
+  resolved "https://registry.yarnpkg.com/release-it/-/release-it-17.4.0.tgz#bb6f48e9e0c773ba1d0fc9a2adc4669f89813411"
+  integrity sha512-tYnk1tS530TLQtV8UQ+6OCiV3opVtkgwmLOpjXeV63ZtlZpSAGLZCXrA/I6ywiYKcEQWxW8WV7YJQvdxxGNZSg==
   dependencies:
     "@iarna/toml" "2.2.5"
     "@octokit/rest" "20.1.1"
@@ -7696,9 +7696,9 @@ release-it@^17.2.0:
     git-url-parse "14.0.0"
     globby "14.0.1"
     got "13.0.0"
-    inquirer "9.2.22"
+    inquirer "9.2.23"
     is-ci "3.0.1"
-    issue-parser "7.0.0"
+    issue-parser "7.0.1"
     lodash "4.17.21"
     mime-types "2.1.35"
     new-github-release-url "2.0.0"
