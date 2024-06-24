@@ -44,6 +44,7 @@ export type KeyPairAlgorithm =
   | CFRGKeyPairAlgorithm;
 
 export type SecretKeyAlgorithm = 'HMAC' | AESAlgorithm;
+export type SecretKeyType = 'hmac' | 'aes';
 
 export type SignVerifyAlgorithm =
   | 'RSASSA-PKCS1-v1_5'
@@ -79,13 +80,18 @@ export type AesCtrParams = {
 export type AesGcmParams = {
   name: 'AES-GCM';
   iv: BufferLike;
-  tagLength: TagLength;
-  additionalData: BufferLike;
+  tagLength?: TagLength;
+  additionalData?: BufferLike;
 };
 
 export type AesKwParams = {
   name: 'AES-KW';
   wrappingKey?: BufferLike;
+};
+
+export type AesKeyGenParams = {
+  length: AESLength;
+  name?: AESAlgorithm;
 };
 
 export type TagLength = 32 | 64 | 96 | 104 | 112 | 120 | 128;

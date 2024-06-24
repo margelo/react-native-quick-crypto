@@ -108,7 +108,7 @@ This document attempts to describe the implementation status of Crypto APIs/Inte
   * ✅ `crypto.createVerify(algorithm[, options])`
   * ❌ `crypto.diffieHellman(options)`
   * ❌ `crypto.hash(algorithm, data[, outputEncoding])`
-  * ❌ `crypto.generateKey(type, options, callback)`
+  * 🚧 `crypto.generateKey(type, options, callback)`
   * 🚧 `crypto.generateKeyPair(type, options, callback)`
   * 🚧 `crypto.generateKeyPairSync(type, options)`
   * ❌ `crypto.generateKeySync(type, options)`
@@ -150,7 +150,7 @@ This document attempts to describe the implementation status of Crypto APIs/Inte
 ## `crypto.generateKey`
 | type       | Status |
 | ---------  | :----: |
-| `aes`      | ❌ |
+| `aes`      | ✅ |
 | `hmac`     | ❌ |
 
 ## `crypto.generateKeyPair`
@@ -182,7 +182,7 @@ This document attempts to describe the implementation status of Crypto APIs/Inte
 ## `crypto.generateKeySync`
 | type       | Status |
 | ---------  | :----: |
-| `aes`      | ❌ |
+| `aes`      | ✅ |
 | `hmac`     | ❌ |
 
 
@@ -302,10 +302,10 @@ This document attempts to describe the implementation status of Crypto APIs/Inte
 | Algorithm  | Status |
 | ---------  | :----: |
 | `HMAC`     |  |
-| `AES-CTR`  |  |
-| `AES-CBC`  |  |
-| `AES-GCM`  |  |
-| `AES-KW`   |  |
+| `AES-CTR`  | ✅ |
+| `AES-CBC`  | ✅ |
+| `AES-GCM`  | ✅ |
+| `AES-KW`   | ✅ |
 
 ## `subtle.importKey`
 | Key Type            | `spki` | `pkcs8` | `jwk` | `raw` |

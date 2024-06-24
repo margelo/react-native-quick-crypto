@@ -1,3 +1,4 @@
+import { promisify } from 'util';
 import { NativeQuickCrypto } from './NativeQuickCrypto/NativeQuickCrypto';
 import {
   lazyDOMException,
@@ -24,7 +25,9 @@ import {
   type AesCtrParams,
   type TagLength,
   type AESLength,
+  type AesKeyGenParams,
 } from './keys';
+import { generateKey } from './keygen';
 
 // TODO: assign values?
 export enum AESKeyVariant {
@@ -44,6 +47,7 @@ export enum AESKeyVariant {
 
 const kMaxCounterLength = 128;
 const kTagLengths: TagLength[] = [32, 64, 96, 104, 112, 120, 128];
+const kAesKeyLengths = [128, 192, 256];
 
 export const getAlgorithmName = (name: string, length?: number) => {
   if (length === undefined)
@@ -236,7 +240,7 @@ function asyncAesGcmCipher(
     bufferLikeToArrayBuffer(iv),
     length,
     bufferLikeToArrayBuffer(tag),
-    bufferLikeToArrayBuffer(additionalData)
+    bufferLikeToArrayBuffer(additionalData || new ArrayBuffer(0))
   );
 }
 
@@ -259,40 +263,51 @@ export const aesCipher = (
   throw new Error(`aesCipher: Unknown algorithm ${algorithm.name}`);
 };
 
-// const generateKey = promisify(_generateKey);
+const generateKeyAsync = promisify(generateKey);
 
-// export const aesGenerateKey = async (algorithm, extractable, keyUsages)  => {
-//   const { name, length } = algorithm;
-//   if (!ArrayPrototypeIncludes(kAesKeyLengths, length)) {
-//     throw lazyDOMException(
-//       'AES key length must be 128, 192, or 256 bits',
-//       'OperationError');
-//   }
+export const aesGenerateKey = async (
+  algorithm: AesKeyGenParams,
+  extractable: boolean,
+  keyUsages: KeyUsage[]
+): Promise<CryptoKey> => {
+  const { name, length } = algorithm;
+  if (!name) {
+    throw lazyDOMException('Algorithm name is undefined', 'SyntaxError');
+  }
+  if (!kAesKeyLengths.includes(length)) {
+    throw lazyDOMException(
+      'AES key length must be 128, 192, or 256 bits',
+      'OperationError'
+    );
+  }
 
-//   const checkUsages = ['wrapKey', 'unwrapKey'];
-//   if (name !== 'AES-KW')
-//     ArrayPrototypePush(checkUsages, 'encrypt', 'decrypt');
+  const checkUsages = ['wrapKey', 'unwrapKey'];
+  if (name !== 'AES-KW') {
+    checkUsages.push('encrypt', 'decrypt');
+  }
+  // const usagesSet = new SafeSet(keyUsages);
+  if (hasAnyNotIn(keyUsages, checkUsages)) {
+    throw lazyDOMException(
+      `Unsupported key usage for an AES key: ${keyUsages}`,
+      'SyntaxError'
+    );
+  }
 
-//   const usagesSet = new SafeSet(keyUsages);
-//   if (hasAnyNotIn(usagesSet, checkUsages)) {
-//     throw lazyDOMException(
-//       'Unsupported key usage for an AES key',
-//       'SyntaxError');
-//   }
+  const key = await generateKeyAsync('aes', { length }).catch((err: Error) => {
+    throw lazyDOMException(
+      'The operation failed for an operation-specific reason' +
+        `[${err.message}]`,
+      { name: 'OperationError', cause: err }
+    );
+  });
 
-//   const key = await generateKey('aes', { length }).catch((err) => {
-//     throw lazyDOMException(
-//       'The operation failed for an operation-specific reason' +
-//       `[${err.message}]`,
-//       { name: 'OperationError', cause: err });
-//   });
-
-//   return new InternalCryptoKey(
-//     key,
-//     { name, length },
-//     ArrayFrom(usagesSet),
-//     extractable);
-// };
+  return new CryptoKey(
+    key as SecretKeyObject,
+    { name, length },
+    Array.from(keyUsages),
+    extractable
+  );
+};
 
 export const aesImportKey = async (
   algorithm: SubtleAlgorithm,

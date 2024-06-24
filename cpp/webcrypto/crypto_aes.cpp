@@ -386,8 +386,6 @@ void UseDefaultIV(AESCipherConfig* params) {
 
 }  // namespace
 
-AESCipher::AESCipher() {}
-
 AESCipherConfig AESCipher::GetParamsFromJS(jsi::Runtime &rt,
                                           const jsi::Value *args) {
   AESCipherConfig params;
@@ -512,6 +510,7 @@ AESCipherConfig AESCipher::GetParamsFromJS(jsi::Runtime &rt,
 
 WebCryptoCipherStatus AESCipher::DoCipher(const AESCipherConfig &params,
                                           ByteSource* out) {
+  // TODO: threading / async here, as we don't have jsi::Runtime
 #define V(name, fn)                                                           \
   case kKeyVariantAES_ ## name:                                               \
     return fn(params, out);

@@ -9,6 +9,10 @@ import type {
   NamedCurve,
 } from '../keys';
 import type { SignVerify } from './sig';
+import type {
+  GenerateSecretKeyMethod,
+  GenerateSecretKeySyncMethod,
+} from './keygen';
 
 type KeyDetail = {
   length?: number;
@@ -46,5 +50,7 @@ export type webcrypto = {
   aesCipher: AESCipher;
   createKeyObjectHandle: CreateKeyObjectHandle;
   ecExportKey: ECExportKey;
+  generateSecretKey: GenerateSecretKeyMethod;
+  generateSecretKeySync: GenerateSecretKeySyncMethod;
   signVerify: SignVerify;
 };

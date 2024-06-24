@@ -51,7 +51,7 @@ describe('subtle - encrypt / decrypt', () => {
     const buf = crypto.getRandomValues(new Uint8Array(50));
     const counter = crypto.getRandomValues(new Uint8Array(16));
 
-    async function test() {
+    async function testAESCTR() {
       const key = await subtle.generateKey(
         {
           name: 'AES-CTR',
@@ -79,7 +79,7 @@ describe('subtle - encrypt / decrypt', () => {
     }
 
     it('AES-CTR', async () => {
-      await test();
+      await testAESCTR();
     });
   }
 
@@ -88,7 +88,7 @@ describe('subtle - encrypt / decrypt', () => {
     const buf = crypto.getRandomValues(new Uint8Array(50));
     const iv = crypto.getRandomValues(new Uint8Array(16));
 
-    async function test() {
+    async function testAESCBC() {
       const key = await subtle.generateKey(
         {
           name: 'AES-CBC',
@@ -116,7 +116,7 @@ describe('subtle - encrypt / decrypt', () => {
     }
 
     it('AES-CBC', async () => {
-      await test();
+      await testAESCBC();
     });
   }
 
@@ -125,7 +125,7 @@ describe('subtle - encrypt / decrypt', () => {
     const buf = crypto.getRandomValues(new Uint8Array(50));
     const iv = crypto.getRandomValues(new Uint8Array(12));
 
-    async function test() {
+    async function testAESGCM() {
       const key = await subtle.generateKey(
         {
           name: 'AES-GCM',
@@ -153,7 +153,7 @@ describe('subtle - encrypt / decrypt', () => {
     }
 
     it('AES-GCM', async () => {
-      await test();
+      await testAESGCM();
     });
   }
 

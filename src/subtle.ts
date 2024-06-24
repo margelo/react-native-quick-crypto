@@ -10,6 +10,7 @@ import {
   type CryptoKeyPair,
   CipherOrWrapMode,
   type EncryptDecryptParams,
+  type AesKeyGenParams,
 } from './keys';
 import {
   hasAnyNotIn,
@@ -26,7 +27,12 @@ import {
 import { ecImportKey, ecExportKey, ecGenerateKey, ecdsaSignVerify } from './ec';
 import { pbkdf2DeriveBits } from './pbkdf2';
 import { asyncDigest } from './Hash';
-import { aesCipher, aesImportKey, getAlgorithmName } from './aes';
+import {
+  aesCipher,
+  aesGenerateKey,
+  aesImportKey,
+  getAlgorithmName,
+} from './aes';
 import { rsaImportKey } from './rsa';
 
 const exportKeySpki = async (key: CryptoKey): Promise<ArrayBuffer | any> => {
@@ -561,16 +567,19 @@ class Subtle {
       //   resultType = 'CryptoKey';
       //   result = await hmacGenerateKey(algorithm, extractable, keyUsages);
       //   break;
-      // case 'AES-CTR':
-      // // Fall through
-      // case 'AES-CBC':
-      // // Fall through
-      // case 'AES-GCM':
-      // // Fall through
-      // case 'AES-KW':
-      //   resultType = 'CryptoKey';
-      //   result = await aesGenerateKey(algorithm, extractable, keyUsages);
-      //   break;
+      case 'AES-CTR':
+      // Fall through
+      case 'AES-CBC':
+      // Fall through
+      case 'AES-GCM':
+      // Fall through
+      case 'AES-KW':
+        result = await aesGenerateKey(
+          algorithm as AesKeyGenParams,
+          extractable,
+          keyUsages
+        );
+        break;
       default:
         throw new Error(
           `'subtle.generateKey()' is not implemented for ${algorithm.name}.
