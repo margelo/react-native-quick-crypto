@@ -26,6 +26,7 @@ import {
   type TagLength,
   type AESLength,
   type AesKeyGenParams,
+  SecretKeyType,
 } from './keys';
 import { generateKey } from './keygen';
 
@@ -293,13 +294,15 @@ export const aesGenerateKey = async (
     );
   }
 
-  const key = await generateKeyAsync('aes', { length }).catch((err: Error) => {
-    throw lazyDOMException(
-      'The operation failed for an operation-specific reason' +
-        `[${err.message}]`,
-      { name: 'OperationError', cause: err }
-    );
-  });
+  const key = await generateKeyAsync(SecretKeyType.AES, { length }).catch(
+    (err: Error) => {
+      throw lazyDOMException(
+        'The operation failed for an operation-specific reason' +
+          `[${err.message}]`,
+        { name: 'OperationError', cause: err }
+      );
+    }
+  );
 
   return new CryptoKey(
     key as SecretKeyObject,

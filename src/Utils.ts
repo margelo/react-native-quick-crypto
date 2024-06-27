@@ -13,11 +13,6 @@ import type {
 } from './keys';
 import { type CipherKey } from 'crypto'; // @types/node
 
-export enum Fn {
-  kAsync,
-  kSync,
-}
-
 export type BufferLike = ArrayBuffer | Buffer | ArrayBufferView;
 export type BinaryLike = string | ArrayBuffer | Buffer | TypedArray;
 export type BinaryLikeNode = CipherKey | BinaryLike;

@@ -45,6 +45,7 @@ add_library(
   "../cpp/webcrypto/MGLWebCrypto.cpp"
   "../cpp/webcrypto/crypto_aes.cpp"
   "../cpp/webcrypto/crypto_ec.cpp"
+  "../cpp/webcrypto/crypto_keygen.cpp"
 )
 
 target_include_directories(

@@ -1,10 +1,6 @@
 import { NativeQuickCrypto } from './NativeQuickCrypto/NativeQuickCrypto';
 import { validateFunction } from './Utils';
-import {
-  SecretKeyObject,
-  type AesKeyGenParams,
-  type SecretKeyType,
-} from './keys';
+import { SecretKeyObject, SecretKeyType, type AesKeyGenParams } from './keys';
 
 export type KeyGenCallback = (err: Error | null, key?: SecretKeyObject) => void;
 

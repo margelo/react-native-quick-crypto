@@ -17,15 +17,18 @@
 #include "Utils/MGLUtils.h"
 #include "webcrypto/crypto_aes.h"
 #include "webcrypto/crypto_ec.h"
+#include "webcrypto/crypto_keygen.h"
 #else
 #include "MGLJSIMacros.h"
 #include "MGLSignHostObjects.h"
 #include "MGLUtils.h"
 #include "crypto_aes.h"
 #include "crypto_ec.h"
+#include "crypto_keygen.h"
 #endif
 
 namespace margelo {
+
 namespace jsi = facebook::jsi;
 namespace react = facebook::react;
 
@@ -46,7 +49,7 @@ jsi::Value createWebCryptoObject(jsi::Runtime &rt) {
 
     auto createKeyObjectHandle = HOSTFN("createKeyObjectHandle", 0) {
         auto keyObjectHandleHostObject =
-                std::make_shared<KeyObjectHandle>();
+            std::make_shared<KeyObjectHandle>();
         return jsi::Object::createFromHostObject(rt, keyObjectHandleHostObject);
     });
 
@@ -67,21 +70,30 @@ jsi::Value createWebCryptoObject(jsi::Runtime &rt) {
         return toJSI(rt, std::move(out));
     });
 
+    auto generateSecretKey = HOSTFN("generateSecretKey", 2) {
+        return SecretKeyGen::DoKeyGen(rt, args);
+    });
+
+    auto generateSecretKeySync = HOSTFN("generateSecretKeySync", 2) {
+        return SecretKeyGen::DoKeyGenSync(rt, args);
+    });
+
     auto signVerify = HOSTFN("signVerify", 4) {
-      auto ssv = SubtleSignVerify();
-      auto params = ssv.GetParamsFromJS(rt, args);
-      ByteSource out;
-      ssv.DoSignVerify(rt, params, out);
-      return ssv.EncodeOutput(rt, params, out);
+        auto ssv = SubtleSignVerify();
+        auto params = ssv.GetParamsFromJS(rt, args);
+        ByteSource out;
+        ssv.DoSignVerify(rt, params, out);
+        return ssv.EncodeOutput(rt, params, out);
     });
 
     obj.setProperty(rt,
                     "createKeyObjectHandle",
                     std::move(createKeyObjectHandle));
     obj.setProperty(rt, "ecExportKey", std::move(ecExportKey));
+    obj.setProperty(rt, "generateSecretKey", std::move(generateSecretKey));
+    obj.setProperty(rt, "generateSecretKeySync", std::move(generateSecretKeySync));
     obj.setProperty(rt, "signVerify", std::move(signVerify));
     return obj;
 };
 
 }  // namespace margelo
-

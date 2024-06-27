@@ -44,7 +44,11 @@ export type KeyPairAlgorithm =
   | CFRGKeyPairAlgorithm;
 
 export type SecretKeyAlgorithm = 'HMAC' | AESAlgorithm;
-export type SecretKeyType = 'hmac' | 'aes';
+export type SecretKeyTypeIn = 'hmac' | 'aes';
+export enum SecretKeyType {
+  AES,
+  HMAC,
+}
 
 export type SignVerifyAlgorithm =
   | 'RSASSA-PKCS1-v1_5'

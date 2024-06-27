@@ -77,7 +77,7 @@ class AESCipher {
  public:
   AESCipher() {}
   AESCipherConfig GetParamsFromJS(jsi::Runtime &rt, const jsi::Value *args);
-  WebCryptoCipherStatus DoCipher(const AESCipherConfig &params, ByteSource* out);
+  WebCryptoCipherStatus DoCipher(const AESCipherConfig &params, ByteSource *out);
 };
 
 }  // namespace margelo

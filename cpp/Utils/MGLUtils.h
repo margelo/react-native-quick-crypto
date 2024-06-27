@@ -52,6 +52,26 @@ using ECKeyPointer = DeleteFnPtr<EC_KEY, EC_KEY_free>;
 using ECPointPointer = DeleteFnPtr<EC_POINT, EC_POINT_free>;
 using CipherCtxPointer = DeleteFnPtr<EVP_CIPHER_CTX, EVP_CIPHER_CTX_free>;
 
+
+#ifdef __GNUC__
+#define MUST_USE_RESULT __attribute__((warn_unused_result))
+#else
+#define MUST_USE_RESULT
+#endif
+
+struct CSPRNGResult {
+  const bool ok;
+  MUST_USE_RESULT bool is_ok() const { return ok; }
+  MUST_USE_RESULT bool is_err() const { return !ok; }
+};
+
+// Either succeeds with exactly |length| bytes of cryptographically
+// strong pseudo-random data, or fails. This function may block.
+// Don't assume anything about the contents of |buffer| on error.
+// As a special case, |length == 0| can be used to check if the CSPRNG
+// is properly seeded without consuming entropy.
+MUST_USE_RESULT CSPRNGResult CSPRNG(void* buffer, size_t length);
+
 template <typename T>
 class NonCopyableMaybe {
  public:
@@ -298,6 +318,11 @@ enum KeyVariant {
   kvEC,
   kvNID,
   kvDH,
+};
+
+enum FnMode {
+  kAsync,
+  kSync,
 };
 
 }  // namespace margelo

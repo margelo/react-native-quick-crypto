@@ -1,7 +1,7 @@
 #include "crypto_aes.h"
 
 #ifdef ANDROID
-#include "JSIUtils/MGLJSIMacros.h"
+#include "JSIUtils/MGLJSIUtils.h"
 #include "Utils/MGLUtils.h"
 #else
 #include "MGLJSIUtils.h"
@@ -318,7 +318,7 @@ ByteSource GetByteSourceFromJS(jsi::Runtime &rt,
   if (data.size() > INT_MAX) {
     throw jsi::JSError(rt, "arg is too big (> int32): " + name);
   }
-  return std::move(data);
+  return data;
 }
 
 bool ValidateIV(
@@ -509,7 +509,7 @@ AESCipherConfig AESCipher::GetParamsFromJS(jsi::Runtime &rt,
 }
 
 WebCryptoCipherStatus AESCipher::DoCipher(const AESCipherConfig &params,
-                                          ByteSource* out) {
+                                          ByteSource *out) {
   // TODO: threading / async here, as we don't have jsi::Runtime
 #define V(name, fn)                                                           \
   case kKeyVariantAES_ ## name:                                               \
