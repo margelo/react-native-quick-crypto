@@ -70,11 +70,11 @@ jsi::Value createWebCryptoObject(jsi::Runtime &rt) {
         return toJSI(rt, std::move(out));
     });
 
-    auto generateSecretKey = HOSTFN("generateSecretKey", 2) {
+    auto generateSecretKey = HOSTFN("generateSecretKey", 1) {
         return SecretKeyGen::DoKeyGen(rt, args);
     });
 
-    auto generateSecretKeySync = HOSTFN("generateSecretKeySync", 2) {
+    auto generateSecretKeySync = HOSTFN("generateSecretKeySync", 1) {
         return SecretKeyGen::DoKeyGenSync(rt, args);
     });
 
@@ -86,11 +86,12 @@ jsi::Value createWebCryptoObject(jsi::Runtime &rt) {
         return ssv.EncodeOutput(rt, params, out);
     });
 
+    obj.setProperty(rt, "aesCipher", std::move(aesCipher));
     obj.setProperty(rt,
                     "createKeyObjectHandle",
                     std::move(createKeyObjectHandle));
     obj.setProperty(rt, "ecExportKey", std::move(ecExportKey));
-    obj.setProperty(rt, "generateSecretKey", std::move(generateSecretKey));
+    obj.setProperty(rt, "generateSecretKey", std::move(generateSecretKeySync));
     obj.setProperty(rt, "generateSecretKeySync", std::move(generateSecretKeySync));
     obj.setProperty(rt, "signVerify", std::move(signVerify));
     return obj;

@@ -16,8 +16,7 @@ namespace margelo
   namespace jsi = facebook::jsi;
 
   struct SecretKeyGenConfig {
-    size_t length;  // In bytes.
-    ByteSource out; // Placeholder for the generated key bytes.
+    size_t length;  // in bytes
 
     SecretKeyGenConfig() = default;
   };
@@ -33,11 +32,11 @@ namespace margelo
     inline void setMode(FnMode mode) { mode_ = mode; };
     bool getParamsFromJS(jsi::Runtime &rt, const jsi::Value *args);
     bool doKeyGen();
-    ByteSource getKey();
+    std::shared_ptr<KeyObjectHandle> getHandle();
 
     FnMode mode_;
     SecretKeyGenConfig params_;
-    ByteSource key_;
+    std::shared_ptr<KeyObjectData> key_;
   };
 
 } // namespace margelo

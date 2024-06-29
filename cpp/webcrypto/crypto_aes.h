@@ -54,7 +54,7 @@ struct AESCipherConfig final {
 
   Mode mode;
   AESKeyVariant variant;
-  std::shared_ptr<KeyObjectData> key; // TODO: ManagedEVPPKey?
+  std::shared_ptr<KeyObjectData> key;
   ByteSource data;
   const EVP_CIPHER* cipher;
   ByteSource iv;  // Used for both iv or counter

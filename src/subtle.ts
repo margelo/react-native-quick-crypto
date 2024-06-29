@@ -309,7 +309,7 @@ const cipherOrWrap = async (
   // key must have the proper usage.
   if (
     key.algorithm.name !== algorithm.name ||
-    key.usages.includes(op as KeyUsage)
+    !key.usages.includes(op as KeyUsage)
   ) {
     throw lazyDOMException(
       'The requested operation is not valid for the provided key',

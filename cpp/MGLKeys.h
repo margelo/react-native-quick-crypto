@@ -168,8 +168,7 @@ class JSI_EXPORT KeyObjectHandle: public jsi::HostObject {
     jsi::Value get(jsi::Runtime &rt, const jsi::PropNameID &propNameID);
     const std::shared_ptr<KeyObjectData>& Data();
 
-    static std::shared_ptr<KeyObjectHandle> Create(jsi::Runtime &rt,
-                                                   std::shared_ptr<KeyObjectData> data);
+    static std::shared_ptr<KeyObjectHandle> Create(std::shared_ptr<KeyObjectData> data);
 
  protected:
     jsi::Value Export(jsi::Runtime &rt);

@@ -2,8 +2,10 @@
 
 #ifdef ANDROID
 #include "JSIUtils/MGLJSIMacros.h"
+#include "JSIUtils/MGLJSIUtils.h"
 #include "Utils/MGLUtils.h"
 #else
+#include "MGLJSIMacros.h"
 #include "MGLJSIUtils.h"
 #include "MGLUtils.h"
 #endif
@@ -14,14 +16,16 @@ namespace margelo {
     auto skg = new SecretKeyGen(FnMode::kAsync);
     CHECK(skg->getParamsFromJS(rt, args));
     CHECK(skg->doKeyGen());
-    return toJSI(rt, std::move(skg->getKey()));
+    auto out = jsi::Object::createFromHostObject(rt, skg->getHandle());
+    return jsi::Value(std::move(out));
   }
 
   jsi::Value SecretKeyGen::DoKeyGenSync(jsi::Runtime &rt, const jsi::Value *args) {
     auto skg = new SecretKeyGen(FnMode::kSync);
     CHECK(skg->getParamsFromJS(rt, args));
     CHECK(skg->doKeyGen());
-    return toJSI(rt, std::move(skg->getKey()));
+    auto out = jsi::Object::createFromHostObject(rt, skg->getHandle());
+    return jsi::Value(std::move(out));
   }
 
   bool SecretKeyGen::getParamsFromJS(jsi::Runtime &rt, const jsi::Value *args) {
@@ -42,12 +46,14 @@ namespace margelo {
     ByteSource::Builder bytes(this->params_.length);
     if (CSPRNG(bytes.data<unsigned char>(), this->params_.length).is_err())
       return false;
-    this->key_ = std::move(bytes).release();
+    auto key_data = std::move(bytes).release();
+    this->key_ = KeyObjectData::CreateSecret(std::move(key_data));
     return true;
   }
 
-  ByteSource SecretKeyGen::getKey() {
-    return std::move(this->key_);
+  std::shared_ptr<KeyObjectHandle> SecretKeyGen::getHandle() {
+    auto handle = KeyObjectHandle::Create(this->key_);
+    return handle;
   }
 
 } // namespace margelo

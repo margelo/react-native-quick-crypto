@@ -398,10 +398,14 @@ AESCipherConfig AESCipher::GetParamsFromJS(jsi::Runtime &rt,
   offset++;
 
   // key (handle)
+  if (!args[offset].isObject()) {
+    throw std::runtime_error("arg is not a KeyObjectHandle: key");
+  }
   std::shared_ptr<KeyObjectHandle> handle =
     std::static_pointer_cast<KeyObjectHandle>(
       args[offset].asObject(rt).getHostObject(rt));
   params.key = handle->Data();
+  offset++;
 
   // data
   params.data = GetByteSourceFromJS(rt, args[offset], "data");

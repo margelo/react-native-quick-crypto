@@ -1,4 +1,3 @@
-import { promisify } from 'util';
 import { NativeQuickCrypto } from './NativeQuickCrypto/NativeQuickCrypto';
 import {
   lazyDOMException,
@@ -26,29 +25,28 @@ import {
   type TagLength,
   type AESLength,
   type AesKeyGenParams,
-  SecretKeyType,
 } from './keys';
-import { generateKey } from './keygen';
+import { generateKeySync } from './keygen';
 
-// TODO: assign values?
+// needs to match the values in cpp/webcrypto/crypto_aes.{h,cpp}
 export enum AESKeyVariant {
   AES_CTR_128,
-  AES_CBC_128,
-  AES_GCM_128,
-  AES_KW_128,
   AES_CTR_192,
-  AES_CBC_192,
-  AES_GCM_192,
-  AES_KW_192,
   AES_CTR_256,
+  AES_CBC_128,
+  AES_CBC_192,
   AES_CBC_256,
+  AES_GCM_128,
+  AES_GCM_192,
   AES_GCM_256,
+  AES_KW_128,
+  AES_KW_192,
   AES_KW_256,
 }
 
 const kMaxCounterLength = 128;
 const kTagLengths: TagLength[] = [32, 64, 96, 104, 112, 120, 128];
-const kAesKeyLengths = [128, 192, 256];
+export const kAesKeyLengths = [128, 192, 256];
 
 export const getAlgorithmName = (name: string, length?: number) => {
   if (length === undefined)
@@ -151,7 +149,7 @@ function asyncAesCtrCipher(
     key.keyObject.handle,
     data,
     getVariant('AES-CTR', key.algorithm.length as AESLength),
-    counter,
+    bufferLikeToArrayBuffer(counter),
     length
   );
 }
@@ -264,8 +262,6 @@ export const aesCipher = (
   throw new Error(`aesCipher: Unknown algorithm ${algorithm.name}`);
 };
 
-const generateKeyAsync = promisify(generateKey);
-
 export const aesGenerateKey = async (
   algorithm: AesKeyGenParams,
   extractable: boolean,
@@ -294,15 +290,16 @@ export const aesGenerateKey = async (
     );
   }
 
-  const key = await generateKeyAsync(SecretKeyType.AES, { length }).catch(
-    (err: Error) => {
-      throw lazyDOMException(
-        'The operation failed for an operation-specific reason' +
-          `[${err.message}]`,
-        { name: 'OperationError', cause: err }
-      );
-    }
-  );
+  // TODO: after development, switch back to async here
+
+  // const key = await generateKey('aes', { length }).catch((err: Error) => {
+  //   throw lazyDOMException(
+  //     'The operation failed for an operation-specific reason' +
+  //       `[${err.message}]`,
+  //     { name: 'OperationError', cause: err }
+  //   );
+  // });
+  const key = generateKeySync('aes', { length });
 
   return new CryptoKey(
     key as SecretKeyObject,
