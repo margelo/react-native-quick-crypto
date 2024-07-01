@@ -113,12 +113,12 @@ MGLQuickCryptoHostObject::MGLQuickCryptoHostObject(
   // createVerify
   this->fields.push_back(getVerifyFieldDefinition(jsCallInvoker, workerQueue));
 
-  // subtle API created from a simple jsi::Object
-  // because this FieldDefinition is only good for returning
-  // objects and too convoluted
-    this->fields.push_back(JSI_VALUE("webcrypto", {
-      return createWebCryptoObject(runtime);
-    }));
+  // subtle API
+  this->fields.push_back(JSI_VALUE("webcrypto", {
+    auto hostObject = std::make_shared<MGLWebCryptoHostObject>(
+        jsCallInvoker, workerQueue);
+    return jsi::Object::createFromHostObject(runtime, hostObject);
+  }));
 }
 
 }  // namespace margelo

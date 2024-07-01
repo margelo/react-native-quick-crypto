@@ -564,7 +564,6 @@ class Subtle {
         checkCryptoKeyPairUsages(result);
         break;
       // case 'HMAC':
-      //   resultType = 'CryptoKey';
       //   result = await hmacGenerateKey(algorithm, extractable, keyUsages);
       //   break;
       case 'AES-CTR':

@@ -209,8 +209,8 @@ export function validateString(str: any, name?: string): str is string {
   return isString;
 }
 
-export function validateFunction(f: any): f is Function {
-  return f != null && typeof f === 'function';
+export function validateFunction(f: any): boolean {
+  return f !== null && typeof f === 'function';
 }
 
 export function isStringOrBuffer(val: any): val is string | ArrayBuffer {

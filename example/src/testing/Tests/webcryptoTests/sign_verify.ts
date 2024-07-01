@@ -3,12 +3,6 @@ import crypto from 'react-native-quick-crypto';
 import { describe, it } from '../../MochaRNAdapter';
 import { expect } from 'chai';
 
-// polyfill encoders
-// @ts-expect-error
-import { polyfillGlobal } from 'react-native/Libraries/Utilities/PolyfillFunctions';
-import RNFE from 'react-native-fast-encoder';
-polyfillGlobal('TextEncoder', () => RNFE);
-
 const { subtle } = crypto;
 
 describe('subtle - sign / verify', () => {

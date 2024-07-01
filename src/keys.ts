@@ -621,7 +621,7 @@ export class SecretKeyObject extends KeyObject {
   //   return this[kHandle].getSymmetricKeySize();
   // }
 
-  export(options: EncodingOptions) {
+  export(options?: EncodingOptions) {
     if (options !== undefined) {
       if (options.format === 'jwk') {
         throw new Error('SecretKey export for jwk is not implemented');

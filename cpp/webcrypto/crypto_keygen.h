@@ -10,34 +10,28 @@
 #include "MGLUtils.h"
 #endif
 
-namespace margelo
-{
+namespace margelo {
 
-  namespace jsi = facebook::jsi;
+namespace jsi = facebook::jsi;
 
-  struct SecretKeyGenConfig {
-    size_t length;  // in bytes
+FieldDefinition GenerateSecretKeyFieldDefinition(
+    std::shared_ptr<react::CallInvoker> jsCallInvoker,
+    std::shared_ptr<DispatchQueue::dispatch_queue> workerQueue);
 
-    SecretKeyGenConfig() = default;
-  };
+struct SecretKeyGenConfig {
+  size_t length;  // in bytes
+  SecretKeyGenConfig() = default;
+};
 
-  class SecretKeyGen {
-   public:
-    static jsi::Value DoKeyGen(jsi::Runtime &rt, const jsi::Value *args);
-    static jsi::Value DoKeyGenSync(jsi::Runtime &rt, const jsi::Value *args);
-    inline SecretKeyGen(FnMode mode) {
-      this->setMode(mode);
-    }
-   private:
-    inline void setMode(FnMode mode) { mode_ = mode; };
-    bool getParamsFromJS(jsi::Runtime &rt, const jsi::Value *args);
-    bool doKeyGen();
-    std::shared_ptr<KeyObjectHandle> getHandle();
-
-    FnMode mode_;
-    SecretKeyGenConfig params_;
-    std::shared_ptr<KeyObjectData> key_;
-  };
+class SecretKeyGen {
+  public:
+  bool GetParamsFromJS(jsi::Runtime &rt, const jsi::Value *args);
+  bool DoKeyGen();
+  std::shared_ptr<KeyObjectHandle> GetHandle();
+  private:
+  SecretKeyGenConfig params_;
+  std::shared_ptr<KeyObjectData> key_;
+};
 
 } // namespace margelo
 

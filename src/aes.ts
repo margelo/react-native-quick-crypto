@@ -26,7 +26,7 @@ import {
   type AESLength,
   type AesKeyGenParams,
 } from './keys';
-import { generateKeySync } from './keygen';
+import { generateKeyPromise } from './keygen';
 
 // needs to match the values in cpp/webcrypto/crypto_aes.{h,cpp}
 export enum AESKeyVariant {
@@ -290,16 +290,16 @@ export const aesGenerateKey = async (
     );
   }
 
-  // TODO: after development, switch back to async here
-
-  // const key = await generateKey('aes', { length }).catch((err: Error) => {
-  //   throw lazyDOMException(
-  //     'The operation failed for an operation-specific reason' +
-  //       `[${err.message}]`,
-  //     { name: 'OperationError', cause: err }
-  //   );
-  // });
-  const key = generateKeySync('aes', { length });
+  const [err, key] = await generateKeyPromise('aes', { length });
+  if (err) {
+    throw lazyDOMException(
+      `aesGenerateKey (generateKeyPromise) failed: [${err.message}]`,
+      {
+        name: 'OperationError',
+        cause: err,
+      }
+    );
+  }
 
   return new CryptoKey(
     key as SecretKeyObject,

@@ -7,19 +7,42 @@ import {
   type AesKeyGenParams,
 } from './keys';
 
-export type KeyGenCallback = (err: Error | null, key?: SecretKeyObject) => void;
+export type KeyGenCallback = (
+  err: Error | undefined,
+  key?: SecretKeyObject
+) => void;
 
-export const generateKey = async (
+export const generateKeyPromise = (
+  type: SecretKeyType,
+  options: AesKeyGenParams // | HmacKeyGenParams
+): Promise<[Error | undefined, SecretKeyObject | undefined]> => {
+  return new Promise((resolve, reject) => {
+    generateKey(type, options, (err, key) => {
+      if (err) {
+        reject([err, undefined]);
+      }
+      resolve([undefined, key]);
+    });
+  });
+};
+
+export const generateKey = (
   type: SecretKeyType,
   options: AesKeyGenParams, // | HmacKeyGenParams,
   callback: KeyGenCallback
-): Promise<SecretKeyObject> => {
+): void => {
   validateLength(type, options.length);
-  validateFunction(callback);
-  const handle = await NativeQuickCrypto.webcrypto.generateSecretKey(
-    options.length
-  );
-  return new SecretKeyObject(handle);
+  if (!validateFunction(callback)) {
+    throw lazyDOMException('Callback is not a function', 'SyntaxError');
+  }
+  NativeQuickCrypto.webcrypto
+    .generateSecretKey(options.length)
+    .then((handle) => {
+      callback(undefined, new SecretKeyObject(handle));
+    })
+    .catch((err) => {
+      callback(err, undefined);
+    });
 };
 
 export const generateKeySync = (

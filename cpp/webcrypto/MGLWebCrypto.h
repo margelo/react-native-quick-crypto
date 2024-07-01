@@ -27,7 +27,12 @@ enum WebCryptoKeyFormat {
   kWebCryptoKeyFormatJWK
 };
 
-jsi::Value createWebCryptoObject(jsi::Runtime &rt);
+class MGLWebCryptoHostObject : public MGLSmartHostObject {
+ public:
+  MGLWebCryptoHostObject(
+      std::shared_ptr<react::CallInvoker> jsCallInvoker,
+      std::shared_ptr<DispatchQueue::dispatch_queue> workerQueue);
+};
 
 }  // namespace margelo
 
