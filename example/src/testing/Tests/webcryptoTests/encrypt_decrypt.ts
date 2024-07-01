@@ -185,6 +185,48 @@ describe('subtle - encrypt / decrypt', () => {
     });
   }
 
+  {
+    const iv = crypto.getRandomValues(new Uint8Array(12));
+    const aad = crypto.getRandomValues(new Uint8Array(32));
+
+    async function testAESGCM2() {
+      const secretKey = (await subtle.generateKey(
+        {
+          name: 'AES-GCM',
+          length: 256,
+        },
+        false,
+        ['encrypt', 'decrypt']
+      )) as CryptoKey;
+
+      const encrypted = await subtle.encrypt(
+        {
+          name: 'AES-GCM',
+          iv,
+          additionalData: aad,
+          tagLength: 128,
+        },
+        secretKey,
+        crypto.getRandomValues(new Uint8Array(32))
+      );
+
+      await subtle.decrypt(
+        {
+          name: 'AES-GCM',
+          iv,
+          additionalData: aad,
+          tagLength: 128,
+        },
+        secretKey,
+        new Uint8Array(encrypted)
+      );
+    }
+
+    it('AES-GCM with iv & additionalData - default AuthTag length', async () => {
+      await testAESGCM2();
+    });
+  }
+
   // from https://github.com/nodejs/node/blob/main/test/parallel/test-webcrypto-encrypt-decrypt-aes.js
   async function testEncrypt({
     keyBuffer,
@@ -425,31 +467,31 @@ describe('subtle - encrypt / decrypt', () => {
 
     passing.forEach((vector: AesEncryptDecryptTestVector) => {
       const { algorithm, keyLength } = vector;
-      const { name } = algorithm as AesGcmParams;
-      it(`testEncrypt passing ${name} ${keyLength}`, async () => {
+      const { name, tagLength } = algorithm as AesGcmParams;
+      it(`testEncrypt passing ${name} ${keyLength} ${tagLength}`, async () => {
         await testEncrypt(vector);
       });
-      it(`testEncryptNoEncrypt passing ${name} ${keyLength}`, async () => {
+      it(`testEncryptNoEncrypt passing ${name} ${keyLength} ${tagLength}`, async () => {
         await testEncryptNoEncrypt(vector);
       });
-      it(`testEncryptNoDecrypt passing ${name} ${keyLength}`, async () => {
+      it(`testEncryptNoDecrypt passing ${name} ${keyLength} ${tagLength}`, async () => {
         await testEncryptNoDecrypt(vector);
       });
-      it(`testEncryptWrongAlg passing ${name} ${keyLength}`, async () => {
+      it(`testEncryptWrongAlg passing ${name} ${keyLength} ${tagLength}`, async () => {
         await testEncryptWrongAlg(vector, 'AES-CBC');
       });
     });
 
     failing.forEach((vector: AesEncryptDecryptTestVector) => {
       const { algorithm, keyLength } = vector;
-      const { name } = algorithm as AesGcmParams;
-      it(`testEncrypt failing ${name} ${keyLength}`, async () => {
+      const { name, tagLength } = algorithm as AesGcmParams;
+      it(`testEncrypt failing ${name} ${keyLength} ${tagLength}`, async () => {
         await assertThrowsAsync(
           async () => await testEncrypt(vector),
           'is not a valid AES-GCM tag length'
         );
       });
-      it(`testDecrypt failing ${name} ${keyLength}`, async () => {
+      it(`testDecrypt failing ${name} ${keyLength} ${tagLength}`, async () => {
         await assertThrowsAsync(
           async () => await testDecrypt(vector),
           'is not a valid AES-GCM tag length'
@@ -459,55 +501,13 @@ describe('subtle - encrypt / decrypt', () => {
 
     decryptionFailing.forEach((vector: AesEncryptDecryptTestVector) => {
       const { algorithm, keyLength } = vector;
-      const { name } = algorithm as AesGcmParams;
-      it(`testDecrypt decryptionFailing ${name} ${keyLength}`, async () => {
+      const { name, tagLength } = algorithm as AesGcmParams;
+      it(`testDecrypt decryptionFailing ${name} ${keyLength} ${tagLength}`, async () => {
         await assertThrowsAsync(
           async () => await testDecrypt(vector),
           'error in DoCipher, status: 2'
         );
       });
-    });
-  }
-
-  {
-    const iv = crypto.getRandomValues(new Uint8Array(12));
-    const aad = crypto.getRandomValues(new Uint8Array(32));
-
-    async function testAESGCM2() {
-      const secretKey = (await subtle.generateKey(
-        {
-          name: 'AES-GCM',
-          length: 256,
-        },
-        false,
-        ['encrypt', 'decrypt']
-      )) as CryptoKey;
-
-      const encrypted = await subtle.encrypt(
-        {
-          name: 'AES-GCM',
-          iv,
-          additionalData: aad,
-          tagLength: 128,
-        },
-        secretKey,
-        crypto.getRandomValues(new Uint8Array(32))
-      );
-
-      await subtle.decrypt(
-        {
-          name: 'AES-GCM',
-          iv,
-          additionalData: aad,
-          tagLength: 128,
-        },
-        secretKey,
-        new Uint8Array(encrypted)
-      );
-    }
-
-    it('AES-GCM with iv & additionalData - default AuthTag length', async () => {
-      await testAESGCM2();
     });
   }
 });

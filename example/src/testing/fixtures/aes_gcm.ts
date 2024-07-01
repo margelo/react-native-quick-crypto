@@ -109,6 +109,7 @@ kKeyLengths.forEach((keyLength) => {
       algorithm: { name: 'AES-GCM', iv, additionalData, tagLength },
       plaintext: kPlaintext,
       result,
+      keyLength,
     });
 
     const noadresult = new Uint8Array(cipherText.byteLength + byteCount);
