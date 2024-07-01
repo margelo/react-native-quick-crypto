@@ -108,7 +108,7 @@ This document attempts to describe the implementation status of Crypto APIs/Inte
   * ✅ `crypto.createVerify(algorithm[, options])`
   * ❌ `crypto.diffieHellman(options)`
   * ❌ `crypto.hash(algorithm, data[, outputEncoding])`
-  * ❌ `crypto.generateKey(type, options, callback)`
+  * 🚧 `crypto.generateKey(type, options, callback)`
   * 🚧 `crypto.generateKeyPair(type, options, callback)`
   * 🚧 `crypto.generateKeyPairSync(type, options)`
   * ❌ `crypto.generateKeySync(type, options)`
@@ -150,7 +150,7 @@ This document attempts to describe the implementation status of Crypto APIs/Inte
 ## `crypto.generateKey`
 | type       | Status |
 | ---------  | :----: |
-| `aes`      | ❌ |
+| `aes`      | ✅ |
 | `hmac`     | ❌ |
 
 ## `crypto.generateKeyPair`
@@ -182,7 +182,7 @@ This document attempts to describe the implementation status of Crypto APIs/Inte
 ## `crypto.generateKeySync`
 | type       | Status |
 | ---------  | :----: |
-| `aes`      | ❌ |
+| `aes`      | ✅ |
 | `hmac`     | ❌ |
 
 
@@ -206,11 +206,11 @@ This document attempts to describe the implementation status of Crypto APIs/Inte
 # `SubtleCrypto`
 
 * 🚧 Class: `SubtleCrypto`
-  * ❌ `subtle.decrypt(algorithm, key, data)`
+  * 🚧 `subtle.decrypt(algorithm, key, data)`
   * 🚧 `subtle.deriveBits(algorithm, baseKey, length)`
   * ❌ `subtle.deriveKey(algorithm, baseKey, derivedKeyAlgorithm, extractable, keyUsages)`
   * ✅ `subtle.digest(algorithm, data)`
-  * ❌ `subtle.encrypt(algorithm, key, data)`
+  * 🚧 `subtle.encrypt(algorithm, key, data)`
   * 🚧 `subtle.exportKey(format, key)`
   * 🚧 `subtle.generateKey(algorithm, extractable, keyUsages)`
   * 🚧 `subtle.importKey(format, keyData, algorithm, extractable, keyUsages)`
@@ -223,9 +223,9 @@ This document attempts to describe the implementation status of Crypto APIs/Inte
 | Algorithm  | Status |
 | ---------  | :----: |
 | `RSA-OAEP` |  |
-| `AES-CTR`  |  |
-| `AES-CBC`  |  |
-| `AES-GCM`  |  |
+| `AES-CTR`  | ✅ |
+| `AES-CBC`  | ✅ |
+| `AES-GCM`  | ✅ |
 
 ## `subtle.deriveBits`
 | Algorithm  | Status |
@@ -257,9 +257,9 @@ This document attempts to describe the implementation status of Crypto APIs/Inte
 | Algorithm  | Status |
 | ---------  | :----: |
 | `RSA-OAEP` |  |
-| `AES-CTR`  |  |
-| `AES-CBC`  |  |
-| `AES-GCM`  |  |
+| `AES-CTR`  | ✅ |
+| `AES-CBC`  | ✅ |
+| `AES-GCM`  | ✅ |
 
 ## `subtle.exportKey`
 | Key Type            | `spki` | `pkcs8` | `jwk` | `raw` |
@@ -302,10 +302,10 @@ This document attempts to describe the implementation status of Crypto APIs/Inte
 | Algorithm  | Status |
 | ---------  | :----: |
 | `HMAC`     |  |
-| `AES-CTR`  |  |
-| `AES-CBC`  |  |
-| `AES-GCM`  |  |
-| `AES-KW`   |  |
+| `AES-CTR`  | ✅ |
+| `AES-CBC`  | ✅ |
+| `AES-GCM`  | ✅ |
+| `AES-KW`   | ✅ |
 
 ## `subtle.importKey`
 | Key Type            | `spki` | `pkcs8` | `jwk` | `raw` |

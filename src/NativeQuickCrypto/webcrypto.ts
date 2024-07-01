@@ -1,3 +1,4 @@
+import type { AESCipher } from './aes';
 import type {
   AsymmetricKeyType,
   JWK,
@@ -8,6 +9,10 @@ import type {
   NamedCurve,
 } from '../keys';
 import type { SignVerify } from './sig';
+import type {
+  GenerateSecretKeyMethod,
+  GenerateSecretKeySyncMethod,
+} from './keygen';
 
 type KeyDetail = {
   length?: number;
@@ -42,7 +47,10 @@ export type KeyObjectHandle = {
 type CreateKeyObjectHandle = () => KeyObjectHandle;
 
 export type webcrypto = {
-  ecExportKey: ECExportKey;
+  aesCipher: AESCipher;
   createKeyObjectHandle: CreateKeyObjectHandle;
+  ecExportKey: ECExportKey;
+  generateSecretKey: GenerateSecretKeyMethod;
+  generateSecretKeySync: GenerateSecretKeySyncMethod;
   signVerify: SignVerify;
 };

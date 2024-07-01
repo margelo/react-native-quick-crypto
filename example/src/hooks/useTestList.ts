@@ -11,6 +11,7 @@ import '../testing/Tests/HashTests/HashTests';
 import '../testing/Tests/CipherTests/CipherTestFirst';
 import '../testing/Tests/CipherTests/CipherTestSecond';
 import '../testing/Tests/CipherTests/PublicCipherTests';
+import '../testing/Tests/CipherTests/generateKey';
 import '../testing/Tests/CipherTests/GenerateKeyPairTests';
 import '../testing/Tests/ConstantsTests/ConstantsTests';
 import '../testing/Tests/SignTests/SignTests';
@@ -18,6 +19,7 @@ import '../testing/Tests/SmokeTests/bundlerTests';
 import '../testing/Tests/webcryptoTests/deriveBits';
 import '../testing/Tests/webcryptoTests/digest';
 import '../testing/Tests/webcryptoTests/generateKey';
+import '../testing/Tests/webcryptoTests/encrypt_decrypt';
 import '../testing/Tests/webcryptoTests/import_export';
 import '../testing/Tests/webcryptoTests/sign_verify';
 

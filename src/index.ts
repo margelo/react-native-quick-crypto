@@ -12,6 +12,7 @@ import {
   generateKeyPair,
   generateKeyPairSync,
 } from './Cipher';
+import { generateKey, generateKeySync } from './keygen';
 import { createSign, createVerify } from './sig';
 import { createHmac } from './Hmac';
 import { createHash } from './Hash';
@@ -34,8 +35,10 @@ const QuickCrypto = {
   publicEncrypt,
   publicDecrypt,
   privateDecrypt,
+  generateKey,
   generateKeyPair,
   generateKeyPairSync,
+  generateKeySync,
   createSign,
   createVerify,
   subtle,

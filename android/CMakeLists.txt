@@ -43,7 +43,9 @@ add_library(
   "../cpp/Sig/MGLVerifyInstaller.cpp"
   "../cpp/Sig/MGLSignHostObjects.cpp"
   "../cpp/webcrypto/MGLWebCrypto.cpp"
+  "../cpp/webcrypto/crypto_aes.cpp"
   "../cpp/webcrypto/crypto_ec.cpp"
+  "../cpp/webcrypto/crypto_keygen.cpp"
 )
 
 target_include_directories(

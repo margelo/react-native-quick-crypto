@@ -74,7 +74,6 @@ export const TestItem: React.FC<TestItemProps> = ({
 const styles = StyleSheet.create({
   container: {
     width: '100%',
-    paddingVertical: 2,
     flexDirection: 'row',
     alignContent: 'center',
     alignItems: 'center',
@@ -84,7 +83,7 @@ const styles = StyleSheet.create({
     borderBottomColor: '#ccc',
   },
   checkbox: {
-    transform: [{ scaleX: 0.8 }, { scaleY: 0.8 }],
+    transform: [{ scaleX: 0.7 }, { scaleY: 0.7 }],
   },
   label: {
     fontSize: 12,

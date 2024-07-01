@@ -562,7 +562,7 @@ jsi::Value ManagedEVPPKey::ToEncodedPublicKey(jsi::Runtime& rt,
     // Note that this has the downside of containing sensitive data of the
     // private key.
     auto data = KeyObjectData::CreateAsymmetric(kKeyTypePublic, std::move(key));
-    auto handle = KeyObjectHandle::Create(rt, data);
+    auto handle = KeyObjectHandle::Create(data);
     auto out = jsi::Object::createFromHostObject(rt, handle);
     return jsi::Value(std::move(out));
   } else
@@ -583,7 +583,7 @@ jsi::Value ManagedEVPPKey::ToEncodedPrivateKey(jsi::Runtime& rt,
   if (!key) return {};
   if (config.output_key_object_) {
     auto data = KeyObjectData::CreateAsymmetric(kKeyTypePrivate, std::move(key));
-    auto handle = KeyObjectHandle::Create(rt, data);
+    auto handle = KeyObjectHandle::Create(data);
     auto out = jsi::Object::createFromHostObject(rt, handle);
     return jsi::Value(std::move(out));
   } else
@@ -907,8 +907,7 @@ jsi::Value KeyObjectHandle::get(
 //   registry->Register(Equals);
 // }
 
-std::shared_ptr<KeyObjectHandle> KeyObjectHandle::Create(jsi::Runtime &rt,
-                                                         std::shared_ptr<KeyObjectData> data) {
+std::shared_ptr<KeyObjectHandle> KeyObjectHandle::Create(std::shared_ptr<KeyObjectData> data) {
   auto handle = std::make_shared<KeyObjectHandle>();
   handle->data_ = data;
   return handle;

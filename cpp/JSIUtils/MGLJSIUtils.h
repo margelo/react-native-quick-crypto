@@ -30,4 +30,12 @@ inline bool CheckIsInt32(const jsi::Value &value) {
   return (d >= std::numeric_limits<int32_t>::lowest() && d <= std::numeric_limits<int32_t>::max());
 }
 
+inline bool CheckIsUint32(const jsi::Value &value) {
+  if (!value.isNumber()) {
+    return false;
+  }
+  double d = value.asNumber();
+  return (d >= std::numeric_limits<uint32_t>::lowest() && d <= std::numeric_limits<uint32_t>::max());
+}
+
 #endif /* MGLJSIUtils_h */

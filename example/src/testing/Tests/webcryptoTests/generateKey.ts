@@ -4,6 +4,8 @@ import { describe, it } from '../../MochaRNAdapter';
 import crypto from 'react-native-quick-crypto';
 import { assertThrowsAsync } from '../util';
 import type {
+  AESAlgorithm,
+  AESLength,
   AnyAlgorithm,
   CryptoKey,
   CryptoKeyPair,
@@ -498,46 +500,43 @@ describe('subtle - generateKey', () => {
     testECKeyGen('ECDH', 'P-384', ['deriveKey', 'deriveBits'], []);
     testECKeyGen('ECDH', 'P-521', ['deriveKey', 'deriveBits'], []);
   }
-  /*
+
   // Test AES Key Generation
   {
-    async function test(name, length, usages) {
-      const key = await subtle.generateKey(
-        {
-          name,
-          length,
-        },
-        true,
-        usages
-      );
+    type AESArgs = [AESAlgorithm, AESLength, KeyUsage[]];
+    async function testAesKeyGen(args: AESArgs) {
+      const [name, length, usages] = args;
+      it(`AES keygen: ${name} ${length} ${usages}`, async () => {
+        const key = await subtle.generateKey({ name, length }, true, usages);
+        const k = key as CryptoKey;
+        expect(k).is.not.undefined;
+        expect(isCryptoKey(k));
 
-      assert(key);
-      assert(isCryptoKey(key));
+        expect(k.type).to.equal('secret');
+        expect(k.extractable).to.equal(true);
+        expect(k.usages).to.deep.equal(usages);
+        expect(k.algorithm.name).to.equal(name);
+        expect(k.algorithm.length).to.equal(length);
 
-      assert.strictEqual(key.type, 'secret');
-      assert.strictEqual(key.toString(), '[object CryptoKey]');
-      assert.strictEqual(key.extractable, true);
-      assert.deepStrictEqual(key.usages, usages);
-      assert.strictEqual(key.algorithm.name, name);
-      assert.strictEqual(key.algorithm.length, length);
-
-      // Invalid parameters
-      [1, 100, 257, '', false, null].forEach(async (length) => {
-        await assert.rejects(subtle.generateKey({ name, length }, true, usages), {
-          name: 'OperationError',
-        });
+        // Invalid parameters
+        [1, 100, 257, '', false, null, undefined].forEach(
+          async (invalidParam) => {
+            await assertThrowsAsync(
+              async () =>
+                subtle.generateKey(
+                  // @ts-expect-error
+                  { name, length: invalidParam },
+                  true,
+                  usages
+                ),
+              'AES key length must be 128, 192, or 256 bits'
+            );
+          }
+        );
       });
-
-      await assert.rejects(
-        subtle.generateKey({ name, length: undefined }, true, usages),
-        {
-          name: 'TypeError',
-          code: 'ERR_MISSING_OPTION',
-        }
-      );
     }
 
-    const kTests = [
+    const aesTests: AESArgs[] = [
       ['AES-CTR', 128, ['encrypt', 'decrypt', 'wrapKey']],
       ['AES-CTR', 256, ['encrypt', 'decrypt', 'unwrapKey']],
       ['AES-CBC', 128, ['encrypt', 'decrypt']],
@@ -548,11 +547,10 @@ describe('subtle - generateKey', () => {
       ['AES-KW', 256, ['wrapKey', 'unwrapKey']],
     ];
 
-    const tests = Promise.all(kTests.map((args) => test(...args)));
-
-    tests.then(common.mustCall());
+    aesTests.map((args) => testAesKeyGen(args));
   }
 
+  /*
   // Test HMAC Key Generation
   {
     async function test(length, hash, usages) {
