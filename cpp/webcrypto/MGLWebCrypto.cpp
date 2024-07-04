@@ -14,6 +14,7 @@
 #ifdef ANDROID
 #include "JSIUtils/MGLJSIMacros.h"
 #include "Sig/MGLSignHostObjects.h"
+#include "Cipher/MGLRsa.h"
 #include "Utils/MGLUtils.h"
 #include "webcrypto/crypto_aes.h"
 #include "webcrypto/crypto_ec.h"
@@ -21,6 +22,7 @@
 #else
 #include "MGLJSIMacros.h"
 #include "MGLSignHostObjects.h"
+#include "MGLRsa.h"
 #include "MGLUtils.h"
 #include "crypto_aes.h"
 #include "crypto_ec.h"
@@ -79,6 +81,17 @@ MGLWebCryptoHostObject::MGLWebCryptoHostObject(
     return jsi::Value(std::move(out));
   };
 
+  auto rsaExportKey = JSIF([=]) {
+    ByteSource out;
+    auto rsa = new RsaKeyExport();
+    CHECK(rsa->GetParamsFromJS(runtime, arguments));
+    WebCryptoKeyExportStatus status = rsa->DoExport(&out);
+    if (status != WebCryptoKeyExportStatus::OK) {
+      throw jsi::JSError(runtime, "Error exporting key");
+    }
+    return toJSI(runtime, std::move(out));
+  };
+
   auto signVerify = JSIF([=]) {
     auto ssv = SubtleSignVerify();
     auto params = ssv.GetParamsFromJS(runtime, arguments);
@@ -92,6 +105,7 @@ MGLWebCryptoHostObject::MGLWebCryptoHostObject(
   this->fields.push_back(buildPair("ecExportKey", ecExportKey));
   this->fields.push_back(GenerateSecretKeyFieldDefinition(jsCallInvoker, workerQueue));
   this->fields.push_back(buildPair("generateSecretKeySync", generateSecretKeySync));
+  this->fields.push_back(buildPair("rsaExportKey", rsaExportKey));
   this->fields.push_back(buildPair("signVerify", signVerify));
 };
 

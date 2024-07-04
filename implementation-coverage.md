@@ -101,9 +101,9 @@ This document attempts to describe the implementation status of Crypto APIs/Inte
   * ❌ `crypto.createECDH(curveName)`
   * ✅ `crypto.createHash(algorithm[, options])`
   * ✅ `crypto.createHmac(algorithm, key[, options])`
-  * ❌ `crypto.createPrivateKey(key)`
-  * ❌ `crypto.createPublicKey(key)`
-  * ❌ `crypto.createSecretKey(key[, encoding])`
+  * ✅ `crypto.createPrivateKey(key)`
+  * ✅ `crypto.createPublicKey(key)`
+  * ✅ `crypto.createSecretKey(key[, encoding])`
   * ✅ `crypto.createSign(algorithm[, options])`
   * ✅ `crypto.createVerify(algorithm[, options])`
   * ❌ `crypto.diffieHellman(options)`
@@ -188,10 +188,10 @@ This document attempts to describe the implementation status of Crypto APIs/Inte
 
 # `WebCrypto`
 
-* 🚧 Class: `Crypto`
-  * 🚧 `crypto.subtle`
-  * ✅ `crypto.getRandomValues(typedArray)`
-  * ✅ `crypto.randomUUID()`
+* ❌ Class: `Crypto`
+  * ❌ `crypto.subtle`
+  * ❌ `crypto.getRandomValues(typedArray)`
+  * ❌ `crypto.randomUUID()`
 * ✅ Class: `CryptoKey`
   * ✅ `cryptoKey.algorithm`
   * ✅ `cryptoKey.extractable`
@@ -268,16 +268,16 @@ This document attempts to describe the implementation status of Crypto APIs/Inte
 | `AES-CTR`           |   |   | ✅ | ✅ |
 | `AES-GCM`           |   |   | ✅ | ✅ |
 | `AES-KW`            |   |   | ✅ | ✅ |
-| `ECDH`              | ✅ | ❌ | ✅ | ✅ |
-| `ECDSA`             | ✅ | ❌ | ✅ | ✅ |
+| `ECDH`              | ✅ | ✅ | ✅ | ✅ |
+| `ECDSA`             | ✅ | ✅ | ✅ | ✅ |
 | `Ed25519`           | ❌ | ❌ | ❌ | ❌ |
 | `Ed448`             | ❌ | ❌ | ❌ | ❌ |
 | `HDKF`              |   |   |   |   |
 | `HMAC`              |   |   | ❌ | ❌ |
 | `PBKDF2`            |   |   |   |   |
-| `RSA-OAEP`          | ❌ | ❌ | ✅ |   |
-| `RSA-PSS`           | ❌ | ❌ | ✅ |   |
-| `RSASSA-PKCS1-v1_5` | ❌ | ❌ | ✅ |   |
+| `RSA-OAEP`          | ✅ | ✅ | ✅ |   |
+| `RSA-PSS`           | ✅ | ✅ | ✅ |   |
+| `RSASSA-PKCS1-v1_5` | ✅ | ✅ | ✅ |   |
 
 * ` ` - not implemented in Node
 * ❌ - implemented in Node, not RNQC
@@ -288,9 +288,9 @@ This document attempts to describe the implementation status of Crypto APIs/Inte
 ### `CryptoKeyPair` algorithms
 | Algorithm           | Status |
 | ---------           | :----: |
-| `RSASSA-PKCS1-v1_5` |  |
-| `RSA-PSS`           |  |
-| `RSA-OAEP`          |  |
+| `RSASSA-PKCS1-v1_5` | ✅ |
+| `RSA-PSS`           | ✅ |
+| `RSA-OAEP`          | ✅ |
 | `ECDSA`             | ✅ |
 | `Ed25519`           | ✅ |
 | `Ed448`             |  |
@@ -323,9 +323,9 @@ This document attempts to describe the implementation status of Crypto APIs/Inte
 | `HDKF`              |   |   |   |   |
 | `HMAC`              |   |   | ❌ | ❌ |
 | `PBKDF2`            |   |   |   | ✅ |
-| `RSA-OAEP`          | ❌ | ❌ | ✅ |   |
-| `RSA-PSS`           | ❌ | ❌ | ✅ |   |
-| `RSASSA-PKCS1-v1_5` | ❌ | ❌ | ✅ |   |
+| `RSA-OAEP`          | ✅ | ❌ | ✅ |   |
+| `RSA-PSS`           | ✅ | ❌ | ✅ |   |
+| `RSASSA-PKCS1-v1_5` | ✅ | ❌ | ✅ |   |
 
 * ` ` - not implemented in Node
 * ❌ - implemented in Node, not RNQC

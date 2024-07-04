@@ -122,6 +122,11 @@ describe('subtle - generateKey', () => {
   // Test invalid algorithms
   {
     async function testInvalidAlgorithm(algorithm: any) {
+      // one test is slightly different than the others
+      const errorText =
+        algorithm.hash === 'SHA'
+          ? 'Invalid Hash Algorithm'
+          : 'Unrecognized algorithm name';
       const algo = JSON.stringify(algorithm);
       it(`invalid algo: ${algo}`, async () => {
         await assertThrowsAsync(
@@ -130,7 +135,7 @@ describe('subtle - generateKey', () => {
             // The extractable and usages values are invalid here also,
             // but the unrecognized algorithm name should be caught first.
             await subtle.generateKey(algorithm, 7, []),
-          'Unrecognized algorithm name'
+          errorText
         );
       });
     }

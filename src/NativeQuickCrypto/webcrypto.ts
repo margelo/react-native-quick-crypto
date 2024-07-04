@@ -13,6 +13,7 @@ import type {
   GenerateSecretKeyMethod,
   GenerateSecretKeySyncMethod,
 } from './keygen';
+import type { KeyVariant } from './Cipher';
 
 type KeyDetail = {
   length?: number;
@@ -29,6 +30,12 @@ type ECExportKey = (
   handle: KeyObjectHandle
 ) => ArrayBuffer;
 
+type RSAExportKey = (
+  format: KWebCryptoKeyFormat,
+  handle: KeyObjectHandle,
+  variant: KeyVariant
+) => ArrayBuffer;
+
 export type KeyObjectHandle = {
   export(
     format?: KFormatType,
@@ -38,7 +45,13 @@ export type KeyObjectHandle = {
   ): ArrayBuffer;
   exportJwk(key: JWK, handleRsaPss: boolean): JWK;
   getAsymmetricKeyType(): AsymmetricKeyType;
-  init(keyType: KeyType, key: any): boolean;
+  init(
+    keyType: KeyType,
+    key: any,
+    format?: KFormatType,
+    type?: KeyEncoding,
+    passphrase?: string | ArrayBuffer
+  ): boolean;
   initECRaw(curveName: string, keyData: ArrayBuffer): boolean;
   initJwk(keyData: JWK, namedCurve?: NamedCurve): KeyType | undefined;
   keyDetail(): KeyDetail;
@@ -52,5 +65,6 @@ export type webcrypto = {
   ecExportKey: ECExportKey;
   generateSecretKey: GenerateSecretKeyMethod;
   generateSecretKeySync: GenerateSecretKeySyncMethod;
+  rsaExportKey: RSAExportKey;
   signVerify: SignVerify;
 };

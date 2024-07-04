@@ -64,6 +64,20 @@ std::shared_ptr<KeyObjectData> ImportJWKRsaKey(jsi::Runtime &rt,
 jsi::Value GetRsaKeyDetail(jsi::Runtime &rt,
                            std::shared_ptr<KeyObjectData> key);
 
+struct RsaKeyExportConfig final {
+  WebCryptoKeyFormat format;
+  std::shared_ptr<KeyObjectData> key_;
+  KeyVariant variant;
+};
+
+class RsaKeyExport {
+ public:
+  bool GetParamsFromJS(jsi::Runtime &rt, const jsi::Value *args);
+  WebCryptoKeyExportStatus DoExport(ByteSource* out);
+ private:
+  RsaKeyExportConfig params_;
+};
+
 }  // namespace margelo
 
 #endif /* MGLRsa_hpp */

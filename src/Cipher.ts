@@ -562,7 +562,7 @@ function internalGenerateKeyPair(
       if (type === 'rsa') {
         if (isAsync) {
           NativeQuickCrypto.generateKeyPair(
-            KeyVariant.RSA_SSA_PKCS1_v1_5,
+            KeyVariant.RSA_SSA_PKCS1_v1_5, // Used also for RSA-OAEP
             modulusLength as number,
             publicExponent,
             ...encoding

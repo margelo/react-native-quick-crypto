@@ -1,6 +1,7 @@
-// 'use strict';
-
+import { KeyVariantLookup } from './NativeQuickCrypto/Cipher';
+import { generateKeyPairPromise } from './Cipher';
 import { NativeQuickCrypto } from './NativeQuickCrypto/NativeQuickCrypto';
+import type { KeyObjectHandle } from './NativeQuickCrypto/webcrypto';
 import {
   lazyDOMException,
   type BufferLike,
@@ -8,6 +9,8 @@ import {
   normalizeHashName,
   HashContext,
   hasAnyNotIn,
+  getUsagesUnion,
+  bigIntArrayToUnsignedInt,
 } from './Utils';
 import {
   CryptoKey,
@@ -20,68 +23,10 @@ import {
   PublicKeyObject,
   type AnyAlgorithm,
   KeyType,
+  createPublicKey,
+  type CryptoKeyPair,
+  KWebCryptoKeyFormat,
 } from './keys';
-
-// const {
-//   SafeSet,
-//   Uint8Array,
-// } = primordials;
-
-// const {
-//   KeyObjectHandle,
-//   RSACipherJob,
-//   RSAKeyExportJob,
-//   SignJob,
-//   kCryptoJobAsync,
-//   kSignJobModeSign,
-//   kSignJobModeVerify,
-//   kKeyVariantRSA_SSA_PKCS1_v1_5,
-//   kKeyVariantRSA_PSS,
-//   kKeyVariantRSA_OAEP,
-//   kKeyTypePrivate,
-//   kWebCryptoCipherEncrypt,
-//   RSA_PKCS1_PSS_PADDING,
-// } = internalBinding('crypto');
-
-// const {
-//   validateInt32,
-// } = require('internal/validators');
-
-// const {
-//   bigIntArrayToUnsignedInt,
-//   getUsagesUnion,
-//   hasAnyNotIn,
-//   jobPromise,
-//   normalizeHashName,
-//   validateKeyOps,
-//   validateMaxBufferLength,
-//   kHandle,
-//   kKeyObject,
-// } = require('internal/crypto/util');
-
-// const {
-//   lazyDOMException,
-//   promisify,
-// } = require('internal/util');
-
-// const {
-//   InternalCryptoKey,
-//   PrivateKeyObject,
-//   PublicKeyObject,
-//   createPublicKey,
-//   createPrivateKey,
-// } = require('internal/crypto/keys');
-
-// const {
-//   generateKeyPair: _generateKeyPair,
-// } = require('internal/crypto/keygen');
-
-// const kRsaVariants = {
-//   'RSASSA-PKCS1-v1_5': kKeyVariantRSA_SSA_PKCS1_v1_5,
-//   'RSA-PSS': kKeyVariantRSA_PSS,
-//   'RSA-OAEP': kKeyVariantRSA_OAEP,
-// };
-// const generateKeyPair = promisify(_generateKeyPair);
 
 function verifyAcceptableRsaKeyUse(
   name: AnyAlgorithm,
@@ -133,99 +78,107 @@ function verifyAcceptableRsaKeyUse(
 //     label));
 // }
 
-// async function rsaKeyGenerate(
-//   algorithm,
-//   extractable,
-//   keyUsages) {
+export const rsaKeyGenerate = async (
+  algorithm: SubtleAlgorithm,
+  extractable: boolean,
+  keyUsages: KeyUsage[]
+): Promise<CryptoKeyPair> => {
+  const { name, modulusLength, publicExponent, hash: rawHash } = algorithm;
+  const hash: HashAlgorithm = normalizeHashName(rawHash);
 
-//   const {
-//     name,
-//     modulusLength,
-//     publicExponent,
-//     hash,
-//   } = algorithm;
+  // const usageSet = new SafeSet(keyUsages);
+  const publicExponentConverted = bigIntArrayToUnsignedInt(publicExponent);
+  if (publicExponentConverted === undefined) {
+    throw lazyDOMException(
+      'The publicExponent must be equivalent to an unsigned 32-bit value',
+      'OperationError'
+    );
+  }
 
-//   const usageSet = new SafeSet(keyUsages);
+  switch (name) {
+    case 'RSA-OAEP':
+      if (
+        hasAnyNotIn(keyUsages, ['encrypt', 'decrypt', 'wrapKey', 'unwrapKey'])
+      ) {
+        throw lazyDOMException(
+          'Unsupported key usage for a RSA key',
+          'SyntaxError'
+        );
+      }
+      break;
+    default:
+      if (hasAnyNotIn(keyUsages, ['sign', 'verify'])) {
+        throw lazyDOMException(
+          'Unsupported key usage for a RSA key',
+          'SyntaxError'
+        );
+      }
+  }
 
-//   const publicExponentConverted = bigIntArrayToUnsignedInt(publicExponent);
-//   if (publicExponentConverted === undefined) {
-//     throw lazyDOMException(
-//       'The publicExponent must be equivalent to an unsigned 32-bit value',
-//       'OperationError');
-//   }
+  const [err, keypair] = await generateKeyPairPromise('rsa', {
+    modulusLength,
+    publicExponent: publicExponentConverted,
+  });
+  if (err) {
+    throw lazyDOMException(
+      'The operation failed for an operation-specific reason',
+      { name: 'OperationError', cause: err }
+    );
+  }
 
-//   switch (name) {
-//     case 'RSA-OAEP':
-//       if (hasAnyNotIn(usageSet,
-//                       ['encrypt', 'decrypt', 'wrapKey', 'unwrapKey'])) {
-//         throw lazyDOMException(
-//           'Unsupported key usage for a RSA key',
-//           'SyntaxError');
-//       }
-//       break;
-//     default:
-//       if (hasAnyNotIn(usageSet, ['sign', 'verify'])) {
-//         throw lazyDOMException(
-//           'Unsupported key usage for a RSA key',
-//           'SyntaxError');
-//       }
-//   }
+  const keyAlgorithm = {
+    name,
+    modulusLength,
+    publicExponent: publicExponentConverted,
+    hash,
+  };
 
-//   const keypair = await generateKeyPair('rsa', {
-//     modulusLength,
-//     publicExponent: publicExponentConverted,
-//   }).catch((err) => {
-//     throw lazyDOMException(
-//       'The operation failed for an operation-specific reason',
-//       { name: 'OperationError', cause: err });
-//   });
+  let publicUsages: KeyUsage[] = [];
+  let privateUsages: KeyUsage[] = [];
+  switch (name) {
+    case 'RSA-OAEP': {
+      publicUsages = getUsagesUnion(keyUsages, 'encrypt', 'wrapKey');
+      privateUsages = getUsagesUnion(keyUsages, 'decrypt', 'unwrapKey');
+      break;
+    }
+    default: {
+      publicUsages = getUsagesUnion(keyUsages, 'verify');
+      privateUsages = getUsagesUnion(keyUsages, 'sign');
+      break;
+    }
+  }
 
-//   const keyAlgorithm = {
-//     name,
-//     modulusLength,
-//     publicExponent,
-//     hash: { name: hash.name },
-//   };
+  const pub = new PublicKeyObject(keypair?.publicKey as KeyObjectHandle);
+  const publicKey = new CryptoKey(pub, keyAlgorithm, publicUsages, true);
 
-//   let publicUsages;
-//   let privateUsages;
-//   switch (name) {
-//     case 'RSA-OAEP': {
-//       publicUsages = getUsagesUnion(usageSet, 'encrypt', 'wrapKey');
-//       privateUsages = getUsagesUnion(usageSet, 'decrypt', 'unwrapKey');
-//       break;
-//     }
-//     default: {
-//       publicUsages = getUsagesUnion(usageSet, 'verify');
-//       privateUsages = getUsagesUnion(usageSet, 'sign');
-//       break;
-//     }
-//   }
+  const priv = new PrivateKeyObject(keypair?.privateKey as KeyObjectHandle);
+  const privateKey = new CryptoKey(
+    priv,
+    keyAlgorithm,
+    privateUsages,
+    extractable
+  );
 
-//   const publicKey =
-//     new InternalCryptoKey(
-//       keypair.publicKey,
-//       keyAlgorithm,
-//       publicUsages,
-//       true);
+  return { publicKey, privateKey };
+};
 
-//   const privateKey =
-//     new InternalCryptoKey(
-//       keypair.privateKey,
-//       keyAlgorithm,
-//       privateUsages,
-//       extractable);
-
-//   return { __proto__: null, publicKey, privateKey };
-// }
-
-// function rsaExportKey(key, format) {
-//   return jobPromise(() => new RSAKeyExportJob(
-//     kCryptoJobAsync,
-//     format,
-//     key[kKeyObject][kHandle],
-//     kRsaVariants[key.algorithm.name]));
-// }
+export const rsaExportKey = (
+  key: CryptoKey,
+  format: KWebCryptoKeyFormat
+): ArrayBuffer => {
+  const variant = KeyVariantLookup[key.algorithm.name];
+  if (variant === undefined) {
+    throw lazyDOMException(
+      `Unrecognized algorithm name '${key.algorithm.name}'`,
+      'NotSupportedError'
+    );
+  }
+  return NativeQuickCrypto.webcrypto.rsaExportKey(
+    format,
+    key.keyObject.handle,
+    variant
+  );
+};
 
 export const rsaImportKey = (
   format: ImportFormat,
@@ -235,24 +188,24 @@ export const rsaImportKey = (
   keyUsages: KeyUsage[]
 ): CryptoKey => {
   // const usagesSet = new SafeSet(keyUsages);
-  let keyObject;
+  let keyObject: PublicKeyObject | PrivateKeyObject;
   switch (format) {
-    // case 'spki': {
-    //   verifyAcceptableRsaKeyUse(algorithm.name, true, keyUsages);
-    //   try {
-    //     keyObject = createPublicKey({
-    //       key: keyData,
-    //       format: 'der',
-    //       type: 'spki',
-    //     });
-    //   } catch (err) {
-    //     throw lazyDOMException('Invalid keyData', {
-    //       name: 'DataError',
-    //       cause: err,
-    //     });
-    //   }
-    //   break;
-    // }
+    case 'spki': {
+      verifyAcceptableRsaKeyUse(algorithm.name, true, keyUsages);
+      try {
+        keyObject = createPublicKey({
+          key: keyData,
+          format: 'der',
+          type: 'spki',
+        });
+      } catch (err) {
+        throw lazyDOMException('Invalid keyData', {
+          name: 'DataError',
+          cause: err,
+        });
+      }
+      break;
+    }
     // case 'pkcs8': {
     //   verifyAcceptableRsaKeyUse(algorithm.name, false, keyUsages);
     //   try {

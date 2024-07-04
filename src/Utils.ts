@@ -4,7 +4,6 @@ import type {
   DeriveBitsAlgorithm,
   EncryptDecryptAlgorithm,
   EncryptDecryptParams,
-  HashAlgorithm,
   KeyPairAlgorithm,
   KeyUsage,
   SecretKeyAlgorithm,
@@ -214,7 +213,11 @@ export function validateFunction(f: any): boolean {
 }
 
 export function isStringOrBuffer(val: any): val is string | ArrayBuffer {
-  return typeof val === 'string' || ArrayBuffer.isView(val);
+  return (
+    typeof val === 'string' ||
+    ArrayBuffer.isView(val) ||
+    val instanceof ArrayBuffer
+  );
 }
 
 export function validateObject<T>(
@@ -325,12 +328,14 @@ const kMaxBufferLength = 2 ** 31 - 1;
 // // the Web Crypto API.
 // const kHashTypes = ['SHA-1', 'SHA-256', 'SHA-384', 'SHA-512'];
 
+type DigestAlgorithm = 'SHA-1' | 'SHA-256' | 'SHA-384' | 'SHA-512';
+
 type SupportedAlgorithm<Type extends string> = {
   [key in Type]: string | null;
 };
 
 type SupportedAlgorithms = {
-  'digest': SupportedAlgorithm<HashAlgorithm>;
+  'digest': SupportedAlgorithm<DigestAlgorithm>;
   'generateKey': SupportedAlgorithm<KeyPairAlgorithm | SecretKeyAlgorithm>;
   'sign': SupportedAlgorithm<SignVerifyAlgorithm>;
   'verify': SupportedAlgorithm<SignVerifyAlgorithm>;
@@ -495,8 +500,9 @@ export const normalizeAlgorithm = (
   algorithm: SubtleAlgorithm | EncryptDecryptParams | AnyAlgorithm,
   op: Operation
 ): SubtleAlgorithm | EncryptDecryptParams => {
-  if (typeof algorithm === 'string')
+  if (typeof algorithm === 'string') {
     return normalizeAlgorithm({ name: algorithm }, op);
+  }
 
   // 1.
   const registeredAlgorithms = kSupportedAlgorithms[op];
@@ -662,6 +668,29 @@ export const validateKeyOps = (
       }
     }
   }
+};
+
+// In WebCrypto, the publicExponent option in RSA is represented as a
+// WebIDL "BigInteger"... that is, a Uint8Array that allows an arbitrary
+// number of leading zero bits. Our conventional APIs for reading
+// an unsigned int from a Buffer are not adequate. The implementation
+// here is adapted from the chromium implementation here:
+// https://github.com/chromium/chromium/blob/HEAD/third_party/blink/public/platform/web_crypto_algorithm_params.h, but ported to JavaScript
+// Returns undefined if the conversion was unsuccessful.
+export const bigIntArrayToUnsignedInt = (
+  input: Uint8Array
+): number | undefined => {
+  let result = 0;
+
+  for (let n = 0; n < input.length; ++n) {
+    const n_reversed = input.length - n - 1;
+    if (n_reversed >= 4 && input[n]) return; // Too large
+    // @ts-ignore
+    // eslint-disable-next-line no-bitwise
+    result |= input[n] << (8 * n_reversed);
+  }
+
+  return result;
 };
 
 // TODO: these used to be shipped by crypto-browserify in quickcrypto v0.6

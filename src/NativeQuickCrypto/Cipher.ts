@@ -1,6 +1,12 @@
 import type { GenerateKeyPairReturn } from '../Cipher';
 import type { BinaryLike } from '../Utils';
 import type { Buffer } from '@craftzdog/react-native-buffer';
+import type {
+  EncodingOptions,
+  PrivateKeyObject,
+  PublicKeyObject,
+  SecretKeyObject,
+} from '../keys';
 
 // TODO: until shared, keep in sync with C++ side (cpp/Utils/MGLUtils.h)
 export enum KeyVariant {
@@ -12,6 +18,19 @@ export enum KeyVariant {
   NID,
   DH,
 }
+
+export const KeyVariantLookup: Record<string, KeyVariant> = {
+  'RSASSA-PKCS1-v1_5': KeyVariant.RSA_SSA_PKCS1_v1_5,
+  'RSA-PSS': KeyVariant.RSA_PSS,
+  'RSA-OAEP': KeyVariant.RSA_OAEP,
+  'ECDSA': KeyVariant.DSA,
+  'ECDH': KeyVariant.EC,
+  'Ed25519': KeyVariant.NID,
+  'Ed448': KeyVariant.NID,
+  'X25519': KeyVariant.NID,
+  'X448': KeyVariant.NID,
+  'DH': KeyVariant.DH,
+};
 
 export type InternalCipher = {
   update: (data: BinaryLike | ArrayBufferView) => ArrayBuffer;
@@ -68,3 +87,16 @@ export type GenerateKeyPairSyncMethod = (
   keyVariant: KeyVariant,
   ...rest: any[]
 ) => GenerateKeyPairReturn;
+
+export type CreatePublicKeyMethod = (
+  key: BinaryLike | EncodingOptions
+) => PublicKeyObject;
+
+export type CreatePrivateKeyMethod = (
+  key: BinaryLike | EncodingOptions
+) => PrivateKeyObject;
+
+export type CreateSecretKeyMethod = (
+  key: BinaryLike | EncodingOptions,
+  encoding?: string
+) => SecretKeyObject;

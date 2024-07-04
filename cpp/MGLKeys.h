@@ -190,6 +190,14 @@ class JSI_EXPORT KeyObjectHandle: public jsi::HostObject {
     std::shared_ptr<KeyObjectData> data_;
 };
 
+WebCryptoKeyExportStatus PKEY_SPKI_Export(
+    KeyObjectData* key_data,
+    ByteSource* out);
+
+WebCryptoKeyExportStatus PKEY_PKCS8_Export(
+    KeyObjectData* key_data,
+    ByteSource* out);
+
 }  // namespace margelo
 
 #endif /* MGLCipherKeys_h */

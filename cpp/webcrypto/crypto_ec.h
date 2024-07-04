@@ -14,11 +14,9 @@
 #include "MGLKeys.h"
 #ifdef ANDROID
 #include "Utils/MGLUtils.h"
-#include "webcrypto/MGLWebCrypto.h"
 #include "JSIUtils/MGLJSIUtils.h"
 #else
 #include "MGLUtils.h"
-#include "MGLWebCrypto.h"
 #include "MGLJSIUtils.h"
 #endif
 
@@ -43,9 +41,6 @@ class ECDH final {
                                              const ECKeyExportConfig &params,
                                              ByteSource* out);
 };
-
-WebCryptoKeyExportStatus PKEY_SPKI_Export(KeyObjectData* key_data,
-                                          ByteSource* out);
 
 WebCryptoKeyExportStatus EC_Raw_Export(KeyObjectData* key_data,
                                        const ECKeyExportConfig &params,

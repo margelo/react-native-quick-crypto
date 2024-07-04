@@ -696,6 +696,7 @@ ManagedEVPPKey ManagedEVPPKey::GetPublicOrPrivateKeyFromJs(
     const jsi::Value* args,
     unsigned int* offset) {
   if (args[*offset].asObject(runtime).isArrayBuffer(runtime)) {
+    // data (key) as ArrayBuffer
     auto dataArrayBuffer =
         args[(*offset)++].asObject(runtime).getArrayBuffer(runtime);
 
@@ -703,6 +704,7 @@ ManagedEVPPKey ManagedEVPPKey::GetPublicOrPrivateKeyFromJs(
       throw jsi::JSError(runtime, "data is too big");
     }
 
+    // rest of args for encoding
     NonCopyableMaybe<PrivateKeyEncodingConfig> config_ =
         GetPrivateKeyEncodingFromJs(runtime, args, offset, kKeyContextInput);
     if (config_.IsEmpty()) return ManagedEVPPKey();
@@ -931,7 +933,7 @@ const std::shared_ptr<KeyObjectData>& KeyObjectHandle::Data() {
 //
 
 jsi::Value KeyObjectHandle::Init(jsi::Runtime &rt) {
-  return HOSTFN("init", 2) {
+  return HOSTFN("init", 5) {
     CHECK(args[0].isNumber());
     KeyType type = static_cast<KeyType>((int32_t)args[0].asNumber());
 
@@ -940,15 +942,13 @@ jsi::Value KeyObjectHandle::Init(jsi::Runtime &rt) {
 
     switch (type) {
       case kKeyTypeSecret: {
-        // CHECK_EQ(args.Length(), 2);
-
+        CHECK_EQ(count, 2);
         ByteSource key = ByteSource::FromStringOrBuffer(rt, args[1]);
         this->data_ = KeyObjectData::CreateSecret(std::move(key));
         break;
       }
       case kKeyTypePublic: {
-        // CHECK_EQ(args.Length(), 5);
-
+        CHECK_EQ(count, 5);
         offset = 1;
         pkey = ManagedEVPPKey::GetPublicOrPrivateKeyFromJs(rt, args, &offset);
         if (!pkey)
@@ -957,8 +957,7 @@ jsi::Value KeyObjectHandle::Init(jsi::Runtime &rt) {
         break;
       }
       case kKeyTypePrivate: {
-        // CHECK_EQ(args.Length(), 5);
-
+        CHECK_EQ(count, 5);
         offset = 1;
         pkey = ManagedEVPPKey::GetPrivateKeyFromJs(rt, args, &offset, false);
         if (!pkey)
@@ -1166,7 +1165,7 @@ jsi::Value KeyObjectHandle::GetAsymmetricKeyType(jsi::Runtime &rt) const {
     std::string ret;
     switch (EVP_PKEY_id(key.get())) {
       case EVP_PKEY_RSA:
-        ret = "rss";
+        ret = "rsa";
         break;
       case EVP_PKEY_RSA_PSS:
         ret = "rsa_pss";
@@ -1388,37 +1387,37 @@ jsi::Value KeyObjectHandle::ExportJWK(jsi::Runtime &rt) {
 //  return std::make_unique<KeyObjectTransferData>(handle_data_);
 //}
 //
-// WebCryptoKeyExportStatus PKEY_SPKI_Export(
-//                                          KeyObjectData* key_data,
-//                                          ByteSource* out) {
-//  CHECK_EQ(key_data->GetKeyType(), kKeyTypePublic);
-//  ManagedEVPPKey m_pkey = key_data->GetAsymmetricKey();
-//  Mutex::ScopedLock lock(*m_pkey.mutex());
-//  BIOPointer bio(BIO_new(BIO_s_mem()));
-//  CHECK(bio);
-//  if (!i2d_PUBKEY_bio(bio.get(), m_pkey.get()))
-//    return WebCryptoKeyExportStatus::FAILED;
-//
-//  *out = ByteSource::FromBIO(bio);
-//  return WebCryptoKeyExportStatus::OK;
-//}
-//
-// WebCryptoKeyExportStatus PKEY_PKCS8_Export(
-//                                           KeyObjectData* key_data,
-//                                           ByteSource* out) {
-//  CHECK_EQ(key_data->GetKeyType(), kKeyTypePrivate);
-//  ManagedEVPPKey m_pkey = key_data->GetAsymmetricKey();
-//  Mutex::ScopedLock lock(*m_pkey.mutex());
-//
-//  BIOPointer bio(BIO_new(BIO_s_mem()));
-//  CHECK(bio);
-//  PKCS8Pointer p8inf(EVP_PKEY2PKCS8(m_pkey.get()));
-//  if (!i2d_PKCS8_PRIV_KEY_INFO_bio(bio.get(), p8inf.get()))
-//    return WebCryptoKeyExportStatus::FAILED;
-//
-//  *out = ByteSource::FromBIO(bio);
-//  return WebCryptoKeyExportStatus::OK;
-//}
+WebCryptoKeyExportStatus PKEY_SPKI_Export(KeyObjectData* key_data,
+                                          ByteSource* out) {
+  CHECK_EQ(key_data->GetKeyType(), kKeyTypePublic);
+  ManagedEVPPKey m_pkey = key_data->GetAsymmetricKey();
+  // Mutex::ScopedLock lock(*m_pkey.mutex());
+  BIOPointer bio(BIO_new(BIO_s_mem()));
+  CHECK(bio);
+  if (!i2d_PUBKEY_bio(bio.get(), m_pkey.get())) {
+      throw std::runtime_error("Failed to export key");
+      return WebCryptoKeyExportStatus::FAILED;
+  }
+
+  *out = ByteSource::FromBIO(bio);
+  return WebCryptoKeyExportStatus::OK;
+}
+
+WebCryptoKeyExportStatus PKEY_PKCS8_Export(
+                                          KeyObjectData* key_data,
+                                          ByteSource* out) {
+  CHECK_EQ(key_data->GetKeyType(), kKeyTypePrivate);
+  ManagedEVPPKey m_pkey = key_data->GetAsymmetricKey();
+  //  Mutex::ScopedLock lock(*m_pkey.mutex());
+  BIOPointer bio(BIO_new(BIO_s_mem()));
+  CHECK(bio);
+  PKCS8Pointer p8inf(EVP_PKEY2PKCS8(m_pkey.get()));
+  if (!i2d_PKCS8_PRIV_KEY_INFO_bio(bio.get(), p8inf.get()))
+    return WebCryptoKeyExportStatus::FAILED;
+
+  *out = ByteSource::FromBIO(bio);
+  return WebCryptoKeyExportStatus::OK;
+}
 
 //  void RegisterExternalReferences(ExternalReferenceRegistry * registry) {
 //    KeyObjectHandle::RegisterExternalReferences(registry);

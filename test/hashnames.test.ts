@@ -8,9 +8,7 @@ test('normalizeHashName happy', () => {
 });
 
 test('normalizeHashName sad', () => {
-  // @ts-expect-error
   expect(normalizeHashName('SHA-2')).toBe('sha-2');
-  // @ts-expect-error
   expect(normalizeHashName('NOT-a-hash', HashContext.JwkRsaPss)).toBe(
     'not-a-hash'
   );
