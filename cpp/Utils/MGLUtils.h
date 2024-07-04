@@ -219,6 +219,8 @@ class ByteSource {
 
     static ByteSource FromBIO(const BIOPointer& bio);
 
+    static ByteSource FromBN(const BIGNUM* bn, size_t size);
+
     //  static ByteSource NullTerminatedCopy(Environment* env,
     //                                       v8::Local<v8::Value> value);
     //
@@ -303,7 +305,7 @@ inline jsi::Value toJSI(jsi::Runtime& rt, ByteSource value) {
 }
 
 std::string EncodeBignum(const BIGNUM* bn,
-                         int size,
+                         size_t size,
                          bool url = false);
 
 std::string EncodeBase64(const std::string data, bool url = false);
@@ -323,6 +325,13 @@ enum KeyVariant {
 enum FnMode {
   kAsync,
   kSync,
+};
+
+enum WebCryptoKeyFormat {
+  kWebCryptoKeyFormatRaw,
+  kWebCryptoKeyFormatPKCS8,
+  kWebCryptoKeyFormatSPKI,
+  kWebCryptoKeyFormatJWK
 };
 
 }  // namespace margelo

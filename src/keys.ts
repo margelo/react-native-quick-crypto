@@ -29,7 +29,13 @@ export type AnyAlgorithm =
   | 'PBKDF2'
   | 'HKDF';
 
-export type HashAlgorithm = 'SHA-1' | 'SHA-256' | 'SHA-384' | 'SHA-512';
+export type HashAlgorithm =
+  | 'SHA-1'
+  | 'SHA-224'
+  | 'SHA-256'
+  | 'SHA-384'
+  | 'SHA-512'
+  | 'RIPEMD-160';
 
 export type KeyPairType = 'rsa' | 'rsa-pss' | 'ec';
 
@@ -139,12 +145,18 @@ export enum KFormatType {
   kKeyFormatJWK,
 }
 
+export type KFormat = 'der' | 'pem' | 'jwk';
+
 // Same as KFormatType, this enum needs to be defined on the native side
 export enum KeyType {
   Secret,
   Public,
   Private,
 }
+
+export type KTypePrivate = 'pkcs1' | 'pkcs8' | 'sec1';
+export type KTypePublic = 'pkcs1' | 'spki';
+export type KType = KTypePrivate | KTypePublic;
 
 // Same as KFormatType, this enum needs to be defined on the native side
 export enum KWebCryptoKeyFormat {
@@ -175,10 +187,10 @@ export enum KeyEncoding {
 }
 
 export type EncodingOptions = {
-  key: any;
-  type?: string;
+  key?: any;
+  type?: KType;
   encoding?: string;
-  format?: string;
+  format?: KFormat;
   padding?: number;
   cipher?: string;
   passphrase?: string | ArrayBuffer;
@@ -371,14 +383,7 @@ function parseKeyEncoding(
 }
 
 function prepareAsymmetricKey(
-  key:
-    | BinaryLike
-    | {
-        key: any;
-        encoding?: string;
-        format?: any;
-        passphrase?: string | ArrayBuffer;
-      },
+  key: BinaryLike | EncodingOptions,
   ctx: KeyInputContext
 ): {
   format: KFormatType;
@@ -401,14 +406,12 @@ function prepareAsymmetricKey(
       data: binaryLikeToArrayBuffer(key),
     };
   } else if (typeof key === 'object') {
-    const {
-      key: data,
-      encoding,
-      // format
-    } = key;
+    const { key: data, encoding } = key;
     // // The 'key' property can be a KeyObject as well to allow specifying
     // // additional options such as padding along with the key.
-    // if (isKeyObject(data)) return { data: getKeyObjectHandle(data, ctx) };
+    // if (isKeyObject(data)) {
+    //   return { data: getKeyObjectHandle(data, ctx) };
+    // }
     // else if (isCryptoKey(data))
     //   return { data: getKeyObjectHandle(data[kKeyObject], ctx) };
     // else if (isJwk(data) && format === 'jwk')
@@ -441,11 +444,7 @@ export function preparePrivateKey(key: BinaryLike | EncodingOptions) {
 }
 
 // TODO(osp) any here is a node KeyObject
-export function preparePublicOrPrivateKey(
-  key:
-    | BinaryLike
-    | { key: any; encoding?: string; format?: any; padding?: number }
-) {
+export function preparePublicOrPrivateKey(key: BinaryLike | EncodingOptions) {
   return prepareAsymmetricKey(key, KeyInputContext.kConsumePublic);
 }
 
@@ -470,6 +469,29 @@ export function parsePrivateKeyEncoding(
 ) {
   return parseKeyEncoding(enc, keyType, false, objName);
 }
+
+// function getKeyObjectHandle(key: any, ctx: KeyInputContext) {
+//   if (ctx === KeyInputContext.kConsumePublic) {
+//     throw new Error(
+//       'Invalid argument type for "key". Need ArrayBuffer, TypeArray, KeyObject, CryptoKey, string'
+//     );
+//   }
+
+//   if (key.type !== 'private') {
+//     if (
+//       ctx === KeyInputContext.kConsumePrivate ||
+//       ctx === KeyInputContext.kCreatePublic
+//     )
+//       throw new Error(`Invalid KeyObject type: ${key.type}, expected 'public'`);
+//     if (key.type !== 'public') {
+//       throw new Error(
+//         `Invalid KeyObject type: ${key.type}, expected 'private' or 'public'`
+//       );
+//     }
+//   }
+
+//   return key.handle;
+// }
 
 function prepareSecretKey(
   key: BinaryLike,
@@ -515,6 +537,42 @@ export function createSecretKey(key: any, encoding?: string) {
   handle.init(KeyType.Secret, k);
   return new SecretKeyObject(handle);
 }
+
+export function createPublicKey(
+  key: BinaryLike | EncodingOptions
+): PublicKeyObject {
+  const { format, type, data, passphrase } = prepareAsymmetricKey(
+    key,
+    KeyInputContext.kCreatePublic
+  );
+  const handle = NativeQuickCrypto.webcrypto.createKeyObjectHandle();
+  if (format === KFormatType.kKeyFormatJWK) {
+    handle.init(KeyType.Public, data);
+  } else {
+    handle.init(KeyType.Public, data, format, type, passphrase);
+  }
+  return new PublicKeyObject(handle);
+}
+
+export const createPrivateKey = (
+  key: BinaryLike | EncodingOptions
+): PrivateKeyObject => {
+  const { format, type, data, passphrase } = prepareAsymmetricKey(
+    key,
+    KeyInputContext.kCreatePrivate
+  );
+  const handle = NativeQuickCrypto.webcrypto.createKeyObjectHandle();
+  if (format === KFormatType.kKeyFormatJWK) {
+    handle.init(KeyType.Private, data);
+  } else {
+    handle.init(KeyType.Private, data, format, type, passphrase);
+  }
+  return new PrivateKeyObject(handle);
+};
+
+// const isKeyObject = (obj: any): obj is KeyObject => {
+//   return obj != null && obj.keyType !== undefined;
+// };
 
 export class CryptoKey {
   keyObject: KeyObject;

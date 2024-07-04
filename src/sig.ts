@@ -14,7 +14,11 @@ import {
   binaryLikeToArrayBuffer,
   getDefaultEncoding,
 } from './Utils';
-import { preparePrivateKey, preparePublicOrPrivateKey } from './keys';
+import {
+  preparePrivateKey,
+  preparePublicOrPrivateKey,
+  type EncodingOptions,
+} from './keys';
 
 const createInternalSign = NativeQuickCrypto.createSign;
 const createInternalVerify = NativeQuickCrypto.createVerify;
@@ -70,17 +74,7 @@ class Verify extends Stream.Writable {
     return this;
   }
 
-  verify(
-    options: {
-      key: string | Buffer;
-      format?: string;
-      type?: string;
-      passphrase?: string;
-      padding?: number;
-      saltLength?: number;
-    },
-    signature: BinaryLike
-  ): boolean {
+  verify(options: EncodingOptions, signature: BinaryLike): boolean {
     if (!options) {
       throw new Error('Crypto sign key required');
     }
@@ -129,17 +123,7 @@ class Sign extends Stream.Writable {
     return this;
   }
 
-  sign(
-    options: {
-      key: string | Buffer;
-      format?: string;
-      type?: string;
-      passphrase?: string;
-      padding?: number;
-      saltLength?: number;
-    },
-    encoding?: string
-  ) {
+  sign(options: EncodingOptions, encoding?: string) {
     if (!options) {
       throw new Error('Crypto sign key required');
     }

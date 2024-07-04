@@ -330,12 +330,11 @@ jsi::Value GetRsaKeyDetail(jsi::Runtime &rt,
   RSA_get0_key(rsa, &n, &e, nullptr);
 
   size_t modulus_length = BN_num_bits(n);
-  // TODO: should this be modulusLength or n?
   target.setProperty(rt, "modulusLength", static_cast<double>(modulus_length));
 
   size_t exp_size = BN_num_bytes(e);
-  // TODO: should this be publicExponent or e?
-  target.setProperty(rt, "publicExponent", EncodeBignum(e, exp_size, true));
+  ByteSource public_exponent = ByteSource::FromBN(e, exp_size);
+  target.setProperty(rt, "publicExponent", toJSI(rt, std::move(public_exponent)));
 
   if (type == EVP_PKEY_RSA_PSS) {
     // Due to the way ASN.1 encoding works, default values are omitted when
@@ -392,6 +391,58 @@ jsi::Value GetRsaKeyDetail(jsi::Runtime &rt,
   }
 
   return target;
+}
+
+bool RsaKeyExport::GetParamsFromJS(jsi::Runtime &rt, const jsi::Value *args) {
+  RsaKeyExportConfig params;
+  unsigned int offset = 0;
+
+  // format
+  params.format = static_cast<WebCryptoKeyFormat>((int)args[offset].getNumber());
+  offset++;
+
+  // key
+  std::shared_ptr<KeyObjectHandle> handle =
+    std::static_pointer_cast<KeyObjectHandle>(
+      args[1].asObject(rt).getHostObject(rt));
+  params.key_ = handle->Data();
+  offset++;
+
+  // variant
+  params.variant = static_cast<KeyVariant>((int)args[offset].getNumber());
+  offset++;
+
+  this->params_ = std::move(params);
+  return true;
+}
+
+WebCryptoKeyExportStatus RsaKeyExport::DoExport(ByteSource* out) {
+  auto key_data = this->params_.key_;
+  CHECK_NE(key_data->GetKeyType(), kKeyTypeSecret);
+
+  switch (this->params_.format) {
+    case kWebCryptoKeyFormatRaw:
+      throw std::runtime_error("Raw format not supported for RSA keys");
+      return WebCryptoKeyExportStatus::FAILED;
+    case kWebCryptoKeyFormatJWK:
+      throw std::runtime_error("JWK format not handled in C++ for RSA keys");
+      return WebCryptoKeyExportStatus::FAILED;
+    case kWebCryptoKeyFormatPKCS8:
+      if (key_data->GetKeyType() != kKeyTypePrivate) {
+        throw std::runtime_error("Invalid key type for PKCS8 export");
+        return WebCryptoKeyExportStatus::INVALID_KEY_TYPE;
+      }
+      return PKEY_PKCS8_Export(key_data.get(), out);
+    case kWebCryptoKeyFormatSPKI:
+      if (key_data->GetKeyType() != kKeyTypePublic) {
+        throw std::runtime_error("Invalid key type for SPKI export");
+        return WebCryptoKeyExportStatus::INVALID_KEY_TYPE;
+      }
+      return PKEY_SPKI_Export(key_data.get(), out);
+    default:
+      throw std::runtime_error("Unrecognized format for RSA key export");
+      return WebCryptoKeyExportStatus::FAILED;
+  }
 }
 
 }  // namespace margelo

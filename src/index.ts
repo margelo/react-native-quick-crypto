@@ -19,9 +19,11 @@ import { createHash } from './Hash';
 import { constants } from './constants';
 import { subtle } from './subtle';
 import { getCiphers, getHashes } from './Utils';
+import webcrypto from './webcrypto';
+import { createPrivateKey, createPublicKey, createSecretKey } from './keys';
 
 /**
- * Loosesly matches Node.js {crypto} with some unimplemented functionality
+ * Loosely matches Node.js {crypto} with some unimplemented functionality
  */
 const QuickCrypto = {
   createHmac,
@@ -32,6 +34,9 @@ const QuickCrypto = {
   createCipheriv,
   createDecipher,
   createDecipheriv,
+  createPublicKey,
+  createPrivateKey,
+  createSecretKey,
   publicEncrypt,
   publicDecrypt,
   privateDecrypt,
@@ -47,6 +52,7 @@ const QuickCrypto = {
   ...random,
   getCiphers,
   getHashes,
+  webcrypto,
 };
 
 /**

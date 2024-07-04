@@ -33,22 +33,19 @@ import {
   aesImportKey,
   getAlgorithmName,
 } from './aes';
-import { rsaImportKey } from './rsa';
+import { rsaExportKey, rsaImportKey, rsaKeyGenerate } from './rsa';
 
 const exportKeySpki = async (key: CryptoKey): Promise<ArrayBuffer | any> => {
   switch (key.algorithm.name) {
-    // case 'RSASSA-PKCS1-v1_5':
-    // // Fall through
-    // case 'RSA-PSS':
-    // // Fall through
-    // case 'RSA-OAEP':
-    //   if (key.type === 'public') {
-    //     return require('internal/crypto/rsa').rsaExportKey(
-    //       key,
-    //       kWebCryptoKeyFormatSPKI
-    //     );
-    //   }
-    //   break;
+    case 'RSASSA-PKCS1-v1_5':
+    // Fall through
+    case 'RSA-PSS':
+    // Fall through
+    case 'RSA-OAEP':
+      if (key.type === 'public') {
+        return rsaExportKey(key, KWebCryptoKeyFormat.kWebCryptoKeyFormatSPKI);
+      }
+      break;
     case 'ECDSA':
     // Fall through
     case 'ECDH':
@@ -64,16 +61,49 @@ const exportKeySpki = async (key: CryptoKey): Promise<ArrayBuffer | any> => {
     // // Fall through
     // case 'X448':
     //   if (key.type === 'public') {
-    //     return require('internal/crypto/cfrg').cfrgExportKey(
-    //       key,
-    //       kWebCryptoKeyFormatSPKI
-    //     );
+    //     return cfrgExportKey(key, KWebCryptoKeyFormat.kWebCryptoKeyFormatSPKI);
     //   }
     //   break;
   }
 
   throw new Error(
-    `Unable to export a raw ${key.algorithm.name} ${key.type} key`
+    `Unable to export a spki ${key.algorithm.name} ${key.type} key`
+  );
+};
+
+const exportKeyPkcs8 = async (key: CryptoKey): Promise<ArrayBuffer | any> => {
+  switch (key.algorithm.name) {
+    case 'RSASSA-PKCS1-v1_5':
+    // Fall through
+    case 'RSA-PSS':
+    // Fall through
+    case 'RSA-OAEP':
+      if (key.type === 'private') {
+        return rsaExportKey(key, KWebCryptoKeyFormat.kWebCryptoKeyFormatPKCS8);
+      }
+      break;
+    case 'ECDSA':
+    // Fall through
+    case 'ECDH':
+      if (key.type === 'private') {
+        return ecExportKey(key, KWebCryptoKeyFormat.kWebCryptoKeyFormatPKCS8);
+      }
+      break;
+    // case 'Ed25519':
+    // // Fall through
+    // case 'Ed448':
+    // // Fall through
+    // case 'X25519':
+    // // Fall through
+    // case 'X448':
+    //   if (key.type === 'private') {
+    //     return cfrgExportKey(key, KWebCryptoKeyFormat.kWebCryptoKeyFormatPKCS8);
+    //   }
+    //   break;
+  }
+
+  throw new Error(
+    `Unable to export a pkcs8 ${key.algorithm.name} ${key.type} key`
   );
 };
 
@@ -342,7 +372,7 @@ const cipherOrWrap = async (
   );
 };
 
-class Subtle {
+export class Subtle {
   async decrypt(
     algorithm: EncryptDecryptParams,
     key: CryptoKey,
@@ -408,6 +438,81 @@ class Subtle {
       bufferLikeToArrayBuffer(data),
       'encrypt'
     );
+  }
+
+  async exportKey(
+    format: ImportFormat,
+    key: CryptoKey
+  ): Promise<ArrayBuffer | JWK> {
+    if (!key.extractable) throw new Error('key is not extractable');
+
+    switch (format) {
+      case 'spki':
+        return await exportKeySpki(key);
+      case 'pkcs8':
+        return await exportKeyPkcs8(key);
+      case 'jwk':
+        return exportKeyJWK(key);
+      case 'raw':
+        return exportKeyRaw(key);
+    }
+  }
+
+  async generateKey(
+    algorithm: SubtleAlgorithm,
+    extractable: boolean,
+    keyUsages: KeyUsage[]
+  ): Promise<CryptoKey | CryptoKeyPair> {
+    algorithm = normalizeAlgorithm(algorithm, 'generateKey');
+    let result: CryptoKey | CryptoKeyPair;
+    switch (algorithm.name) {
+      case 'RSASSA-PKCS1-v1_5':
+      // Fall through
+      case 'RSA-PSS':
+      // Fall through
+      case 'RSA-OAEP':
+        result = await rsaKeyGenerate(algorithm, extractable, keyUsages);
+        break;
+      // case 'Ed25519':
+      // // Fall through
+      // case 'Ed448':
+      // // Fall through
+      // case 'X25519':
+      // // Fall through
+      // case 'X448':
+      //   resultType = 'CryptoKeyPair';
+      //   result = await cfrgGenerateKey(algorithm, extractable, keyUsages);
+      //   break;
+      case 'ECDSA':
+      // Fall through
+      case 'ECDH':
+        result = await ecGenerateKey(algorithm, extractable, keyUsages);
+        checkCryptoKeyPairUsages(result);
+        break;
+      // case 'HMAC':
+      //   result = await hmacGenerateKey(algorithm, extractable, keyUsages);
+      //   break;
+      case 'AES-CTR':
+      // Fall through
+      case 'AES-CBC':
+      // Fall through
+      case 'AES-GCM':
+      // Fall through
+      case 'AES-KW':
+        result = await aesGenerateKey(
+          algorithm as AesKeyGenParams,
+          extractable,
+          keyUsages
+        );
+        break;
+      default:
+        throw new Error(
+          `'subtle.generateKey()' is not implemented for ${algorithm.name}.
+            Unrecognized algorithm name`
+        );
+    }
+
+    return result;
   }
 
   async importKey(
@@ -507,83 +612,6 @@ class Subtle {
       throw new Error(
         `Usages cannot be empty when importing a ${result.type} key.`
       );
-    }
-
-    return result;
-  }
-
-  async exportKey(
-    format: ImportFormat,
-    key: CryptoKey
-  ): Promise<ArrayBuffer | any> {
-    if (!key.extractable) throw new Error('key is not extractable');
-
-    switch (format) {
-      case 'spki':
-        return await exportKeySpki(key);
-      // case 'pkcs8':
-      //   return await exportKeyPkcs8(key);
-      case 'jwk':
-        return exportKeyJWK(key);
-      case 'raw':
-        return exportKeyRaw(key);
-    }
-    throw new Error(`'subtle.exportKey()' is not implemented for ${format}`);
-  }
-
-  async generateKey(
-    algorithm: SubtleAlgorithm,
-    extractable: boolean,
-    keyUsages: KeyUsage[]
-  ): Promise<CryptoKey | CryptoKeyPair> {
-    algorithm = normalizeAlgorithm(algorithm, 'generateKey');
-    let result: CryptoKey | CryptoKeyPair;
-    switch (algorithm.name) {
-      // case 'RSASSA-PKCS1-v1_5':
-      // // Fall through
-      // case 'RSA-PSS':
-      // // Fall through
-      // case 'RSA-OAEP':
-      //   resultType = 'CryptoKeyPair';
-      //   result = await rsaKeyGenerate(algorithm, extractable, keyUsages);
-      //   break;
-      // case 'Ed25519':
-      // // Fall through
-      // case 'Ed448':
-      // // Fall through
-      // case 'X25519':
-      // // Fall through
-      // case 'X448':
-      //   resultType = 'CryptoKeyPair';
-      //   result = await cfrgGenerateKey(algorithm, extractable, keyUsages);
-      //   break;
-      case 'ECDSA':
-      // Fall through
-      case 'ECDH':
-        result = await ecGenerateKey(algorithm, extractable, keyUsages);
-        checkCryptoKeyPairUsages(result);
-        break;
-      // case 'HMAC':
-      //   result = await hmacGenerateKey(algorithm, extractable, keyUsages);
-      //   break;
-      case 'AES-CTR':
-      // Fall through
-      case 'AES-CBC':
-      // Fall through
-      case 'AES-GCM':
-      // Fall through
-      case 'AES-KW':
-        result = await aesGenerateKey(
-          algorithm as AesKeyGenParams,
-          extractable,
-          keyUsages
-        );
-        break;
-      default:
-        throw new Error(
-          `'subtle.generateKey()' is not implemented for ${algorithm.name}.
-            Unrecognized algorithm name`
-        );
     }
 
     return result;

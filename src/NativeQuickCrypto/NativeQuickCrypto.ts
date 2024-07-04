@@ -10,6 +10,9 @@ import type {
   PrivateDecryptMethod,
   GenerateKeyPairMethod,
   GenerateKeyPairSyncMethod,
+  CreatePublicKeyMethod,
+  CreatePrivateKeyMethod,
+  CreateSecretKeyMethod,
 } from './Cipher';
 import type { CreateSignMethod, CreateVerifyMethod } from './sig';
 import type { webcrypto } from './webcrypto';
@@ -21,6 +24,9 @@ interface NativeQuickCryptoSpec {
   createHash: CreateHashMethod;
   createCipher: CreateCipherMethod;
   createDecipher: CreateDecipherMethod;
+  createPublicKey: CreatePublicKeyMethod;
+  createPrivateKey: CreatePrivateKeyMethod;
+  createSecretKey: CreateSecretKeyMethod;
   publicEncrypt: PublicEncryptMethod;
   publicDecrypt: PublicEncryptMethod;
   privateDecrypt: PrivateDecryptMethod;

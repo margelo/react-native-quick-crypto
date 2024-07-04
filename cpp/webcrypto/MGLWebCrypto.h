@@ -20,13 +20,6 @@
 namespace margelo {
 namespace jsi = facebook::jsi;
 
-enum WebCryptoKeyFormat {
-  kWebCryptoKeyFormatRaw,
-  kWebCryptoKeyFormatPKCS8,
-  kWebCryptoKeyFormatSPKI,
-  kWebCryptoKeyFormatJWK
-};
-
 class MGLWebCryptoHostObject : public MGLSmartHostObject {
  public:
   MGLWebCryptoHostObject(

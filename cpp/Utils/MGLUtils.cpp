@@ -184,8 +184,16 @@ ByteSource ByteSource::Foreign(const void* data, size_t size) {
   return ByteSource(data, nullptr, size);
 }
 
+ByteSource ByteSource::FromBN(const BIGNUM* bn, size_t size) {
+  std::vector<uint8_t> buf(size);
+  CHECK_EQ(BN_bn2binpad(bn, buf.data(), size), size);
+  ByteSource::Builder out(size);
+  memcpy(out.data<void>(), buf.data(), size);
+  return std::move(out).release();
+}
+
 std::string EncodeBignum(const BIGNUM* bn,
-                         int size,
+                         size_t size,
                          bool url) {
   if (size == 0)
     size = BN_num_bytes(bn);

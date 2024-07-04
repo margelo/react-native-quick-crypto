@@ -1,9 +1,4 @@
-import type {
-  HashAlgorithm,
-  KeyPairAlgorithm,
-  SecretKeyAlgorithm,
-  SubtleAlgorithm,
-} from './keys';
+import type { HashAlgorithm } from './keys';
 
 export enum HashContext {
   Node,
@@ -32,6 +27,14 @@ const kHashNames: HashNames = {
     [HashContext.JwkRsaOaep]: 'RSA-OAEP',
     [HashContext.JwkHmac]: 'HS1',
   },
+  sha224: {
+    [HashContext.Node]: 'sha224',
+    [HashContext.WebCrypto]: 'SHA-224',
+    [HashContext.JwkRsa]: 'RS224',
+    [HashContext.JwkRsaPss]: 'PS224',
+    [HashContext.JwkRsaOaep]: 'RSA-OAEP-224',
+    [HashContext.JwkHmac]: 'HS224',
+  },
   sha256: {
     [HashContext.Node]: 'sha256',
     [HashContext.WebCrypto]: 'SHA-256',
@@ -56,6 +59,10 @@ const kHashNames: HashNames = {
     [HashContext.JwkRsaOaep]: 'RSA-OAEP-512',
     [HashContext.JwkHmac]: 'HS512',
   },
+  ripemd160: {
+    [HashContext.Node]: 'ripemd160',
+    [HashContext.WebCrypto]: 'RIPEMD-160',
+  },
 };
 
 {
@@ -72,20 +79,15 @@ const kHashNames: HashNames = {
 }
 
 export function normalizeHashName(
-  algo:
-    | SubtleAlgorithm
-    | HashAlgorithm
-    | KeyPairAlgorithm
-    | SecretKeyAlgorithm
-    | undefined,
+  algo: string | HashAlgorithm | undefined,
   context: HashContext = HashContext.Node
-): string {
-  if (typeof algo === 'undefined') return 'unknown';
-  if (typeof algo !== 'string') return algo.name;
-  const normAlgo = algo.toString().toLowerCase();
-  try {
-    const alias = kHashNames[normAlgo]![context];
-    return alias || algo;
-  } catch (_e) {}
-  return algo;
+): HashAlgorithm {
+  if (typeof algo !== 'undefined') {
+    const normAlgo = algo.toString().toLowerCase();
+    try {
+      const alias = kHashNames[normAlgo]![context] as HashAlgorithm;
+      if (alias) return alias;
+    } catch (_e) {}
+  }
+  throw new Error(`Invalid Hash Algorithm: ${algo}`);
 }

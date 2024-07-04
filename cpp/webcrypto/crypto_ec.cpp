@@ -61,10 +61,10 @@ WebCryptoKeyExportStatus ECDH::doExport(jsi::Runtime &rt,
     switch (format) {
         case kWebCryptoKeyFormatRaw:
             return EC_Raw_Export(key_data.get(), params, out);
-        // case kWebCryptoKeyFormatPKCS8:
-        //     if (key_data->GetKeyType() != kKeyTypePrivate)
-        //         return WebCryptoKeyExportStatus::INVALID_KEY_TYPE;
-        //     return PKEY_PKCS8_Export(key_data.get(), out);
+        case kWebCryptoKeyFormatPKCS8:
+            if (key_data->GetKeyType() != kKeyTypePrivate)
+                return WebCryptoKeyExportStatus::INVALID_KEY_TYPE;
+            return PKEY_PKCS8_Export(key_data.get(), out);
         case kWebCryptoKeyFormatSPKI: {
             if (key_data->GetKeyType() != kKeyTypePublic)
                 throw std::runtime_error("Invalid type public to be exported");
@@ -120,22 +120,6 @@ WebCryptoKeyExportStatus ECDH::doExport(jsi::Runtime &rt,
         default:
             throw std::runtime_error("Un-reachable export code");
     }
-}
-
-WebCryptoKeyExportStatus PKEY_SPKI_Export(KeyObjectData* key_data,
-                                          ByteSource* out) {
-    CHECK_EQ(key_data->GetKeyType(), kKeyTypePublic);
-    ManagedEVPPKey m_pkey = key_data->GetAsymmetricKey();
-    // Mutex::ScopedLock lock(*m_pkey.mutex());
-    BIOPointer bio(BIO_new(BIO_s_mem()));
-    CHECK(bio);
-    if (!i2d_PUBKEY_bio(bio.get(), m_pkey.get())) {
-        throw std::runtime_error("Failed to export key");
-        return WebCryptoKeyExportStatus::FAILED;
-    }
-
-    *out = ByteSource::FromBIO(bio);
-    return WebCryptoKeyExportStatus::OK;
 }
 
 WebCryptoKeyExportStatus EC_Raw_Export(KeyObjectData* key_data,
