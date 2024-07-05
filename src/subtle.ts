@@ -33,7 +33,7 @@ import {
   aesImportKey,
   getAlgorithmName,
 } from './aes';
-import { rsaExportKey, rsaImportKey, rsaKeyGenerate } from './rsa';
+import { rsaCipher, rsaExportKey, rsaImportKey, rsaKeyGenerate } from './rsa';
 
 const exportKeySpki = async (key: CryptoKey): Promise<ArrayBuffer | any> => {
   switch (key.algorithm.name) {
@@ -353,8 +353,8 @@ const cipherOrWrap = async (
   validateMaxBufferLength(data, 'data');
 
   switch (algorithm.name) {
-    // case 'RSA-OAEP':
-    //   return rsaCipher(mode, key, data, algorithm);
+    case 'RSA-OAEP':
+      return rsaCipher(mode, key, data, algorithm);
     case 'AES-CTR':
     // Fall through
     case 'AES-CBC':
@@ -366,6 +366,7 @@ const cipherOrWrap = async (
     //     return aesCipher(mode, key, data, algorithm);
     //   }
   }
+  // @ts-ignore
   throw lazyDOMException(
     `Unrecognized algorithm name '${algorithm}' for '${op}'`,
     'NotSupportedError'

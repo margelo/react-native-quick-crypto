@@ -7,9 +7,15 @@
 
 #include "MGLRsa.h"
 #ifdef ANDROID
+#include "Cipher/MGLPublicCipher.h"
 #include "JSIUtils/MGLJSIMacros.h"
+#include "JSIUtils/MGLJSIUtils.h"
+#include "Utils/MGLUtils.h"
 #else
+#include "MGLPublicCipher.h"
 #include "MGLJSIMacros.h"
+#include "MGLJSIUtils.h"
+#include "MGLUtils.h"
 #endif
 
 #include <string>
@@ -184,6 +190,125 @@ std::pair<jsi::Value, jsi::Value> generateRsaKeyPair(
   }
 
   return {std::move(publicBuffer), std::move(privateBuffer)};
+}
+
+template <MGLPublicCipher::EVP_PKEY_cipher_init_t init,
+          MGLPublicCipher::EVP_PKEY_cipher_t cipher>
+WebCryptoCipherStatus RSA_Cipher(const RSACipherConfig& params, ByteSource* out) {
+  CHECK_NE(params.key->GetKeyType(), kKeyTypeSecret);
+  ManagedEVPPKey m_pkey = params.key->GetAsymmetricKey();
+  // Mutex::ScopedLock lock(*m_pkey.mutex());
+
+  EVPKeyCtxPointer ctx(EVP_PKEY_CTX_new(m_pkey.get(), nullptr));
+
+  if (!ctx || init(ctx.get()) <= 0)
+    return WebCryptoCipherStatus::FAILED;
+
+  if (EVP_PKEY_CTX_set_rsa_padding(ctx.get(), params.padding) <= 0) {
+    return WebCryptoCipherStatus::FAILED;
+  }
+
+  if (params.digest != nullptr &&
+      (EVP_PKEY_CTX_set_rsa_oaep_md(ctx.get(), params.digest) <= 0 ||
+       EVP_PKEY_CTX_set_rsa_mgf1_md(ctx.get(), params.digest) <= 0)) {
+    return WebCryptoCipherStatus::FAILED;
+  }
+
+  if (!SetRsaOaepLabel(ctx, params.label)) return WebCryptoCipherStatus::FAILED;
+
+  size_t out_len = 0;
+  if (cipher(
+          ctx.get(),
+          nullptr,
+          &out_len,
+          params.data.data<unsigned char>(),
+          params.data.size()) <= 0) {
+    return WebCryptoCipherStatus::FAILED;
+  }
+
+  ByteSource::Builder buf(out_len);
+
+  if (cipher(ctx.get(),
+             buf.data<unsigned char>(),
+             &out_len,
+             params.data.data<unsigned char>(),
+             params.data.size()) <= 0) {
+    return WebCryptoCipherStatus::FAILED;
+  }
+
+  *out = std::move(buf).release(out_len);
+  return WebCryptoCipherStatus::OK;
+}
+
+RSACipherConfig RSACipher::GetParamsFromJS(jsi::Runtime &rt,
+                                          const jsi::Value *args) {
+  RSACipherConfig params;
+  unsigned int offset = 0;
+
+  // padding
+  params.padding = RSA_PKCS1_OAEP_PADDING;
+
+  // mode (encrypt/decrypt)
+  params.mode = static_cast<WebCryptoCipherMode>((int)args[offset].getNumber());
+  offset++;
+
+  // key (handle)
+  if (!args[offset].isObject()) {
+    throw std::runtime_error("arg is not a KeyObjectHandle: key");
+  }
+  std::shared_ptr<KeyObjectHandle> handle =
+    std::static_pointer_cast<KeyObjectHandle>(
+      args[offset].asObject(rt).getHostObject(rt));
+  params.key = handle->Data();
+  offset++;
+
+  // data
+  params.data = GetByteSourceFromJS(rt, args[offset], "data");
+  offset++;
+
+  // variant
+  if (CheckIsInt32(args[offset])) {
+    params.variant = static_cast<RSAKeyVariant>((int)args[offset].getNumber());
+  }
+  // offset++; // The below variant-dependent params advance offset themselves
+
+  std::string digest;
+  switch (params.variant) {
+    case kKeyVariantRSA_OAEP:
+      // hash (digest)
+      CHECK(args[offset + 1].isString());
+      digest = args[offset + 1].asString(rt).utf8(rt);
+      params.digest = EVP_get_digestbyname(digest.c_str());
+      if (params.digest == nullptr) {
+        throw jsi::JSError(rt, "invalid digest: " + digest);
+        return params;
+      }
+
+      // label
+      if (args[offset + 2].isUndefined()) {
+        params.label = ByteSource();
+      } else {
+        params.label = GetByteSourceFromJS(rt, args[offset + 2], "label");
+      }
+
+      break;
+    default:
+      throw jsi::JSError(rt, "Invalid RSA key variant");
+  }
+
+  return params;
+}
+
+WebCryptoCipherStatus RSACipher::DoCipher(const RSACipherConfig &params,
+                                          ByteSource *out) {
+  switch (params.mode) {
+    case kEncrypt:
+      CHECK_EQ(params.key->GetKeyType(), kKeyTypePublic);
+      return RSA_Cipher<EVP_PKEY_encrypt_init, EVP_PKEY_encrypt>(params, out);
+    case kDecrypt:
+      CHECK_EQ(params.key->GetKeyType(), kKeyTypePrivate);
+      return RSA_Cipher<EVP_PKEY_decrypt_init, EVP_PKEY_decrypt>(params, out);
+  }
 }
 
 jsi::Value ExportJWKRsaKey(jsi::Runtime &rt,

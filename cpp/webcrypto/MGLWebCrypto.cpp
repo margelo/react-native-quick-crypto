@@ -81,6 +81,18 @@ MGLWebCryptoHostObject::MGLWebCryptoHostObject(
     return jsi::Value(std::move(out));
   };
 
+  auto rsaCipher = JSIF([=]) {
+    auto rsa = RSACipher();
+    auto params = rsa.GetParamsFromJS(runtime, arguments);
+    ByteSource out;
+    WebCryptoCipherStatus status = rsa.DoCipher(params, &out);
+    if (status != WebCryptoCipherStatus::OK) {
+      throw jsi::JSError(runtime, "error in DoCipher, status: " +
+        std::to_string(static_cast<int>(status)));
+    }
+    return toJSI(runtime, std::move(out));
+  };
+
   auto rsaExportKey = JSIF([=]) {
     ByteSource out;
     auto rsa = new RsaKeyExport();
@@ -105,6 +117,7 @@ MGLWebCryptoHostObject::MGLWebCryptoHostObject(
   this->fields.push_back(buildPair("ecExportKey", ecExportKey));
   this->fields.push_back(GenerateSecretKeyFieldDefinition(jsCallInvoker, workerQueue));
   this->fields.push_back(buildPair("generateSecretKeySync", generateSecretKeySync));
+  this->fields.push_back(buildPair("rsaCipher", rsaCipher));
   this->fields.push_back(buildPair("rsaExportKey", rsaExportKey));
   this->fields.push_back(buildPair("signVerify", signVerify));
 };

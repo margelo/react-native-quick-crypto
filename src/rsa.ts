@@ -11,6 +11,8 @@ import {
   hasAnyNotIn,
   getUsagesUnion,
   bigIntArrayToUnsignedInt,
+  validateMaxBufferLength,
+  bufferLikeToArrayBuffer,
 } from './Utils';
 import {
   CryptoKey,
@@ -26,7 +28,17 @@ import {
   createPublicKey,
   type CryptoKeyPair,
   KWebCryptoKeyFormat,
+  CipherOrWrapMode,
+  type RsaOaepParams,
+  type DigestAlgorithm,
 } from './keys';
+
+// TODO: keep in in sync with C++ side (cpp/Cipher/MGLRsa.h)
+export enum RSAKeyVariant {
+  RSA_SSA_PKCS1_v1_5,
+  RSA_PSS,
+  RSA_OAEP,
+}
 
 function verifyAcceptableRsaKeyUse(
   name: AnyAlgorithm,
@@ -57,26 +69,35 @@ function verifyAcceptableRsaKeyUse(
   }
 }
 
-// function rsaOaepCipher(mode, key, data, { label }) {
-//   const type = mode === kWebCryptoCipherEncrypt ? 'public' : 'private';
-//   if (key.type !== type) {
-//     throw lazyDOMException(
-//       'The requested operation is not valid for the provided key',
-//       'InvalidAccessError');
-//   }
-//   if (label !== undefined) {
-//     validateMaxBufferLength(label, 'algorithm.label');
-//   }
+const rsaOaepCipher = (
+  mode: CipherOrWrapMode,
+  key: CryptoKey,
+  data: ArrayBuffer,
+  { label }: RsaOaepParams
+): Promise<ArrayBuffer> => {
+  const type =
+    mode === CipherOrWrapMode.kWebCryptoCipherEncrypt ? 'public' : 'private';
+  if (key.type !== type) {
+    throw lazyDOMException(
+      'The requested operation is not valid for the provided key',
+      'InvalidAccessError'
+    );
+  }
+  if (label !== undefined) {
+    validateMaxBufferLength(label, 'algorithm.label');
+  }
 
-//   return jobPromise(() => new RSACipherJob(
-//     kCryptoJobAsync,
-//     mode,
-//     key[kKeyObject][kHandle],
-//     data,
-//     kKeyVariantRSA_OAEP,
-//     normalizeHashName(key.algorithm.hash.name),
-//     label));
-// }
+  return NativeQuickCrypto.webcrypto.rsaCipher(
+    mode,
+    key.keyObject.handle,
+    data,
+    RSAKeyVariant.RSA_OAEP,
+    normalizeHashName(key.algorithm.hash) as DigestAlgorithm,
+    label !== undefined ? bufferLikeToArrayBuffer(label) : undefined
+  );
+};
+
+export const rsaCipher = rsaOaepCipher;
 
 export const rsaKeyGenerate = async (
   algorithm: SubtleAlgorithm,

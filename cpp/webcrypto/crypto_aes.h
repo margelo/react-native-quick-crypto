@@ -38,12 +38,6 @@ enum AESKeyVariant {
 #undef V
 };
 
-enum class WebCryptoCipherStatus {
-  OK,
-  INVALID_KEY_TYPE,
-  FAILED
-};
-
 struct AESCipherConfig final {
     enum Mode {
     kEncrypt,

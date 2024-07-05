@@ -308,19 +308,6 @@ WebCryptoCipherStatus AES_CTR_Cipher(
   return status;
 }
 
-ByteSource GetByteSourceFromJS(jsi::Runtime &rt,
-                               const jsi::Value &value,
-                               std::string name) {
-    if (!value.isObject() || !value.asObject(rt).isArrayBuffer(rt)) {
-    throw jsi::JSError(rt, "arg is not an array buffer: " + name);
-  }
-  ByteSource data = ByteSource::FromStringOrBuffer(rt, value);
-  if (data.size() > INT_MAX) {
-    throw jsi::JSError(rt, "arg is too big (> int32): " + name);
-  }
-  return data;
-}
-
 bool ValidateIV(
     jsi::Runtime &rt,
     const jsi::Value &value,

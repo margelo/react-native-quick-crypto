@@ -192,6 +192,19 @@ ByteSource ByteSource::FromBN(const BIGNUM* bn, size_t size) {
   return std::move(out).release();
 }
 
+ByteSource GetByteSourceFromJS(jsi::Runtime &rt,
+                               const jsi::Value &value,
+                               std::string name) {
+    if (!value.isObject() || !value.asObject(rt).isArrayBuffer(rt)) {
+    throw jsi::JSError(rt, "arg is not an array buffer: " + name);
+  }
+  ByteSource data = ByteSource::FromStringOrBuffer(rt, value);
+  if (data.size() > INT_MAX) {
+    throw jsi::JSError(rt, "arg is too big (> int32): " + name);
+  }
+  return data;
+}
+
 std::string EncodeBignum(const BIGNUM* bn,
                          size_t size,
                          bool url) {
@@ -262,6 +275,21 @@ MUST_USE_RESULT CSPRNGResult CSPRNG(void* buffer, size_t length) {
   } while (1 == RAND_poll());
 
   return {false};
+}
+
+bool SetRsaOaepLabel(const EVPKeyCtxPointer& ctx, const ByteSource& label) {
+  if (label.size() != 0) {
+    // OpenSSL takes ownership of the label, so we need to create a copy.
+    void* label_copy = OPENSSL_memdup(label.data(), label.size());
+    CHECK_NOT_NULL(label_copy);
+    int ret = EVP_PKEY_CTX_set0_rsa_oaep_label(
+        ctx.get(), static_cast<unsigned char*>(label_copy), label.size());
+    if (ret <= 0) {
+      OPENSSL_free(label_copy);
+      return false;
+    }
+  }
+  return true;
 }
 
 }  // namespace margelo
