@@ -25,6 +25,13 @@ namespace margelo {
 
 namespace jsi = facebook::jsi;
 
+// TODO: keep in in sync with JS side (src/rsa.ts)
+enum RSAKeyVariant {
+  kKeyVariantRSA_SSA_PKCS1_v1_5,
+  kKeyVariantRSA_PSS,
+  kKeyVariantRSA_OAEP
+};
+
 // On node there is a complete madness of structs/classes that encapsulate and
 // initialize the data in a generic manner this is to be later be used to
 // generate the keys in a thread-safe manner (I think) I'm however too dumb and
@@ -76,6 +83,25 @@ class RsaKeyExport {
   WebCryptoKeyExportStatus DoExport(ByteSource* out);
  private:
   RsaKeyExportConfig params_;
+};
+
+struct RSACipherConfig final {
+  WebCryptoCipherMode mode;
+  std::shared_ptr<KeyObjectData> key;
+  ByteSource data;
+  RSAKeyVariant variant;
+  ByteSource label;
+  int padding = 0;
+  const EVP_MD* digest = nullptr;
+
+  RSACipherConfig() = default;
+};
+
+class RSACipher {
+ public:
+  RSACipher() {}
+  RSACipherConfig GetParamsFromJS(jsi::Runtime &rt, const jsi::Value *args);
+  WebCryptoCipherStatus DoCipher(const RSACipherConfig &params, ByteSource *out);
 };
 
 }  // namespace margelo

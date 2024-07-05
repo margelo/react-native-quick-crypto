@@ -206,11 +206,11 @@ This document attempts to describe the implementation status of Crypto APIs/Inte
 # `SubtleCrypto`
 
 * 🚧 Class: `SubtleCrypto`
-  * 🚧 `subtle.decrypt(algorithm, key, data)`
+  * ✅ `subtle.decrypt(algorithm, key, data)`
   * 🚧 `subtle.deriveBits(algorithm, baseKey, length)`
   * ❌ `subtle.deriveKey(algorithm, baseKey, derivedKeyAlgorithm, extractable, keyUsages)`
   * ✅ `subtle.digest(algorithm, data)`
-  * 🚧 `subtle.encrypt(algorithm, key, data)`
+  * ✅ `subtle.encrypt(algorithm, key, data)`
   * 🚧 `subtle.exportKey(format, key)`
   * 🚧 `subtle.generateKey(algorithm, extractable, keyUsages)`
   * 🚧 `subtle.importKey(format, keyData, algorithm, extractable, keyUsages)`
@@ -222,7 +222,7 @@ This document attempts to describe the implementation status of Crypto APIs/Inte
 ## `subtle.decrypt`
 | Algorithm  | Status |
 | ---------  | :----: |
-| `RSA-OAEP` |  |
+| `RSA-OAEP` | ✅ |
 | `AES-CTR`  | ✅ |
 | `AES-CBC`  | ✅ |
 | `AES-GCM`  | ✅ |
@@ -256,7 +256,7 @@ This document attempts to describe the implementation status of Crypto APIs/Inte
 ## `subtle.encrypt`
 | Algorithm  | Status |
 | ---------  | :----: |
-| `RSA-OAEP` |  |
+| `RSA-OAEP` | ✅ |
 | `AES-CTR`  | ✅ |
 | `AES-CBC`  | ✅ |
 | `AES-GCM`  | ✅ |

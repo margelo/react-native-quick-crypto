@@ -7,13 +7,32 @@ import type {
   AesGcmParams,
   AnyAlgorithm,
   CryptoKey,
+  CryptoKeyPair,
+  DigestAlgorithm,
   EncryptDecryptParams,
+  KeyUsage,
+  RsaOaepParams,
 } from '../../../../../src/keys';
+import rsa_oaep_fixtures from '../../fixtures/rsa';
 import aes_cbc_fixtures from '../../fixtures/aes_cbc';
 import aes_ctr_fixtures from '../../fixtures/aes_ctr';
 import aes_gcm_fixtures from '../../fixtures/aes_gcm';
 import { assertThrowsAsync } from '../util';
 import { ab2str } from '../../../../../src/Utils';
+
+export type RsaEncryptDecryptTestVector = {
+  name: string;
+  publicKeyBuffer: ArrayBuffer;
+  publicKeyFormat: string;
+  privateKey: Buffer | null;
+  privateKeyBuffer: ArrayBuffer | null;
+  privateKeyFormat: string | null;
+  publicKey: any | null;
+  algorithm: RsaOaepParams;
+  hash: DigestAlgorithm;
+  plaintext: ArrayBuffer;
+  ciphertext: ArrayBuffer;
+};
 
 export type AesEncryptDecryptTestVector = {
   keyBuffer?: ArrayBuffer;
@@ -39,47 +58,338 @@ const { subtle } = crypto;
 describe('subtle - encrypt / decrypt', () => {
   // from https://github.com/nodejs/node/blob/main/test/parallel/test-webcrypto-encrypt-decrypt.js
 
-  // // Test Encrypt/Decrypt RSA-OAEP
-  // {
-  //   const buf = crypto.getRandomValues(new Uint8Array(50));
+  // Test Encrypt/Decrypt RSA-OAEP
+  {
+    async function testRSAOAEP() {
+      const buf = crypto.getRandomValues(new Uint8Array(50));
+      const ec = new TextEncoder();
+      const { publicKey, privateKey } = (await subtle.generateKey(
+        {
+          name: 'RSA-OAEP',
+          modulusLength: 2048,
+          publicExponent: new Uint8Array([1, 0, 1]),
+          hash: 'SHA-384',
+        },
+        true,
+        ['encrypt', 'decrypt']
+      )) as CryptoKeyPair;
 
-  //   async function test() {
-  //     const ec = new TextEncoder();
-  //     const { publicKey, privateKey } = await subtle.generateKey({
-  //       name: 'RSA-OAEP',
-  //       modulusLength: 2048,
-  //       publicExponent: new Uint8Array([1, 0, 1]),
-  //       hash: 'SHA-384',
-  //     }, true, ['encrypt', 'decrypt']);
+      const ciphertext = await subtle.encrypt(
+        {
+          name: 'RSA-OAEP',
+          label: ec.encode('a label'),
+        },
+        publicKey as CryptoKey,
+        buf
+      );
 
-  //     const ciphertext = await subtle.encrypt({
-  //       name: 'RSA-OAEP',
-  //       label: ec.encode('a label')
-  //     }, publicKey, buf);
+      const plaintext = await subtle.decrypt(
+        {
+          name: 'RSA-OAEP',
+          label: ec.encode('a label'),
+        },
+        privateKey as CryptoKey,
+        ciphertext
+      );
 
-  //     const plaintext = await subtle.decrypt({
-  //       name: 'RSA-OAEP',
-  //       label: ec.encode('a label')
-  //     }, privateKey, ciphertext);
+      expect(Buffer.from(plaintext).toString('hex')).to.equal(
+        Buffer.from(buf).toString('hex')
+      );
+    }
 
-  //     assert.strictEqual(
-  //       Buffer.from(plaintext).toString('hex'),
-  //       Buffer.from(buf).toString('hex'));
-  //   }
+    it('RSA-OAEP', async () => {
+      await testRSAOAEP();
+    });
+  }
 
-  //   test().then(common.mustCall());
-  // }
+  // from https://github.com/nodejs/node/blob/main/test/parallel/test-webcrypto-encrypt-decrypt-rsa.js
+  async function importRSAVectorKey(
+    publicKeyBuffer: ArrayBuffer,
+    _privateKeyBuffer: ArrayBuffer | null,
+    name: AnyAlgorithm,
+    hash: DigestAlgorithm,
+    publicUsages: KeyUsage[],
+    _privateUsages: KeyUsage[]
+  ): Promise<CryptoKeyPair> {
+    const publicKey = await subtle.importKey(
+      'spki',
+      publicKeyBuffer,
+      { name, hash },
+      false,
+      publicUsages
+    );
+    // const privateKey = await subtle.importKey(
+    //   'pkcs8',
+    //   privateKeyBuffer,
+    //   { name, hash },
+    //   false,
+    //   privateUsages
+    // ),
 
-  // TODO: when RSA is fully-implemented, add the tests in
-  //  * test-webcrypto-encrypt-decrypt-rsa.js
+    return { publicKey, privateKey: undefined };
+  }
+
+  async function testRSADecryption({
+    ciphertext,
+    algorithm,
+    plaintext,
+    hash,
+    publicKeyBuffer,
+    privateKeyBuffer,
+  }: RsaEncryptDecryptTestVector) {
+    if (ciphertext === undefined) {
+      return;
+    }
+
+    const { privateKey } = await importRSAVectorKey(
+      publicKeyBuffer,
+      privateKeyBuffer,
+      algorithm.name,
+      hash,
+      ['encrypt'],
+      ['decrypt']
+    );
+
+    // TODO: remove condition when importKey() rsa pkcs8 is implemented
+    if (privateKey !== undefined) {
+      const encodedPlaintext = Buffer.from(plaintext).toString('hex');
+      const result = await subtle.decrypt(
+        algorithm,
+        privateKey as CryptoKey,
+        ciphertext
+      );
+
+      expect(Buffer.from(result).toString('hex')).to.equal(encodedPlaintext);
+
+      const ciphercopy = Buffer.from(ciphertext);
+
+      // Modifying the ciphercopy after calling decrypt should just work
+      const result2 = await subtle.decrypt(
+        algorithm,
+        privateKey as CryptoKey,
+        ciphercopy
+      );
+      // @ts-expect-error
+      ciphercopy[0] = 255 - ciphercopy[0];
+
+      expect(Buffer.from(result2).toString('hex')).to.equal(encodedPlaintext);
+    }
+  }
+
+  async function testRSAEncryption(
+    {
+      algorithm,
+      plaintext,
+      hash,
+      publicKeyBuffer,
+      privateKeyBuffer,
+    }: RsaEncryptDecryptTestVector,
+    modify = false
+  ) {
+    const { publicKey, privateKey } = await importRSAVectorKey(
+      publicKeyBuffer,
+      privateKeyBuffer,
+      algorithm.name,
+      hash,
+      ['encrypt'],
+      ['decrypt']
+    );
+
+    const plaintextCopy = Buffer.from(plaintext); // make a copy
+    if (modify) {
+      plaintext = plaintextCopy;
+    }
+
+    const result = await subtle.encrypt(
+      algorithm,
+      publicKey as CryptoKey,
+      plaintext
+    );
+    if (modify) {
+      // @ts-expect-error
+      plaintext[0] = 255 - plaintext[0];
+    }
+    expect(result.byteLength).to.be.greaterThan(0);
+
+    // TODO: remove condition when importKey() rsa pkcs8 is implemented
+    if (privateKey !== undefined) {
+      const encodedPlaintext = Buffer.from(plaintext).toString('hex');
+
+      expect(result.byteLength * 8).to.equal(
+        (privateKey as CryptoKey).algorithm.modulusLength
+      );
+
+      const out = await subtle.decrypt(
+        algorithm,
+        privateKey as CryptoKey,
+        result
+      );
+      expect(Buffer.from(out).toString('hex')).to.equal(encodedPlaintext);
+    }
+  }
+
+  async function testRSAEncryptionLongPlaintext({
+    algorithm,
+    plaintext,
+    hash,
+    publicKeyBuffer,
+    privateKeyBuffer,
+  }: RsaEncryptDecryptTestVector) {
+    const { publicKey } = await importRSAVectorKey(
+      publicKeyBuffer,
+      privateKeyBuffer,
+      algorithm.name,
+      hash,
+      ['encrypt'],
+      ['decrypt']
+    );
+    const newplaintext = new Uint8Array(plaintext.byteLength + 1);
+    newplaintext.set(plaintext as Uint8Array, 0);
+    newplaintext[plaintext.byteLength] = 32;
+
+    return assertThrowsAsync(
+      async () =>
+        await subtle.encrypt(algorithm, publicKey as CryptoKey, newplaintext),
+      'error in DoCipher, status: 2'
+    );
+  }
+
+  async function testRSAEncryptionWrongKey({
+    algorithm,
+    plaintext,
+    hash,
+    publicKeyBuffer,
+    privateKeyBuffer,
+  }: RsaEncryptDecryptTestVector) {
+    const { privateKey } = await importRSAVectorKey(
+      publicKeyBuffer,
+      privateKeyBuffer,
+      algorithm.name,
+      hash,
+      ['encrypt'],
+      ['decrypt']
+    );
+    return assertThrowsAsync(
+      async () =>
+        await subtle.encrypt(algorithm, privateKey as CryptoKey, plaintext),
+      "Cannot read property 'algorithm' of undefined"
+    );
+  }
+
+  async function testRSAEncryptionBadUsage({
+    algorithm,
+    plaintext,
+    hash,
+    publicKeyBuffer,
+    privateKeyBuffer,
+  }: RsaEncryptDecryptTestVector) {
+    const { publicKey } = await importRSAVectorKey(
+      publicKeyBuffer,
+      privateKeyBuffer,
+      algorithm.name,
+      hash,
+      ['wrapKey'],
+      ['decrypt']
+    );
+    return assertThrowsAsync(
+      async () =>
+        await subtle.encrypt(algorithm, publicKey as CryptoKey, plaintext),
+      'The requested operation is not valid'
+    );
+  }
+
+  async function testRSADecryptionWrongKey({
+    ciphertext,
+    algorithm,
+    hash,
+    publicKeyBuffer,
+    privateKeyBuffer,
+  }: RsaEncryptDecryptTestVector) {
+    if (ciphertext === undefined) {
+      return;
+    }
+
+    const { publicKey } = await importRSAVectorKey(
+      publicKeyBuffer,
+      privateKeyBuffer,
+      algorithm.name,
+      hash,
+      ['encrypt'],
+      ['decrypt']
+    );
+
+    return assertThrowsAsync(
+      async () =>
+        await subtle.decrypt(algorithm, publicKey as CryptoKey, ciphertext),
+      'The requested operation is not valid'
+    );
+  }
+
+  async function testRSADecryptionBadUsage({
+    ciphertext,
+    algorithm,
+    hash,
+    publicKeyBuffer,
+    privateKeyBuffer,
+  }: RsaEncryptDecryptTestVector) {
+    if (ciphertext === undefined) {
+      return;
+    }
+
+    const { publicKey } = await importRSAVectorKey(
+      publicKeyBuffer,
+      privateKeyBuffer,
+      algorithm.name,
+      hash,
+      ['encrypt'],
+      ['unwrapKey']
+    );
+
+    return assertThrowsAsync(
+      async () =>
+        await subtle.decrypt(algorithm, publicKey as CryptoKey, ciphertext),
+      'The requested operation is not valid'
+    );
+  }
+
+  {
+    let { passing } = rsa_oaep_fixtures;
+
+    passing.forEach((vector: RsaEncryptDecryptTestVector) => {
+      it(`RSA-OAEP decryption ${vector.name}`, async () => {
+        await testRSADecryption(vector);
+      });
+      it(`RSA-OAEP decryption wrong key ${vector.name}`, async () => {
+        await testRSADecryptionWrongKey(vector);
+      });
+      it(`RSA-OAEP decryption bad usage ${vector.name}`, async () => {
+        await testRSADecryptionBadUsage(vector);
+      });
+      it(`RSA-OAEP encryption ${vector.name}`, async () => {
+        await testRSAEncryption(vector);
+      });
+      it(`RSA-OAEP encryption ${vector.name}`, async () => {
+        await testRSAEncryption(vector, true);
+      });
+      it(`RSA-OAEP encryption long plaintext ${vector.name}`, async () => {
+        await testRSAEncryptionLongPlaintext(vector);
+      });
+      it(`RSA-OAEP encryption wrong key ${vector.name}`, async () => {
+        await testRSAEncryptionWrongKey(vector);
+      });
+      it(`RSA-OAEP encryption bad usage ${vector.name}`, async () => {
+        await testRSAEncryptionBadUsage(vector);
+      });
+    });
+  }
 
   // from https://github.com/nodejs/node/blob/main/test/parallel/test-webcrypto-encrypt-decrypt.js
   // Test Encrypt/Decrypt AES-CTR
   {
-    const buf = crypto.getRandomValues(new Uint8Array(50));
-    const counter = crypto.getRandomValues(new Uint8Array(16));
-
     async function testAESCTR() {
+      const buf = crypto.getRandomValues(new Uint8Array(50));
+      const counter = crypto.getRandomValues(new Uint8Array(16));
+
       const key = await subtle.generateKey(
         {
           name: 'AES-CTR',
@@ -113,10 +423,10 @@ describe('subtle - encrypt / decrypt', () => {
 
   // Test Encrypt/Decrypt AES-CBC
   {
-    const buf = crypto.getRandomValues(new Uint8Array(50));
-    const iv = crypto.getRandomValues(new Uint8Array(16));
-
     async function testAESCBC() {
+      const buf = crypto.getRandomValues(new Uint8Array(50));
+      const iv = crypto.getRandomValues(new Uint8Array(16));
+
       const key = await subtle.generateKey(
         {
           name: 'AES-CBC',
@@ -150,10 +460,10 @@ describe('subtle - encrypt / decrypt', () => {
 
   // Test Encrypt/Decrypt AES-GCM
   {
-    const buf = crypto.getRandomValues(new Uint8Array(50));
-    const iv = crypto.getRandomValues(new Uint8Array(12));
-
     async function testAESGCM() {
+      const buf = crypto.getRandomValues(new Uint8Array(50));
+      const iv = crypto.getRandomValues(new Uint8Array(12));
+
       const key = await subtle.generateKey(
         {
           name: 'AES-GCM',
@@ -186,10 +496,10 @@ describe('subtle - encrypt / decrypt', () => {
   }
 
   {
-    const iv = crypto.getRandomValues(new Uint8Array(12));
-    const aad = crypto.getRandomValues(new Uint8Array(32));
-
     async function testAESGCM2() {
+      const iv = crypto.getRandomValues(new Uint8Array(12));
+      const aad = crypto.getRandomValues(new Uint8Array(32));
+
       const secretKey = (await subtle.generateKey(
         {
           name: 'AES-GCM',
@@ -228,7 +538,7 @@ describe('subtle - encrypt / decrypt', () => {
   }
 
   // from https://github.com/nodejs/node/blob/main/test/parallel/test-webcrypto-encrypt-decrypt-aes.js
-  async function testEncrypt({
+  async function testAESEncrypt({
     keyBuffer,
     algorithm,
     plaintext,
@@ -268,7 +578,7 @@ describe('subtle - encrypt / decrypt', () => {
     );
   }
 
-  async function testEncryptNoEncrypt({
+  async function testAESEncryptNoEncrypt({
     keyBuffer,
     algorithm,
     plaintext,
@@ -292,7 +602,7 @@ describe('subtle - encrypt / decrypt', () => {
     );
   }
 
-  async function testEncryptNoDecrypt({
+  async function testAESEncryptNoDecrypt({
     keyBuffer,
     algorithm,
     plaintext,
@@ -318,7 +628,7 @@ describe('subtle - encrypt / decrypt', () => {
     );
   }
 
-  async function testEncryptWrongAlg(
+  async function testAESEncryptWrongAlg(
     { keyBuffer, algorithm, plaintext }: AesEncryptDecryptTestVector,
     alg: AnyAlgorithm
   ): Promise<void> {
@@ -338,7 +648,7 @@ describe('subtle - encrypt / decrypt', () => {
     );
   }
 
-  async function testDecrypt({
+  async function testAESDecrypt({
     keyBuffer,
     algorithm,
     result,
@@ -367,16 +677,16 @@ describe('subtle - encrypt / decrypt', () => {
       const { algorithm, keyLength } = vector;
       const { name } = algorithm as AesCbcParams;
       it(`testEncrypt passing ${name} ${keyLength}`, async () => {
-        await testEncrypt(vector);
+        await testAESEncrypt(vector);
       });
       it(`testEncryptNoEncrypt passing ${name} ${keyLength}`, async () => {
-        await testEncryptNoEncrypt(vector);
+        await testAESEncryptNoEncrypt(vector);
       });
       it(`testEncryptNoDecrypt passing ${name} ${keyLength}`, async () => {
-        await testEncryptNoDecrypt(vector);
+        await testAESEncryptNoDecrypt(vector);
       });
       it(`testEncryptWrongAlg passing ${name} ${keyLength}`, async () => {
-        await testEncryptWrongAlg(vector, 'AES-CTR');
+        await testAESEncryptWrongAlg(vector, 'AES-CTR');
       });
     });
 
@@ -385,13 +695,13 @@ describe('subtle - encrypt / decrypt', () => {
       const { name } = algorithm as AesCbcParams;
       it(`testEncrypt failing ${name} ${keyLength}`, async () => {
         await assertThrowsAsync(
-          async () => await testEncrypt(vector),
+          async () => await testAESEncrypt(vector),
           'algorithm.iv must contain exactly 16 bytes'
         );
       });
       it(`testDecrypt failing ${name} ${keyLength}`, async () => {
         await assertThrowsAsync(
-          async () => await testDecrypt(vector),
+          async () => await testAESDecrypt(vector),
           'algorithm.iv must contain exactly 16 bytes'
         );
       });
@@ -402,7 +712,7 @@ describe('subtle - encrypt / decrypt', () => {
       const { name } = algorithm as AesCbcParams;
       it(`testDecrypt decryptionFailing ${name} ${keyLength}`, async () => {
         await assertThrowsAsync(
-          async () => await testDecrypt(vector),
+          async () => await testAESDecrypt(vector),
           'error in DoCipher, status: 2'
         );
       });
@@ -417,16 +727,16 @@ describe('subtle - encrypt / decrypt', () => {
       const { algorithm, keyLength } = vector;
       const { name } = algorithm as AesCtrParams;
       it(`testEncrypt passing ${name} ${keyLength}`, async () => {
-        await testEncrypt(vector);
+        await testAESEncrypt(vector);
       });
       it(`testEncryptNoEncrypt passing ${name} ${keyLength}`, async () => {
-        await testEncryptNoEncrypt(vector);
+        await testAESEncryptNoEncrypt(vector);
       });
       it(`testEncryptNoDecrypt passing ${name} ${keyLength}`, async () => {
-        await testEncryptNoDecrypt(vector);
+        await testAESEncryptNoDecrypt(vector);
       });
       it(`testEncryptWrongAlg passing ${name} ${keyLength}`, async () => {
-        await testEncryptWrongAlg(vector, 'AES-CBC');
+        await testAESEncryptWrongAlg(vector, 'AES-CBC');
       });
     });
 
@@ -437,13 +747,13 @@ describe('subtle - encrypt / decrypt', () => {
       const { name } = algorithm as AesCtrParams;
       it(`testEncrypt failing ${name} ${keyLength}`, async () => {
         await assertThrowsAsync(
-          async () => await testEncrypt(vector),
+          async () => await testAESEncrypt(vector),
           'AES-CTR algorithm.length must be between 1 and 128'
         );
       });
       it(`testDecrypt failing ${name} ${keyLength}`, async () => {
         await assertThrowsAsync(
-          async () => await testDecrypt(vector),
+          async () => await testAESDecrypt(vector),
           'AES-CTR algorithm.length must be between 1 and 128'
         );
       });
@@ -454,7 +764,7 @@ describe('subtle - encrypt / decrypt', () => {
       const { name } = algorithm as AesCtrParams;
       it(`testDecrypt decryptionFailing ${name} ${keyLength}`, async () => {
         await assertThrowsAsync(
-          async () => await testDecrypt(vector),
+          async () => await testAESDecrypt(vector),
           'error in DoCipher, status: 2'
         );
       });
@@ -469,16 +779,16 @@ describe('subtle - encrypt / decrypt', () => {
       const { algorithm, keyLength } = vector;
       const { name, tagLength } = algorithm as AesGcmParams;
       it(`testEncrypt passing ${name} ${keyLength} ${tagLength}`, async () => {
-        await testEncrypt(vector);
+        await testAESEncrypt(vector);
       });
       it(`testEncryptNoEncrypt passing ${name} ${keyLength} ${tagLength}`, async () => {
-        await testEncryptNoEncrypt(vector);
+        await testAESEncryptNoEncrypt(vector);
       });
       it(`testEncryptNoDecrypt passing ${name} ${keyLength} ${tagLength}`, async () => {
-        await testEncryptNoDecrypt(vector);
+        await testAESEncryptNoDecrypt(vector);
       });
       it(`testEncryptWrongAlg passing ${name} ${keyLength} ${tagLength}`, async () => {
-        await testEncryptWrongAlg(vector, 'AES-CBC');
+        await testAESEncryptWrongAlg(vector, 'AES-CBC');
       });
     });
 
@@ -487,13 +797,13 @@ describe('subtle - encrypt / decrypt', () => {
       const { name, tagLength } = algorithm as AesGcmParams;
       it(`testEncrypt failing ${name} ${keyLength} ${tagLength}`, async () => {
         await assertThrowsAsync(
-          async () => await testEncrypt(vector),
+          async () => await testAESEncrypt(vector),
           'is not a valid AES-GCM tag length'
         );
       });
       it(`testDecrypt failing ${name} ${keyLength} ${tagLength}`, async () => {
         await assertThrowsAsync(
-          async () => await testDecrypt(vector),
+          async () => await testAESDecrypt(vector),
           'is not a valid AES-GCM tag length'
         );
       });
@@ -504,7 +814,7 @@ describe('subtle - encrypt / decrypt', () => {
       const { name, tagLength } = algorithm as AesGcmParams;
       it(`testDecrypt decryptionFailing ${name} ${keyLength} ${tagLength}`, async () => {
         await assertThrowsAsync(
-          async () => await testDecrypt(vector),
+          async () => await testAESDecrypt(vector),
           'error in DoCipher, status: 2'
         );
       });

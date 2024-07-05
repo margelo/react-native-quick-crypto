@@ -14,6 +14,7 @@ import type {
   GenerateSecretKeySyncMethod,
 } from './keygen';
 import type { KeyVariant } from './Cipher';
+import type { RSACipher } from './rsa';
 
 type KeyDetail = {
   length?: number;
@@ -65,6 +66,7 @@ export type webcrypto = {
   ecExportKey: ECExportKey;
   generateSecretKey: GenerateSecretKeyMethod;
   generateSecretKeySync: GenerateSecretKeySyncMethod;
+  rsaCipher: RSACipher;
   rsaExportKey: RSAExportKey;
   signVerify: SignVerify;
 };

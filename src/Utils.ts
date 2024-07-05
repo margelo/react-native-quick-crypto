@@ -2,6 +2,7 @@ import { Buffer } from '@craftzdog/react-native-buffer';
 import type {
   AnyAlgorithm,
   DeriveBitsAlgorithm,
+  DigestAlgorithm,
   EncryptDecryptAlgorithm,
   EncryptDecryptParams,
   KeyPairAlgorithm,
@@ -327,8 +328,6 @@ const kMaxBufferLength = 2 ** 31 - 1;
 // // These are the only hash algorithms we currently support via
 // // the Web Crypto API.
 // const kHashTypes = ['SHA-1', 'SHA-256', 'SHA-384', 'SHA-512'];
-
-type DigestAlgorithm = 'SHA-1' | 'SHA-256' | 'SHA-384' | 'SHA-512';
 
 type SupportedAlgorithm<Type extends string> = {
   [key in Type]: string | null;

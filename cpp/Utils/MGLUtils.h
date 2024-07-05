@@ -304,12 +304,18 @@ inline jsi::Value toJSI(jsi::Runtime& rt, ByteSource value) {
     return o;
 }
 
+ByteSource GetByteSourceFromJS(jsi::Runtime &rt,
+                               const jsi::Value &value,
+                               std::string name);
+
 std::string EncodeBignum(const BIGNUM* bn,
                          size_t size,
                          bool url = false);
 
 std::string EncodeBase64(const std::string data, bool url = false);
 std::string DecodeBase64(const std::string &in, bool remove_linebreaks = false);
+
+bool SetRsaOaepLabel(const EVPKeyCtxPointer& ctx, const ByteSource& label);
 
 // TODO: until shared, keep in sync with JS side (src/NativeQuickCrypto/Cipher.ts)
 enum KeyVariant {
@@ -332,6 +338,19 @@ enum WebCryptoKeyFormat {
   kWebCryptoKeyFormatPKCS8,
   kWebCryptoKeyFormatSPKI,
   kWebCryptoKeyFormatJWK
+};
+
+enum WebCryptoCipherMode {
+  kEncrypt,
+  kDecrypt,
+  // kWrapKey,
+  // kUnwrapKey,
+};
+
+enum class WebCryptoCipherStatus {
+  OK,
+  INVALID_KEY_TYPE,
+  FAILED
 };
 
 }  // namespace margelo
