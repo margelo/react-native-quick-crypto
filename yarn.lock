@@ -7356,10 +7356,10 @@ react-is@^17.0.1:
   resolved "https://registry.yarnpkg.com/react-is/-/react-is-17.0.2.tgz#e691d4a8e9c789365655539ab372762b0efb54f0"
   integrity sha512-w2GsyukL62IJnlaff/nRegPQR94C/XXamvMWmSHRJ4y7Ts/4ocGRmTHvOs8PSE6pB3dWOrD/nueuU5sduBsQ4w==
 
-react-native-builder-bob@^0.24.0:
-  version "0.24.0"
-  resolved "https://registry.yarnpkg.com/react-native-builder-bob/-/react-native-builder-bob-0.24.0.tgz#06e8c8bf9ea4129b162eadc23664d7cca202552e"
-  integrity sha512-nRaAVDxc9uoj68ChCECxIWHn/uVKnCH4QzRDpNmxALsfHYPoDQLPvNtN14/jKUFQDu950MW1WNuUDQkEBa69sA==
+react-native-builder-bob@^0.25.0:
+  version "0.25.0"
+  resolved "https://registry.yarnpkg.com/react-native-builder-bob/-/react-native-builder-bob-0.25.0.tgz#fa5478639adbeaca5cc9692eee2b9b7b2a8e8d8e"
+  integrity sha512-UmjbnNwL6LRUSuArsdj5bKIIQaLwwis/dtOT33g165iQ93wWfMBry3z/iVBuoBMx9De+RWCKQzIlZql2UtgCCQ==
   dependencies:
     "@babel/core" "^7.18.5"
     "@babel/plugin-proposal-class-properties" "^7.17.12"
