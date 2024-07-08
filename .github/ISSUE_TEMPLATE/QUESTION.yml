@@ -1,0 +1,42 @@
+name: 💭 Question
+description: Ask a Question about this library
+title: "💭 "
+labels: [💭 question]
+body:
+  - type: textarea
+    attributes:
+      label: Question
+      description: Ask a question about the library or ask for help/advice. Make sure to be as detailed as possible, since well written questions are more likely to be picked up than badly written ones.
+      placeholder: How do I encrypt/decrypt foo with `aes-gcm`?
+    validations:
+      required: true
+  - type: textarea
+    attributes:
+      label: What I tried
+      description: (Optional) Explain what alternatives/workarounds you tried.
+      render: js
+      placeholder: >
+        const ciphertext = await subtle.encrypt(
+          { name: 'AES-GCM', iv },
+          key as CryptoKey,
+          buf
+        );
+  - type: input
+    attributes:
+      label: QuickCrypto Version
+      description: Which version of react-native-quick-crypto are you using?
+      placeholder: ex. 0.7.1
+    validations:
+      required: true
+  - type: checkboxes
+    attributes:
+      label: Additional information
+      description: Please check all the boxes that apply
+      options:
+        - label: I am using Expo
+        - label: I have read the [Troubleshooting Guide](https://github.com/margelo/react-native-quick-crypto/blob/main/docs/troubleshooting.md)
+          required: true
+        - label: I agree to follow this project's [Code of Conduct](https://github.com/margelo/react-native-quick-crypto/blob/main/CODE_OF_CONDUCT.md)
+          required: true
+        - label: I searched for similar questions [in the issues page](https://github.com/margelo/react-native-quick-crypto/issues?q=is%3Aopen+is%3Aissue+label%3A%22💭+question%22) as well as [in the discussions page](https://github.com/margelo/react-native-quick-crypto/discussions) and found none.
+          required: true
