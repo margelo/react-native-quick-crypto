@@ -1,0 +1,97 @@
+name: 🐛 Bug Report
+description: File a bug report
+title: "🐛 "
+labels: [🐛 bug]
+body:
+  - type: textarea
+    attributes:
+      label: What's happening?
+      description: Explain what you are trying to do and what happened instead. Be as precise as possible, I can't help you if I don't understand your issue.
+      placeholder: I wanted to take a picture, but the method failed with this error "[capture/photo-not-enabled] Failed to take photo, photo is not enabled!"
+    validations:
+      required: true
+  - type: textarea
+    attributes:
+      label: Reproduceable Code
+      description: >
+        Share a small reproduceable code snippet here (or the entire file if necessary).
+        Most importantly, share how you use QuickCrypto and polyfills (if any).
+        This will be automatically formatted into code, so no need for backticks.
+      render: tsx
+      placeholder: >
+        const ciphertext = await subtle.encrypt(
+          { name: 'AES-GCM', iv },
+          key as CryptoKey,
+          buf
+        );
+    validations:
+      required: true
+  - type: textarea
+    attributes:
+      label: Relevant log output
+      description: >
+        Paste any relevant **native log output** (Xcode Logs/Android Studio Logcat) here.
+        This will be automatically formatted into code, so no need for backticks.
+
+        * For iOS, run the project through Xcode and copy the logs from the log window.
+
+        * For Android, either open the project through Android Studio and paste the logs from the logcat window, or run `adb logcat` in terminal.
+      render: shell
+      placeholder: >
+        LOG  [FastEncoder] (assureJSILoaded) JSI install: Installed
+        LOG  pass: ECDSA
+        LOG  {
+          "start": "2024-07-05T19:11:33.608Z",
+          "end": "2024-07-05T19:12:21.671Z",
+          "duration": 48063,
+          "suites": 19,
+          "tests": 840,
+          "passes": 811,
+          "pending": 0,
+          "failures": 29
+        }
+        ...
+    validations:
+      required: true
+  - type: input
+    attributes:
+      label: Device
+      description: >
+        Which device are you seeing this Problem on?
+        Mention the full name of the phone, as well as the operating system and version.
+        If you have tested this on multiple devices (ex. Android and iOS) then mention all of those devices (comma separated)
+      placeholder: ex. iPhone 15 Pro (iOS 17.4)
+    validations:
+      required: true
+  - type: input
+    attributes:
+      label: QuickCrypto Version
+      description: Which version of react-native-quick-crypto are you using?
+      placeholder: ex. 0.7.1
+    validations:
+      required: true
+  - type: dropdown
+    attributes:
+      label: Can you reproduce this issue in the QuickCrypto Example app?
+      description: >
+        Try to build the example app (`example/`) and see if the issue is reproduceable here.
+        **Note:** If you don't try this in the example app, we most likely won't help you with your issue.
+      options:
+        - I didn't try (⚠️ your issue might get ignored & closed if you don't try this)
+        - Yes, I can reproduce the same issue in the Example app here
+        - No, I cannot reproduce the issue in the Example app
+      default: 0
+    validations:
+      required: true
+  - type: checkboxes
+    attributes:
+      label: Additional information
+      description: Please check all the boxes that apply
+      options:
+        - label: I am using Expo
+        - label: I have read the [Troubleshooting Guide](https://github.com/margelo/react-native-quick-crypto/blob/main/docs/troubleshooting.md)
+          required: true
+        - label: I agree to follow this project's [Code of Conduct](https://github.com/margelo/react-native-quick-crypto/blob/main/CODE_OF_CONDUCT.md)
+          required: true
+        - label: I searched for [similar issues in this repository](https://github.com/margelo/react-native-quick-crypto/issues) and found none.
+          required: true

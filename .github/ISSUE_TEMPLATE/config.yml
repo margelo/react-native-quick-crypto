@@ -1,0 +1,8 @@
+blank_issues_enabled: false
+contact_links:
+  - name: Troubleshooting Guide
+    url: https://github.com/margelo/react-native-quick-crypto/blob/main/docs/troubleshooting.md
+    about: Please read the Troubleshooting Guide before opening an issue.
+  - name: Margelo Community Discord
+    url: https://discord.gg/6CSHz2qAvA
+    about: Discuss and chat about react-native-quick-crypto or other Margelo libraries with our team or other community members. Remember to read the rules!

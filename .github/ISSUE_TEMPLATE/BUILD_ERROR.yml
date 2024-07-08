@@ -1,0 +1,102 @@
+name: 🔧 Build Error
+description: File a build error bug report
+title: "🔧 "
+labels: [🔧 build error]
+body:
+  - type: textarea
+    attributes:
+      label: How were you trying to build the app?
+      description: Explain how you tried to build the app, through Xcode, `yarn ios`, a CI, or other. Be as precise as possible, We can't help you if we don't understand your issue.
+      placeholder: I tried to build my app with react-native-quick-crypto using the `yarn ios` command, and it failed.
+    validations:
+      required: true
+  - type: textarea
+    attributes:
+      label: Full build logs
+      description: Share the full build logs that appear in the console. Make sure you don't just paste the last few lines here, but rather everything from start to end.
+      render: shell
+      placeholder: >
+        ❯ yarn ios
+        yarn run v1.22.19
+        $ react-native run-ios --simulator='iPhone 15'
+        info Found Xcode workspace "QuickCryptoExample.xcworkspace"
+        info Launching iPhone 15 (iOS 17.2)
+        info Building (using "xcodebuild -workspace QuickCryptoExample.xcworkspace -configuration Debug -scheme QuickCryptoExample -destination id=062977DD-FA41-49C3-9C36-7F15386033B9")
+        success Successfully built the app
+        2024-07-08 10:09:16.359 xcodebuild[18759:223095248]  DVTPlugInQuery: Requested but did not find extension point with identifier 'Xcode.InterfaceBuilderBuildSupport.PlatformDefinition'. This is programmer error; code should only request extension points that are defined by itself or its dependencies.
+        info Installing "/Users/me/Library/Developer/Xcode/DerivedData/QuickCryptoExample-ajgrjatepgujfrabcibqvzxedaty/Build/Products/Debug-iphonesimulator/QuickCryptoExample.app on iPhone 15"
+        info Launching "org.reactjs.native.example.QuickCryptoExample"
+        success Successfully launched the app on the simulator
+        ✨  Done in 209.29s.
+        ...
+    validations:
+      required: true
+  - type: textarea
+    attributes:
+      label: Project dependencies
+      description: Share all of your project's dependencies including their versions from `package.json`. This is useful if there are any other conflicting libraries.
+      render: json
+      placeholder: >
+        "dependencies": {
+          "react-native": "^0.74.3",
+          "react-native-quick-crypto": "^0.7.1",
+          "@craftzdog/react-native-buffer": "^6.0.5",
+          "react-native-fast-encoder": "^0.1.12",
+          "react-native-quick-base64": "^2.1.2",
+          ...
+        },
+    validations:
+      required: true
+  - type: input
+    attributes:
+      label: QuickCrypto Version
+      description: Which version of react-native-quick-crypto are you using?
+      placeholder: "0.7.1"
+    validations:
+      required: true
+  - type: dropdown
+    attributes:
+      label: Target platforms
+      description: Select the platforms where the build error occurs.
+      multiple: true
+      options:
+        - iOS
+        - Android
+    validations:
+      required: true
+  - type: dropdown
+    attributes:
+      label: Operating system
+      description: Select your operating system that you are trying to build on.
+      multiple: true
+      options:
+        - MacOS
+        - Windows
+        - Linux
+    validations:
+      required: true
+  - type: dropdown
+    attributes:
+      label: Can you build the QuickCrypto Example app?
+      description: >
+        Try to build the example app (`example/`) and see if the issue is reproduceable here.
+        **Note:** If you don't try to build the example app, I most likely won't help you with your issue.
+      options:
+        - I didn't try (⚠️ your issue might get ignored & closed if you don't try this)
+        - Yes, I can successfully build the Example app here
+        - No, I cannot build the Example app either
+      default: 0
+    validations:
+      required: true
+  - type: checkboxes
+    attributes:
+      label: Additional information
+      description: Please check all the boxes that apply
+      options:
+        - label: I am using Expo
+        - label: I have read the [Troubleshooting Guide](https://github.com/margelo/react-native-quick-crypto/blob/main/docs/troubleshooting.md)
+          required: true
+        - label: I agree to follow this project's [Code of Conduct](https://github.com/margelo/react-native-quick-crypto/blob/main/CODE_OF_CONDUCT.md)
+          required: true
+        - label: I searched for [similar issues in this repository](https://github.com/margelo/react-native-quick-crypto/issues) and found none.
+          required: true
