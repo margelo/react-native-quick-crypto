@@ -7616,9 +7616,9 @@ regjsparser@^0.9.1:
     jsesc "~0.5.0"
 
 release-it@^17.2.0:
-  version "17.4.1"
-  resolved "https://registry.yarnpkg.com/release-it/-/release-it-17.4.1.tgz#186f700064565afe5ca2265f1589fe7b8d3128ff"
-  integrity sha512-Aa48kKx5qZRVXJ6YCnCJRg6sJiofEX7RErTLmnlFbCE7k1Kg8ayhgJovofuBhCtz3FRdsYnxBKjlh+VAMeazEA==
+  version "17.5.0"
+  resolved "https://registry.yarnpkg.com/release-it/-/release-it-17.5.0.tgz#da18bf207e9cdea5b7c264474a26607f0e27c578"
+  integrity sha512-+g6k/7i6AjdCozLkcybvwgYLw/RF6bcYJHf1xDLcg36GeBu8zr/geI9joLk5drubiE/UKdN694vwAeimmJWt8Q==
   dependencies:
     "@iarna/toml" "2.2.5"
     "@octokit/rest" "20.1.1"
