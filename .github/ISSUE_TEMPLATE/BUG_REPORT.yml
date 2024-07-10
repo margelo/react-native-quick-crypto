@@ -12,9 +12,9 @@ body:
       required: true
   - type: textarea
     attributes:
-      label: Reproduceable Code
+      label: Reproducible Code
       description: >
-        Share a small reproduceable code snippet here (or the entire file if necessary).
+        Share a small reproducible code snippet here (or the entire file if necessary).
         Most importantly, share how you use QuickCrypto and polyfills (if any).
         This will be automatically formatted into code, so no need for backticks.
       render: tsx
@@ -74,7 +74,7 @@ body:
     attributes:
       label: Can you reproduce this issue in the QuickCrypto Example app?
       description: >
-        Try to build the example app (`example/`) and see if the issue is reproduceable here.
+        Try to build the example app (`example/`) and see if the issue is reproducible here.
         **Note:** If you don't try this in the example app, we most likely won't help you with your issue.
       options:
         - I didn't try (⚠️ your issue might get ignored & closed if you don't try this)
