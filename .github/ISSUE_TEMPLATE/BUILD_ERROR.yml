@@ -79,7 +79,7 @@ body:
     attributes:
       label: Can you build the QuickCrypto Example app?
       description: >
-        Try to build the example app (`example/`) and see if the issue is reproduceable here.
+        Try to build the example app (`example/`) and see if the issue is reproducible here.
         **Note:** If you don't try to build the example app, I most likely won't help you with your issue.
       options:
         - I didn't try (⚠️ your issue might get ignored & closed if you don't try this)
