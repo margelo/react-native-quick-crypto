@@ -75,7 +75,7 @@
     "@react-native/eslint-plugin": "^0.75.0-main",
     "@release-it/conventional-changelog": "^8.0.1",
     "@types/jest": "^29.5.11",
-    "@types/node": "^20.12.7",
+    "@types/node": "^22.0.0",
     "@types/react": "^18.0.33",
     "@types/readable-stream": "^4.0.11",
     "eslint": "^8.4.1",
