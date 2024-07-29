@@ -55,11 +55,15 @@ bool ApplyRSAOptions(const ManagedEVPPKey& pkey, EVP_PKEY_CTX* pkctx,
   return true;
 }
 
-std::optional<jsi::Value> Node_SignFinal(jsi::Runtime& runtime,
-                                         EVPMDPointer&& mdctx,
-                                         const ManagedEVPPKey& pkey,
-                                         int padding,
-                                         std::optional<int> pss_salt_len) {
+std::optional<MGLTypedArray<MGLTypedArrayKind::Uint8Array>> Node_SignFinal(
+    jsi::Runtime& runtime,
+    EVPMDPointer&& mdctx,
+    const ManagedEVPPKey& pkey,
+    int padding,
+    std::optional<int> pss_salt_len
+) {
+  std::optional<MGLTypedArray<MGLTypedArrayKind::Uint8Array>> ret;
+
   unsigned char m[EVP_MAX_MD_SIZE];
   unsigned int m_len;
 
@@ -81,13 +85,14 @@ std::optional<jsi::Value> Node_SignFinal(jsi::Runtime& runtime,
           &sig_len, m, m_len)) {
     CHECK_LE(sig_len, sig.size(runtime));
 
-    // do this bits need to be trimmed? I think so
+    // (osp) do these bits need to be trimmed? I think so
     //    if (sig_len == 0)
     //      sig = ArrayBuffer::NewBackingStore(env->isolate(), 0);
     //    else
     //      sig = BackingStore::Reallocate(env->isolate(), std::move(sig),
     //      sig_len);
-    return sig;
+    ret.emplace(std::move(sig));
+    return ret;
   }
 
   return {};
@@ -281,16 +286,18 @@ SignBase::SignResult SignBase::SignFinal(jsi::Runtime& runtime,
   EVPMDPointer mdctx = std::move(mdctx_);
 
   if (!ValidateDSAParameters(pkey.get())) return SignResult(kSignPrivateKey);
-
-  std::optional<jsi::Value> buffer =
+  ByteSource bs;
+  std::optional<MGLTypedArray<MGLTypedArrayKind::Uint8Array>> buffer =
       Node_SignFinal(runtime, std::move(mdctx), pkey, padding, salt_len);
   Error error = buffer.has_value() ? kSignOk : kSignPrivateKey;
-  // TODO(osp) enable this
-  //  if (error == kSignOk && dsa_sig_enc == kSigEncP1363) {
-  //    buffer = ConvertSignatureToP1363(env(), pkey, std::move(buffer));
-  //    CHECK_NOT_NULL(buffer->Data());
-  //  }
-  return SignResult(error, std::move(buffer.value()));
+  if (error == kSignOk) {
+    bs = ByteSource::FromBuffer(runtime, buffer.value().getBuffer(runtime));
+    if (dsa_sig_enc == kSigEncP1363) {
+      bs = ConvertSignatureToP1363(pkey, std::move(bs));
+    }
+    CHECK_NOT_NULL(bs.data<unsigned char>());
+  }
+  return SignResult(error, toJSI(runtime, std::move(bs)));
 }
 
 SignBase::Error SignBase::VerifyFinal(const ManagedEVPPKey& pkey,
