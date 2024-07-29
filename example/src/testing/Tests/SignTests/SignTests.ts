@@ -81,6 +81,59 @@ describe('sign/verify', () => {
     expect(matches).to.equal(true);
   });
 
+  it('ec sign/verify #387', async () => {
+    const privateKeyPem = `
+-----BEGIN PRIVATE KEY-----
+MIGTAgEAMBMGByqGSM49AgEGCCqGSM49AwEHBHkwdwIBAQQgaTunuTuxJ0oduU8A
+gchLiPEO5p8URkI0YyUlkNMR+8KgCgYIKoZIzj0DAQehRANCAAS2bcRIxh29Yf49
+8bnSu4y3bmVDiJjg0SCWD1mHN8DC5gM8uAaTdnz2IYRsvy+UAbqMc8J1xBeQanwV
+nkT8PPPD
+-----END PRIVATE KEY-----
+    `;
+
+    const publicKeyPem = `
+-----BEGIN PUBLIC KEY-----
+MFkwEwYHKoZIzj0CAQYIKoZIzj0DAQcDQgAEtm3ESMYdvWH+PfG50ruMt25lQ4iY
+4NEglg9ZhzfAwuYDPLgGk3Z89iGEbL8vlAG6jHPCdcQXkGp8FZ5E/Dzzww==
+-----END PUBLIC KEY-----
+    `;
+
+    const data = Buffer.from(
+      'lets try if we can check the crypto fun here',
+      'utf8'
+    );
+
+    // Do the signing
+
+    const signer = crypto.createSign('sha256');
+    signer.update(data);
+    const signature = signer.sign({
+      key: privateKeyPem,
+      format: 'pem',
+      type: 'pkcs8',
+      dsaEncoding: 'ieee-p1363',
+    });
+
+    console.log(signature.toString('base64'));
+    console.log('Signature length', signature.length);
+
+    // Do verify
+
+    const verifier = crypto.createVerify('sha256');
+    verifier.update(data);
+    const success = verifier.verify(
+      {
+        key: publicKeyPem,
+        format: 'pem',
+        type: 'spki',
+        dsaEncoding: 'ieee-p1363',
+      },
+      signature
+    );
+
+    expect(success).to.equal(true);
+  });
+
   // // We need to monkey patch sscrypto to use all the crypto functions from quick-crypto
   // it('simple sscrypto sign/verify', async () => {
   //   const clearText = 'This is clear text';

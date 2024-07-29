@@ -188,14 +188,18 @@ export enum KeyEncoding {
   kKeyEncodingSEC1,
 }
 
+export type DSAEncoding = 'der' | 'ieee-p1363';
+
 export type EncodingOptions = {
   key?: any;
   type?: KType;
   encoding?: string;
+  dsaEncoding?: DSAEncoding;
   format?: KFormat;
   padding?: number;
   cipher?: string;
   passphrase?: string | ArrayBuffer;
+  saltLength?: number;
 };
 
 export type AsymmetricKeyType = 'rsa' | 'rsa-pss' | 'dsa' | 'ec' | undefined;
