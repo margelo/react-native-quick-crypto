@@ -10,6 +10,7 @@ import '../testing/Tests/HmacTests/HmacTests';
 import '../testing/Tests/HashTests/HashTests';
 import '../testing/Tests/CipherTests/CipherTestFirst';
 import '../testing/Tests/CipherTests/CipherTestSecond';
+import '../testing/Tests/CipherTests/test398';
 import '../testing/Tests/CipherTests/PublicCipherTests';
 import '../testing/Tests/CipherTests/generateKey';
 import '../testing/Tests/CipherTests/GenerateKeyPairTests';

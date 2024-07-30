@@ -96,7 +96,7 @@ FieldDefinition getPublicCipherFieldDefinition(
                 runtime, pkey, padding, digest, arguments[offset + 3], buf);
 
         if (!out.has_value()) {
-          throw jsi::JSError(runtime, "Failed to decrypt");
+          throw jsi::JSError(runtime, "Failed Cipher Operation - " + name);
         }
 
         return out.value().getObject(runtime);
