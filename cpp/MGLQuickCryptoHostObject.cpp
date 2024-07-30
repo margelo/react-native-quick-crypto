@@ -63,26 +63,29 @@ MGLQuickCryptoHostObject::MGLQuickCryptoHostObject(
   // publicEncrypt
   this->fields.push_back(
       getPublicCipherFieldDefinition<MGLPublicCipher::kPublic,
-                                     EVP_PKEY_encrypt_init, EVP_PKEY_encrypt>(
+                                    EVP_PKEY_encrypt_init,
+                                    EVP_PKEY_encrypt>(
           "publicEncrypt", jsCallInvoker, workerQueue));
 
   // privateDecrypt
   this->fields.push_back(
       getPublicCipherFieldDefinition<MGLPublicCipher::kPrivate,
-                                     EVP_PKEY_decrypt_init, EVP_PKEY_decrypt>(
+                                    EVP_PKEY_decrypt_init,
+                                    EVP_PKEY_decrypt>(
           "privateDecrypt", jsCallInvoker, workerQueue));
 
   // privateEncrypt
   this->fields.push_back(
       getPublicCipherFieldDefinition<MGLPublicCipher::kPrivate,
-                                     EVP_PKEY_sign_init, EVP_PKEY_sign>(
+                                    EVP_PKEY_sign_init,
+                                    EVP_PKEY_sign>(
           "privateEncrypt", jsCallInvoker, workerQueue));
 
   // publicDecrypt
   this->fields.push_back(
       getPublicCipherFieldDefinition<MGLPublicCipher::kPublic,
-                                     EVP_PKEY_verify_recover_init,
-                                     EVP_PKEY_verify_recover>(
+                                    EVP_PKEY_verify_recover_init,
+                                    EVP_PKEY_verify_recover>(
           "publicDecrypt", jsCallInvoker, workerQueue));
 
   // generateKeyPair
