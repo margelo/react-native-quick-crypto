@@ -4,7 +4,7 @@ import {
   isStringOrBuffer,
   type BufferLike,
   type TypedArray,
-} from './Utils';
+} from './utils';
 import type { KeyObjectHandle } from './NativeQuickCrypto/webcrypto';
 import { NativeQuickCrypto } from './NativeQuickCrypto/NativeQuickCrypto';
 import type { KeyPairKey } from './Cipher';

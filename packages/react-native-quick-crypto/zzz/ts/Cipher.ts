@@ -13,7 +13,7 @@ import {
   validateUint32,
   validateInt32,
   type BinaryLikeNode,
-} from './Utils';
+} from './utils';
 import { type InternalCipher, KeyVariant } from './NativeQuickCrypto/Cipher';
 import type {
   CipherCCMOptions,

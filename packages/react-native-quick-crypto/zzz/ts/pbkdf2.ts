@@ -7,7 +7,7 @@ import {
   bufferLikeToArrayBuffer,
   normalizeHashName,
   HashContext,
-} from './Utils';
+} from './utils';
 import type { CryptoKey, HashAlgorithm, SubtleAlgorithm } from './keys';
 import { promisify } from 'util';
 

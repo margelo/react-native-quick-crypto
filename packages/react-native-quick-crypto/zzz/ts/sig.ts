@@ -13,7 +13,7 @@ import {
   type BinaryLike,
   binaryLikeToArrayBuffer,
   getDefaultEncoding,
-} from './Utils';
+} from './utils';
 import {
   preparePrivateKey,
   preparePublicOrPrivateKey,

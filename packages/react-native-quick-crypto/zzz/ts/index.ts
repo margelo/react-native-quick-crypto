@@ -1,6 +1,6 @@
 import { Buffer } from '@craftzdog/react-native-buffer';
 import * as pbkdf2 from './pbkdf2';
-import * as random from './random';
+import * as random from '../../src/ts/random';
 import {
   createCipher,
   createCipheriv,
@@ -18,7 +18,7 @@ import { createHmac } from './Hmac';
 import { createHash } from './Hash';
 import { constants } from './constants';
 import { subtle } from './subtle';
-import { getCiphers, getHashes } from './Utils';
+import { getCiphers, getHashes } from './utils';
 import webcrypto from './webcrypto';
 import { createPrivateKey, createPublicKey, createSecretKey } from './keys';
 

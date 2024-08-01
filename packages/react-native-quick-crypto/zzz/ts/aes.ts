@@ -7,7 +7,7 @@ import {
   validateByteLength,
   validateMaxBufferLength,
   bufferLikeToArrayBuffer,
-} from './Utils';
+} from './utils';
 import {
   type ImportFormat,
   type SubtleAlgorithm,

@@ -13,7 +13,7 @@ import {
   bigIntArrayToUnsignedInt,
   validateMaxBufferLength,
   bufferLikeToArrayBuffer,
-} from './Utils';
+} from './utils';
 import {
   CryptoKey,
   PrivateKeyObject,

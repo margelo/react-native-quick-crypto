@@ -1,5 +1,5 @@
 import type { GenerateKeyPairReturn } from '../Cipher';
-import type { BinaryLike } from '../Utils';
+import type { BinaryLike } from '../utils';
 import type { Buffer } from '@craftzdog/react-native-buffer';
 import type {
   EncodingOptions,

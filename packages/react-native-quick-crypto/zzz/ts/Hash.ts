@@ -7,10 +7,10 @@ import {
   normalizeHashName,
   type BufferLike,
   bufferLikeToArrayBuffer,
-} from './Utils';
+} from './utils';
 import Stream from 'readable-stream';
 import { Buffer } from '@craftzdog/react-native-buffer';
-import { lazyDOMException } from './Utils';
+import { lazyDOMException } from './utils';
 import type { SubtleAlgorithm } from './keys';
 
 interface HashOptionsBase extends Stream.TransformOptions {

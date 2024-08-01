@@ -5,7 +5,7 @@ import {
   toArrayBuffer,
   type BinaryLike,
   binaryLikeToArrayBuffer,
-} from './Utils';
+} from './utils';
 import Stream from 'readable-stream';
 import { Buffer } from '@craftzdog/react-native-buffer';
 

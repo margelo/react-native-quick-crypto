@@ -23,7 +23,7 @@ import {
   type Operation,
   validateMaxBufferLength,
   bufferLikeToArrayBuffer,
-} from './Utils';
+} from './utils';
 import { ecImportKey, ecExportKey, ecGenerateKey, ecdsaSignVerify } from './ec';
 import { pbkdf2DeriveBits } from './pbkdf2';
 import { asyncDigest } from './Hash';

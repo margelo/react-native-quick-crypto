@@ -1,5 +1,5 @@
 import { NativeQuickCrypto } from './NativeQuickCrypto/NativeQuickCrypto';
-import { lazyDOMException, validateFunction } from './Utils';
+import { lazyDOMException, validateFunction } from './utils';
 import { kAesKeyLengths } from './aes';
 import {
   SecretKeyObject,

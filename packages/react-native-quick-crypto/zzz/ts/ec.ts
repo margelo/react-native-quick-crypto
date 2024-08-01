@@ -12,7 +12,7 @@ import {
   ab2str,
   getUsagesUnion,
   normalizeHashName,
-} from './Utils';
+} from './utils';
 import {
   type ImportFormat,
   type SubtleAlgorithm,
