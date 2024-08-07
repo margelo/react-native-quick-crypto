@@ -1,26 +1,6 @@
 import { ab2str, abvToArrayBuffer } from './../../../../../packages/react-native-quick-crypto/src/utils/conversion';
 import { ArrayBufferView } from './../../../../../packages/react-native-quick-crypto/src/utils/types';
 // copied from https://github.com/nodejs/node/blob/master/test/parallel/test-crypto-random.js
-// Copyright Joyent, Inc. and other Node contributors.
-//
-// Permission is hereby granted, free of charge, to any person obtaining a
-// copy of this software and associated documentation files (the
-// "Software"), to deal in the Software without restriction, including
-// without limitation the rights to use, copy, modify, merge, publish,
-// distribute, sublicense, and/or sell copies of the Software, and to permit
-// persons to whom the Software is furnished to do so, subject to the
-// following conditions:
-//
-// The above copyright notice and this permission notice shall be included
-// in all copies or substantial portions of the Software.
-//
-// THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS
-// OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF
-// MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN
-// NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM,
-// DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR
-// OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE
-// USE OR OTHER DEALINGS IN THE SOFTWARE.
 
 // Flags: --pending-deprecation
 import crypto from 'react-native-quick-crypto';
@@ -31,8 +11,8 @@ import type { Done } from 'mocha';
 
 describe('random', () => {
 
-  // TODO (Szymon)
   [crypto.randomBytes, crypto.pseudoRandomBytes].forEach((f) => {
+    // TODO (Szymon)
     // [undefined, null, false, true, {}, []].forEach((value) => {
     //   const errObj = {
     //     code: 'ERR_INVALID_ARG_TYPE',
@@ -75,14 +55,14 @@ describe('random', () => {
     });
   });
 
-  it('simple test (do sth)', () => {
+  it('simple test 1', () => {
     const buf = Buffer.alloc(10);
     const before = buf.toString('hex');
     const after = crypto.randomFillSync(buf).toString('hex');
     assert.notStrictEqual(before, after);
   });
 
-  it('simple test (do sth) 2', () => {
+  it('simple test 2', () => {
     const buf = new Uint8Array(new Array(10).fill(0));
     const before = Buffer.from(buf).toString('hex');
     crypto.randomFillSync(buf);
@@ -90,7 +70,7 @@ describe('random', () => {
     assert.notStrictEqual(before, after);
   });
 
-  it('simple test (do sth) 3', () => {
+  it('simple test 3', () => {
     [
       new Uint16Array(10),
       new Uint32Array(10),
@@ -105,7 +85,7 @@ describe('random', () => {
     });
   });
 
-  it('simple test (do sth) 4 - random Fill Sync AB', () => {
+  it('simple test 4 - randomFillSync ArrayBuffer', () => {
     [new ArrayBuffer(10), new ArrayBuffer(10)].forEach((buf) => {
       const before = Buffer.from(buf).toString('hex');
       crypto.randomFillSync(buf);
@@ -114,7 +94,7 @@ describe('random', () => {
     });
   });
 
-  it('simple test (do sth) 5- random Fill ', (done: Done) => {
+  it('simple test 5 - randomFill Buffer ', (done: Done) => {
     const buf = Buffer.alloc(10);
     const before = buf.toString('hex');
 
@@ -129,7 +109,7 @@ describe('random', () => {
     });
   });
 
-  it('simple test (do sth) 6 ', (done: Done) => {
+  it('simple test 6', (done: Done) => {
     const buf = new Uint8Array(new Array(10).fill(0));
     const before = Buffer.from(buf).toString('hex');
 
@@ -152,7 +132,7 @@ describe('random', () => {
     [new DataView(new ArrayBuffer(10)), 'DataView'],
   ];
   bufs.forEach(([buf, name]) => {
-    it(`simple test (do sth) 7, ${name}`, (done: Done) => {
+    it(`simple test 7, ${name}`, (done: Done) => {
       const ab = abvToArrayBuffer(buf);
       const before = ab2str(ab);
 
@@ -168,7 +148,7 @@ describe('random', () => {
     });
   });
 
-  it('simple test (do sth) 8', (done: Done) => {
+  it('simple test 8', (done: Done) => {
     let ctr = 0;
     [new ArrayBuffer(10), new ArrayBuffer(10)].forEach((buf) => {
       const before = Buffer.from(buf).toString('hex');
@@ -366,13 +346,13 @@ describe('random', () => {
   //   });
   // });
 
-  // TODO I suppose this is checking the functions are there, but why the configurable and enumerable checks?
   ['pseudoRandomBytes', 'prng', 'rng'].forEach((name) => {
     it(name, () => {
       const desc = Object.getOwnPropertyDescriptor(crypto, name);
       assert.ok(desc, 'descriptor');
       assert.strictEqual(desc?.configurable, true, `${name} configurable`);
-      // assert.strictEqual(desc?.enumerable, false, `${name} enumerable`); // TODO: re-enable this?
+      // TODO: re-enable this?
+      // assert.strictEqual(desc?.enumerable, false, `${name} enumerable`);
     });
   });
 
