@@ -30,7 +30,7 @@ import { assert } from 'chai';
 import type { Done } from 'mocha';
 
 describe('random', () => {
-  /*
+
   // TODO (Szymon)
   [crypto.randomBytes, crypto.pseudoRandomBytes].forEach((f) => {
     // [undefined, null, false, true, {}, []].forEach((value) => {
@@ -220,7 +220,7 @@ describe('random', () => {
 
     crypto.randomFill(buf, 5, 5, (_err, res) => {
       try {
-        const after = res.toString('hex');
+        const after = Buffer.from(res).toString('hex');
         assert.notStrictEqual(before, after, 'before/after');
         assert.deepStrictEqual(before.slice(0, 5), after.slice(0, 5), 'before/after slices');
         done();
@@ -375,7 +375,7 @@ describe('random', () => {
       // assert.strictEqual(desc?.enumerable, false, `${name} enumerable`); // TODO: re-enable this?
     });
   });
-  */
+
   it('randomInt - Asynchronous API', (done: Done) => {
     const randomInts: number[] = [];
     let failed = false;
@@ -418,7 +418,7 @@ describe('random', () => {
     assert.ok(randomInts.includes(2), 'includes(2)');
     assert.ok(!randomInts.includes(3), 'includes(3)');
   });
-  /*
+
   it('randomInt positive range', (done: Done) => {
     const randomInts: number[] = [];
     let failed = false;
@@ -621,5 +621,5 @@ describe('random', () => {
       done();
     });
   });
-  */
+
 });

@@ -59,7 +59,6 @@ export function randomFill(buffer: ArrayBufferView, ...rest: any[]): void {
   random.randomFill(abvToArrayBuffer(buffer), offset, size)
     .then(
       (res: ArrayBuffer) => {
-        buffer = res;
         callback(null, res);
       },
       (e: Error) => {
@@ -104,11 +103,11 @@ export function randomBytes(
     return buf;
   }
 
-  randomFill(buf.buffer, 0, size, (error: Error | null) => {
+  randomFill(buf.buffer, 0, size, (error: Error | null, res: ArrayBuffer) => {
     if (error) {
       callback(error);
     }
-    callback(null, buf);
+    callback(null, Buffer.from(res));
   });
 }
 
@@ -131,7 +130,7 @@ const RAND_MAX = 0xffffffffffff;
 
 // Cache random data to use in randomInt. The cache size must be evenly
 // divisible by 6 because each attempt to obtain a random int uses 6 bytes.
-const randomCache = new Buffer(6 * 1024);
+let randomCache = new Buffer(6 * 1024);
 let randomCacheOffset = randomCache.length;
 let asyncCacheFillInProgress = false;
 const asyncCachePendingTasks: Task[] = [];
@@ -242,13 +241,15 @@ function asyncRefillRandomIntCache() {
   if (asyncCacheFillInProgress) return;
 
   asyncCacheFillInProgress = true;
-  randomFill(randomCache, (err) => {
-    console.log('randomCache after', randomCache.toString('hex'));
+  randomFill(randomCache, (err, res) => {
     asyncCacheFillInProgress = false;
 
     const tasks = asyncCachePendingTasks;
     const errorReceiver = err && tasks.shift();
-    if (!err) randomCacheOffset = 0;
+    if (!err) {
+      randomCache = Buffer.from(res);
+      randomCacheOffset = 0;
+    }
 
     // Restart all pending tasks. If an error occurred, we only notify a single
     // callback (errorReceiver) about it. This way, every async call to
