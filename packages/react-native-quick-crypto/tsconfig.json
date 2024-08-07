@@ -1,8 +1,8 @@
 {
   "compilerOptions": {
-    "paths": {
-      "react-native-quick-crypto": ["./src/index"]
-    },
+    "composite": true,
+    "outDir": "lib",
+    "rootDir": "src",
     "allowUnreachableCode": false,
     "allowUnusedLabels": false,
     "esModuleInterop": true,
@@ -11,6 +11,7 @@
     "lib": ["esnext"],
     "module": "esnext",
     "moduleResolution": "node",
+    "noEmit": false,
     "noFallthroughCasesInSwitch": true,
     "noImplicitReturns": true,
     "noImplicitUseStrict": false,
@@ -23,11 +24,6 @@
     "strict": true,
     "target": "esnext",
     "verbatimModuleSyntax": true,
-    "declaration": true,
-    "declarationMap": true,
-    "sourceMap": true,
-    "allowSyntheticDefaultImports": true
   },
-  "include": ["src"],
-  "exclude": ["node_modules", "lib", "docs", "example"]
+  "include": ["src"]
 }

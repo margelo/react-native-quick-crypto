@@ -1,6 +1,6 @@
 import { Buffer } from '@craftzdog/react-native-buffer';
 import * as pbkdf2 from './pbkdf2';
-import * as random from '../../src/ts/random';
+import * as random from './random';
 import {
   createCipher,
   createCipheriv,

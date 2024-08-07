@@ -1,0 +1,15 @@
+{
+  "version": "v1",
+  "packages": {
+    "react-native-nitro-modules": {
+      "signature": "f69b53be06809c7cdefbd90588d2244a",
+      "file": true,
+      "replaced": "workspace:*"
+    },
+    "nitro-codegen": {
+      "signature": "114966d35cb0c3413bc7390f946068c5",
+      "file": true,
+      "replaced": "workspace:*"
+    }
+  }
+}

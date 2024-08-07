@@ -1,6 +1,6 @@
 import React from 'react';
 import { View, Text, StyleSheet, TouchableOpacity } from 'react-native';
-import Checkbox from '@react-native-community/checkbox';
+import BouncyCheckbox from "react-native-bouncy-checkbox";
 import type { TestResult } from '../types/TestResults';
 import { useNavigation } from '@react-navigation/native';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
@@ -38,11 +38,13 @@ export const TestItem: React.FC<TestItemProps> = ({
 
   return (
     <View style={styles.container}>
-      <Checkbox
-        value={value}
-        onValueChange={() => {
+      <BouncyCheckbox
+        isChecked={value}
+        onPress={() => {
           onToggle(description);
         }}
+        disableText={true}
+        fillColor='#1976d2'
         style={styles.checkbox}
       />
       <TouchableOpacity

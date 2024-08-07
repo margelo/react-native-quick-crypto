@@ -26,8 +26,10 @@ const styles = StyleSheet.create({
     borderRadius: 5,
     alignContent: 'center',
     justifyContent: 'center',
+    minWidth: 100,
   },
   label: {
     color: 'white',
+    alignSelf: 'center',
   },
 });

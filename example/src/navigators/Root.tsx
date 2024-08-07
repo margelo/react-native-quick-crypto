@@ -2,7 +2,11 @@ import React from 'react';
 import { NavigationContainer } from '@react-navigation/native';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import type { RootStackParamList } from './RootProps';
+import { enableFreeze } from "react-native-screens";
+import { TestingScreen } from './children/TestingScreen/TestingScreen';
+import { Entry } from './children/Entry/Entry';
 
+enableFreeze(true);
 const Stack = createNativeStackNavigator<RootStackParamList>();
 
 export const Root: React.FC = () => {
@@ -11,32 +15,18 @@ export const Root: React.FC = () => {
       <Stack.Navigator>
         <Stack.Screen
           name="Entry"
-          options={{
-            title: 'Test Suites',
-          }}
-          getComponent={() => {
-            const { Entry } = require('./children/Entry/Entry');
-            return Entry;
-          }}
+          component={ Entry }
+          options={{ title: 'Test Suites' }}
         />
-        <Stack.Screen
+        {/* <Stack.Screen
           name="Benchmarks"
-          getComponent={() => {
-            const { Benchmarks } = require('./children/benchmarks/Benchmarks');
-            return Benchmarks;
-          }}
-        />
+          component={ Benchmarks }
+          options={{ title: 'Benchmarks' }}
+        /> */}
         <Stack.Screen
           name="TestingScreen"
-          options={{
-            title: 'Tests',
-          }}
-          getComponent={() => {
-            const {
-              TestingScreen,
-            } = require('./children/TestingScreen/TestingScreen');
-            return TestingScreen;
-          }}
+          component={ TestingScreen }
+          options={{ title: 'Tests' }}
         />
       </Stack.Navigator>
     </NavigationContainer>

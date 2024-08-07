@@ -52,12 +52,12 @@ export const Entry: React.FC<EntryProps> = ({}: EntryProps) => {
             runTests(tests);
           }}
         />
-        <Button
+        {/* <Button
           title="Benchmarks"
           onPress={() => {
             navigation.navigate('Benchmarks');
           }}
-        />
+        /> */}
       </View>
     </SafeAreaView>
   );

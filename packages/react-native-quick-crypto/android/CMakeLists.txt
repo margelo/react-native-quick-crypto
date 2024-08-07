@@ -1,7 +1,7 @@
-project(ReactNativeQuickCrypto)
+project(QuickCrypto)
 cmake_minimum_required(VERSION 3.10.2)
 
-set(PACKAGE_NAME "reactnativequickcrypto")
+set(PACKAGE_NAME "QuickCrypto")
 set(BUILD_DIR ${CMAKE_SOURCE_DIR}/build)
 set(CMAKE_VERBOSE_MAKEFILE ON)
 set(CMAKE_CXX_STANDARD 17)
@@ -19,33 +19,6 @@ add_library(
   ${PACKAGE_NAME}
   SHARED
   "src/main/cpp/cpp-adapter.cpp"
-  "../cpp/MGLQuickCryptoHostObject.cpp"
-  "../cpp/JSIUtils/MGLTypedArray.cpp"
-  "../cpp/Utils/MGLDispatchQueue.cpp"
-  "../cpp/JSIUtils/MGLThreadAwareHostObject.cpp"
-  "../cpp/JSIUtils/MGLSmartHostObject.cpp"
-  "../cpp/HMAC/MGLHmacInstaller.cpp"
-  "../cpp/HMAC/MGLHmacHostObject.cpp"
-  "../cpp/fastpbkdf2/MGLPbkdf2HostObject.cpp"
-  "../cpp/fastpbkdf2/fastpbkdf2.c"
-  "../cpp/Random/MGLRandomHostObject.cpp"
-  "../cpp/Hash/MGLHashInstaller.cpp"
-  "../cpp/Hash/MGLHashHostObject.cpp"
-  "../cpp/Cipher/MGLCipherHostObject.cpp"
-  "../cpp/Cipher/MGLCreateCipherInstaller.cpp"
-  "../cpp/Cipher/MGLCreateDecipherInstaller.cpp"
-  "../cpp/MGLKeys.cpp"
-  "../cpp/Utils/MGLUtils.cpp"
-  "../cpp/Cipher/MGLRsa.cpp"
-  "../cpp/Cipher/MGLGenerateKeyPairInstaller.cpp"
-  "../cpp/Cipher/MGLGenerateKeyPairSyncInstaller.cpp"
-  "../cpp/Sig/MGLSignInstaller.cpp"
-  "../cpp/Sig/MGLVerifyInstaller.cpp"
-  "../cpp/Sig/MGLSignHostObjects.cpp"
-  "../cpp/webcrypto/MGLWebCrypto.cpp"
-  "../cpp/webcrypto/crypto_aes.cpp"
-  "../cpp/webcrypto/crypto_ec.cpp"
-  "../cpp/webcrypto/crypto_keygen.cpp"
 )
 
 target_include_directories(

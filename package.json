@@ -1,14 +1,19 @@
 {
   "scripts": {
-    "example": "yarn workspace react-native-quick-crypto-example",
-    "bootstrap": "yarn workspace react-native-quick-crypto install && yarn workspace react-native-quick-crypto-example install && yarn workspace react-native-quick-crypto-example pods && yarn tsc",
-    "tsc": "yarn workspace react-native-quick-crypto tsc",
-    "lint": "yarn workspace react-native-quick-crypto lint",
-    "postinstall": "yarn tsc"
+    "check-all": "./scripts/clang-format.sh",
+    "install_tsc": "bun --filter=\"**\" install && bun tsc",
+    "nitro": "cd packages/react-native-quick-crypto && bunx nitro-codegen",
+    "pods": "bun --filter=\"react-native-quick-crypto-example\" pods",
+    "example": "cd example && bun start",
+    "bootstrap": "bun install_tsc && bun nitro && bun pods && bun example",
+    "tsc": "bun --filter=\"**\" typescript",
+    "lint": "bun --filter=\"**\" lint",
+    "release": "bun --filter=\"react-native-quick-crypto\" release && release-it",
+    "postinstall": "bun tsc"
   },
   "workspaces": [
     "packages/*",
     "example"
   ],
-  "packageManager": "yarn@3.6.4"
+  "packageManager": "bun@1.1.21"
 }

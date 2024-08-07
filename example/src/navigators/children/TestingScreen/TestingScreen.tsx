@@ -2,20 +2,24 @@ import React, { useState } from 'react';
 import type { RootStackParamList } from '../../RootProps';
 import type { NativeStackScreenProps } from '@react-navigation/native-stack';
 import { SafeAreaView, ScrollView, StyleSheet, Text, View } from 'react-native';
-import Checkbox from '@react-native-community/checkbox';
+import BouncyCheckbox from 'react-native-bouncy-checkbox';
 import { CorrectResultItem } from '../../../components/CorrectResultItem';
 import { IncorrectResultItem } from '../../../components/IncorrectResultItem';
 import { Suite } from '../../../components/Suite';
+import { TestResult } from '../../../types/TestResults';
 
 type TestingScreenProps = NativeStackScreenProps<
   RootStackParamList,
   'TestingScreen'
 >;
 
-export const TestingScreen: React.FC<TestingScreenProps> = ({
-  route,
-}: TestingScreenProps) => {
-  const { results, suiteName } = route.params;
+type TestingScreenRouteParams = {
+  results: TestResult[];
+  suiteName: string;
+};
+
+export const TestingScreen = ({ route }: TestingScreenProps) => {
+  const { results, suiteName }: TestingScreenRouteParams = route.params;
   const [showFailed, setShowFailed] = useState<boolean>(true);
   const [showPassed, setShowPassed] = useState<boolean>(true);
 
@@ -26,16 +30,20 @@ export const TestingScreen: React.FC<TestingScreenProps> = ({
       </View>
       <View style={styles.showMenu}>
         <View style={styles.showMenuItem}>
-          <Checkbox
-            value={showFailed}
-            onValueChange={() => setShowFailed(!showFailed)}
+          <BouncyCheckbox
+            isChecked={showFailed}
+            onPress={() => setShowFailed(!showFailed)}
+            disableText={true}
+            fillColor='red'
           />
           <Text style={styles.showMenuLabel}>Show Failed</Text>
         </View>
         <View style={styles.showMenuItem}>
-          <Checkbox
-            value={showPassed}
-            onValueChange={() => setShowPassed(!showPassed)}
+          <BouncyCheckbox
+            isChecked={showPassed}
+            onPress={() => setShowPassed(!showPassed)}
+            disableText={true}
+            fillColor='green'
           />
           <Text style={styles.showMenuLabel}>Show Passed</Text>
         </View>
@@ -44,7 +52,7 @@ export const TestingScreen: React.FC<TestingScreenProps> = ({
         style={styles.scroll}
         contentContainerStyle={styles.scrollContent}
       >
-        {results.map((it, index) => {
+        {results.map((it, index: number) => {
           let InnerElement = <View />;
           if (showPassed && it.type === 'correct') {
             InnerElement = (
@@ -62,7 +70,7 @@ export const TestingScreen: React.FC<TestingScreenProps> = ({
             );
           }
           if (it.type === 'grouping') {
-            InnerElement = <Suite description={it.description} />;
+            InnerElement = <Suite key={index} description={it.description} />;
           }
           return InnerElement;
         })}
