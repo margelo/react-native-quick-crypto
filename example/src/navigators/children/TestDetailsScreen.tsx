@@ -1,25 +1,23 @@
-import React, { useState } from 'react';
-import type { RootStackParamList } from '../../RootProps';
-import type { NativeStackScreenProps } from '@react-navigation/native-stack';
-import { SafeAreaView, ScrollView, StyleSheet, Text, View } from 'react-native';
+import React, {useState} from 'react';
+import type {NativeStackScreenProps} from '@react-navigation/native-stack';
+import {SafeAreaView, ScrollView, StyleSheet, Text, View} from 'react-native';
 import BouncyCheckbox from 'react-native-bouncy-checkbox';
-import { CorrectResultItem } from '../../../components/CorrectResultItem';
-import { IncorrectResultItem } from '../../../components/IncorrectResultItem';
-import { Suite } from '../../../components/Suite';
-import { TestResult } from '../../../types/TestResults';
+import {CorrectResultItem} from '../../components/CorrectResultItem';
+import {IncorrectResultItem} from '../../components/IncorrectResultItem';
+import {Suite} from '../../components/Suite';
+import {TestResult} from '../../types/Results';
 
-type TestingScreenProps = NativeStackScreenProps<
-  RootStackParamList,
-  'TestingScreen'
->;
+type TestDetailsScreenProps = {
+  route: any;
+};
 
-type TestingScreenRouteParams = {
+type RouteParams = {
   results: TestResult[];
   suiteName: string;
 };
 
-export const TestingScreen = ({ route }: TestingScreenProps) => {
-  const { results, suiteName }: TestingScreenRouteParams = route.params;
+export const TestDetailsScreen = ({route}: TestDetailsScreenProps) => {
+  const {results, suiteName}: RouteParams = route.params;
   const [showFailed, setShowFailed] = useState<boolean>(true);
   const [showPassed, setShowPassed] = useState<boolean>(true);
 
@@ -34,7 +32,7 @@ export const TestingScreen = ({ route }: TestingScreenProps) => {
             isChecked={showFailed}
             onPress={() => setShowFailed(!showFailed)}
             disableText={true}
-            fillColor='red'
+            fillColor="red"
           />
           <Text style={styles.showMenuLabel}>Show Failed</Text>
         </View>
@@ -43,17 +41,16 @@ export const TestingScreen = ({ route }: TestingScreenProps) => {
             isChecked={showPassed}
             onPress={() => setShowPassed(!showPassed)}
             disableText={true}
-            fillColor='green'
+            fillColor="green"
           />
           <Text style={styles.showMenuLabel}>Show Passed</Text>
         </View>
       </View>
       <ScrollView
         style={styles.scroll}
-        contentContainerStyle={styles.scrollContent}
-      >
+        contentContainerStyle={styles.scrollContent}>
         {results.map((it, index: number) => {
-          let InnerElement = <View />;
+          let InnerElement = <View key={index} />;
           if (showPassed && it.type === 'correct') {
             InnerElement = (
               <CorrectResultItem key={index} description={it.description} />

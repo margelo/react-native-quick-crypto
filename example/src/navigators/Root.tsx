@@ -1,34 +1,39 @@
 import React from 'react';
-import { NavigationContainer } from '@react-navigation/native';
-import { createNativeStackNavigator } from '@react-navigation/native-stack';
-import type { RootStackParamList } from './RootProps';
-import { enableFreeze } from "react-native-screens";
-import { TestingScreen } from './children/TestingScreen/TestingScreen';
-import { Entry } from './children/Entry/Entry';
+import {NavigationContainer} from '@react-navigation/native';
+import {enableFreeze} from 'react-native-screens';
+import {TestStack} from './children/TestStack';
+import {BenchmarkSuitesScreen} from './children/BenchmarkSuitesScreen';
+import {createBottomTabNavigator} from '@react-navigation/bottom-tabs';
+import Icon from 'react-native-vector-icons/MaterialCommunityIcons';
 
 enableFreeze(true);
-const Stack = createNativeStackNavigator<RootStackParamList>();
+const Tab = createBottomTabNavigator();
 
 export const Root: React.FC = () => {
   return (
     <NavigationContainer>
-      <Stack.Navigator>
-        <Stack.Screen
-          name="Entry"
-          component={ Entry }
-          options={{ title: 'Test Suites' }}
+      <Tab.Navigator initialRouteName="Benchmarks">
+        <Tab.Screen
+          name="Tests"
+          component={TestStack}
+          options={{
+            headerShown: false,
+            tabBarIcon: ({color}) => (
+              <Icon name="test-tube" size={24} color={color} />
+            ),
+          }}
         />
-        {/* <Stack.Screen
+        <Tab.Screen
           name="Benchmarks"
-          component={ Benchmarks }
-          options={{ title: 'Benchmarks' }}
-        /> */}
-        <Stack.Screen
-          name="TestingScreen"
-          component={ TestingScreen }
-          options={{ title: 'Tests' }}
+          component={BenchmarkSuitesScreen}
+          options={{
+            title: 'Benchmarks',
+            tabBarIcon: ({color}) => (
+              <Icon name="timer" size={24} color={color} />
+            ),
+          }}
         />
-      </Stack.Navigator>
+      </Tab.Navigator>
     </NavigationContainer>
   );
 };

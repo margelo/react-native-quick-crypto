@@ -7,7 +7,7 @@ PODS:
   - hermes-engine (0.74.5):
     - hermes-engine/Pre-built (= 0.74.5)
   - hermes-engine/Pre-built (0.74.5)
-  - NitroModules (0.1.7):
+  - NitroModules (0.2.0):
     - DoubleConversion
     - glog
     - hermes-engine
@@ -29,7 +29,7 @@ PODS:
     - ReactCommon/turbomodule/core
     - Yoga
   - OpenSSL-Universal (3.2.2000)
-  - QuickCrypto (0.7.2):
+  - QuickCrypto (1.0.0-rc.0):
     - DoubleConversion
     - glog
     - hermes-engine
@@ -1341,6 +1341,27 @@ PODS:
     - ReactCommon/turbomodule/bridging
     - ReactCommon/turbomodule/core
     - Yoga
+  - RNVectorIcons (10.1.0):
+    - DoubleConversion
+    - glog
+    - hermes-engine
+    - RCT-Folly (= 2024.01.01.00)
+    - RCTRequired
+    - RCTTypeSafety
+    - React-Codegen
+    - React-Core
+    - React-debug
+    - React-Fabric
+    - React-featureflags
+    - React-graphics
+    - React-ImageManager
+    - React-NativeModulesApple
+    - React-RCTFabric
+    - React-rendererdebug
+    - React-utils
+    - ReactCommon/turbomodule/bridging
+    - ReactCommon/turbomodule/core
+    - Yoga
   - SocketRocket (0.7.0)
   - Yoga (0.0.0)
 
@@ -1405,6 +1426,7 @@ DEPENDENCIES:
   - React-utils (from `../../node_modules/react-native/ReactCommon/react/utils`)
   - ReactCommon/turbomodule/core (from `../../node_modules/react-native/ReactCommon`)
   - RNScreens (from `../../node_modules/react-native-screens`)
+  - RNVectorIcons (from `../../node_modules/react-native-vector-icons`)
   - Yoga (from `../../node_modules/react-native/ReactCommon/yoga`)
 
 SPEC REPOS:
@@ -1530,6 +1552,8 @@ EXTERNAL SOURCES:
     :path: "../../node_modules/react-native/ReactCommon"
   RNScreens:
     :path: "../../node_modules/react-native-screens"
+  RNVectorIcons:
+    :path: "../../node_modules/react-native-vector-icons"
   Yoga:
     :path: "../../node_modules/react-native/ReactCommon/yoga"
 
@@ -1540,9 +1564,9 @@ SPEC CHECKSUMS:
   fmt: 4c2741a687cc09f0634a2e2c72a838b99f1ff120
   glog: fdfdfe5479092de0c4bdbebedd9056951f092c4f
   hermes-engine: 8c1577f3fdb849cbe7729c2e7b5abc4b845e88f8
-  NitroModules: f566390a6fc64cbe9d2aa0991efca58942b9689c
+  NitroModules: 0d242535bd5046d11ed48264f1d6585bf878a968
   OpenSSL-Universal: f8a9c4fdab7e21cb70bda471c269e86e9212439c
-  QuickCrypto: fd798eaff4f5df1c79da1bbfee7ce2dd12ffa955
+  QuickCrypto: 86549a9ce367ff0c933b9c54215300afe31a6806
   RCT-Folly: 02617c592a293bd6d418e0a88ff4ee1f88329b47
   RCTDeprecation: 3afceddffa65aee666dafd6f0116f1d975db1584
   RCTRequired: ec1239bc9d8bf63e10fb92bd8b26171a9258e0c1
@@ -1593,6 +1617,7 @@ SPEC CHECKSUMS:
   React-utils: f242eb7e7889419d979ca0e1c02ccc0ea6e43b29
   ReactCommon: f7da14a8827b72704169a48c929bcde802698361
   RNScreens: c55a1c0375e26d211940f09b0798bb44a5b3d968
+  RNVectorIcons: 933948590e598ec50433d6f207242e5a7c1d6b7d
   SocketRocket: abac6f5de4d4d62d24e11868d7a2f427e0ef940d
   Yoga: 950bbfd7e6f04790fdb51149ed51df41f329fcc8
 

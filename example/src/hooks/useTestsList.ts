@@ -1,7 +1,7 @@
 /* eslint-disable @typescript-eslint/no-shadow */
 import { useState, useCallback } from 'react';
 import type * as MochaTypes from 'mocha';
-import type { Suites } from '../types/TestSuite';
+import type { Suites, TestSuite } from '../types/Suite';
 import { rootSuite } from '../testing/MochaRNAdapter';
 
 // import '../testing/Tests/pbkdf2Tests/pbkdf2Tests';
@@ -24,13 +24,13 @@ import '../testing/Tests/RandomTests/randomTests';
 // import '../testing/Tests/webcryptoTests/import_export';
 // import '../testing/Tests/webcryptoTests/sign_verify';
 
-export const useTestList = (): [
-  Suites,
+export const useTestsList = (): [
+  Suites<TestSuite>,
   (description: string) => void,
   () => void,
   () => void,
 ] => {
-  const [suites, setSuites] = useState<Suites>(getInitialSuites());
+  const [suites, setSuites] = useState<Suites<TestSuite>>(getInitialSuites());
 
   const toggle = useCallback(
     (description: string) => {

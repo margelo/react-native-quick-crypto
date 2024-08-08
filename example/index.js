@@ -4,6 +4,9 @@ install();
 
 // mocha things
 global.process.cwd = () => 'sxsx';
+
+// readable-stream
+global.process.version = 'v22.0.0';
 // global.process.env = { NODE_ENV: 'production' };
 // global.location = {};
 

@@ -1,24 +1,15 @@
 import React from 'react';
-import type { RootStackParamList } from '../../RootProps';
-import type {
-  NativeStackNavigationProp,
-  NativeStackScreenProps,
-} from '@react-navigation/native-stack';
-import { Text, View, ScrollView, StyleSheet, SafeAreaView } from 'react-native';
+import {Text, View, ScrollView, StyleSheet, SafeAreaView} from 'react-native';
 import 'mocha';
-import { Button } from '../../../components/Button';
-import { useNavigation } from '@react-navigation/native';
-import { TestItem } from '../../../components/TestItem';
-import { useTestList } from '../../../hooks/useTestList';
-import { useRunTests } from '../../../hooks/useRunTests';
+import {Button} from '../../components/Button';
+import {TestItem} from '../../components/TestItem';
+import {useTestsList} from '../../hooks/useTestsList';
+import {useTestsRun} from '../../hooks/useTestsRun';
 
-type EntryProps = NativeStackScreenProps<RootStackParamList, 'Entry'>;
 
-export const Entry: React.FC<EntryProps> = ({}: EntryProps) => {
-  const [tests, toggle, clearAll, checkAll] = useTestList();
-  const [results, runTests] = useRunTests();
-  const navigation =
-    useNavigation<NativeStackNavigationProp<RootStackParamList, 'Entry'>>();
+export const TestSuitesScreen= () => {
+  const [tests, toggle, clearAll, checkAll] = useTestsList();
+  const [results, runTests] = useTestsRun();
   let totalCount = 0;
 
   return (
@@ -51,13 +42,8 @@ export const Entry: React.FC<EntryProps> = ({}: EntryProps) => {
           onPress={() => {
             runTests(tests);
           }}
+          color="action"
         />
-        {/* <Button
-          title="Benchmarks"
-          onPress={() => {
-            navigation.navigate('Benchmarks');
-          }}
-        /> */}
       </View>
     </SafeAreaView>
   );
@@ -77,9 +63,7 @@ const styles = StyleSheet.create({
     alignContent: 'space-around',
     justifyContent: 'space-around',
   },
-  scrollView: {
-    paddingHorizontal: 10,
-  },
+  scrollView: {},
   totalCount: {
     fontSize: 12,
     fontWeight: 'bold',

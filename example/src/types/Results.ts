@@ -1,13 +1,21 @@
-export type SuiteResults = {
-  [key: string]: SuiteResult;
+export type SuiteResults<T = TestResult | BenchmarkResult> = {
+  [key: string]: SuiteResult<T>;
 };
 
-export type SuiteResult = {
-  results: TestResult[];
+export type SuiteResult<T> = {
+  results: T[];
 };
 
 export type TestResult = {
   type: 'correct' | 'incorrect' | 'grouping';
+  description: string;
+  errorMsg?: string;
+  indentation: number;
+  suiteName: string;
+};
+
+export type BenchmarkResult = {
+  type: 'faster' | 'slower' | 'grouping';
   description: string;
   errorMsg?: string;
   indentation: number;
@@ -24,3 +32,4 @@ export type Stats = {
   pending: number;
   failures: number;
 };
+

@@ -1,8 +1,8 @@
 import 'mocha';
 import type * as MochaTypes from 'mocha';
 import { useCallback, useState } from 'react';
-import type { Suites } from '../types/TestSuite';
-import type { Stats, SuiteResults, TestResult } from '../types/TestResults';
+import type { Suites, TestSuite } from '../types/Suite';
+import type { Stats, SuiteResults, TestResult } from '../types/Results';
 import { rootSuite } from '../testing/MochaRNAdapter';
 
 const defaultStats = {
@@ -16,8 +16,8 @@ const defaultStats = {
   failures: 0,
 };
 
-export const useRunTests = (): [SuiteResults, (suites: Suites) => void] => {
-  const [results, setResults] = useState<SuiteResults>({});
+export const useTestsRun = (): [SuiteResults<TestResult>, (suites: Suites<TestSuite>) => void] => {
+  const [results, setResults] = useState<SuiteResults<TestResult>>({});
 
   const addResult = useCallback(
     (newResult: TestResult) => {
@@ -32,7 +32,7 @@ export const useRunTests = (): [SuiteResults, (suites: Suites) => void] => {
     [setResults]
   );
 
-  const runTests = (suites: Suites) => {
+  const runTests = (suites: Suites<TestSuite>) => {
     setResults({});
     run(addResult, suites);
   };
@@ -42,7 +42,7 @@ export const useRunTests = (): [SuiteResults, (suites: Suites) => void] => {
 
 const run = (
   addTestResult: (testResult: TestResult) => void,
-  tests: Suites = {}
+  tests: Suites<TestSuite> = {}
 ) => {
   const {
     EVENT_RUN_BEGIN,
