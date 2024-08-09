@@ -1,1 +1,1 @@
-export type RandomBytesFn = (len: number) => void;
+export type RandomBytesFn = () => void;

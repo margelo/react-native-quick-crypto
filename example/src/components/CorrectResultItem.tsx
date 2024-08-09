@@ -9,23 +9,24 @@ export const CorrectResultItem: React.FC<CorrectResultItemProps> = ({
   description,
 }: CorrectResultItemProps) => {
   const emoji = '✅';
-  const fullText = emoji + ' [' + description + ']';
 
   return (
     <View style={styles.itemContainer}>
-      <Text style={styles.text}>{fullText}</Text>
+      <Text style={styles.text}>{emoji}</Text>
+      <Text style={styles.text}>{description}</Text>
     </View>
   );
 };
 
 const styles = StyleSheet.create({
   itemContainer: {
-    borderWidth: 1,
-    borderRadius: 5,
-    padding: 5,
-    marginVertical: 5,
+    flexDirection: 'row',
+    paddingHorizontal: 5,
+    marginVertical: 2,
   },
   text: {
     flexShrink: 1,
+    fontSize: 9,
+    paddingRight: 5,
   },
 });

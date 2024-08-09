@@ -4,6 +4,7 @@ import BouncyCheckbox from 'react-native-bouncy-checkbox';
 import type {BenchmarkResult} from '../types/Results';
 import {useNavigation} from '@react-navigation/native';
 import type {NativeStackNavigationProp} from '@react-navigation/native-stack';
+import { calculateTimes, formatNumber } from '../benchmarks/utils';
 
 type BenchmarkItemProps = {
   description: string;
@@ -21,6 +22,23 @@ export const BenchmarkItem: React.FC<BenchmarkItemProps> = ({
   onToggle,
 }: BenchmarkItemProps) => {
   const navigation = useNavigation();
+  const stats = {
+    us: 0,
+    them: 0,
+  };
+  results.map((r) => {
+    stats.us += r.us;
+    stats.them += r.them;
+  });
+  const timesType = stats.us < stats.them ? 'faster' : 'slower';
+  const times = calculateTimes({
+    type: timesType,
+    ...stats,
+    // rest of these are for matching type, ignore
+    description: '',
+    indentation: 0,
+    suiteName: '',
+  });
 
   return (
     <View style={styles.container}>
@@ -45,6 +63,7 @@ export const BenchmarkItem: React.FC<BenchmarkItemProps> = ({
         <Text style={styles.label} numberOfLines={1}>
           {description}
         </Text>
+        <Text style={[styles.times, styles[timesType]]} numberOfLines={1}>{formatNumber(times, 2, 'x')}</Text>
         <Text style={styles.count} numberOfLines={1}>
           {count}
         </Text>
@@ -81,6 +100,12 @@ const styles = StyleSheet.create({
   },
   slower: {
     color: 'red',
+  },
+  times: {
+    fontSize: 12,
+    fontWeight: 'bold',
+    flex: 1,
+    textAlign: 'right',
   },
   count: {
     fontSize: 12,

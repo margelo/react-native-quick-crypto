@@ -19,6 +19,8 @@ export type BenchmarkResult = {
   description: string;
   errorMsg?: string;
   indentation: number;
+  us: number;
+  them: number;
   suiteName: string;
 };
 
@@ -32,4 +34,3 @@ export type Stats = {
   pending: number;
   failures: number;
 };
-

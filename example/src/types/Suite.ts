@@ -8,6 +8,11 @@ export interface TestSuite {
 };
 
 export interface BenchmarkSuite extends TestSuite {
-  us: Record<string, Function>;
-  them: Record<string, Function>;
+  benchmarks: Benchmark[];
+};
+
+export type Benchmark = {
+  name: string;
+  us?: Function;
+  them?: Function;
 };

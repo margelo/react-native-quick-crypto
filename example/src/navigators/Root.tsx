@@ -2,7 +2,7 @@ import React from 'react';
 import {NavigationContainer} from '@react-navigation/native';
 import {enableFreeze} from 'react-native-screens';
 import {TestStack} from './children/TestStack';
-import {BenchmarkSuitesScreen} from './children/BenchmarkSuitesScreen';
+import {BenchmarkStack} from './children/BenchmarkStack';
 import {createBottomTabNavigator} from '@react-navigation/bottom-tabs';
 import Icon from 'react-native-vector-icons/MaterialCommunityIcons';
 
@@ -25,9 +25,9 @@ export const Root: React.FC = () => {
         />
         <Tab.Screen
           name="Benchmarks"
-          component={BenchmarkSuitesScreen}
+          component={BenchmarkStack}
           options={{
-            title: 'Benchmarks',
+            headerShown: false,
             tabBarIcon: ({color}) => (
               <Icon name="timer" size={24} color={color} />
             ),

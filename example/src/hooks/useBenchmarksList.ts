@@ -1,5 +1,5 @@
 import { useCallback, useState } from "react";
-import { BenchmarkSuite, Suites } from "../types/Suite";
+import { Benchmark, BenchmarkSuite, Suites } from "../types/Suite";
 
 export const useBenchmarksList = (challenger: string): [
   Suites<BenchmarkSuite>,
@@ -40,21 +40,36 @@ export const useBenchmarksList = (challenger: string): [
 };
 
 const getInitialSuites = (challenger: string) => {
-  const suiteNames = ['random', ];
+  const suiteNames: string[] = [
+    // random - all challengers use `crypto` too,so the comparison is to 'us' - maybe skip in future
+    'random',
+  ];
   let suites: Suites<BenchmarkSuite> = {};
   suiteNames.forEach((suiteName) => {
-    const {us, them} = loadBenchmarks(suiteName, challenger);
-    suites[suiteName] = { value: false, count: 0, us, them };
+    const benchmarks = loadBenchmarks(suiteName, challenger);
+    suites[suiteName] = { value: false, count: benchmarks.length, benchmarks };
   });
 
   // return count-enhanced list and totals
   return suites;
 };
 
-const loadBenchmarks = (suiteName: string, challenger: string) => {
+const loadBenchmarks = (suiteName: string, challenger: string): Benchmark[] => {
   const us = allBenchmarks[`rnqc/${suiteName}`];
   const them = allBenchmarks[`${challenger}/${suiteName}`];
-  return { us, them };
+  const ret: Benchmark[] = [];
+  const themKeys = Object.keys(them);
+  // add all 'us' benchmarks
+  Object.entries(us).forEach(([name, fn]) => {
+    ret.push({ name, us: fn, them: them[name] });
+    // remove from themKeys
+    themKeys.splice(themKeys.indexOf(name), 1);
+  });
+  // add all 'them' benchmarks that are not in 'us'
+  themKeys.forEach((name) => {
+    ret.push({ name, us: us[name], them: them[name] });
+  });
+  return ret;
 };
 
 // can't use dynamic strings here, as require() is compile-time

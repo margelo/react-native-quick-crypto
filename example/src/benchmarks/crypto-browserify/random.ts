@@ -1,11 +1,16 @@
 // @ts-ignore
-import * as them from 'crypto-browserify';
+import { randomBytes } from 'crypto-browserify';
 import type { RandomBytesFn } from '../types';
 
-const randomBytes: RandomBytesFn = (len: number) => {
-  them.randomBytes(len);
+const randomBytes10: RandomBytesFn = () => {
+  randomBytes(10);
+};
+
+const randomBytes1024: RandomBytesFn = () => {
+  randomBytes(1024);
 };
 
 export default {
-  randomBytes,
+  randomBytes10,
+  randomBytes1024,
 };

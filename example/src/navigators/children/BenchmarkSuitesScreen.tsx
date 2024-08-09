@@ -13,9 +13,10 @@ import {useBenchmarksList} from '../../hooks/useBenchmarksList';
 import {useBenchmarksRun} from '../../hooks/useBenchmarksRun';
 
 export const BenchmarkSuitesScreen = () => {
+  const [runCount, setRunCount] = useState<number>(1000);
   const [challenger, setChallenger] = useState<string>('crypto-browserify');
   const [benchmarks, toggle, clearAll, checkAll] = useBenchmarksList(challenger);
-  const [results, runBenchmarks] = useBenchmarksRun();
+  const [results, runBenchmarks] = useBenchmarksRun(runCount);
   let totalCount = 0;
 
   return (
@@ -23,7 +24,10 @@ export const BenchmarkSuitesScreen = () => {
       <View style={styles.options}>
         <View style={styles.option}>
           <Text style={styles.optionLabel}>run count</Text>
-          <TextInput value="100" />
+          <TextInput
+            value={runCount.toString()}
+            onChangeText={(s: string) => setRunCount(parseInt(s, 10))}
+          />
         </View>
         <View style={styles.option}>
           <Text style={styles.optionLabel}>challenger</Text>
