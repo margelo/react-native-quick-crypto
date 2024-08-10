@@ -61,7 +61,11 @@ std::optional<jsi::Value> MGLPublicCipher::Cipher(jsi::Runtime& runtime,
     return {};
   }
 
-  if (EVP_PKEY_cipher_init(ctx.get()) <= 0) {
+  int init_ret = EVP_PKEY_cipher_init(ctx.get());
+  if (init_ret <= 0) {
+    if (init_ret == -2) {
+      throw std::runtime_error("operation is not supported by the public key algorithm");
+    }
     return {};
   }
 
