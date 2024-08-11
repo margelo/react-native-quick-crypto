@@ -27,12 +27,12 @@ jobs:
         with:
           bun-version: 1.1.21
 
-      - name: Setup Ruby (bundle)
-        uses: ruby/setup-ruby@v1
-        with:
-          ruby-version: 3.3
-          bundler-cache: true
-          working-directory: example/ios
+      # - name: Setup Ruby (bundle)
+      #   uses: ruby/setup-ruby@v1
+      #   with:
+      #     ruby-version: 3.3
+      #     bundler-cache: true
+      #     working-directory: example/ios
 
       - name: Bootstrap JS
         run: |
@@ -49,9 +49,9 @@ jobs:
           restore-keys: |
             ${{ runner.os }}-pods-
 
-      - name: Install Gems
-        working-directory: example
-        run: bundle config set deployment 'true' && bundle install
+      # - name: Install Gems
+      #   working-directory: example
+      #   run: bundle config set deployment 'true' && bundle install
 
       - name: Install Pods
         run: bun pods
