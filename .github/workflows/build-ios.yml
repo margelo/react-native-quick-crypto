@@ -26,23 +26,9 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      - name: Get yarn cache directory path
-        id: yarn-cache-dir-path
-        run: echo "dir=$(yarn cache dir)" >> $GITHUB_OUTPUT
-      - name: Restore node_modules from cache
-        uses: actions/cache@v4
-        id: yarn-cache
+      - uses: oven-sh/setup-bun@v2
         with:
-          path: ${{ steps.yarn-cache-dir-path.outputs.dir }}
-          key: ${{ runner.os }}-yarn-${{ hashFiles('**/yarn.lock') }}
-          restore-keys: |
-            ${{ runner.os }}-yarn-
-      - name: Install node_modules for example/
-        run: yarn install --frozen-lockfile --cwd ..
-
-      # - name: Restore buildcache
-      #   uses: mikehardy/buildcache-action@v2
-      #   continue-on-error: true
+          bun-version: 1.1.21
 
       - name: Setup Ruby (bundle)
         uses: ruby/setup-ruby@v1
@@ -50,6 +36,10 @@ jobs:
           ruby-version: 3.3
           bundler-cache: true
           working-directory: example/ios
+
+      - name: Bootstrap JS
+        run: |
+          bun install_tsc
 
       - name: Restore Pods cache
         uses: actions/cache@v4
@@ -61,13 +51,17 @@ jobs:
           key: ${{ runner.os }}-pods-${{ hashFiles('**/Podfile.lock') }}
           restore-keys: |
             ${{ runner.os }}-pods-
+
       - name: Install Gems
         working-directory: example
         run: bundle config set deployment 'true' && bundle install
+
       - name: Install Pods
-        run: yarn pods
+        run: bun pods
+
       - name: Install xcpretty
         run: gem install xcpretty
+        
       - name: Build App
         run: "set -o pipefail && xcodebuild \
           CC=clang CPLUSPLUS=clang++ LD=clang LDPLUSPLUS=clang++ \

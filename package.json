@@ -5,7 +5,7 @@
     "nitro": "cd packages/react-native-quick-crypto && bunx nitro-codegen",
     "pods": "bun --filter=\"react-native-quick-crypto-example\" pods",
     "example": "cd example && bun start",
-    "bootstrap": "bun install_tsc && bun nitro && bun pods && bun example",
+    "bootstrap": "bun install_tsc && bun nitro && bun pods",
     "tsc": "bun --filter=\"**\" typescript",
     "lint": "bun --filter=\"**\" lint",
     "release": "bun --filter=\"react-native-quick-crypto\" release && release-it",
