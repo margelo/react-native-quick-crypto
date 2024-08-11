@@ -39,6 +39,7 @@
     "@babel/plugin-transform-class-static-block": "7.24.7",
     "@babel/preset-env": "7.25.3",
     "@babel/runtime": "7.25.0",
+    "@eslint/compat": "^1.1.1",
     "@react-native/babel-preset": "0.74.86",
     "@react-native/eslint-config": "0.74.86",
     "@react-native/eslint-plugin": "0.74.86",
