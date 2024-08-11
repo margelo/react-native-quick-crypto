@@ -1,6 +1,6 @@
-import { assert, expect } from 'chai';
-import { Buffer } from '@craftzdog/react-native-buffer';
-import { describe, it } from '../../MochaRNAdapter';
+import {assert, expect} from 'chai';
+import {Buffer} from '@craftzdog/react-native-buffer';
+import {describe, it} from '../../MochaRNAdapter';
 import crypto from 'react-native-quick-crypto';
 // import { PrivateKey } from 'sscrypto/node';
 
@@ -55,7 +55,7 @@ describe('publicCipher', () => {
   // });
 
   it('publicEncrypt/privateDecrypt', () => {
-    const { privateKey, publicKey } = crypto.generateKeyPairSync('rsa', {
+    const {privateKey, publicKey} = crypto.generateKeyPairSync('rsa', {
       modulusLength: 512,
       publicKeyEncoding: {
         type: 'pkcs1',
@@ -71,7 +71,7 @@ describe('publicCipher', () => {
   });
 
   it('publicEncrypt/privateDecrypt with non-common exponent', () => {
-    const { privateKey, publicKey } = crypto.generateKeyPairSync('rsa', {
+    const {privateKey, publicKey} = crypto.generateKeyPairSync('rsa', {
       publicExponent: 3,
       modulusLength: 512,
       publicKeyEncoding: {
@@ -88,7 +88,7 @@ describe('publicCipher', () => {
   });
 
   it('publicEncrypt/privateDecrypt with passphrase', () => {
-    const { privateKey, publicKey } = crypto.generateKeyPairSync('rsa', {
+    const {privateKey, publicKey} = crypto.generateKeyPairSync('rsa', {
       modulusLength: 4096,
       publicKeyEncoding: {
         type: 'spki',
@@ -106,15 +106,15 @@ describe('publicCipher', () => {
     const plaintext = Buffer.from(message, 'utf8');
     const ciphertext = crypto.publicEncrypt(publicKey, plaintext);
     const decrypted = crypto.privateDecrypt(
-      { key: privateKey, passphrase: 'top secret' },
-      ciphertext
+      {key: privateKey, passphrase: 'top secret'},
+      ciphertext,
     );
 
     expect(decrypted.toString('utf-8')).to.equal(message);
   });
 
   it('passphrased private key without passphrase should throw', () => {
-    const { privateKey, publicKey } = crypto.generateKeyPairSync('rsa', {
+    const {privateKey, publicKey} = crypto.generateKeyPairSync('rsa', {
       modulusLength: 4096,
       publicKeyEncoding: {
         type: 'spki',

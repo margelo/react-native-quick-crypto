@@ -1,10 +1,10 @@
-import { describe, it } from '../../MochaRNAdapter';
-import { expect } from 'chai';
+import {describe, it} from '../../MochaRNAdapter';
+import {expect} from 'chai';
 import QuickCrypto from 'react-native-quick-crypto';
-import { Buffer } from '@craftzdog/react-native-buffer';
-import type { Done } from 'mocha';
-import { fixtures } from './fixtures';
-import type { HashAlgorithm } from '../../../../../src/keys';
+import {Buffer} from '@craftzdog/react-native-buffer';
+import type {Done} from 'mocha';
+import {fixtures} from './fixtures';
+import type {HashAlgorithm} from '../../../../../src/keys';
 
 type TestFixture = [string, string, number, number, string];
 
@@ -28,7 +28,7 @@ describe('pbkdf2', () => {
       hash: string,
       length: number,
       expected: string,
-      done: Done
+      done: Done,
     ) => {
       QuickCrypto.pbkdf2(
         pass,
@@ -45,7 +45,7 @@ describe('pbkdf2', () => {
           } catch (e) {
             done(e);
           }
-        }
+        },
       );
     };
 
@@ -90,7 +90,7 @@ describe('pbkdf2', () => {
   it(' defaults to sha1 and handles buffers', (done: Done) => {
     var resultSync = QuickCrypto.pbkdf2Sync('password', 'salt', 1, 32);
     expect(ab2str(resultSync)).to.eql(
-      '0c60c80f961f0e71f3a9b524af6012062fe037a6e0f0eb94fe8fc46bdc637164'
+      '0c60c80f961f0e71f3a9b524af6012062fe037a6e0f0eb94fe8fc46bdc637164',
     );
 
     QuickCrypto.pbkdf2(
@@ -102,31 +102,31 @@ describe('pbkdf2', () => {
       function (_, result) {
         // @ts-expect-error
         expect(ab2str(result)).to.eql(
-          '0c60c80f961f0e71f3a9b524af6012062fe037a6e0f0eb94fe8fc46bdc637164'
+          '0c60c80f961f0e71f3a9b524af6012062fe037a6e0f0eb94fe8fc46bdc637164',
         );
         done();
-      }
+      },
     );
   });
 
   it('should throw if no callback is provided', function () {
     // @ts-expect-error
     expect(QuickCrypto.pbkdf2('password', 'salt', 1, 32, 'sha1')).to.throw(
-      /No callback provided to pbkdf2/
+      /No callback provided to pbkdf2/,
     );
   });
 
   it('should throw if the password is not a string or an ArrayBuffer', function () {
     // @ts-expect-error
     expect(QuickCrypto.pbkdf2(['a'], 'salt', 1, 32, 'sha1')).to.throw(
-      /Password must be a string, a Buffer, a typed array or a DataView/
+      /Password must be a string, a Buffer, a typed array or a DataView/,
     );
   });
 
   it(' should throw if the salt is not a string or an ArrayBuffer', function () {
     // @ts-expect-error
     expect(QuickCrypto.pbkdf2('a', ['salt'], 1, 32, 'sha1')).to.throw(
-      /Salt must be a string, a Buffer, a typed array or a DataView/
+      /Salt must be a string, a Buffer, a typed array or a DataView/,
     );
   });
 
@@ -198,7 +198,7 @@ describe('pbkdf2', () => {
             } catch (e) {
               done(e);
             }
-          }
+          },
         );
       });
 
@@ -208,7 +208,7 @@ describe('pbkdf2', () => {
           salt,
           f.iterations,
           f.dkLen,
-          algorithm as HashAlgorithm
+          algorithm as HashAlgorithm,
         );
         expect(ab2str(result)).to.equal(expected);
       });

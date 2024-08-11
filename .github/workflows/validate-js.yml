@@ -66,11 +66,11 @@ jobs:
         run: |
           bun install_tsc
 
-      - name: Run ESLint
-        run: bun lint -f @jamesacarr/github-actions
+      - name: Run ESLint (rnqc)
+        run: cd packages/react-native-quick-crypto && bun lint
 
-      - name: Run ESLint with auto-fix
-        run: bun lint --fix
+      - name: Run ESLint (example)
+        run: cd example && bun lint
 
       - name: Verify no files have changed after auto-fix
         run: git diff --exit-code HEAD

@@ -1,4 +1,4 @@
-import { assert } from 'chai';
+import {assert} from 'chai';
 
 export const assertThrowsAsync = async (fn: any, expectedMessage: string) => {
   try {
@@ -8,7 +8,7 @@ export const assertThrowsAsync = async (fn: any, expectedMessage: string) => {
       assert.include(
         err.message,
         expectedMessage,
-        `Function failed as expected, but could not find message snippet '${expectedMessage}'.  Saw '${err.message}' instead.`
+        `Function failed as expected, but could not find message snippet '${expectedMessage}'.  Saw '${err.message}' instead.`,
       );
     }
     return;

@@ -1,5 +1,5 @@
 import React from 'react';
-import { View, Text, TouchableOpacity, StyleSheet } from 'react-native';
+import {View, Text, TouchableOpacity, StyleSheet} from 'react-native';
 
 type ButtonProps = {
   title: string;
@@ -16,8 +16,7 @@ export const Button: React.FC<ButtonProps> = ({
     <View>
       <TouchableOpacity
         style={[styles.container, {backgroundColor: colors[color]}]}
-        onPress={onPress}
-      >
+        onPress={onPress}>
         <Text style={styles.label}>{title}</Text>
       </TouchableOpacity>
     </View>

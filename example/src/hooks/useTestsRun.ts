@@ -1,9 +1,9 @@
 import 'mocha';
 import type * as MochaTypes from 'mocha';
-import { useCallback, useState } from 'react';
-import type { Suites, TestSuite } from '../types/Suite';
-import type { Stats, SuiteResults, TestResult } from '../types/Results';
-import { rootSuite } from '../testing/MochaRNAdapter';
+import {useCallback, useState} from 'react';
+import type {Suites, TestSuite} from '../types/Suite';
+import type {Stats, SuiteResults, TestResult} from '../types/Results';
+import {rootSuite} from '../testing/MochaRNAdapter';
 
 const defaultStats = {
   start: new Date(),
@@ -16,20 +16,23 @@ const defaultStats = {
   failures: 0,
 };
 
-export const useTestsRun = (): [SuiteResults<TestResult>, (suites: Suites<TestSuite>) => void] => {
+export const useTestsRun = (): [
+  SuiteResults<TestResult>,
+  (suites: Suites<TestSuite>) => void,
+] => {
   const [results, setResults] = useState<SuiteResults<TestResult>>({});
 
   const addResult = useCallback(
     (newResult: TestResult) => {
-      setResults((prev) => {
+      setResults(prev => {
         if (!prev[newResult.suiteName]) {
-          prev[newResult.suiteName] = { results: [] };
+          prev[newResult.suiteName] = {results: []};
         }
         prev[newResult.suiteName]?.results.push(newResult);
-        return { ...prev };
+        return {...prev};
       });
     },
-    [setResults]
+    [setResults],
   );
 
   const runTests = (suites: Suites<TestSuite>) => {
@@ -42,7 +45,7 @@ export const useTestsRun = (): [SuiteResults<TestResult>, (suites: Suites<TestSu
 
 const run = (
   addTestResult: (testResult: TestResult) => void,
-  tests: Suites<TestSuite> = {}
+  tests: Suites<TestSuite> = {},
 ) => {
   const {
     EVENT_RUN_BEGIN,
@@ -55,24 +58,24 @@ const run = (
     EVENT_SUITE_END,
   } = Mocha.Runner.constants;
 
-  let stats: Stats = { ...defaultStats };
+  let stats: Stats = {...defaultStats};
 
   var runner = new Mocha.Runner(rootSuite) as MochaTypes.Runner;
   runner.stats = stats;
 
   // enable/disable tests based on checkbox value
-  runner.suite.suites.map((s) => {
+  runner.suite.suites.map(s => {
     const suiteName = s.title;
     if (!tests[suiteName]?.value) {
       // console.log(`skipping '${suiteName}' suite`);
-      s.tests.map((t) => {
+      s.tests.map(t => {
         try {
           t.skip();
         } catch (e) {} // do nothing w error
       });
     } else {
       // console.log(`will run '${suiteName}' suite`);
-      s.tests.map((t) => {
+      s.tests.map(t => {
         // @ts-expect-error - not sure why this is erroring
         t.reset();
       });

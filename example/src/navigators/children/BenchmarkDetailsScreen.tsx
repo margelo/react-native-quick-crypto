@@ -1,6 +1,9 @@
-import React, {useState} from 'react';
+import React from 'react';
 import {SafeAreaView, ScrollView, StyleSheet, Text, View} from 'react-native';
-import {BenchmarkResultItem, BenchmarkResultItemHeader} from '../../components/BenchmarkResultItem';
+import {
+  BenchmarkResultItem,
+  BenchmarkResultItemHeader,
+} from '../../components/BenchmarkResultItem';
 import {BenchmarkResult} from '../../types/Results';
 
 type BenchmarkDetailsScreenProps = {
@@ -12,13 +15,17 @@ type RouteParams = {
   suiteName: string;
 };
 
-export const BenchmarkDetailsScreen = ({route}: BenchmarkDetailsScreenProps) => {
+export const BenchmarkDetailsScreen = ({
+  route,
+}: BenchmarkDetailsScreenProps) => {
   const {results, suiteName}: RouteParams = route.params;
 
   return (
     <SafeAreaView style={styles.container}>
       <View>
-        <Text style={styles.title}>Benchmark Results for '{suiteName}' Suite</Text>
+        <Text style={styles.title}>
+          Benchmark Results for '{suiteName}' Suite
+        </Text>
       </View>
       <BenchmarkResultItemHeader />
       <ScrollView

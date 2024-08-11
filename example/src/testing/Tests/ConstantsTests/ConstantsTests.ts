@@ -1,6 +1,6 @@
-import { expect } from 'chai';
+import {expect} from 'chai';
 import crypto from 'react-native-quick-crypto';
-import { describe, it } from '../../MochaRNAdapter';
+import {describe, it} from '../../MochaRNAdapter';
 
 describe('constants', () => {
   it('crypto constants are present', () => {

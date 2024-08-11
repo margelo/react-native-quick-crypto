@@ -1,12 +1,12 @@
-import { expect } from 'chai';
-import { Buffer } from '@craftzdog/react-native-buffer';
+import {expect} from 'chai';
+import {Buffer} from '@craftzdog/react-native-buffer';
 import crypto from 'react-native-quick-crypto';
-import { describe, it } from '../../MochaRNAdapter';
-import type { HashAlgorithm } from '../../../../../src/keys';
-import { ab2str, toArrayBuffer } from '../../../../../src/Utils';
-import { createHash } from '../../../../../src/Hash';
+import {describe, it} from '../../MochaRNAdapter';
+import type {HashAlgorithm} from '../../../../../src/keys';
+import {ab2str, toArrayBuffer} from '../../../../../src/Utils';
+import {createHash} from '../../../../../src/Hash';
 
-const { subtle } = crypto;
+const {subtle} = crypto;
 
 type Test = [HashAlgorithm, string, number];
 
@@ -32,8 +32,8 @@ describe('subtle - digest', () => {
         .toString('hex');
 
       const values = Promise.all([
-        subtle.digest({ name: test[0] }, kData),
-        subtle.digest({ name: test[0], length: test[2] }, kData),
+        subtle.digest({name: test[0]}, kData),
+        subtle.digest({name: test[0], length: test[2]}, kData),
         subtle.digest(test[0], kData),
         // subtle.digest(test[0], kData.buffer),
         // subtle.digest(test[0], new DataView(kData.buffer)),
@@ -42,7 +42,7 @@ describe('subtle - digest', () => {
 
       // Compare that the legacy crypto API and SubtleCrypto API
       // produce the same results
-      (await values).forEach((v) => {
+      (await values).forEach(v => {
         expect(ab2str(v)).to.equal(checkValue);
       });
     });

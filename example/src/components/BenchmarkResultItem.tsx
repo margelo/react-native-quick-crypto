@@ -1,7 +1,7 @@
 import React from 'react';
-import { View, Text, StyleSheet } from 'react-native';
-import { BenchmarkResult } from '../types/Results';
-import { calculateTimes, formatNumber } from '../benchmarks/utils';
+import {View, Text, StyleSheet} from 'react-native';
+import {BenchmarkResult} from '../types/Results';
+import {calculateTimes, formatNumber} from '../benchmarks/utils';
 
 type BenchmarkResultItemProps = {
   result: BenchmarkResult;
@@ -29,8 +29,12 @@ export const BenchmarkResultItem: React.FC<BenchmarkResultItemProps> = ({
   return (
     <View style={styles.itemContainer}>
       <Text style={styles.text}>{emoji}</Text>
-      <Text style={[styles.text, styles.description]}>{result.description}</Text>
-      <Text style={[styles.value, styles[timesType]]}>{formatNumber(times, 2, 'x')}</Text>
+      <Text style={[styles.text, styles.description]}>
+        {result.description}
+      </Text>
+      <Text style={[styles.value, styles[timesType]]}>
+        {formatNumber(times, 2, 'x')}
+      </Text>
       <Text style={styles.value}>{formatNumber(result.us, 2, 'ms')}</Text>
       <Text style={styles.value}>{formatNumber(result.them, 2, 'ms')}</Text>
     </View>

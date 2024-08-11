@@ -1,9 +1,9 @@
-import type { CryptoKey, CryptoKeyPair } from '../../../../../src/keys';
+import type {CryptoKey, CryptoKeyPair} from '../../../../../src/keys';
 import crypto from 'react-native-quick-crypto';
-import { describe, it } from '../../MochaRNAdapter';
-import { expect } from 'chai';
+import {describe, it} from '../../MochaRNAdapter';
+import {expect} from 'chai';
 
-const { subtle } = crypto;
+const {subtle} = crypto;
 
 describe('subtle - sign / verify', () => {
   // // Test Sign/Verify RSASSA-PKCS1-v1_5
@@ -65,9 +65,9 @@ describe('subtle - sign / verify', () => {
           namedCurve: 'P-384',
         },
         true,
-        ['sign', 'verify']
+        ['sign', 'verify'],
       );
-      const { publicKey, privateKey } = pair as CryptoKeyPair;
+      const {publicKey, privateKey} = pair as CryptoKeyPair;
 
       const signature = await subtle.sign(
         {
@@ -75,7 +75,7 @@ describe('subtle - sign / verify', () => {
           hash: 'SHA-384',
         },
         privateKey as CryptoKey,
-        ec.encode(data)
+        ec.encode(data),
       );
 
       expect(
@@ -86,8 +86,8 @@ describe('subtle - sign / verify', () => {
           },
           publicKey as CryptoKey,
           signature,
-          ec.encode(data)
-        )
+          ec.encode(data),
+        ),
       ).to.equal(true);
     }
 

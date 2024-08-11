@@ -1,6 +1,6 @@
-import { assert, expect } from 'chai';
-import type { Buffer } from '@craftzdog/react-native-buffer';
-import { describe, it } from '../../MochaRNAdapter';
+import {assert, expect} from 'chai';
+import type {Buffer} from '@craftzdog/react-native-buffer';
+import {describe, it} from '../../MochaRNAdapter';
 import crypto from 'react-native-quick-crypto';
 
 // Constructs a regular expression for a PEM-encoded key with the given label.
@@ -21,11 +21,11 @@ function assertApproximateSize(key: 'string' | Buffer, expectedSize: number) {
   const max = Math.ceil(1.1 * expectedSize);
   assert(
     key.length >= min,
-    `Key (${key.length} ${u}) is shorter than expected (${min} ${u})`
+    `Key (${key.length} ${u}) is shorter than expected (${min} ${u})`,
   );
   assert(
     key.length <= max,
-    `Key (${key.length} ${u}) is longer than expected (${max} ${u})`
+    `Key (${key.length} ${u}) is longer than expected (${max} ${u})`,
   );
 }
 
@@ -55,7 +55,7 @@ describe('generateKeyPair', () => {
     });
 
     assert.strictEqual(Object.keys(ret).length, 2);
-    const { publicKey, privateKey } = ret;
+    const {publicKey, privateKey} = ret;
     expect(!!publicKey).to.equal(true);
     expect(!!privateKey).to.equal(true);
 
@@ -84,7 +84,7 @@ describe('generateKeyPair', () => {
     });
 
     assert.strictEqual(Object.keys(ret).length, 2);
-    const { publicKey, privateKey } = ret;
+    const {publicKey, privateKey} = ret;
 
     assert.strictEqual(typeof publicKey, 'string');
     assert.match(publicKey, pkcs1PubExp);
@@ -94,7 +94,7 @@ describe('generateKeyPair', () => {
     assertApproximateSize(privateKey, 512);
   });
 
-  it('Async RSA: spki - pkcs8/aes-256-cbc/passphrase', (done) => {
+  it('Async RSA: spki - pkcs8/aes-256-cbc/passphrase', done => {
     crypto.generateKeyPair(
       'rsa',
       {
@@ -128,7 +128,7 @@ describe('generateKeyPair', () => {
         // assertApproximateSize(privateKey, 512);
 
         done();
-      }
+      },
     );
   });
 });

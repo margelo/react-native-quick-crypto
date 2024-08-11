@@ -1,30 +1,30 @@
 // from https://github.com/nodejs/node/blob/main/test/parallel/test-crypto-secret-keygen.js
 
-import { expect } from 'chai';
+import {expect} from 'chai';
 import crypto from 'react-native-quick-crypto';
-import { describe, it } from '../../MochaRNAdapter';
-import type { AESLength } from '../../../../../src/keys';
+import {describe, it} from '../../MochaRNAdapter';
+import type {AESLength} from '../../../../../src/keys';
 
-const { generateKey, generateKeySync } = crypto;
+const {generateKey, generateKeySync} = crypto;
 
 describe('generateKey', () => {
   const badTypes = [1, true, [], {}, Infinity, null, undefined];
-  badTypes.forEach((badType) => {
+  badTypes.forEach(badType => {
     it(`bad type input: ${badType}`, async () => {
       // @ts-expect-error
       expect(() => generateKey(badType, 1, () => {})).to.throw(
-        'Unsupported key type'
+        'Unsupported key type',
       );
 
       // @ts-expect-error
       expect(() => generateKeySync(badType, 1)).to.throw(
-        'Unsupported key type'
+        'Unsupported key type',
       );
     });
   });
 
   const badOptionsAES = ['', true, [], null, undefined];
-  badOptionsAES.forEach((badOption) => {
+  badOptionsAES.forEach(badOption => {
     it(`bad option input (aes): ${badOption}`, async () => {
       const expected =
         badOption !== null && badOption !== undefined
@@ -65,35 +65,35 @@ describe('generateKey', () => {
 
   it('bad callback (aes)', async () => {
     // @ts-expect-error
-    expect(() => generateKey('aes', { length: 256 })).to.throw(
-      'Callback is not a function'
+    expect(() => generateKey('aes', {length: 256})).to.throw(
+      'Callback is not a function',
     );
   });
 
   const hmacBadLengths = [-1, 4, 7, 2 ** 31];
-  hmacBadLengths.forEach((badLength) => {
+  hmacBadLengths.forEach(badLength => {
     it(`bad option length (hmac): ${badLength}`, async () => {
       expect(() =>
         // @ts-expect-error
-        generateKey('hmac', { length: badLength }, () => {})
+        generateKey('hmac', {length: badLength}, () => {}),
       ).to.throw('HMAC key length must be between 8 and 2^31 - 1');
       // @ts-expect-error
-      expect(() => generateKeySync('hmac', { length: badLength })).to.throw(
-        'HMAC key length must be between 8 and 2^31 - 1'
+      expect(() => generateKeySync('hmac', {length: badLength})).to.throw(
+        'HMAC key length must be between 8 and 2^31 - 1',
       );
     });
   });
 
   const aesLengths: AESLength[] = [128, 192, 256];
-  aesLengths.forEach((length) => {
+  aesLengths.forEach(length => {
     it(`happy generateKeySync (aes): ${length}`, async () => {
-      const key = generateKeySync('aes', { length });
+      const key = generateKeySync('aes', {length});
       expect(key).to.not.be.undefined;
       const keybuf = key.export();
       expect(keybuf.byteLength).to.equal(length / 8);
     });
     it(`happy generateKey (aes): ${length}`, async () => {
-      generateKey('aes', { length }, (err, key) => {
+      generateKey('aes', {length}, (err, key) => {
         expect(err).to.be.undefined;
         expect(key).to.not.be.undefined;
         const keybuf = key?.export();

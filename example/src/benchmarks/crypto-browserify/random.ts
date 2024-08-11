@@ -1,6 +1,6 @@
 // @ts-ignore
-import { randomBytes } from 'crypto-browserify';
-import type { RandomBytesFn } from '../types';
+import {randomBytes} from 'crypto-browserify';
+import type {RandomBytesFn} from '../types';
 
 const randomBytes10: RandomBytesFn = () => {
   randomBytes(10);

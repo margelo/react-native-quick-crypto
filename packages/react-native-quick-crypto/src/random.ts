@@ -5,15 +5,14 @@ import { NitroModules } from 'react-native-nitro-modules';
 import type { Random } from './specs/random.nitro';
 
 // to use native bits in sub-functions, use getNative(). don't call it at top-level!
-let random: Random | undefined = undefined
+let random: Random;
 function getNative(): Random {
   if (random == null) {
     // lazy-load the Nitro HybridObject
-    random = NitroModules.get<Random>('Random')
+    random = NitroModules.get<Random>('Random');
   }
-  return random
+  return random;
 }
-
 
 export function randomFill<T extends ArrayBufferView>(
   buffer: T,
@@ -55,16 +54,15 @@ export function randomFill(buffer: ArrayBufferView, ...rest: any[]): void {
     offset = rest[0];
   }
 
-  const random = getNative();
-  random.randomFill(abvToArrayBuffer(buffer), offset, size)
-    .then(
-      (res: ArrayBuffer) => {
-        callback(null, res);
-      },
-      (e: Error) => {
-        callback(e);
-      }
-    );
+  getNative();
+  random.randomFill(abvToArrayBuffer(buffer), offset, size).then(
+    (res: ArrayBuffer) => {
+      callback(null, res);
+    },
+    (e: Error) => {
+      callback(e);
+    }
+  );
 }
 
 export function randomFillSync<T extends ArrayBufferView>(
@@ -73,14 +71,14 @@ export function randomFillSync<T extends ArrayBufferView>(
   size?: number
 ): T;
 
-export function randomFillSync(buffer: ArrayBufferView, offset: number = 0, size?: number) {
-  const random = getNative();
+export function randomFillSync(
+  buffer: ArrayBufferView,
+  offset: number = 0,
+  size?: number
+) {
+  getNative();
   buffer = abvToArrayBuffer(buffer);
-  const res = random.randomFillSync(
-    buffer,
-    offset,
-    size ?? buffer.byteLength
-  );
+  const res = random.randomFillSync(buffer, offset, size ?? buffer.byteLength);
   buffer = res;
   return buffer;
 }

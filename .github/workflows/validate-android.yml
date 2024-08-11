@@ -18,9 +18,6 @@ jobs:
   validate_android:
     name: Gradle Lint
     runs-on: ubuntu-latest
-    defaults:
-      run:
-        working-directory: packages/react-native-quick-crypto/android
     steps:
       - uses: actions/checkout@v4
 
@@ -53,11 +50,10 @@ jobs:
             ${{ runner.os }}-gradle-
 
       - name: Run Gradle Lint
-        run: cd ../../example/android && ./gradlew lint
+        run: cd example/android && ./gradlew lint
 
       - name: Parse Gradle Lint Report
         uses: yutailang0119/action-android-lint@v4
         with:
           # ignore-warnings: true
           report-path: example/android/app/build/reports/*.xml
-  

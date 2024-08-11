@@ -5,7 +5,7 @@ const escape = require('escape-string-regexp');
 const pack = require('../package.json');
 
 const root = path.resolve(__dirname, '..');
-const peerModules = Object.keys({ ...pack.peerDependencies });
+const peerModules = Object.keys({...pack.peerDependencies});
 
 /**
  * Metro configuration
@@ -21,9 +21,8 @@ const config = {
   resolver: {
     blacklistRE: blacklist(
       peerModules.map(
-        (m) =>
-          new RegExp(`^${escape(path.join(root, 'node_modules', m))}\\/.*$`)
-      )
+        m => new RegExp(`^${escape(path.join(root, 'node_modules', m))}\\/.*$`),
+      ),
     ),
 
     extraNodeModules: {
@@ -31,7 +30,7 @@ const config = {
         acc[name] = path.join(__dirname, 'node_modules', name);
         return acc;
       }, {}),
-      'stream': require.resolve('readable-stream'),
+      stream: require.resolve('readable-stream'),
     },
   },
 

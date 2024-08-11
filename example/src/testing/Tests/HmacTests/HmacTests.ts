@@ -1,8 +1,8 @@
 // copied from https://github.com/nodejs/node/blob/master/test/parallel/test-crypto-hmac.js
 import crypto from 'react-native-quick-crypto';
-import { Buffer } from '@craftzdog/react-native-buffer';
-import { describe, it } from '../../MochaRNAdapter';
-import { expect } from 'chai';
+import {Buffer} from '@craftzdog/react-native-buffer';
+import {describe, it} from '../../MochaRNAdapter';
+import {expect} from 'chai';
 
 describe('hmac', () => {
   it('Hmac called directly', () => {
@@ -25,7 +25,7 @@ describe('hmac', () => {
     algo: string,
     key: string | Buffer,
     data: string | string[] | Buffer,
-    expected: any
+    expected: any,
   ) {
     const nameKey = key.toString().replace(/\s/g, '');
     const nameData = data.toString().replace(/\s/g, '');
@@ -57,7 +57,7 @@ describe('hmac', () => {
     'sha1',
     'Node',
     ['some data', 'to hmac'],
-    '19fd6e1ba73d9ed2224dd5094a71babe85d9a892'
+    '19fd6e1ba73d9ed2224dd5094a71babe85d9a892',
   );
 
   // Test HMAC (Wikipedia Test Cases)
@@ -112,7 +112,7 @@ describe('hmac', () => {
     },
   ];
 
-  for (const { key, data, hmac } of wikipedia) {
+  for (const {key, data, hmac} of wikipedia) {
     for (const hash in hmac) {
       testHmac(hash, key, data, (hmac as any)[hash]);
     }
@@ -141,7 +141,7 @@ describe('hmac', () => {
       key: Buffer.from('4a656665', 'hex'), // 'Jefe'
       data: Buffer.from(
         '7768617420646f2079612077616e7420666f72206e6f74686' + '96e673f',
-        'hex'
+        'hex',
       ), // 'what do ya want for nothing?'
       hmac: {
         sha224: 'a30e01098bc6dbbf45690f3a7e9e6d0f8bbea2a39e6148008fd05e44',
@@ -162,7 +162,7 @@ describe('hmac', () => {
       data: Buffer.from(
         'ddddddddddddddddddddddddddddddddddddddddddddddddd' +
           'ddddddddddddddddddddddddddddddddddddddddddddddddddd',
-        'hex'
+        'hex',
       ),
       hmac: {
         sha224: '7fb3cb3588c6c1f6ffa9694d7d6ad2649365b0c1f65d69d1ec8333ea',
@@ -181,12 +181,12 @@ describe('hmac', () => {
     {
       key: Buffer.from(
         '0102030405060708090a0b0c0d0e0f10111213141516171819',
-        'hex'
+        'hex',
       ),
       data: Buffer.from(
         'cdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdc' +
           'dcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcd',
-        'hex'
+        'hex',
       ),
       hmac: {
         sha224: '6c11506874013cac6a2abc1bb382627cec6a90d86efc012de7afec5a',
@@ -223,14 +223,14 @@ describe('hmac', () => {
           'aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa' +
           'aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa' +
           'aaaaaaaaaaaa',
-        'hex'
+        'hex',
       ),
       // 'Test Using Larger Than Block-Size Key - Hash Key First'
       data: Buffer.from(
         '54657374205573696e67204c6172676572205468616e20426' +
           'c6f636b2d53697a65204b6579202d2048617368204b657920' +
           '4669727374',
-        'hex'
+        'hex',
       ),
       hmac: {
         sha224: '95e9a0db962095adaebe9b2d6f0dbce2d499f112f2d2b7273fa6870e',
@@ -254,7 +254,7 @@ describe('hmac', () => {
           'aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa' +
           'aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa' +
           'aaaaaaaaaaaa',
-        'hex'
+        'hex',
       ),
       // 'This is a test using a larger than block-size key and a larger ' +
       // 'than block-size data. The key needs to be hashed before being ' +
@@ -267,7 +267,7 @@ describe('hmac', () => {
           '20746f20626520686173686564206265666f7265206265696' +
           'e6720757365642062792074686520484d414320616c676f72' +
           '6974686d2e',
-        'hex'
+        'hex',
       ),
       hmac: {
         sha224: '3a854166ac5d9f023f54d517d0b39dbd946770db9c2b95c9f6f565d1',
@@ -323,20 +323,20 @@ describe('hmac', () => {
       data: Buffer.from(
         'ddddddddddddddddddddddddddddddddddddddddddddddddd' +
           'ddddddddddddddddddddddddddddddddddddddddddddddddddd',
-        'hex'
+        'hex',
       ),
       hmac: '56be34521d144c88dbb8c733f0e8b3f6',
     },
     {
       key: Buffer.from(
         '0102030405060708090a0b0c0d0e0f10111213141516171819',
-        'hex'
+        'hex',
       ),
       data: Buffer.from(
         'cdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdc' +
           'dcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcd' +
           'cdcdcdcdcd',
-        'hex'
+        'hex',
       ),
       hmac: '697eaf0aca3a3aea3a75164746ffaa79',
     },
@@ -351,7 +351,7 @@ describe('hmac', () => {
           'aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa' +
           'aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa' +
           'aaaaaaaaaaaaaaaaaaaaaa',
-        'hex'
+        'hex',
       ),
       data: 'Test Using Larger Than Block-Size Key - Hash Key First',
       hmac: '6b1ab7fe4bd7bf8f0b62e6ce61b9d0cd',
@@ -362,7 +362,7 @@ describe('hmac', () => {
           'aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa' +
           'aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa' +
           'aaaaaaaaaaaaaaaaaaaaaa',
-        'hex'
+        'hex',
       ),
       data:
         'Test Using Larger Than Block-Size Key and Larger Than One ' +
@@ -371,7 +371,7 @@ describe('hmac', () => {
     },
   ];
 
-  for (const { key, data, hmac } of rfc2202_md5) {
+  for (const {key, data, hmac} of rfc2202_md5) {
     testHmac('md5', key, data, hmac);
   }
 
@@ -392,20 +392,20 @@ describe('hmac', () => {
         'ddddddddddddddddddddddddddddddddddddddddddddd' +
           'ddddddddddddddddddddddddddddddddddddddddddddd' +
           'dddddddddd',
-        'hex'
+        'hex',
       ),
       hmac: '125d7342b9ac11cd91a39af48aa17b4f63f175d3',
     },
     {
       key: Buffer.from(
         '0102030405060708090a0b0c0d0e0f10111213141516171819',
-        'hex'
+        'hex',
       ),
       data: Buffer.from(
         'cdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdc' +
           'dcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcd' +
           'cdcdcdcdcd',
-        'hex'
+        'hex',
       ),
       hmac: '4c9007f4026250c6bc8414f9bf50c86c2d7235da',
     },
@@ -420,7 +420,7 @@ describe('hmac', () => {
           'aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa' +
           'aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa' +
           'aaaaaaaaaaaaaaaaaaaaaa',
-        'hex'
+        'hex',
       ),
       data: 'Test Using Larger Than Block-Size Key - Hash Key First',
       hmac: 'aa4ae5e15272d00e95705637ce8a3b55ed402112',
@@ -431,7 +431,7 @@ describe('hmac', () => {
           'aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa' +
           'aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa' +
           'aaaaaaaaaaaaaaaaaaaaaa',
-        'hex'
+        'hex',
       ),
       data:
         'Test Using Larger Than Block-Size Key and Larger Than One ' +
@@ -440,13 +440,13 @@ describe('hmac', () => {
     },
   ];
 
-  for (const { key, data, hmac } of rfc2202_sha1) {
+  for (const {key, data, hmac} of rfc2202_sha1) {
     testHmac('sha1', key, data, hmac);
   }
 
   it('digest encoding', () => {
     expect(crypto.createHmac('sha256', 'w00t').digest('ucs2')).to.be.eql(
-      crypto.createHmac('sha256', 'w00t').digest().toString('ucs2')
+      crypto.createHmac('sha256', 'w00t').digest().toString('ucs2'),
     );
   });
 

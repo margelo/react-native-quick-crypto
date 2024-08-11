@@ -1,9 +1,9 @@
-import type { BinaryLikeNode } from './../../../../../src/Utils';
-import { Buffer } from 'buffer';
+import type {BinaryLikeNode} from './../../../../../src/Utils';
+import {Buffer} from 'buffer';
 // import { Buffer } from '@craftzdog/react-native-buffer';
 import crypto from 'react-native-quick-crypto';
-import { describe, it } from '../../MochaRNAdapter';
-import { expect } from 'chai';
+import {describe, it} from '../../MochaRNAdapter';
+import {expect} from 'chai';
 
 type EncryptRequest = {
   payload: string;
@@ -18,7 +18,7 @@ type EncryptResponse = {
 
 const algo = 'aes-128-gcm';
 
-const encrypt = ({ payload, publicKey }: EncryptRequest): EncryptResponse => {
+const encrypt = ({payload, publicKey}: EncryptRequest): EncryptResponse => {
   const secretKey = crypto.randomBytes(16);
   const iv = crypto.randomBytes(16);
 
@@ -35,7 +35,7 @@ const encrypt = ({ payload, publicKey }: EncryptRequest): EncryptResponse => {
       key: publicKey,
       padding: crypto.constants.RSA_PKCS1_OAEP_PADDING,
     },
-    secretKey
+    secretKey,
   );
 
   return {
@@ -53,17 +53,17 @@ const decrypt = ({
   response: EncryptResponse;
   secretKey: BinaryLikeNode;
 }) => {
-  const { IV, PAYLOAD } = response;
+  const {IV, PAYLOAD} = response;
 
   const decipher = crypto.createDecipheriv(
     algo,
     secretKey,
-    Buffer.from(IV, 'base64')
+    Buffer.from(IV, 'base64'),
   );
 
   const encryptedPayload = Buffer.from(PAYLOAD, 'base64');
   let decrypted = decipher.update(
-    Buffer.from(encryptedPayload.subarray(0, encryptedPayload.length - 16))
+    Buffer.from(encryptedPayload.subarray(0, encryptedPayload.length - 16)),
   );
   decrypted = Buffer.concat([decrypted, decipher.final()]);
 
@@ -91,14 +91,14 @@ describe('test398', () => {
     const publicKey = getPublicKeyInPEMFormat(publicKeySpkiBase64);
     console.log('\n' + publicKey);
     const encrypted = encrypt({
-      payload: JSON.stringify({ a: 1 }),
+      payload: JSON.stringify({a: 1}),
       publicKey,
     });
-    console.log({ encrypted });
-    const { response: decrypted } = decrypt({
+    console.log({encrypted});
+    const {response: decrypted} = decrypt({
       response: encrypted,
       secretKey: encrypted.secretKey,
     });
-    expect(decrypted).to.equal({ a: 1 });
+    expect(decrypted).to.equal({a: 1});
   });
 });

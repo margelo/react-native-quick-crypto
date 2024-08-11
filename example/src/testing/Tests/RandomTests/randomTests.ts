@@ -1,17 +1,19 @@
-import { ab2str, abvToArrayBuffer } from './../../../../../packages/react-native-quick-crypto/src/utils/conversion';
-import { ArrayBufferView } from './../../../../../packages/react-native-quick-crypto/src/utils/types';
+import {
+  ab2str,
+  abvToArrayBuffer,
+} from './../../../../../packages/react-native-quick-crypto/src/utils/conversion';
+import {ArrayBufferView} from './../../../../../packages/react-native-quick-crypto/src/utils/types';
 // copied from https://github.com/nodejs/node/blob/master/test/parallel/test-crypto-random.js
 
 // Flags: --pending-deprecation
 import crypto from 'react-native-quick-crypto';
-import { describe, it } from '../../MochaRNAdapter';
-import { Buffer } from '@craftzdog/react-native-buffer';
-import { assert } from 'chai';
-import type { Done } from 'mocha';
+import {describe, it} from '../../MochaRNAdapter';
+import {Buffer} from '@craftzdog/react-native-buffer';
+import {assert} from 'chai';
+import type {Done} from 'mocha';
 
 describe('random', () => {
-
-  [crypto.randomBytes, crypto.pseudoRandomBytes].forEach((f) => {
+  [crypto.randomBytes, crypto.pseudoRandomBytes].forEach(f => {
     // TODO (Szymon)
     // [undefined, null, false, true, {}, []].forEach((value) => {
     //   const errObj = {
@@ -37,7 +39,7 @@ describe('random', () => {
     //   assert.throws(() => f(value, common.mustNotCall()), errObj);
     // });
 
-    [0, 1, 2, 4, 16, 256, 1024, 101.2].forEach((len) => {
+    [0, 1, 2, 4, 16, 256, 1024, 101.2].forEach(len => {
       const length = len;
       const funn = f;
       it('function ' + funn + ' & len ' + length, (done: Done) => {
@@ -77,7 +79,7 @@ describe('random', () => {
       new Float32Array(10),
       new Float64Array(10),
       new DataView(new ArrayBuffer(10)),
-    ].forEach((buf) => {
+    ].forEach(buf => {
       const before = Buffer.from(buf.buffer).toString('hex');
       crypto.randomFillSync(buf);
       const after = Buffer.from(buf.buffer).toString('hex');
@@ -86,7 +88,7 @@ describe('random', () => {
   });
 
   it('simple test 4 - randomFillSync ArrayBuffer', () => {
-    [new ArrayBuffer(10), new ArrayBuffer(10)].forEach((buf) => {
+    [new ArrayBuffer(10), new ArrayBuffer(10)].forEach(buf => {
       const before = Buffer.from(buf).toString('hex');
       crypto.randomFillSync(buf);
       const after = Buffer.from(buf).toString('hex');
@@ -150,7 +152,7 @@ describe('random', () => {
 
   it('simple test 8', (done: Done) => {
     let ctr = 0;
-    [new ArrayBuffer(10), new ArrayBuffer(10)].forEach((buf) => {
+    [new ArrayBuffer(10), new ArrayBuffer(10)].forEach(buf => {
       const before = Buffer.from(buf).toString('hex');
       crypto.randomFill(buf, (_err, res) => {
         try {
@@ -173,7 +175,11 @@ describe('random', () => {
     crypto.randomFillSync(buf, 5, 5);
     const after = buf.toString('hex');
     assert.notStrictEqual(before, after, 'before/after');
-    assert.deepStrictEqual(before.slice(0, 5), after.slice(0, 5), 'before/after slices');
+    assert.deepStrictEqual(
+      before.slice(0, 5),
+      after.slice(0, 5),
+      'before/after slices',
+    );
   });
 
   it('randomFillSync - deepStringEqual - Uint8Array', () => {
@@ -182,7 +188,11 @@ describe('random', () => {
     crypto.randomFillSync(buf, 5, 5);
     const after = Buffer.from(buf).toString('hex');
     assert.notStrictEqual(before, after, 'before/after');
-    assert.deepStrictEqual(before.slice(0, 5), after.slice(0, 5), 'before/after slices');
+    assert.deepStrictEqual(
+      before.slice(0, 5),
+      after.slice(0, 5),
+      'before/after slices',
+    );
   });
 
   it('randomFillSync - deepStringEqual - Buffer no size', () => {
@@ -191,7 +201,11 @@ describe('random', () => {
     crypto.randomFillSync(buf, 5);
     const after = buf.toString('hex');
     assert.notStrictEqual(before, after, 'before/after');
-    assert.deepStrictEqual(before.slice(0, 5), after.slice(0, 5), 'before/after slices');
+    assert.deepStrictEqual(
+      before.slice(0, 5),
+      after.slice(0, 5),
+      'before/after slices',
+    );
   });
 
   it('randomFill - deepStringEqual - Buffer', (done: Done) => {
@@ -202,7 +216,11 @@ describe('random', () => {
       try {
         const after = Buffer.from(res).toString('hex');
         assert.notStrictEqual(before, after, 'before/after');
-        assert.deepStrictEqual(before.slice(0, 5), after.slice(0, 5), 'before/after slices');
+        assert.deepStrictEqual(
+          before.slice(0, 5),
+          after.slice(0, 5),
+          'before/after slices',
+        );
         done();
       } catch (e) {
         done(e);
@@ -217,7 +235,11 @@ describe('random', () => {
       try {
         const after = Buffer.from(res).toString('hex');
         assert.notStrictEqual(before, after, 'before/after');
-        assert.deepStrictEqual(before.slice(0, 5), after.slice(0, 5), 'before/after slices');
+        assert.deepStrictEqual(
+          before.slice(0, 5),
+          after.slice(0, 5),
+          'before/after slices',
+        );
         done();
       } catch (e) {
         done(e);
@@ -346,7 +368,7 @@ describe('random', () => {
   //   });
   // });
 
-  ['pseudoRandomBytes', 'prng', 'rng'].forEach((name) => {
+  ['pseudoRandomBytes', 'prng', 'rng'].forEach(name => {
     it(name, () => {
       const desc = Object.getOwnPropertyDescriptor(crypto, name);
       assert.ok(desc, 'descriptor');
@@ -509,7 +531,7 @@ describe('random', () => {
         /ERR_OUT_OF_RANGE/,
         'The value of "max" is out of range. It must be greater than ' +
           `the value of "min" (${interval[interval.length - 2] || 0}). ` +
-          `Received ${interval[interval.length - 1]}`
+          `Received ${interval[interval.length - 1]}`,
       );
     });
   }
@@ -560,7 +582,7 @@ describe('random', () => {
       /ERR_OUT_OF_RANGE/,
       'The value of "max" is out of range. ' +
         `It must be <= ${MAX_RANGE}. ` +
-        'Received 281_474_976_710_657'
+        'Received 281_474_976_710_657',
     );
   });
 
@@ -570,16 +592,16 @@ describe('random', () => {
       /ERR_OUT_OF_RANGE/,
       'The value of "max" is out of range. ' +
         `It must be <= ${MAX_RANGE}. ` +
-        'Received 281_474_976_710_656'
+        'Received 281_474_976_710_656',
     );
   });
 
-  [true, NaN, null, {}, [], 10].forEach((val) => {
+  [true, NaN, null, {}, [], 10].forEach(val => {
     it(`expect type error: ${val}`, () => {
       assert.throws(
         // @ts-expect-error
         () => crypto.randomInt(0, 1, val),
-        /callback must be a function or undefined/
+        /callback must be a function or undefined/,
       );
     });
   });
@@ -601,5 +623,4 @@ describe('random', () => {
       done();
     });
   });
-
 });

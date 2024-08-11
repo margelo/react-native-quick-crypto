@@ -1,22 +1,26 @@
-import { useCallback, useState } from 'react';
-import type { BenchmarkSuite, Suites } from '../types/Suite';
-import type { SuiteResults, BenchmarkResult } from '../types/Results';
+import {useCallback, useState} from 'react';
+import type {BenchmarkSuite, Suites} from '../types/Suite';
+import type {SuiteResults, BenchmarkResult} from '../types/Results';
 
-export const useBenchmarksRun = (runCount: number):
-  [SuiteResults<BenchmarkResult>, (suites: Suites<BenchmarkSuite>) => void] => {
+export const useBenchmarksRun = (
+  runCount: number,
+): [
+  SuiteResults<BenchmarkResult>,
+  (suites: Suites<BenchmarkSuite>) => void,
+] => {
   const [results, setResults] = useState<SuiteResults<BenchmarkResult>>({});
 
   const addResult = useCallback(
     (newResult: BenchmarkResult) => {
-      setResults((prev) => {
+      setResults(prev => {
         if (!prev[newResult.suiteName]) {
-          prev[newResult.suiteName] = { results: [] };
+          prev[newResult.suiteName] = {results: []};
         }
         prev[newResult.suiteName]?.results.push(newResult);
-        return { ...prev };
+        return {...prev};
       });
     },
-    [setResults]
+    [setResults],
   );
 
   const runBenchmarks = (suites: Suites<BenchmarkSuite>) => {
@@ -30,11 +34,11 @@ export const useBenchmarksRun = (runCount: number):
 const run = (
   addBenchmarkResult: (benchmarkResult: BenchmarkResult) => void,
   suites: Suites<BenchmarkSuite> = {},
-  runCount: number
+  runCount: number,
 ) => {
   Object.entries(suites).forEach(([suiteName, suite]) => {
     if (suite.value) {
-      const res = suite.benchmarks.map((benchmark) => {
+      suite.benchmarks.map(benchmark => {
         if (!benchmark.them || !benchmark.us) {
           return;
         }

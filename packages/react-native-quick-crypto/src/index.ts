@@ -47,7 +47,6 @@ export const install = () => {
 
   // @ts-expect-error subtle isn't fully implemented and Cryptokey is missing
   global.crypto = QuickCrypto;
-
 };
 
 // random, cipher, hash use nextTick

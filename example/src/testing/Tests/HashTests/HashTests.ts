@@ -1,8 +1,8 @@
 // copied from https://github.com/nodejs/node/blob/master/test/parallel/test-crypto-hash.js
-import { Buffer } from '@craftzdog/react-native-buffer';
-import { assert, expect } from 'chai';
+import {Buffer} from '@craftzdog/react-native-buffer';
+import {assert, expect} from 'chai';
 import crypto from 'react-native-quick-crypto';
-import { describe, it } from '../../MochaRNAdapter';
+import {describe, it} from '../../MochaRNAdapter';
 
 describe('hash', () => {
   'use strict';
@@ -43,7 +43,7 @@ describe('hash', () => {
     assert.strictEqual(
       a0,
       'h\u00ea\u00cb\u0097\u00d8o\fF!\u00fa+\u000e\u0017\u00ca\u00bd\u008c',
-      `${cryptoType} with ${digest} digest failed to evaluate to expected hash`
+      `${cryptoType} with ${digest} digest failed to evaluate to expected hash`,
     );
 
     cryptoType = 'md5';
@@ -51,14 +51,14 @@ describe('hash', () => {
     assert.strictEqual(
       a1,
       '8308651804facb7b9af8ffc53a33a22d6a1c8ac2',
-      `${cryptoType} with ${digest} digest failed to evaluate to expected hash`
+      `${cryptoType} with ${digest} digest failed to evaluate to expected hash`,
     );
     cryptoType = 'sha256';
     digest = 'base64';
     assert.strictEqual(
       a2,
       '2bX1jws4GYKTlxhloUB09Z66PoJZW+y+hq5R8dnx9l4=',
-      `${cryptoType} with ${digest} digest failed to evaluate to expected hash`
+      `${cryptoType} with ${digest} digest failed to evaluate to expected hash`,
     );
     cryptoType = 'sha512';
     digest = 'latin1';
@@ -70,9 +70,9 @@ describe('hash', () => {
           '\u00d6\u0092\u00a3\u00df\u00a2i\u00a1\u009b\n\n*\u000f' +
           '\u00d7\u00d6\u00a2\u00a8\u0085\u00e3<\u0083\u009c\u0093' +
           "\u00c2\u0006\u00da0\u00a1\u00879(G\u00ed'",
-        'latin1'
+        'latin1',
       ),
-      `${cryptoType} with ${digest} digest failed to evaluate to expected hash`
+      `${cryptoType} with ${digest} digest failed to evaluate to expected hash`,
     );
     cryptoType = 'sha1';
     digest = 'hex';
@@ -80,7 +80,7 @@ describe('hash', () => {
     assert.deepStrictEqual(
       a4,
       Buffer.from('8308651804facb7b9af8ffc53a33a22d6a1c8ac2', 'hex'),
-      `${cryptoType} with ${digest} digest failed to evaluate to expected hash`
+      `${cryptoType} with ${digest} digest failed to evaluate to expected hash`,
     );
 
     // Stream interface should produce the same result.
@@ -135,7 +135,7 @@ describe('hash', () => {
           },
         } as any),
       /boom/,
-      'boom'
+      'boom',
     );
   });
 
@@ -145,7 +145,7 @@ describe('hash', () => {
       // @ts-expect-error
       () => crypto.createHash('sha256').update(),
       /The first argument must be one of/,
-      'TypeError'
+      'TypeError',
     );
   });
 
@@ -157,11 +157,11 @@ describe('hash', () => {
     assert.strictEqual(
       hutf8,
       '4b21bbd1a68e690a730ddcb5a8bc94ead9879ffe82580767ad7ec6fa8ba2dea6' +
-        '43a821af66afa9a45b6a78c712fecf0e56dc7f43aef4bcfc8eb5b4d8dca6ea5b'
+        '43a821af66afa9a45b6a78c712fecf0e56dc7f43aef4bcfc8eb5b4d8dca6ea5b',
     );
     assert.notStrictEqual(
       hutf8,
-      crypto.createHash('sha512').update('УТФ-8 text', 'latin1').digest('hex')
+      crypto.createHash('sha512').update('УТФ-8 text', 'latin1').digest('hex'),
     );
   });
 
@@ -174,7 +174,7 @@ describe('hash', () => {
   it('shas ucs2', () => {
     assert.strictEqual(
       crypto.createHash('sha256').update('test').digest('ucs2'),
-      crypto.createHash('sha256').update('test').digest().toString('ucs2')
+      crypto.createHash('sha256').update('test').digest().toString('ucs2'),
     );
   });
 
@@ -183,7 +183,8 @@ describe('hash', () => {
       // @ts-expect-error
       () => crypto.createHash(),
       /Value is undefined, expected a String/,
-      'The "algorithm" argument must be of type string. ' + 'Received undefined'
+      'The "algorithm" argument must be of type string. ' +
+        'Received undefined',
     );
   });
 
@@ -192,68 +193,69 @@ describe('hash', () => {
     const instance = crypto.Hash('sha256');
     assert(
       instance instanceof Hash,
-      'Hash is expected to return a new instance' + ' when called without `new`'
+      'Hash is expected to return a new instance' +
+        ' when called without `new`',
     );
   });
 
   it('Default outputLengths.', () => {
     assert.strictEqual(
       crypto.createHash('shake128').digest('hex'),
-      '7f9c2ba4e88f827d616045507605853e'
+      '7f9c2ba4e88f827d616045507605853e',
     );
     assert.strictEqual(
       crypto.createHash('shake128', null).digest('hex'),
-      '7f9c2ba4e88f827d616045507605853e'
+      '7f9c2ba4e88f827d616045507605853e',
     );
     assert.strictEqual(
       crypto.createHash('shake256').digest('hex'),
-      '46b9dd2b0ba88d13233b3feb743eeb24' + '3fcd52ea62b81b82b50c27646ed5762f'
+      '46b9dd2b0ba88d13233b3feb743eeb24' + '3fcd52ea62b81b82b50c27646ed5762f',
     );
     assert.strictEqual(
       crypto
-        .createHash('shake256', { outputLength: 0 })
+        .createHash('shake256', {outputLength: 0})
         .copy() // Default outputLength.
         .digest('hex'),
-      '46b9dd2b0ba88d13233b3feb743eeb24' + '3fcd52ea62b81b82b50c27646ed5762f'
+      '46b9dd2b0ba88d13233b3feb743eeb24' + '3fcd52ea62b81b82b50c27646ed5762f',
     );
   });
 
   it('Short outputLengths.', () => {
     assert.strictEqual(
-      crypto.createHash('shake128', { outputLength: 0 }).digest('hex'),
-      ''
+      crypto.createHash('shake128', {outputLength: 0}).digest('hex'),
+      '',
     );
     assert.strictEqual(
       crypto
-        .createHash('shake128', { outputLength: 5 })
-        .copy({ outputLength: 0 })
+        .createHash('shake128', {outputLength: 5})
+        .copy({outputLength: 0})
         .digest('hex'),
-      ''
+      '',
     );
     assert.strictEqual(
-      crypto.createHash('shake128', { outputLength: 5 }).digest('hex'),
-      '7f9c2ba4e8'
+      crypto.createHash('shake128', {outputLength: 5}).digest('hex'),
+      '7f9c2ba4e8',
     );
     assert.strictEqual(
       crypto
-        .createHash('shake128', { outputLength: 0 })
-        .copy({ outputLength: 5 })
+        .createHash('shake128', {outputLength: 0})
+        .copy({outputLength: 5})
         .digest('hex'),
-      '7f9c2ba4e8'
+      '7f9c2ba4e8',
     );
     assert.strictEqual(
-      crypto.createHash('shake128', { outputLength: 15 }).digest('hex'),
-      '7f9c2ba4e88f827d61604550760585'
+      crypto.createHash('shake128', {outputLength: 15}).digest('hex'),
+      '7f9c2ba4e88f827d61604550760585',
     );
     assert.strictEqual(
-      crypto.createHash('shake256', { outputLength: 16 }).digest('hex'),
-      '46b9dd2b0ba88d13233b3feb743eeb24'
+      crypto.createHash('shake256', {outputLength: 16}).digest('hex'),
+      '46b9dd2b0ba88d13233b3feb743eeb24',
     );
   });
 
   it('Large outputLengths.', () => {
     assert.strictEqual(
-      crypto.createHash('shake128', { outputLength: 128 }).digest('hex'),
+      crypto.createHash('shake128', {outputLength: 128}).digest('hex'),
       '7f9c2ba4e88f827d616045507605853e' +
         'd73b8093f6efbc88eb1a6eacfa66ef26' +
         '3cb1eea988004b93103cfb0aeefd2a68' +
@@ -261,7 +263,7 @@ describe('hash', () => {
         '35b8cc873c23dc62b8d260169afa2f75' +
         'ab916a58d974918835d25e6a435085b2' +
         'badfd6dfaac359a5efbb7bcc4b59d538' +
-        'df9a04302e10c8bc1cbf1a0b3a5120ea'
+        'df9a04302e10c8bc1cbf1a0b3a5120ea',
     );
     const superLongHash = crypto
       .createHash('shake256', {
@@ -276,28 +278,28 @@ describe('hash', () => {
 
   it('Non-XOF hash functions should accept valid outputLength options as well.', () => {
     assert.strictEqual(
-      crypto.createHash('sha224', { outputLength: 28 }).digest('hex'),
-      'd14a028c2a3a2bc9476102bb288234c4' + '15a2b01f828ea62ac5b3e42f'
+      crypto.createHash('sha224', {outputLength: 28}).digest('hex'),
+      'd14a028c2a3a2bc9476102bb288234c4' + '15a2b01f828ea62ac5b3e42f',
     );
   });
 
   it('Passing invalid sizes should throw during creation.', () => {
     assert.throws(() => {
-      crypto.createHash('sha256', { outputLength: 28 });
+      crypto.createHash('sha256', {outputLength: 28});
     }, /ERR_OSSL_EVP_NOT_XOF_OR_INVALID_LENGTH/);
 
     for (const outputLength of [null, {}, 'foo', false]) {
       assert.throws(
         // @ts-expect-error
-        () => crypto.createHash('sha256', { outputLength }),
-        /ERR_INVALID_ARG_TYPE/
+        () => crypto.createHash('sha256', {outputLength}),
+        /ERR_INVALID_ARG_TYPE/,
       );
     }
 
     for (const outputLength of [-1, 0.5, Infinity, 2 ** 90]) {
       assert.throws(
-        () => crypto.createHash('sha256', { outputLength }),
-        /ERR_OUT_OF_RANGE/
+        () => crypto.createHash('sha256', {outputLength}),
+        /ERR_OUT_OF_RANGE/,
       );
     }
   });

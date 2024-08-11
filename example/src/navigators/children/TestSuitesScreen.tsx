@@ -6,8 +6,7 @@ import {TestItem} from '../../components/TestItem';
 import {useTestsList} from '../../hooks/useTestsList';
 import {useTestsRun} from '../../hooks/useTestsRun';
 
-
-export const TestSuitesScreen= () => {
+export const TestSuitesScreen = () => {
   const [tests, toggle, clearAll, checkAll] = useTestsList();
   const [results, runTests] = useTestsRun();
   let totalCount = 0;

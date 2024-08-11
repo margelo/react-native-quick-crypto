@@ -1,8 +1,8 @@
 // copied from https://github.com/nodejs/node/blob/master/test/parallel/test-crypto-hash.js
 import crypto from 'react-native-quick-crypto';
-import { describe, it } from '../../MochaRNAdapter';
-import { assert } from 'chai';
-import { Buffer } from '@craftzdog/react-native-buffer';
+import {describe, it} from '../../MochaRNAdapter';
+import {assert} from 'chai';
+import {Buffer} from '@craftzdog/react-native-buffer';
 
 describe('createCipheriv/createDecipheriv', () => {
   'use strict';
@@ -25,7 +25,7 @@ describe('createCipheriv/createDecipheriv', () => {
       assert.strictEqual(
         txt,
         plaintext,
-        `encryption/decryption with key ${key} and iv ${iv}`
+        `encryption/decryption with key ${key} and iv ${iv}`,
       );
 
       // Streaming cipher interface
@@ -43,7 +43,7 @@ describe('createCipheriv/createDecipheriv', () => {
       assert.strictEqual(
         txt,
         plaintext,
-        `streaming cipher with key ${key} and iv ${iv}`
+        `streaming cipher with key ${key} and iv ${iv}`,
       );
     });
   }
@@ -67,7 +67,7 @@ describe('createCipheriv/createDecipheriv', () => {
       assert.strictEqual(
         txt,
         plaintext,
-        `encryption/decryption with key ${key} and iv ${iv}`
+        `encryption/decryption with key ${key} and iv ${iv}`,
       );
     });
   }
@@ -106,7 +106,7 @@ describe('createCipheriv/createDecipheriv', () => {
       assert.strictEqual(
         decrypted,
         plaintext,
-        'Decrypted text should match the original plaintext'
+        'Decrypted text should match the original plaintext',
       );
     });
   }

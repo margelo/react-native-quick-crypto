@@ -1,6 +1,6 @@
-import { expect } from 'chai';
-import { Buffer } from '@craftzdog/react-native-buffer';
-import { describe, it } from '../../MochaRNAdapter';
+import {expect} from 'chai';
+import {Buffer} from '@craftzdog/react-native-buffer';
+import {describe, it} from '../../MochaRNAdapter';
 import crypto from 'react-native-quick-crypto';
 // import { PrivateKey } from 'sscrypto/node';
 
@@ -42,7 +42,7 @@ import crypto from 'react-native-quick-crypto';
 
 describe('sign/verify', () => {
   it('basic sign/verify', async () => {
-    const { publicKey, privateKey } = crypto.generateKeyPairSync('rsa', {
+    const {publicKey, privateKey} = crypto.generateKeyPairSync('rsa', {
       modulusLength: 1024,
       publicKeyEncoding: {
         type: 'pkcs1',
@@ -75,7 +75,7 @@ describe('sign/verify', () => {
         padding,
         saltLength,
       },
-      signature
+      signature,
     );
 
     expect(matches).to.equal(true);
@@ -100,7 +100,7 @@ MFkwEwYHKoZIzj0CAQYIKoZIzj0DAQcDQgAEtm3ESMYdvWH+PfG50ruMt25lQ4iY
 
     const data = Buffer.from(
       'lets try if we can check the crypto fun here',
-      'utf8'
+      'utf8',
     );
 
     // Do the signing
@@ -128,7 +128,7 @@ MFkwEwYHKoZIzj0CAQYIKoZIzj0DAQcDQgAEtm3ESMYdvWH+PfG50ruMt25lQ4iY
         type: 'spki',
         dsaEncoding: 'ieee-p1363',
       },
-      signature
+      signature,
     );
 
     expect(success).to.equal(true);

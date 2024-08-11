@@ -1,11 +1,11 @@
 import React from 'react';
-import { View, Text, StyleSheet } from 'react-native';
+import {View, Text, StyleSheet} from 'react-native';
 
 type SuiteProps = {
   description: string;
 };
 
-export const Suite: React.FC<SuiteProps> = ({ description }: SuiteProps) => {
+export const Suite: React.FC<SuiteProps> = ({description}: SuiteProps) => {
   const emoji = '↘️ ';
   const fullText = emoji + description;
 

@@ -1,8 +1,8 @@
-import { expect } from 'chai';
+import {expect} from 'chai';
 // import type { Buffer } from '@craftzdog/react-native-buffer';
-import { describe, it } from '../../MochaRNAdapter';
+import {describe, it} from '../../MochaRNAdapter';
 import crypto from 'react-native-quick-crypto';
-import { assertThrowsAsync } from '../util';
+import {assertThrowsAsync} from '../util';
 import type {
   AESAlgorithm,
   AESLength,
@@ -12,9 +12,9 @@ import type {
   KeyUsage,
   NamedCurve,
 } from '../../../../../src/keys';
-import { isCryptoKey } from '../../../../../src/keys';
+import {isCryptoKey} from '../../../../../src/keys';
 
-const { subtle } = crypto;
+const {subtle} = crypto;
 
 const allUsages: KeyUsage[] = [
   'encrypt',
@@ -91,12 +91,12 @@ const vectors: Vectors = {
   //   usages: ['encrypt', 'decrypt', 'wrapKey', 'unwrapKey'],
   // },
   ECDSA: {
-    algorithm: { namedCurve: 'P-521' },
+    algorithm: {namedCurve: 'P-521'},
     result: 'CryptoKeyPair',
     usages: ['sign', 'verify'],
   },
   ECDH: {
-    algorithm: { namedCurve: 'P-521' },
+    algorithm: {namedCurve: 'P-521'},
     result: 'CryptoKeyPair',
     usages: ['deriveKey', 'deriveBits'],
   },
@@ -135,17 +135,17 @@ describe('subtle - generateKey', () => {
             // The extractable and usages values are invalid here also,
             // but the unrecognized algorithm name should be caught first.
             await subtle.generateKey(algorithm, 7, []),
-          errorText
+          errorText,
         );
       });
     }
 
     const invalidAlgoTests = [
       'AES',
-      { name: 'AES' },
-      { name: 'AES-CMAC' },
-      { name: 'AES-CFB' },
-      { name: 'HMAC', hash: 'MD5' },
+      {name: 'AES'},
+      {name: 'AES-CMAC'},
+      {name: 'AES-CFB'},
+      {name: 'HMAC', hash: 'MD5'},
       {
         name: 'RSA',
         hash: 'SHA-256',
@@ -179,9 +179,9 @@ describe('subtle - generateKey', () => {
                 ...vectors[name]?.algorithm,
               },
               true,
-              []
+              [],
             ),
-          'Usages cannot be empty'
+          'Usages cannot be empty',
         );
 
         // For CryptoKeyPair results the private key
@@ -201,14 +201,14 @@ describe('subtle - generateKey', () => {
                   ...vectors[name]?.algorithm,
                 },
                 true,
-                ['verify']
+                ['verify'],
               ),
-            'Usages cannot be empty'
+            'Usages cannot be empty',
           );
         }
 
         const invalidUsages: KeyUsage[] = [];
-        allUsages.forEach((usage) => {
+        allUsages.forEach(usage => {
           if (!vectors[name]?.usages.includes(usage)) {
             invalidUsages.push(usage);
           }
@@ -222,9 +222,9 @@ describe('subtle - generateKey', () => {
                   ...vectors[name]?.algorithm,
                 },
                 true,
-                [...(vectors[name]?.usages as KeyUsage[]), invalidUsage]
+                [...(vectors[name]?.usages as KeyUsage[]), invalidUsage],
               ),
-            'Unsupported key usage'
+            'Unsupported key usage',
           );
         }
       });
@@ -440,7 +440,7 @@ describe('subtle - generateKey', () => {
       name: AnyAlgorithm,
       namedCurve: NamedCurve,
       privateUsages: KeyUsage[],
-      publicUsages: KeyUsage[] = privateUsages
+      publicUsages: KeyUsage[] = privateUsages,
     ) {
       it(`EC keygen: ${name} ${namedCurve} ${privateUsages} ${publicUsages}`, async () => {
         let usages = privateUsages;
@@ -454,9 +454,9 @@ describe('subtle - generateKey', () => {
             namedCurve,
           },
           true,
-          usages
+          usages,
         );
-        const { publicKey, privateKey } = pair as CryptoKeyPair;
+        const {publicKey, privateKey} = pair as CryptoKeyPair;
         const pub = publicKey as CryptoKey;
         const priv = privateKey as CryptoKey;
 
@@ -476,26 +476,26 @@ describe('subtle - generateKey', () => {
         expect(priv.algorithm.namedCurve, namedCurve);
 
         // Invalid parameters
-        [1, true, {}, [], null].forEach(async (curve) => {
+        [1, true, {}, [], null].forEach(async curve => {
           await assertThrowsAsync(
             async () =>
               await subtle.generateKey(
                 // @ts-expect-error
-                { name, namedCurve: curve },
+                {name, namedCurve: curve},
                 true,
-                privateUsages
+                privateUsages,
               ),
-            'NotSupportedError'
+            'NotSupportedError',
           );
         });
         await assertThrowsAsync(
           async () =>
             subtle.generateKey(
-              { name, namedCurve: undefined },
+              {name, namedCurve: undefined},
               true,
-              privateUsages
+              privateUsages,
             ),
-          "Unrecognized namedCurve 'undefined'"
+          "Unrecognized namedCurve 'undefined'",
         );
       });
     }
@@ -512,7 +512,7 @@ describe('subtle - generateKey', () => {
     async function testAesKeyGen(args: AESArgs) {
       const [name, length, usages] = args;
       it(`AES keygen: ${name} ${length} ${usages}`, async () => {
-        const key = await subtle.generateKey({ name, length }, true, usages);
+        const key = await subtle.generateKey({name, length}, true, usages);
         const k = key as CryptoKey;
         expect(k).is.not.undefined;
         expect(isCryptoKey(k));
@@ -525,18 +525,18 @@ describe('subtle - generateKey', () => {
 
         // Invalid parameters
         [1, 100, 257, '', false, null, undefined].forEach(
-          async (invalidParam) => {
+          async invalidParam => {
             await assertThrowsAsync(
               async () =>
                 subtle.generateKey(
                   // @ts-expect-error
-                  { name, length: invalidParam },
+                  {name, length: invalidParam},
                   true,
-                  usages
+                  usages,
                 ),
-              'AES key length must be 128, 192, or 256 bits'
+              'AES key length must be 128, 192, or 256 bits',
             );
-          }
+          },
         );
       });
     }
@@ -552,7 +552,7 @@ describe('subtle - generateKey', () => {
       ['AES-KW', 256, ['wrapKey', 'unwrapKey']],
     ];
 
-    aesTests.map((args) => testAesKeyGen(args));
+    aesTests.map(args => testAesKeyGen(args));
   }
 
   /*

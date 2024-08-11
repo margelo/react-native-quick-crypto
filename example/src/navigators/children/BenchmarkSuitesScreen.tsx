@@ -15,7 +15,8 @@ import {useBenchmarksRun} from '../../hooks/useBenchmarksRun';
 export const BenchmarkSuitesScreen = () => {
   const [runCount, setRunCount] = useState<number>(1000);
   const [challenger, setChallenger] = useState<string>('crypto-browserify');
-  const [benchmarks, toggle, clearAll, checkAll] = useBenchmarksList(challenger);
+  const [benchmarks, toggle, clearAll, checkAll] =
+    useBenchmarksList(challenger);
   const [results, runBenchmarks] = useBenchmarksRun(runCount);
   let totalCount = 0;
 

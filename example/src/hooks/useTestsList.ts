@@ -1,8 +1,8 @@
 /* eslint-disable @typescript-eslint/no-shadow */
-import { useState, useCallback } from 'react';
+import {useState, useCallback} from 'react';
 import type * as MochaTypes from 'mocha';
-import type { Suites, TestSuite } from '../types/Suite';
-import { rootSuite } from '../testing/MochaRNAdapter';
+import type {Suites, TestSuite} from '../types/Suite';
+import {rootSuite} from '../testing/MochaRNAdapter';
 
 // import '../testing/Tests/pbkdf2Tests/pbkdf2Tests';
 import '../testing/Tests/RandomTests/randomTests';
@@ -34,29 +34,29 @@ export const useTestsList = (): [
 
   const toggle = useCallback(
     (description: string) => {
-      setSuites((tests) => {
+      setSuites(tests => {
         tests[description]!.value = !tests[description]!.value;
         return tests;
       });
     },
-    [setSuites]
+    [setSuites],
   );
 
   const clearAll = useCallback(() => {
-    setSuites((suites) => {
+    setSuites(suites => {
       Object.entries(suites).forEach(([_, suite]) => {
         suite.value = false;
       });
-      return { ...suites };
+      return {...suites};
     });
   }, [setSuites]);
 
   const checkAll = useCallback(() => {
-    setSuites((suites) => {
+    setSuites(suites => {
       Object.entries(suites).forEach(([_, suite]) => {
         suite.value = true;
       });
-      return { ...suites };
+      return {...suites};
     });
   }, [setSuites]);
 
@@ -68,8 +68,8 @@ const getInitialSuites = () => {
 
   // interrogate the loaded mocha suites/tests via a temporary runner
   const runner = new Mocha.Runner(rootSuite) as MochaTypes.Runner;
-  runner.suite.suites.map((s) => {
-    suites[s.title] = { value: false, count: s.total() };
+  runner.suite.suites.map(s => {
+    suites[s.title] = {value: false, count: s.total()};
   });
 
   // return count-enhanced list and totals

@@ -61,7 +61,7 @@ jobs:
             ${{ runner.os }}-gradle-
 
       - name: Run Gradle Build for android/
-        run: cd android && ./gradlew assembleDebug && cd ..
+        run: cd packages/react-native-quick-crypto/android && ./gradlew assembleDebug && cd ../..
 
       - name: Run Gradle Build for example/android/
         run: cd example/android && ./gradlew assembleDebug --build-cache && cd ../..

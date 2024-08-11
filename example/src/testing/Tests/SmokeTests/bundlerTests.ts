@@ -1,5 +1,5 @@
-import { expect } from 'chai';
-import { describe, it } from '../../MochaRNAdapter';
+import {expect} from 'chai';
+import {describe, it} from '../../MochaRNAdapter';
 
 describe('bundler smoke tests', () => {
   it('using cjs work with default import through the crypto alias', function () {

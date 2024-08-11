@@ -1,5 +1,4 @@
 import React, {useState} from 'react';
-import type {NativeStackScreenProps} from '@react-navigation/native-stack';
 import {SafeAreaView, ScrollView, StyleSheet, Text, View} from 'react-native';
 import BouncyCheckbox from 'react-native-bouncy-checkbox';
 import {CorrectResultItem} from '../../components/CorrectResultItem';

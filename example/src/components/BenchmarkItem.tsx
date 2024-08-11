@@ -3,8 +3,7 @@ import {View, Text, StyleSheet, TouchableOpacity} from 'react-native';
 import BouncyCheckbox from 'react-native-bouncy-checkbox';
 import type {BenchmarkResult} from '../types/Results';
 import {useNavigation} from '@react-navigation/native';
-import type {NativeStackNavigationProp} from '@react-navigation/native-stack';
-import { calculateTimes, formatNumber } from '../benchmarks/utils';
+import {calculateTimes, formatNumber} from '../benchmarks/utils';
 
 type BenchmarkItemProps = {
   description: string;
@@ -26,7 +25,7 @@ export const BenchmarkItem: React.FC<BenchmarkItemProps> = ({
     us: 0,
     them: 0,
   };
-  results.map((r) => {
+  results.map(r => {
     stats.us += r.us;
     stats.them += r.them;
   });
@@ -63,7 +62,9 @@ export const BenchmarkItem: React.FC<BenchmarkItemProps> = ({
         <Text style={styles.label} numberOfLines={1}>
           {description}
         </Text>
-        <Text style={[styles.times, styles[timesType]]} numberOfLines={1}>{formatNumber(times, 2, 'x')}</Text>
+        <Text style={[styles.times, styles[timesType]]} numberOfLines={1}>
+          {formatNumber(times, 2, 'x')}
+        </Text>
         <Text style={styles.count} numberOfLines={1}>
           {count}
         </Text>
