@@ -2,7 +2,7 @@
   "compilerOptions": {
     "composite": true,
     "outDir": "lib",
-    "rootDir": "src",
+    "rootDir": ".",
     "allowUnreachableCode": false,
     "allowUnusedLabels": false,
     "esModuleInterop": true,
@@ -25,5 +25,6 @@
     "target": "esnext",
     "verbatimModuleSyntax": true,
   },
-  "include": ["src"]
+  "include": ["src"],
+  "exclude": ["zzz"]
 }

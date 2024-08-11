@@ -32,12 +32,12 @@ export function randomFill<T extends ArrayBufferView>(
   callback: (err: Error | null, buf: T) => void
 ): void;
 
-export function randomFill(buffer: ArrayBufferView, ...rest: any[]): void {
+export function randomFill(buffer: ArrayBufferView, ...rest: unknown[]): void {
   if (typeof rest[rest.length - 1] !== 'function') {
     throw new Error('No callback provided to randomFill');
   }
 
-  const callback = rest[rest.length - 1] as any as (
+  const callback = rest[rest.length - 1] as unknown as (
     err: Error | null,
     buf?: ArrayBuffer
   ) => void;
@@ -46,12 +46,12 @@ export function randomFill(buffer: ArrayBufferView, ...rest: any[]): void {
   let size: number = buffer.byteLength;
 
   if (typeof rest[2] === 'function') {
-    offset = rest[0];
-    size = rest[1];
+    offset = rest[0] as number;
+    size = rest[1] as number;
   }
 
   if (typeof rest[1] === 'function') {
-    offset = rest[0];
+    offset = rest[0] as number;
   }
 
   getNative();
@@ -158,12 +158,12 @@ export function randomInt(
     typeof arg2 === 'undefined' || typeof arg2 === 'function';
 
   if (minNotSpecified) {
-    callback = arg2 as any as undefined | RandomIntCallback;
+    callback = arg2 as undefined | RandomIntCallback;
     max = arg1;
     min = 0;
   } else {
     min = arg1;
-    max = arg2 as any as number;
+    max = arg2 as number;
   }
   if (typeof callback !== 'undefined' && typeof callback !== 'function') {
     throw new TypeError('callback must be a function or undefined');
@@ -219,7 +219,7 @@ export function randomInt(
     if (x < randLimit) {
       const n = (x % range) + min;
       if (isSync) return n;
-      process.nextTick(callback as Function, undefined, n);
+      process.nextTick(callback as RandomIntCallback, undefined, n);
       return;
     }
   }
@@ -294,9 +294,7 @@ export function randomUUID() {
   randomFillSync(buffer, 0, size);
 
   // Per 4.4, set bits for version and `clock_seq_hi_and_reserved`
-  // eslint-disable-next-line no-bitwise
   buffer[6] = (buffer[6]! & 0x0f) | 0x40;
-  // eslint-disable-next-line no-bitwise
   buffer[8] = (buffer[8]! & 0x3f) | 0x80;
 
   return (
