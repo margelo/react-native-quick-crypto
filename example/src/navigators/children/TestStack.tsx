@@ -1,9 +1,9 @@
-import React from 'react';
-import {createNativeStackNavigator} from '@react-navigation/native-stack';
-import {TestSuitesScreen} from './TestSuitesScreen';
-import {TestDetailsScreen} from './TestDetailsScreen';
+import React from 'react'
+import { createNativeStackNavigator } from '@react-navigation/native-stack'
+import { TestSuitesScreen } from './TestSuitesScreen'
+import { TestDetailsScreen } from './TestDetailsScreen'
 
-const Stack = createNativeStackNavigator();
+const Stack = createNativeStackNavigator()
 
 export const TestStack = () => {
   return (
@@ -11,13 +11,13 @@ export const TestStack = () => {
       <Stack.Screen
         name="TestSuites"
         component={TestSuitesScreen}
-        options={{title: 'Test Suites'}}
+        options={{ title: 'Test Suites' }}
       />
       <Stack.Screen
         name="TestDetailsScreen"
         component={TestDetailsScreen}
-        options={{title: 'Test Details'}}
+        options={{ title: 'Test Details' }}
       />
     </Stack.Navigator>
-  );
-};
+  )
+}

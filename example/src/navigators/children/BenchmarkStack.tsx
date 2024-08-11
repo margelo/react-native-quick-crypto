@@ -1,9 +1,9 @@
-import React from 'react';
-import {createNativeStackNavigator} from '@react-navigation/native-stack';
-import {BenchmarkSuitesScreen} from './BenchmarkSuitesScreen';
-import {BenchmarkDetailsScreen} from './BenchmarkDetailsScreen';
+import React from 'react'
+import { createNativeStackNavigator } from '@react-navigation/native-stack'
+import { BenchmarkSuitesScreen } from './BenchmarkSuitesScreen'
+import { BenchmarkDetailsScreen } from './BenchmarkDetailsScreen'
 
-const Stack = createNativeStackNavigator();
+const Stack = createNativeStackNavigator()
 
 export const BenchmarkStack = () => {
   return (
@@ -11,13 +11,13 @@ export const BenchmarkStack = () => {
       <Stack.Screen
         name="BenchmarkSuites"
         component={BenchmarkSuitesScreen}
-        options={{title: 'Benchmark Suites'}}
+        options={{ title: 'Benchmark Suites' }}
       />
       <Stack.Screen
         name="BenchmarkDetailsScreen"
         component={BenchmarkDetailsScreen}
-        options={{title: 'Benchmark Details'}}
+        options={{ title: 'Benchmark Details' }}
       />
     </Stack.Navigator>
-  );
-};
+  )
+}

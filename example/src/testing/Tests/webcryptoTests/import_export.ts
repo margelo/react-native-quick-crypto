@@ -1,14 +1,16 @@
-import {expect} from 'chai';
-import {Buffer} from '@craftzdog/react-native-buffer';
+/* eslint-disable @typescript-eslint/no-unused-expressions */ // TODO: remove once nitro port is done
+
+import { expect } from 'chai'
+import { Buffer } from '@craftzdog/react-native-buffer'
 import {
   fromByteArray,
   toByteArray,
   trimBase64Padding,
-} from 'react-native-quick-base64';
-import crypto from 'react-native-quick-crypto';
-import {describe, it} from '../../MochaRNAdapter';
-import {ab2str, binaryLikeToArrayBuffer} from '../../../../../src/Utils';
-import {assertThrowsAsync} from '../util';
+} from 'react-native-quick-base64'
+import crypto from 'react-native-quick-crypto'
+import { describe, it } from '../../MochaRNAdapter'
+import { ab2str, binaryLikeToArrayBuffer } from '../../../../../src/Utils'
+import { assertThrowsAsync } from '../util'
 import type {
   CryptoKey,
   CryptoKeyPair,
@@ -18,14 +20,14 @@ import type {
   NamedCurve,
   RSAKeyPairAlgorithm,
   SubtleAlgorithm,
-} from '../../../../../src/keys';
-import type {RandomTypedArrays} from '../../../../../src/random';
-// @ts-ignore
-import pubTestKeyEc256 from '../../fixtures/keys/ec_p256_public';
-// @ts-ignore
-import privTestKeyEc256 from '../../fixtures/keys/ec_p256_private';
+} from '../../../../../src/keys'
+import type { RandomTypedArrays } from '../../../../../src/random'
+// @ts-expect-error - TODO: check ts error
+import pubTestKeyEc256 from '../../fixtures/keys/ec_p256_public'
+// @ts-expect-error - TODO: check ts error
+import privTestKeyEc256 from '../../fixtures/keys/ec_p256_private'
 
-const {subtle, createPublicKey, createPrivateKey} = crypto;
+const { subtle, createPublicKey, createPrivateKey } = crypto
 
 // Tests that a key pair can be used for encryption / decryption.
 // function testEncryptDecrypt(publicKey: any, privateKey: any) {
@@ -64,49 +66,49 @@ const {subtle, createPublicKey, createPrivateKey} = crypto;
 // }
 
 function base64ToArrayBuffer(val: string): ArrayBuffer {
-  const arr = toByteArray(val);
-  return arr.buffer;
+  const arr = toByteArray(val)
+  return arr.buffer
 }
 
 // TODO: add in `url` from react-native-quick-base64 when 2.1.1 is released
 function arrayBufferToBase64(buffer: ArrayBuffer, urlSafe: boolean = false) {
-  var bytes = new Uint8Array(buffer);
-  return fromByteArray(bytes, urlSafe);
+  const bytes = new Uint8Array(buffer)
+  return fromByteArray(bytes, urlSafe)
 }
 
 describe('subtle - importKey / exportKey', () => {
   // Import/Export test bad inputs
   it('Bad inputs', async () => {
-    const keyData = crypto.getRandomValues(new Uint8Array(32));
-    [1, null, undefined, {}, []].map(
-      async format =>
+    const keyData = crypto.getRandomValues(new Uint8Array(32))
+    ;[1, null, undefined, {}, []].map(
+      async (format) =>
         await assertThrowsAsync(
           async () =>
-            // @ts-expect-error
+            // @ts-expect-error - testing bad args
             await subtle.importKey(format, keyData, {}, false, ['wrapKey']),
-          '"subtle.importKey()" is not implemented for undefined',
-        ),
-    );
+          '"subtle.importKey()" is not implemented for undefined'
+        )
+    )
     await assertThrowsAsync(
       async () =>
         await subtle.importKey(
-          // @ts-expect-error
+          // @ts-expect-error - testing bad args
           'not valid',
           keyData,
-          {name: 'PBKDF2'},
+          { name: 'PBKDF2' },
           false,
-          ['wrapKey'],
+          ['wrapKey']
         ),
-      'Unsupported key usage for a PBKDF2 key',
-    );
+      'Unsupported key usage for a PBKDF2 key'
+    )
     await assertThrowsAsync(
       async () =>
-        // @ts-expect-error
-        await subtle.importKey('raw', 1, {name: 'PBKDF2'}, false, [
+        // @ts-expect-error - testing bad args
+        await subtle.importKey('raw', 1, { name: 'PBKDF2' }, false, [
           'deriveBits',
         ]),
-      'Invalid argument type for "key". Need ArrayBuffer, TypedArray, KeyObject, CryptoKey, string',
-    );
+      'Invalid argument type for "key". Need ArrayBuffer, TypedArray, KeyObject, CryptoKey, string'
+    )
     await assertThrowsAsync(
       async () =>
         await subtle.importKey(
@@ -116,11 +118,11 @@ describe('subtle - importKey / exportKey', () => {
             name: 'HMAC',
           },
           false,
-          ['sign', 'verify'],
+          ['sign', 'verify']
         ),
-      '"subtle.importKey()" is not implemented for HMAC',
+      '"subtle.importKey()" is not implemented for HMAC'
       // TODO: will be ERR_MISSING_OPTION or similar
-    );
+    )
     await assertThrowsAsync(
       async () =>
         await subtle.importKey(
@@ -131,11 +133,11 @@ describe('subtle - importKey / exportKey', () => {
             hash: 'SHA-256',
           },
           false,
-          ['deriveBits'],
+          ['deriveBits']
         ),
-      '"subtle.importKey()" is not implemented for HMAC',
+      '"subtle.importKey()" is not implemented for HMAC'
       // TODO: will be 'Unsupported key usage for an HMAC key'
-    );
+    )
     await assertThrowsAsync(
       async () =>
         await subtle.importKey(
@@ -147,11 +149,11 @@ describe('subtle - importKey / exportKey', () => {
             length: 0,
           },
           false,
-          ['sign', 'verify'],
+          ['sign', 'verify']
         ),
-      '"subtle.importKey()" is not implemented for HMAC',
+      '"subtle.importKey()" is not implemented for HMAC'
       // TODO: will be 'Zero-length key is not supported'
-    );
+    )
     await assertThrowsAsync(
       async () =>
         await subtle.importKey(
@@ -163,28 +165,28 @@ describe('subtle - importKey / exportKey', () => {
             length: 1,
           },
           false,
-          ['sign', 'verify'],
+          ['sign', 'verify']
         ),
-      '"subtle.importKey()" is not implemented for HMAC',
+      '"subtle.importKey()" is not implemented for HMAC'
       // TODO: will be 'Invalid key length'
-    );
+    )
     await assertThrowsAsync(
       async () =>
         await subtle.importKey(
           'jwk',
-          // @ts-expect-error
+          // @ts-expect-error - unimplemented
           null,
           {
             name: 'HMAC',
             hash: 'SHA-256',
           },
           false,
-          ['sign', 'verify'],
+          ['sign', 'verify']
         ),
-      '"subtle.importKey()" is not implemented for HMAC',
+      '"subtle.importKey()" is not implemented for HMAC'
       // TODO: will be 'Invalid keyData'
-    );
-  });
+    )
+  })
 
   it('Good Input - Uint8Array', async () => {
     await subtle.importKey(
@@ -202,82 +204,82 @@ describe('subtle - importKey / exportKey', () => {
         101, 99, 111, 110, 100, 32, 97, 98, 115, 116, 114, 97, 99, 116, 32, 107,
         110, 111, 99, 107,
       ]),
-      {name: 'PBKDF2'},
+      { name: 'PBKDF2' },
       false,
-      ['deriveBits'],
-    );
-  });
+      ['deriveBits']
+    )
+  })
 
   // Import/Export AES Secret Key
   {
     it('AES import raw / export raw', async () => {
-      const rawKeyData = crypto.getRandomValues(new Uint8Array(32));
-      const keyData = binaryLikeToArrayBuffer(rawKeyData);
+      const rawKeyData = crypto.getRandomValues(new Uint8Array(32))
+      const keyData = binaryLikeToArrayBuffer(rawKeyData)
 
       // import raw
       const key = await subtle.importKey(
         'raw',
         keyData,
-        {name: 'AES-CTR', length: 256},
+        { name: 'AES-CTR', length: 256 },
         true,
-        ['encrypt', 'decrypt'],
-      );
+        ['encrypt', 'decrypt']
+      )
 
       // export raw
-      const raw = (await subtle.exportKey('raw', key)) as ArrayBuffer;
-      const actual = ab2str(raw, 'hex');
+      const raw = (await subtle.exportKey('raw', key)) as ArrayBuffer
+      const actual = ab2str(raw, 'hex')
 
       // test results
-      const expected = ab2str(keyData, 'hex');
+      const expected = ab2str(keyData, 'hex')
       if (actual !== expected) {
-        console.log('actual  ', actual);
-        console.log('expected', expected);
+        console.log('actual  ', actual)
+        console.log('expected', expected)
       }
-      expect(actual).to.equal(expected, 'import raw, export raw');
-    });
+      expect(actual).to.equal(expected, 'import raw, export raw')
+    })
 
     it('importKey, raw, AES-GCM string algo', async () => {
-      const rawKeyData = crypto.getRandomValues(new Uint8Array(32));
-      const keyData = binaryLikeToArrayBuffer(rawKeyData);
+      const rawKeyData = crypto.getRandomValues(new Uint8Array(32))
+      const keyData = binaryLikeToArrayBuffer(rawKeyData)
 
       const key = await subtle.importKey('raw', keyData, 'AES-GCM', false, [
         'encrypt',
         'decrypt',
-      ]);
-      expect(key.keyAlgorithm.name).to.equal('AES-GCM');
-      expect(key.keyAlgorithm.length).to.equal(256);
-    });
+      ])
+      expect(key.keyAlgorithm.name).to.equal('AES-GCM')
+      expect(key.keyAlgorithm.length).to.equal(256)
+    })
 
     const test = (rawKeyData: RandomTypedArrays, descr: string): void => {
       it(`AES import raw / export jwk (${descr})`, async () => {
-        const keyData = binaryLikeToArrayBuffer(rawKeyData);
-        const keyB64 = arrayBufferToBase64(keyData, true);
+        const keyData = binaryLikeToArrayBuffer(rawKeyData)
+        const keyB64 = arrayBufferToBase64(keyData, true)
 
         // import raw
         const key = await subtle.importKey(
           'raw',
           keyData,
-          {name: 'AES-CTR', length: 256},
+          { name: 'AES-CTR', length: 256 },
           true,
-          ['encrypt', 'decrypt'],
-        );
+          ['encrypt', 'decrypt']
+        )
 
         // export jwk
-        const jwk = (await subtle.exportKey('jwk', key)) as JWK;
-        expect(jwk.key_ops).to.have.all.members(['encrypt', 'decrypt']);
-        expect(jwk.ext);
-        expect(jwk.kty).to.equal('oct');
-        const actual = ab2str(base64ToArrayBuffer(jwk.k as string));
+        const jwk = (await subtle.exportKey('jwk', key)) as JWK
+        expect(jwk.key_ops).to.have.all.members(['encrypt', 'decrypt'])
+        expect(jwk.ext)
+        expect(jwk.kty).to.equal('oct')
+        const actual = ab2str(base64ToArrayBuffer(jwk.k as string))
 
         // test results
-        const expected = ab2str(keyData, 'hex');
+        const expected = ab2str(keyData, 'hex')
         if (actual !== expected) {
-          console.log('actual  ', actual);
-          console.log('expected', expected);
-          console.log('keyB64  ', keyB64);
-          console.log('jwk.k   ', jwk.k);
+          console.log('actual  ', actual)
+          console.log('expected', expected)
+          console.log('keyB64  ', keyB64)
+          console.log('jwk.k   ', jwk.k)
         }
-        expect(actual).to.equal(expected, 'import raw, export jwk');
+        expect(actual).to.equal(expected, 'import raw, export jwk')
 
         // error, no usages
         await assertThrowsAsync(
@@ -285,80 +287,80 @@ describe('subtle - importKey / exportKey', () => {
             await subtle.importKey(
               'raw',
               keyData,
-              {name: 'AES-GCM', length: 256},
+              { name: 'AES-GCM', length: 256 },
               true,
               [
                 // empty usages
-              ],
+              ]
             ),
-          'Usages cannot be empty when importing a secret key',
-        );
-      });
-    };
+          'Usages cannot be empty when importing a secret key'
+        )
+      })
+    }
 
     // test random Uint8Array
-    const random = crypto.getRandomValues(new Uint8Array(32));
-    test(random as Uint8Array, 'random');
+    const random = crypto.getRandomValues(new Uint8Array(32))
+    test(random as Uint8Array, 'random')
 
     // test while ensuring at least one of the elements is zero
-    const withZero = crypto.getRandomValues(new Uint8Array(32));
-    withZero[4] = 0;
-    test(withZero as Uint8Array, 'with zero');
+    const withZero = crypto.getRandomValues(new Uint8Array(32))
+    withZero[4] = 0
+    test(withZero as Uint8Array, 'with zero')
   }
 
   // from https://gist.github.com/pedrouid/b4056fd1f754918ddae86b32cf7d803e#aes-gcm---importkey
   it('AES import jwk / export jwk', async () => {
-    const origKey: string = 'Y0zt37HgOx-BY7SQjYVmrqhPkO44Ii2Jcb9yydUDPfE.';
+    const origKey: string = 'Y0zt37HgOx-BY7SQjYVmrqhPkO44Ii2Jcb9yydUDPfE.'
     const origJwk: JWK = {
       kty: 'oct',
       k: origKey,
       alg: 'A256GCM',
       ext: true,
-    };
+    }
 
     // import jwk
     const key = await subtle.importKey(
       'jwk',
       origJwk,
-      {name: 'AES-GCM'},
+      { name: 'AES-GCM' },
       true,
-      ['encrypt', 'decrypt'],
-    );
+      ['encrypt', 'decrypt']
+    )
 
     // export jwk
-    const jwk = (await subtle.exportKey('jwk', key)) as JWK;
-    expect(jwk.key_ops).to.have.all.members(['encrypt', 'decrypt']);
-    expect(jwk.ext);
-    expect(jwk.kty).to.equal('oct');
+    const jwk = (await subtle.exportKey('jwk', key)) as JWK
+    expect(jwk.key_ops).to.have.all.members(['encrypt', 'decrypt'])
+    expect(jwk.ext)
+    expect(jwk.kty).to.equal('oct')
     const actual = trimBase64Padding(
-      ab2str(base64ToArrayBuffer(jwk.k as string)),
-    );
-    const expected = trimBase64Padding(ab2str(base64ToArrayBuffer(origKey)));
+      ab2str(base64ToArrayBuffer(jwk.k as string))
+    )
+    const expected = trimBase64Padding(ab2str(base64ToArrayBuffer(origKey)))
     // if (actual !== expected) {
     //   console.log('actual  ', actual);
     //   console.log('expected', expected);
     // }
-    expect(actual).to.equal(expected, 'import jwk, export jwk');
-  });
+    expect(actual).to.equal(expected, 'import jwk, export jwk')
+  })
 
   // Import/Export EC Key (osp)
   it('EC import raw / export spki (osp)', async () => {
     const key = await subtle.importKey(
       'raw',
       base64ToArrayBuffer(
-        'BDZRaWzATXwmOi4Y/QP3JXn8sSVSFxidMugnGf3G28snm7zek9GjT76UMhXVMEbWLxR5WG6iGTjPAKKnT3J0jCA=',
+        'BDZRaWzATXwmOi4Y/QP3JXn8sSVSFxidMugnGf3G28snm7zek9GjT76UMhXVMEbWLxR5WG6iGTjPAKKnT3J0jCA='
       ),
-      {name: 'ECDSA', namedCurve: 'P-256'},
+      { name: 'ECDSA', namedCurve: 'P-256' },
       true,
-      ['verify'],
-    );
+      ['verify']
+    )
 
-    const buf = await subtle.exportKey('spki', key);
-    const spkiKey = arrayBufferToBase64(buf as ArrayBuffer);
+    const buf = await subtle.exportKey('spki', key)
+    const spkiKey = arrayBufferToBase64(buf as ArrayBuffer)
     expect(spkiKey).to.equal(
-      'MFkwEwYHKoZIzj0CAQYIKoZIzj0DAQcDQgAENlFpbMBNfCY6Lhj9A/clefyxJVIXGJ0y6CcZ/cbbyyebvN6T0aNPvpQyFdUwRtYvFHlYbqIZOM8AoqdPcnSMIA==',
-    );
-  });
+      'MFkwEwYHKoZIzj0CAQYIKoZIzj0DAQcDQgAENlFpbMBNfCY6Lhj9A/clefyxJVIXGJ0y6CcZ/cbbyyebvN6T0aNPvpQyFdUwRtYvFHlYbqIZOM8AoqdPcnSMIA=='
+    )
+  })
 
   // // TODO: enable when generateKey() is implemented
   // // from Node.js https://github.com/nodejs/node/blob/main/test/parallel/test-webcrypto-export-import.js#L217-L273
@@ -418,23 +420,23 @@ describe('subtle - importKey / exportKey', () => {
   // from Node.js https://github.com/nodejs/node/blob/main/test/parallel/test-webcrypto-export-import-ec.js
   {
     type TestKeyData = {
-      [key in NamedCurve]: TestKeyDatum;
-    };
+      [key in NamedCurve]: TestKeyDatum
+    }
 
     type TestKeyDatum = {
-      jwsAlg: string;
-      spki: Buffer;
-      pkcs8: Buffer;
-      jwk: JWK;
-    };
+      jwsAlg: string
+      spki: Buffer
+      pkcs8: Buffer
+      jwk: JWK
+    }
 
     type TestVector = {
-      name: 'ECDH' | 'ECDSA';
-      publicUsages: KeyUsage[];
-      privateUsages: KeyUsage[];
-    };
+      name: 'ECDH' | 'ECDSA'
+      publicUsages: KeyUsage[]
+      privateUsages: KeyUsage[]
+    }
 
-    const curves: NamedCurve[] = ['P-256', 'P-384', 'P-521'];
+    const curves: NamedCurve[] = ['P-256', 'P-384', 'P-521']
 
     const keyData: TestKeyData = {
       'P-521': {
@@ -445,7 +447,7 @@ describe('subtle - importKey / exportKey', () => {
             '9cdec8cda59bbbbd31d460b3292521e7c1b722e5667c03db2fae753f01501736' +
             'cfe247394320d8e4afc2fd39b5a9331061b81e2241282b9e17891822b5b79e05' +
             '2f4597b59643fd39379c51bd5125c4f48bc3f025ce3cd36953286ccb38fb',
-          'hex',
+          'hex'
         ),
         pkcs8: Buffer.from(
           '3081ee020100301006072a8648ce3d020106052b810400230481d63081d3020' +
@@ -456,7 +458,7 @@ describe('subtle - importKey / exportKey', () => {
             '0b3292521e7c1b722e5667c03db2fae753f01501736cfe247394320d8e4afc2' +
             'fd39b5a9331061b81e2241282b9e17891822b5b79e052f4597b59643fd39379' +
             'c51bd5125c4f48bc3f025ce3cd36953286ccb38fb',
-          'hex',
+          'hex'
         ),
         jwk: {
           kty: 'EC',
@@ -479,7 +481,7 @@ describe('subtle - importKey / exportKey', () => {
             'c6d8856b385b73a74d344fd8ae75ef046435dda54e3b44bd5fbdebd1d08dd69e' +
             '2d7dc1dc218cb435bd28138cc778337a842f6bd61b240e74249f24667c2a5810' +
             'a76bfc28e0335f88a6501dec01976da85afb00869cb6ace8',
-          'hex',
+          'hex'
         ),
         pkcs8: Buffer.from(
           '3081b6020100301006072a8648ce3d020106052b8104002204819e30819b0201' +
@@ -488,7 +490,7 @@ describe('subtle - importKey / exportKey', () => {
             '6ec6d8856b385b73a74d344fd8ae75ef046435dda54e3b44bd5fbdebd1d08dd6' +
             '9e2d7dc1dc218cb435bd28138cc778337a842f6bd61b240e74249f24667c2a58' +
             '10a76bfc28e0335f88a6501dec01976da85afb00869cb6ace8',
-          'hex',
+          'hex'
         ),
         jwk: {
           kty: 'EC',
@@ -504,7 +506,7 @@ describe('subtle - importKey / exportKey', () => {
           '3059301306072a8648ce3d020106082a8648ce3d03010703420004d6e8328a95' +
             'fe29afcdc30977b9251efbb219022807f6b14bb34695b6b4bdb93ee6684548a4' +
             'ad13c49d00433c45315e8274f3540f58f5d79ef7a1b184f4c21d17',
-          'hex',
+          'hex'
         ),
         pkcs8: Buffer.from(
           '308187020100301306072a8648ce3d020106082a8648ce3d030107046d306b02' +
@@ -512,7 +514,7 @@ describe('subtle - importKey / exportKey', () => {
             '0f13fbf8a14403420004d6e8328a95fe29afcdc30977b9251efbb219022807f6' +
             'b14bb34695b6b4bdb93ee6684548a4ad13c49d00433c45315e8274f3540f58f5' +
             'd79ef7a1b184f4c21d17',
-          'hex',
+          'hex'
         ),
         jwk: {
           kty: 'EC',
@@ -522,7 +524,7 @@ describe('subtle - importKey / exportKey', () => {
           d: 'K8LtomXkaGbvqPj5namTF1tshcJG4V3OrtfjBw8T-_g.',
         },
       },
-    };
+    }
 
     const testVectors: TestVector[] = [
       {
@@ -535,7 +537,7 @@ describe('subtle - importKey / exportKey', () => {
         privateUsages: ['deriveKey', 'deriveBits'],
         publicUsages: [],
       },
-    ];
+    ]
 
     // async function testImportSpki({ name, publicUsages }, namedCurve, extractable) {
     //   const key = await subtle.importKey(
@@ -614,11 +616,11 @@ describe('subtle - importKey / exportKey', () => {
     // }
 
     const testImportJwk = async (
-      {name, publicUsages, privateUsages}: TestVector,
+      { name, publicUsages, privateUsages }: TestVector,
       namedCurve: NamedCurve,
-      extractable: boolean,
+      extractable: boolean
     ) => {
-      const jwk = keyData[namedCurve].jwk;
+      const jwk = keyData[namedCurve].jwk
 
       const [publicKey, privateKey] = await Promise.all([
         subtle.importKey(
@@ -629,16 +631,16 @@ describe('subtle - importKey / exportKey', () => {
             x: jwk.x,
             y: jwk.y,
           },
-          {name, namedCurve},
+          { name, namedCurve },
           extractable,
-          publicUsages,
+          publicUsages
         ),
         subtle.importKey(
           'jwk',
           jwk,
-          {name, namedCurve},
+          { name, namedCurve },
           extractable,
-          privateUsages,
+          privateUsages
         ),
         subtle.importKey(
           'jwk',
@@ -649,9 +651,9 @@ describe('subtle - importKey / exportKey', () => {
             x: jwk.x,
             y: jwk.y,
           },
-          {name, namedCurve},
+          { name, namedCurve },
           extractable,
-          publicUsages,
+          publicUsages
         ),
         subtle.importKey(
           'jwk',
@@ -659,71 +661,68 @@ describe('subtle - importKey / exportKey', () => {
             ...jwk,
             alg: name === 'ECDSA' ? keyData[namedCurve].jwsAlg : 'ECDH-ES',
           },
-          {name, namedCurve},
+          { name, namedCurve },
           extractable,
-          privateUsages,
+          privateUsages
         ),
-      ]);
+      ])
 
-      expect(publicKey.type).to.equal('public');
-      expect(privateKey.type).to.equal('private');
-      expect(publicKey.extractable).to.equal(extractable);
-      expect(privateKey.extractable).to.equal(extractable);
-      expect(publicKey.usages).to.have.all.members(publicUsages);
-      expect(privateKey.usages).to.have.all.members(privateUsages);
-      expect(publicKey.algorithm.name).to.equal(name);
-      expect(privateKey.algorithm.name).to.equal(name);
-      expect(publicKey.algorithm.namedCurve).to.equal(namedCurve);
-      expect(privateKey.algorithm.namedCurve).to.equal(namedCurve);
+      expect(publicKey.type).to.equal('public')
+      expect(privateKey.type).to.equal('private')
+      expect(publicKey.extractable).to.equal(extractable)
+      expect(privateKey.extractable).to.equal(extractable)
+      expect(publicKey.usages).to.have.all.members(publicUsages)
+      expect(privateKey.usages).to.have.all.members(privateUsages)
+      expect(publicKey.algorithm.name).to.equal(name)
+      expect(privateKey.algorithm.name).to.equal(name)
+      expect(publicKey.algorithm.namedCurve).to.equal(namedCurve)
+      expect(privateKey.algorithm.namedCurve).to.equal(namedCurve)
 
       if (extractable) {
         // Test the round trip
         const [pubJwk, pvtJwk] = await Promise.all([
           subtle.exportKey('jwk', publicKey) as Promise<JWK>,
           subtle.exportKey('jwk', privateKey) as Promise<JWK>,
-        ]);
+        ])
 
-        expect(pubJwk.key_ops).to.have.all.members(publicUsages, 'pub key_ops');
-        expect(pubJwk.ext).to.equal(true, 'pub ext');
-        expect(pubJwk.kty).to.equal('EC', 'pub kty');
-        expect(pubJwk.x).to.equal(jwk.x, 'pub x');
-        expect(pubJwk.y).to.equal(jwk.y, 'pub y');
-        expect(pubJwk.crv).to.equal(jwk.crv, 'pub crv');
+        expect(pubJwk.key_ops).to.have.all.members(publicUsages, 'pub key_ops')
+        expect(pubJwk.ext).to.equal(true, 'pub ext')
+        expect(pubJwk.kty).to.equal('EC', 'pub kty')
+        expect(pubJwk.x).to.equal(jwk.x, 'pub x')
+        expect(pubJwk.y).to.equal(jwk.y, 'pub y')
+        expect(pubJwk.crv).to.equal(jwk.crv, 'pub crv')
 
-        expect(pvtJwk.key_ops).to.have.all.members(
-          privateUsages,
-          'pvt key_ops',
-        );
-        expect(pvtJwk.ext).to.equal(true, 'pvt ext');
-        expect(pvtJwk.kty).to.equal('EC', 'pvt kty');
-        expect(pvtJwk.x).to.equal(jwk.x, 'pvt x');
-        expect(pvtJwk.y).to.equal(jwk.y, 'pvt y');
-        expect(pvtJwk.crv).to.equal(jwk.crv, 'pvt crv');
-        expect(pvtJwk.d).to.equal(jwk.d, 'pvt d');
+        expect(pvtJwk.key_ops).to.have.all.members(privateUsages, 'pvt key_ops')
+        expect(pvtJwk.ext).to.equal(true, 'pvt ext')
+        expect(pvtJwk.kty).to.equal('EC', 'pvt kty')
+        expect(pvtJwk.x).to.equal(jwk.x, 'pvt x')
+        expect(pvtJwk.y).to.equal(jwk.y, 'pvt y')
+        expect(pvtJwk.crv).to.equal(jwk.crv, 'pvt crv')
+        expect(pvtJwk.d).to.equal(jwk.d, 'pvt d')
       } else {
         await assertThrowsAsync(
           async () => await subtle.exportKey('jwk', publicKey),
-          'key is not extractable',
-        );
+          'key is not extractable'
+        )
         await assertThrowsAsync(
           async () => await subtle.exportKey('jwk', privateKey),
-          'key is not extractable',
-        );
+          'key is not extractable'
+        )
       }
 
       {
-        const invalidUse = name === 'ECDH' ? 'sig' : 'enc';
+        const invalidUse = name === 'ECDH' ? 'sig' : 'enc'
         await assertThrowsAsync(
           async () =>
             await subtle.importKey(
               'jwk',
-              {...jwk, use: invalidUse},
-              {name, namedCurve},
+              { ...jwk, use: invalidUse },
+              { name, namedCurve },
               extractable,
-              privateUsages,
+              privateUsages
             ),
-          'Invalid JWK "use" Parameter',
-        );
+          'Invalid JWK "use" Parameter'
+        )
       }
 
       if (name === 'ECDSA') {
@@ -738,24 +737,24 @@ describe('subtle - importKey / exportKey', () => {
                 crv: jwk.crv,
                 alg: jwk.crv === 'P-256' ? 'ES384' : 'ES256',
               },
-              {name, namedCurve},
+              { name, namedCurve },
               extractable,
-              publicUsages,
+              publicUsages
             ),
-          'JWK "alg" does not match the requested algorithm',
-        );
+          'JWK "alg" does not match the requested algorithm'
+        )
 
         await assertThrowsAsync(
           async () =>
             await subtle.importKey(
               'jwk',
-              {...jwk, alg: jwk.crv === 'P-256' ? 'ES384' : 'ES256'},
-              {name, namedCurve},
+              { ...jwk, alg: jwk.crv === 'P-256' ? 'ES384' : 'ES256' },
+              { name, namedCurve },
               extractable,
-              privateUsages,
+              privateUsages
             ),
-          'JWK "alg" does not match the requested algorithm',
-        );
+          'JWK "alg" does not match the requested algorithm'
+        )
       }
 
       for (const crv of [
@@ -766,49 +765,49 @@ describe('subtle - importKey / exportKey', () => {
           async () =>
             await subtle.importKey(
               'jwk',
-              {kty: jwk.kty, x: jwk.x, y: jwk.y, crv},
-              {name, namedCurve},
+              { kty: jwk.kty, x: jwk.x, y: jwk.y, crv },
+              { name, namedCurve },
               extractable,
-              publicUsages,
+              publicUsages
             ),
-          'JWK "crv" does not match the requested algorithm',
-        );
+          'JWK "crv" does not match the requested algorithm'
+        )
 
         await assertThrowsAsync(
           async () =>
             await subtle.importKey(
               'jwk',
-              {...jwk, crv},
-              {name, namedCurve},
+              { ...jwk, crv },
+              { name, namedCurve },
               extractable,
-              privateUsages,
+              privateUsages
             ),
-          'JWK "crv" does not match the requested algorithm',
-        );
+          'JWK "crv" does not match the requested algorithm'
+        )
       }
 
       await assertThrowsAsync(
         async () =>
           await subtle.importKey(
             'jwk',
-            {...jwk},
-            {name, namedCurve},
+            { ...jwk },
+            { name, namedCurve },
             extractable,
             [
               // empty usages
-            ],
+            ]
           ),
-        'Usages cannot be empty when importing a private key.',
-      );
-    };
+        'Usages cannot be empty when importing a private key.'
+      )
+    }
 
     const testImportRaw = async (
-      {name, publicUsages}: TestVector,
-      namedCurve: NamedCurve,
+      { name, publicUsages }: TestVector,
+      namedCurve: NamedCurve
     ) => {
-      const jwk = keyData[namedCurve].jwk;
+      const jwk = keyData[namedCurve].jwk
       if (jwk.x === undefined || jwk.y === undefined) {
-        throw new Error('invalid x, y args');
+        throw new Error('invalid x, y args')
       }
 
       const [publicKey] = await Promise.all([
@@ -819,9 +818,9 @@ describe('subtle - importKey / exportKey', () => {
             toByteArray(jwk.x), // base64url?
             toByteArray(jwk.y), // base64url?
           ]),
-          {name, namedCurve},
+          { name, namedCurve },
           true,
-          publicUsages,
+          publicUsages
         ),
         subtle.importKey(
           'raw',
@@ -829,17 +828,17 @@ describe('subtle - importKey / exportKey', () => {
             Buffer.alloc(1, 0x03),
             toByteArray(jwk.x), // base64url?
           ]),
-          {name, namedCurve},
+          { name, namedCurve },
           true,
-          publicUsages,
+          publicUsages
         ),
-      ]);
+      ])
 
-      expect(publicKey.type).to.equal('public');
-      expect(publicKey.usages).to.have.all.members(publicUsages);
-      expect(publicKey.algorithm.name).to.equal(name);
-      expect(publicKey.algorithm.namedCurve).to.equal(namedCurve);
-    };
+      expect(publicKey.type).to.equal('public')
+      expect(publicKey.usages).to.have.all.members(publicUsages)
+      expect(publicKey.algorithm.name).to.equal(name)
+      expect(publicKey.algorithm.namedCurve).to.equal(namedCurve)
+    }
 
     for (const vector of testVectors) {
       for (const namedCurve of curves) {
@@ -851,12 +850,12 @@ describe('subtle - importKey / exportKey', () => {
           //   await testImportPkcs8(vector, namedCurve, extractable);
           // });
           it(`EC jwk, ${vector.name}, ${namedCurve}, ${extractable}`, async () => {
-            await testImportJwk(vector, namedCurve, extractable);
-          });
+            await testImportJwk(vector, namedCurve, extractable)
+          })
         }
         it(`EC raw, ${vector.name}, ${namedCurve}`, async () => {
-          await testImportRaw(vector, namedCurve);
-        });
+          await testImportRaw(vector, namedCurve)
+        })
       }
     }
   }
@@ -911,12 +910,12 @@ describe('subtle - importKey / exportKey', () => {
         hash: 'SHA-384',
       },
       true,
-      ['sign', 'verify'],
-    );
-    const {publicKey} = generated as CryptoKeyPair;
+      ['sign', 'verify']
+    )
+    const { publicKey } = generated as CryptoKeyPair
 
-    const exported = await subtle.exportKey('spki', publicKey as CryptoKey);
-    expect(exported).to.not.be.undefined;
+    const exported = await subtle.exportKey('spki', publicKey as CryptoKey)
+    expect(exported).to.not.be.undefined
 
     const imported = await subtle.importKey(
       'spki',
@@ -926,10 +925,10 @@ describe('subtle - importKey / exportKey', () => {
         hash: 'SHA-384',
       },
       true,
-      ['verify'],
-    );
-    expect(imported).to.not.be.undefined;
-  });
+      ['verify']
+    )
+    expect(imported).to.not.be.undefined
+  })
 
   it('RSA pkcs8', async () => {
     const generated = await subtle.generateKey(
@@ -940,12 +939,12 @@ describe('subtle - importKey / exportKey', () => {
         hash: 'SHA-384',
       },
       true,
-      ['sign', 'verify'],
-    );
-    const {privateKey} = generated as CryptoKeyPair;
+      ['sign', 'verify']
+    )
+    const { privateKey } = generated as CryptoKeyPair
 
-    const exported = await subtle.exportKey('pkcs8', privateKey as CryptoKey);
-    expect(exported).to.not.be.undefined;
+    const exported = await subtle.exportKey('pkcs8', privateKey as CryptoKey)
+    expect(exported).to.not.be.undefined
 
     // TODO: enable when RSA pkcs8 importKey() is implemented
     //   const imported = await subtle.importKey(
@@ -959,7 +958,7 @@ describe('subtle - importKey / exportKey', () => {
     //     ['verify']
     //   );
     //   expect(imported).to.not.be.undefined;
-  });
+  })
 
   it('RSA jwk', async () => {
     const generated = await subtle.generateKey(
@@ -970,12 +969,12 @@ describe('subtle - importKey / exportKey', () => {
         hash: 'SHA-384',
       },
       true,
-      ['sign', 'verify'],
-    );
-    const {publicKey, privateKey} = generated as CryptoKeyPair;
+      ['sign', 'verify']
+    )
+    const { publicKey, privateKey } = generated as CryptoKeyPair
 
-    const exportedPub = await subtle.exportKey('jwk', publicKey as CryptoKey);
-    expect(exportedPub).to.not.be.undefined;
+    const exportedPub = await subtle.exportKey('jwk', publicKey as CryptoKey)
+    expect(exportedPub).to.not.be.undefined
     const importedPub = await subtle.importKey(
       'jwk',
       exportedPub,
@@ -984,12 +983,12 @@ describe('subtle - importKey / exportKey', () => {
         hash: 'SHA-384',
       },
       true,
-      ['verify'],
-    );
-    expect(importedPub).to.not.be.undefined;
+      ['verify']
+    )
+    expect(importedPub).to.not.be.undefined
 
-    const exportedPriv = await subtle.exportKey('jwk', privateKey as CryptoKey);
-    expect(exportedPriv).to.not.be.undefined;
+    const exportedPriv = await subtle.exportKey('jwk', privateKey as CryptoKey)
+    expect(exportedPriv).to.not.be.undefined
     const importedPriv = await subtle.importKey(
       'jwk',
       exportedPriv,
@@ -998,16 +997,16 @@ describe('subtle - importKey / exportKey', () => {
         hash: 'SHA-384',
       },
       true,
-      ['sign'],
-    );
-    expect(importedPriv).to.not.be.undefined;
-  });
+      ['sign']
+    )
+    expect(importedPriv).to.not.be.undefined
+  })
 
   // from https://github.com/nodejs/node/blob/main/test/parallel/test-webcrypto-export-import-rsa.js
-  type HashSize = '1024' | '2048' | '4096';
-  const sizes: HashSize[] = ['1024', '2048', '4096'];
+  type HashSize = '1024' | '2048' | '4096'
+  const sizes: HashSize[] = ['1024', '2048', '4096']
 
-  const hashes: HashAlgorithm[] = ['SHA-1', 'SHA-256', 'SHA-384', 'SHA-512'];
+  const hashes: HashAlgorithm[] = ['SHA-1', 'SHA-256', 'SHA-384', 'SHA-512']
 
   const keyData = {
     '1024': {
@@ -1017,7 +1016,7 @@ describe('subtle - importKey / exportKey', () => {
           'e88f71d086e94b7abe77839103a476bee0cc87c743151afd4431fa5d8fa051271cf5' +
           '4e49cf7500d8a9957ec09b9d43ef70098c57f10d03bfd31748af563b881687720d3c' +
           '7b10a1cd553ac71d296b6edeeca5b99c8afb36dd970203010001',
-        'hex',
+        'hex'
       ),
       pkcs8: Buffer.from(
         '30820278020100300d06092a864886f70d0101010500048202623082025e02010002' +
@@ -1039,7 +1038,7 @@ describe('subtle - importKey / exportKey', () => {
           'd85666b2711e0dc02aca70463d051c6c6d80bff8601f3d8e67024100cdba49400862' +
           '9ebc526d52b1050d846461540f67b75825db009458a64f07550e40039d8e84a4e270' +
           'ec9eda11079eb82914acc2f22ce74ec086dc5324bf0723e1',
-        'hex',
+        'hex'
       ),
       jwk: {
         kty: 'RSA',
@@ -1081,7 +1080,7 @@ describe('subtle - importKey / exportKey', () => {
           '67009273f79d45b85b9f33f57318dfc5af981aa2964834e7f5b33012d369646a6738' +
           'b22bca55e59066f1e69f6a69f1eedecce881b7423fd44dfc7a7c989c426741d8813c' +
           '3fcdc024b53d84290a3beda3c83872cafd0203010001',
-        'hex',
+        'hex'
       ),
       pkcs8: Buffer.from(
         '308204be020100300d06092a864886f70d0101010500048204a8308204a402010002' +
@@ -1120,7 +1119,7 @@ describe('subtle - importKey / exportKey', () => {
           'bb120015ca4446ec3fdb9ec980a661d2aad23850511898f07c148716095cd1bd60d6' +
           '31464ac89b524660bd465952d2e57d8740b7c3f3db79492b16b87a5cd1767e13526e' +
           'f66d79c691e2c7f2528b69652c29ba210a5e679d23b21a680cbf0d07',
-        'hex',
+        'hex'
       ),
       jwk: {
         kty: 'RSA',
@@ -1181,7 +1180,7 @@ describe('subtle - importKey / exportKey', () => {
           '9b657b14da835c7c4e522c378b4d69b18879b12b4d0cf0004c14857981490fa0c896' +
           '725f3b3ba5f0cc0d9c86c204469ed56fe567d8ef8410b897cefee53e173a7d3190d0' +
           'd70203010001',
-        'hex',
+        'hex'
       ),
       pkcs8: Buffer.from(
         '30820944020100300d06092a864886f70d01010105000482092e3082092a02010002' +
@@ -1254,7 +1253,7 @@ describe('subtle - importKey / exportKey', () => {
           'b55580f749862930b7397f1cea1af4b19f715af97820f8864f637b9badc9b9d8a620' +
           '98b5069a7612b5f56a1925927610d71e5360239a5d000d05ce9c81937657f89b3187' +
           '07279de2ab6010707aad3a9113065a0bdd6dd010fbbc12786aaa8f954fc0',
-        'hex',
+        'hex'
       ),
       jwk: {
         kty: 'RSA',
@@ -1320,42 +1319,42 @@ describe('subtle - importKey / exportKey', () => {
           'WgvdbdAQ-7wSeGqqj5VPwA',
       },
     },
-  };
+  }
 
   async function testImportSpki(
-    {name, publicUsages}: TestVector,
+    { name, publicUsages }: TestVector,
     size: HashSize,
     hash: HashAlgorithm,
-    extractable: boolean,
+    extractable: boolean
   ) {
     const key = await subtle.importKey(
       'spki',
       keyData[size].spki,
-      {name, hash},
+      { name, hash },
       extractable,
-      publicUsages,
-    );
+      publicUsages
+    )
 
-    expect(key.type).to.equal('public');
-    expect(key.extractable).to.equal(extractable);
-    expect(key.usages).to.deep.equal(publicUsages);
-    expect(key.algorithm.name).to.equal(name);
-    expect(key.algorithm.modulusLength).to.equal(parseInt(size, 10));
+    expect(key.type).to.equal('public')
+    expect(key.extractable).to.equal(extractable)
+    expect(key.usages).to.deep.equal(publicUsages)
+    expect(key.algorithm.name).to.equal(name)
+    expect(key.algorithm.modulusLength).to.equal(parseInt(size, 10))
     expect(key.algorithm.publicExponent).to.deep.equal(
-      new Uint8Array([1, 0, 1]),
-    );
-    expect(key.algorithm.hash).to.equal(hash);
+      new Uint8Array([1, 0, 1])
+    )
+    expect(key.algorithm.hash).to.equal(hash)
 
     if (extractable) {
-      const spki = await subtle.exportKey('spki', key);
+      const spki = await subtle.exportKey('spki', key)
       expect(Buffer.from(spki as ArrayBuffer).toString('hex')).to.equal(
-        keyData[size].spki.toString('hex'),
-      );
+        keyData[size].spki.toString('hex')
+      )
     } else {
       await assertThrowsAsync(
         async () => await subtle.exportKey('spki', key),
-        'key is not extractable',
-      );
+        'key is not extractable'
+      )
     }
   }
   /*
@@ -1578,10 +1577,10 @@ describe('subtle - importKey / exportKey', () => {
 
   // combinations to test
   type TestVector = {
-    name: RSAKeyPairAlgorithm;
-    privateUsages: KeyUsage[];
-    publicUsages: KeyUsage[];
-  };
+    name: RSAKeyPairAlgorithm
+    privateUsages: KeyUsage[]
+    publicUsages: KeyUsage[]
+  }
   const testVectors: TestVector[] = [
     {
       name: 'RSA-OAEP',
@@ -1598,63 +1597,63 @@ describe('subtle - importKey / exportKey', () => {
       privateUsages: ['sign'],
       publicUsages: ['verify'],
     },
-  ];
+  ]
 
-  sizes.forEach(size => {
-    hashes.forEach(hash => {
-      [true, false].forEach(extractable => {
-        testVectors.forEach(vector => {
+  sizes.forEach((size) => {
+    hashes.forEach((hash) => {
+      ;[true, false].forEach((extractable) => {
+        testVectors.forEach((vector) => {
           it(`rsa importKey spki ${vector.name} ${size} ${hash} ${extractable}`, async () => {
-            await testImportSpki(vector, size, hash, extractable);
-          });
+            await testImportSpki(vector, size, hash, extractable)
+          })
           // it(`rsa importKey pkcs8 ${vector.name} ${size} ${hash} ${extractable}`, async () => {
           //   await testImportPkcs8(vector, size, hash, extractable);
           // });
           // it(`rsa importKey jwk ${vector.name} ${size} ${hash} ${extractable}`, async () => {
           //   await testImportJwk(vector, size, hash, extractable);
           // });
-        });
-      });
-    });
-  });
+        })
+      })
+    })
+  })
 
   {
-    const ecPublic = createPublicKey(pubTestKeyEc256);
-    const ecPrivate = createPrivateKey(privTestKeyEc256);
+    const ecPublic = createPublicKey(pubTestKeyEc256)
+    const ecPrivate = createPrivateKey(privTestKeyEc256)
 
     const badUsages: Record<RSAKeyPairAlgorithm, [KeyUsage, KeyUsage]> = {
       'RSA-PSS': ['verify', 'sign'],
       'RSASSA-PKCS1-v1_5': ['verify', 'sign'],
       'RSA-OAEP': ['encrypt', 'decrypt'],
-    };
+    }
     for (const [name, [publicUsage, privateUsage]] of Object.entries(
-      badUsages,
+      badUsages
     )) {
       it(`bad usages ${name} ${publicUsage} ${privateUsage}`, async () => {
         await assertThrowsAsync(
           async () =>
             await subtle.importKey(
               'spki',
-              ecPublic.export({format: 'der', type: 'spki'}),
-              {name, hash: 'SHA-256'} as SubtleAlgorithm,
+              ecPublic.export({ format: 'der', type: 'spki' }),
+              { name, hash: 'SHA-256' } as SubtleAlgorithm,
               true,
-              [publicUsage],
+              [publicUsage]
             ),
-          'Invalid key type',
-        );
+          'Invalid key type'
+        )
 
         await assertThrowsAsync(
           async () =>
             await subtle.importKey(
               'pkcs8',
-              ecPrivate.export({format: 'der', type: 'pkcs8'}),
-              {name, hash: 'SHA-256'} as SubtleAlgorithm,
+              ecPrivate.export({ format: 'der', type: 'pkcs8' }),
+              { name, hash: 'SHA-256' } as SubtleAlgorithm,
               true,
-              [privateUsage],
+              [privateUsage]
             ),
-          'Unable to import RSA key with format pkcs8',
-        );
-      });
+          'Unable to import RSA key with format pkcs8'
+        )
+      })
     }
   }
-});
+})

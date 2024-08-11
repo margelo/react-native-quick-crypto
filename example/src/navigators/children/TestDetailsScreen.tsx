@@ -1,24 +1,21 @@
-import React, {useState} from 'react';
-import {SafeAreaView, ScrollView, StyleSheet, Text, View} from 'react-native';
-import BouncyCheckbox from 'react-native-bouncy-checkbox';
-import {CorrectResultItem} from '../../components/CorrectResultItem';
-import {IncorrectResultItem} from '../../components/IncorrectResultItem';
-import {Suite} from '../../components/Suite';
-import {TestResult} from '../../types/Results';
-
-type TestDetailsScreenProps = {
-  route: any;
-};
+import React, { useState } from 'react'
+import { SafeAreaView, ScrollView, StyleSheet, Text, View } from 'react-native'
+import BouncyCheckbox from 'react-native-bouncy-checkbox'
+import { CorrectResultItem } from '../../components/CorrectResultItem'
+import { IncorrectResultItem } from '../../components/IncorrectResultItem'
+import { Suite } from '../../components/Suite'
+import type { TestResult } from '../../types/Results'
 
 type RouteParams = {
-  results: TestResult[];
-  suiteName: string;
-};
+  results: TestResult[]
+  suiteName: string
+}
 
-export const TestDetailsScreen = ({route}: TestDetailsScreenProps) => {
-  const {results, suiteName}: RouteParams = route.params;
-  const [showFailed, setShowFailed] = useState<boolean>(true);
-  const [showPassed, setShowPassed] = useState<boolean>(true);
+// @ts-expect-error - not dealing with navigation types rn
+export const TestDetailsScreen = ({ route }) => {
+  const { results, suiteName }: RouteParams = route.params
+  const [showFailed, setShowFailed] = useState<boolean>(true)
+  const [showPassed, setShowPassed] = useState<boolean>(true)
 
   return (
     <SafeAreaView style={styles.container}>
@@ -47,33 +44,34 @@ export const TestDetailsScreen = ({route}: TestDetailsScreenProps) => {
       </View>
       <ScrollView
         style={styles.scroll}
-        contentContainerStyle={styles.scrollContent}>
+        contentContainerStyle={styles.scrollContent}
+      >
         {results.map((it, index: number) => {
-          let InnerElement = <View key={index} />;
+          let InnerElement = <View key={index} />
           if (showPassed && it.type === 'correct') {
             InnerElement = (
               <CorrectResultItem key={index} description={it.description} />
-            );
+            )
           }
           if (showFailed && it.type === 'incorrect') {
-            const errorMsg = it.errorMsg || ''; // Trick TS - How to do it as it should be? :)
+            const errorMsg = it.errorMsg || '' // Trick TS - How to do it as it should be? :)
             InnerElement = (
               <IncorrectResultItem
                 key={index}
                 description={it.description}
                 errorMsg={errorMsg}
               />
-            );
+            )
           }
           if (it.type === 'grouping') {
-            InnerElement = <Suite key={index} description={it.description} />;
+            InnerElement = <Suite key={index} description={it.description} />
           }
-          return InnerElement;
+          return InnerElement
         })}
       </ScrollView>
     </SafeAreaView>
-  );
-};
+  )
+}
 
 const styles = StyleSheet.create({
   container: {
@@ -103,4 +101,4 @@ const styles = StyleSheet.create({
   scrollContent: {
     paddingHorizontal: 5,
   },
-});
+})

@@ -1,8 +1,8 @@
-import {decodeHex} from '../Tests/util';
+import { decodeHex } from '../Tests/util'
 import type {
   AesEncryptDecryptTestVector,
   VectorValue,
-} from '../Tests/webcryptoTests/encrypt_decrypt';
+} from '../Tests/webcryptoTests/encrypt_decrypt'
 
 const kPlaintext = decodeHex(
   '546869732073706563696669636174696f6e206465736372696265' +
@@ -22,17 +22,17 @@ const kPlaintext = decodeHex(
     '63652061757468656e7469636174696f6e2c20646f63756d656e74' +
     '206f7220636f6465207369676e696e672c20616e64207468652063' +
     '6f6e666964656e7469616c69747920616e6420696e746567726974' +
-    '79206f6620636f6d6d756e69636174696f6e732e',
-);
+    '79206f6620636f6d6d756e69636174696f6e732e'
+)
 
 const kKeyBytes: VectorValue = {
   '128': decodeHex('dec0d4fcbf3c4741c892dabd1cd4c04e'),
   '256': decodeHex(
-    '67693823fb1d58073f91ece9cc3af910e5532616a4d27b1' + '3eb7b74d8000bbf30',
+    '67693823fb1d58073f91ece9cc3af910e5532616a4d27b1' + '3eb7b74d8000bbf30'
   ),
-};
+}
 
-const counter = decodeHex('55aaf89ba89413d54ea727a76c27a284');
+const counter = decodeHex('55aaf89ba89413d54ea727a76c27a284')
 
 const kCiphertext: VectorValue = {
   '128': decodeHex(
@@ -51,7 +51,7 @@ const kCiphertext: VectorValue = {
       '0954b6e6a393f656f6346f40229d0c50e01c15701f2a4fe5d25a174edf9b90e' +
       'e0c0ebf9e06b5fe00558638a1ea3781403b0c9206d9e814d6a79fb7a56060e1' +
       'c7176af36c6a1ad635981a9bfd8007d8cf6d9f93f0e8e22b93a9a2ccd7090ab' +
-      '1df63cea3f040',
+      '1df63cea3f040'
   ),
   '256': decodeHex(
     '37529a432f50ba4e53385f8266ec3deccceceade7ae29395e9291076c95bb9a' +
@@ -69,40 +69,40 @@ const kCiphertext: VectorValue = {
       '4226288dfb86817ef17116321c71bb9ed97db6e990f62058580f006683431f2' +
       '29662f1d5e3cdaffe0335467ca72635688c939ec8b32d6465f651a635f73c0a' +
       '4e7f0aadb0e81f5bcbfaec2671ac97fdc2fd32f24c941775c37a6810d4b171b' +
-      'c8aba90a86603',
+      'c8aba90a86603'
   ),
-};
+}
 
-const kKeyLengths = ['128', '256'];
+const kKeyLengths = ['128', '256']
 
-const passing: AesEncryptDecryptTestVector[] = [];
-kKeyLengths.forEach(keyLength => {
+const passing: AesEncryptDecryptTestVector[] = []
+kKeyLengths.forEach((keyLength) => {
   passing.push({
     keyBuffer: kKeyBytes[keyLength],
-    algorithm: {name: 'AES-CTR', counter, length: 64},
+    algorithm: { name: 'AES-CTR', counter, length: 64 },
     plaintext: kPlaintext,
     result: kCiphertext[keyLength],
     keyLength,
-  });
-});
+  })
+})
 
-const failing: AesEncryptDecryptTestVector[] = [];
-kKeyLengths.forEach(keyLength => {
+const failing: AesEncryptDecryptTestVector[] = []
+kKeyLengths.forEach((keyLength) => {
   failing.push({
     keyBuffer: kKeyBytes[keyLength],
-    algorithm: {name: 'AES-CTR', counter, length: 0},
+    algorithm: { name: 'AES-CTR', counter, length: 0 },
     plaintext: kPlaintext,
     result: kCiphertext[keyLength],
     keyLength,
-  });
+  })
 
   failing.push({
     keyBuffer: kKeyBytes[keyLength],
-    algorithm: {name: 'AES-CTR', counter, length: 129},
+    algorithm: { name: 'AES-CTR', counter, length: 129 },
     plaintext: kPlaintext,
     result: kCiphertext[keyLength],
     keyLength,
-  });
-});
+  })
+})
 
-export default {passing, failing, decryptionFailing: []};
+export default { passing, failing, decryptionFailing: [] }

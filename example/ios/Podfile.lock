@@ -7,7 +7,7 @@ PODS:
   - hermes-engine (0.74.5):
     - hermes-engine/Pre-built (= 0.74.5)
   - hermes-engine/Pre-built (0.74.5)
-  - NitroModules (0.2.0):
+  - NitroModules (0.3.0):
     - DoubleConversion
     - glog
     - hermes-engine
@@ -1564,7 +1564,7 @@ SPEC CHECKSUMS:
   fmt: 4c2741a687cc09f0634a2e2c72a838b99f1ff120
   glog: fdfdfe5479092de0c4bdbebedd9056951f092c4f
   hermes-engine: 8c1577f3fdb849cbe7729c2e7b5abc4b845e88f8
-  NitroModules: 0d242535bd5046d11ed48264f1d6585bf878a968
+  NitroModules: cd421091537fbdebf47ba7d785d1fb2b647971f7
   OpenSSL-Universal: f8a9c4fdab7e21cb70bda471c269e86e9212439c
   QuickCrypto: 86549a9ce367ff0c933b9c54215300afe31a6806
   RCT-Folly: 02617c592a293bd6d418e0a88ff4ee1f88329b47
@@ -1621,6 +1621,6 @@ SPEC CHECKSUMS:
   SocketRocket: abac6f5de4d4d62d24e11868d7a2f427e0ef940d
   Yoga: 950bbfd7e6f04790fdb51149ed51df41f329fcc8
 
-PODFILE CHECKSUM: efcfcdd525ddb3153aba0f0cead8d819c94e720c
+PODFILE CHECKSUM: 6b9c820897cb7361464ed0bc3d04c1c1ca2946f7
 
 COCOAPODS: 1.14.3

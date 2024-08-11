@@ -1,4 +1,4 @@
-import React, {useState} from 'react';
+import React, { useState } from 'react'
 import {
   View,
   Text,
@@ -6,19 +6,19 @@ import {
   SafeAreaView,
   ScrollView,
   TextInput,
-} from 'react-native';
-import {Button} from '../../components/Button';
-import {BenchmarkItem} from '../../components/BenchmarkItem';
-import {useBenchmarksList} from '../../hooks/useBenchmarksList';
-import {useBenchmarksRun} from '../../hooks/useBenchmarksRun';
+} from 'react-native'
+import { Button } from '../../components/Button'
+import { BenchmarkItem } from '../../components/BenchmarkItem'
+import { useBenchmarksList } from '../../hooks/useBenchmarksList'
+import { useBenchmarksRun } from '../../hooks/useBenchmarksRun'
+import { colors } from '../../styles/colors'
 
 export const BenchmarkSuitesScreen = () => {
-  const [runCount, setRunCount] = useState<number>(1000);
-  const [challenger, setChallenger] = useState<string>('crypto-browserify');
-  const [benchmarks, toggle, clearAll, checkAll] =
-    useBenchmarksList(challenger);
-  const [results, runBenchmarks] = useBenchmarksRun(runCount);
-  let totalCount = 0;
+  const [runCount, setRunCount] = useState<number>(1000)
+  const [challenger, setChallenger] = useState<string>('crypto-browserify')
+  const [benchmarks, toggle, clearAll, checkAll] = useBenchmarksList(challenger)
+  const [results, runBenchmarks] = useBenchmarksRun(runCount)
+  let totalCount = 0
 
   return (
     <SafeAreaView style={styles.mainContainer}>
@@ -38,7 +38,7 @@ export const BenchmarkSuitesScreen = () => {
       <View style={styles.benchmarkList}>
         <ScrollView style={styles.scrollView}>
           {Object.entries(benchmarks).map(([suiteName, suite], index) => {
-            totalCount += suite.count;
+            totalCount += suite.count
             return (
               <BenchmarkItem
                 key={index.toString()}
@@ -48,7 +48,7 @@ export const BenchmarkSuitesScreen = () => {
                 results={results[suiteName]?.results || []}
                 onToggle={toggle}
               />
-            );
+            )
           })}
         </ScrollView>
       </View>
@@ -61,14 +61,14 @@ export const BenchmarkSuitesScreen = () => {
         <Button
           title="Run"
           onPress={() => {
-            runBenchmarks(benchmarks);
+            runBenchmarks(benchmarks)
           }}
-          color="action"
+          color="green"
         />
       </View>
     </SafeAreaView>
-  );
-};
+  )
+}
 
 const styles = StyleSheet.create({
   mainContainer: {
@@ -82,7 +82,7 @@ const styles = StyleSheet.create({
     padding: 5,
     maxHeight: 50,
     borderBottomWidth: 1,
-    borderColor: '#ccc',
+    borderColor: colors.gray,
   },
   option: {},
   optionLabel: {
@@ -107,4 +107,4 @@ const styles = StyleSheet.create({
     alignSelf: 'flex-end',
     paddingRight: 9,
   },
-});
+})

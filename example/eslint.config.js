@@ -4,8 +4,21 @@ import eslintReactNative from 'eslint-plugin-react-native';
 import typescriptEslint from 'typescript-eslint';
 
 export default typescriptEslint.config(
+  {
+    plugins: {
+      '@typescript-eslint': typescriptEslint.plugin,
+    },
+    languageOptions: {
+      parser: '@typescript-eslint/parser',
+      parserOptions: {
+        // project: './tsconfig.json',
+        projectService: true,
+      },
+    },
+    rules: {},
+  },
   js.configs.recommended,
-  ...typescriptEslint.configs.recommendedTypeChecked,
+  ...typescriptEslint.configs.recommended,
   // react-native
   {
     name: 'eslint-plugin-react-native',
@@ -19,5 +32,9 @@ export default typescriptEslint.config(
       'react-native/sort-styles': 'off',
       'react-native/no-inline-styles': 'warn',
     },
+  },
+  // don't lint config files
+  {
+    ignores: ['.prettierrc.js', '*.config.js'],
   },
 );

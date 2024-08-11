@@ -1,12 +1,12 @@
 import React from 'react';
-import {NavigationContainer} from '@react-navigation/native';
-import {enableFreeze} from 'react-native-screens';
-import {TestStack} from './children/TestStack';
-import {BenchmarkStack} from './children/BenchmarkStack';
-import {createBottomTabNavigator} from '@react-navigation/bottom-tabs';
+import { NavigationContainer } from '@react-navigation/native';
+import { enableFreeze } from 'react-native-screens';
+import { TestStack } from './children/TestStack';
+import { BenchmarkStack } from './children/BenchmarkStack';
+import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import Icon from 'react-native-vector-icons/MaterialCommunityIcons';
 
-enableFreeze(true);
+enableFreeze(true)
 const Tab = createBottomTabNavigator();
 
 export const Root: React.FC = () => {
@@ -18,7 +18,7 @@ export const Root: React.FC = () => {
           component={TestStack}
           options={{
             headerShown: false,
-            tabBarIcon: ({color}) => (
+            tabBarIcon: ({ color }) => (
               <Icon name="test-tube" size={24} color={color} />
             ),
           }}
@@ -28,12 +28,12 @@ export const Root: React.FC = () => {
           component={BenchmarkStack}
           options={{
             headerShown: false,
-            tabBarIcon: ({color}) => (
+            tabBarIcon: ({ color }) => (
               <Icon name="timer" size={24} color={color} />
             ),
           }}
         />
       </Tab.Navigator>
     </NavigationContainer>
-  );
-};
+  )
+}

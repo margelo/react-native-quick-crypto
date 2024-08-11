@@ -1,7 +1,7 @@
-import {expect} from 'chai';
-import {Buffer} from '@craftzdog/react-native-buffer';
-import {describe, it} from '../../MochaRNAdapter';
-import crypto from 'react-native-quick-crypto';
+import { expect } from 'chai'
+import { Buffer } from '@craftzdog/react-native-buffer'
+import { describe, it } from '../../MochaRNAdapter'
+import crypto from 'react-native-quick-crypto'
 // import { PrivateKey } from 'sscrypto/node';
 
 // Tests that a key pair can be used for encryption / decryption.
@@ -42,7 +42,7 @@ import crypto from 'react-native-quick-crypto';
 
 describe('sign/verify', () => {
   it('basic sign/verify', async () => {
-    const {publicKey, privateKey} = crypto.generateKeyPairSync('rsa', {
+    const { publicKey, privateKey } = crypto.generateKeyPairSync('rsa', {
       modulusLength: 1024,
       publicKeyEncoding: {
         type: 'pkcs1',
@@ -52,34 +52,34 @@ describe('sign/verify', () => {
         type: 'pkcs8',
         format: 'pem',
       },
-    });
+    })
 
-    const textToSign = 'This text should be signed';
-    const textBuffer = Buffer.from(textToSign, 'utf-8');
-    const padding = crypto.constants.RSA_PKCS1_PSS_PADDING;
-    const saltLength = crypto.constants.RSA_PSS_SALTLEN_MAX_SIGN;
+    const textToSign = 'This text should be signed'
+    const textBuffer = Buffer.from(textToSign, 'utf-8')
+    const padding = crypto.constants.RSA_PKCS1_PSS_PADDING
+    const saltLength = crypto.constants.RSA_PSS_SALTLEN_MAX_SIGN
 
-    const sign = crypto.createSign('SHA256');
-    sign.update(textBuffer);
+    const sign = crypto.createSign('SHA256')
+    sign.update(textBuffer)
     const signature = sign.sign({
       key: privateKey,
       padding,
       saltLength,
-    });
+    })
 
-    const verify = crypto.createVerify('SHA256');
-    verify.update(textToSign, 'utf-8');
+    const verify = crypto.createVerify('SHA256')
+    verify.update(textToSign, 'utf-8')
     const matches = verify.verify(
       {
         key: publicKey,
         padding,
         saltLength,
       },
-      signature,
-    );
+      signature
+    )
 
-    expect(matches).to.equal(true);
-  });
+    expect(matches).to.equal(true)
+  })
 
   it('ec sign/verify #387', async () => {
     const privateKeyPem = `
@@ -89,38 +89,38 @@ gchLiPEO5p8URkI0YyUlkNMR+8KgCgYIKoZIzj0DAQehRANCAAS2bcRIxh29Yf49
 8bnSu4y3bmVDiJjg0SCWD1mHN8DC5gM8uAaTdnz2IYRsvy+UAbqMc8J1xBeQanwV
 nkT8PPPD
 -----END PRIVATE KEY-----
-    `;
+    `
 
     const publicKeyPem = `
 -----BEGIN PUBLIC KEY-----
 MFkwEwYHKoZIzj0CAQYIKoZIzj0DAQcDQgAEtm3ESMYdvWH+PfG50ruMt25lQ4iY
 4NEglg9ZhzfAwuYDPLgGk3Z89iGEbL8vlAG6jHPCdcQXkGp8FZ5E/Dzzww==
 -----END PUBLIC KEY-----
-    `;
+    `
 
     const data = Buffer.from(
       'lets try if we can check the crypto fun here',
-      'utf8',
-    );
+      'utf8'
+    )
 
     // Do the signing
 
-    const signer = crypto.createSign('sha256');
-    signer.update(data);
+    const signer = crypto.createSign('sha256')
+    signer.update(data)
     const signature = signer.sign({
       key: privateKeyPem,
       format: 'pem',
       type: 'pkcs8',
       dsaEncoding: 'ieee-p1363',
-    });
+    })
 
-    console.log(signature.toString('base64'));
-    console.log('Signature length', signature.length);
+    console.log(signature.toString('base64'))
+    console.log('Signature length', signature.length)
 
     // Do verify
 
-    const verifier = crypto.createVerify('sha256');
-    verifier.update(data);
+    const verifier = crypto.createVerify('sha256')
+    verifier.update(data)
     const success = verifier.verify(
       {
         key: publicKeyPem,
@@ -128,11 +128,11 @@ MFkwEwYHKoZIzj0CAQYIKoZIzj0DAQcDQgAEtm3ESMYdvWH+PfG50ruMt25lQ4iY
         type: 'spki',
         dsaEncoding: 'ieee-p1363',
       },
-      signature,
-    );
+      signature
+    )
 
-    expect(success).to.equal(true);
-  });
+    expect(success).to.equal(true)
+  })
 
   // // We need to monkey patch sscrypto to use all the crypto functions from quick-crypto
   // it('simple sscrypto sign/verify', async () => {
@@ -149,4 +149,4 @@ MFkwEwYHKoZIzj0CAQYIKoZIzj0DAQcDQgAEtm3ESMYdvWH+PfG50ruMt25lQ4iY
   //   console.log(3);
   //   expect(verified).to.equal(true);
   // });
-});
+})

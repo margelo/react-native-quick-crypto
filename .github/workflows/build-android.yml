@@ -48,7 +48,7 @@ jobs:
 
       - name: Bootstrap JS
         run: |
-          bun install_tsc
+          bun install
 
       - name: Restore Gradle cache
         uses: actions/cache@v4

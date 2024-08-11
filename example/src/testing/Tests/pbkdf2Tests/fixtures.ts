@@ -408,4 +408,4 @@ export const fixtures = {
       exception: 'Bad key length',
     },
   ],
-};
+}

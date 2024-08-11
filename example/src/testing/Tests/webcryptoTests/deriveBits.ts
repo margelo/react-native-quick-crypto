@@ -1,12 +1,12 @@
-import {expect} from 'chai';
-import crypto from 'react-native-quick-crypto';
-import {describe, it} from '../../MochaRNAdapter';
-import {ab2str} from '../../../../../src/Utils';
-import type {HashAlgorithm} from '../../../../../src/keys';
+import { expect } from 'chai'
+import crypto from 'react-native-quick-crypto'
+import { describe, it } from '../../MochaRNAdapter'
+import { ab2str } from '../../../../../src/Utils'
+import type { HashAlgorithm } from '../../../../../src/keys'
 
-const {subtle} = crypto;
+const { subtle } = crypto
 
-type TestFixture = [string, string, number, HashAlgorithm, number, string];
+type TestFixture = [string, string, number, HashAlgorithm, number, string]
 
 describe('subtle - deriveBits', () => {
   // pbkdf2 deriveBits()
@@ -17,15 +17,15 @@ describe('subtle - deriveBits', () => {
     iterations: number,
     hash: HashAlgorithm,
     length: number,
-    expected: string,
+    expected: string
   ) => {
     const key = await subtle.importKey(
       'raw',
       pass,
-      {name: 'PBKDF2', hash},
+      { name: 'PBKDF2', hash },
       false,
-      ['deriveBits'],
-    );
+      ['deriveBits']
+    )
 
     const bits = await subtle.deriveBits(
       {
@@ -35,10 +35,10 @@ describe('subtle - deriveBits', () => {
         hash,
       },
       key,
-      length,
-    );
-    expect(ab2str(bits)).to.equal(expected);
-  };
+      length
+    )
+    expect(ab2str(bits)).to.equal(expected)
+  }
 
   const kTests: TestFixture[] = [
     [
@@ -52,15 +52,15 @@ describe('subtle - deriveBits', () => {
         '719d293280f780f9fafdcf46925c5c0588b3',
     ],
     ['hello', 'there', 5, 'SHA-384', 128, '201509b012c9cd2fbe7ea938f0c509b3'],
-  ];
+  ]
 
   kTests.forEach(async ([pass, salt, iterations, hash, length, expected]) => {
     it(`PBKDF2 importKey raw/deriveBits - ${pass} ${salt} ${iterations} ${hash} ${length}`, async () => {
-      await test(pass, salt, iterations, hash, length, expected);
-    });
-  });
+      await test(pass, salt, iterations, hash, length, expected)
+    })
+  })
   // }
 
   // ecdh deriveBits
   // {}
-});
+})

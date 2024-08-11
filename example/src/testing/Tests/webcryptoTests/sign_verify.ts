@@ -1,9 +1,9 @@
-import type {CryptoKey, CryptoKeyPair} from '../../../../../src/keys';
-import crypto from 'react-native-quick-crypto';
-import {describe, it} from '../../MochaRNAdapter';
-import {expect} from 'chai';
+import type { CryptoKey, CryptoKeyPair } from '../../../../../src/keys'
+import crypto from 'react-native-quick-crypto'
+import { describe, it } from '../../MochaRNAdapter'
+import { expect } from 'chai'
 
-const {subtle} = crypto;
+const { subtle } = crypto
 
 describe('subtle - sign / verify', () => {
   // // Test Sign/Verify RSASSA-PKCS1-v1_5
@@ -55,19 +55,19 @@ describe('subtle - sign / verify', () => {
   // }
 
   // Test Sign/Verify ECDSA
-  // eslint-disable-next-line no-lone-blocks
+   
   {
     async function test(data: string) {
-      const ec = new TextEncoder();
+      const ec = new TextEncoder()
       const pair = await subtle.generateKey(
         {
           name: 'ECDSA',
           namedCurve: 'P-384',
         },
         true,
-        ['sign', 'verify'],
-      );
-      const {publicKey, privateKey} = pair as CryptoKeyPair;
+        ['sign', 'verify']
+      )
+      const { publicKey, privateKey } = pair as CryptoKeyPair
 
       const signature = await subtle.sign(
         {
@@ -75,8 +75,8 @@ describe('subtle - sign / verify', () => {
           hash: 'SHA-384',
         },
         privateKey as CryptoKey,
-        ec.encode(data),
-      );
+        ec.encode(data)
+      )
 
       expect(
         await subtle.verify(
@@ -86,14 +86,14 @@ describe('subtle - sign / verify', () => {
           },
           publicKey as CryptoKey,
           signature,
-          ec.encode(data),
-        ),
-      ).to.equal(true);
+          ec.encode(data)
+        )
+      ).to.equal(true)
     }
 
     it('ECDSA', async () => {
-      await test('hello world');
-    });
+      await test('hello world')
+    })
   }
 
   // // Test Sign/Verify HMAC
@@ -164,4 +164,4 @@ describe('subtle - sign / verify', () => {
   //  * test-webcrypto-sign-verify-eddsa.js
   //  * test-webcrypto-sign-verify-hmac.js
   //  * test-webcrypto-sign-verify-rsa.js
-});
+})

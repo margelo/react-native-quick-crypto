@@ -1,18 +1,20 @@
 export type Suites<T = TestSuite | BenchmarkSuite> = {
-  [key: string]: T;
-};
+  [key: string]: T
+}
 
 export interface TestSuite {
-  value: boolean;
-  count: number;
+  value: boolean
+  count: number
 }
 
 export interface BenchmarkSuite extends TestSuite {
-  benchmarks: Benchmark[];
+  benchmarks: Benchmark[]
 }
 
+type Fn = () => void
+
 export type Benchmark = {
-  name: string;
-  us?: Function;
-  them?: Function;
-};
+  name: string
+  us?: Fn,
+  them?: Fn,
+}

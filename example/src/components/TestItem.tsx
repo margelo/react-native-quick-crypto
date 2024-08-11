@@ -1,16 +1,17 @@
-import React from 'react';
-import {View, Text, StyleSheet, TouchableOpacity} from 'react-native';
-import BouncyCheckbox from 'react-native-bouncy-checkbox';
-import type {TestResult} from '../types/Results';
-import {useNavigation} from '@react-navigation/native';
+import React from 'react'
+import { View, Text, StyleSheet, TouchableOpacity } from 'react-native'
+import BouncyCheckbox from 'react-native-bouncy-checkbox'
+import type { TestResult } from '../types/Results'
+import { useNavigation } from '@react-navigation/native'
+import { colors } from '../styles/colors'
 
 type TestItemProps = {
-  description: string;
-  value: boolean;
-  count: number;
-  results: TestResult[];
-  onToggle: (description: string) => void;
-};
+  description: string
+  value: boolean
+  count: number
+  results: TestResult[]
+  onToggle: (description: string) => void
+}
 
 export const TestItem: React.FC<TestItemProps> = ({
   description,
@@ -19,40 +20,41 @@ export const TestItem: React.FC<TestItemProps> = ({
   results,
   onToggle,
 }: TestItemProps) => {
-  const navigation = useNavigation();
+  const navigation = useNavigation()
 
   // get pass/fail stats from results
-  let pass = 0;
-  let fail = 0;
-  results.map(r => {
+  let pass = 0
+  let fail = 0
+  results.map((r) => {
     if (r.type === 'correct') {
-      pass++;
+      pass++
     }
     if (r.type === 'incorrect') {
-      fail++;
+      fail++
     }
-  });
+  })
 
   return (
     <View style={styles.container}>
       <BouncyCheckbox
         isChecked={value}
         onPress={() => {
-          onToggle(description);
+          onToggle(description)
         }}
         disableText={true}
-        fillColor="#1976d2"
+        fillColor={colors.blue}
         style={styles.checkbox}
       />
       <TouchableOpacity
         style={styles.touchable}
         onPress={() => {
-          // @ts-ignore
+          // @ts-expect-error - not dealing with navigation types rn
           navigation.navigate('TestDetailsScreen', {
             results,
             suiteName: description,
-          });
-        }}>
+          })
+        }}
+      >
         <Text style={styles.label} numberOfLines={1}>
           {description}
         </Text>
@@ -67,8 +69,8 @@ export const TestItem: React.FC<TestItemProps> = ({
         </Text>
       </TouchableOpacity>
     </View>
-  );
-};
+  )
+}
 
 const styles = StyleSheet.create({
   container: {
@@ -79,11 +81,11 @@ const styles = StyleSheet.create({
     justifyContent: 'space-evenly',
     gap: 10,
     borderBottomWidth: 1,
-    borderBottomColor: '#ccc',
+    borderBottomColor: colors.gray,
     paddingHorizontal: 10,
   },
   checkbox: {
-    transform: [{scaleX: 0.7}, {scaleY: 0.7}],
+    transform: [{ scaleX: 0.7 }, { scaleY: 0.7 }],
   },
   label: {
     fontSize: 12,
@@ -94,10 +96,10 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
   },
   pass: {
-    color: 'green',
+    color: colors.green,
   },
   fail: {
-    color: 'red',
+    color: colors.red,
   },
   count: {
     fontSize: 12,
@@ -105,4 +107,4 @@ const styles = StyleSheet.create({
     flex: 1,
     textAlign: 'right',
   },
-});
+})

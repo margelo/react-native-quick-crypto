@@ -1,11 +1,10 @@
 {
   "scripts": {
     "check-all": "./scripts/clang-format.sh",
-    "install_tsc": "bun --filter=\"**\" install && bun tsc",
     "nitro": "cd packages/react-native-quick-crypto && bunx nitro-codegen",
     "pods": "bun --filter=\"react-native-quick-crypto-example\" pods",
     "example": "cd example && bun start",
-    "bootstrap": "bun install_tsc && bun nitro && bun pods",
+    "bootstrap": "bun install && bun pods",
     "tsc": "bun --filter=\"**\" typescript",
     "lint": "bun --filter=\"**\" lint",
     "release": "bun --filter=\"react-native-quick-crypto\" release && release-it",
@@ -15,5 +14,8 @@
     "packages/*",
     "example"
   ],
-  "packageManager": "bun@1.1.21"
+  "packageManager": "bun@1.1.21",
+  "patchedDependencies": {
+    "react-native-screens@3.34.0": "patches/react-native-screens@3.34.0.patch"
+  }
 }

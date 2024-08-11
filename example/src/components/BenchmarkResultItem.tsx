@@ -1,11 +1,12 @@
-import React from 'react';
-import {View, Text, StyleSheet} from 'react-native';
-import {BenchmarkResult} from '../types/Results';
-import {calculateTimes, formatNumber} from '../benchmarks/utils';
+import React from 'react'
+import { View, Text, StyleSheet } from 'react-native'
+import type { BenchmarkResult } from '../types/Results'
+import { calculateTimes, formatNumber } from '../benchmarks/utils'
+import { colors } from '../styles/colors'
 
 type BenchmarkResultItemProps = {
-  result: BenchmarkResult;
-};
+  result: BenchmarkResult
+}
 
 export const BenchmarkResultItemHeader: React.FC = () => {
   return (
@@ -16,15 +17,16 @@ export const BenchmarkResultItemHeader: React.FC = () => {
       <Text style={styles.label}>rnqc</Text>
       <Text style={styles.label}>challenger</Text>
     </View>
-  );
-};
+  )
+}
 
 export const BenchmarkResultItem: React.FC<BenchmarkResultItemProps> = ({
   result,
 }: BenchmarkResultItemProps) => {
-  const emoji = result.type === 'faster' ? '🐇' : '🐢';
-  const times = calculateTimes(result);
-  const timesType = result.type === 'faster' ? 'faster' : 'slower';
+  const emoji = result.type === 'faster' ? '🐇' : '🐢'
+  const times = calculateTimes(result)
+  const timesType = result.type === 'faster' ? 'faster' : 'slower'
+  const timesStyle = timesType === 'faster' ? styles.faster : styles.slower
 
   return (
     <View style={styles.itemContainer}>
@@ -32,14 +34,14 @@ export const BenchmarkResultItem: React.FC<BenchmarkResultItemProps> = ({
       <Text style={[styles.text, styles.description]}>
         {result.description}
       </Text>
-      <Text style={[styles.value, styles[timesType]]}>
+      <Text style={[styles.value, timesStyle]}>
         {formatNumber(times, 2, 'x')}
       </Text>
       <Text style={styles.value}>{formatNumber(result.us, 2, 'ms')}</Text>
       <Text style={styles.value}>{formatNumber(result.them, 2, 'ms')}</Text>
     </View>
-  );
-};
+  )
+}
 
 const styles = StyleSheet.create({
   itemContainer: {
@@ -68,11 +70,11 @@ const styles = StyleSheet.create({
     textAlign: 'center',
   },
   faster: {
-    color: 'green',
+    color: colors.green,
     fontWeight: 'bold',
   },
   slower: {
-    color: 'red',
+    color: colors.red,
     fontWeight: 'bold',
   },
-});
+})

@@ -1,55 +1,55 @@
 // copied from https://github.com/nodejs/node/blob/master/test/parallel/test-crypto-hmac.js
-import crypto from 'react-native-quick-crypto';
-import {Buffer} from '@craftzdog/react-native-buffer';
-import {describe, it} from '../../MochaRNAdapter';
-import {expect} from 'chai';
+import crypto from 'react-native-quick-crypto'
+import { Buffer } from '@craftzdog/react-native-buffer'
+import { describe, it } from '../../MochaRNAdapter'
+import { expect } from 'chai'
 
 describe('hmac', () => {
   it('Hmac called directly', () => {
-    const Hmac = crypto.Hmac;
-    const instance = crypto.Hmac('sha256', 'Node');
-    expect(instance).to.instanceOf(Hmac);
-  });
+    const Hmac = crypto.Hmac
+    const instance = crypto.Hmac('sha256', 'Node')
+    expect(instance).to.instanceOf(Hmac)
+  })
 
   it('invalid arg1', () => {
-    // @ts-expect-error
-    expect(crypto.createHmac(null)).Throw(/ERR_INVALID_ARG_TYPE/);
-  });
+    // @ts-expect-error - testing bad args
+    expect(crypto.createHmac(null)).Throw(/ERR_INVALID_ARG_TYPE/)
+  })
 
   it('invalid arg type', () => {
-    // @ts-expect-error
-    expect(crypto.createHmac('sha1', null)).Throw(/ERR_INVALID_ARG_TYPE/);
-  });
+    // @ts-expect-error - testing bad args
+    expect(crypto.createHmac('sha1', null)).Throw(/ERR_INVALID_ARG_TYPE/)
+  })
 
   function testHmac(
     algo: string,
     key: string | Buffer,
     data: string | string[] | Buffer,
-    expected: any,
+    expected: string
   ) {
-    const nameKey = key.toString().replace(/\s/g, '');
-    const nameData = data.toString().replace(/\s/g, '');
+    const nameKey = key.toString().replace(/\s/g, '')
+    const nameData = data.toString().replace(/\s/g, '')
 
     it(`testHmac ${algo} ${nameKey} ${nameData}`, () => {
       if (!Array.isArray(data)) {
-        data = [data] as any;
+        data = [data] as string[]
       }
 
       // If the key is a Buffer, test Hmac with a key object as well.
       const keyWrappers = [
-        (key2: any) => key2,
+        (key2: string | Buffer) => key2,
         //    ...(typeof key === 'string' ? [] : [crypto.createSecretKey]),
-      ];
+      ]
 
       for (const keyWrapper of keyWrappers) {
-        const hmac = crypto.createHmac(algo, keyWrapper(key));
+        const hmac = crypto.createHmac(algo, keyWrapper(key))
         for (const chunk of data) {
-          hmac.update(chunk as any);
+          hmac.update(chunk as string)
         }
-        const actual = hmac.digest('hex');
-        expect(actual).to.be.eql(expected);
+        const actual = hmac.digest('hex')
+        expect(actual).to.be.eql(expected)
       }
-    });
+    })
   }
 
   // Test HMAC with multiple updates.
@@ -57,11 +57,17 @@ describe('hmac', () => {
     'sha1',
     'Node',
     ['some data', 'to hmac'],
-    '19fd6e1ba73d9ed2224dd5094a71babe85d9a892',
-  );
+    '19fd6e1ba73d9ed2224dd5094a71babe85d9a892'
+  )
+
+  type TestCase = {
+    key: string | Buffer
+    data: string | string[] | Buffer
+    hmac: Record<string, string>
+  }
 
   // Test HMAC (Wikipedia Test Cases)
-  const wikipedia = [
+  const wikipedia: TestCase[] = [
     {
       key: 'key',
       data: 'The quick brown fox jumps over the lazy dog',
@@ -110,11 +116,11 @@ describe('hmac', () => {
           '4292c5ad',
       },
     },
-  ];
+  ]
 
-  for (const {key, data, hmac} of wikipedia) {
+  for (const { key, data, hmac } of wikipedia) {
     for (const hash in hmac) {
-      testHmac(hash, key, data, (hmac as any)[hash]);
+      testHmac(hash, key, data, hmac[hash] as string)
     }
   }
 
@@ -141,7 +147,7 @@ describe('hmac', () => {
       key: Buffer.from('4a656665', 'hex'), // 'Jefe'
       data: Buffer.from(
         '7768617420646f2079612077616e7420666f72206e6f74686' + '96e673f',
-        'hex',
+        'hex'
       ), // 'what do ya want for nothing?'
       hmac: {
         sha224: 'a30e01098bc6dbbf45690f3a7e9e6d0f8bbea2a39e6148008fd05e44',
@@ -162,7 +168,7 @@ describe('hmac', () => {
       data: Buffer.from(
         'ddddddddddddddddddddddddddddddddddddddddddddddddd' +
           'ddddddddddddddddddddddddddddddddddddddddddddddddddd',
-        'hex',
+        'hex'
       ),
       hmac: {
         sha224: '7fb3cb3588c6c1f6ffa9694d7d6ad2649365b0c1f65d69d1ec8333ea',
@@ -181,12 +187,12 @@ describe('hmac', () => {
     {
       key: Buffer.from(
         '0102030405060708090a0b0c0d0e0f10111213141516171819',
-        'hex',
+        'hex'
       ),
       data: Buffer.from(
         'cdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdc' +
           'dcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcd',
-        'hex',
+        'hex'
       ),
       hmac: {
         sha224: '6c11506874013cac6a2abc1bb382627cec6a90d86efc012de7afec5a',
@@ -223,14 +229,14 @@ describe('hmac', () => {
           'aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa' +
           'aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa' +
           'aaaaaaaaaaaa',
-        'hex',
+        'hex'
       ),
       // 'Test Using Larger Than Block-Size Key - Hash Key First'
       data: Buffer.from(
         '54657374205573696e67204c6172676572205468616e20426' +
           'c6f636b2d53697a65204b6579202d2048617368204b657920' +
           '4669727374',
-        'hex',
+        'hex'
       ),
       hmac: {
         sha224: '95e9a0db962095adaebe9b2d6f0dbce2d499f112f2d2b7273fa6870e',
@@ -254,7 +260,7 @@ describe('hmac', () => {
           'aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa' +
           'aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa' +
           'aaaaaaaaaaaa',
-        'hex',
+        'hex'
       ),
       // 'This is a test using a larger than block-size key and a larger ' +
       // 'than block-size data. The key needs to be hashed before being ' +
@@ -267,7 +273,7 @@ describe('hmac', () => {
           '20746f20626520686173686564206265666f7265206265696' +
           'e6720757365642062792074686520484d414320616c676f72' +
           '6974686d2e',
-        'hex',
+        'hex'
       ),
       hmac: {
         sha224: '3a854166ac5d9f023f54d517d0b39dbd946770db9c2b95c9f6f565d1',
@@ -283,26 +289,26 @@ describe('hmac', () => {
           '65c97440fa8c6a58',
       },
     },
-  ];
+  ]
 
   for (let i = 0, l = rfc4231.length; i < l; i++) {
     for (const hash in rfc4231[i]!.hmac) {
       it(`Test HMAC-${hash} rfc 4231 case ${i + 1}`, () => {
-        const str = crypto.createHmac(hash, rfc4231[i]!.key);
-        str.end(rfc4231[i]!.data);
-        let strRes = str.read().toString('hex');
+        const str = crypto.createHmac(hash, rfc4231[i]!.key)
+        str.end(rfc4231[i]!.data)
+        let strRes = str.read().toString('hex')
         let actual = crypto
           .createHmac(hash, rfc4231[i]!.key)
           .update(rfc4231[i]!.data)
-          .digest('hex');
+          .digest('hex')
         if (rfc4231[i]!.truncate) {
-          actual = actual.substr(0, 32); // first 128 bits == 32 hex chars
-          strRes = strRes.substr(0, 32);
+          actual = actual.substr(0, 32) // first 128 bits == 32 hex chars
+          strRes = strRes.substr(0, 32)
         }
-        const expected = (rfc4231[i]!.hmac as any)[hash];
-        expect(actual).to.be.eql(expected);
-        expect(actual).to.be.eql(strRes);
-      });
+        const expected = (rfc4231[i]!.hmac as Record<string, string>)[hash]
+        expect(actual).to.be.eql(expected)
+        expect(actual).to.be.eql(strRes)
+      })
     }
   }
 
@@ -323,20 +329,20 @@ describe('hmac', () => {
       data: Buffer.from(
         'ddddddddddddddddddddddddddddddddddddddddddddddddd' +
           'ddddddddddddddddddddddddddddddddddddddddddddddddddd',
-        'hex',
+        'hex'
       ),
       hmac: '56be34521d144c88dbb8c733f0e8b3f6',
     },
     {
       key: Buffer.from(
         '0102030405060708090a0b0c0d0e0f10111213141516171819',
-        'hex',
+        'hex'
       ),
       data: Buffer.from(
         'cdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdc' +
           'dcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcd' +
           'cdcdcdcdcd',
-        'hex',
+        'hex'
       ),
       hmac: '697eaf0aca3a3aea3a75164746ffaa79',
     },
@@ -351,7 +357,7 @@ describe('hmac', () => {
           'aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa' +
           'aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa' +
           'aaaaaaaaaaaaaaaaaaaaaa',
-        'hex',
+        'hex'
       ),
       data: 'Test Using Larger Than Block-Size Key - Hash Key First',
       hmac: '6b1ab7fe4bd7bf8f0b62e6ce61b9d0cd',
@@ -362,17 +368,17 @@ describe('hmac', () => {
           'aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa' +
           'aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa' +
           'aaaaaaaaaaaaaaaaaaaaaa',
-        'hex',
+        'hex'
       ),
       data:
         'Test Using Larger Than Block-Size Key and Larger Than One ' +
         'Block-Size Data',
       hmac: '6f630fad67cda0ee1fb1f562db3aa53e',
     },
-  ];
+  ]
 
-  for (const {key, data, hmac} of rfc2202_md5) {
-    testHmac('md5', key, data, hmac);
+  for (const { key, data, hmac } of rfc2202_md5) {
+    testHmac('md5', key, data, hmac)
   }
 
   const rfc2202_sha1 = [
@@ -392,20 +398,20 @@ describe('hmac', () => {
         'ddddddddddddddddddddddddddddddddddddddddddddd' +
           'ddddddddddddddddddddddddddddddddddddddddddddd' +
           'dddddddddd',
-        'hex',
+        'hex'
       ),
       hmac: '125d7342b9ac11cd91a39af48aa17b4f63f175d3',
     },
     {
       key: Buffer.from(
         '0102030405060708090a0b0c0d0e0f10111213141516171819',
-        'hex',
+        'hex'
       ),
       data: Buffer.from(
         'cdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdc' +
           'dcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcd' +
           'cdcdcdcdcd',
-        'hex',
+        'hex'
       ),
       hmac: '4c9007f4026250c6bc8414f9bf50c86c2d7235da',
     },
@@ -420,7 +426,7 @@ describe('hmac', () => {
           'aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa' +
           'aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa' +
           'aaaaaaaaaaaaaaaaaaaaaa',
-        'hex',
+        'hex'
       ),
       data: 'Test Using Larger Than Block-Size Key - Hash Key First',
       hmac: 'aa4ae5e15272d00e95705637ce8a3b55ed402112',
@@ -431,58 +437,58 @@ describe('hmac', () => {
           'aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa' +
           'aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa' +
           'aaaaaaaaaaaaaaaaaaaaaa',
-        'hex',
+        'hex'
       ),
       data:
         'Test Using Larger Than Block-Size Key and Larger Than One ' +
         'Block-Size Data',
       hmac: 'e8e99d0f45237d786d6bbaa7965c7808bbff1a91',
     },
-  ];
+  ]
 
-  for (const {key, data, hmac} of rfc2202_sha1) {
-    testHmac('sha1', key, data, hmac);
+  for (const { key, data, hmac } of rfc2202_sha1) {
+    testHmac('sha1', key, data, hmac)
   }
 
   it('digest encoding', () => {
     expect(crypto.createHmac('sha256', 'w00t').digest('ucs2')).to.be.eql(
-      crypto.createHmac('sha256', 'w00t').digest().toString('ucs2'),
-    );
-  });
+      crypto.createHmac('sha256', 'w00t').digest().toString('ucs2')
+    )
+  })
 
   it('Check initialized -> uninitialized state transition after calling digest().', () => {
     const expected =
       '\u0010\u0041\u0052\u00c5\u00bf\u00dc\u00a0\u007b\u00c6\u0033' +
-      '\u00ee\u00bd\u0046\u0019\u009f\u0002\u0055\u00c9\u00f4\u009d';
+      '\u00ee\u00bd\u0046\u0019\u009f\u0002\u0055\u00c9\u00f4\u009d'
     {
-      const h = crypto.createHmac('sha1', 'key').update('data');
-      expect(h.digest('buffer')).to.deep.equal(Buffer.from(expected, 'latin1'));
-      expect(h.digest('buffer')).to.deep.equal(Buffer.from(''));
+      const h = crypto.createHmac('sha1', 'key').update('data')
+      expect(h.digest('buffer')).to.deep.equal(Buffer.from(expected, 'latin1'))
+      expect(h.digest('buffer')).to.deep.equal(Buffer.from(''))
     }
     {
-      const h = crypto.createHmac('sha1', 'key').update('data');
-      expect(h.digest('latin1')).to.equal(expected);
-      expect(h.digest('latin1')).to.equal('');
+      const h = crypto.createHmac('sha1', 'key').update('data')
+      expect(h.digest('latin1')).to.equal(expected)
+      expect(h.digest('latin1')).to.equal('')
     }
-  });
+  })
 
   it('Check initialized -> uninitialized state transition after calling digest(). no update', () => {
     const expected =
       '\u00f4\u002b\u00b0\u00ee\u00b0\u0018\u00eb\u00bd\u0045\u0097' +
-      '\u00ae\u0072\u0013\u0071\u001e\u00c6\u0007\u0060\u0084\u003f';
+      '\u00ae\u0072\u0013\u0071\u001e\u00c6\u0007\u0060\u0084\u003f'
     {
-      const h = crypto.createHmac('sha1', 'key');
-      expect(h.digest('buffer')).to.deep.equal(Buffer.from(expected, 'latin1'));
-      expect(h.digest('buffer')).to.deep.equal(Buffer.from(''));
+      const h = crypto.createHmac('sha1', 'key')
+      expect(h.digest('buffer')).to.deep.equal(Buffer.from(expected, 'latin1'))
+      expect(h.digest('buffer')).to.deep.equal(Buffer.from(''))
     }
     {
-      const h = crypto.createHmac('sha1', 'key');
-      expect(h.digest('latin1')).to.equal(expected);
-      expect(h.digest('latin1')).to.equal('');
+      const h = crypto.createHmac('sha1', 'key')
+      expect(h.digest('latin1')).to.equal(expected)
+      expect(h.digest('latin1')).to.equal('')
     }
-  });
+  })
 
   it('Invalid digest', () => {
-    expect(crypto.createHmac('sha7', 'key')).throw(/Invalid digest/);
-  });
-});
+    expect(crypto.createHmac('sha7', 'key')).throw(/Invalid digest/)
+  })
+})

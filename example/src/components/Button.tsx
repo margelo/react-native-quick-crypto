@@ -1,32 +1,29 @@
-import React from 'react';
-import {View, Text, TouchableOpacity, StyleSheet} from 'react-native';
+import React from 'react'
+import { View, Text, TouchableOpacity, StyleSheet } from 'react-native'
+import { colors } from '../styles/colors'
 
 type ButtonProps = {
-  title: string;
-  onPress: () => void;
-  color?: string;
-};
+  title: string
+  onPress: () => void
+  color?: string
+}
 
 export const Button: React.FC<ButtonProps> = ({
   title,
   onPress,
-  color = 'primary',
+  color = 'blue',
 }: ButtonProps) => {
   return (
     <View>
       <TouchableOpacity
-        style={[styles.container, {backgroundColor: colors[color]}]}
-        onPress={onPress}>
+        style={[styles.container, { backgroundColor: colors[color] }]}
+        onPress={onPress}
+      >
         <Text style={styles.label}>{title}</Text>
       </TouchableOpacity>
     </View>
-  );
-};
-
-const colors: Record<string, string> = {
-  primary: '#1976d2',
-  action: 'green',
-};
+  )
+}
 
 const styles = StyleSheet.create({
   container: {
@@ -37,7 +34,7 @@ const styles = StyleSheet.create({
     minWidth: 100,
   },
   label: {
-    color: 'white',
+    color: colors.white,
     alignSelf: 'center',
   },
-});
+})
