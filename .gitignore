@@ -150,3 +150,6 @@ lint/tmp/
 
 # Release
 .npmrc
+
+example0/
+tsconfig.tsbuildinfo
