@@ -35,6 +35,6 @@ export default typescriptEslint.config(
   },
   // don't lint config files
   {
-    ignores: ['*.config.js'],
+    ignores: ['*.config.*js'],
   },
 );
