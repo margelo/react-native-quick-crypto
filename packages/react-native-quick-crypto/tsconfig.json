@@ -1,8 +1,7 @@
 {
   "compilerOptions": {
     "composite": true,
-    "outDir": "lib",
-    "rootDir": ".",
+    "rootDir": "src",
     "allowUnreachableCode": false,
     "allowUnusedLabels": false,
     "esModuleInterop": true,

@@ -1,11 +1,11 @@
 import rnqc from 'react-native-quick-crypto'
-import { RandomBytesFn } from '../types'
+import type { BenchmarkFn } from '../types'
 
-const randomBytes10: RandomBytesFn = () => {
+const randomBytes10: BenchmarkFn = () => {
   rnqc.randomBytes(10)
 }
 
-const randomBytes1024: RandomBytesFn = () => {
+const randomBytes1024: BenchmarkFn = () => {
   rnqc.randomBytes(1024)
 }
 

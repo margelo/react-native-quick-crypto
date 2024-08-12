@@ -5,16 +5,16 @@
     "pods": "bun --filter=\"react-native-quick-crypto-example\" pods",
     "example": "cd example && bun start",
     "bootstrap": "bun install && bun pods",
-    "tsc": "bun --filter=\"**\" typescript",
-    "lint": "bun --filter=\"**\" lint",
-    "release": "bun --filter=\"react-native-quick-crypto\" release && release-it",
-    "postinstall": "bun tsc"
+    "tsc": "bun --filter=\"*\" typescript",
+    "lint": "bun --filter=\"*\" lint",
+    "prepare": "bun --filter=\"react-native-quick-crypto\" prepare",
+    "release": "bun --filter=\"react-native-quick-crypto\" release && release-it"
   },
   "workspaces": [
     "packages/*",
     "example"
   ],
-  "packageManager": "bun@1.1.21",
+  "packageManager": "bun@1.1.22",
   "patchedDependencies": {
     "react-native-screens@3.34.0": "patches/react-native-screens@3.34.0.patch"
   }

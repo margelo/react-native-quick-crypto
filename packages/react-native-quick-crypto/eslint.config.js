@@ -35,6 +35,6 @@ export default typescriptEslint.config(
   },
   // don't lint config files
   {
-    ignores: ['.prettierrc.js', '*.config.js'],
+    ignores: ['.prettierrc.js', '*.config.js', '**/lib/**', '**/test/**', '**/zzz/**'],
   },
 );

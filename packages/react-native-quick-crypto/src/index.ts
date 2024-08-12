@@ -4,6 +4,9 @@ import { Buffer } from '@craftzdog/react-native-buffer';
 // API imports
 import * as random from './random';
 
+// utils import
+import { utils } from './utils';
+
 /**
  * Loosely matches Node.js {crypto} with some unimplemented functionality.
  * See `docs/implementation-coverage.md` for status.
@@ -36,6 +39,7 @@ const QuickCrypto = {
   // getCiphers,
   // getHashes,
   // webcrypto,
+  utils,
 };
 
 /**

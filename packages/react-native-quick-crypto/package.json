@@ -29,13 +29,15 @@
     "!**/__mocks__"
   ],
   "scripts": {
+    "clean": "del-cli lib",
     "tsc": "tsc --noEmit",
     "typescript": "tsc --noEmit",
-    "lint": "eslint \"src/**/*.{js,ts,tsx}\"",
-    "lint-fix": "eslint \"src/**/*.{js,ts,tsx}\" --fix",
-    "prepare": "bob build",
+    "lint": "eslint \"**/*.{js,ts,tsx}\"",
+    "lint-fix": "eslint \"**/*.{js,ts,tsx}\" --fix",
+    "prepare": "bun clean && bob build",
     "release": "release-it",
-    "test": "jest"
+    "test": "jest",
+    "postinstall": "bun tsc"
   },
   "keywords": [
     "react-native",
@@ -73,12 +75,13 @@
   },
   "devDependencies": {
     "@eslint/compat": "^1.1.1",
-    "@eslint/js": "^9.9.0",
+    "@eslint/js": "10.0.0",
     "@release-it/conventional-changelog": "8.0.1",
     "@types/jest": "29.5.11",
     "@types/node": "22.0.0",
     "@types/react": "18.3.3",
     "@types/readable-stream": "4.0.11",
+    "del-cli": "5.1.0",
     "eslint": "9.9.0",
     "eslint-plugin-react-native": "^4.1.0",
     "jest": "29.7.0",
@@ -86,7 +89,7 @@
     "prettier": "3.2.5",
     "react": "18.3.1",
     "react-native": "0.74.5",
-    "react-native-builder-bob": "0.29.0",
+    "react-native-builder-bob": "0.29.1",
     "react-native-nitro-modules": "0.3.0",
     "release-it": "17.6.0",
     "typescript": "5.1.6",
@@ -146,7 +149,8 @@
       [
         "typescript",
         {
-          "project": "tsconfig.json"
+          "project": "tsconfig.json",
+          "tsc": "../../node_modules/.bin/tsc"
         }
       ]
     ]

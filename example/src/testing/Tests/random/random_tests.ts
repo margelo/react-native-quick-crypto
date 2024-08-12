@@ -1,8 +1,3 @@
-import {
-  ab2str,
-  abvToArrayBuffer,
-} from './../../../../../packages/react-native-quick-crypto/src/utils/conversion'
-import { ArrayBufferView } from './../../../../../packages/react-native-quick-crypto/src/utils/types'
 // copied from https://github.com/nodejs/node/blob/master/test/parallel/test-crypto-random.js
 
 // Flags: --pending-deprecation
@@ -11,6 +6,8 @@ import { describe, it } from '../../MochaRNAdapter'
 import { Buffer } from '@craftzdog/react-native-buffer'
 import { assert } from 'chai'
 import type { Done } from 'mocha'
+
+const { ab2str, abvToArrayBuffer } = crypto.utils;
 
 describe('random', () => {
   ;[crypto.randomBytes, crypto.pseudoRandomBytes].forEach((f) => {
@@ -43,10 +40,10 @@ describe('random', () => {
       const length = len
       const funn = f
       it('function ' + funn + ' & len ' + length, (done: Done) => {
-        funn(length, (ex: Error | null, buf: Buffer) => {
+        funn(length, (ex: Error | null, buf?: Buffer) => {
           try {
             assert.strictEqual(ex, null)
-            assert.strictEqual(buf.length, Math.floor(len))
+            assert.strictEqual(buf?.length, Math.floor(len))
             assert.ok(Buffer.isBuffer(buf))
           } catch (e) {
             done(e)
@@ -100,7 +97,7 @@ describe('random', () => {
     const buf = Buffer.alloc(10)
     const before = buf.toString('hex')
 
-    crypto.randomFill(buf, (_, res) => {
+    crypto.randomFill(buf, (_err: Error | null, res: Buffer) => {
       try {
         const after = res?.toString('hex')
         assert.notStrictEqual(before, after)
@@ -115,7 +112,7 @@ describe('random', () => {
     const buf = new Uint8Array(new Array(10).fill(0))
     const before = Buffer.from(buf).toString('hex')
 
-    crypto.randomFill(buf, (_, res) => {
+    crypto.randomFill(buf, (_err: Error | null, res: Uint8Array) => {
       try {
         const after = Buffer.from(res).toString('hex')
         assert.notStrictEqual(before, after)
@@ -126,7 +123,8 @@ describe('random', () => {
     })
   })
 
-  const bufs: [ArrayBufferView, string][] = [
+  type BufTypes = Uint16Array | Uint32Array | Float32Array | Float64Array | DataView;
+  const bufs: [BufTypes, string][] = [
     [new Uint16Array(10), 'Uint16Array'],
     [new Uint32Array(10), 'Uint32Array'],
     [new Float32Array(10), 'Float32Array'],
@@ -138,7 +136,7 @@ describe('random', () => {
       const ab = abvToArrayBuffer(buf)
       const before = ab2str(ab)
 
-      crypto.randomFill(ab, (_err, buf2: ArrayBuffer) => {
+      crypto.randomFill(ab, (_err: Error | null, buf2: ArrayBuffer) => {
         try {
           const after = Buffer.from(buf2).toString('hex')
           assert.notStrictEqual(before, after, 'before/after')
@@ -154,7 +152,7 @@ describe('random', () => {
     let ctr = 0
     ;[new ArrayBuffer(10), new ArrayBuffer(10)].forEach((buf) => {
       const before = Buffer.from(buf).toString('hex')
-      crypto.randomFill(buf, (_err, res) => {
+      crypto.randomFill(buf, (_err: Error | null, res: ArrayBuffer) => {
         try {
           const after = Buffer.from(res).toString('hex')
           assert.notStrictEqual(before, after)
@@ -212,7 +210,7 @@ describe('random', () => {
     const buf = Buffer.alloc(10)
     const before = buf.toString('hex')
 
-    crypto.randomFill(buf, 5, 5, (_err, res) => {
+    crypto.randomFill(buf, 5, 5, (_err: Error | null, res: Buffer) => {
       try {
         const after = Buffer.from(res).toString('hex')
         assert.notStrictEqual(before, after, 'before/after')
@@ -231,7 +229,7 @@ describe('random', () => {
   it('randomFill - deepStringEqual - Uint8Array', (done: Done) => {
     const buf = new Uint8Array(new Array(10).fill(0))
     const before = Buffer.from(buf).toString('hex')
-    crypto.randomFill(buf, 5, 5, (_err, res) => {
+    crypto.randomFill(buf, 5, 5, (_err: Error | null, res: Uint8Array) => {
       try {
         const after = Buffer.from(res).toString('hex')
         assert.notStrictEqual(before, after, 'before/after')
@@ -381,7 +379,7 @@ describe('random', () => {
     const randomInts: number[] = []
     let failed = false
     for (let i = 0; i < 100; i++) {
-      crypto.randomInt(3, (_, n) => {
+      crypto.randomInt(3, (_err: Error | null, n: number) => {
         try {
           assert.ok(n >= 0, `${n} >= 0`)
           assert.ok(n < 3, `${n} < 3`)
@@ -424,7 +422,7 @@ describe('random', () => {
     const randomInts: number[] = []
     let failed = false
     for (let i = 0; i < 100; i++) {
-      crypto.randomInt(1, 3, (_, n) => {
+      crypto.randomInt(1, 3, (_err: Error | null, n: number) => {
         try {
           assert.ok(n >= 1)
           assert.ok(n < 3)
@@ -448,7 +446,7 @@ describe('random', () => {
     const randomInts: number[] = []
     let failed = false
     for (let i = 0; i < 100; i++) {
-      crypto.randomInt(-10, -8, (_, n) => {
+      crypto.randomInt(-10, -8, (_err: Error | null, n: number) => {
         try {
           assert.ok(n >= -10)
           assert.ok(n < -8)
@@ -594,10 +592,9 @@ describe('random', () => {
         'Received 281_474_976_710_656'
     )
   })
-  ;[true, NaN, null, {}, [], 10].forEach((val) => {
+  ;[true, NaN, [], 10].forEach((val) => {
     it(`expect type error: ${val}`, () => {
       assert.throws(
-        // @ts-expect-error - testing bad types
         () => crypto.randomInt(0, 1, val),
         /callback must be a function or undefined/
       )

@@ -10,3 +10,6 @@ export type TypedArray =
   | Int32Array
   | Float32Array
   | Float64Array;
+
+  export type RandomCallback<T> = (err: Error | null, value: T) => void;
+  

@@ -1,9 +1,9 @@
-import { decodeHex } from '../Tests/util'
+import { decodeHex } from '../tests/util'
 import type {
   AesEncryptDecryptTestVector,
   BadPaddingVectorValue,
   VectorValue,
-} from '../Tests/webcryptoTests/encrypt_decrypt'
+} from '../tests/webcryptoTests/encrypt_decrypt'
 
 const kPlaintext = decodeHex(
   '546869732073706563696669636174696f6e206465736372696265' +

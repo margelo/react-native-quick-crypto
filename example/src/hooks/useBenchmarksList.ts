@@ -1,5 +1,6 @@
 import { useCallback, useState } from 'react'
 import type { Benchmark, BenchmarkSuite, Suites } from '../types/Suite'
+import type { BenchmarkFn } from '../benchmarks/types'
 
 export const useBenchmarksList = (
   challenger: string
@@ -82,8 +83,7 @@ const loadBenchmarks = (suiteName: string, challenger: string): Benchmark[] => {
 
 // can't use dynamic strings here, as require() is compile-time
 /* eslint-disable @typescript-eslint/no-require-imports */
-// eslint-disable-next-line @typescript-eslint/no-unsafe-function-type
-const allBenchmarks: Record<string, Record<string, Function>> = {
+const allBenchmarks: Record<string, Record<string, BenchmarkFn>> = {
   'rnqc/random': require('../benchmarks/rnqc/random').default,
   'crypto-browserify/random': require('../benchmarks/crypto-browserify/random')
     .default,

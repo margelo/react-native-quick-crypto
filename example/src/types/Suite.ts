@@ -1,3 +1,5 @@
+import type { BenchmarkFn } from "../benchmarks/types"
+
 export type Suites<T = TestSuite | BenchmarkSuite> = {
   [key: string]: T
 }
@@ -11,10 +13,8 @@ export interface BenchmarkSuite extends TestSuite {
   benchmarks: Benchmark[]
 }
 
-type Fn = () => void
-
 export type Benchmark = {
   name: string
-  us?: Fn,
-  them?: Fn,
+  us?: BenchmarkFn,
+  them?: BenchmarkFn,
 }

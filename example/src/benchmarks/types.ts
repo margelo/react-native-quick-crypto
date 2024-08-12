@@ -1,1 +1,1 @@
-export type RandomBytesFn = () => void
+export type BenchmarkFn = () => void

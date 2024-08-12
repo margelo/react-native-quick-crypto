@@ -1,5 +1,5 @@
 import { Buffer } from '@craftzdog/react-native-buffer';
-import type { ArrayBufferView } from './utils/types';
+import type { ArrayBufferView, RandomCallback } from './utils/types';
 import { abvToArrayBuffer } from './utils/conversion';
 import { NitroModules } from 'react-native-nitro-modules';
 import type { Random } from './specs/random.nitro';
@@ -16,20 +16,20 @@ function getNative(): Random {
 
 export function randomFill<T extends ArrayBufferView>(
   buffer: T,
-  callback: (err: Error | null, buf: T) => void
+  callback: RandomCallback<T>
 ): void;
 
 export function randomFill<T extends ArrayBufferView>(
   buffer: T,
   offset: number,
-  callback: (err: Error | null, buf: T) => void
+  callback: RandomCallback<T>
 ): void;
 
 export function randomFill<T extends ArrayBufferView>(
   buffer: T,
   offset: number,
   size: number,
-  callback: (err: Error | null, buf: T) => void
+  callback: RandomCallback<T>
 ): void;
 
 export function randomFill(buffer: ArrayBufferView, ...rest: unknown[]): void {

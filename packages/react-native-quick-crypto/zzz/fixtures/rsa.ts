@@ -1,5 +1,5 @@
-import { decodeHex } from '../Tests/util'
-import type { RsaEncryptDecryptTestVector } from '../Tests/webcryptoTests/encrypt_decrypt'
+import { decodeHex } from '../tests/util'
+import type { RsaEncryptDecryptTestVector } from '../tests/webcryptoTests/encrypt_decrypt'
 
 const pkcs8 = decodeHex(
   '308204bf020100300d06092a864886f70d0101010500048204a930820' +
