@@ -6,6 +6,7 @@ buildscript {
 
   dependencies {
     classpath "com.android.tools.build:gradle:7.2.1"
+    classpath "org.jetbrains.kotlin:kotlin-gradle-plugin:1.9.25"
   }
 }
 
@@ -19,24 +20,23 @@ def isNewArchitectureEnabled() {
 }
 
 apply plugin: "com.android.library"
-apply plugin: 'org.jetbrains.kotlin.android'
-apply from: '../nitrogen/generated/android/QuickCrypto+autolinking.gradle'
+apply plugin: "org.jetbrains.kotlin.android"
+apply from: "../nitrogen/generated/android/QuickCrypto+autolinking.gradle"
 
 if (isNewArchitectureEnabled()) {
   apply plugin: "com.facebook.react"
 }
 
 def getExtOrDefault(name) {
-  return rootProject.ext.has(name) ? rootProject.ext.get(name) : project.properties["Nitro_" + name]
+  return rootProject.ext.has(name) ? rootProject.ext.get(name) : project.properties["QuickCrypto_" + name]
 }
 
 def getExtOrIntegerDefault(name) {
-  return rootProject.ext.has(name) ? rootProject.ext.get(name) : (project.properties["Nitro_" + name]).toInteger()
+  return rootProject.ext.has(name) ? rootProject.ext.get(name) : (project.properties["QuickCrypto_" + name]).toInteger()
 }
 
 android {
   namespace "com.margelo.nitro.quickcrypto"
-
   ndkVersion getExtOrDefault("ndkVersion")
   compileSdkVersion getExtOrIntegerDefault("compileSdkVersion")
 
@@ -106,12 +106,6 @@ dependencies {
 
   // Add a dependency on NitroModules
   implementation project(":react-native-nitro-modules")
-
-  // Add a dependency on React Native Screens
-  implementation project(':react-native-screens')
-
-  // Add a dependency on React Native Vector Icons
-  implementation project(':react-native-vector-icons')
 }
 
 if (isNewArchitectureEnabled()) {
