@@ -34,6 +34,9 @@ jobs:
 
       - name: Setup Android SDK
         uses: android-actions/setup-android@v3
+        with:
+          accept-android-sdk-licenses: yes
+          log-accepted-android-sdk-licenses: false
 
       - name: Bootstrap JS
         run: |
