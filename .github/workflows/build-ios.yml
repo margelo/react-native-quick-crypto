@@ -31,16 +31,27 @@ jobs:
         run: |
           bun install
 
-      # - name: Restore Pods cache
-      #   uses: actions/cache@v4
-      #   with:
-      #     path: |
-      #       example/ios/Pods
-      #       ~/Library/Caches/CocoaPods
-      #       ~/.cocoapods
-      #     key: ${{ runner.os }}-pods-${{ hashFiles('**/Podfile.lock') }}
-      #     restore-keys: |
-      #       ${{ runner.os }}-pods-
+      - name: Setup Ruby (bundle)
+        uses: ruby/setup-ruby@v1
+        with:
+          ruby-version: 3.3
+          bundler-cache: true
+          working-directory: example/ios
+
+      - name: Restore Pods cache
+        uses: actions/cache@v4
+        with:
+          path: |
+            example/ios/Pods
+            ~/Library/Caches/CocoaPods
+            ~/.cocoapods
+          key: ${{ runner.os }}-pods-${{ hashFiles('**/Podfile.lock') }}
+          restore-keys: |
+            ${{ runner.os }}-pods-
+
+      - name: Install Gems
+        working-directory: example
+        run: bundle config set deployment 'true' && bundle install
 
       - name: Install Pods
         run: bun pods

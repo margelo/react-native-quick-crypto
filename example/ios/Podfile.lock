@@ -1296,7 +1296,7 @@ PODS:
     - React-logger (= 0.74.5)
     - React-perflogger (= 0.74.5)
     - React-utils (= 0.74.5)
-  - RNScreens (3.34.0):
+  - RNScreens (3.32.0):
     - DoubleConversion
     - glog
     - hermes-engine
@@ -1317,9 +1317,9 @@ PODS:
     - React-utils
     - ReactCommon/turbomodule/bridging
     - ReactCommon/turbomodule/core
-    - RNScreens/common (= 3.34.0)
+    - RNScreens/common (= 3.32.0)
     - Yoga
-  - RNScreens/common (3.34.0):
+  - RNScreens/common (3.32.0):
     - DoubleConversion
     - glog
     - hermes-engine
@@ -1616,11 +1616,11 @@ SPEC CHECKSUMS:
   React-runtimescheduler: cfbe85c3510c541ec6dc815c7729b41304b67961
   React-utils: f242eb7e7889419d979ca0e1c02ccc0ea6e43b29
   ReactCommon: f7da14a8827b72704169a48c929bcde802698361
-  RNScreens: c55a1c0375e26d211940f09b0798bb44a5b3d968
+  RNScreens: d3d50aa84db4541eee00fbb1f32151030f56c510
   RNVectorIcons: 933948590e598ec50433d6f207242e5a7c1d6b7d
   SocketRocket: abac6f5de4d4d62d24e11868d7a2f427e0ef940d
   Yoga: 950bbfd7e6f04790fdb51149ed51df41f329fcc8
 
-PODFILE CHECKSUM: 6b9c820897cb7361464ed0bc3d04c1c1ca2946f7
+PODFILE CHECKSUM: 684599d0e4b0f60fab3a5ad6c896bb5e77f7b4f2
 
 COCOAPODS: 1.14.3
