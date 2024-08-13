@@ -27,7 +27,7 @@ target_sources(
   # Shared Nitrogen C++ sources
   ../nitrogen/generated/shared/c++/HybridRandomSpec.cpp
   # Android-specific Nitrogen C++ sources
-  
+
 )
 
 # Add all libraries required by the generated specs

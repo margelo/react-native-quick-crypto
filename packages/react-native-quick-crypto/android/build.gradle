@@ -1,40 +1,24 @@
-import java.nio.file.Paths
-import com.android.Version
-
-def agpVersion = com.android.Version.ANDROID_GRADLE_PLUGIN_VERSION
-def agpVersionMajor = agpVersion.tokenize('.')[0].toInteger()
-def agpVersionMinor = agpVersion.tokenize('.')[1].toInteger()
-
 buildscript {
   repositories {
-    maven {
-      url "https://plugins.gradle.org/m2/"
-    }
-    mavenCentral()
     google()
+    mavenCentral()
   }
 
   dependencies {
-    classpath("com.android.tools.build:gradle:8.3.1")
+    classpath "com.android.tools.build:gradle:7.2.1"
   }
 }
 
+def reactNativeArchitectures() {
+  def value = rootProject.getProperties().get("reactNativeArchitectures")
+  return value ? value.split(",") : ["armeabi-v7a", "x86", "x86_64", "arm64-v8a"]
+}
+
 def isNewArchitectureEnabled() {
-  // To opt-in for the New Architecture, you can either:
-  // - Set `newArchEnabled` to true inside the `gradle.properties` file
-  // - Invoke gradle with `-newArchEnabled=true`
-  // - Set an environment variable `ORG_GRADLE_PROJECT_newArchEnabled=true`
-  return project.hasProperty("newArchEnabled") && project.newArchEnabled == "true"
+  return rootProject.hasProperty("newArchEnabled") && rootProject.getProperty("newArchEnabled") == "true"
 }
 
-def resolveBuildType() {
-    Gradle gradle = getGradle()
-    String tskReqStr = gradle.getStartParameter().getTaskRequests()['args'].toString()
-
-    return tskReqStr.contains('Release') ? 'release' : 'debug'
-}
-
-apply plugin: 'com.android.library'
+apply plugin: "com.android.library"
 apply plugin: 'org.jetbrains.kotlin.android'
 apply from: '../nitrogen/generated/android/QuickCrypto+autolinking.gradle'
 
@@ -42,80 +26,29 @@ if (isNewArchitectureEnabled()) {
   apply plugin: "com.facebook.react"
 }
 
-def safeExtGet(prop, fallback) {
-  rootProject.ext.has(prop) ? rootProject.ext.get(prop) : fallback
+def getExtOrDefault(name) {
+  return rootProject.ext.has(name) ? rootProject.ext.get(name) : project.properties["Nitro_" + name]
 }
 
-def reactNativeArchitectures() {
-  def value = project.getProperties().get("reactNativeArchitectures")
-  return value ? value.split(",") : ["armeabi-v7a", "x86", "x86_64", "arm64-v8a"]
-}
-
-static def findNodeModules(baseDir) {
-  def basePath = baseDir.toPath().normalize()
-  // Node's module resolution algorithm searches up to the root directory,
-  // after which the base path will be null
-  while (basePath) {
-    def nodeModulesPath = Paths.get(basePath.toString(), "node_modules")
-    def reactNativePath = Paths.get(nodeModulesPath.toString(), "react-native")
-    if (nodeModulesPath.toFile().exists() && reactNativePath.toFile().exists()) {
-      return nodeModulesPath.toString()
-    }
-    basePath = basePath.getParent()
-  }
-  throw new GradleException("react-native-quick-crypto: Failed to find node_modules/ path!")
-}
-
-def nodeModules = findNodeModules(projectDir)
-
-repositories {
-  google()
-  mavenCentral()
+def getExtOrIntegerDefault(name) {
+  return rootProject.ext.has(name) ? rootProject.ext.get(name) : (project.properties["Nitro_" + name]).toInteger()
 }
 
 android {
-  compileSdkVersion safeExtGet("compileSdkVersion", 31)
+  namespace "com.margelo.nitro.quickcrypto"
 
-  if ((agpVersionMajor == 7 && agpVersionMinor >= 3) || agpVersionMajor >= 8) {
-    // Namespace support was added in 7.3.0
-    namespace "com.margelo.quickcrypto"
-
-    sourceSets {
-      main {
-        manifest.srcFile "src/main/AndroidManifestNew.xml"
-      }
-    }
-  }
-
-  if (agpVersionMajor >= 8) {
-      buildFeatures {
-          buildConfig = true
-      }
-  }
-
-  // Used to override the NDK path/version on internal CI or by allowing
-  // users to customize the NDK path/version from their root project (e.g. for M1 support)
-  if (rootProject.hasProperty("ndkPath")) {
-    ndkPath rootProject.ext.ndkPath
-  }
-  if (rootProject.hasProperty("ndkVersion")) {
-    ndkVersion rootProject.ext.ndkVersion
-  }
-
-  buildFeatures {
-    prefab true
-  }
+  ndkVersion getExtOrDefault("ndkVersion")
+  compileSdkVersion getExtOrIntegerDefault("compileSdkVersion")
 
   defaultConfig {
-    minSdkVersion safeExtGet('minSdkVersion', 28)
-    targetSdkVersion safeExtGet('targetSdkVersion', 31)
-    versionCode 1
-    versionName "1.0"
+    minSdkVersion getExtOrIntegerDefault("minSdkVersion")
+    targetSdkVersion getExtOrIntegerDefault("targetSdkVersion")
     buildConfigField "boolean", "IS_NEW_ARCHITECTURE_ENABLED", isNewArchitectureEnabled().toString()
+
     externalNativeBuild {
       cmake {
-        cppFlags "-O2 -frtti -fexceptions -Wall -Wno-unused-variable -fstack-protector-all -DANDROID"
-        arguments "-DANDROID_STL=c++_shared", "-DNODE_MODULES_DIR=${nodeModules}"
+        cppFlags "-O2 -frtti -fexceptions -Wall -fstack-protector-all"
+        arguments "-DANDROID_STL=c++_shared"
         abiFilters (*reactNativeArchitectures())
       }
     }
@@ -127,42 +60,36 @@ android {
     }
   }
 
-  packagingOptions {
-    doNotStrip resolveBuildType() == 'debug' ? "**/**/*.so" : ''
-    excludes = [
-            "**/libc++_shared.so",
-            "**/libfbjni.so",
-            "**/libreactnativejni.so",
-            "**/libjsi.so",
-            "**/libreact_nativemodule_core.so",
-            "**/libturbomodulejsijni.so",
-            "**/MANIFEST.MF",
-    ]
+  buildFeatures {
+    buildConfig true
+    prefab true
   }
 
   buildTypes {
     release {
       minifyEnabled false
     }
-    debug {
-      packagingOptions {
-        doNotStrip '**/*.so'
-      }
-      minifyEnabled false
-      debuggable true
-      jniDebuggable true
-      renderscriptDebuggable true
-    }
   }
 
   lintOptions {
-    disable 'GradleCompatible'
+    disable "GradleCompatible"
   }
+
   compileOptions {
     sourceCompatibility JavaVersion.VERSION_1_8
     targetCompatibility JavaVersion.VERSION_1_8
   }
 
+  sourceSets {
+    main {
+      if (isNewArchitectureEnabled()) {
+        java.srcDirs += [
+          // React Codegen files
+          "${project.buildDir}/generated/source/codegen/java"
+        ]
+      }
+    }
+  }
 }
 
 repositories {
@@ -170,24 +97,27 @@ repositories {
   google()
 }
 
+
 dependencies {
+  // For < 0.71, this will be from the local maven repo
+  // For > 0.71, this will be replaced by `com.facebook.react:react-android:$version` by react gradle plugin
   //noinspection GradleDynamicVersion
-  implementation "com.facebook.react:react-android:+"
-  // https://mvnrepository.com/artifact/com.android.ndk.thirdparty/openssl
-  implementation 'com.android.ndk.thirdparty:openssl:1.1.1q-beta-1'
+  implementation "com.facebook.react:react-native:+"
+
+  // Add a dependency on NitroModules
+  implementation project(":react-native-nitro-modules")
+
+  // Add a dependency on React Native Screens
+  implementation project(':react-native-screens')
+
+  // Add a dependency on React Native Vector Icons
+  implementation project(':react-native-vector-icons')
 }
 
-// Resolves "LOCAL_SRC_FILES points to a missing file, Check that libfb.so exists or that its path is correct".
-tasks.whenTaskAdded { task ->
-  if (task.name.contains("configureCMakeDebug")) {
-    rootProject.getTasksByName("packageReactNdkDebugLibs", true).forEach {
-      task.dependsOn(it)
-    }
-  }
-  // We want to add a dependency for both configureCMakeRelease and configureCMakeRelWithDebInfo
-  if (task.name.contains("configureCMakeRel")) {
-    rootProject.getTasksByName("packageReactNdkReleaseLibs", true).forEach {
-      task.dependsOn(it)
-    }
+if (isNewArchitectureEnabled()) {
+  react {
+    jsRootDir = file("../src/")
+    libraryName = "QuickCrypto"
+    codegenJavaPackageName = "com.margelo.nitro.quickcrypto"
   }
 }
