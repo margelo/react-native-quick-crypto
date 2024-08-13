@@ -35,8 +35,9 @@ jobs:
       - name: Setup Android SDK
         uses: android-actions/setup-android@v3
         with:
-          accept-android-sdk-licenses: yes
+          accept-android-sdk-licenses: 'yes'
           log-accepted-android-sdk-licenses: false
+          cmdline-tools-version: 9477386
 
       - name: Bootstrap JS
         run: |
