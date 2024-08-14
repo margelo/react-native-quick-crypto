@@ -6,27 +6,29 @@ on:
       - main
     paths:
       - '.github/workflows/validate-js.yml'
-      - 'src/**'
-      - '*.json'
-      - '*.js'
-      - '*.lock'
+      - 'bun.lockb'
+      - 'packages/react-native-quick-crypto/src/**'
+      - 'packages/react-native-quick-crypto/*.json'
+      - 'packages/react-native-quick-crypto/*.*s'
+      - 'packages/react-native-quick-crypto/bun.lockb'
       - 'example/src/**'
       - 'example/*.json'
-      - 'example/*.js'
-      - 'example/*.lock'
-      - 'example/*.tsx'
+      - 'example/*.*s'
+      - 'example/*.*sx'
+      - 'example/bun.lockb'
   pull_request:
     paths:
       - '.github/workflows/validate-js.yml'
-      - 'src/**'
-      - '*.json'
-      - '*.js'
-      - '*.lock'
+      - 'bun.lockb'
+      - 'packages/react-native-quick-crypto/src/**'
+      - 'packages/react-native-quick-crypto/*.json'
+      - 'packages/react-native-quick-crypto/*.*s'
+      - 'packages/react-native-quick-crypto/bun.lockb'
       - 'example/src/**'
       - 'example/*.json'
-      - 'example/*.js'
-      - 'example/*.lock'
-      - 'example/*.tsx'
+      - 'example/*.*s'
+      - 'example/*.*sx'
+      - 'example/bun.lockb'
 
 jobs:
   compile_js:

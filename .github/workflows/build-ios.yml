@@ -6,13 +6,17 @@ on:
       - main
     paths:
       - '.github/workflows/build-ios.yml'
-      - 'ios/**'
+      - 'packages/react-native-quick-crypto/ios/**'
+      - 'packages/react-native-quick-crypto/nitrogen/generated/ios/**'
+      - 'packages/react-native-quick-crypto/nitrogen/generated/shared/**'
       - '*.podspec'
       - 'example/ios/**'
   pull_request:
     paths:
       - '.github/workflows/build-ios.yml'
-      - 'ios/**'
+      - 'packages/react-native-quick-crypto/ios/**'
+      - 'packages/react-native-quick-crypto/nitrogen/generated/ios/**'
+      - 'packages/react-native-quick-crypto/nitrogen/generated/shared/**'
       - '*.podspec'
       - 'example/ios/**'
 

@@ -37,6 +37,8 @@ jobs:
         with:
           accept-android-sdk-licenses: true
           log-accepted-android-sdk-licenses: false
+          # this cmdline tools version barked the least in GHA runners
+          # hopefully we can remove it in the future
           cmdline-tools-version: 9477386
 
       - name: Bootstrap JS

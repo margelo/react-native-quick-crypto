@@ -6,17 +6,21 @@ on:
       - main
     paths:
       - '.github/workflows/build-android.yml'
-      - 'android/**'
+      - 'packages/react-native-quick-crypto/android/**'
+      - 'packages/react-native-quick-crypto/nitrogen/generated/android/**'
+      - 'packages/react-native-quick-crypto/nitrogen/generated/shared/**'
       - 'example/android/**'
-      - 'yarn.lock'
-      - 'example/yarn.lock'
+      - 'bun.lockb'
+      - 'example/bun.lockb'
   pull_request:
     paths:
       - '.github/workflows/build-android.yml'
-      - 'android/**'
+      - 'packages/react-native-quick-crypto/android/**'
+      - 'packages/react-native-quick-crypto/nitrogen/generated/android/**'
+      - 'packages/react-native-quick-crypto/nitrogen/generated/shared/**'
       - 'example/android/**'
-      - 'yarn.lock'
-      - 'example/yarn.lock'
+      - 'bun.lockb'
+      - 'example/bun.lockb'
 
 jobs:
   build_android_example:
@@ -29,8 +33,6 @@ jobs:
         run: |
           sudo rm -rf /usr/share/dotnet
           sudo rm -rf /opt/ghc
-          sudo rm -rf "/usr/local/share/boost"
-          sudo rm -rf "$AGENT_TOOLSDIRECTORY"
 
       - uses: oven-sh/setup-bun@v2
         with:
@@ -48,6 +50,8 @@ jobs:
         with:
           accept-android-sdk-licenses: true
           log-accepted-android-sdk-licenses: false
+          # this cmdline tools version barked the least in GHA runners
+          # hopefully we can remove it in the future
           cmdline-tools-version: 9477386
 
       - name: Bootstrap JS
@@ -64,8 +68,5 @@ jobs:
           restore-keys: |
             ${{ runner.os }}-gradle-
 
-      - name: Run Gradle Build for android/
-        run: cd packages/react-native-quick-crypto/android && ./gradlew assembleDebug && cd ../..
-
-      - name: Run Gradle Build for example/android/
+      - name: Run Gradle Build for example app
         run: cd example/android && ./gradlew assembleDebug --build-cache && cd ../..
