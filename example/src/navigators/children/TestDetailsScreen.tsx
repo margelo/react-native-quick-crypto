@@ -5,6 +5,7 @@ import { CorrectResultItem } from '../../components/CorrectResultItem'
 import { IncorrectResultItem } from '../../components/IncorrectResultItem'
 import { Suite } from '../../components/Suite'
 import type { TestResult } from '../../types/Results'
+import { colors } from '../../styles/colors'
 
 type RouteParams = {
   results: TestResult[]
@@ -37,7 +38,7 @@ export const TestDetailsScreen = ({ route }) => {
             isChecked={showPassed}
             onPress={() => setShowPassed(!showPassed)}
             disableText={true}
-            fillColor="green"
+            fillColor={colors.green}
           />
           <Text style={styles.showMenuLabel}>Show Passed</Text>
         </View>

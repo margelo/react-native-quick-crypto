@@ -3,7 +3,12 @@
 #include <future>
 
 #include "HybridRandomSpec.hpp"
+
+#ifdef ANDROID
 #include "utils/Utils.hpp"
+#else
+#include "Utils.hpp"
+#endif
 
 namespace margelo::crypto {
 
