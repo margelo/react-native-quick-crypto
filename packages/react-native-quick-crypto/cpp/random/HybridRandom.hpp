@@ -3,7 +3,7 @@
 #include <future>
 
 #include "HybridRandomSpec.hpp"
-#include "Utils.hpp"
+#include "utils/Utils.hpp"
 
 namespace margelo::crypto {
 

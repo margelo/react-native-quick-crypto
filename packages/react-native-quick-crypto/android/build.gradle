@@ -99,13 +99,9 @@ repositories {
 
 
 dependencies {
-  // For < 0.71, this will be from the local maven repo
-  // For > 0.71, this will be replaced by `com.facebook.react:react-android:$version` by react gradle plugin
-  //noinspection GradleDynamicVersion
-  implementation "com.facebook.react:react-native:+"
-
-  // Add a dependency on NitroModules
+  implementation "com.facebook.react:react-native"
   implementation project(":react-native-nitro-modules")
+  implementation "com.android.ndk.thirdparty:openssl:1.1.1q-beta-1"
 }
 
 if (isNewArchitectureEnabled()) {

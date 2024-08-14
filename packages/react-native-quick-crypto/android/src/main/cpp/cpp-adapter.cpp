@@ -1,6 +1,6 @@
 #include <jni.h>
 
-#include "HybridRandom.hpp"
+#include "random/HybridRandom.hpp"
 #include <NitroModules/HybridObjectRegistry.hpp>
 
 using namespace margelo::nitro::crypto;
