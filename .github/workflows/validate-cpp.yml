@@ -1,4 +1,4 @@
-name: Validate C++
+name: 'Validate C++'
 
 on:
   push:
@@ -8,13 +8,13 @@ on:
       - '.github/workflows/validate-cpp.yml'
       - 'packages/react-native-quick-crypto/android/src/main/cpp/**'
       - 'packages/react-native-quick-crypto/cpp/**'
-      - 'packages/react-native-quick-crypto/nitrogen/generated/shared/c++/**'
+      - 'packages/react-native-quick-crypto/nitrogen/generated/shared/**'
   pull_request:
     paths:
       - '.github/workflows/validate-cpp.yml'
       - 'packages/react-native-quick-crypto/android/src/main/cpp/**'
       - 'packages/react-native-quick-crypto/cpp/**'
-      - 'packages/react-native-quick-crypto/nitrogen/generated/shared/c++/**'
+      - 'packages/react-native-quick-crypto/nitrogen/generated/shared/**'
 
 jobs:
   validate_cpp:
