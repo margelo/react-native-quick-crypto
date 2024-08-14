@@ -9,7 +9,7 @@ let random: Random;
 function getNative(): Random {
   if (random == null) {
     // lazy-load the Nitro HybridObject
-    random = NitroModules.get<Random>('Random');
+    random = NitroModules.createHybridObject<Random>('Random');
   }
   return random;
 }
