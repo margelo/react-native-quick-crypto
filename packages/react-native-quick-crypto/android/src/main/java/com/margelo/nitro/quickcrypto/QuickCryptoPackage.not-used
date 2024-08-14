@@ -2,7 +2,7 @@ package com.margelo.nitro.quickcrypto;
 
 import android.util.Log;
 
-// import androidx.annotation.Nullable;
+import androidx.annotation.Nullable;
 
 import com.facebook.react.bridge.NativeModule;
 import com.facebook.react.bridge.ReactApplicationContext;
@@ -12,7 +12,7 @@ import com.margelo.nitro.HybridObject;
 import com.margelo.nitro.HybridObjectRegistry;
 
 import java.util.HashMap;
-// import java.util.function.Supplier;
+import java.util.function.Supplier;
 
 public class QuickCryptoPackage extends TurboReactPackage {
   @Nullable
@@ -21,12 +21,13 @@ public class QuickCryptoPackage extends TurboReactPackage {
     return null;
   }
 
-  public QuickCryptoPackagePackage() {
-      HybridObjectRegistry.registerHybridObjectConstructor("HybridRandom", () -> {
+  public QuickCryptoPackage() {
+    HybridObjectRegistry.registerHybridObjectConstructor("HybridRandom", () -> {
       Log.i("YEET", "initializing Random...");
       HybridObject obj = new HybridObject(new Random());
       Log.i("YEET", "done Random!");
       return f;
+    });
   }
 
   @Override

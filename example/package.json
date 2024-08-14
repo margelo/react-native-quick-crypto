@@ -68,10 +68,5 @@
   },
   "engines": {
     "node": ">=18"
-  },
-  "codegenConfig": {
-    "name": "QuickCryptoExampleSpec",
-    "type": "modules",
-    "jsSrcsDir": "src"
   }
 }
