@@ -49,7 +49,7 @@
     "@react-native/eslint-config": "0.74.86",
     "@react-native/eslint-plugin": "0.74.86",
     "@react-native/metro-config": "0.74.86",
-    "@react-native/typescript-config": "0.74.86",
+    "@react-native/typescript-config": "0.75.1",
     "@types/chai": "4.3.17",
     "@types/mocha": "^10.0.7",
     "@types/react": "18.3.3",
