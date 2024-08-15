@@ -6,6 +6,8 @@
 
 A fast implementation of Node's `crypto` module.
 
+> Note: This version `1.x` is undergoing a major refactor, porting to New Architecture, Bridgeless, and [`Nitro Modules`](https://github.com/mrousavy/react-native-nitro) and is incomplete compared to the `0.x` version.  Status, as always, will be represented in [implementation-coverage.md](../blob/main/docs/implementation-coverage.md).
+
 ## Features
 
 Unlike any other current JS-based polyfills, react-native-quick-crypto is written in C/C++ JSI and provides much greater performance - especially on mobile devices.
