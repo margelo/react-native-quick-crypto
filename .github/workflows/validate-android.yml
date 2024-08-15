@@ -6,23 +6,24 @@ on:
       - main
     paths:
       - '.github/workflows/validate-android.yml'
-      - 'android/**'
+      - 'packages/react-native-quick-crypto/android/**'
       - '.editorconfig'
   pull_request:
     paths:
       - '.github/workflows/validate-android.yml'
-      - 'android/**'
+      - 'packages/react-native-quick-crypto/android/**'
       - '.editorconfig'
 
 jobs:
   validate_android:
     name: Gradle Lint
     runs-on: ubuntu-latest
-    defaults:
-      run:
-        working-directory: ./android
     steps:
       - uses: actions/checkout@v4
+
+      - uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: 1.1.22
 
       - name: Setup JDK
         uses: actions/setup-java@v4
@@ -33,28 +34,16 @@ jobs:
 
       - name: Setup Android SDK
         uses: android-actions/setup-android@v3
-
-      - uses: actions/setup-node@v4
         with:
-          node-version: 20
-      - run: corepack enable
+          accept-android-sdk-licenses: true
+          log-accepted-android-sdk-licenses: false
+          # this cmdline tools version barked the least in GHA runners
+          # hopefully we can remove it in the future
+          cmdline-tools-version: 9477386
 
-      - name: Get yarn cache directory path
-        id: yarn-cache-dir-path
-        run: echo "dir=$(yarn cache dir)" >> $GITHUB_OUTPUT
-
-      - name: Restore node_modules from cache
-        uses: actions/cache@v4
-        id: yarn-cache
-        with:
-          path: ${{ steps.yarn-cache-dir-path.outputs.dir }}
-          key: ${{ runner.os }}-yarn-${{ hashFiles('**/yarn.lock') }}
-          restore-keys: |
-            ${{ runner.os }}-yarn-
-      - name: Install node_modules
-        run: yarn install --frozen-lockfile --cwd ..
-      - name: Install node_modules for example/
-        run: yarn install --frozen-lockfile --cwd ../example
+      - name: Bootstrap JS
+        run: |
+          bun install
 
       - name: Restore Gradle cache
         uses: actions/cache@v4
@@ -67,19 +56,10 @@ jobs:
             ${{ runner.os }}-gradle-
 
       - name: Run Gradle Lint
-        run: cd ../example/android && ./gradlew lint
+        run: cd example/android && ./gradlew lint
 
       - name: Parse Gradle Lint Report
         uses: yutailang0119/action-android-lint@v4
         with:
           # ignore-warnings: true
           report-path: example/android/app/build/reports/*.xml
-  # ktlint:
-  #   name: Kotlin Lint
-  #   runs-on: ubuntu-latest
-  #   steps:
-  #     - uses: actions/checkout@v4
-  #     - name: Run KTLint
-  #       uses: mrousavy/action-ktlint@v1.7
-  #       with:
-  #         github_token: ${{ secrets.github_token }}

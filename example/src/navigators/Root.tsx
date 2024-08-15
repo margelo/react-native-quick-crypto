@@ -1,44 +1,39 @@
 import React from 'react';
 import { NavigationContainer } from '@react-navigation/native';
-import { createNativeStackNavigator } from '@react-navigation/native-stack';
-import type { RootStackParamList } from './RootProps';
+import { enableFreeze } from 'react-native-screens';
+import { TestStack } from './children/TestStack';
+import { BenchmarkStack } from './children/BenchmarkStack';
+import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
+import Icon from 'react-native-vector-icons/MaterialCommunityIcons';
 
-const Stack = createNativeStackNavigator<RootStackParamList>();
+enableFreeze(true)
+const Tab = createBottomTabNavigator();
 
 export const Root: React.FC = () => {
   return (
     <NavigationContainer>
-      <Stack.Navigator>
-        <Stack.Screen
-          name="Entry"
+      <Tab.Navigator initialRouteName="Benchmarks">
+        <Tab.Screen
+          name="Tests"
+          component={TestStack}
           options={{
-            title: 'Test Suites',
-          }}
-          getComponent={() => {
-            const { Entry } = require('./children/Entry/Entry');
-            return Entry;
+            headerShown: false,
+            tabBarIcon: ({ color }) => (
+              <Icon name="test-tube" size={24} color={color} />
+            ),
           }}
         />
-        <Stack.Screen
+        <Tab.Screen
           name="Benchmarks"
-          getComponent={() => {
-            const { Benchmarks } = require('./children/benchmarks/Benchmarks');
-            return Benchmarks;
-          }}
-        />
-        <Stack.Screen
-          name="TestingScreen"
+          component={BenchmarkStack}
           options={{
-            title: 'Tests',
-          }}
-          getComponent={() => {
-            const {
-              TestingScreen,
-            } = require('./children/TestingScreen/TestingScreen');
-            return TestingScreen;
+            headerShown: false,
+            tabBarIcon: ({ color }) => (
+              <Icon name="timer" size={24} color={color} />
+            ),
           }}
         />
-      </Stack.Navigator>
+      </Tab.Navigator>
     </NavigationContainer>
-  );
-};
+  )
+}

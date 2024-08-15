@@ -2,6 +2,12 @@ version: 2
 
 updates:
   - package-ecosystem: "npm"
+    target-branch: "main"
     directory: "/"
     schedule:
-      interval: "daily"
+      interval: "weekly"
+  - package-ecosystem: "npm"
+    target-branch: "0.x"
+    directory: "/"
+    schedule:
+      interval: "weekly"

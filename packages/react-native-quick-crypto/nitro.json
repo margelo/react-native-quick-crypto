@@ -1,0 +1,11 @@
+{
+  "logLevel": "debug",
+  "cxxNamespace": ["crypto"],
+  "ios": {
+    "iosModulename": "QuickCrypto"
+  },
+  "android": {
+    "androidNamespace": ["crypto"],
+    "androidCxxLibName": "QuickCrypto"
+  }
+}

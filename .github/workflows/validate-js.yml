@@ -6,27 +6,29 @@ on:
       - main
     paths:
       - '.github/workflows/validate-js.yml'
-      - 'src/**'
-      - '*.json'
-      - '*.js'
-      - '*.lock'
+      - 'bun.lockb'
+      - 'packages/react-native-quick-crypto/src/**'
+      - 'packages/react-native-quick-crypto/*.json'
+      - 'packages/react-native-quick-crypto/*.*s'
+      - 'packages/react-native-quick-crypto/bun.lockb'
       - 'example/src/**'
       - 'example/*.json'
-      - 'example/*.js'
-      - 'example/*.lock'
-      - 'example/*.tsx'
+      - 'example/*.*s'
+      - 'example/*.*sx'
+      - 'example/bun.lockb'
   pull_request:
     paths:
       - '.github/workflows/validate-js.yml'
-      - 'src/**'
-      - '*.json'
-      - '*.js'
-      - '*.lock'
+      - 'bun.lockb'
+      - 'packages/react-native-quick-crypto/src/**'
+      - 'packages/react-native-quick-crypto/*.json'
+      - 'packages/react-native-quick-crypto/*.*s'
+      - 'packages/react-native-quick-crypto/bun.lockb'
       - 'example/src/**'
       - 'example/*.json'
-      - 'example/*.js'
-      - 'example/*.lock'
-      - 'example/*.tsx'
+      - 'example/*.*s'
+      - 'example/*.*sx'
+      - 'example/bun.lockb'
 
 jobs:
   compile_js:
@@ -35,42 +37,20 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      - uses: actions/setup-node@v4
+      - uses: oven-sh/setup-bun@v2
         with:
-          node-version: 20
-      - run: corepack enable
+          bun-version: 1.1.22
 
       - name: Install reviewdog
         uses: reviewdog/action-setup@v1
 
-      - name: Get yarn cache directory path
-        id: yarn-cache-dir-path
-        run: echo "dir=$(yarn cache dir)" >> $GITHUB_OUTPUT
-
-      - name: Restore node_modules from cache
-        uses: actions/cache@v4
-        id: yarn-cache
-        with:
-          path: ${{ steps.yarn-cache-dir-path.outputs.dir }}
-          key: ${{ runner.os }}-yarn-${{ hashFiles('**/yarn.lock') }}
-          restore-keys: |
-            ${{ runner.os }}-yarn-
-
-      - name: Install node_modules
-        run: yarn install --frozen-lockfile
-
-      - name: Install node_modules (example/)
-        run: yarn install --frozen-lockfile --cwd example
+      - name: Bootstrap JS
+        run: |
+          bun install
 
       - name: Run TypeScript # Reviewdog tsc errorformat: %f:%l:%c - error TS%n: %m
         run: |
-          yarn typescript | reviewdog -name="tsc" -efm="%f(%l,%c): error TS%n: %m" -reporter="github-pr-review" -filter-mode="nofilter" -fail-on-error -tee
-        env:
-          REVIEWDOG_GITHUB_API_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-
-      - name: Run TypeScript in example/ # Reviewdog tsc errorformat: %f:%l:%c - error TS%n: %m
-        run: |
-          cd example && yarn typescript | reviewdog -name="tsc" -efm="%f(%l,%c): error TS%n: %m" -reporter="github-pr-review" -filter-mode="nofilter" -fail-on-error -tee && cd ..
+          bun tsc | reviewdog -name="tsc" -efm="%f(%l,%c): error TS%n: %m" -reporter="github-pr-review" -filter-mode="nofilter" -fail-on-error -tee
         env:
           REVIEWDOG_GITHUB_API_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
@@ -80,41 +60,19 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      - uses: actions/setup-node@v4
+      - uses: oven-sh/setup-bun@v2
         with:
-          node-version: 20
-      - run: corepack enable
+          bun-version: 1.1.22
 
-      - name: Get yarn cache directory path
-        id: yarn-cache-dir-path
-        run: echo "dir=$(yarn cache dir)" >> $GITHUB_OUTPUT
+      - name: Bootstrap JS
+        run: |
+          bun install
 
-      - name: Restore node_modules from cache
-        uses: actions/cache@v4
-        id: yarn-cache
-        with:
-          path: ${{ steps.yarn-cache-dir-path.outputs.dir }}
-          key: ${{ runner.os }}-yarn-${{ hashFiles('**/yarn.lock') }}
-          restore-keys: |
-            ${{ runner.os }}-yarn-
+      - name: Run ESLint (rnqc)
+        run: cd packages/react-native-quick-crypto && bun lint-fix
 
-      - name: Install node_modules
-        run: yarn install --frozen-lockfile
-        
-      - name: Install node_modules (example/)
-        run: yarn install --frozen-lockfile --cwd example
-
-      - name: Run ESLint
-        run: yarn lint -f @jamesacarr/github-actions
-
-      - name: Run ESLint with auto-fix
-        run: yarn lint --fix
-
-      - name: Run ESLint in example/
-        run: cd example && yarn lint -f @jamesacarr/github-actions && cd ..
-
-      - name: Run ESLint in example/ with auto-fix
-        run: cd example && yarn lint --fix && cd ..
+      - name: Run ESLint (example)
+        run: cd example && bun lint-fix
 
       - name: Verify no files have changed after auto-fix
         run: git diff --exit-code HEAD
