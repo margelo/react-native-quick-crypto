@@ -8,7 +8,7 @@
     "tsc": "bun --filter=\"*\" typescript",
     "lint": "bun --filter=\"*\" lint",
     "prepare": "bun --filter=\"react-native-quick-crypto\" prepare",
-    "release": "bun --filter=\"react-native-quick-crypto\" release && release-it"
+    "release": "cd packages/react-native-quick-crypto && bun release"
   },
   "workspaces": [
     "packages/*",
