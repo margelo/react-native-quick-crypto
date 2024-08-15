@@ -1,5 +1,5 @@
 {
-  "version": "1.0.0-beta.0",
+  "version": "1.0.0-beta.1",
   "scripts": {
     "check-all": "./scripts/clang-format.sh",
     "nitro": "cd packages/react-native-quick-crypto && bunx nitro-codegen",
@@ -9,7 +9,9 @@
     "tsc": "bun --filter=\"*\" typescript",
     "lint": "bun --filter=\"*\" lint",
     "prepare": "bun --filter=\"react-native-quick-crypto\" prepare",
-    "release": "release-it"
+    "pre-release": "./scripts/prepare-release.sh",
+    "release-git": "bun pre-release && release-it",
+    "release-npm": "bun pre-release && cd packages/react-native-quick-crypto && release-it"
   },
   "workspaces": [
     "packages/*",
