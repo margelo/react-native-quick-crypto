@@ -6,6 +6,8 @@
 
 A fast implementation of Node's `crypto` module.
 
+## Features
+
 Unlike any other current JS-based polyfills, react-native-quick-crypto is written in C/C++ JSI and provides much greater performance - especially on mobile devices.
 QuickCrypto can be used as a drop-in replacement for your Web3/Crypto apps to speed up common cryptography functions.
 
@@ -15,6 +17,15 @@ QuickCrypto can be used as a drop-in replacement for your Web3/Crypto apps to sp
 - 💰 Made for crypto apps and Wallets
 - 🔢 Secure native compiled cryptography
 - 🔁 Easy drop-in replacement for [crypto-browserify](https://github.com/browserify/crypto-browserify) or [react-native-crypto](https://github.com/tradle/react-native-crypto)
+
+## Versions
+
+| Version | RN Architecture | Modules |
+| ------- | ------ | ------- |
+| `1.x`     | new [->](https://github.com/reactwg/react-native-new-architecture/blob/main/docs/enable-apps.md)  | Nitro Modules [->](https://github.com/margelo/react-native-nitro) |
+| `0.x`     | old  | Bridge & JSI |
+
+## Benchmarks
 
 For example, creating a Wallet using ethers.js uses complex algorithms to generate a private-key/mnemonic-phrase pair:
 
@@ -132,52 +143,6 @@ const hashed = QuickCrypto.createHash('sha256')
   .update('Damn, Margelo writes hella good software!')
   .digest('hex');
 ```
-
----
-
-## Sponsors
-
-<!-- Onin -->
-<div align="center">
-<img height="50" src="./docs/img/sponsors/onin.svg" align="center"><br/>
-<a href="https://onin.co"><b>Onin</b></a> - This library is supported by Onin. Plan events without leaving the chat: <a href="https://onin.co">onin.co</a>
-</div>
-<br/>
-<br/>
-
-<!-- Steakwallet -->
-<div align="center">
-<img height="37" src="./docs/img/sponsors/omni.png" align="center"><br/>
-<a href="https://steakwallet.fi"><b>Omni</b></a> - Web3 for all. Access all of Web3 in one easy to use wallet. Omni supports more blockchains so you get more tokens, more yields, more NFTs, and more fun!
-</div>
-<br/>
-<br/>
-
-<!-- Litentry -->
-<div align="center">
-<img height="70" src="./docs/img/sponsors/litentry.png" align="center"><br/>
-<a href="https://litentry.com"><b>Litentry</b></a> - A decentralized identity aggregator, providing the structure and tools to empower you and your identity.
-</div>
-<br/>
-<br/>
-
-<!-- WalletConnect -->
-<div align="center">
-<img height="35" src="./docs/img/sponsors/walletconnect.png" align="center"><br/>
-<a href="https://walletconnect.com"><b>WalletConnect</b></a> - The communications protocol for web3, WalletConnect brings the ecosystem together by enabling wallets and apps to securely connect and interact.
-</div>
-<br/>
-<br/>
-
-<!-- WalletConnect -->
-
-<!-- THORSwap -->
-<div align="center">
-<img height="40" src="./docs/img/sponsors/thorswap.png" align="center"><br/>
-<a href="https://thorswap.finance"><b>THORSwap</b></a> - THORSwap is a cross-chain DEX aggregator that enables users to swap native assets across chains, provide liquidity to earn yield, and more. THORSwap is fully permissionless and non-custodial. No account signup, your wallet, your keys, your coins.
-</div>
-<br/>
-<br/>
 
 ## Limitations
 
