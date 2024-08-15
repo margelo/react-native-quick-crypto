@@ -1,4 +1,5 @@
 {
+  "version": "1.0.0-beta.0",
   "scripts": {
     "check-all": "./scripts/clang-format.sh",
     "nitro": "cd packages/react-native-quick-crypto && bunx nitro-codegen",
@@ -8,11 +9,58 @@
     "tsc": "bun --filter=\"*\" typescript",
     "lint": "bun --filter=\"*\" lint",
     "prepare": "bun --filter=\"react-native-quick-crypto\" prepare",
-    "release": "cd packages/react-native-quick-crypto && bun release"
+    "release": "release-it"
   },
   "workspaces": [
     "packages/*",
     "example"
   ],
-  "packageManager": "bun@1.1.22"
+  "devDependencies": {
+    "@release-it/conventional-changelog": "^8.0.1",
+    "@release-it/bumper": "^6.0.1",
+    "release-it": "^17.6.0"
+  },
+  "packageManager": "bun@1.1.22",
+  "release-it": {
+    "npm": {
+      "publish": false
+    },
+    "git": {
+      "commitMessage": "chore: release ${version}",
+      "tagName": "v${version}",
+      "requireCleanWorkingDir": false
+    },
+    "github": {
+      "release": true
+    },
+    "plugins": {
+      "@release-it/conventional-changelog": {
+        "preset": {
+          "name": "conventionalcommits",
+          "types": [
+            {
+              "type": "feat",
+              "section": "✨ Features"
+            },
+            {
+              "type": "perf",
+              "section": "💨 Performance Improvements"
+            },
+            {
+              "type": "fix",
+              "section": "🐛 Bug Fixes"
+            },
+            {
+              "type": "chore(deps)",
+              "section": "🛠️ Dependency Upgrades"
+            },
+            {
+              "type": "docs",
+              "section": "📚 Documentation"
+            }
+          ]
+        }
+      }
+    }
+  }
 }
