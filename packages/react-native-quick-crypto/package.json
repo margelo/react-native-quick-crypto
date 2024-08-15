@@ -35,7 +35,7 @@
     "lint": "eslint \"**/*.{js,ts,tsx}\"",
     "lint-fix": "eslint \"**/*.{js,ts,tsx}\" --fix",
     "prepare": "bun clean && bob build",
-    "release": "bun prepare && release-it",
+    "release-it": "bun prepare && release-it",
     "test": "jest",
     "postinstall": "bun tsc"
   },
