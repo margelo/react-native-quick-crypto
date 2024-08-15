@@ -8110,15 +8110,11 @@ react-is@^18.0.0:
   integrity sha512-xWGDIW6x921xtzPkhiULtthJHoJvBbF3q26fzloPCK0hsvxtPVelvftw3zjbHWSkR2km9Z+4uxbDDK/6Zw9B8w==
 
 react-native-builder-bob@^0.29.0:
-  version "0.29.0"
-  resolved "https://registry.yarnpkg.com/react-native-builder-bob/-/react-native-builder-bob-0.29.0.tgz#b92da4b883aad0c2885fe6fbfb758570901b3e16"
-  integrity sha512-myDEhns/aaxkCNhQoxrV4TMmGf39BQUah0sXRjV8sqJ0m8k8JvqV83Dx9EXkESGHxuS7wEjF4rbQjJj6jE8/PQ==
+  version "0.29.1"
+  resolved "https://registry.yarnpkg.com/react-native-builder-bob/-/react-native-builder-bob-0.29.1.tgz#a79163354b7249187dfe091ec15476b6037acf8b"
+  integrity sha512-+ylWgxioe5tkAL8DQImU/9xuTZsyA8F8yZiHiVo/LT98Gb/p4jv6DEeZ65LziqKWnDHcbsLiuwD25L75fXFS2Q==
   dependencies:
     "@babel/core" "^7.25.2"
-    "@babel/plugin-transform-class-properties" "^7.24.7"
-    "@babel/plugin-transform-classes" "^7.25.0"
-    "@babel/plugin-transform-private-methods" "^7.24.7"
-    "@babel/plugin-transform-private-property-in-object" "^7.24.7"
     "@babel/plugin-transform-strict-mode" "^7.24.7"
     "@babel/preset-env" "^7.25.2"
     "@babel/preset-flow" "^7.24.7"
