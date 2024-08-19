@@ -3,15 +3,19 @@
   "description": "Example app for react-native-quick-crypto",
   "version": "0.0.1",
   "private": true,
+  "packageManager": "bun@1.1.22",
   "scripts": {
     "android": "react-native run-android",
     "ios": "react-native run-ios --simulator='iPhone 15'",
-    "lint": "eslint .",
-    "lint-ci": "yarn lint -f ../node_modules/@firmnav/eslint-github-actions-formatter/dist/formatter.js",
+    "tsc": "tsc --noEmit",
+    "typescript": "tsc --noEmit",
+    "lint": "eslint \"**/*.{js,ts,tsx}\"",
+    "lint-fix": "eslint \"**/*.{js,ts,tsx}\" --fix",
+    "lint-ci": "bun lint -f ../node_modules/@firmnav/eslint-github-actions-formatter/dist/formatter.js",
     "start": "react-native start",
     "test": "jest",
     "pods": "bundle install && bundle exec pod install --project-directory=ios/",
-    "bootstrap": "yarn && bundle install && yarn pods"
+    "bootstrap": "bun install && bun pods"
   },
   "dependencies": {
     "@craftzdog/react-native-buffer": "^6.0.5",

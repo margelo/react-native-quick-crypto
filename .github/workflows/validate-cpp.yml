@@ -1,4 +1,4 @@
-name: Validate C++
+name: 'Validate C++'
 
 on:
   push:
