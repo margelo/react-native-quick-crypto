@@ -39,7 +39,7 @@ jobs:
 
       - uses: oven-sh/setup-bun@v2
         with:
-          bun-version: 1.1.22
+          bun-version: 1.1.26
 
       - name: Install reviewdog
         uses: reviewdog/action-setup@v1
@@ -62,7 +62,7 @@ jobs:
 
       - uses: oven-sh/setup-bun@v2
         with:
-          bun-version: 1.1.22
+          bun-version: 1.1.26
 
       - name: Bootstrap JS
         run: |

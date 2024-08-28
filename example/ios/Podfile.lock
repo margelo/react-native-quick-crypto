@@ -29,7 +29,7 @@ PODS:
     - ReactCommon/turbomodule/core
     - Yoga
   - OpenSSL-Universal (3.2.2000)
-  - QuickCrypto (1.0.0-rc.0):
+  - QuickCrypto (1.0.0-beta.2):
     - DoubleConversion
     - glog
     - hermes-engine
@@ -1566,7 +1566,7 @@ SPEC CHECKSUMS:
   hermes-engine: 8c1577f3fdb849cbe7729c2e7b5abc4b845e88f8
   NitroModules: da051fe7d5765063eb128f5fa920e0e3aa5b09b6
   OpenSSL-Universal: f8a9c4fdab7e21cb70bda471c269e86e9212439c
-  QuickCrypto: 66251dc3bae056eaf0bb5313cc078b94853d4da8
+  QuickCrypto: f7ee33fc626d3b924ef8314bead200e028370146
   RCT-Folly: 02617c592a293bd6d418e0a88ff4ee1f88329b47
   RCTDeprecation: 3afceddffa65aee666dafd6f0116f1d975db1584
   RCTRequired: ec1239bc9d8bf63e10fb92bd8b26171a9258e0c1
