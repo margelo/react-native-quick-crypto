@@ -121,5 +121,10 @@
         }
       ]
     ]
-  }
+  },
+  "trustedDependencies": [
+    "react-native-quick-crypto",
+    "nitro-codegen",
+    "react-native-nitro-modules"
+  ]
 }
