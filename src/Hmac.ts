@@ -26,10 +26,11 @@ class Hmac extends Stream.Transform {
   constructor(
     algorithm: string,
     key: BinaryLike,
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
     _options?: Stream.TransformOptions
   ) {
     super();
-    let keyAsString = binaryLikeToArrayBuffer(key);
+    const keyAsString = binaryLikeToArrayBuffer(key);
 
     if (keyAsString === undefined) {
       throw 'Wrong key type';

@@ -235,7 +235,7 @@ export function ecImportKey(
     case 'raw': {
       const data = keyData as BufferLike | BinaryLike;
       verifyAcceptableEcKeyUse(name, true, keyUsages);
-      let buffer =
+      const buffer =
         typeof data === 'string'
           ? binaryLikeToArrayBuffer(data)
           : bufferLikeToArrayBuffer(data);
@@ -317,8 +317,7 @@ export const ecGenerateKey = async (
   // const usageSet = new SafeSet(keyUsages);
   switch (name) {
     case 'ECDSA':
-      const checkUsages = ['sign', 'verify'];
-      if (hasAnyNotIn(keyUsages, checkUsages)) {
+      if (hasAnyNotIn(keyUsages, ['sign', 'verify'])) {
         throw lazyDOMException(
           'Unsupported key usage for an ECDSA key',
           'SyntaxError'

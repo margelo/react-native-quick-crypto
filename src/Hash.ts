@@ -119,14 +119,18 @@ export const asyncDigest = async (
     case 'SHA-384':
     // Fall through
     case 'SHA-512':
-      const normalizedHashName = normalizeHashName(algorithm.name);
-      const hash = new Hash(normalizedHashName);
-      hash.update(bufferLikeToArrayBuffer(data));
-      return hash.digest();
+      return internalDigest(algorithm, data);
   }
 
   throw lazyDOMException(
     `Unrecognized algorithm name: ${algorithm.name}`,
     'NotSupportedError'
   );
+};
+
+const internalDigest = (algorithm: SubtleAlgorithm, data: BufferLike): ArrayBuffer => {
+  const normalizedHashName = normalizeHashName(algorithm.name);
+  const hash = new Hash(normalizedHashName);
+  hash.update(bufferLikeToArrayBuffer(data));
+  return hash.digest();
 };

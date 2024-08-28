@@ -20,24 +20,24 @@ export type NamedCurve = 'P-256' | 'P-384' | 'P-521';
 export type ImportFormat = 'raw' | 'pkcs8' | 'spki' | 'jwk';
 
 export type AnyAlgorithm =
+  | DigestAlgorithm
   | HashAlgorithm
   | KeyPairAlgorithm
   | SecretKeyAlgorithm
   | SignVerifyAlgorithm
   | DeriveBitsAlgorithm
   | EncryptDecryptAlgorithm
+  | AESAlgorithm
   | 'PBKDF2'
-  | 'HKDF';
+  | 'HKDF'
+  | 'unknown';
 
-export type HashAlgorithm =
-  | 'SHA-1'
+  export type DigestAlgorithm = 'SHA-1' | 'SHA-256' | 'SHA-384' | 'SHA-512';
+
+  export type HashAlgorithm =
+  | DigestAlgorithm
   | 'SHA-224'
-  | 'SHA-256'
-  | 'SHA-384'
-  | 'SHA-512'
   | 'RIPEMD-160';
-
-export type DigestAlgorithm = 'SHA-1' | 'SHA-256' | 'SHA-384' | 'SHA-512';
 
 export type KeyPairType = 'rsa' | 'rsa-pss' | 'ec';
 
@@ -126,7 +126,7 @@ export type SubtleAlgorithm = {
   namedCurve?: NamedCurve;
   length?: number;
   modulusLength?: number;
-  publicExponent?: any;
+  publicExponent?: Uint8Array;
 };
 
 export type KeyUsage =
@@ -191,6 +191,7 @@ export enum KeyEncoding {
 export type DSAEncoding = 'der' | 'ieee-p1363';
 
 export type EncodingOptions = {
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   key?: any;
   type?: KType;
   encoding?: string;
@@ -200,6 +201,8 @@ export type EncodingOptions = {
   cipher?: string;
   passphrase?: string | ArrayBuffer;
   saltLength?: number;
+  oaepHash?: ArrayBuffer;
+  oaepLabel?: ArrayBuffer;
 };
 
 export type AsymmetricKeyType = 'rsa' | 'rsa-pss' | 'dsa' | 'ec' | undefined;
@@ -503,7 +506,7 @@ function prepareSecretKey(
   key: BinaryLike,
   encoding?: string,
   bufferOnly = false
-): any {
+): ArrayBuffer {
   try {
     if (!bufferOnly) {
       // TODO: maybe use `key.constructor.name === 'KeyObject'` ?
@@ -512,7 +515,7 @@ function prepareSecretKey(
           throw new Error(
             `invalid KeyObject type: ${key.type}, expected 'secret'`
           );
-        return key.handle;
+        return key.handle.export();
       }
       // TODO: maybe use `key.constructor.name === 'CryptoKey'` ?
       else if (key instanceof CryptoKey) {
@@ -520,7 +523,7 @@ function prepareSecretKey(
           throw new Error(
             `invalid CryptoKey type: ${key.type}, expected 'secret'`
           );
-        return key.keyObject.handle;
+        return key.keyObject.handle.export();
       }
     }
 
@@ -537,7 +540,7 @@ function prepareSecretKey(
   }
 }
 
-export function createSecretKey(key: any, encoding?: string) {
+export function createSecretKey(key: BinaryLike, encoding?: string): SecretKeyObject {
   const k = prepareSecretKey(key, encoding, true);
   const handle = NativeQuickCrypto.webcrypto.createKeyObjectHandle();
   handle.init(KeyType.Secret, k);
@@ -598,6 +601,7 @@ export class CryptoKey {
     this.keyExtractable = keyExtractable;
   }
 
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars, @typescript-eslint/no-explicit-any
   inspect(_depth: number, _options: any): any {
     throw new Error('CryptoKey.inspect is not implemented');
     // if (depth < 0) return this;
@@ -639,6 +643,7 @@ export class CryptoKey {
 class KeyObject {
   handle: KeyObjectHandle;
   type: 'public' | 'secret' | 'private' | 'unknown' = 'unknown';
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   export(_options?: EncodingOptions): ArrayBuffer {
     return new ArrayBuffer(0);
   }
@@ -782,6 +787,7 @@ export class PrivateKeyObject extends AsymmetricKeyObject {
   }
 }
 
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
 export const isCryptoKey = (obj: any): boolean => {
   return obj !== null && obj?.keyObject !== undefined;
 };

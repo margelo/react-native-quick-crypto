@@ -35,7 +35,7 @@ import {
 } from './aes';
 import { rsaCipher, rsaExportKey, rsaImportKey, rsaKeyGenerate } from './rsa';
 
-const exportKeySpki = async (key: CryptoKey): Promise<ArrayBuffer | any> => {
+const exportKeySpki = async (key: CryptoKey): Promise<ArrayBuffer | unknown> => {
   switch (key.algorithm.name) {
     case 'RSASSA-PKCS1-v1_5':
     // Fall through
@@ -71,7 +71,7 @@ const exportKeySpki = async (key: CryptoKey): Promise<ArrayBuffer | any> => {
   );
 };
 
-const exportKeyPkcs8 = async (key: CryptoKey): Promise<ArrayBuffer | any> => {
+const exportKeyPkcs8 = async (key: CryptoKey): Promise<ArrayBuffer | unknown> => {
   switch (key.algorithm.name) {
     case 'RSASSA-PKCS1-v1_5':
     // Fall through
@@ -107,7 +107,7 @@ const exportKeyPkcs8 = async (key: CryptoKey): Promise<ArrayBuffer | any> => {
   );
 };
 
-const exportKeyRaw = (key: CryptoKey): ArrayBuffer | any => {
+const exportKeyRaw = (key: CryptoKey): ArrayBuffer | unknown => {
   switch (key.algorithm.name) {
     case 'ECDSA':
     // Fall through
@@ -146,7 +146,7 @@ const exportKeyRaw = (key: CryptoKey): ArrayBuffer | any => {
   );
 };
 
-const exportKeyJWK = (key: CryptoKey): ArrayBuffer | any => {
+const exportKeyJWK = (key: CryptoKey): ArrayBuffer | unknown => {
   const jwk = key.keyObject.handle.exportJwk(
     {
       key_ops: key.usages,
@@ -236,7 +236,7 @@ const importGenericSecretKey = async (
         throw new Error('Invalid key length');
       }
 
-      const keyObject = createSecretKey(keyData);
+      const keyObject = createSecretKey(keyData as BinaryLike);
       return new CryptoKey(keyObject, { name }, keyUsages, false);
     }
   }
@@ -260,7 +260,7 @@ const checkCryptoKeyPairUsages = (pair: CryptoKeyPair) => {
   if (
     !(pair.privateKey instanceof Buffer) &&
     pair.privateKey &&
-    pair.privateKey.hasOwnProperty('keyUsages')
+    Object.prototype.hasOwnProperty.call(pair.privateKey, 'keyUsages')
   ) {
     const priv = pair.privateKey as CryptoKey;
     if (priv.usages.length > 0) {
@@ -366,7 +366,7 @@ const cipherOrWrap = async (
     //     return aesCipher(mode, key, data, algorithm);
     //   }
   }
-  // @ts-ignore
+  // @ts-expect-error unreachable code
   throw lazyDOMException(
     `Unrecognized algorithm name '${algorithm}' for '${op}'`,
     'NotSupportedError'
@@ -449,13 +449,13 @@ export class Subtle {
 
     switch (format) {
       case 'spki':
-        return await exportKeySpki(key);
+        return await exportKeySpki(key) as ArrayBuffer;
       case 'pkcs8':
-        return await exportKeyPkcs8(key);
+        return await exportKeyPkcs8(key) as ArrayBuffer;
       case 'jwk':
-        return exportKeyJWK(key);
+        return exportKeyJWK(key) as JWK;
       case 'raw':
-        return exportKeyRaw(key);
+        return exportKeyRaw(key) as ArrayBuffer;
     }
   }
 

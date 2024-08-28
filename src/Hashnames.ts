@@ -87,7 +87,10 @@ export function normalizeHashName(
     try {
       const alias = kHashNames[normAlgo]![context] as HashAlgorithm;
       if (alias) return alias;
-    } catch (_e) {}
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
+    } catch (_e) {
+      // ignore
+    }
   }
   throw new Error(`Invalid Hash Algorithm: ${algo}`);
 }

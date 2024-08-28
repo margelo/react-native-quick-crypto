@@ -40,10 +40,11 @@ interface NativeQuickCryptoSpec {
 // global func declaration for JSI functions
 declare global {
   function nativeCallSyncHook(): unknown;
-  var __QuickCryptoProxy: object | undefined;
+  let __QuickCryptoProxy: object | undefined;
 }
 
 // Check if the constructor exists. If not, try installing the JSI bindings.
+// @ts-expect-error this may not exist on global object
 if (global.__QuickCryptoProxy == null) {
   // Get the native QuickCrypto ReactModule
   const QuickCryptoModule = NativeModules.QuickCrypto;
@@ -92,11 +93,13 @@ if (global.__QuickCryptoProxy == null) {
     );
 
   // Check again if the constructor now exists. If not, throw an error.
-  if (global.__QuickCryptoProxy == null)
+// @ts-expect-error this may not exist on global object
+if (global.__QuickCryptoProxy == null)
     throw new Error(
       'Failed to install react-native-quick-crypto, the native initializer function does not exist. Are you trying to use QuickCrypto from different JS Runtimes?'
     );
 }
 
+// @ts-expect-error this may not exist on global object
 const proxy = global.__QuickCryptoProxy;
-export const NativeQuickCrypto = proxy as any as NativeQuickCryptoSpec;
+export const NativeQuickCrypto = proxy as NativeQuickCryptoSpec;

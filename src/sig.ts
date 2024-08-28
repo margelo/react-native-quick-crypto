@@ -1,6 +1,6 @@
 import { NativeQuickCrypto } from './NativeQuickCrypto/NativeQuickCrypto';
 import type { InternalSign, InternalVerify } from './NativeQuickCrypto/sig';
-import Stream from 'readable-stream';
+import Stream, { type WritableOptions } from 'readable-stream';
 
 // TODO(osp) same as publicCipher on node this are defined on C++ and exposed to node
 // Do the same here
@@ -23,15 +23,15 @@ import {
 const createInternalSign = NativeQuickCrypto.createSign;
 const createInternalVerify = NativeQuickCrypto.createVerify;
 
-function getPadding(options: any) {
+function getPadding(options: EncodingOptions) {
   return getIntOption('padding', options);
 }
 
-function getSaltLength(options: any) {
+function getSaltLength(options: EncodingOptions) {
   return getIntOption('saltLength', options);
 }
 
-function getDSASignatureEncoding(options: any) {
+function getDSASignatureEncoding(options: EncodingOptions) {
   if (typeof options === 'object') {
     const { dsaEncoding = 'der' } = options;
     if (dsaEncoding === 'der') return DSASigEnc.kSigEncDER;
@@ -42,10 +42,9 @@ function getDSASignatureEncoding(options: any) {
   return DSASigEnc.kSigEncDER;
 }
 
-function getIntOption(name: string, options: any) {
+function getIntOption(name: keyof EncodingOptions, options: EncodingOptions) {
   const value = options[name];
   if (value !== undefined) {
-    // eslint-disable-next-line no-bitwise
     if (value === value >> 0) {
       return value;
     }
@@ -56,7 +55,7 @@ function getIntOption(name: string, options: any) {
 
 class Verify extends Stream.Writable {
   private internal: InternalVerify;
-  constructor(algorithm: string, options: Stream.WritableOptions) {
+  constructor(algorithm: string, options?: WritableOptions) {
     super(options);
     this.internal = createInternalVerify();
     this.internal.init(algorithm);
@@ -105,7 +104,7 @@ class Verify extends Stream.Writable {
 
 class Sign extends Stream.Writable {
   private internal: InternalSign;
-  constructor(algorithm: string, options: Stream.WritableOptions) {
+  constructor(algorithm: string, options?: WritableOptions) {
     super(options);
     this.internal = createInternalSign();
     this.internal.init(algorithm);
@@ -148,17 +147,17 @@ class Sign extends Stream.Writable {
 
     encoding = encoding || getDefaultEncoding();
     if (encoding && encoding !== 'buffer') {
-      return Buffer.from(ret).toString(encoding as any);
+      return Buffer.from(ret).toString(encoding as BufferEncoding);
     }
 
     return Buffer.from(ret);
   }
 }
 
-export function createSign(algorithm: string, options?: any) {
+export function createSign(algorithm: string, options?: WritableOptions) {
   return new Sign(algorithm, options);
 }
 
-export function createVerify(algorithm: string, options?: any) {
+export function createVerify(algorithm: string, options?: WritableOptions) {
   return new Verify(algorithm, options);
 }

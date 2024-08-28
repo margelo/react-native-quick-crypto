@@ -43,7 +43,7 @@ type DOMName =
   | string
   | {
       name: string;
-      cause: any;
+      cause: unknown;
     };
 
 // Mimics node behavior for default global encoding
@@ -181,8 +181,7 @@ export function binaryLikeToArrayBuffer(
   if (!(input instanceof ArrayBuffer)) {
     try {
       // this is a strange fallback case and input is unknown at this point
-      // @ts-expect-error
-      const buffer = Buffer.from(input);
+      const buffer = Buffer.from(input as unknown as string);
       return buffer.buffer.slice(
         buffer.byteOffset,
         buffer.byteOffset + buffer.byteLength
@@ -201,7 +200,7 @@ export function ab2str(buf: ArrayBuffer, encoding: string = 'hex') {
   return Buffer.from(buf).toString(encoding);
 }
 
-export function validateString(str: any, name?: string): str is string {
+export function validateString(str: unknown, name?: string): str is string {
   const isString = typeof str === 'string';
   if (!isString) {
     throw new Error(`${name} is not a string`);
@@ -209,11 +208,11 @@ export function validateString(str: any, name?: string): str is string {
   return isString;
 }
 
-export function validateFunction(f: any): boolean {
+export function validateFunction(f: unknown): boolean {
   return f !== null && typeof f === 'function';
 }
 
-export function isStringOrBuffer(val: any): val is string | ArrayBuffer {
+export function isStringOrBuffer(val: unknown): val is string | ArrayBuffer {
   return (
     typeof val === 'string' ||
     ArrayBuffer.isView(val) ||
@@ -222,7 +221,7 @@ export function isStringOrBuffer(val: any): val is string | ArrayBuffer {
 }
 
 export function validateObject<T>(
-  value: any,
+  value: unknown,
   name: string,
   options?: {
     allowArray: boolean;
@@ -246,6 +245,7 @@ export function validateObject<T>(
 }
 
 export function validateInt32(
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   value: any,
   name: string,
   min = -2147483648,
@@ -456,7 +456,7 @@ const kSupportedAlgorithms: SupportedAlgorithms = {
 };
 
 type AlgorithmDictionaries = {
-  [key in string]: Object;
+  [key in string]: object;
 };
 
 const simpleAlgorithmDictionaries: AlgorithmDictionaries = {
@@ -514,19 +514,17 @@ export const normalizeAlgorithm = (
 
   // 4.
   let algName = algorithm.name;
-  // @ts-expect-error
-  if (algName === undefined) return { name: undefined };
+  if (algName === undefined) return { name: 'unknown' };
 
   // 5.
   let desiredType: string | null | undefined;
   for (const key in registeredAlgorithms) {
-    if (!registeredAlgorithms.hasOwnProperty(key)) {
+    if (!Object.prototype.hasOwnProperty.call(registeredAlgorithms, key)) {
       continue;
     }
     if (key.toUpperCase() === algName.toUpperCase()) {
       algName = key as AnyAlgorithm;
-      // @ts-ignore
-      desiredType = registeredAlgorithms[algName];
+      desiredType = (registeredAlgorithms as Record<string, typeof desiredType>)[algName];
     }
   }
   if (desiredType === undefined)
@@ -551,7 +549,7 @@ export const normalizeAlgorithm = (
   const dictKeys = dict ? Object.keys(dict) : [];
   for (let i = 0; i < dictKeys.length; i++) {
     const member = dictKeys[i] || '';
-    if (!dict?.hasOwnProperty(member)) continue;
+    if (!Object.prototype.hasOwnProperty.call(dict, member)) continue;
     // TODO: implement this?  Maybe via typescript?
     // const idlType = dict[member];
     // const idlValue = normalizedAlgorithm[member];
@@ -646,10 +644,8 @@ export const validateKeyOps = (
     // Skipping unknown key ops
     if (op_flag === undefined) continue;
     // Have we seen it already? if so, error
-    // eslint-disable-next-line no-bitwise
     if (flags & (1 << op_flag))
       throw lazyDOMException('Duplicate key operation', 'DataError');
-    // eslint-disable-next-line no-bitwise
     flags |= 1 << op_flag;
 
     // TODO(@jasnell): RFC7517 section 4.3 strong recommends validating
@@ -684,12 +680,21 @@ export const bigIntArrayToUnsignedInt = (
   for (let n = 0; n < input.length; ++n) {
     const n_reversed = input.length - n - 1;
     if (n_reversed >= 4 && input[n]) return; // Too large
-    // @ts-ignore
-    // eslint-disable-next-line no-bitwise
+    // @ts-expect-error - input[n] is possibly undefined
     result |= input[n] << (8 * n_reversed);
   }
 
   return result;
+};
+
+export function abvToArrayBuffer(buffer: ArrayBufferView): ArrayBuffer {
+  if (Buffer.isBuffer(buffer)) {
+    return buffer.buffer;
+  }
+  if (ArrayBuffer.isView(buffer)) {
+    return buffer.buffer;
+  }
+  return buffer;
 };
 
 // TODO: these used to be shipped by crypto-browserify in quickcrypto v0.6

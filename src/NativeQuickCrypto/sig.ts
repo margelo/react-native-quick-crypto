@@ -6,12 +6,14 @@ import type { KeyObjectHandle } from './webcrypto';
 export type InternalSign = {
   init: (algorithm: string) => void;
   update: (data: ArrayBuffer) => void;
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   sign: (...args: any) => Uint8Array; // returns raw bytes
 };
 
 export type InternalVerify = {
   init: (algorithm: string) => void;
   update: (data: ArrayBuffer) => void;
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   verify: (...args: any) => boolean;
 };
 

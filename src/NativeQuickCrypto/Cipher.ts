@@ -3,6 +3,7 @@ import type { BinaryLike } from '../Utils';
 import type { Buffer } from '@craftzdog/react-native-buffer';
 import type {
   EncodingOptions,
+  KeyEncoding,
   PrivateKeyObject,
   PublicKeyObject,
   SecretKeyObject,
@@ -60,32 +61,32 @@ export type CreateDecipherMethod = (params: {
 export type PublicEncryptMethod = (
   data: ArrayBuffer,
   format: number,
-  type: any,
-  passphrase: any,
+  type: KeyEncoding | undefined,
+  passphrase: string | ArrayBuffer | undefined,
   buffer: ArrayBuffer,
   padding: number,
-  oaepHash: any,
-  oaepLabel: any
+  oaepHash: ArrayBuffer | undefined,
+  oaepLabel: ArrayBuffer | undefined
 ) => Buffer;
 export type PrivateDecryptMethod = (
   data: ArrayBuffer,
   format: number,
-  type: any,
-  passphrase: any,
+  type: KeyEncoding | undefined,
+  passphrase: string | ArrayBuffer | undefined,
   buffer: ArrayBuffer,
   padding: number,
-  oaepHash: any,
-  oaepLabel: any
+  oaepHash: ArrayBuffer | undefined,
+  oaepLabel: ArrayBuffer | undefined
 ) => Buffer;
 
 export type GenerateKeyPairMethod = (
   keyVariant: KeyVariant,
-  ...rest: any[]
+  ...rest: unknown[]
 ) => Promise<GenerateKeyPairReturn>;
 
 export type GenerateKeyPairSyncMethod = (
   keyVariant: KeyVariant,
-  ...rest: any[]
+  ...rest: unknown[]
 ) => GenerateKeyPairReturn;
 
 export type CreatePublicKeyMethod = (

@@ -48,7 +48,7 @@ export type KeyObjectHandle = {
   getAsymmetricKeyType(): AsymmetricKeyType;
   init(
     keyType: KeyType,
-    key: any,
+    key: string | ArrayBuffer,
     format?: KFormatType,
     type?: KeyEncoding,
     passphrase?: string | ArrayBuffer

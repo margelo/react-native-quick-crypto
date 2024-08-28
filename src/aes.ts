@@ -84,7 +84,7 @@ function getVariant(name: AESAlgorithm, length: AESLength): AESKeyVariant {
         case 256:
           return AESKeyVariant.AES_CBC_256;
       }
-      // @ts-ignore
+      // @ts-expect-error unreachable code
       break;
     case 'AES-CTR':
       switch (length) {
@@ -95,7 +95,7 @@ function getVariant(name: AESAlgorithm, length: AESLength): AESKeyVariant {
         case 256:
           return AESKeyVariant.AES_CTR_256;
       }
-      // @ts-ignore
+      // @ts-expect-error unreachable code
       break;
     case 'AES-GCM':
       switch (length) {
@@ -106,7 +106,7 @@ function getVariant(name: AESAlgorithm, length: AESLength): AESKeyVariant {
         case 256:
           return AESKeyVariant.AES_GCM_256;
       }
-      // @ts-ignore
+      // @ts-expect-error unreachable code
       break;
     case 'AES-KW':
       switch (length) {
@@ -117,11 +117,11 @@ function getVariant(name: AESAlgorithm, length: AESLength): AESKeyVariant {
         case 256:
           return AESKeyVariant.AES_KW_256;
       }
-      // @ts-ignore
+      // @ts-expect-error unreachable code
       break;
   }
 
-  // @ts-ignore
+  // @ts-expect-error unreachable code
   throw lazyDOMException(
     `Error getting variant ${name} at length: ${length}`,
     'DataError'
@@ -335,9 +335,9 @@ export const aesImportKey = async (
 
   switch (format) {
     case 'raw': {
-      const data = keyData as BufferLike;
+      const data = bufferLikeToArrayBuffer(keyData as BufferLike);
       validateKeyLength(data.byteLength * 8);
-      keyObject = createSecretKey(keyData);
+      keyObject = createSecretKey(data);
       break;
     }
     case 'jwk': {

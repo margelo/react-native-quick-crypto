@@ -22,7 +22,8 @@ type Pbkdf2Callback = (err: Error | null, derivedKey?: Buffer) => void;
 function sanitizeInput(input: BinaryLike, errorMsg: string): ArrayBuffer {
   try {
     return binaryLikeToArrayBuffer(input);
-  } catch (e: any) {
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  } catch (_e: unknown) {
     throw errorMsg;
   }
 }
@@ -101,7 +102,7 @@ export function pbkdf2Sync(
   const sanitizedSalt = sanitizeInput(salt, WRONG_SALT);
 
   const algo = digest ? normalizeHashName(digest, HashContext.Node) : 'sha1';
-  let result: ArrayBuffer = nativePbkdf2.pbkdf2Sync(
+  const result: ArrayBuffer = nativePbkdf2.pbkdf2Sync(
     sanitizedPassword,
     sanitizedSalt,
     iterations,
@@ -152,7 +153,7 @@ export async function pbkdf2DeriveBits(
 
   const sanitizedPassword = sanitizeInput(raw, WRONG_PASS);
   const sanitizedSalt = sanitizeInput(salt, WRONG_SALT);
-  let result: Buffer | undefined = await pbkdf2Promise(
+  const result: Buffer | undefined = await pbkdf2Promise(
     sanitizedPassword,
     sanitizedSalt,
     iterations,
