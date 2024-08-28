@@ -1,4 +1,6 @@
-import { HashContext, normalizeHashName } from '../src/Hashnames';
+// TODO: fix this test when we have a hashnames.ts file
+//       i.e. after porting to nitro/new architecture
+import { HashContext, normalizeHashName } from '../src/utils/hashnames';
 
 test('normalizeHashName happy', () => {
   expect(normalizeHashName('SHA-1')).toBe('sha1');

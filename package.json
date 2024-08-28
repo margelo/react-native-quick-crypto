@@ -8,6 +8,7 @@
     "bootstrap": "bun install && bun pods",
     "tsc": "bun --filter=\"*\" typescript",
     "lint": "bun --filter=\"*\" lint",
+    "lint-fix": "bun --filter=\"*\" lint-fix",
     "prepare": "bun --filter=\"react-native-quick-crypto\" prepare",
     "pre-release": "./scripts/prepare-release.sh",
     "release-git": "bun pre-release && release-it",
@@ -22,7 +23,7 @@
     "@release-it/bumper": "^6.0.1",
     "release-it": "^17.6.0"
   },
-  "packageManager": "bun@1.1.22",
+  "packageManager": "bun@1.1.26",
   "release-it": {
     "npm": {
       "publish": false
