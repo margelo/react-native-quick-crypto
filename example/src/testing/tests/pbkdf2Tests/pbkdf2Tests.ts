@@ -2,9 +2,12 @@ import { describe, it } from '../../MochaRNAdapter';
 import { expect } from 'chai';
 import QuickCrypto from 'react-native-quick-crypto';
 import { Buffer } from '@craftzdog/react-native-buffer';
+import { Buffer as SBuffer } from 'safe-buffer';
+
 import type { Done } from 'mocha';
-import { fixtures } from './fixtures';
+import { fixtures, type Fixture } from './fixtures';
 import type { HashAlgorithm } from '../../../../../src/keys';
+import type { BinaryLike } from '../../../../../src/Utils';
 
 type TestFixture = [string, string, number, number, string];
 
@@ -84,24 +87,21 @@ describe('pbkdf2', () => {
     });
   }
 
-  // eslint-disable-next-line @typescript-eslint/no-shadow
-  var Buffer = require('safe-buffer').Buffer;
 
-  it(' defaults to sha1 and handles buffers', (done: Done) => {
-    var resultSync = QuickCrypto.pbkdf2Sync('password', 'salt', 1, 32);
+  it('handles buffers', (done: Done) => {
+    const resultSync = QuickCrypto.pbkdf2Sync('password', 'salt', 1, 32);
     expect(ab2str(resultSync)).to.eql(
       '0c60c80f961f0e71f3a9b524af6012062fe037a6e0f0eb94fe8fc46bdc637164'
     );
 
     QuickCrypto.pbkdf2(
-      Buffer.from('password'),
-      Buffer.from('salt'),
+      SBuffer.from('password').toString(),
+      SBuffer.from('salt').toString(),
       1,
       32,
-
+      'sha1',
       function (_, result) {
-        // @ts-expect-error
-        expect(ab2str(result)).to.eql(
+        expect(ab2str(result as ArrayBuffer)).to.eql(
           '0c60c80f961f0e71f3a9b524af6012062fe037a6e0f0eb94fe8fc46bdc637164'
         );
         done();
@@ -110,30 +110,36 @@ describe('pbkdf2', () => {
   });
 
   it('should throw if no callback is provided', function () {
-    // @ts-expect-error
-    expect(QuickCrypto.pbkdf2('password', 'salt', 1, 32, 'sha1')).to.throw(
+    expect(
+      // @ts-expect-error bad password
+      () => QuickCrypto.pbkdf2('password', 'salt', 1, 32, 'sha1')
+    ).to.throw(
       /No callback provided to pbkdf2/
     );
   });
 
   it('should throw if the password is not a string or an ArrayBuffer', function () {
-    // @ts-expect-error
-    expect(QuickCrypto.pbkdf2(['a'], 'salt', 1, 32, 'sha1')).to.throw(
+    expect(
+      // @ts-expect-error bad password
+      () => QuickCrypto.pbkdf2(['a'], 'salt', 1, 32, 'sha1', () => {})
+    ).to.throw(
       /Password must be a string, a Buffer, a typed array or a DataView/
     );
   });
 
   it(' should throw if the salt is not a string or an ArrayBuffer', function () {
-    // @ts-expect-error
-    expect(QuickCrypto.pbkdf2('a', ['salt'], 1, 32, 'sha1')).to.throw(
+    expect(
+      // @ts-expect-error bad salt
+      () => QuickCrypto.pbkdf2('a', ['salt'], 1, 32, 'sha1', () => {})
+    ).to.throw(
       /Salt must be a string, a Buffer, a typed array or a DataView/
     );
   });
 
-  let algos = ['sha1', 'sha224', 'sha256', 'sha384', 'sha512', 'ripemd160'];
+const algos = ['sha1', 'sha224', 'sha256', 'sha384', 'sha512', 'ripemd160'];
   algos.forEach(function (algorithm) {
-    fixtures.valid.forEach(function (f: any) {
-      let key: any, keyType: any, salt: any, saltType: any;
+    fixtures.valid.forEach(function (f: Fixture) {
+      let key: BinaryLike, keyType: string, salt: BinaryLike, saltType: string;
       if (f.keyUint8Array) {
         key = new Uint8Array(f.keyUint8Array);
         keyType = 'Uint8Array';
@@ -144,10 +150,10 @@ describe('pbkdf2', () => {
         key = new Float64Array(f.keyFloat64Array);
         keyType = 'Float64Array';
       } else if (f.keyHex) {
-        key = Buffer.from(f.keyHex, 'hex');
+        key = SBuffer.from(f.keyHex, 'hex');
         keyType = 'hex';
       } else {
-        key = f.key;
+        key = f.key as BinaryLike;
         keyType = 'string';
       }
       if (f.saltUint8Array) {
@@ -160,14 +166,14 @@ describe('pbkdf2', () => {
         salt = new Float64Array(f.saltFloat64Array);
         saltType = 'Float64Array';
       } else if (f.saltHex) {
-        salt = Buffer.from(f.saltHex, 'hex');
+        salt = SBuffer.from(f.saltHex, 'hex');
         saltType = 'hex';
       } else {
-        salt = f.salt;
+        salt = f.salt as BinaryLike;
         saltType = 'string';
       }
-      var expected = f.results[algorithm];
-      var description =
+      const expected = f.results ? f.results[algorithm] : undefined;
+      const description =
         algorithm +
         ' encodes "' +
         key +
@@ -182,13 +188,13 @@ describe('pbkdf2', () => {
         ' to ' +
         expected;
 
-      it(' async w/ ' + description, (done: Done) => {
+      it('async w/ ' + description, (done: Done) => {
         QuickCrypto.pbkdf2(
           key,
           salt,
-          f.iterations,
-          f.dkLen,
-          algorithm as HashAlgorithm,
+          f.iterations as number,
+          f.dkLen as number,
+          algorithm,
           function (err, result) {
             try {
               expect(err).to.eql(null);
@@ -203,47 +209,47 @@ describe('pbkdf2', () => {
       });
 
       it('sync w/ ' + description, function () {
-        var result = QuickCrypto.pbkdf2Sync(
+        const result = QuickCrypto.pbkdf2Sync(
           key,
           salt,
-          f.iterations,
-          f.dkLen,
-          algorithm as HashAlgorithm
+          f.iterations as number,
+          f.dkLen as number,
+          algorithm
         );
         expect(ab2str(result)).to.equal(expected);
       });
     });
 
-    /*fixtures.invalid.forEach(function (f) {
-      var description = algorithm + ' should throw ' + f.exception;
+    // fixtures.invalid.forEach(function (f) {
+    //   var description = algorithm + ' should throw ' + f.exception;
 
-      it(' async w/ ' + description, function () {
-        function noop() {}
-        expect(
-          QuickCrypto.pbkdf2(
-            f.key,
-            f.salt,
-            f.iterations,
-            f.dkLen,
-            f.algo,
-            noop
-          )
-        )
-        .to.throw(new RegExp(f.exception));
-      });
+    //   it(' async w/ ' + description, function () {
+    //     function noop() {}
+    //     expect(
+    //       QuickCrypto.pbkdf2(
+    //         f.key,
+    //         f.salt,
+    //         f.iterations,
+    //         f.dkLen,
+    //         f.algo,
+    //         noop
+    //       )
+    //     )
+    //     .to.throw(new RegExp(f.exception));
+    //   });
 
-      it(' sync w/' + description, function () {
-        expect(
-          QuickCrypto.pbkdf2Sync(
-            f.key,
-            f.salt,
-            f.iterations,
-            f.dkLen,
-            f.algo
-          )
-        )
-        .to.throw(new RegExp(f.exception));
-      });
-    }); */
+    //   it(' sync w/' + description, function () {
+    //     expect(
+    //       QuickCrypto.pbkdf2Sync(
+    //         f.key,
+    //         f.salt,
+    //         f.iterations,
+    //         f.dkLen,
+    //         f.algo
+    //       )
+    //     )
+    //     .to.throw(new RegExp(f.exception));
+    //   });
+    // });
   });
 });

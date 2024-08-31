@@ -1,31 +1,31 @@
 import { abvToArrayBuffer } from './Utils';
 import { NativeQuickCrypto } from './NativeQuickCrypto/NativeQuickCrypto';
 import { Buffer } from '@craftzdog/react-native-buffer';
-// import type { TypedArray } from './Utils';
+import type { TypedArray } from './Utils';
 
 const random = NativeQuickCrypto.random;
 
-// type ArrayBufferView = TypedArray | DataView | ArrayBufferLike | Buffer;
+type RandomBuffer = TypedArray | DataView | ArrayBufferLike | Buffer;
 
-export function randomFill<T extends ArrayBufferView>(
+export function randomFill<T extends RandomBuffer>(
   buffer: T,
   callback: (err: Error | null, buf: T) => void
 ): void;
 
-export function randomFill<T extends ArrayBufferView>(
+export function randomFill<T extends RandomBuffer>(
   buffer: T,
   offset: number,
   callback: (err: Error | null, buf: T) => void
 ): void;
 
-export function randomFill<T extends ArrayBufferView>(
+export function randomFill<T extends RandomBuffer>(
   buffer: T,
   offset: number,
   size: number,
   callback: (err: Error | null, buf: T) => void
 ): void;
 
-export function randomFill(buffer: ArrayBufferView, ...rest: unknown[]): void {
+export function randomFill(buffer: RandomBuffer, ...rest: unknown[]): void {
   if (typeof rest[rest.length - 1] !== 'function') {
     throw new Error('No callback provided to randomFill');
   }
@@ -48,7 +48,7 @@ export function randomFill(buffer: ArrayBufferView, ...rest: unknown[]): void {
   }
 
   random
-    .randomFill(abvToArrayBuffer(buffer), offset, size)
+    .randomFill(abvToArrayBuffer(buffer as ArrayBufferView), offset, size)
     .then(
       (res: ArrayBuffer) => {
         callback(null, res);
@@ -59,18 +59,22 @@ export function randomFill(buffer: ArrayBufferView, ...rest: unknown[]): void {
     );
 }
 
-export function randomFillSync<T extends ArrayBufferView>(
+export function randomFillSync<T extends RandomBuffer>(
   buffer: T,
   offset?: number,
   size?: number
 ): T;
 
 export function randomFillSync(
-  buffer: ArrayBufferView,
+  buffer: RandomBuffer,
   offset: number = 0,
   size?: number
 ) {
-  return random.randomFillSync(abvToArrayBuffer(buffer), offset, size ?? buffer.byteLength);
+  return random.randomFillSync(
+    abvToArrayBuffer(buffer as ArrayBufferView),
+    offset,
+    size ?? buffer.byteLength
+  );
 }
 
 export function randomBytes(size: number): Buffer;

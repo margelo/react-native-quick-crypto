@@ -126,7 +126,7 @@ export type SubtleAlgorithm = {
   namedCurve?: NamedCurve;
   length?: number;
   modulusLength?: number;
-  publicExponent?: Uint8Array;
+  publicExponent?: number | Uint8Array;
 };
 
 export type KeyUsage =

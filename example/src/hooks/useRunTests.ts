@@ -55,9 +55,9 @@ const run = (
     EVENT_SUITE_END,
   } = Mocha.Runner.constants;
 
-  let stats: Stats = { ...defaultStats };
+  const stats: Stats = { ...defaultStats };
 
-  var runner = new Mocha.Runner(rootSuite) as MochaTypes.Runner;
+  const runner = new Mocha.Runner(rootSuite) as MochaTypes.Runner;
   runner.stats = stats;
 
   // enable/disable tests based on checkbox value
@@ -68,7 +68,10 @@ const run = (
       s.tests.map((t) => {
         try {
           t.skip();
-        } catch (e) {} // do nothing w error
+        // eslint-disable-next-line @typescript-eslint/no-unused-vars
+        } catch (_e) {
+          // do nothing w error
+        }
       });
     } else {
       // console.log(`will run '${suiteName}' suite`);
@@ -86,7 +89,7 @@ const run = (
       stats.start = new Date();
     })
     .on(EVENT_SUITE_BEGIN, (suite: MochaTypes.Suite) => {
-      suite.root || stats.suites++;
+      if (suite.root) stats.suites++;
       indents++;
     })
     .on(EVENT_SUITE_END, () => {

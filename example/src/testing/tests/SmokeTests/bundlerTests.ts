@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-require-imports */
 import { expect } from 'chai';
 import { describe, it } from '../../MochaRNAdapter';
 

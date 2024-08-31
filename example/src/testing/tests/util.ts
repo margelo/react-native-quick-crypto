@@ -1,9 +1,10 @@
 import { assert } from 'chai';
 
-export const assertThrowsAsync = async (fn: any, expectedMessage: string) => {
+export const assertThrowsAsync = async (fn: () => Promise<unknown>, expectedMessage: string) => {
   try {
     await fn();
-  } catch (err: any) {
+  } catch (error) {
+    const err = error as Error;
     if (expectedMessage) {
       assert.include(
         err.message,

@@ -1,5 +1,6 @@
 import React from 'react';
 import { View, Text, StyleSheet } from 'react-native';
+import { colors } from '../styles/colors';
 
 type IncorrectResultItemProps = {
   description: string;
@@ -32,6 +33,6 @@ const styles = StyleSheet.create({
     flexShrink: 1,
   },
   error: {
-    color: 'red',
+    color: colors.red,
   },
 });

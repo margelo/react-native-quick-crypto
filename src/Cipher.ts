@@ -13,6 +13,8 @@ import {
   validateUint32,
   validateInt32,
   type BinaryLikeNode,
+  type CipherType,
+  type CipherDesType,
 } from './Utils';
 import { type InternalCipher, KeyVariant } from './NativeQuickCrypto/Cipher';
 import type {
@@ -271,6 +273,11 @@ export function createDecipher(
   options?: CipherGCMOptions
 ): DecipherGCM;
 export function createDecipher(
+  algorithm: CipherType | CipherDesType,
+  password: BinaryLikeNode,
+  options?: Stream.TransformOptions
+): DecipherCCM | DecipherGCM | Decipher;
+export function createDecipher(
   algorithm: string,
   password: BinaryLikeNode,
   options?: CipherCCMOptions | CipherGCMOptions | Stream.TransformOptions
@@ -298,6 +305,12 @@ export function createDecipheriv(
   options?: CipherGCMOptions
 ): DecipherGCM;
 export function createDecipheriv(
+  algorithm: CipherType | CipherDesType,
+  key: BinaryLikeNode,
+  iv: BinaryLike | null,
+  options?: Stream.TransformOptions
+): DecipherCCM | DecipherOCB | DecipherGCM | Decipher;
+export function createDecipheriv(
   algorithm: string,
   key: BinaryLikeNode,
   iv: BinaryLike | null,
@@ -321,11 +334,16 @@ export function createCipher(
   options?: CipherGCMOptions
 ): CipherGCM;
 export function createCipher(
-  algorithm: string,
+  algorithm: CipherType | CipherDesType,
   password: BinaryLikeNode,
-  options?: CipherGCMOptions | CipherCCMOptions | Stream.TransformOptions
-): CipherCCM | CipherGCM | Cipher {
-  return new Cipher(algorithm, password, options as Record<string, TransformOptions>);
+  options?: Stream.TransformOptions
+): CipherCCM | CipherGCM | Cipher;
+export function createCipher(
+    algorithm: string,
+    password: BinaryLikeNode,
+    options?: CipherGCMOptions | CipherCCMOptions | Stream.TransformOptions
+  ): CipherCCM | CipherGCM | Cipher {
+    return new Cipher(algorithm, password, options as Record<string, TransformOptions>);
 }
 
 export function createCipheriv(
@@ -346,6 +364,12 @@ export function createCipheriv(
   iv: BinaryLike,
   options?: CipherGCMOptions
 ): CipherGCM;
+export function createCipheriv(
+  algorithm: CipherType | CipherDesType,
+  key: BinaryLikeNode,
+  iv: BinaryLike | null,
+  options?: Stream.TransformOptions
+): CipherCCM | CipherOCB | CipherGCM | Cipher;
 export function createCipheriv(
   algorithm: string,
   key: BinaryLikeNode,
@@ -446,7 +470,7 @@ export type GenerateKeyPairOptions = {
   generator?: number; // Custom generator (DH). Default: 2.
   groupName?: string; // Diffie-Hellman group name (DH). See crypto.getDiffieHellman().
   publicKeyEncoding?: EncodingOptions; // See keyObject.export().
-  privateKeyEncoding?: Encoding; // See keyObject.export().
+  privateKeyEncoding?: EncodingOptions; // See keyObject.export().
   paramEncoding?: string;
   hash?: string;
   mgf1Hash?: string;

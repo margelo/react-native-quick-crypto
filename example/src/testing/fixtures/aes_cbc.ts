@@ -130,13 +130,13 @@ const decryptionFailing: AesEncryptDecryptTestVector[] = [];
 kKeyLengths.forEach(function (keyLength) {
   ['zeroPadChar', 'bigPadChar', 'inconsistentPadChars'].forEach(
     (paddingProblem) => {
-      // @ts-expect-error
+      // @ts-expect-error bad padding
       const badCiphertext = new Uint8Array(kCipherText[keyLength].byteLength);
       badCiphertext.set(
-        // @ts-expect-error
+        // @ts-expect-error bad padding
         kCipherText[keyLength].slice(0, kCipherText[keyLength].byteLength - 16)
       );
-      // @ts-expect-error
+      // @ts-expect-error bad padding
       badCiphertext.set(kBadPadding[keyLength][paddingProblem]);
 
       decryptionFailing.push({

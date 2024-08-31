@@ -2,15 +2,17 @@ import { assert, expect } from 'chai';
 import { Buffer } from '@craftzdog/react-native-buffer';
 import { describe, it } from '../../MochaRNAdapter';
 import crypto from 'react-native-quick-crypto';
+import type { KeyPairKey } from '../../../../../src/Cipher';
+import type { EncodingOptions } from '../../../../../src/keys';
 // import { PrivateKey } from 'sscrypto/node';
 
 // Tests that a key pair can be used for encryption / decryption.
-function testEncryptDecrypt(publicKey: any, privateKey: any) {
+function testEncryptDecrypt(publicKey: KeyPairKey, privateKey: KeyPairKey) {
   const message = 'Hello Node.js world!';
   const plaintext = Buffer.from(message, 'utf8');
   for (const key of [publicKey, privateKey]) {
-    const ciphertext = crypto.publicEncrypt(key, plaintext);
-    const received = crypto.privateDecrypt(privateKey, ciphertext);
+    const ciphertext = crypto.publicEncrypt({key} as EncodingOptions, plaintext);
+    const received = crypto.privateDecrypt({key: privateKey} as EncodingOptions, ciphertext);
     assert.strictEqual(received.toString('utf8'), message);
   }
 }
@@ -104,7 +106,7 @@ describe('publicCipher', () => {
 
     const message = 'Hello RN world!';
     const plaintext = Buffer.from(message, 'utf8');
-    const ciphertext = crypto.publicEncrypt(publicKey, plaintext);
+    const ciphertext = crypto.publicEncrypt(publicKey as EncodingOptions, plaintext);
     const decrypted = crypto.privateDecrypt(
       { key: privateKey, passphrase: 'top secret' },
       ciphertext
@@ -131,7 +133,8 @@ describe('publicCipher', () => {
     try {
       testEncryptDecrypt(publicKey, privateKey);
       assert.fail();
-    } catch (e) {
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
+    } catch (_e) {
       // intentionally left blank
     }
   });

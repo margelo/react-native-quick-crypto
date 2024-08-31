@@ -15,11 +15,11 @@ describe('createCipheriv/createDecipheriv', () => {
         'eCBsThSsfUHLeRe0KCsK8ooHgxie0zOINpXxfZi/oNG7uq9JWFVCk70gfzQH8ZUJ' +
         'jAfaFg**';
       const cipher = crypto.createCipheriv('des-ede3-cbc', key, iv);
-      let ciph = cipher.update(plaintext, 'utf8', 'hex');
+      let ciph = cipher.update(plaintext, 'utf8', 'hex') as string;
       ciph += cipher.final('hex');
 
       const decipher = crypto.createDecipheriv('des-ede3-cbc', key, iv);
-      let txt = decipher.update(ciph, 'hex', 'utf8');
+      let txt = decipher.update(ciph, 'hex', 'utf8') as string;
       txt += decipher.final('utf8');
 
       assert.strictEqual(
@@ -56,13 +56,12 @@ describe('createCipheriv/createDecipheriv', () => {
         'eCBsThSsfUHLeRe0KCsK8ooHgxie0zOINpXxfZi/oNG7uq9JWFVCk70gfzQH8ZUJ' +
         'jAfaFg**';
       const cipher = crypto.createCipheriv('des-ede3-cbc', key, iv);
-      let ciph = cipher.update(plaintext, 'utf8', 'buffer');
-      // @ts-expect-error
-      ciph = Buffer.concat([ciph, cipher.final('buffer')]);
+      let ciph = cipher.update(plaintext, 'utf8', 'buffer') as Uint8Array;
+      ciph = Buffer.concat([ciph, cipher.final('buffer') as Uint8Array]);
 
       const decipher = crypto.createDecipheriv('des-ede3-cbc', key, iv);
       let txt = decipher.update(ciph, 'buffer', 'utf8');
-      txt += decipher.final('utf8');
+      txt += decipher.final('utf8') as string;
 
       assert.strictEqual(
         txt,

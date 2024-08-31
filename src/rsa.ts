@@ -108,7 +108,7 @@ export const rsaKeyGenerate = async (
   const hash: HashAlgorithm = normalizeHashName(rawHash);
 
   // const usageSet = new SafeSet(keyUsages);
-  const publicExponentConverted = bigIntArrayToUnsignedInt(publicExponent);
+  const publicExponentConverted = bigIntArrayToUnsignedInt(publicExponent as Uint8Array);
   if (publicExponentConverted === undefined) {
     throw lazyDOMException(
       'The publicExponent must be equivalent to an unsigned 32-bit value',

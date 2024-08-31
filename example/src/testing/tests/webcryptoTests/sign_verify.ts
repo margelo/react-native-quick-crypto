@@ -55,7 +55,6 @@ describe('subtle - sign / verify', () => {
   // }
 
   // Test Sign/Verify ECDSA
-  // eslint-disable-next-line no-lone-blocks
   {
     async function test(data: string) {
       const ec = new TextEncoder();

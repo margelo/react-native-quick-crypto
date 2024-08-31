@@ -1,4 +1,3 @@
-/* eslint-disable @typescript-eslint/no-shadow */
 import { useState, useCallback } from 'react';
 import type * as MochaTypes from 'mocha';
 import type { Suites } from '../types/TestSuite';
@@ -8,8 +7,8 @@ import '../testing/tests/pbkdf2Tests/pbkdf2Tests';
 import '../testing/tests/RandomTests/randomTests';
 import '../testing/tests/HmacTests/HmacTests';
 import '../testing/tests/HashTests/HashTests';
-import '../testing/tests/CipherTests/CipherTestFirst';
-import '../testing/tests/CipherTests/CipherTestSecond';
+import '../testing/tests/CipherTests/CipherDecipher';
+import '../testing/tests/CipherTests/CipherivDecipheriv';
 import '../testing/tests/CipherTests/test398';
 import '../testing/tests/CipherTests/PublicCipherTests';
 import '../testing/tests/CipherTests/generateKey';
@@ -44,6 +43,7 @@ export const useTestList = (): [
 
   const clearAll = useCallback(() => {
     setSuites((suites) => {
+      // eslint-disable-next-line @typescript-eslint/no-unused-vars
       Object.entries(suites).forEach(([_, suite]) => {
         suite.value = false;
       });
@@ -53,6 +53,7 @@ export const useTestList = (): [
 
   const checkAll = useCallback(() => {
     setSuites((suites) => {
+      // eslint-disable-next-line @typescript-eslint/no-unused-vars
       Object.entries(suites).forEach(([_, suite]) => {
         suite.value = true;
       });
@@ -64,7 +65,7 @@ export const useTestList = (): [
 };
 
 const getInitialSuites = () => {
-  let suites: Suites = {};
+  const suites: Suites = {};
 
   // interrogate the loaded mocha suites/tests via a temporary runner
   const runner = new Mocha.Runner(rootSuite) as MochaTypes.Runner;

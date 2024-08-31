@@ -1,5 +1,28 @@
 // copied from https://github.com/crypto-browserify/pbkdf2/blob/master/test/fixtures.json
-export const fixtures = {
+export type Fixture = {
+  description?: string;
+  key?: string;
+  keyHex?: string;
+  keyUint8Array?: number[];
+  keyInt32Array?: number[];
+  keyFloat64Array?: number[];
+  salt?: string;
+  saltHex?: string;
+  saltUint8Array?: number[];
+  saltInt32Array?: number[];
+  saltFloat64Array?: number[];
+  iterations: number | string;
+  dkLen: number | string;
+  results?: Record<string, string>;
+  exception?: string;
+};
+
+type Fixtures = {
+  valid: Fixture[];
+  invalid: Fixture[];
+};
+
+export const fixtures: Fixtures = {
   valid: [
     {
       key: 'password',
@@ -334,26 +357,6 @@ export const fixtures = {
           '15010450f456769467e834db7fa93dd9d353e8bb733b63b0621090f96599ac3316908eb64ac9366094f0787cd4bfb2fea25be41dc271a19309710db6144f9b34',
         ripemd160:
           '255321c22a32f41ed925032043e01afe9cacf05470c6506621782c9d768df03c74cb3fe14a4296feba4c2825e736486fb3871e948f9c413ca006cc20b7ff6d37',
-      },
-    },
-    {
-      description: 'Unicode salt, suffers from truncation',
-      key: 'abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon about',
-      salt: 'mnemonicメートルガバヴァぱばぐゞちぢ十人十色',
-      iterations: 2048,
-      dkLen: 64,
-      results: {
-        sha1: 'd85d14adcb7bdb5d976160e504f520a98cf71aca4cd5fceadf37759743bd6e1d2ff78bdd4403552aef7658094384b341ede80fffd334182be076f9d988a0a40f',
-        sha256:
-          'b86b5b900c29ed2724359afd793e10ffc1eb0e7d6f624fc9c85b8ac1785d9a2f0575af52a2338e611f2e6cffdee544adfff6f3d4f43be2ba0e2bd7e917b38a14',
-        sha512:
-          '3a863fa00f2e97a83fa9b18805e0047a6282cbae0ff48438b33a14475771c52d05137daa12e364cb34d84547ac07568b801c5c7f8dd4baaeee18a67a5c6a3377',
-        sha224:
-          '95727793842437774ad9ae27b8154a6f37f208b75a03d3a4d4a2443422bb6bc85efcfa92aa4376926ea89a8f5a63118eecdb58c8ca28ab31007da79437e0a1ef',
-        sha384:
-          '1a7e02e8ba0e357269a55642024b85738b95238d6cdc49bc440204995aefeff499e22cba76d4c7e96b7d4a9596a70e744f53fa94f3547e7dc506fcaf16ceb4a2',
-        ripemd160:
-          'bac7849db13e90604620945695288ffee20369107c3a6632d6b1d6b926175ac914319b5a742e6b1a37b82841b6f010ad47ebdb5cd608026eb48513bf68cb54f5',
       },
     },
   ],

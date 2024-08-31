@@ -38,7 +38,7 @@ describe('hash', () => {
     a8 = a8.read();
 
     cryptoType = 'md5';
-    digest = 'latin1' as 'latin1';
+    digest = 'latin1' as const;
     const a0 = crypto.createHash(cryptoType).update('Test123').digest(digest);
     assert.strictEqual(
       a0,
@@ -84,8 +84,8 @@ describe('hash', () => {
     );
 
     // Stream interface should produce the same result.
-    assert.deepStrictEqual(a5 as any as Buffer, a3);
-    assert.deepStrictEqual(a6 as any as Buffer, a3);
+    assert.deepStrictEqual(a5 as unknown as Buffer, a3);
+    assert.deepStrictEqual(a6 as unknown as Buffer, a3);
     assert.notStrictEqual(a7, undefined);
     assert.notStrictEqual(a8, undefined);
   });
@@ -133,6 +133,7 @@ describe('hash', () => {
           toString: () => {
             throw new Error('boom');
           },
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
         } as any),
       /boom/,
       'boom'
@@ -142,7 +143,7 @@ describe('hash', () => {
   // Issue https://github.com/nodejs/node/issues/25487: error message for invalid
   it('arg type to update method should include all possible types.', () => {
     assert.throws(
-      // @ts-expect-error
+      // @ts-expect-error no data argument
       () => crypto.createHash('sha256').update(),
       /The first argument must be one of/,
       'TypeError'
@@ -180,7 +181,7 @@ describe('hash', () => {
 
   it('empty call', () => {
     assert.throws(
-      // @ts-expect-error
+      // @ts-expect-error no algorithm argument
       () => crypto.createHash(),
       /Value is undefined, expected a String/,
       'The "algorithm" argument must be of type string. ' + 'Received undefined'
@@ -288,7 +289,7 @@ describe('hash', () => {
 
     for (const outputLength of [null, {}, 'foo', false]) {
       assert.throws(
-        // @ts-expect-error
+        // @ts-expect-error bad outputLength
         () => crypto.createHash('sha256', { outputLength }),
         /ERR_INVALID_ARG_TYPE/
       );

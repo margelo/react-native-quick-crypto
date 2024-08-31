@@ -28,7 +28,7 @@ const allUsages: KeyUsage[] = [
 ];
 
 type Vector = {
-  algorithm?: Object;
+  algorithm?: object;
   result: string;
   usages: KeyUsage[];
 };
@@ -121,6 +121,7 @@ const vectors: Vectors = {
 describe('subtle - generateKey', () => {
   // Test invalid algorithms
   {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     async function testInvalidAlgorithm(algorithm: any) {
       // one test is slightly different than the others
       const errorText =
@@ -131,7 +132,7 @@ describe('subtle - generateKey', () => {
       it(`invalid algo: ${algo}`, async () => {
         await assertThrowsAsync(
           async () =>
-            // @ts-expect-error
+            // @ts-expect-error bad extractable
             // The extractable and usages values are invalid here also,
             // but the unrecognized algorithm name should be caught first.
             await subtle.generateKey(algorithm, 7, []),
@@ -460,8 +461,8 @@ describe('subtle - generateKey', () => {
         const pub = publicKey as CryptoKey;
         const priv = privateKey as CryptoKey;
 
-        expect(pub).is.not.undefined;
-        expect(priv).is.not.undefined;
+        expect(pub !== undefined);
+        expect(priv !== undefined);
         expect(isCryptoKey(pub));
         expect(isCryptoKey(priv));
         expect(pub.type).to.equal('public');
@@ -480,7 +481,7 @@ describe('subtle - generateKey', () => {
           await assertThrowsAsync(
             async () =>
               await subtle.generateKey(
-                // @ts-expect-error
+                // @ts-expect-error bad named curve
                 { name, namedCurve: curve },
                 true,
                 privateUsages
@@ -514,7 +515,7 @@ describe('subtle - generateKey', () => {
       it(`AES keygen: ${name} ${length} ${usages}`, async () => {
         const key = await subtle.generateKey({ name, length }, true, usages);
         const k = key as CryptoKey;
-        expect(k).is.not.undefined;
+        expect(k !== undefined);
         expect(isCryptoKey(k));
 
         expect(k.type).to.equal('secret');
@@ -529,7 +530,7 @@ describe('subtle - generateKey', () => {
             await assertThrowsAsync(
               async () =>
                 subtle.generateKey(
-                  // @ts-expect-error
+                  // @ts-expect-error bad length
                   { name, length: invalidParam },
                   true,
                   usages

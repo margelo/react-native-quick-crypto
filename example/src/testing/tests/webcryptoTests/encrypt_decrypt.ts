@@ -22,12 +22,12 @@ import { ab2str } from '../../../../../src/Utils';
 
 export type RsaEncryptDecryptTestVector = {
   name: string;
+  // publicKey: Buffer | null;
   publicKeyBuffer: ArrayBuffer;
-  publicKeyFormat: string;
-  privateKey: Buffer | null;
+  // publicKeyFormat: string;
+  // privateKey: Buffer | null;
   privateKeyBuffer: ArrayBuffer | null;
-  privateKeyFormat: string | null;
-  publicKey: any | null;
+  // privateKeyFormat: string | null;
   algorithm: RsaOaepParams;
   hash: DigestAlgorithm;
   plaintext: ArrayBuffer;
@@ -109,6 +109,7 @@ describe('subtle - encrypt / decrypt', () => {
     name: AnyAlgorithm,
     hash: DigestAlgorithm,
     publicUsages: KeyUsage[],
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
     _privateUsages: KeyUsage[]
   ): Promise<CryptoKeyPair> {
     const publicKey = await subtle.importKey(
@@ -169,7 +170,7 @@ describe('subtle - encrypt / decrypt', () => {
         privateKey as CryptoKey,
         ciphercopy
       );
-      // @ts-expect-error
+      // @ts-expect-error possibly undefined
       ciphercopy[0] = 255 - ciphercopy[0];
 
       expect(Buffer.from(result2).toString('hex')).to.equal(encodedPlaintext);
@@ -206,7 +207,7 @@ describe('subtle - encrypt / decrypt', () => {
       plaintext
     );
     if (modify) {
-      // @ts-expect-error
+      // @ts-expect-error possibly undefined
       plaintext[0] = 255 - plaintext[0];
     }
     expect(result.byteLength).to.be.greaterThan(0);
@@ -353,7 +354,7 @@ describe('subtle - encrypt / decrypt', () => {
   }
 
   {
-    let { passing } = rsa_oaep_fixtures;
+    const { passing } = rsa_oaep_fixtures;
 
     passing.forEach((vector: RsaEncryptDecryptTestVector) => {
       it(`RSA-OAEP decryption ${vector.name}`, async () => {
@@ -560,7 +561,7 @@ describe('subtle - encrypt / decrypt', () => {
       ['encrypt', 'decrypt']
     );
     const output = await subtle.encrypt(algorithm, key, plaintext);
-    // @ts-expect-error
+    // @ts-expect-error possibly undefined
     plaintextBuffer[0] = 255 - plaintextBuffer[0];
 
     expect(ab2str(output)).to.equal(ab2str(result), 'output != result');
@@ -569,7 +570,7 @@ describe('subtle - encrypt / decrypt', () => {
     // Converting the returned ArrayBuffer into a Buffer right away,
     // so that the next line works
     const check = Buffer.from(checkAB);
-    // @ts-expect-error
+    // @ts-expect-error possibly undefined
     check[0] = 255 - check[0];
 
     expect(ab2str(checkAB)).to.equal(
@@ -671,7 +672,7 @@ describe('subtle - encrypt / decrypt', () => {
 
   // Test aes-cbc vectors
   {
-    let { passing, failing, decryptionFailing } = aes_cbc_fixtures;
+    const { passing, failing, decryptionFailing } = aes_cbc_fixtures;
 
     passing.forEach((vector: AesEncryptDecryptTestVector) => {
       const { algorithm, keyLength } = vector;
@@ -721,7 +722,7 @@ describe('subtle - encrypt / decrypt', () => {
 
   // Test aes-ctr vectors
   {
-    let { passing, failing, decryptionFailing } = aes_ctr_fixtures;
+    const { passing, failing, decryptionFailing } = aes_ctr_fixtures;
 
     passing.forEach((vector: AesEncryptDecryptTestVector) => {
       const { algorithm, keyLength } = vector;
@@ -773,7 +774,7 @@ describe('subtle - encrypt / decrypt', () => {
 
   // Test aes-gcm vectors
   {
-    let { passing, failing, decryptionFailing } = aes_gcm_fixtures;
+    const { passing, failing, decryptionFailing } = aes_gcm_fixtures;
 
     passing.forEach((vector: AesEncryptDecryptTestVector) => {
       const { algorithm, keyLength } = vector;

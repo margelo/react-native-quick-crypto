@@ -2,6 +2,7 @@ import { assert, expect } from 'chai';
 import type { Buffer } from '@craftzdog/react-native-buffer';
 import { describe, it } from '../../MochaRNAdapter';
 import crypto from 'react-native-quick-crypto';
+import type { KeyPairKey } from '../../../../../src/Cipher';
 
 // Constructs a regular expression for a PEM-encoded key with the given label.
 function getRegExpForPEM(label: string, cipher?: string | null) {
@@ -15,7 +16,8 @@ function getRegExpForPEM(label: string, cipher?: string | null) {
   return new RegExp(`^${head}${rfc1421Header}\n${body}\n${end}\n$`);
 }
 
-function assertApproximateSize(key: 'string' | Buffer, expectedSize: number) {
+function assertApproximateSize(kpk: KeyPairKey, expectedSize: number) {
+  const key = kpk as unknown as Buffer;
   const u = typeof key === 'string' ? 'chars' : 'bytes';
   const min = Math.floor(0.9 * expectedSize);
   const max = Math.ceil(1.1 * expectedSize);
@@ -60,10 +62,10 @@ describe('generateKeyPair', () => {
     expect(!!privateKey).to.equal(true);
 
     assert.strictEqual(typeof publicKey, 'string');
-    assert.match(publicKey as any, spkiExp);
+    assert.match(publicKey as unknown as string, spkiExp);
     assertApproximateSize(publicKey, 800);
     assert.strictEqual(typeof privateKey, 'string');
-    assert.match(privateKey as any, pkcs8EncExp);
+    assert.match(privateKey as unknown as string, pkcs8EncExp);
     assertApproximateSize(privateKey, 3434);
   });
 
@@ -87,10 +89,10 @@ describe('generateKeyPair', () => {
     const { publicKey, privateKey } = ret;
 
     assert.strictEqual(typeof publicKey, 'string');
-    assert.match(publicKey, pkcs1PubExp);
+    assert.match(publicKey as unknown as string, pkcs1PubExp);
     assertApproximateSize(publicKey, 162);
     assert.strictEqual(typeof privateKey, 'string');
-    assert.match(privateKey, pkcs8Exp);
+    assert.match(privateKey as unknown as string, pkcs8Exp);
     assertApproximateSize(privateKey, 512);
   });
 
@@ -112,7 +114,7 @@ describe('generateKeyPair', () => {
       },
       (err, publicKey, privateKey) => {
         if (err) {
-          assert.fail((err as any).toString());
+          assert.fail((err as Error).toString());
         }
         expect(!!publicKey).to.equal(true);
         expect(!!privateKey).to.equal(true);
@@ -121,10 +123,10 @@ describe('generateKeyPair', () => {
         // const { publicKey, privateKey } = ret;
 
         assert.strictEqual(typeof publicKey, 'string');
-        assert.match(publicKey as any, spkiExp);
+        assert.match(publicKey as unknown as string, spkiExp);
         // assertApproximateSize(publicKey, 162);
         assert.strictEqual(typeof privateKey, 'string');
-        assert.match(privateKey as any, pkcs8EncExp);
+        assert.match(privateKey as unknown as string, pkcs8EncExp);
         // assertApproximateSize(privateKey, 512);
 
         done();

@@ -1,4 +1,5 @@
 import { Buffer } from '@craftzdog/react-native-buffer';
+import { Buffer as SBuffer } from 'safe-buffer';
 import type {
   AnyAlgorithm,
   DeriveBitsAlgorithm,
@@ -14,7 +15,7 @@ import type {
 import { type CipherKey } from 'crypto'; // @types/node
 
 export type BufferLike = ArrayBuffer | Buffer | ArrayBufferView;
-export type BinaryLike = string | ArrayBuffer | Buffer | TypedArray;
+export type BinaryLike = string | ArrayBuffer | Buffer | SBuffer | TypedArray;
 export type BinaryLikeNode = CipherKey | BinaryLike;
 
 export type BinaryToTextEncoding = 'base64' | 'base64url' | 'hex' | 'binary';
@@ -27,6 +28,17 @@ export type Encoding =
 
 // TODO(osp) should buffer be part of the Encoding type?
 export type CipherEncoding = Encoding | 'buffer';
+
+export type CipherType = 'aes128' | 'aes192' | 'aes256';
+export type CipherDesType =
+  | 'des'
+  | 'des3'
+  | 'des-cbc'
+  | 'des-ecb'
+  | 'des-ede'
+  | 'des-ede-cbc'
+  | 'des-ede3'
+  | 'des-ede3-cbc';
 
 export type TypedArray =
   | Uint8Array
@@ -154,6 +166,8 @@ export function binaryLikeToArrayBuffer(
   input: BinaryLikeNode, // CipherKey adds compat with node types
   encoding: string = 'utf-8'
 ): ArrayBuffer {
+
+  // string
   if (typeof input === 'string') {
     if (encoding === 'buffer') {
       throw new Error(
@@ -169,31 +183,40 @@ export function binaryLikeToArrayBuffer(
     );
   }
 
+  // Buffer
   if (Buffer.isBuffer(input)) {
     return toArrayBuffer(input);
   }
 
+  // ArrayBufferView
   // TODO add further binary types to BinaryLike, UInt8Array and so for have this array as property
   if (ArrayBuffer.isView(input)) {
     return input.buffer;
   }
 
-  if (!(input instanceof ArrayBuffer)) {
-    try {
-      // this is a strange fallback case and input is unknown at this point
-      const buffer = Buffer.from(input as unknown as string);
-      return buffer.buffer.slice(
-        buffer.byteOffset,
-        buffer.byteOffset + buffer.byteLength
-      );
-    } catch {
-      throw 'error';
-    }
+  // ArrayBuffer
+  if (input instanceof ArrayBuffer) {
+    return input;
   }
+
+  // if (!(input instanceof ArrayBuffer)) {
+  //   try {
+  //     // this is a strange fallback case and input is unknown at this point
+  //     const buffer = Buffer.from(input as unknown as string);
+  //     return buffer.buffer.slice(
+  //       buffer.byteOffset,
+  //       buffer.byteOffset + buffer.byteLength
+  //     );
+  //   } catch(e: unknown) {
+  //     console.log('throwing 1');
+  //     const err = e as Error;
+  //     throw new Error(err.message);
+  //   }
+  // }
 
   // TODO: handle if input is KeyObject?
 
-  return input;
+  throw new Error('input could not be converted to ArrayBuffer');
 }
 
 export function ab2str(buf: ArrayBuffer, encoding: string = 'hex') {
@@ -483,7 +506,9 @@ export const validateMaxBufferLength = (
   data: BinaryLike | BufferLike,
   name: string
 ): void => {
-  const length = typeof data === 'string' ? data.length : data.byteLength;
+  const length = (typeof data === 'string' || data instanceof SBuffer)
+    ? data.length
+    : data.byteLength;
   if (length > kMaxBufferLength) {
     throw lazyDOMException(
       `${name} must be less than ${kMaxBufferLength + 1} bits`,

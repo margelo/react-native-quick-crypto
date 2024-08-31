@@ -137,7 +137,7 @@ kKeyLengths.forEach((keyLength) => {
         name: 'AES-GCM',
         iv,
         additionalData,
-        // @ts-expect-error
+        // @ts-expect-error bad tag length
         tagLength: badTagLength,
       },
       plaintext: kPlaintext,

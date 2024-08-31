@@ -20,9 +20,7 @@ import type {
   SubtleAlgorithm,
 } from '../../../../../src/keys';
 import type { RandomTypedArrays } from '../../../../../src/random';
-// @ts-ignore
 import pubTestKeyEc256 from '../../fixtures/keys/ec_p256_public';
-// @ts-ignore
 import privTestKeyEc256 from '../../fixtures/keys/ec_p256_private';
 
 const { subtle, createPublicKey, createPrivateKey } = crypto;
@@ -70,7 +68,7 @@ function base64ToArrayBuffer(val: string): ArrayBuffer {
 
 // TODO: add in `url` from react-native-quick-base64 when 2.1.1 is released
 function arrayBufferToBase64(buffer: ArrayBuffer, urlSafe: boolean = false) {
-  var bytes = new Uint8Array(buffer);
+  const bytes = new Uint8Array(buffer);
   return fromByteArray(bytes, urlSafe);
 }
 
@@ -82,15 +80,15 @@ describe('subtle - importKey / exportKey', () => {
       async (format) =>
         await assertThrowsAsync(
           async () =>
-            // @ts-expect-error
+            // @ts-expect-error bad format
             await subtle.importKey(format, keyData, {}, false, ['wrapKey']),
-          '"subtle.importKey()" is not implemented for undefined'
+          '"subtle.importKey()" is not implemented for unknown'
         )
     );
     await assertThrowsAsync(
       async () =>
         await subtle.importKey(
-          // @ts-expect-error
+          // @ts-expect-error bad format
           'not valid',
           keyData,
           { name: 'PBKDF2' },
@@ -101,7 +99,7 @@ describe('subtle - importKey / exportKey', () => {
     );
     await assertThrowsAsync(
       async () =>
-        // @ts-expect-error
+        // @ts-expect-error bad key data
         await subtle.importKey('raw', 1, { name: 'PBKDF2' }, false, [
           'deriveBits',
         ]),
@@ -172,7 +170,7 @@ describe('subtle - importKey / exportKey', () => {
       async () =>
         await subtle.importKey(
           'jwk',
-          // @ts-expect-error
+          // @ts-expect-error bad key data
           null,
           {
             name: 'HMAC',
@@ -916,7 +914,7 @@ describe('subtle - importKey / exportKey', () => {
     const { publicKey } = generated as CryptoKeyPair;
 
     const exported = await subtle.exportKey('spki', publicKey as CryptoKey);
-    expect(exported).to.not.be.undefined;
+    expect(exported !== undefined);
 
     const imported = await subtle.importKey(
       'spki',
@@ -928,7 +926,7 @@ describe('subtle - importKey / exportKey', () => {
       true,
       ['verify']
     );
-    expect(imported).to.not.be.undefined;
+    expect(imported !== undefined);
   });
 
   it('RSA pkcs8', async () => {
@@ -945,7 +943,7 @@ describe('subtle - importKey / exportKey', () => {
     const { privateKey } = generated as CryptoKeyPair;
 
     const exported = await subtle.exportKey('pkcs8', privateKey as CryptoKey);
-    expect(exported).to.not.be.undefined;
+    expect(exported !== undefined);
 
     // TODO: enable when RSA pkcs8 importKey() is implemented
     //   const imported = await subtle.importKey(
@@ -975,7 +973,7 @@ describe('subtle - importKey / exportKey', () => {
     const { publicKey, privateKey } = generated as CryptoKeyPair;
 
     const exportedPub = await subtle.exportKey('jwk', publicKey as CryptoKey);
-    expect(exportedPub).to.not.be.undefined;
+    expect(exportedPub !== undefined);
     const importedPub = await subtle.importKey(
       'jwk',
       exportedPub,
@@ -986,10 +984,10 @@ describe('subtle - importKey / exportKey', () => {
       true,
       ['verify']
     );
-    expect(importedPub).to.not.be.undefined;
+    expect(importedPub !== undefined);
 
     const exportedPriv = await subtle.exportKey('jwk', privateKey as CryptoKey);
-    expect(exportedPriv).to.not.be.undefined;
+    expect(exportedPriv !== undefined);
     const importedPriv = await subtle.importKey(
       'jwk',
       exportedPriv,
@@ -1000,7 +998,7 @@ describe('subtle - importKey / exportKey', () => {
       true,
       ['sign']
     );
-    expect(importedPriv).to.not.be.undefined;
+    expect(importedPriv !== undefined);
   });
 
   // from https://github.com/nodejs/node/blob/main/test/parallel/test-webcrypto-export-import-rsa.js

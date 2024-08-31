@@ -1,5 +1,6 @@
 import React from 'react';
 import { View, Text, TouchableOpacity, StyleSheet } from 'react-native';
+import { colors } from '../styles/colors';
 
 type ButtonProps = {
   title: string;
@@ -21,13 +22,13 @@ export const Button: React.FC<ButtonProps> = ({
 
 const styles = StyleSheet.create({
   container: {
-    backgroundColor: '#1976d2',
+    backgroundColor: colors.blue,
     padding: 10,
     borderRadius: 5,
     alignContent: 'center',
     justifyContent: 'center',
   },
   label: {
-    color: 'white',
+    color: colors.white,
   },
 });

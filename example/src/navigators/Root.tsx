@@ -2,6 +2,9 @@ import React from 'react';
 import { NavigationContainer } from '@react-navigation/native';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import type { RootStackParamList } from './RootProps';
+import { Entry } from './children/Entry/Entry';
+import { Benchmarks } from './children/benchmarks/Benchmarks';
+import { TestingScreen } from './children/TestingScreen/TestingScreen';
 
 const Stack = createNativeStackNavigator<RootStackParamList>();
 
@@ -15,14 +18,12 @@ export const Root: React.FC = () => {
             title: 'Test Suites',
           }}
           getComponent={() => {
-            const { Entry } = require('./children/Entry/Entry');
             return Entry;
           }}
         />
         <Stack.Screen
           name="Benchmarks"
           getComponent={() => {
-            const { Benchmarks } = require('./children/benchmarks/Benchmarks');
             return Benchmarks;
           }}
         />
@@ -32,9 +33,6 @@ export const Root: React.FC = () => {
             title: 'Tests',
           }}
           getComponent={() => {
-            const {
-              TestingScreen,
-            } = require('./children/TestingScreen/TestingScreen');
             return TestingScreen;
           }}
         />

@@ -1,10 +1,37 @@
 {
-  "extends": "../tsconfig.json",
+  "references": [{ "path": ".." }],
+  "include": [
+    "index.js",
+    "app.json",
+    "src"
+  ],
+  "exclude": ["node_modules", "android", "ios", "vendor"],
   "compilerOptions": {
     "paths": {
       "react-native-quick-crypto": ["../src/index"]
-    }
+    },
+    "composite": true,
+    "noEmit": true,
+    "rootDir": ".",
+    "allowUnreachableCode": false,
+    "allowUnusedLabels": false,
+    "esModuleInterop": true,
+    "forceConsistentCasingInFileNames": true,
+    "jsx": "react",
+    "lib": ["esnext"],
+    "module": "esnext",
+    "moduleResolution": "node",
+    "noFallthroughCasesInSwitch": true,
+    "noImplicitReturns": true,
+    "noImplicitUseStrict": false,
+    "noStrictGenericChecks": false,
+    "noUncheckedIndexedAccess": true,
+    "noUnusedLocals": true,
+    "noUnusedParameters": true,
+    "resolveJsonModule": true,
+    "skipLibCheck": true,
+    "strict": true,
+    "target": "esnext",
+    "verbatimModuleSyntax": true
   },
-  "include": ["src", "index.js"],
-  "exclude": ["node_modules"]
 }

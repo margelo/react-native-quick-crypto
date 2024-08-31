@@ -12,12 +12,12 @@ describe('hmac', () => {
   });
 
   it('invalid arg1', () => {
-    // @ts-expect-error
+    // @ts-expect-error bad algorithm
     expect(crypto.createHmac(null)).Throw(/ERR_INVALID_ARG_TYPE/);
   });
 
   it('invalid arg type', () => {
-    // @ts-expect-error
+    // @ts-expect-error bad key
     expect(crypto.createHmac('sha1', null)).Throw(/ERR_INVALID_ARG_TYPE/);
   });
 
@@ -25,32 +25,40 @@ describe('hmac', () => {
     algo: string,
     key: string | Buffer,
     data: string | string[] | Buffer,
-    expected: any
+    expected: string
   ) {
     const nameKey = key.toString().replace(/\s/g, '');
     const nameData = data.toString().replace(/\s/g, '');
 
     it(`testHmac ${algo} ${nameKey} ${nameData}`, () => {
       if (!Array.isArray(data)) {
-        data = [data] as any;
+        data = [data] as string[];
       }
 
       // If the key is a Buffer, test Hmac with a key object as well.
       const keyWrappers = [
-        (key2: any) => key2,
+        (key2: Buffer) => key2,
         //    ...(typeof key === 'string' ? [] : [crypto.createSecretKey]),
       ];
 
       for (const keyWrapper of keyWrappers) {
-        const hmac = crypto.createHmac(algo, keyWrapper(key));
+        const hmac = crypto.createHmac(algo, keyWrapper(key as Buffer));
         for (const chunk of data) {
-          hmac.update(chunk as any);
+          hmac.update(chunk as string);
         }
         const actual = hmac.digest('hex');
         expect(actual).to.be.eql(expected);
       }
     });
   }
+
+  type HmacTestVector = {
+    key: string | Buffer;
+    data: string | string[] | Buffer;
+    hmac: Record<string, string>;
+    digest?: string;
+    truncate?: boolean;
+  };
 
   // Test HMAC with multiple updates.
   testHmac(
@@ -61,7 +69,7 @@ describe('hmac', () => {
   );
 
   // Test HMAC (Wikipedia Test Cases)
-  const wikipedia = [
+  const wikipedia: HmacTestVector[] = [
     {
       key: 'key',
       data: 'The quick brown fox jumps over the lazy dog',
@@ -114,12 +122,12 @@ describe('hmac', () => {
 
   for (const { key, data, hmac } of wikipedia) {
     for (const hash in hmac) {
-      testHmac(hash, key, data, (hmac as any)[hash]);
+      testHmac(hash, key, data, hmac[hash] || '');
     }
   }
 
   // Test HMAC-SHA-* (rfc 4231 Test Cases)
-  const rfc4231 = [
+  const rfc4231: HmacTestVector[] = [
     {
       key: Buffer.from('0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b', 'hex'),
       data: Buffer.from('4869205468657265', 'hex'), // 'Hi There'
@@ -293,13 +301,13 @@ describe('hmac', () => {
         let strRes = str.read().toString('hex');
         let actual = crypto
           .createHmac(hash, rfc4231[i]!.key)
-          .update(rfc4231[i]!.data)
+          .update(rfc4231[i]!.data as Buffer)
           .digest('hex');
         if (rfc4231[i]!.truncate) {
           actual = actual.substr(0, 32); // first 128 bits == 32 hex chars
           strRes = strRes.substr(0, 32);
         }
-        const expected = (rfc4231[i]!.hmac as any)[hash];
+        const expected = (rfc4231[i]!.hmac as Record<string, string>)[hash];
         expect(actual).to.be.eql(expected);
         expect(actual).to.be.eql(strRes);
       });
