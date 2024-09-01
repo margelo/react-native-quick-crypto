@@ -78,12 +78,13 @@ if (global.__QuickCryptoProxy == null) {
     throw new Error(message);
   }
 
-  // Check if we are running on-device (JSI)
-  if (global.nativeCallSyncHook == null || QuickCryptoModule.install == null) {
-    throw new Error(
-      'Failed to install react-native-quick-crypto: React Native is not running on-device. QuickCrypto can only be used when synchronous method invocations (JSI) are possible. If you are using a remote debugger (e.g. Chrome), switch to an on-device debugger (e.g. Flipper) instead.',
-    );
-  }
+  // see #333, commenting this may allow the library to work in new architecture
+  // // Check if we are running on-device (JSI)
+  // if (global.nativeCallSyncHook == null || QuickCryptoModule.install == null) {
+  //   throw new Error(
+  //     'Failed to install react-native-quick-crypto: React Native is not running on-device. QuickCrypto can only be used when synchronous method invocations (JSI) are possible. If you are using a remote debugger (e.g. Chrome), switch to an on-device debugger (e.g. Flipper) instead.',
+  //   );
+  // }
 
   // Call the synchronous blocking install() function
   const result = QuickCryptoModule.install();
