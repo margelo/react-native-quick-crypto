@@ -3,7 +3,7 @@
   "description": "Example app for react-native-quick-crypto",
   "version": "0.0.1",
   "private": true,
-  "packageManager": "bun@1.1.22",
+  "packageManager": "bun@1.1.26",
   "scripts": {
     "android": "react-native run-android",
     "ios": "react-native run-ios",
@@ -12,6 +12,8 @@
     "lint": "eslint \"**/*.{js,ts,tsx}\"",
     "lint-fix": "eslint \"**/*.{js,ts,tsx}\" --fix",
     "lint-ci": "bun lint -f ../node_modules/@firmnav/eslint-github-actions-formatter/dist/formatter.js",
+    "format": "prettier --check \"**/*.{js,ts,tsx}\"",
+    "format-fix": "prettier --write \"**/*.{js,ts,tsx}\"",
     "start": "react-native start",
     "test": "jest",
     "pods": "bundle install && bundle exec pod install --project-directory=ios/",

@@ -30,6 +30,8 @@
     "typescript": "tsc --noEmit",
     "lint": "eslint \"**/*.{js,ts,tsx}\"",
     "lint-fix": "eslint \"**/*.{js,ts,tsx}\" --fix",
+    "format": "prettier --check \"**/*.{js,ts,tsx}\"",
+    "format-fix": "prettier --write \"**/*.{js,ts,tsx}\"",
     "prepare": "bob build",
     "release": "release-it",
     "example": "cd example && bun start",
