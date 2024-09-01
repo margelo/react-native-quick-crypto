@@ -1,5 +1,5 @@
-import { decodeHex } from '../Tests/util';
-import type { RsaEncryptDecryptTestVector } from '../Tests/webcryptoTests/encrypt_decrypt';
+import { decodeHex } from '../tests/util';
+import type { RsaEncryptDecryptTestVector } from '../tests/webcryptoTests/encrypt_decrypt';
 
 const pkcs8 = decodeHex(
   '308204bf020100300d06092a864886f70d0101010500048204a930820' +
@@ -44,7 +44,7 @@ const pkcs8 = decodeHex(
     'e9420a5b2069b7459b99f5d9f7f2fad7cd79aaee67a7f9a34437e3c79' +
     'a84af0cd8de9dff268eb0c4793f501f988d540f6d3475c2079b8227a2' +
     '3d968dec4e3c66503187193459630472bfdb6ba1de786c797fa6f4ea6' +
-    '5a2a8419262f29678856cb73c9bd4bc89b5e041b2277'
+    '5a2a8419262f29678856cb73c9bd4bc89b5e041b2277',
 );
 
 const spki = decodeHex(
@@ -58,12 +58,12 @@ const spki = decodeHex(
     'ceabc725da8c02aabeaaa13ac36a75cc0bae135df3114b66589c7ed3c' +
     'b61559ae5a384f162bfa80dbe4617f86c3f1d010c94fe2c9bf019a6e6' +
     '3b3efc028d43cee611c85ec263c906c463772c6911b19eec096ca76ec' +
-    '5e31e1e30203010001'
+    '5e31e1e30203010001',
 );
 
 const label = decodeHex(
   '5468657265206172652037206675727468657220656469746f7269616' +
-    'c206e6f74657320696e2074686520646f63756d656e742e'
+    'c206e6f74657320696e2074686520646f63756d656e742e',
 );
 
 // overlong plaintext for RSA-OAEP
@@ -75,7 +75,7 @@ const plaintext = decodeHex(
     '978cea5d2a5b9fb7f1b48c8b0be58a305202754d8376107374793cf026' +
     'aaee5300727d836cd71e71b345ddb2e44446ffc5b901635413890d910e' +
     'a380984a90191031323f16dbcc9d6be168b84885384ca03e12600ac1c2' +
-    '48028af3726cc93463882ea8c02aab'
+    '48028af3726cc93463882ea8c02aab',
 );
 
 const ciphertext = {
@@ -89,7 +89,7 @@ const ciphertext = {
       'dc6c845583f74ab2c36d9684d43b71962a18ff0e2b13ce74f537fb3a' +
       '0b00ede329e77c11900a070e20f86dc07cacb56f7821d0249234106c' +
       '6e0b4dda82e0febdb202ef0c7b10d560f0bafdc78f0624185783b522' +
-      '83ca14a1'
+      '83ca14a1',
   ),
   'sha-256, no label': decodeHex(
     '0531eaeb4b8cef8eb77dd736d096b6dce840d164e9751f86a8d5ced0' +
@@ -101,7 +101,7 @@ const ciphertext = {
       '52a7e8c093533d0cd659ad60a7dc05044220019887016437dcc94c6f' +
       '9e8202b03bc955eb2c790d3fb7c7e77e2612ffa521daf467f640a749' +
       'e9e1191574be76e2d55c3cfe7a93551a7c28ddb2ba6b26c33a30c237' +
-      '1cd8974d'
+      '1cd8974d',
   ),
   'sha-384, no label': decodeHex(
     '0c2392e30f92f1f4e4acd1b4a6fd99f983c61dcaf39bddde47b29ead' +
@@ -113,7 +113,7 @@ const ciphertext = {
       '937abcf917df6f39badc6f5ff630c7ac73b92fadbadd0c29fce04ca7' +
       'd62aab52b264e5a282bcbf02721c119e28e9426cd996b3791973d8a2' +
       'acf43a2c2f67ff884c1a77b83fc3268c640cab414336c31f7a6977e4' +
-      '951031d4'
+      '951031d4',
   ),
   'sha-512, no label': decodeHex(
     '0626d346d5253113ddc0f8ced1918d88ebf00869f880af89c5e67bb3' +
@@ -125,7 +125,7 @@ const ciphertext = {
       '39e899489e60f14fff5a43106e2bea9914394b5317b8d819d73409f1' +
       '7215dfb8b1f742620d0fafcc5251cd160f5c1c63baeaf12125d20f08' +
       'c51ed061072a33add5ab3b9a47354e58f4329d216f8fb93d5b76edf5' +
-      '5d5b9c24'
+      '5d5b9c24',
   ),
   'sha-1, with label': decodeHex(
     '450c932bdb5f223d1d40dabe85457d230849499a57c25bc9826ff356' +
@@ -137,7 +137,7 @@ const ciphertext = {
       '1abc817c6252ff5f8e471a05d7c681b36e82fbde8cd2e225c87564ac' +
       '1a8a610b57a168d244752e574afa9856c22a757afeebca96f93f6e6d' +
       '17c520515927d99ca34eedfd19bce31f23aebe159da0253c27c10b5c' +
-      '0ffb7d97'
+      '0ffb7d97',
   ),
   'sha-256, with label': decodeHex(
     'b4d46d087682180560797166729d951fea055f8ab80a10f9314e55de' +
@@ -149,7 +149,7 @@ const ciphertext = {
       '3779a7acb6bb4b9531d56890cae66f7d77ecd59b837a2b37f5b73c8c' +
       '67582d549df743f3a966b0e1c0b59afc5a5f11a17060c4696837065c' +
       'd4127f55be0c697bdb6e826fb320b751f6f0873b05d2ad0f66d7575f' +
-      '8888ee0c'
+      '8888ee0c',
   ),
   'sha-384, with label': decodeHex(
     'cc3cbc830f7256f6be9bce3e44f9623fb29001f42af82f09fd088bba' +
@@ -161,7 +161,7 @@ const ciphertext = {
       '1a0769e1ee933d446661f79527084446d7dccd4ac3b770985b467aa3' +
       '1e423334beccd1df6f432c120e6c9c3ea5dd06f694e99432d9f82c63' +
       'e976ebf84e2dca3dd3dcc14a06e5cbd47274f2d655a5c7727d350557' +
-      'eed091b8'
+      'eed091b8',
   ),
   'sha-512, with label': decodeHex(
     '8697b55eef5b0d5311398a15f2ce1856b8efee39e774718b0c806864' +
@@ -173,7 +173,7 @@ const ciphertext = {
       '5a2b7732d2a6ca0279ac18ac334aa12d6b96bb590959b7e9a9954e91' +
       'e49c8ad7e8db2121e0b2ae100648b9d622cc9fa19a0b978e27f44a4b' +
       'f3bf7be7203676eb0c13c8a5fca1572e6333f892b47a2cd267eda932' +
-      '1cd27988'
+      '1cd27988',
   ),
 };
 

@@ -14,7 +14,7 @@ import { useRunTests } from '../../../hooks/useRunTests';
 
 type EntryProps = NativeStackScreenProps<RootStackParamList, 'Entry'>;
 
-export const Entry: React.FC<EntryProps> = ({}: EntryProps) => {
+export const Entry: React.FC<EntryProps> = () => {
   const [tests, toggle, clearAll, checkAll] = useTestList();
   const [results, runTests] = useRunTests();
   const navigation =

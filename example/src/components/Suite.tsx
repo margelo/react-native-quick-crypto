@@ -11,15 +11,12 @@ export const Suite: React.FC<SuiteProps> = ({ description }: SuiteProps) => {
 
   return (
     <View style={styles.itemContainer}>
-      <Text style={[styles.text]}>{fullText}</Text>
+      <Text style={styles.text}>{fullText}</Text>
     </View>
   );
 };
 
 const styles = StyleSheet.create({
-  scroll: {
-    flex: 1,
-  },
   itemContainer: {
     borderWidth: 1,
     margin: 10,

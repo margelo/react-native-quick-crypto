@@ -6,12 +6,14 @@ import type { KeyObjectHandle } from './webcrypto';
 export type InternalSign = {
   init: (algorithm: string) => void;
   update: (data: ArrayBuffer) => void;
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   sign: (...args: any) => Uint8Array; // returns raw bytes
 };
 
 export type InternalVerify = {
   init: (algorithm: string) => void;
   update: (data: ArrayBuffer) => void;
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   verify: (...args: any) => boolean;
 };
 
@@ -40,5 +42,5 @@ export type SignVerify = (
   salt_length: number | undefined,
   padding: number | undefined,
   dsa_encoding: DSASigEnc | undefined,
-  signature: ArrayBuffer | undefined
+  signature: ArrayBuffer | undefined,
 ) => ArrayBuffer | boolean;

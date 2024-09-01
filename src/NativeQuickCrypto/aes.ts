@@ -10,5 +10,5 @@ export type AESCipher = (
   iv_or_counter?: ArrayBuffer,
   length?: number,
   authTag?: ArrayBuffer,
-  additionalData?: ArrayBuffer
+  additionalData?: ArrayBuffer,
 ) => Promise<ArrayBuffer>;

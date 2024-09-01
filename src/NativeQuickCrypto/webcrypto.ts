@@ -28,13 +28,13 @@ type KeyDetail = {
 
 type ECExportKey = (
   format: KWebCryptoKeyFormat,
-  handle: KeyObjectHandle
+  handle: KeyObjectHandle,
 ) => ArrayBuffer;
 
 type RSAExportKey = (
   format: KWebCryptoKeyFormat,
   handle: KeyObjectHandle,
-  variant: KeyVariant
+  variant: KeyVariant,
 ) => ArrayBuffer;
 
 export type KeyObjectHandle = {
@@ -42,16 +42,16 @@ export type KeyObjectHandle = {
     format?: KFormatType,
     type?: KeyEncoding,
     cipher?: string,
-    passphrase?: ArrayBuffer
+    passphrase?: ArrayBuffer,
   ): ArrayBuffer;
   exportJwk(key: JWK, handleRsaPss: boolean): JWK;
   getAsymmetricKeyType(): AsymmetricKeyType;
   init(
     keyType: KeyType,
-    key: any,
+    key: string | ArrayBuffer,
     format?: KFormatType,
     type?: KeyEncoding,
-    passphrase?: string | ArrayBuffer
+    passphrase?: string | ArrayBuffer,
   ): boolean;
   initECRaw(curveName: string, keyData: ArrayBuffer): boolean;
   initJwk(keyData: JWK, namedCurve?: NamedCurve): KeyType | undefined;

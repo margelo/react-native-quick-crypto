@@ -14,7 +14,7 @@ const createInternalHmac = NativeQuickCrypto.createHmac;
 export function createHmac(
   algorithm: string,
   key: BinaryLike,
-  options?: Stream.TransformOptions
+  options?: Stream.TransformOptions,
 ) {
   return new Hmac(algorithm, key, options);
 }
@@ -26,10 +26,11 @@ class Hmac extends Stream.Transform {
   constructor(
     algorithm: string,
     key: BinaryLike,
-    _options?: Stream.TransformOptions
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
+    _options?: Stream.TransformOptions,
   ) {
     super();
-    let keyAsString = binaryLikeToArrayBuffer(key);
+    const keyAsString = binaryLikeToArrayBuffer(key);
 
     if (keyAsString === undefined) {
       throw 'Wrong key type';
@@ -37,7 +38,7 @@ class Hmac extends Stream.Transform {
 
     this.internalHmac = createInternalHmac(
       algorithm,
-      keyAsString as ArrayBuffer
+      keyAsString as ArrayBuffer,
     );
   }
 
@@ -69,7 +70,7 @@ class Hmac extends Stream.Transform {
   _transform(
     chunk: string | BinaryLike,
     encoding: Encoding,
-    callback: () => void
+    callback: () => void,
   ) {
     this.update(chunk, encoding);
     callback();

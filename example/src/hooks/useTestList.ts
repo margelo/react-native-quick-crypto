@@ -1,28 +1,27 @@
-/* eslint-disable @typescript-eslint/no-shadow */
 import { useState, useCallback } from 'react';
 import type * as MochaTypes from 'mocha';
 import type { Suites } from '../types/TestSuite';
 import { rootSuite } from '../testing/MochaRNAdapter';
 
-import '../testing/Tests/pbkdf2Tests/pbkdf2Tests';
-import '../testing/Tests/RandomTests/randomTests';
-import '../testing/Tests/HmacTests/HmacTests';
-import '../testing/Tests/HashTests/HashTests';
-import '../testing/Tests/CipherTests/CipherTestFirst';
-import '../testing/Tests/CipherTests/CipherTestSecond';
-import '../testing/Tests/CipherTests/test398';
-import '../testing/Tests/CipherTests/PublicCipherTests';
-import '../testing/Tests/CipherTests/generateKey';
-import '../testing/Tests/CipherTests/GenerateKeyPairTests';
-import '../testing/Tests/ConstantsTests/ConstantsTests';
-import '../testing/Tests/SignTests/SignTests';
-import '../testing/Tests/SmokeTests/bundlerTests';
-import '../testing/Tests/webcryptoTests/deriveBits';
-import '../testing/Tests/webcryptoTests/digest';
-import '../testing/Tests/webcryptoTests/generateKey';
-import '../testing/Tests/webcryptoTests/encrypt_decrypt';
-import '../testing/Tests/webcryptoTests/import_export';
-import '../testing/Tests/webcryptoTests/sign_verify';
+import '../testing/tests/pbkdf2Tests/pbkdf2Tests';
+import '../testing/tests/RandomTests/randomTests';
+import '../testing/tests/HmacTests/HmacTests';
+import '../testing/tests/HashTests/HashTests';
+import '../testing/tests/CipherTests/CipherDecipher';
+import '../testing/tests/CipherTests/CipherivDecipheriv';
+import '../testing/tests/CipherTests/test398';
+import '../testing/tests/CipherTests/PublicCipherTests';
+import '../testing/tests/CipherTests/generateKey';
+import '../testing/tests/CipherTests/GenerateKeyPairTests';
+import '../testing/tests/ConstantsTests/ConstantsTests';
+import '../testing/tests/SignTests/SignTests';
+import '../testing/tests/SmokeTests/bundlerTests';
+import '../testing/tests/webcryptoTests/deriveBits';
+import '../testing/tests/webcryptoTests/digest';
+import '../testing/tests/webcryptoTests/generateKey';
+import '../testing/tests/webcryptoTests/encrypt_decrypt';
+import '../testing/tests/webcryptoTests/import_export';
+import '../testing/tests/webcryptoTests/sign_verify';
 
 export const useTestList = (): [
   Suites,
@@ -39,11 +38,12 @@ export const useTestList = (): [
         return tests;
       });
     },
-    [setSuites]
+    [setSuites],
   );
 
   const clearAll = useCallback(() => {
     setSuites((suites) => {
+      // eslint-disable-next-line @typescript-eslint/no-unused-vars
       Object.entries(suites).forEach(([_, suite]) => {
         suite.value = false;
       });
@@ -53,6 +53,7 @@ export const useTestList = (): [
 
   const checkAll = useCallback(() => {
     setSuites((suites) => {
+      // eslint-disable-next-line @typescript-eslint/no-unused-vars
       Object.entries(suites).forEach(([_, suite]) => {
         suite.value = true;
       });
@@ -64,7 +65,7 @@ export const useTestList = (): [
 };
 
 const getInitialSuites = () => {
-  let suites: Suites = {};
+  const suites: Suites = {};
 
   // interrogate the loaded mocha suites/tests via a temporary runner
   const runner = new Mocha.Runner(rootSuite) as MochaTypes.Runner;

@@ -1,9 +1,9 @@
 import type { TagLength } from '../../../../src/keys';
-import { decodeHex } from '../Tests/util';
+import { decodeHex } from '../tests/util';
 import type {
   AesEncryptDecryptTestVector,
   VectorValue,
-} from '../Tests/webcryptoTests/encrypt_decrypt';
+} from '../tests/webcryptoTests/encrypt_decrypt';
 
 const kPlaintext = decodeHex(
   '546869732073706563696669636174696f6e206465736372696265' +
@@ -23,23 +23,23 @@ const kPlaintext = decodeHex(
     '63652061757468656e7469636174696f6e2c20646f63756d656e74' +
     '206f7220636f6465207369676e696e672c20616e64207468652063' +
     '6f6e666964656e7469616c69747920616e6420696e746567726974' +
-    '79206f6620636f6d6d756e69636174696f6e732e'
+    '79206f6620636f6d6d756e69636174696f6e732e',
 );
 
 const kKeyBytes: VectorValue = {
   '128': decodeHex('dec0d4fcbf3c4741c892dabd1cd4c04e'),
   '256': decodeHex(
-    '67693823fb1d58073f91ece9cc3af910e5532616a4d27b1' + '3eb7b74d8000bbf30'
+    '67693823fb1d58073f91ece9cc3af910e5532616a4d27b1' + '3eb7b74d8000bbf30',
   ),
 };
 
 const iv = decodeHex(
-  '3a92732aa6ea39bf3986e0c73fa920002' + '02175385ef8adeac2c87335eb928dd4'
+  '3a92732aa6ea39bf3986e0c73fa920002' + '02175385ef8adeac2c87335eb928dd4',
 );
 
 const additionalData = decodeHex(
   '5468657265206172652037206675727468657220656469746f72696' +
-    '16c206e6f74657320696e2074686520646f63756d656e742e'
+    '16c206e6f74657320696e2074686520646f63756d656e742e',
 );
 
 const tag: VectorValue = {
@@ -69,7 +69,7 @@ const kCiphertext: VectorValue = {
       '619c8c8d1f3e0ace3730cf00c5cac56c85af5004109adfff04c4bcb2f01d0d7805e1' +
       'ca0323e19e5c9849cd6b9de0f563c2ab9cf5f7b7a5283ec86e1d97ce64af5824f25a' +
       '045249fa8cf5d9099923f2ce4ec579730f508065bff05b97f93e3ef412031187ded2' +
-      '5d957b'
+      '5d957b',
   ),
   '256': decodeHex(
     '0861eb7146208783d2d17ca0ffb6091d7dc11bf0812e0289a98e3d079136aacf9f6f' +
@@ -86,7 +86,7 @@ const kCiphertext: VectorValue = {
       '52f67d577d4e15ba66cd142820c9ae0f34f0d9b4a26c06d3291287e8b812bca99dbe' +
       '4ca64bb07f27fb16cb995031f17c89977bcc2b9fbeb1c41275a92e98fb2d19a41b91' +
       'd6e4370f0283d850ffccaf643b910f6728212dffc8feac8a143a57b6c094db2958e6' +
-      'e546f9'
+      'e546f9',
   ),
 };
 
@@ -102,7 +102,7 @@ kKeyLengths.forEach((keyLength) => {
     result.set(cipherText, 0);
     result.set(
       (tag[keyLength] as Uint8Array).slice(0, byteCount),
-      cipherText.byteLength
+      cipherText.byteLength,
     );
     passing.push({
       keyBuffer: kKeyBytes[keyLength],
@@ -116,7 +116,7 @@ kKeyLengths.forEach((keyLength) => {
     noadresult.set(cipherText, 0);
     noadresult.set(
       (tag_with_empty_ad[keyLength] as Uint8Array).slice(0, byteCount),
-      cipherText.byteLength
+      cipherText.byteLength,
     );
     passing.push({
       keyBuffer: kKeyBytes[keyLength],
@@ -137,7 +137,7 @@ kKeyLengths.forEach((keyLength) => {
         name: 'AES-GCM',
         iv,
         additionalData,
-        // @ts-expect-error
+        // @ts-expect-error bad tag length
         tagLength: badTagLength,
       },
       plaintext: kPlaintext,

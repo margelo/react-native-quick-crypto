@@ -3,15 +3,21 @@
   "description": "Example app for react-native-quick-crypto",
   "version": "0.0.1",
   "private": true,
+  "packageManager": "bun@1.1.26",
   "scripts": {
     "android": "react-native run-android",
-    "ios": "react-native run-ios --simulator='iPhone 15'",
-    "lint": "eslint .",
-    "lint-ci": "yarn lint -f ../node_modules/@firmnav/eslint-github-actions-formatter/dist/formatter.js",
+    "ios": "react-native run-ios",
+    "tsc": "tsc --noEmit",
+    "typescript": "tsc --noEmit",
+    "lint": "eslint \"**/*.{js,ts,tsx}\"",
+    "lint-fix": "eslint \"**/*.{js,ts,tsx}\" --fix",
+    "lint-ci": "bun lint -f ../node_modules/@firmnav/eslint-github-actions-formatter/dist/formatter.js",
+    "format": "prettier --check \"**/*.{js,ts,tsx}\"",
+    "format-fix": "prettier --write \"**/*.{js,ts,tsx}\"",
     "start": "react-native start",
     "test": "jest",
     "pods": "bundle install && bundle exec pod install --project-directory=ios/",
-    "bootstrap": "yarn && bundle install && yarn pods"
+    "bootstrap": "bun install && bun pods"
   },
   "dependencies": {
     "@craftzdog/react-native-buffer": "^6.0.5",
@@ -37,9 +43,10 @@
     "@babel/plugin-transform-class-static-block": "^7.24.7",
     "@babel/preset-env": "^7.20.0",
     "@babel/runtime": "^7.20.0",
+    "@eslint/compat": "^1.1.1",
+    "@eslint/js": "10.0.0",
     "@react-native/gradle-plugin": "0.74.87",
     "@react-native/metro-config": "^0.73.2",
-    "@tsconfig/react-native": "^2.0.2",
     "@types/chai": "^4.3.4",
     "@types/jest": "^29.2.1",
     "@types/mocha": "^10.0.1",
@@ -48,9 +55,11 @@
     "@types/react-test-renderer": "^18.0.0",
     "@types/readable-stream": "^4.0.11",
     "babel-plugin-module-resolver": "^5.0.0",
-    "eslint": "^8.4.1",
+    "eslint": "9.9.1",
     "metro-react-native-babel-preset": "0.76.8",
-    "prettier": "^2.4.1"
+    "prettier": "3.3.3",
+    "typescript": "5.5.4",
+    "typescript-eslint": "8.3.0"
   },
   "jest": {
     "preset": "react-native"

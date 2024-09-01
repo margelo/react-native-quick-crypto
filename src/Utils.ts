@@ -1,4 +1,5 @@
 import { Buffer } from '@craftzdog/react-native-buffer';
+import { Buffer as SBuffer } from 'safe-buffer';
 import type {
   AnyAlgorithm,
   DeriveBitsAlgorithm,
@@ -13,8 +14,8 @@ import type {
 } from './keys';
 import { type CipherKey } from 'crypto'; // @types/node
 
-export type BufferLike = ArrayBuffer | Buffer | ArrayBufferView;
-export type BinaryLike = string | ArrayBuffer | Buffer | TypedArray;
+export type BufferLike = ArrayBuffer | Buffer | SBuffer | ArrayBufferView;
+export type BinaryLike = string | ArrayBuffer | Buffer | SBuffer | TypedArray;
 export type BinaryLikeNode = CipherKey | BinaryLike;
 
 export type BinaryToTextEncoding = 'base64' | 'base64url' | 'hex' | 'binary';
@@ -27,6 +28,44 @@ export type Encoding =
 
 // TODO(osp) should buffer be part of the Encoding type?
 export type CipherEncoding = Encoding | 'buffer';
+
+// These are for shortcomings in @types/node
+// Here we use "*Type" instead of "*Types" like node does.
+export type CipherType =
+  | 'aes128'
+  | 'aes192'
+  | 'aes256'
+  | CipherCBCType
+  | CipherCFBType
+  | CipherCTRType
+  | CipherDESType
+  | CipherECBType
+  | CipherGCMType
+  | CipherOFBType;
+export type CipherCBCType = 'aes-128-cbc' | 'aes-192-cbc' | 'aes-256-cbc';
+export type CipherCFBType =
+  | 'aes-128-cfb'
+  | 'aes-192-cfb'
+  | 'aes-256-cfb'
+  | 'aes-128-cfb1'
+  | 'aes-192-cfb1'
+  | 'aes-256-cfb1'
+  | 'aes-128-cfb8'
+  | 'aes-192-cfb8'
+  | 'aes-256-cfb8';
+export type CipherCTRType = 'aes-128-ctr' | 'aes-192-ctr' | 'aes-256-ctr';
+export type CipherDESType =
+  | 'des'
+  | 'des3'
+  | 'des-cbc'
+  | 'des-ecb'
+  | 'des-ede'
+  | 'des-ede-cbc'
+  | 'des-ede3'
+  | 'des-ede3-cbc';
+export type CipherECBType = 'aes-128-ecb' | 'aes-192-ecb' | 'aes-256-ecb';
+export type CipherGCMType = 'aes-128-gcm' | 'aes-192-gcm' | 'aes-256-gcm';
+export type CipherOFBType = 'aes-128-ofb' | 'aes-192-ofb' | 'aes-256-ofb';
 
 export type TypedArray =
   | Uint8Array
@@ -43,7 +82,7 @@ type DOMName =
   | string
   | {
       name: string;
-      cause: any;
+      cause: unknown;
     };
 
 // Mimics node behavior for default global encoding
@@ -130,34 +169,40 @@ export const kEmptyObject = Object.freeze(Object.create(null));
 //   return slowCases(enc);
 // }
 
-export function toArrayBuffer(buf: Buffer): ArrayBuffer {
-  if (buf?.buffer?.slice) {
+export function toArrayBuffer(buf: Buffer | SBuffer): ArrayBuffer {
+  if (Buffer.isBuffer(buf) && buf?.buffer?.slice) {
     return buf.buffer.slice(buf.byteOffset, buf.byteOffset + buf.byteLength);
   }
   const ab = new ArrayBuffer(buf.length);
   const view = new Uint8Array(ab);
   for (let i = 0; i < buf.length; ++i) {
-    view[i] = buf[i]!;
+    view[i] = SBuffer.isBuffer(buf) ? buf.readUInt8(i) : buf[i]!;
   }
   return ab;
 }
 
 export function bufferLikeToArrayBuffer(buf: BufferLike): ArrayBuffer {
-  return Buffer.isBuffer(buf)
-    ? buf.buffer
-    : ArrayBuffer.isView(buf)
-      ? buf.buffer
-      : buf;
+  if (Buffer.isBuffer(buf)) {
+    return buf.buffer;
+  }
+  if (SBuffer.isBuffer(buf)) {
+    return toArrayBuffer(buf);
+  }
+  if (ArrayBuffer.isView(buf)) {
+    return buf.buffer;
+  }
+  return buf;
 }
 
 export function binaryLikeToArrayBuffer(
   input: BinaryLikeNode, // CipherKey adds compat with node types
-  encoding: string = 'utf-8'
+  encoding: string = 'utf-8',
 ): ArrayBuffer {
+  // string
   if (typeof input === 'string') {
     if (encoding === 'buffer') {
       throw new Error(
-        'Cannot create a buffer from a string with a buffer encoding'
+        'Cannot create a buffer from a string with a buffer encoding',
       );
     }
 
@@ -165,43 +210,51 @@ export function binaryLikeToArrayBuffer(
 
     return buffer.buffer.slice(
       buffer.byteOffset,
-      buffer.byteOffset + buffer.byteLength
+      buffer.byteOffset + buffer.byteLength,
     );
   }
 
+  // Buffer
   if (Buffer.isBuffer(input)) {
     return toArrayBuffer(input);
   }
 
+  // ArrayBufferView
   // TODO add further binary types to BinaryLike, UInt8Array and so for have this array as property
   if (ArrayBuffer.isView(input)) {
     return input.buffer;
   }
 
-  if (!(input instanceof ArrayBuffer)) {
-    try {
-      // this is a strange fallback case and input is unknown at this point
-      // @ts-expect-error
-      const buffer = Buffer.from(input);
-      return buffer.buffer.slice(
-        buffer.byteOffset,
-        buffer.byteOffset + buffer.byteLength
-      );
-    } catch {
-      throw 'error';
-    }
+  // ArrayBuffer
+  if (input instanceof ArrayBuffer) {
+    return input;
   }
+
+  // if (!(input instanceof ArrayBuffer)) {
+  //   try {
+  //     // this is a strange fallback case and input is unknown at this point
+  //     const buffer = Buffer.from(input as unknown as string);
+  //     return buffer.buffer.slice(
+  //       buffer.byteOffset,
+  //       buffer.byteOffset + buffer.byteLength
+  //     );
+  //   } catch(e: unknown) {
+  //     console.log('throwing 1');
+  //     const err = e as Error;
+  //     throw new Error(err.message);
+  //   }
+  // }
 
   // TODO: handle if input is KeyObject?
 
-  return input;
+  throw new Error('input could not be converted to ArrayBuffer');
 }
 
 export function ab2str(buf: ArrayBuffer, encoding: string = 'hex') {
   return Buffer.from(buf).toString(encoding);
 }
 
-export function validateString(str: any, name?: string): str is string {
+export function validateString(str: unknown, name?: string): str is string {
   const isString = typeof str === 'string';
   if (!isString) {
     throw new Error(`${name} is not a string`);
@@ -209,11 +262,11 @@ export function validateString(str: any, name?: string): str is string {
   return isString;
 }
 
-export function validateFunction(f: any): boolean {
+export function validateFunction(f: unknown): boolean {
   return f !== null && typeof f === 'function';
 }
 
-export function isStringOrBuffer(val: any): val is string | ArrayBuffer {
+export function isStringOrBuffer(val: unknown): val is string | ArrayBuffer {
   return (
     typeof val === 'string' ||
     ArrayBuffer.isView(val) ||
@@ -222,13 +275,13 @@ export function isStringOrBuffer(val: any): val is string | ArrayBuffer {
 }
 
 export function validateObject<T>(
-  value: any,
+  value: unknown,
   name: string,
   options?: {
     allowArray: boolean;
     allowFunction: boolean;
     nullable: boolean;
-  } | null
+  } | null,
 ): value is T {
   const useDefaultOptions = options == null;
   const allowArray = useDefaultOptions ? false : options.allowArray;
@@ -246,10 +299,11 @@ export function validateObject<T>(
 }
 
 export function validateInt32(
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   value: any,
   name: string,
   min = -2147483648,
-  max = 2147483647
+  max = 2147483647,
 ) {
   // The defaults for min and max correspond to the limits of 32-bit integers.
   if (typeof value !== 'number') {
@@ -257,12 +311,12 @@ export function validateInt32(
   }
   if (!Number.isInteger(value)) {
     throw new Error(
-      `Argument out of range - ${name} out of integer range: ${value}`
+      `Argument out of range - ${name} out of integer range: ${value}`,
     );
   }
   if (value < min || value > max) {
     throw new Error(
-      `Invalid argument - ${name} out of range >= ${min} && <= ${max}: ${value}`
+      `Invalid argument - ${name} out of range >= ${min} && <= ${max}: ${value}`,
     );
   }
 }
@@ -270,7 +324,7 @@ export function validateInt32(
 export function validateUint32(
   value: number,
   name: string,
-  positive?: boolean
+  positive?: boolean,
 ) {
   if (typeof value !== 'number') {
     // throw new ERR_INVALID_ARG_TYPE(name, 'number', value);
@@ -279,7 +333,7 @@ export function validateUint32(
   if (!Number.isInteger(value)) {
     // throw new ERR_OUT_OF_RANGE(name, 'an integer', value);
     throw new Error(
-      `Argument out of range - ${name} out of integer range: ${value}`
+      `Argument out of range - ${name} out of integer range: ${value}`,
     );
   }
   const min = positive ? 1 : 0;
@@ -288,7 +342,7 @@ export function validateUint32(
   if (value < min || value > max) {
     // throw new ERR_OUT_OF_RANGE(name, `>= ${min} && <= ${max}`, value);
     throw new Error(
-      `Invalid argument - ${name} out of range >= ${min} && <= ${max}: ${value}`
+      `Invalid argument - ${name} out of range >= ${min} && <= ${max}: ${value}`,
     );
   }
 }
@@ -334,19 +388,19 @@ type SupportedAlgorithm<Type extends string> = {
 };
 
 type SupportedAlgorithms = {
-  'digest': SupportedAlgorithm<DigestAlgorithm>;
-  'generateKey': SupportedAlgorithm<KeyPairAlgorithm | SecretKeyAlgorithm>;
-  'sign': SupportedAlgorithm<SignVerifyAlgorithm>;
-  'verify': SupportedAlgorithm<SignVerifyAlgorithm>;
-  'importKey': SupportedAlgorithm<
+  digest: SupportedAlgorithm<DigestAlgorithm>;
+  generateKey: SupportedAlgorithm<KeyPairAlgorithm | SecretKeyAlgorithm>;
+  sign: SupportedAlgorithm<SignVerifyAlgorithm>;
+  verify: SupportedAlgorithm<SignVerifyAlgorithm>;
+  importKey: SupportedAlgorithm<
     KeyPairAlgorithm | 'PBKDF2' | SecretKeyAlgorithm | 'HKDF'
   >;
-  'deriveBits': SupportedAlgorithm<DeriveBitsAlgorithm>;
-  'encrypt': SupportedAlgorithm<EncryptDecryptAlgorithm>;
-  'decrypt': SupportedAlgorithm<EncryptDecryptAlgorithm>;
+  deriveBits: SupportedAlgorithm<DeriveBitsAlgorithm>;
+  encrypt: SupportedAlgorithm<EncryptDecryptAlgorithm>;
+  decrypt: SupportedAlgorithm<EncryptDecryptAlgorithm>;
   'get key length': SupportedAlgorithm<SecretKeyAlgorithm | 'PBKDF2' | 'HKDF'>;
-  'wrapKey': SupportedAlgorithm<'AES-KW'>;
-  'unwrapKey': SupportedAlgorithm<'AES-KW'>;
+  wrapKey: SupportedAlgorithm<'AES-KW'>;
+  unwrapKey: SupportedAlgorithm<'AES-KW'>;
 };
 
 export type Operation =
@@ -363,76 +417,76 @@ export type Operation =
   | 'unwrapKey';
 
 const kSupportedAlgorithms: SupportedAlgorithms = {
-  'digest': {
+  digest: {
     'SHA-1': null,
     'SHA-256': null,
     'SHA-384': null,
     'SHA-512': null,
   },
-  'generateKey': {
+  generateKey: {
     'RSASSA-PKCS1-v1_5': 'RsaHashedKeyGenParams',
     'RSA-PSS': 'RsaHashedKeyGenParams',
     'RSA-OAEP': 'RsaHashedKeyGenParams',
-    'ECDSA': 'EcKeyGenParams',
-    'ECDH': 'EcKeyGenParams',
+    ECDSA: 'EcKeyGenParams',
+    ECDH: 'EcKeyGenParams',
     'AES-CTR': 'AesKeyGenParams',
     'AES-CBC': 'AesKeyGenParams',
     'AES-GCM': 'AesKeyGenParams',
     'AES-KW': 'AesKeyGenParams',
-    'HMAC': 'HmacKeyGenParams',
-    'X25519': null,
-    'Ed25519': null,
-    'X448': null,
-    'Ed448': null,
+    HMAC: 'HmacKeyGenParams',
+    X25519: null,
+    Ed25519: null,
+    X448: null,
+    Ed448: null,
   },
-  'sign': {
+  sign: {
     'RSASSA-PKCS1-v1_5': null,
     'RSA-PSS': 'RsaPssParams',
-    'ECDSA': 'EcdsaParams',
-    'HMAC': null,
-    'Ed25519': null,
-    'Ed448': 'Ed448Params',
+    ECDSA: 'EcdsaParams',
+    HMAC: null,
+    Ed25519: null,
+    Ed448: 'Ed448Params',
   },
-  'verify': {
+  verify: {
     'RSASSA-PKCS1-v1_5': null,
     'RSA-PSS': 'RsaPssParams',
-    'ECDSA': 'EcdsaParams',
-    'HMAC': null,
-    'Ed25519': null,
-    'Ed448': 'Ed448Params',
+    ECDSA: 'EcdsaParams',
+    HMAC: null,
+    Ed25519: null,
+    Ed448: 'Ed448Params',
   },
-  'importKey': {
+  importKey: {
     'RSASSA-PKCS1-v1_5': 'RsaHashedImportParams',
     'RSA-PSS': 'RsaHashedImportParams',
     'RSA-OAEP': 'RsaHashedImportParams',
-    'ECDSA': 'EcKeyImportParams',
-    'ECDH': 'EcKeyImportParams',
-    'HMAC': 'HmacImportParams',
-    'HKDF': null,
-    'PBKDF2': null,
+    ECDSA: 'EcKeyImportParams',
+    ECDH: 'EcKeyImportParams',
+    HMAC: 'HmacImportParams',
+    HKDF: null,
+    PBKDF2: null,
     'AES-CTR': null,
     'AES-CBC': null,
     'AES-GCM': null,
     'AES-KW': null,
-    'Ed25519': null,
-    'X25519': null,
-    'Ed448': null,
-    'X448': null,
+    Ed25519: null,
+    X25519: null,
+    Ed448: null,
+    X448: null,
   },
-  'deriveBits': {
+  deriveBits: {
     HKDF: 'HkdfParams',
     PBKDF2: 'Pbkdf2Params',
     ECDH: 'EcdhKeyDeriveParams',
     X25519: 'EcdhKeyDeriveParams',
     X448: 'EcdhKeyDeriveParams',
   },
-  'encrypt': {
+  encrypt: {
     'RSA-OAEP': 'RsaOaepParams',
     'AES-CBC': 'AesCbcParams',
     'AES-GCM': 'AesGcmParams',
     'AES-CTR': 'AesCtrParams',
   },
-  'decrypt': {
+  decrypt: {
     'RSA-OAEP': 'RsaOaepParams',
     'AES-CBC': 'AesCbcParams',
     'AES-GCM': 'AesGcmParams',
@@ -443,20 +497,20 @@ const kSupportedAlgorithms: SupportedAlgorithms = {
     'AES-CTR': 'AesDerivedKeyParams',
     'AES-GCM': 'AesDerivedKeyParams',
     'AES-KW': 'AesDerivedKeyParams',
-    'HMAC': 'HmacImportParams',
-    'HKDF': null,
-    'PBKDF2': null,
+    HMAC: 'HmacImportParams',
+    HKDF: null,
+    PBKDF2: null,
   },
-  'wrapKey': {
+  wrapKey: {
     'AES-KW': null,
   },
-  'unwrapKey': {
+  unwrapKey: {
     'AES-KW': null,
   },
 };
 
 type AlgorithmDictionaries = {
-  [key in string]: Object;
+  [key in string]: object;
 };
 
 const simpleAlgorithmDictionaries: AlgorithmDictionaries = {
@@ -481,13 +535,16 @@ const simpleAlgorithmDictionaries: AlgorithmDictionaries = {
 
 export const validateMaxBufferLength = (
   data: BinaryLike | BufferLike,
-  name: string
+  name: string,
 ): void => {
-  const length = typeof data === 'string' ? data.length : data.byteLength;
+  const length =
+    typeof data === 'string' || data instanceof SBuffer
+      ? data.length
+      : data.byteLength;
   if (length > kMaxBufferLength) {
     throw lazyDOMException(
       `${name} must be less than ${kMaxBufferLength + 1} bits`,
-      'OperationError'
+      'OperationError',
     );
   }
 };
@@ -497,7 +554,7 @@ export const validateMaxBufferLength = (
 // https://github.com/denoland/deno/blob/v1.29.1/ext/crypto/00_crypto.js#L195
 export const normalizeAlgorithm = (
   algorithm: SubtleAlgorithm | EncryptDecryptParams | AnyAlgorithm,
-  op: Operation
+  op: Operation,
 ): SubtleAlgorithm | EncryptDecryptParams => {
   if (typeof algorithm === 'string') {
     return normalizeAlgorithm({ name: algorithm }, op);
@@ -514,19 +571,19 @@ export const normalizeAlgorithm = (
 
   // 4.
   let algName = algorithm.name;
-  // @ts-expect-error
-  if (algName === undefined) return { name: undefined };
+  if (algName === undefined) return { name: 'unknown' };
 
   // 5.
   let desiredType: string | null | undefined;
   for (const key in registeredAlgorithms) {
-    if (!registeredAlgorithms.hasOwnProperty(key)) {
+    if (!Object.prototype.hasOwnProperty.call(registeredAlgorithms, key)) {
       continue;
     }
     if (key.toUpperCase() === algName.toUpperCase()) {
       algName = key as AnyAlgorithm;
-      // @ts-ignore
-      desiredType = registeredAlgorithms[algName];
+      desiredType = (
+        registeredAlgorithms as Record<string, typeof desiredType>
+      )[algName];
     }
   }
   if (desiredType === undefined)
@@ -551,7 +608,7 @@ export const normalizeAlgorithm = (
   const dictKeys = dict ? Object.keys(dict) : [];
   for (let i = 0; i < dictKeys.length; i++) {
     const member = dictKeys[i] || '';
-    if (!dict?.hasOwnProperty(member)) continue;
+    if (!Object.prototype.hasOwnProperty.call(dict, member)) continue;
     // TODO: implement this?  Maybe via typescript?
     // const idlType = dict[member];
     // const idlValue = normalizedAlgorithm[member];
@@ -581,7 +638,7 @@ export const normalizeAlgorithm = (
 export const validateBitLength = (
   length: number,
   name: string,
-  required: boolean = false
+  required: boolean = false,
 ) => {
   if (length !== undefined || required) {
     // validateNumber(length, name);
@@ -589,7 +646,7 @@ export const validateBitLength = (
     if (length % 8) {
       throw lazyDOMException(
         `${name}'s length (${length}) must be a multiple of 8`,
-        'InvalidArgument'
+        'InvalidArgument',
       );
     }
   }
@@ -598,12 +655,15 @@ export const validateBitLength = (
 export const validateByteLength = (
   buf: BufferLike,
   name: string,
-  target: number
+  target: number,
 ) => {
-  if (buf.byteLength !== target) {
+  if (
+    (SBuffer.isBuffer(buf) && buf.length !== target) ||
+    (buf as Buffer | ArrayBuffer | ArrayBufferView).byteLength !== target
+  ) {
     throw lazyDOMException(
       `${name} must contain exactly ${target} bytes`,
-      'OperationError'
+      'OperationError',
     );
   }
 };
@@ -633,7 +693,7 @@ const kKeyOps: {
 
 export const validateKeyOps = (
   keyOps: KeyUsage[] | undefined,
-  usagesSet: KeyUsage[]
+  usagesSet: KeyUsage[],
 ) => {
   if (keyOps === undefined) return;
   if (!Array.isArray(keyOps)) {
@@ -646,10 +706,8 @@ export const validateKeyOps = (
     // Skipping unknown key ops
     if (op_flag === undefined) continue;
     // Have we seen it already? if so, error
-    // eslint-disable-next-line no-bitwise
     if (flags & (1 << op_flag))
       throw lazyDOMException('Duplicate key operation', 'DataError');
-    // eslint-disable-next-line no-bitwise
     flags |= 1 << op_flag;
 
     // TODO(@jasnell): RFC7517 section 4.3 strong recommends validating
@@ -662,7 +720,7 @@ export const validateKeyOps = (
       if (!keyOps.includes(use)) {
         throw lazyDOMException(
           'Key operations and usage mismatch',
-          'DataError'
+          'DataError',
         );
       }
     }
@@ -677,20 +735,29 @@ export const validateKeyOps = (
 // https://github.com/chromium/chromium/blob/HEAD/third_party/blink/public/platform/web_crypto_algorithm_params.h, but ported to JavaScript
 // Returns undefined if the conversion was unsuccessful.
 export const bigIntArrayToUnsignedInt = (
-  input: Uint8Array
+  input: Uint8Array,
 ): number | undefined => {
   let result = 0;
 
   for (let n = 0; n < input.length; ++n) {
     const n_reversed = input.length - n - 1;
     if (n_reversed >= 4 && input[n]) return; // Too large
-    // @ts-ignore
-    // eslint-disable-next-line no-bitwise
+    // @ts-expect-error - input[n] is possibly undefined
     result |= input[n] << (8 * n_reversed);
   }
 
   return result;
 };
+
+export function abvToArrayBuffer(buffer: ArrayBufferView): ArrayBuffer {
+  if (Buffer.isBuffer(buffer)) {
+    return buffer.buffer;
+  }
+  if (ArrayBuffer.isView(buffer)) {
+    return buffer.buffer;
+  }
+  return buffer;
+}
 
 // TODO: these used to be shipped by crypto-browserify in quickcrypto v0.6
 // could instead fetch from OpenSSL if needed and handle breaking changes

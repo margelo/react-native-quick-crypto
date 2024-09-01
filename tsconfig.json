@@ -3,6 +3,7 @@
     "paths": {
       "react-native-quick-crypto": ["./src/index"]
     },
+    "composite": true,
     "allowUnreachableCode": false,
     "allowUnusedLabels": false,
     "esModuleInterop": true,
@@ -23,10 +24,6 @@
     "strict": true,
     "target": "esnext",
     "verbatimModuleSyntax": true,
-    "declaration": true,
-    "declarationMap": true,
-    "sourceMap": true,
-    "allowSyntheticDefaultImports": true
   },
   "include": ["src"],
   "exclude": ["node_modules", "lib", "docs", "example"]

@@ -68,7 +68,7 @@ class Hash extends Stream.Transform {
   _transform(
     chunk: string | ArrayBuffer,
     encoding: Encoding,
-    callback: () => void
+    callback: () => void,
   ) {
     this.update(chunk, encoding);
     callback();
@@ -107,7 +107,7 @@ class Hash extends Stream.Transform {
 
 export const asyncDigest = async (
   algorithm: SubtleAlgorithm,
-  data: BufferLike
+  data: BufferLike,
 ): Promise<ArrayBuffer> => {
   validateMaxBufferLength(data, 'data');
 
@@ -119,14 +119,21 @@ export const asyncDigest = async (
     case 'SHA-384':
     // Fall through
     case 'SHA-512':
-      const normalizedHashName = normalizeHashName(algorithm.name);
-      const hash = new Hash(normalizedHashName);
-      hash.update(bufferLikeToArrayBuffer(data));
-      return hash.digest();
+      return internalDigest(algorithm, data);
   }
 
   throw lazyDOMException(
     `Unrecognized algorithm name: ${algorithm.name}`,
-    'NotSupportedError'
+    'NotSupportedError',
   );
+};
+
+const internalDigest = (
+  algorithm: SubtleAlgorithm,
+  data: BufferLike,
+): ArrayBuffer => {
+  const normalizedHashName = normalizeHashName(algorithm.name);
+  const hash = new Hash(normalizedHashName);
+  hash.update(bufferLikeToArrayBuffer(data));
+  return hash.digest();
 };

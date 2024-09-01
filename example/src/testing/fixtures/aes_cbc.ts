@@ -1,9 +1,9 @@
-import { decodeHex } from '../Tests/util';
+import { decodeHex } from '../tests/util';
 import type {
   AesEncryptDecryptTestVector,
   BadPaddingVectorValue,
   VectorValue,
-} from '../Tests/webcryptoTests/encrypt_decrypt';
+} from '../tests/webcryptoTests/encrypt_decrypt';
 
 const kPlaintext = decodeHex(
   '546869732073706563696669636174696f6e206465736372696265' +
@@ -23,13 +23,13 @@ const kPlaintext = decodeHex(
     '63652061757468656e7469636174696f6e2c20646f63756d656e74' +
     '206f7220636f6465207369676e696e672c20616e64207468652063' +
     '6f6e666964656e7469616c69747920616e6420696e746567726974' +
-    '79206f6620636f6d6d756e69636174696f6e732e'
+    '79206f6620636f6d6d756e69636174696f6e732e',
 );
 
 const kKeyBytes: VectorValue = {
   '128': decodeHex('dec0d4fcbf3c4741c892dabd1cd4c04e'),
   '256': decodeHex(
-    '67693823fb1d58073f91ece9cc3af910e5532616a4d27b1' + '3eb7b74d8000bbf30'
+    '67693823fb1d58073f91ece9cc3af910e5532616a4d27b1' + '3eb7b74d8000bbf30',
   ),
 };
 
@@ -52,7 +52,7 @@ const kCipherText: VectorValue = {
       'b38a8649821d45b6c0f996a54f2f5bcbe23f57343cacbfbeb3ab9bcd58ac6f3' +
       'b28c6fad194b173c8282ba5a74374409ff051fdeb898431dfd6ac35072fb8df' +
       '783b33217c93dd1b3c10fe187373d64b496188d6d1b16a47fed35e3968aaa82' +
-      '3255dcbc7261c54'
+      '3255dcbc7261c54',
   ),
   '256': decodeHex(
     '29d5798cb5e3c86164853ae36a73193f4d331a39ee8c633f47d38054731aec3' +
@@ -70,7 +70,7 @@ const kCipherText: VectorValue = {
       'f10f32bb24af4ee362e0035fd15d7e70b21d126cf1e84fd22902eed0beab869' +
       '3bcbfe57a20d1a67681df82d6c359435eda9bb90090ff84d5193b53f2394594' +
       '6d853da31ed6fe36a903d94d427bc1ccc76d7b31badfe508e6a4abc491e10a6' +
-      'ff86fa4d836e1fd'
+      'ff86fa4d836e1fd',
   ),
 };
 
@@ -130,13 +130,13 @@ const decryptionFailing: AesEncryptDecryptTestVector[] = [];
 kKeyLengths.forEach(function (keyLength) {
   ['zeroPadChar', 'bigPadChar', 'inconsistentPadChars'].forEach(
     (paddingProblem) => {
-      // @ts-expect-error
+      // @ts-expect-error bad padding
       const badCiphertext = new Uint8Array(kCipherText[keyLength].byteLength);
       badCiphertext.set(
-        // @ts-expect-error
-        kCipherText[keyLength].slice(0, kCipherText[keyLength].byteLength - 16)
+        // @ts-expect-error bad padding
+        kCipherText[keyLength].slice(0, kCipherText[keyLength].byteLength - 16),
       );
-      // @ts-expect-error
+      // @ts-expect-error bad padding
       badCiphertext.set(kBadPadding[keyLength][paddingProblem]);
 
       decryptionFailing.push({
@@ -146,7 +146,7 @@ kKeyLengths.forEach(function (keyLength) {
         result: badCiphertext,
         keyLength,
       });
-    }
+    },
   );
 });
 

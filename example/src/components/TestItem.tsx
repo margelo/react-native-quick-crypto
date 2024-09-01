@@ -5,6 +5,7 @@ import type { TestResult } from '../types/TestResults';
 import { useNavigation } from '@react-navigation/native';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import type { RootStackParamList } from '../navigators/RootProps';
+import { colors } from '../styles/colors';
 
 type TestItemProps = {
   description: string;
@@ -52,8 +53,7 @@ export const TestItem: React.FC<TestItemProps> = ({
             results,
             suiteName: description,
           });
-        }}
-      >
+        }}>
         <Text style={styles.label} numberOfLines={1}>
           {description}
         </Text>
@@ -80,7 +80,7 @@ const styles = StyleSheet.create({
     justifyContent: 'space-evenly',
     gap: 10,
     borderBottomWidth: 1,
-    borderBottomColor: '#ccc',
+    borderBottomColor: colors.gray,
   },
   checkbox: {
     transform: [{ scaleX: 0.7 }, { scaleY: 0.7 }],
@@ -94,10 +94,10 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
   },
   pass: {
-    color: 'green',
+    color: colors.green,
   },
   fail: {
-    color: 'red',
+    color: colors.red,
   },
   count: {
     fontSize: 12,

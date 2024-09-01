@@ -80,7 +80,7 @@ import type { KeyObjectHandle } from './NativeQuickCrypto/webcrypto';
 function verifyAcceptableEcKeyUse(
   name: AnyAlgorithm,
   isPublic: boolean,
-  usages: KeyUsage[]
+  usages: KeyUsage[],
 ): void {
   let checkSet;
   switch (name) {
@@ -93,20 +93,20 @@ function verifyAcceptableEcKeyUse(
     default:
       throw lazyDOMException(
         'The algorithm is not supported',
-        'NotSupportedError'
+        'NotSupportedError',
       );
   }
   if (hasAnyNotIn(usages, checkSet)) {
     throw lazyDOMException(
       `Unsupported key usage for a ${name} key`,
-      'SyntaxError'
+      'SyntaxError',
     );
   }
 }
 
 function createECPublicKeyRaw(
   namedCurve: NamedCurve | undefined,
-  keyData: ArrayBuffer
+  keyData: ArrayBuffer,
 ): PublicKeyObject {
   if (!namedCurve) {
     throw new Error('Invalid namedCurve');
@@ -122,7 +122,7 @@ function createECPublicKeyRaw(
 
 export function ecExportKey(
   key: CryptoKey,
-  format: KWebCryptoKeyFormat
+  format: KWebCryptoKeyFormat,
 ): ArrayBuffer {
   return NativeQuickCrypto.webcrypto.ecExportKey(format, key.keyObject.handle);
 }
@@ -132,7 +132,7 @@ export function ecImportKey(
   keyData: BufferLike | BinaryLike | JWK,
   algorithm: SubtleAlgorithm,
   extractable: boolean,
-  keyUsages: KeyUsage[]
+  keyUsages: KeyUsage[],
 ): CryptoKey {
   const { name, namedCurve } = algorithm;
 
@@ -178,7 +178,7 @@ export function ecImportKey(
       if (data.crv !== namedCurve)
         throw lazyDOMException(
           'JWK "crv" does not match the requested algorithm',
-          'DataError'
+          'DataError',
         );
 
       verifyAcceptableEcKeyUse(name, data.d === undefined, keyUsages);
@@ -198,7 +198,7 @@ export function ecImportKey(
       ) {
         throw lazyDOMException(
           'JWK "ext" Parameter and extractable mismatch',
-          'DataError'
+          'DataError',
         );
       }
 
@@ -218,7 +218,7 @@ export function ecImportKey(
         if (algNamedCurve !== namedCurve)
           throw lazyDOMException(
             'JWK "alg" does not match the requested algorithm',
-            'DataError'
+            'DataError',
           );
       }
 
@@ -235,7 +235,7 @@ export function ecImportKey(
     case 'raw': {
       const data = keyData as BufferLike | BinaryLike;
       verifyAcceptableEcKeyUse(name, true, keyUsages);
-      let buffer =
+      const buffer =
         typeof data === 'string'
           ? binaryLikeToArrayBuffer(data)
           : bufferLikeToArrayBuffer(data);
@@ -271,7 +271,7 @@ export const ecdsaSignVerify = (
   key: CryptoKey,
   data: BufferLike,
   { hash }: SubtleAlgorithm,
-  signature?: BufferLike
+  signature?: BufferLike,
 ) => {
   const mode: SignMode =
     signature === undefined
@@ -296,32 +296,31 @@ export const ecdsaSignVerify = (
     undefined, // salt length, not used with ECDSA
     undefined, // pss padding, not used with ECDSA
     DSASigEnc.kSigEncP1363,
-    bufferLikeToArrayBuffer(signature || new ArrayBuffer(0))
+    bufferLikeToArrayBuffer(signature || new ArrayBuffer(0)),
   );
 };
 
 export const ecGenerateKey = async (
   algorithm: SubtleAlgorithm,
   extractable: boolean,
-  keyUsages: KeyUsage[]
+  keyUsages: KeyUsage[],
 ): Promise<CryptoKeyPair> => {
   const { name, namedCurve } = algorithm;
 
   if (!Object.keys(kNamedCurveAliases).includes(namedCurve || '')) {
     throw lazyDOMException(
       `Unrecognized namedCurve '${namedCurve}'`,
-      'NotSupportedError'
+      'NotSupportedError',
     );
   }
 
   // const usageSet = new SafeSet(keyUsages);
   switch (name) {
     case 'ECDSA':
-      const checkUsages = ['sign', 'verify'];
-      if (hasAnyNotIn(keyUsages, checkUsages)) {
+      if (hasAnyNotIn(keyUsages, ['sign', 'verify'])) {
         throw lazyDOMException(
           'Unsupported key usage for an ECDSA key',
-          'SyntaxError'
+          'SyntaxError',
         );
       }
       break;
@@ -329,7 +328,7 @@ export const ecGenerateKey = async (
       if (hasAnyNotIn(keyUsages, ['deriveKey', 'deriveBits'])) {
         throw lazyDOMException(
           'Unsupported key usage for an ECDH key',
-          'SyntaxError'
+          'SyntaxError',
         );
       }
     // Fall through
@@ -368,7 +367,7 @@ export const ecGenerateKey = async (
     priv,
     keyAlgorithm,
     privateUsages,
-    extractable
+    extractable,
   );
 
   return { publicKey, privateKey };

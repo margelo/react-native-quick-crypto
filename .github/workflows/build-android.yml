@@ -8,29 +8,33 @@ on:
       - '.github/workflows/build-android.yml'
       - 'android/**'
       - 'example/android/**'
-      - 'yarn.lock'
-      - 'example/yarn.lock'
+      - 'bun.lockb'
+      - 'example/bun.lockb'
   pull_request:
     paths:
       - '.github/workflows/build-android.yml'
       - 'android/**'
       - 'example/android/**'
-      - 'yarn.lock'
-      - 'example/yarn.lock'
+      - 'bun.lockb'
+      - 'example/bun.lockb'
 
 jobs:
   build_android_example:
     name: Build Android Example App
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - name: Checkout Code
+        uses: actions/checkout@v4
 
       - name: Clear up some disk space
         run: |
           sudo rm -rf /usr/share/dotnet
           sudo rm -rf /opt/ghc
-          sudo rm -rf "/usr/local/share/boost"
-          sudo rm -rf "$AGENT_TOOLSDIRECTORY"
+
+      - name: Setup Bun
+        uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: 1.1.26
 
       - name: Setup JDK
         uses: actions/setup-java@v4
@@ -41,28 +45,18 @@ jobs:
 
       - name: Setup Android SDK
         uses: android-actions/setup-android@v3
-
-      - uses: actions/setup-node@v4
         with:
-          node-version: 20
-      - run: corepack enable
+          accept-android-sdk-licenses: true
+          log-accepted-android-sdk-licenses: false
 
-      - name: Get yarn cache directory path
-        id: yarn-cache-dir-path
-        run: echo "dir=$(yarn cache dir)" >> $GITHUB_OUTPUT
+      - name: Bootstrap JS (rnqc)
+        run: |
+          bun install
 
-      - name: Restore node_modules from cache
-        uses: actions/cache@v4
-        id: yarn-cache
-        with:
-          path: ${{ steps.yarn-cache-dir-path.outputs.dir }}
-          key: ${{ runner.os }}-yarn-${{ hashFiles('**/yarn.lock') }}
-          restore-keys: |
-            ${{ runner.os }}-yarn-
-      - name: Install node_modules
-        run: yarn install --frozen-lockfile
-      - name: Install node_modules for example/
-        run: yarn install --frozen-lockfile --cwd example
+      - name: Bootstrap JS (example)
+        working-directory: example
+        run: |
+          bun install
 
       - name: Restore Gradle cache
         uses: actions/cache@v4
@@ -73,9 +67,6 @@ jobs:
           key: ${{ runner.os }}-gradle-${{ hashFiles('**/*.gradle*', '**/gradle-wrapper.properties') }}
           restore-keys: |
             ${{ runner.os }}-gradle-
-
-      - name: Run Gradle Build for android/
-        run: cd android && ./gradlew assembleDebug && cd ..
 
       - name: Run Gradle Build for example/android/
         run: cd example/android && ./gradlew assembleDebug --build-cache && cd ../..

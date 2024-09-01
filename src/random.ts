@@ -1,105 +1,101 @@
+import { abvToArrayBuffer } from './Utils';
 import { NativeQuickCrypto } from './NativeQuickCrypto/NativeQuickCrypto';
 import { Buffer } from '@craftzdog/react-native-buffer';
 import type { TypedArray } from './Utils';
 
 const random = NativeQuickCrypto.random;
 
-type ArrayBufferView = TypedArray | DataView | ArrayBufferLike | Buffer;
+type RandomBuffer = TypedArray | DataView | ArrayBufferLike | Buffer;
 
-export function randomFill<T extends ArrayBufferView>(
+export function randomFill<T extends RandomBuffer>(
   buffer: T,
-  callback: (err: Error | null, buf: T) => void
+  callback: (err: Error | null, buf: T) => void,
 ): void;
 
-export function randomFill<T extends ArrayBufferView>(
+export function randomFill<T extends RandomBuffer>(
   buffer: T,
   offset: number,
-  callback: (err: Error | null, buf: T) => void
+  callback: (err: Error | null, buf: T) => void,
 ): void;
 
-export function randomFill<T extends ArrayBufferView>(
+export function randomFill<T extends RandomBuffer>(
   buffer: T,
   offset: number,
   size: number,
-  callback: (err: Error | null, buf: T) => void
+  callback: (err: Error | null, buf: T) => void,
 ): void;
 
-export function randomFill(buffer: any, ...rest: any[]): void {
+export function randomFill(buffer: RandomBuffer, ...rest: unknown[]): void {
   if (typeof rest[rest.length - 1] !== 'function') {
     throw new Error('No callback provided to randomFill');
   }
 
-  const callback = rest[rest.length - 1] as any as (
+  const callback = rest[rest.length - 1] as unknown as (
     err: Error | null,
-    buf?: ArrayBuffer
+    buf?: ArrayBuffer,
   ) => void;
 
   let offset: number = 0;
   let size: number = buffer.byteLength;
 
   if (typeof rest[2] === 'function') {
-    offset = rest[0];
-    size = rest[1];
+    offset = rest[0] as number;
+    size = rest[1] as number;
   }
 
   if (typeof rest[1] === 'function') {
-    offset = rest[0];
+    offset = rest[0] as number;
   }
 
   random
-    .randomFill(
-      Buffer.isBuffer(buffer)
-        ? buffer.buffer
-        : ArrayBuffer.isView(buffer)
-          ? buffer.buffer
-          : buffer,
-      offset,
-      size
-    )
+    .randomFill(abvToArrayBuffer(buffer as ArrayBufferView), offset, size)
     .then(
-      () => {
-        callback(null, buffer);
+      (res: ArrayBuffer) => {
+        callback(null, res);
       },
       (e: Error) => {
         callback(e);
-      }
+      },
     );
 }
 
-export function randomFillSync<T extends ArrayBufferView>(
+export function randomFillSync<T extends RandomBuffer>(
   buffer: T,
   offset?: number,
-  size?: number
+  size?: number,
 ): T;
 
-export function randomFillSync(buffer: any, offset: number = 0, size?: number) {
-  random.randomFillSync(
-    buffer.buffer ? buffer.buffer : buffer,
+export function randomFillSync(
+  buffer: RandomBuffer,
+  offset: number = 0,
+  size?: number,
+) {
+  return random.randomFillSync(
+    abvToArrayBuffer(buffer as ArrayBufferView),
     offset,
-    size ?? buffer.byteLength
+    size ?? buffer.byteLength,
   );
-  return buffer;
 }
 
 export function randomBytes(size: number): Buffer;
 
 export function randomBytes(
   size: number,
-  callback: (err: Error | null, buf?: Buffer) => void
+  callback: (err: Error | null, buf?: Buffer) => void,
 ): void;
 
 export function randomBytes(
   size: number,
-  callback?: (err: Error | null, buf?: Buffer) => void
+  callback?: (err: Error | null, buf?: Buffer) => void,
 ): void | Buffer {
   const buf = new Buffer(size);
 
   if (callback === undefined) {
-    randomFillSync(buf.buffer, 0, size);
+    randomFillSync(buf, 0, size);
     return buf;
   }
 
-  randomFill(buf.buffer, 0, size, (error: Error | null) => {
+  randomFill(buf, 0, size, (error: Error | null) => {
     if (error) {
       callback(error);
     }
@@ -139,13 +135,13 @@ export function randomInt(max: number): number;
 export function randomInt(
   min: number,
   max: number,
-  callback: RandomIntCallback
+  callback: RandomIntCallback,
 ): void;
 export function randomInt(min: number, max: number): number;
 export function randomInt(
   arg1: number,
   arg2?: number | RandomIntCallback,
-  callback?: RandomIntCallback
+  callback?: RandomIntCallback,
 ): void | number {
   // Detect optional min syntax
   // randomInt(max)
@@ -156,12 +152,12 @@ export function randomInt(
     typeof arg2 === 'undefined' || typeof arg2 === 'function';
 
   if (minNotSpecified) {
-    callback = arg2 as any as undefined | RandomIntCallback;
+    callback = arg2 as undefined | RandomIntCallback;
     max = arg1;
     min = 0;
   } else {
     min = arg1;
-    max = arg2 as any as number;
+    max = arg2 as number;
   }
   if (typeof callback !== 'undefined' && typeof callback !== 'function') {
     throw new TypeError('callback must be a function or undefined');
@@ -217,7 +213,7 @@ export function randomInt(
     if (x < randLimit) {
       const n = (x % range) + min;
       if (isSync) return n;
-      process.nextTick(callback as Function, undefined, n);
+      process.nextTick(callback as RandomIntCallback, undefined, n);
       return;
     }
   }
@@ -289,9 +285,7 @@ export function randomUUID() {
   randomFillSync(buffer, 0, size);
 
   // Per 4.4, set bits for version and `clock_seq_hi_and_reserved`
-  // eslint-disable-next-line no-bitwise
   buffer[6] = (buffer[6]! & 0x0f) | 0x40;
-  // eslint-disable-next-line no-bitwise
   buffer[8] = (buffer[8]! & 0x3f) | 0x80;
 
   return (

@@ -1,3 +1,4 @@
+import { Buffer as SBuffer } from 'safe-buffer';
 import {
   type ImportFormat,
   type SubtleAlgorithm,
@@ -35,7 +36,9 @@ import {
 } from './aes';
 import { rsaCipher, rsaExportKey, rsaImportKey, rsaKeyGenerate } from './rsa';
 
-const exportKeySpki = async (key: CryptoKey): Promise<ArrayBuffer | any> => {
+const exportKeySpki = async (
+  key: CryptoKey,
+): Promise<ArrayBuffer | unknown> => {
   switch (key.algorithm.name) {
     case 'RSASSA-PKCS1-v1_5':
     // Fall through
@@ -67,11 +70,13 @@ const exportKeySpki = async (key: CryptoKey): Promise<ArrayBuffer | any> => {
   }
 
   throw new Error(
-    `Unable to export a spki ${key.algorithm.name} ${key.type} key`
+    `Unable to export a spki ${key.algorithm.name} ${key.type} key`,
   );
 };
 
-const exportKeyPkcs8 = async (key: CryptoKey): Promise<ArrayBuffer | any> => {
+const exportKeyPkcs8 = async (
+  key: CryptoKey,
+): Promise<ArrayBuffer | unknown> => {
   switch (key.algorithm.name) {
     case 'RSASSA-PKCS1-v1_5':
     // Fall through
@@ -103,11 +108,11 @@ const exportKeyPkcs8 = async (key: CryptoKey): Promise<ArrayBuffer | any> => {
   }
 
   throw new Error(
-    `Unable to export a pkcs8 ${key.algorithm.name} ${key.type} key`
+    `Unable to export a pkcs8 ${key.algorithm.name} ${key.type} key`,
   );
 };
 
-const exportKeyRaw = (key: CryptoKey): ArrayBuffer | any => {
+const exportKeyRaw = (key: CryptoKey): ArrayBuffer | unknown => {
   switch (key.algorithm.name) {
     case 'ECDSA':
     // Fall through
@@ -142,17 +147,17 @@ const exportKeyRaw = (key: CryptoKey): ArrayBuffer | any => {
 
   throw lazyDOMException(
     `Unable to export a raw ${key.algorithm.name} ${key.type} key`,
-    'InvalidAccessError'
+    'InvalidAccessError',
   );
 };
 
-const exportKeyJWK = (key: CryptoKey): ArrayBuffer | any => {
+const exportKeyJWK = (key: CryptoKey): ArrayBuffer | unknown => {
   const jwk = key.keyObject.handle.exportJwk(
     {
       key_ops: key.usages,
       ext: key.extractable,
     },
-    true
+    true,
   );
   switch (key.algorithm.name) {
     case 'RSASSA-PKCS1-v1_5':
@@ -199,7 +204,7 @@ const exportKeyJWK = (key: CryptoKey): ArrayBuffer | any => {
 
   throw lazyDOMException(
     `JWK export not yet supported: ${key.algorithm.name}`,
-    'NotSupportedError'
+    'NotSupportedError',
   );
 };
 
@@ -208,7 +213,7 @@ const importGenericSecretKey = async (
   format: ImportFormat,
   keyData: BufferLike | BinaryLike,
   extractable: boolean,
-  keyUsages: KeyUsage[]
+  keyUsages: KeyUsage[],
 ): Promise<CryptoKey> => {
   if (extractable) {
     throw new Error(`${name} keys are not extractable`);
@@ -224,7 +229,7 @@ const importGenericSecretKey = async (
       }
 
       const checkLength =
-        typeof keyData === 'string'
+        typeof keyData === 'string' || SBuffer.isBuffer(keyData)
           ? keyData.length * 8
           : keyData.byteLength * 8;
 
@@ -236,7 +241,7 @@ const importGenericSecretKey = async (
         throw new Error('Invalid key length');
       }
 
-      const keyObject = createSecretKey(keyData);
+      const keyObject = createSecretKey(keyData as BinaryLike);
       return new CryptoKey(keyObject, { name }, keyUsages, false);
     }
   }
@@ -260,7 +265,7 @@ const checkCryptoKeyPairUsages = (pair: CryptoKeyPair) => {
   if (
     !(pair.privateKey instanceof Buffer) &&
     pair.privateKey &&
-    pair.privateKey.hasOwnProperty('keyUsages')
+    Object.prototype.hasOwnProperty.call(pair.privateKey, 'keyUsages')
   ) {
     const priv = pair.privateKey as CryptoKey;
     if (priv.usages.length > 0) {
@@ -270,7 +275,7 @@ const checkCryptoKeyPairUsages = (pair: CryptoKeyPair) => {
   console.log(pair.privateKey);
   throw lazyDOMException(
     'Usages cannot be empty when creating a key.',
-    'SyntaxError'
+    'SyntaxError',
   );
 };
 
@@ -278,7 +283,7 @@ const signVerify = (
   algorithm: SubtleAlgorithm,
   key: CryptoKey,
   data: BufferLike,
-  signature?: BufferLike
+  signature?: BufferLike,
 ): ArrayBuffer | boolean => {
   const usage: Operation = signature === undefined ? 'sign' : 'verify';
   algorithm = normalizeAlgorithm(algorithm, usage);
@@ -286,7 +291,7 @@ const signVerify = (
   if (!key.usages.includes(usage) || algorithm.name !== key.algorithm.name) {
     throw lazyDOMException(
       `Unable to use this key to ${usage}`,
-      'InvalidAccessError'
+      'InvalidAccessError',
     );
   }
 
@@ -321,7 +326,7 @@ const signVerify = (
   }
   throw lazyDOMException(
     `Unrecognized algorithm name '${algorithm}' for '${usage}'`,
-    'NotSupportedError'
+    'NotSupportedError',
   );
 };
 
@@ -330,7 +335,7 @@ const cipherOrWrap = async (
   algorithm: EncryptDecryptParams, // | WrapUnwrapParams,
   key: CryptoKey,
   data: ArrayBuffer,
-  op: Operation
+  op: Operation,
 ): Promise<ArrayBuffer> => {
   // We use a Node.js style error here instead of a DOMException because
   // the WebCrypto spec is not specific what kind of error is to be thrown
@@ -343,7 +348,7 @@ const cipherOrWrap = async (
   ) {
     throw lazyDOMException(
       'The requested operation is not valid for the provided key',
-      'InvalidAccessError'
+      'InvalidAccessError',
     );
   }
 
@@ -366,10 +371,10 @@ const cipherOrWrap = async (
     //     return aesCipher(mode, key, data, algorithm);
     //   }
   }
-  // @ts-ignore
+  // @ts-expect-error unreachable code
   throw lazyDOMException(
     `Unrecognized algorithm name '${algorithm}' for '${op}'`,
-    'NotSupportedError'
+    'NotSupportedError',
   );
 };
 
@@ -377,7 +382,7 @@ export class Subtle {
   async decrypt(
     algorithm: EncryptDecryptParams,
     key: CryptoKey,
-    data: BufferLike
+    data: BufferLike,
   ): Promise<ArrayBuffer> {
     const normalizedAlgorithm = normalizeAlgorithm(algorithm, 'decrypt');
     return cipherOrWrap(
@@ -385,13 +390,13 @@ export class Subtle {
       normalizedAlgorithm as EncryptDecryptParams,
       key,
       bufferLikeToArrayBuffer(data),
-      'decrypt'
+      'decrypt',
     );
   }
 
   async digest(
     algorithm: SubtleAlgorithm | AnyAlgorithm,
-    data: BufferLike
+    data: BufferLike,
   ): Promise<ArrayBuffer> {
     const normalizedAlgorithm = normalizeAlgorithm(algorithm, 'digest');
     return asyncDigest(normalizedAlgorithm, data);
@@ -400,7 +405,7 @@ export class Subtle {
   async deriveBits(
     algorithm: SubtleAlgorithm,
     baseKey: CryptoKey,
-    length: number
+    length: number,
   ): Promise<ArrayBuffer> {
     if (!baseKey.keyUsages.includes('deriveBits')) {
       throw new Error('baseKey does not have deriveBits usage');
@@ -422,14 +427,14 @@ export class Subtle {
         return pbkdf2DeriveBits(algorithm, baseKey, length);
     }
     throw new Error(
-      `'subtle.deriveBits()' for ${algorithm.name} is not implemented.`
+      `'subtle.deriveBits()' for ${algorithm.name} is not implemented.`,
     );
   }
 
   async encrypt(
     algorithm: EncryptDecryptParams,
     key: CryptoKey,
-    data: BufferLike
+    data: BufferLike,
   ): Promise<ArrayBuffer> {
     const normalizedAlgorithm = normalizeAlgorithm(algorithm, 'encrypt');
     return cipherOrWrap(
@@ -437,32 +442,32 @@ export class Subtle {
       normalizedAlgorithm as EncryptDecryptParams,
       key,
       bufferLikeToArrayBuffer(data),
-      'encrypt'
+      'encrypt',
     );
   }
 
   async exportKey(
     format: ImportFormat,
-    key: CryptoKey
+    key: CryptoKey,
   ): Promise<ArrayBuffer | JWK> {
     if (!key.extractable) throw new Error('key is not extractable');
 
     switch (format) {
       case 'spki':
-        return await exportKeySpki(key);
+        return (await exportKeySpki(key)) as ArrayBuffer;
       case 'pkcs8':
-        return await exportKeyPkcs8(key);
+        return (await exportKeyPkcs8(key)) as ArrayBuffer;
       case 'jwk':
-        return exportKeyJWK(key);
+        return exportKeyJWK(key) as JWK;
       case 'raw':
-        return exportKeyRaw(key);
+        return exportKeyRaw(key) as ArrayBuffer;
     }
   }
 
   async generateKey(
     algorithm: SubtleAlgorithm,
     extractable: boolean,
-    keyUsages: KeyUsage[]
+    keyUsages: KeyUsage[],
   ): Promise<CryptoKey | CryptoKeyPair> {
     algorithm = normalizeAlgorithm(algorithm, 'generateKey');
     let result: CryptoKey | CryptoKeyPair;
@@ -503,13 +508,13 @@ export class Subtle {
         result = await aesGenerateKey(
           algorithm as AesKeyGenParams,
           extractable,
-          keyUsages
+          keyUsages,
         );
         break;
       default:
         throw new Error(
           `'subtle.generateKey()' is not implemented for ${algorithm.name}.
-            Unrecognized algorithm name`
+            Unrecognized algorithm name`,
         );
     }
 
@@ -521,7 +526,7 @@ export class Subtle {
     data: BufferLike | BinaryLike | JWK,
     algorithm: SubtleAlgorithm | AnyAlgorithm,
     extractable: boolean,
-    keyUsages: KeyUsage[]
+    keyUsages: KeyUsage[],
   ): Promise<CryptoKey> {
     const normalizedAlgorithm = normalizeAlgorithm(algorithm, 'importKey');
     let result: CryptoKey;
@@ -536,7 +541,7 @@ export class Subtle {
           data as BufferLike | JWK,
           normalizedAlgorithm,
           extractable,
-          keyUsages
+          keyUsages,
         );
         break;
       case 'ECDSA':
@@ -547,7 +552,7 @@ export class Subtle {
           data,
           normalizedAlgorithm,
           extractable,
-          keyUsages
+          keyUsages,
         );
         break;
       // case 'Ed25519':
@@ -586,7 +591,7 @@ export class Subtle {
           format,
           data as BufferLike | JWK,
           extractable,
-          keyUsages
+          keyUsages,
         );
         break;
       // case 'HKDF':
@@ -597,12 +602,12 @@ export class Subtle {
           format,
           data as BufferLike | BinaryLike,
           extractable,
-          keyUsages
+          keyUsages,
         );
         break;
       default:
         throw new Error(
-          `"subtle.importKey()" is not implemented for ${normalizedAlgorithm.name}`
+          `"subtle.importKey()" is not implemented for ${normalizedAlgorithm.name}`,
         );
     }
 
@@ -611,7 +616,7 @@ export class Subtle {
       result.usages.length === 0
     ) {
       throw new Error(
-        `Usages cannot be empty when importing a ${result.type} key.`
+        `Usages cannot be empty when importing a ${result.type} key.`,
       );
     }
 
@@ -621,7 +626,7 @@ export class Subtle {
   async sign(
     algorithm: SubtleAlgorithm,
     key: CryptoKey,
-    data: BufferLike
+    data: BufferLike,
   ): Promise<ArrayBuffer> {
     return signVerify(algorithm, key, data) as ArrayBuffer;
   }
@@ -630,7 +635,7 @@ export class Subtle {
     algorithm: SubtleAlgorithm,
     key: CryptoKey,
     signature: BufferLike,
-    data: BufferLike
+    data: BufferLike,
   ): Promise<ArrayBuffer> {
     return signVerify(algorithm, key, data, signature) as ArrayBuffer;
   }
