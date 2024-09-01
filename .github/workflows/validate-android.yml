@@ -63,7 +63,7 @@ jobs:
             ${{ runner.os }}-gradle-
 
       - name: Run Gradle Lint
-        run: cd ../example/android && ./gradlew lint
+        run: cd example/android && ./gradlew lint
 
       - name: Parse Gradle Lint Report
         uses: yutailang0119/action-android-lint@v4
