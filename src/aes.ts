@@ -52,7 +52,7 @@ export const getAlgorithmName = (name: string, length?: number) => {
   if (length === undefined)
     throw lazyDOMException(
       `Invalid algorithm length: ${length}`,
-      'SyntaxError'
+      'SyntaxError',
     );
   switch (name) {
     case 'AES-CBC':
@@ -124,7 +124,7 @@ function getVariant(name: AESAlgorithm, length: AESLength): AESKeyVariant {
   // @ts-expect-error unreachable code
   throw lazyDOMException(
     `Error getting variant ${name} at length: ${length}`,
-    'DataError'
+    'DataError',
   );
 }
 
@@ -132,7 +132,7 @@ function asyncAesCtrCipher(
   mode: CipherOrWrapMode,
   key: CryptoKey,
   data: ArrayBuffer,
-  { counter, length }: AesCtrParams
+  { counter, length }: AesCtrParams,
 ): Promise<ArrayBuffer> {
   validateByteLength(counter, 'algorithm.counter', 16);
   // The length must specify an integer between 1 and 128. While
@@ -140,7 +140,7 @@ function asyncAesCtrCipher(
   if (length === 0 || length > kMaxCounterLength) {
     throw lazyDOMException(
       'AES-CTR algorithm.length must be between 1 and 128',
-      'OperationError'
+      'OperationError',
     );
   }
 
@@ -150,7 +150,7 @@ function asyncAesCtrCipher(
     data,
     getVariant('AES-CTR', key.algorithm.length as AESLength),
     bufferLikeToArrayBuffer(counter),
-    length
+    length,
   );
 }
 
@@ -158,7 +158,7 @@ function asyncAesCbcCipher(
   mode: CipherOrWrapMode,
   key: CryptoKey,
   data: ArrayBuffer,
-  { iv }: AesCbcParams
+  { iv }: AesCbcParams,
 ): Promise<ArrayBuffer> {
   validateByteLength(iv, 'algorithm.iv', 16);
   return NativeQuickCrypto.webcrypto.aesCipher(
@@ -166,7 +166,7 @@ function asyncAesCbcCipher(
     key.keyObject.handle,
     data,
     getVariant('AES-CBC', key.algorithm.length as AESLength),
-    bufferLikeToArrayBuffer(iv)
+    bufferLikeToArrayBuffer(iv),
   );
 }
 
@@ -187,12 +187,12 @@ function asyncAesGcmCipher(
   mode: CipherOrWrapMode,
   key: CryptoKey,
   data: ArrayBuffer,
-  { iv, additionalData, tagLength = 128 }: AesGcmParams
+  { iv, additionalData, tagLength = 128 }: AesGcmParams,
 ) {
   if (!kTagLengths.includes(tagLength)) {
     throw lazyDOMException(
       `${tagLength} is not a valid AES-GCM tag length`,
-      'OperationError'
+      'OperationError',
     );
   }
 
@@ -219,7 +219,7 @@ function asyncAesGcmCipher(
       if (tagByteLength > tag.byteLength) {
         throw lazyDOMException(
           'The provided data is too small.',
-          'OperationError'
+          'OperationError',
         );
       }
 
@@ -239,7 +239,7 @@ function asyncAesGcmCipher(
     bufferLikeToArrayBuffer(iv),
     length,
     bufferLikeToArrayBuffer(tag),
-    bufferLikeToArrayBuffer(additionalData || new ArrayBuffer(0))
+    bufferLikeToArrayBuffer(additionalData || new ArrayBuffer(0)),
   );
 }
 
@@ -247,7 +247,7 @@ export const aesCipher = (
   mode: CipherOrWrapMode,
   key: CryptoKey,
   data: ArrayBuffer,
-  algorithm: EncryptDecryptParams // | WrapUnwrapParams
+  algorithm: EncryptDecryptParams, // | WrapUnwrapParams
 ): Promise<ArrayBuffer> => {
   switch (algorithm.name) {
     case 'AES-CTR':
@@ -265,7 +265,7 @@ export const aesCipher = (
 export const aesGenerateKey = async (
   algorithm: AesKeyGenParams,
   extractable: boolean,
-  keyUsages: KeyUsage[]
+  keyUsages: KeyUsage[],
 ): Promise<CryptoKey> => {
   const { name, length } = algorithm;
   if (!name) {
@@ -274,7 +274,7 @@ export const aesGenerateKey = async (
   if (!kAesKeyLengths.includes(length)) {
     throw lazyDOMException(
       'AES key length must be 128, 192, or 256 bits',
-      'OperationError'
+      'OperationError',
     );
   }
 
@@ -286,7 +286,7 @@ export const aesGenerateKey = async (
   if (hasAnyNotIn(keyUsages, checkUsages)) {
     throw lazyDOMException(
       `Unsupported key usage for an AES key: ${keyUsages}`,
-      'SyntaxError'
+      'SyntaxError',
     );
   }
 
@@ -297,7 +297,7 @@ export const aesGenerateKey = async (
       {
         name: 'OperationError',
         cause: err,
-      }
+      },
     );
   }
 
@@ -305,7 +305,7 @@ export const aesGenerateKey = async (
     key as SecretKeyObject,
     { name, length },
     Array.from(keyUsages),
-    extractable
+    extractable,
   );
 };
 
@@ -314,7 +314,7 @@ export const aesImportKey = async (
   format: ImportFormat,
   keyData: BufferLike | JWK,
   extractable: boolean,
-  keyUsages: KeyUsage[]
+  keyUsages: KeyUsage[],
 ): Promise<CryptoKey> => {
   const { name } = algorithm;
   const checkUsages = ['wrapKey', 'unwrapKey'];
@@ -326,7 +326,7 @@ export const aesImportKey = async (
   if (hasAnyNotIn(keyUsages, checkUsages)) {
     throw lazyDOMException(
       'Unsupported key usage for an AES key',
-      'SyntaxError'
+      'SyntaxError',
     );
   }
 
@@ -365,7 +365,7 @@ export const aesImportKey = async (
       ) {
         throw lazyDOMException(
           'JWK "ext" Parameter and extractable mismatch',
-          'DataError'
+          'DataError',
         );
       }
 
@@ -379,7 +379,7 @@ export const aesImportKey = async (
         if (data.alg !== getAlgorithmName(algorithm.name, length))
           throw lazyDOMException(
             'JWK "alg" does not match the requested algorithm',
-            'DataError'
+            'DataError',
           );
       }
 
@@ -389,7 +389,7 @@ export const aesImportKey = async (
     default:
       throw lazyDOMException(
         `Unable to import AES key with format ${format}`,
-        'NotSupportedError'
+        'NotSupportedError',
       );
   }
 

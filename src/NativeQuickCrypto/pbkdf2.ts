@@ -4,13 +4,13 @@ export type Pbkdf2Object = {
     salt: ArrayBuffer,
     iterations: number,
     keylen: number,
-    digest: string
+    digest: string,
   ) => Promise<ArrayBuffer>;
   pbkdf2Sync: (
     password: ArrayBuffer,
     salt: ArrayBuffer,
     iterations: number,
     keylen: number,
-    digest: string
+    digest: string,
   ) => ArrayBuffer;
 };

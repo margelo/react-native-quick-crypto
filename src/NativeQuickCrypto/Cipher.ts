@@ -24,13 +24,13 @@ export const KeyVariantLookup: Record<string, KeyVariant> = {
   'RSASSA-PKCS1-v1_5': KeyVariant.RSA_SSA_PKCS1_v1_5,
   'RSA-PSS': KeyVariant.RSA_PSS,
   'RSA-OAEP': KeyVariant.RSA_OAEP,
-  'ECDSA': KeyVariant.DSA,
-  'ECDH': KeyVariant.EC,
-  'Ed25519': KeyVariant.NID,
-  'Ed448': KeyVariant.NID,
-  'X25519': KeyVariant.NID,
-  'X448': KeyVariant.NID,
-  'DH': KeyVariant.DH,
+  ECDSA: KeyVariant.DSA,
+  ECDH: KeyVariant.EC,
+  Ed25519: KeyVariant.NID,
+  Ed448: KeyVariant.NID,
+  X25519: KeyVariant.NID,
+  X448: KeyVariant.NID,
+  DH: KeyVariant.DH,
 };
 
 export type InternalCipher = {
@@ -66,7 +66,7 @@ export type PublicEncryptMethod = (
   buffer: ArrayBuffer,
   padding: number,
   oaepHash: ArrayBuffer | undefined,
-  oaepLabel: ArrayBuffer | undefined
+  oaepLabel: ArrayBuffer | undefined,
 ) => Buffer;
 export type PrivateDecryptMethod = (
   data: ArrayBuffer,
@@ -76,7 +76,7 @@ export type PrivateDecryptMethod = (
   buffer: ArrayBuffer,
   padding: number,
   oaepHash: ArrayBuffer | undefined,
-  oaepLabel: ArrayBuffer | undefined
+  oaepLabel: ArrayBuffer | undefined,
 ) => Buffer;
 
 export type GenerateKeyPairMethod = (
@@ -90,14 +90,14 @@ export type GenerateKeyPairSyncMethod = (
 ) => GenerateKeyPairReturn;
 
 export type CreatePublicKeyMethod = (
-  key: BinaryLike | EncodingOptions
+  key: BinaryLike | EncodingOptions,
 ) => PublicKeyObject;
 
 export type CreatePrivateKeyMethod = (
-  key: BinaryLike | EncodingOptions
+  key: BinaryLike | EncodingOptions,
 ) => PrivateKeyObject;
 
 export type CreateSecretKeyMethod = (
   key: BinaryLike | EncodingOptions,
-  encoding?: string
+  encoding?: string,
 ) => SecretKeyObject;

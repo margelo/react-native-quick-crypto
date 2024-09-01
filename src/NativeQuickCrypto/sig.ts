@@ -42,5 +42,5 @@ export type SignVerify = (
   salt_length: number | undefined,
   padding: number | undefined,
   dsa_encoding: DSASigEnc | undefined,
-  signature: ArrayBuffer | undefined
+  signature: ArrayBuffer | undefined,
 ) => ArrayBuffer | boolean;

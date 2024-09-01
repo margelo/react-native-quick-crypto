@@ -124,7 +124,7 @@ class CipherCommon extends Stream.Transform {
     cipherKey: BinaryLikeNode,
     isCipher: boolean,
     options: Record<string, TransformOptions> = {},
-    iv?: BinaryLike | null
+    iv?: BinaryLike | null,
   ) {
     super(options);
     const cipherKeyBuffer = binaryLikeToArrayBuffer(cipherKey);
@@ -148,7 +148,7 @@ class CipherCommon extends Stream.Transform {
   update(
     data: BinaryLike,
     inputEncoding?: CipherEncoding,
-    outputEncoding?: CipherEncoding
+    outputEncoding?: CipherEncoding,
   ): ArrayBuffer | string {
     const defaultEncoding = getDefaultEncoding();
     inputEncoding = inputEncoding ?? defaultEncoding;
@@ -213,7 +213,7 @@ class CipherCommon extends Stream.Transform {
     buffer: Buffer,
     options?: {
       plaintextLength: number;
-    }
+    },
   ): this {
     this.internal.setAAD({
       data: buffer.buffer,
@@ -237,7 +237,7 @@ class Cipher extends CipherCommon {
     cipherType: string,
     cipherKey: BinaryLikeNode,
     options: Record<string, TransformOptions> = {},
-    iv?: BinaryLike | null
+    iv?: BinaryLike | null,
   ) {
     if (iv != null) {
       iv = binaryLikeToArrayBuffer(iv);
@@ -251,7 +251,7 @@ class Decipher extends CipherCommon {
     cipherType: string,
     cipherKey: BinaryLikeNode,
     options: Record<string, TransformOptions> = {},
-    iv?: BinaryLike | null
+    iv?: BinaryLike | null,
   ) {
     if (iv != null) {
       iv = binaryLikeToArrayBuffer(iv);
@@ -264,50 +264,54 @@ class Decipher extends CipherCommon {
 export function createDecipher(
   algorithm: CipherCCMTypes,
   password: BinaryLikeNode,
-  options: CipherCCMOptions
+  options: CipherCCMOptions,
 ): DecipherCCM;
 export function createDecipher(
   algorithm: CipherGCMTypes,
   password: BinaryLikeNode,
-  options?: CipherGCMOptions
+  options?: CipherGCMOptions,
 ): DecipherGCM;
 export function createDecipher(
   algorithm: CipherType,
   password: BinaryLikeNode,
-  options?: Stream.TransformOptions
+  options?: Stream.TransformOptions,
 ): DecipherCCM | DecipherGCM | Decipher;
 export function createDecipher(
   algorithm: string,
   password: BinaryLikeNode,
-  options?: CipherCCMOptions | CipherGCMOptions | Stream.TransformOptions
+  options?: CipherCCMOptions | CipherGCMOptions | Stream.TransformOptions,
 ): DecipherCCM | DecipherGCM | Decipher {
   if (options === undefined) options = {};
-  return new Decipher(algorithm, password, options as Record<string, TransformOptions>);
+  return new Decipher(
+    algorithm,
+    password,
+    options as Record<string, TransformOptions>,
+  );
 }
 
 export function createDecipheriv(
   algorithm: CipherCCMTypes,
   key: BinaryLikeNode,
   iv: BinaryLike,
-  options: CipherCCMOptions
+  options: CipherCCMOptions,
 ): DecipherCCM;
 export function createDecipheriv(
   algorithm: CipherOCBTypes,
   key: BinaryLikeNode,
   iv: BinaryLike,
-  options: CipherOCBOptions
+  options: CipherOCBOptions,
 ): DecipherOCB;
 export function createDecipheriv(
   algorithm: CipherGCMTypes,
   key: BinaryLikeNode,
   iv: BinaryLike,
-  options?: CipherGCMOptions
+  options?: CipherGCMOptions,
 ): DecipherGCM;
 export function createDecipheriv(
   algorithm: CipherType,
   key: BinaryLikeNode,
   iv: BinaryLike | null,
-  options?: Stream.TransformOptions
+  options?: Stream.TransformOptions,
 ): DecipherCCM | DecipherOCB | DecipherGCM | Decipher;
 export function createDecipheriv(
   algorithm: string,
@@ -317,57 +321,66 @@ export function createDecipheriv(
     | CipherCCMOptions
     | CipherOCBOptions
     | CipherGCMOptions
-    | Stream.TransformOptions
+    | Stream.TransformOptions,
 ): DecipherCCM | DecipherOCB | DecipherGCM | Decipher {
-  return new Decipher(algorithm, key, options as Record<string, TransformOptions>, iv);
+  return new Decipher(
+    algorithm,
+    key,
+    options as Record<string, TransformOptions>,
+    iv,
+  );
 }
 
 export function createCipher(
   algorithm: CipherCCMTypes,
   password: BinaryLikeNode,
-  options: CipherCCMOptions
+  options: CipherCCMOptions,
 ): CipherCCM;
 export function createCipher(
   algorithm: CipherGCMTypes,
   password: BinaryLikeNode,
-  options?: CipherGCMOptions
+  options?: CipherGCMOptions,
 ): CipherGCM;
 export function createCipher(
   algorithm: CipherType,
   password: BinaryLikeNode,
-  options?: Stream.TransformOptions
+  options?: Stream.TransformOptions,
 ): CipherCCM | CipherGCM | Cipher;
 export function createCipher(
-    algorithm: string,
-    password: BinaryLikeNode,
-    options?: CipherGCMOptions | CipherCCMOptions | Stream.TransformOptions
-  ): CipherCCM | CipherGCM | Cipher {
-    return new Cipher(algorithm, password, options as Record<string, TransformOptions>);
+  algorithm: string,
+  password: BinaryLikeNode,
+  options?: CipherGCMOptions | CipherCCMOptions | Stream.TransformOptions,
+): CipherCCM | CipherGCM | Cipher {
+  return new Cipher(
+    algorithm,
+    password,
+    options as Record<string, TransformOptions>,
+  );
 }
 
 export function createCipheriv(
   algorithm: CipherCCMTypes,
   key: BinaryLikeNode,
   iv: BinaryLike,
-  options: CipherCCMOptions
+  options: CipherCCMOptions,
 ): CipherCCM;
 export function createCipheriv(
   algorithm: CipherOCBTypes,
   key: BinaryLikeNode,
   iv: BinaryLike,
-  options: CipherOCBOptions
+  options: CipherOCBOptions,
 ): CipherOCB;
 export function createCipheriv(
   algorithm: CipherGCMTypes,
   key: BinaryLikeNode,
   iv: BinaryLike,
-  options?: CipherGCMOptions
+  options?: CipherGCMOptions,
 ): CipherGCM;
 export function createCipheriv(
   algorithm: CipherType,
   key: BinaryLikeNode,
   iv: BinaryLike | null,
-  options?: Stream.TransformOptions
+  options?: Stream.TransformOptions,
 ): CipherCCM | CipherOCB | CipherGCM | Cipher;
 export function createCipheriv(
   algorithm: string,
@@ -377,9 +390,14 @@ export function createCipheriv(
     | CipherCCMOptions
     | CipherOCBOptions
     | CipherGCMOptions
-    | Stream.TransformOptions
+    | Stream.TransformOptions,
 ): CipherCCM | CipherOCB | CipherGCM | Cipher {
-  return new Cipher(algorithm, key, options as Record<string, TransformOptions>, iv);
+  return new Cipher(
+    algorithm,
+    key,
+    options as Record<string, TransformOptions>,
+    iv,
+  );
 }
 
 // RSA Functions
@@ -394,15 +412,12 @@ function rsaFunctionFor(
     buffer: ArrayBuffer,
     padding: number,
     oaepHash: ArrayBuffer | undefined,
-    oaepLabel: ArrayBuffer | undefined
+    oaepLabel: ArrayBuffer | undefined,
   ) => Buffer,
   defaultPadding: number,
-  keyType: 'public' | 'private'
+  keyType: 'public' | 'private',
 ) {
-  return (
-    options: EncodingOptions,
-    buffer: BinaryLike
-  ) => {
+  return (options: EncodingOptions, buffer: BinaryLike) => {
     const { format, type, data, passphrase } =
       keyType === 'private'
         ? preparePrivateKey(options)
@@ -423,7 +438,7 @@ function rsaFunctionFor(
       buffer,
       padding,
       oaepHash,
-      oaepLabel
+      oaepLabel,
     );
 
     return Buffer.from(rawRes);
@@ -433,19 +448,19 @@ function rsaFunctionFor(
 export const publicEncrypt = rsaFunctionFor(
   _publicEncrypt,
   constants.RSA_PKCS1_OAEP_PADDING,
-  'public'
+  'public',
 );
 export const publicDecrypt = rsaFunctionFor(
   _publicDecrypt,
   constants.RSA_PKCS1_PADDING,
-  'public'
+  'public',
 );
 // const privateEncrypt = rsaFunctionFor(_privateEncrypt, constants.RSA_PKCS1_PADDING,
 //   'private');
 export const privateDecrypt = rsaFunctionFor(
   _privateDecrypt,
   constants.RSA_PKCS1_OAEP_PADDING,
-  'private'
+  'private',
 );
 
 //                                   _       _  __          _____      _
@@ -486,7 +501,7 @@ export type GenerateKeyPairReturn = [
 export type GenerateKeyPairCallback = (
   error?: Error,
   publicKey?: KeyPairKey,
-  privateKey?: KeyPairKey
+  privateKey?: KeyPairKey,
 ) => GenerateKeyPairReturn | void;
 
 export type KeyPair = {
@@ -498,7 +513,7 @@ export type GenerateKeyPairPromiseReturn = [error?: Error, keypair?: KeyPair];
 
 function parseKeyEncoding(
   keyType: string,
-  options: GenerateKeyPairOptions = kEmptyObject
+  options: GenerateKeyPairOptions = kEmptyObject,
 ) {
   const { publicKeyEncoding, privateKeyEncoding } = options;
 
@@ -509,12 +524,12 @@ function parseKeyEncoding(
     ({ format: publicFormat, type: publicType } = parsePublicKeyEncoding(
       publicKeyEncoding,
       keyType,
-      'publicKeyEncoding'
+      'publicKeyEncoding',
     ));
   } else {
     throw new Error(
       'Invalid argument options.publicKeyEncoding',
-      publicKeyEncoding
+      publicKeyEncoding,
     );
   }
 
@@ -530,12 +545,12 @@ function parseKeyEncoding(
     } = parsePrivateKeyEncoding(
       privateKeyEncoding,
       keyType,
-      'privateKeyEncoding'
+      'privateKeyEncoding',
     ));
   } else {
     throw new Error(
       'Invalid argument options.privateKeyEncoding',
-      publicKeyEncoding as ErrorOptions
+      publicKeyEncoding as ErrorOptions,
     );
   }
 
@@ -556,7 +571,7 @@ function internalGenerateKeyPair(
   isAsync: boolean,
   type: KeyPairType,
   options?: GenerateKeyPairOptions,
-  callback?: GenerateKeyPairCallback
+  callback?: GenerateKeyPairCallback,
 ): GenerateKeyPairReturn | void {
   const encoding = parseKeyEncoding(type, options);
 
@@ -567,7 +582,13 @@ function internalGenerateKeyPair(
     case 'rsa-pss':
     // fallthrough
     case 'rsa':
-      return internalRsaGenerateKeyPair(isAsync, type, options, callback, encoding);
+      return internalRsaGenerateKeyPair(
+        isAsync,
+        type,
+        options,
+        callback,
+        encoding,
+      );
 
     // case 'dsa': {
     //   validateObject(options, 'options');
@@ -587,7 +608,13 @@ function internalGenerateKeyPair(
     // }
 
     case 'ec':
-      return internalEcGenerateKeyPair(isAsync, type, options, callback, encoding);
+      return internalEcGenerateKeyPair(
+        isAsync,
+        type,
+        options,
+        callback,
+        encoding,
+      );
 
     // case 'ed25519':
     // case 'ed448':
@@ -665,7 +692,7 @@ const internalRsaGenerateKeyPair = (
   type: KeyPairType,
   options: GenerateKeyPairOptions | undefined,
   callback: GenerateKeyPairCallback | undefined,
-  encoding: (string | ArrayBuffer | KFormatType | KeyEncoding | undefined)[]
+  encoding: (string | ArrayBuffer | KFormatType | KeyEncoding | undefined)[],
 ): GenerateKeyPairReturn | void => {
   validateObject<GenerateKeyPairOptions>(options, 'options');
   const { modulusLength } = options!;
@@ -683,7 +710,7 @@ const internalRsaGenerateKeyPair = (
         KeyVariant.RSA_SSA_PKCS1_v1_5, // Used also for RSA-OAEP
         modulusLength as number,
         publicExponent,
-        ...encoding
+        ...encoding,
       )
         .then(([err, publicKey, privateKey]) => {
           if (publicKey instanceof Buffer) {
@@ -703,11 +730,13 @@ const internalRsaGenerateKeyPair = (
           KeyVariant.RSA_SSA_PKCS1_v1_5,
           modulusLength as number,
           publicExponent,
-          ...encoding
+          ...encoding,
         );
 
-      const pub = (publicKey instanceof Buffer) ? Buffer.from(publicKey) : publicKey;
-      const priv = (privateKey instanceof Buffer) ? Buffer.from(privateKey) : privateKey;
+      const pub =
+        publicKey instanceof Buffer ? Buffer.from(publicKey) : publicKey;
+      const priv =
+        privateKey instanceof Buffer ? Buffer.from(privateKey) : privateKey;
       return [err, pub, priv];
     }
   }
@@ -754,7 +783,7 @@ const internalRsaGenerateKeyPair = (
     hashAlgorithm || hash,
     mgf1HashAlgorithm || mgf1Hash,
     saltLength,
-    ...encoding
+    ...encoding,
   );
 };
 
@@ -763,7 +792,7 @@ const internalEcGenerateKeyPair = (
   _type: KeyPairType,
   options: GenerateKeyPairOptions | undefined,
   callback: GenerateKeyPairCallback | undefined,
-  encoding: (string | ArrayBuffer | KFormatType | KeyEncoding | undefined)[]
+  encoding: (string | ArrayBuffer | KFormatType | KeyEncoding | undefined)[],
 ): GenerateKeyPairReturn | void => {
   validateObject<GenerateKeyPairOptions>(options, 'options');
   const { namedCurve } = options!;
@@ -775,16 +804,14 @@ const internalEcGenerateKeyPair = (
   else if (paramEncoding === 'explicit')
     paramEncodingFlag = ECCurve.OPENSSL_EC_EXPLICIT_CURVE;
   else
-    throw new Error(
-      `Invalid Argument options.paramEncoding ${paramEncoding}`
-    );
+    throw new Error(`Invalid Argument options.paramEncoding ${paramEncoding}`);
 
   if (isAsync) {
     NativeQuickCrypto.generateKeyPair(
       KeyVariant.EC,
       namedCurve as NamedCurve,
       paramEncodingFlag,
-      ...encoding
+      ...encoding,
     )
       .then(([err, publicKey, privateKey]) => {
         if (publicKey instanceof Buffer) {
@@ -804,17 +831,18 @@ const internalEcGenerateKeyPair = (
     KeyVariant.EC,
     namedCurve as NamedCurve,
     paramEncodingFlag,
-    ...encoding
+    ...encoding,
   );
-  const pub = (publicKey instanceof Buffer) ? Buffer.from(publicKey) : publicKey;
-  const priv = (privateKey instanceof Buffer) ? Buffer.from(privateKey) : privateKey;
+  const pub = publicKey instanceof Buffer ? Buffer.from(publicKey) : publicKey;
+  const priv =
+    privateKey instanceof Buffer ? Buffer.from(privateKey) : privateKey;
   return [err, pub, priv];
-}
+};
 
 export const generateKeyPair = (
   type: KeyPairType,
   options: GenerateKeyPairOptions,
-  callback: GenerateKeyPairCallback
+  callback: GenerateKeyPairCallback,
 ): void => {
   validateFunction(callback);
   internalGenerateKeyPair(true, type, options, callback);
@@ -824,7 +852,7 @@ export const generateKeyPair = (
 // (attempted to use util.promisify, to no avail)
 export const generateKeyPairPromise = (
   type: KeyPairType,
-  options: GenerateKeyPairOptions
+  options: GenerateKeyPairOptions,
 ): Promise<GenerateKeyPairPromiseReturn> => {
   return new Promise((resolve, reject) => {
     generateKeyPair(type, options, (err, publicKey, privateKey) => {
@@ -841,18 +869,18 @@ export const generateKeyPairPromise = (
 export function generateKeyPairSync(type: KeyPairType): CryptoKeyPair;
 export function generateKeyPairSync(
   type: KeyPairType,
-  options: GenerateKeyPairOptions
+  options: GenerateKeyPairOptions,
 ): CryptoKeyPair;
 export function generateKeyPairSync(
   type: KeyPairType,
-  options?: GenerateKeyPairOptions
+  options?: GenerateKeyPairOptions,
 ): CryptoKeyPair {
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const [_, publicKey, privateKey] = internalGenerateKeyPair(
     false,
     type,
     options,
-    undefined
+    undefined,
   )!;
 
   return {

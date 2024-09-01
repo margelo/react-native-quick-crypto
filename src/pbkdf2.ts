@@ -25,12 +25,11 @@ function sanitizeInput(input: BinaryLike, errorMsg: string): ArrayBuffer {
     const ab = binaryLikeToArrayBuffer(input);
     console.log('sanitized input', ab);
     return ab;
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
   } catch (_e: unknown) {
     throw new Error(errorMsg);
   }
 }
-
 
 export function pbkdf2(
   password: Password,
@@ -38,7 +37,7 @@ export function pbkdf2(
   iterations: number,
   keylen: number,
   digest: string,
-  callback: Pbkdf2Callback
+  callback: Pbkdf2Callback,
 ): void {
   if (callback === undefined || typeof callback !== 'function') {
     throw new Error('No callback provided to pbkdf2');
@@ -54,7 +53,7 @@ export function pbkdf2(
       sanitizedSalt,
       iterations,
       keylen,
-      normalizedDigest
+      normalizedDigest,
     )
     .then(
       (res: ArrayBuffer) => {
@@ -62,7 +61,7 @@ export function pbkdf2(
       },
       (e: Error) => {
         callback!(e);
-      }
+      },
     );
 }
 
@@ -71,7 +70,7 @@ export function pbkdf2Sync(
   salt: Salt,
   iterations: number,
   keylen: number,
-  digest?: string
+  digest?: string,
 ): ArrayBuffer {
   const sanitizedPassword = sanitizeInput(password, WRONG_PASS);
   const sanitizedSalt = sanitizeInput(salt, WRONG_SALT);
@@ -83,7 +82,7 @@ export function pbkdf2Sync(
     sanitizedSalt,
     iterations,
     keylen,
-    algo
+    algo,
   );
 
   return Buffer.from(result);
@@ -97,14 +96,14 @@ const pbkdf2WithDigest = (
   iterations: number,
   keylen: number,
   digest: HashAlgorithm,
-  callback: Pbkdf2Callback
+  callback: Pbkdf2Callback,
 ) => pbkdf2(password, salt, iterations, keylen, digest, callback);
 
 const pbkdf2Promise = promisify(pbkdf2WithDigest);
 export async function pbkdf2DeriveBits(
   algorithm: SubtleAlgorithm,
   baseKey: CryptoKey,
-  length: number
+  length: number,
 ): Promise<ArrayBuffer> {
   const { iterations, hash, salt } = algorithm;
   const normalizedHash = normalizeHashName(hash);
@@ -134,12 +133,12 @@ export async function pbkdf2DeriveBits(
     sanitizedSalt,
     iterations,
     length / 8,
-    normalizedHash as HashAlgorithm
+    normalizedHash as HashAlgorithm,
   );
   if (!result) {
     throw lazyDOMException(
       'received bad result from pbkdf2()',
-      'OperationError'
+      'OperationError',
     );
   }
   return bufferLikeToArrayBuffer(result);

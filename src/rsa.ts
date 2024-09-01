@@ -43,7 +43,7 @@ export enum RSAKeyVariant {
 function verifyAcceptableRsaKeyUse(
   name: AnyAlgorithm,
   isPublic: boolean,
-  usages: KeyUsage[]
+  usages: KeyUsage[],
 ): void {
   let checkSet;
   switch (name) {
@@ -58,13 +58,13 @@ function verifyAcceptableRsaKeyUse(
     default:
       throw lazyDOMException(
         'The algorithm is not supported',
-        'NotSupportedError'
+        'NotSupportedError',
       );
   }
   if (hasAnyNotIn(usages, checkSet)) {
     throw lazyDOMException(
       `Unsupported key usage for an ${name} key`,
-      'SyntaxError'
+      'SyntaxError',
     );
   }
 }
@@ -73,14 +73,14 @@ const rsaOaepCipher = (
   mode: CipherOrWrapMode,
   key: CryptoKey,
   data: ArrayBuffer,
-  { label }: RsaOaepParams
+  { label }: RsaOaepParams,
 ): Promise<ArrayBuffer> => {
   const type =
     mode === CipherOrWrapMode.kWebCryptoCipherEncrypt ? 'public' : 'private';
   if (key.type !== type) {
     throw lazyDOMException(
       'The requested operation is not valid for the provided key',
-      'InvalidAccessError'
+      'InvalidAccessError',
     );
   }
   if (label !== undefined) {
@@ -93,7 +93,7 @@ const rsaOaepCipher = (
     data,
     RSAKeyVariant.RSA_OAEP,
     normalizeHashName(key.algorithm.hash) as DigestAlgorithm,
-    label !== undefined ? bufferLikeToArrayBuffer(label) : undefined
+    label !== undefined ? bufferLikeToArrayBuffer(label) : undefined,
   );
 };
 
@@ -102,17 +102,19 @@ export const rsaCipher = rsaOaepCipher;
 export const rsaKeyGenerate = async (
   algorithm: SubtleAlgorithm,
   extractable: boolean,
-  keyUsages: KeyUsage[]
+  keyUsages: KeyUsage[],
 ): Promise<CryptoKeyPair> => {
   const { name, modulusLength, publicExponent, hash: rawHash } = algorithm;
   const hash: HashAlgorithm = normalizeHashName(rawHash);
 
   // const usageSet = new SafeSet(keyUsages);
-  const publicExponentConverted = bigIntArrayToUnsignedInt(publicExponent as Uint8Array);
+  const publicExponentConverted = bigIntArrayToUnsignedInt(
+    publicExponent as Uint8Array,
+  );
   if (publicExponentConverted === undefined) {
     throw lazyDOMException(
       'The publicExponent must be equivalent to an unsigned 32-bit value',
-      'OperationError'
+      'OperationError',
     );
   }
 
@@ -123,7 +125,7 @@ export const rsaKeyGenerate = async (
       ) {
         throw lazyDOMException(
           'Unsupported key usage for a RSA key',
-          'SyntaxError'
+          'SyntaxError',
         );
       }
       break;
@@ -131,7 +133,7 @@ export const rsaKeyGenerate = async (
       if (hasAnyNotIn(keyUsages, ['sign', 'verify'])) {
         throw lazyDOMException(
           'Unsupported key usage for a RSA key',
-          'SyntaxError'
+          'SyntaxError',
         );
       }
   }
@@ -143,7 +145,7 @@ export const rsaKeyGenerate = async (
   if (err) {
     throw lazyDOMException(
       'The operation failed for an operation-specific reason',
-      { name: 'OperationError', cause: err }
+      { name: 'OperationError', cause: err },
     );
   }
 
@@ -177,7 +179,7 @@ export const rsaKeyGenerate = async (
     priv,
     keyAlgorithm,
     privateUsages,
-    extractable
+    extractable,
   );
 
   return { publicKey, privateKey };
@@ -185,19 +187,19 @@ export const rsaKeyGenerate = async (
 
 export const rsaExportKey = (
   key: CryptoKey,
-  format: KWebCryptoKeyFormat
+  format: KWebCryptoKeyFormat,
 ): ArrayBuffer => {
   const variant = KeyVariantLookup[key.algorithm.name];
   if (variant === undefined) {
     throw lazyDOMException(
       `Unrecognized algorithm name '${key.algorithm.name}'`,
-      'NotSupportedError'
+      'NotSupportedError',
     );
   }
   return NativeQuickCrypto.webcrypto.rsaExportKey(
     format,
     key.keyObject.handle,
-    variant
+    variant,
   );
 };
 
@@ -206,7 +208,7 @@ export const rsaImportKey = (
   keyData: BufferLike | JWK,
   algorithm: SubtleAlgorithm,
   extractable: boolean,
-  keyUsages: KeyUsage[]
+  keyUsages: KeyUsage[],
 ): CryptoKey => {
   // const usagesSet = new SafeSet(keyUsages);
   let keyObject: PublicKeyObject | PrivateKeyObject;
@@ -254,7 +256,7 @@ export const rsaImportKey = (
       verifyAcceptableRsaKeyUse(
         algorithm.name,
         data.d === undefined,
-        keyUsages
+        keyUsages,
       );
 
       if (keyUsages.length > 0 && data.use !== undefined) {
@@ -272,19 +274,19 @@ export const rsaImportKey = (
       ) {
         throw lazyDOMException(
           'JWK "ext" Parameter and extractable mismatch',
-          'DataError'
+          'DataError',
         );
       }
 
       if (data.alg !== undefined) {
         const hash = normalizeHashName(
           data.alg as HashAlgorithm,
-          HashContext.WebCrypto
+          HashContext.WebCrypto,
         );
         if (hash !== algorithm.hash)
           throw lazyDOMException(
             'JWK "alg" does not match the requested algorithm',
-            'DataError'
+            'DataError',
           );
       }
 
@@ -303,7 +305,7 @@ export const rsaImportKey = (
     default:
       throw lazyDOMException(
         `Unable to import RSA key with format ${format}`,
-        'NotSupportedError'
+        'NotSupportedError',
       );
   }
 
@@ -326,7 +328,7 @@ export const rsaImportKey = (
       hash: algorithm.hash,
     },
     keyUsages,
-    extractable
+    extractable,
   );
 };
 

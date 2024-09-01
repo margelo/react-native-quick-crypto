@@ -9,20 +9,20 @@ type RandomBuffer = TypedArray | DataView | ArrayBufferLike | Buffer;
 
 export function randomFill<T extends RandomBuffer>(
   buffer: T,
-  callback: (err: Error | null, buf: T) => void
+  callback: (err: Error | null, buf: T) => void,
 ): void;
 
 export function randomFill<T extends RandomBuffer>(
   buffer: T,
   offset: number,
-  callback: (err: Error | null, buf: T) => void
+  callback: (err: Error | null, buf: T) => void,
 ): void;
 
 export function randomFill<T extends RandomBuffer>(
   buffer: T,
   offset: number,
   size: number,
-  callback: (err: Error | null, buf: T) => void
+  callback: (err: Error | null, buf: T) => void,
 ): void;
 
 export function randomFill(buffer: RandomBuffer, ...rest: unknown[]): void {
@@ -32,7 +32,7 @@ export function randomFill(buffer: RandomBuffer, ...rest: unknown[]): void {
 
   const callback = rest[rest.length - 1] as unknown as (
     err: Error | null,
-    buf?: ArrayBuffer
+    buf?: ArrayBuffer,
   ) => void;
 
   let offset: number = 0;
@@ -55,25 +55,25 @@ export function randomFill(buffer: RandomBuffer, ...rest: unknown[]): void {
       },
       (e: Error) => {
         callback(e);
-      }
+      },
     );
 }
 
 export function randomFillSync<T extends RandomBuffer>(
   buffer: T,
   offset?: number,
-  size?: number
+  size?: number,
 ): T;
 
 export function randomFillSync(
   buffer: RandomBuffer,
   offset: number = 0,
-  size?: number
+  size?: number,
 ) {
   return random.randomFillSync(
     abvToArrayBuffer(buffer as ArrayBufferView),
     offset,
-    size ?? buffer.byteLength
+    size ?? buffer.byteLength,
   );
 }
 
@@ -81,12 +81,12 @@ export function randomBytes(size: number): Buffer;
 
 export function randomBytes(
   size: number,
-  callback: (err: Error | null, buf?: Buffer) => void
+  callback: (err: Error | null, buf?: Buffer) => void,
 ): void;
 
 export function randomBytes(
   size: number,
-  callback?: (err: Error | null, buf?: Buffer) => void
+  callback?: (err: Error | null, buf?: Buffer) => void,
 ): void | Buffer {
   const buf = new Buffer(size);
 
@@ -135,13 +135,13 @@ export function randomInt(max: number): number;
 export function randomInt(
   min: number,
   max: number,
-  callback: RandomIntCallback
+  callback: RandomIntCallback,
 ): void;
 export function randomInt(min: number, max: number): number;
 export function randomInt(
   arg1: number,
   arg2?: number | RandomIntCallback,
-  callback?: RandomIntCallback
+  callback?: RandomIntCallback,
 ): void | number {
   // Detect optional min syntax
   // randomInt(max)

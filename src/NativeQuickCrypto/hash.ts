@@ -6,5 +6,5 @@ export type InternalHash = {
 
 export type CreateHashMethod = (
   algorithm: string,
-  outputLength?: number
+  outputLength?: number,
 ) => InternalHash;

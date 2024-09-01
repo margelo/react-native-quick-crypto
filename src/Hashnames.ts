@@ -80,14 +80,14 @@ const kHashNames: HashNames = {
 
 export function normalizeHashName(
   algo: string | HashAlgorithm | undefined,
-  context: HashContext = HashContext.Node
+  context: HashContext = HashContext.Node,
 ): HashAlgorithm {
   if (typeof algo !== 'undefined') {
     const normAlgo = algo.toString().toLowerCase();
     try {
       const alias = kHashNames[normAlgo]![context] as HashAlgorithm;
       if (alias) return alias;
-    // eslint-disable-next-line @typescript-eslint/no-unused-vars
+      // eslint-disable-next-line @typescript-eslint/no-unused-vars
     } catch (_e) {
       // ignore
     }

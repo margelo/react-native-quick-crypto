@@ -95,7 +95,7 @@ class Verify extends Stream.Writable {
       binaryLikeToArrayBuffer(signature),
       rsaPadding,
       pssSaltLength,
-      dsaSigEnc
+      dsaSigEnc,
     );
 
     return ret;
@@ -142,7 +142,7 @@ class Sign extends Stream.Writable {
       passphrase,
       rsaPadding,
       pssSaltLength,
-      dsaSigEnc
+      dsaSigEnc,
     );
 
     encoding = encoding || getDefaultEncoding();

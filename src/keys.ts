@@ -32,12 +32,9 @@ export type AnyAlgorithm =
   | 'HKDF'
   | 'unknown';
 
-  export type DigestAlgorithm = 'SHA-1' | 'SHA-256' | 'SHA-384' | 'SHA-512';
+export type DigestAlgorithm = 'SHA-1' | 'SHA-256' | 'SHA-384' | 'SHA-512';
 
-  export type HashAlgorithm =
-  | DigestAlgorithm
-  | 'SHA-224'
-  | 'RIPEMD-160';
+export type HashAlgorithm = DigestAlgorithm | 'SHA-224' | 'RIPEMD-160';
 
 export type KeyPairType = 'rsa' | 'rsa-pss' | 'ec';
 
@@ -208,28 +205,28 @@ export type EncodingOptions = {
 export type AsymmetricKeyType = 'rsa' | 'rsa-pss' | 'dsa' | 'ec' | undefined;
 
 export type JWK = {
-  'kty'?: 'AES' | 'RSA' | 'EC' | 'oct';
-  'use'?: 'sig' | 'enc';
-  'key_ops'?: KeyUsage[];
-  'alg'?: string; // TODO: enumerate these (RFC-7517)
-  'crv'?: string;
-  'kid'?: string;
-  'x5u'?: string;
-  'x5c'?: string[];
-  'x5t'?: string;
+  kty?: 'AES' | 'RSA' | 'EC' | 'oct';
+  use?: 'sig' | 'enc';
+  key_ops?: KeyUsage[];
+  alg?: string; // TODO: enumerate these (RFC-7517)
+  crv?: string;
+  kid?: string;
+  x5u?: string;
+  x5c?: string[];
+  x5t?: string;
   'x5t#256'?: string;
-  'n'?: string;
-  'e'?: string;
-  'd'?: string;
-  'p'?: string;
-  'q'?: string;
-  'x'?: string;
-  'y'?: string;
-  'k'?: string;
-  'dp'?: string;
-  'dq'?: string;
-  'qi'?: string;
-  'ext'?: boolean;
+  n?: string;
+  e?: string;
+  d?: string;
+  p?: string;
+  q?: string;
+  x?: string;
+  y?: string;
+  k?: string;
+  dp?: string;
+  dq?: string;
+  qi?: string;
+  ext?: boolean;
 };
 
 const encodingNames = {
@@ -260,7 +257,7 @@ function option(name: string, objName: string | undefined) {
 function parseKeyFormat(
   formatStr: string | undefined,
   defaultFormat: KFormatType | undefined,
-  optionName?: string
+  optionName?: string,
 ) {
   if (formatStr === undefined && defaultFormat !== undefined)
     return defaultFormat;
@@ -276,14 +273,14 @@ function parseKeyType(
   required: boolean,
   keyType: string | undefined,
   isPublic: boolean | undefined,
-  optionName: string
+  optionName: string,
 ): KeyEncoding | undefined {
   if (typeStr === undefined && !required) {
     return undefined;
   } else if (typeStr === 'pkcs1') {
     if (keyType !== undefined && keyType !== 'rsa') {
       throw new Error(
-        `Crypto incompatible key options: ${typeStr} can only be used for RSA keys`
+        `Crypto incompatible key options: ${typeStr} can only be used for RSA keys`,
       );
     }
     return KeyEncoding.kKeyEncodingPKCS1;
@@ -294,7 +291,7 @@ function parseKeyType(
   } else if (typeStr === 'sec1' && isPublic !== true) {
     if (keyType !== undefined && keyType !== 'ec') {
       throw new Error(
-        `Incompatible key options ${typeStr} can only be used for EC keys`
+        `Incompatible key options ${typeStr} can only be used for EC keys`,
       );
     }
     return KeyEncoding.kKeyEncodingSEC1;
@@ -307,7 +304,7 @@ function parseKeyFormatAndType(
   enc: EncodingOptions,
   keyType?: string,
   isPublic?: boolean,
-  objName?: string
+  objName?: string,
 ) {
   const { format: formatStr, type: typeStr } = enc;
 
@@ -315,7 +312,7 @@ function parseKeyFormatAndType(
   const format = parseKeyFormat(
     formatStr,
     isInput ? KFormatType.kKeyFormatPEM : undefined,
-    option('format', objName)
+    option('format', objName),
   );
 
   const isRequired =
@@ -327,7 +324,7 @@ function parseKeyFormatAndType(
     isRequired,
     keyType,
     isPublic,
-    option('type', objName)
+    option('type', objName),
   );
   return { format, type };
 }
@@ -336,7 +333,7 @@ function parseKeyEncoding(
   enc: EncodingOptions,
   keyType?: string,
   isPublic?: boolean,
-  objName?: string
+  objName?: string,
 ) {
   // validateObject(enc, 'options');
 
@@ -346,7 +343,7 @@ function parseKeyEncoding(
     enc,
     keyType,
     isPublic,
-    objName
+    objName,
   );
 
   let cipher, passphrase, encoding;
@@ -357,7 +354,7 @@ function parseKeyEncoding(
       if (cipher != null) {
         if (typeof cipher !== 'string')
           throw new Error(
-            `Invalid argument ${option('cipher', objName)}: ${cipher}`
+            `Invalid argument ${option('cipher', objName)}: ${cipher}`,
           );
         if (
           format === KFormatType.kKeyFormatDER &&
@@ -365,12 +362,12 @@ function parseKeyEncoding(
             type === KeyEncoding.kKeyEncodingSEC1)
         ) {
           throw new Error(
-            `Incompatible key options ${encodingNames[type]} does not support encryption`
+            `Incompatible key options ${encodingNames[type]} does not support encryption`,
           );
         }
       } else if (passphrase !== undefined) {
         throw new Error(
-          `invalid argument ${option('cipher', objName)}: ${cipher}`
+          `invalid argument ${option('cipher', objName)}: ${cipher}`,
         );
       }
     }
@@ -380,7 +377,7 @@ function parseKeyEncoding(
       (!isInput && cipher != null && !isStringOrBuffer(passphrase))
     ) {
       throw new Error(
-        `Invalid argument value ${option('passphrase', objName)}: ${passphrase}`
+        `Invalid argument value ${option('passphrase', objName)}: ${passphrase}`,
       );
     }
   }
@@ -393,7 +390,7 @@ function parseKeyEncoding(
 
 function prepareAsymmetricKey(
   key: BinaryLike | EncodingOptions,
-  ctx: KeyInputContext
+  ctx: KeyInputContext,
 ): {
   format: KFormatType;
   data: ArrayBuffer;
@@ -428,7 +425,7 @@ function prepareAsymmetricKey(
     // Either PEM or DER using PKCS#1 or SPKI.
     if (!isStringOrBuffer(data)) {
       throw new Error(
-        'prepareAsymmetricKey: key is not a string or ArrayBuffer'
+        'prepareAsymmetricKey: key is not a string or ArrayBuffer',
       );
     }
 
@@ -463,7 +460,7 @@ export function preparePublicOrPrivateKey(key: BinaryLike | EncodingOptions) {
 export function parsePublicKeyEncoding(
   enc: EncodingOptions,
   keyType: string | undefined,
-  objName?: string
+  objName?: string,
 ) {
   return parseKeyEncoding(enc, keyType, keyType ? true : undefined, objName);
 }
@@ -474,7 +471,7 @@ export function parsePublicKeyEncoding(
 export function parsePrivateKeyEncoding(
   enc: EncodingOptions,
   keyType: string | undefined,
-  objName?: string
+  objName?: string,
 ) {
   return parseKeyEncoding(enc, keyType, false, objName);
 }
@@ -505,7 +502,7 @@ export function parsePrivateKeyEncoding(
 function prepareSecretKey(
   key: BinaryLike,
   encoding?: string,
-  bufferOnly = false
+  bufferOnly = false,
 ): ArrayBuffer {
   try {
     if (!bufferOnly) {
@@ -513,7 +510,7 @@ function prepareSecretKey(
       if (key instanceof KeyObject) {
         if (key.type !== 'secret')
           throw new Error(
-            `invalid KeyObject type: ${key.type}, expected 'secret'`
+            `invalid KeyObject type: ${key.type}, expected 'secret'`,
           );
         return key.handle.export();
       }
@@ -521,7 +518,7 @@ function prepareSecretKey(
       else if (key instanceof CryptoKey) {
         if (key.type !== 'secret')
           throw new Error(
-            `invalid CryptoKey type: ${key.type}, expected 'secret'`
+            `invalid CryptoKey type: ${key.type}, expected 'secret'`,
           );
         return key.keyObject.handle.export();
       }
@@ -535,12 +532,15 @@ function prepareSecretKey(
   } catch (error) {
     throw new Error(
       'Invalid argument type for "key". Need ArrayBuffer, TypedArray, KeyObject, CryptoKey, string',
-      { cause: error }
+      { cause: error },
     );
   }
 }
 
-export function createSecretKey(key: BinaryLike, encoding?: string): SecretKeyObject {
+export function createSecretKey(
+  key: BinaryLike,
+  encoding?: string,
+): SecretKeyObject {
   const k = prepareSecretKey(key, encoding, true);
   const handle = NativeQuickCrypto.webcrypto.createKeyObjectHandle();
   handle.init(KeyType.Secret, k);
@@ -548,11 +548,11 @@ export function createSecretKey(key: BinaryLike, encoding?: string): SecretKeyOb
 }
 
 export function createPublicKey(
-  key: BinaryLike | EncodingOptions
+  key: BinaryLike | EncodingOptions,
 ): PublicKeyObject {
   const { format, type, data, passphrase } = prepareAsymmetricKey(
     key,
-    KeyInputContext.kCreatePublic
+    KeyInputContext.kCreatePublic,
   );
   const handle = NativeQuickCrypto.webcrypto.createKeyObjectHandle();
   if (format === KFormatType.kKeyFormatJWK) {
@@ -564,11 +564,11 @@ export function createPublicKey(
 }
 
 export const createPrivateKey = (
-  key: BinaryLike | EncodingOptions
+  key: BinaryLike | EncodingOptions,
 ): PrivateKeyObject => {
   const { format, type, data, passphrase } = prepareAsymmetricKey(
     key,
-    KeyInputContext.kCreatePrivate
+    KeyInputContext.kCreatePrivate,
   );
   const handle = NativeQuickCrypto.webcrypto.createKeyObjectHandle();
   if (format === KFormatType.kKeyFormatJWK) {
@@ -593,7 +593,7 @@ export class CryptoKey {
     keyObject: KeyObject,
     keyAlgorithm: SubtleAlgorithm,
     keyUsages: KeyUsage[],
-    keyExtractable: boolean
+    keyExtractable: boolean,
   ) {
     this.keyObject = keyObject;
     this.keyAlgorithm = keyAlgorithm;
@@ -760,7 +760,7 @@ export class PublicKeyObject extends AsymmetricKeyObject {
     }
     const { format, type } = parsePublicKeyEncoding(
       options,
-      this.asymmetricKeyType
+      this.asymmetricKeyType,
     );
     return this.handle.export(format, type);
   }
@@ -781,7 +781,7 @@ export class PrivateKeyObject extends AsymmetricKeyObject {
     }
     const { format, type, cipher, passphrase } = parsePrivateKeyEncoding(
       options,
-      this.asymmetricKeyType
+      this.asymmetricKeyType,
     );
     return this.handle.export(format, type, cipher, passphrase);
   }

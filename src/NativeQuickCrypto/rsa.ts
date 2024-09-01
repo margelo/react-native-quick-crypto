@@ -8,5 +8,5 @@ export type RSACipher = (
   data: ArrayBuffer,
   variant: RSAKeyVariant,
   hash: DigestAlgorithm,
-  label?: ArrayBuffer
+  label?: ArrayBuffer,
 ) => Promise<ArrayBuffer>;

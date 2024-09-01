@@ -9,12 +9,12 @@ import {
 
 export type KeyGenCallback = (
   err: Error | undefined,
-  key?: SecretKeyObject
+  key?: SecretKeyObject,
 ) => void;
 
 export const generateKeyPromise = (
   type: SecretKeyType,
-  options: AesKeyGenParams // | HmacKeyGenParams
+  options: AesKeyGenParams, // | HmacKeyGenParams
 ): Promise<[Error | undefined, SecretKeyObject | undefined]> => {
   return new Promise((resolve, reject) => {
     generateKey(type, options, (err, key) => {
@@ -29,7 +29,7 @@ export const generateKeyPromise = (
 export const generateKey = (
   type: SecretKeyType,
   options: AesKeyGenParams, // | HmacKeyGenParams,
-  callback: KeyGenCallback
+  callback: KeyGenCallback,
 ): void => {
   validateLength(type, options.length);
   if (!validateFunction(callback)) {
@@ -47,11 +47,11 @@ export const generateKey = (
 
 export const generateKeySync = (
   type: SecretKeyType,
-  options: AesKeyGenParams // | HmacKeyGenParams,
+  options: AesKeyGenParams, // | HmacKeyGenParams,
 ): SecretKeyObject => {
   validateLength(type, options.length);
   const handle = NativeQuickCrypto.webcrypto.generateSecretKeySync(
-    options.length
+    options.length,
   );
   return new SecretKeyObject(handle);
 };
@@ -62,7 +62,7 @@ const validateLength = (type: SecretKeyType, length: number) => {
       if (!kAesKeyLengths.includes(length)) {
         throw lazyDOMException(
           'AES key length must be 128, 192, or 256 bits',
-          'OperationError'
+          'OperationError',
         );
       }
       break;
@@ -70,7 +70,7 @@ const validateLength = (type: SecretKeyType, length: number) => {
       if (length < 8 || length > 2 ** 31 - 1) {
         throw lazyDOMException(
           'HMAC key length must be between 8 and 2^31 - 1',
-          'OperationError'
+          'OperationError',
         );
       }
       break;

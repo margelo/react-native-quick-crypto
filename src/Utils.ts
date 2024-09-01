@@ -32,16 +32,29 @@ export type CipherEncoding = Encoding | 'buffer';
 // These are for shortcomings in @types/node
 // Here we use "*Type" instead of "*Types" like node does.
 export type CipherType =
-  | 'aes128' | 'aes192' | 'aes256'
-  | CipherCBCType | CipherCFBType | CipherCTRType | CipherDESType
-  | CipherECBType  | CipherGCMType | CipherOFBType;
+  | 'aes128'
+  | 'aes192'
+  | 'aes256'
+  | CipherCBCType
+  | CipherCFBType
+  | CipherCTRType
+  | CipherDESType
+  | CipherECBType
+  | CipherGCMType
+  | CipherOFBType;
 export type CipherCBCType = 'aes-128-cbc' | 'aes-192-cbc' | 'aes-256-cbc';
 export type CipherCFBType =
-  | 'aes-128-cfb' | 'aes-192-cfb' | 'aes-256-cfb'
-  | 'aes-128-cfb1' | 'aes-192-cfb1' | 'aes-256-cfb1'
-  | 'aes-128-cfb8' | 'aes-192-cfb8' | 'aes-256-cfb8';
+  | 'aes-128-cfb'
+  | 'aes-192-cfb'
+  | 'aes-256-cfb'
+  | 'aes-128-cfb1'
+  | 'aes-192-cfb1'
+  | 'aes-256-cfb1'
+  | 'aes-128-cfb8'
+  | 'aes-192-cfb8'
+  | 'aes-256-cfb8';
 export type CipherCTRType = 'aes-128-ctr' | 'aes-192-ctr' | 'aes-256-ctr';
-  export type CipherDESType =
+export type CipherDESType =
   | 'des'
   | 'des3'
   | 'des-cbc'
@@ -183,14 +196,13 @@ export function bufferLikeToArrayBuffer(buf: BufferLike): ArrayBuffer {
 
 export function binaryLikeToArrayBuffer(
   input: BinaryLikeNode, // CipherKey adds compat with node types
-  encoding: string = 'utf-8'
+  encoding: string = 'utf-8',
 ): ArrayBuffer {
-
   // string
   if (typeof input === 'string') {
     if (encoding === 'buffer') {
       throw new Error(
-        'Cannot create a buffer from a string with a buffer encoding'
+        'Cannot create a buffer from a string with a buffer encoding',
       );
     }
 
@@ -198,7 +210,7 @@ export function binaryLikeToArrayBuffer(
 
     return buffer.buffer.slice(
       buffer.byteOffset,
-      buffer.byteOffset + buffer.byteLength
+      buffer.byteOffset + buffer.byteLength,
     );
   }
 
@@ -269,7 +281,7 @@ export function validateObject<T>(
     allowArray: boolean;
     allowFunction: boolean;
     nullable: boolean;
-  } | null
+  } | null,
 ): value is T {
   const useDefaultOptions = options == null;
   const allowArray = useDefaultOptions ? false : options.allowArray;
@@ -291,7 +303,7 @@ export function validateInt32(
   value: any,
   name: string,
   min = -2147483648,
-  max = 2147483647
+  max = 2147483647,
 ) {
   // The defaults for min and max correspond to the limits of 32-bit integers.
   if (typeof value !== 'number') {
@@ -299,12 +311,12 @@ export function validateInt32(
   }
   if (!Number.isInteger(value)) {
     throw new Error(
-      `Argument out of range - ${name} out of integer range: ${value}`
+      `Argument out of range - ${name} out of integer range: ${value}`,
     );
   }
   if (value < min || value > max) {
     throw new Error(
-      `Invalid argument - ${name} out of range >= ${min} && <= ${max}: ${value}`
+      `Invalid argument - ${name} out of range >= ${min} && <= ${max}: ${value}`,
     );
   }
 }
@@ -312,7 +324,7 @@ export function validateInt32(
 export function validateUint32(
   value: number,
   name: string,
-  positive?: boolean
+  positive?: boolean,
 ) {
   if (typeof value !== 'number') {
     // throw new ERR_INVALID_ARG_TYPE(name, 'number', value);
@@ -321,7 +333,7 @@ export function validateUint32(
   if (!Number.isInteger(value)) {
     // throw new ERR_OUT_OF_RANGE(name, 'an integer', value);
     throw new Error(
-      `Argument out of range - ${name} out of integer range: ${value}`
+      `Argument out of range - ${name} out of integer range: ${value}`,
     );
   }
   const min = positive ? 1 : 0;
@@ -330,7 +342,7 @@ export function validateUint32(
   if (value < min || value > max) {
     // throw new ERR_OUT_OF_RANGE(name, `>= ${min} && <= ${max}`, value);
     throw new Error(
-      `Invalid argument - ${name} out of range >= ${min} && <= ${max}: ${value}`
+      `Invalid argument - ${name} out of range >= ${min} && <= ${max}: ${value}`,
     );
   }
 }
@@ -376,19 +388,19 @@ type SupportedAlgorithm<Type extends string> = {
 };
 
 type SupportedAlgorithms = {
-  'digest': SupportedAlgorithm<DigestAlgorithm>;
-  'generateKey': SupportedAlgorithm<KeyPairAlgorithm | SecretKeyAlgorithm>;
-  'sign': SupportedAlgorithm<SignVerifyAlgorithm>;
-  'verify': SupportedAlgorithm<SignVerifyAlgorithm>;
-  'importKey': SupportedAlgorithm<
+  digest: SupportedAlgorithm<DigestAlgorithm>;
+  generateKey: SupportedAlgorithm<KeyPairAlgorithm | SecretKeyAlgorithm>;
+  sign: SupportedAlgorithm<SignVerifyAlgorithm>;
+  verify: SupportedAlgorithm<SignVerifyAlgorithm>;
+  importKey: SupportedAlgorithm<
     KeyPairAlgorithm | 'PBKDF2' | SecretKeyAlgorithm | 'HKDF'
   >;
-  'deriveBits': SupportedAlgorithm<DeriveBitsAlgorithm>;
-  'encrypt': SupportedAlgorithm<EncryptDecryptAlgorithm>;
-  'decrypt': SupportedAlgorithm<EncryptDecryptAlgorithm>;
+  deriveBits: SupportedAlgorithm<DeriveBitsAlgorithm>;
+  encrypt: SupportedAlgorithm<EncryptDecryptAlgorithm>;
+  decrypt: SupportedAlgorithm<EncryptDecryptAlgorithm>;
   'get key length': SupportedAlgorithm<SecretKeyAlgorithm | 'PBKDF2' | 'HKDF'>;
-  'wrapKey': SupportedAlgorithm<'AES-KW'>;
-  'unwrapKey': SupportedAlgorithm<'AES-KW'>;
+  wrapKey: SupportedAlgorithm<'AES-KW'>;
+  unwrapKey: SupportedAlgorithm<'AES-KW'>;
 };
 
 export type Operation =
@@ -405,76 +417,76 @@ export type Operation =
   | 'unwrapKey';
 
 const kSupportedAlgorithms: SupportedAlgorithms = {
-  'digest': {
+  digest: {
     'SHA-1': null,
     'SHA-256': null,
     'SHA-384': null,
     'SHA-512': null,
   },
-  'generateKey': {
+  generateKey: {
     'RSASSA-PKCS1-v1_5': 'RsaHashedKeyGenParams',
     'RSA-PSS': 'RsaHashedKeyGenParams',
     'RSA-OAEP': 'RsaHashedKeyGenParams',
-    'ECDSA': 'EcKeyGenParams',
-    'ECDH': 'EcKeyGenParams',
+    ECDSA: 'EcKeyGenParams',
+    ECDH: 'EcKeyGenParams',
     'AES-CTR': 'AesKeyGenParams',
     'AES-CBC': 'AesKeyGenParams',
     'AES-GCM': 'AesKeyGenParams',
     'AES-KW': 'AesKeyGenParams',
-    'HMAC': 'HmacKeyGenParams',
-    'X25519': null,
-    'Ed25519': null,
-    'X448': null,
-    'Ed448': null,
+    HMAC: 'HmacKeyGenParams',
+    X25519: null,
+    Ed25519: null,
+    X448: null,
+    Ed448: null,
   },
-  'sign': {
+  sign: {
     'RSASSA-PKCS1-v1_5': null,
     'RSA-PSS': 'RsaPssParams',
-    'ECDSA': 'EcdsaParams',
-    'HMAC': null,
-    'Ed25519': null,
-    'Ed448': 'Ed448Params',
+    ECDSA: 'EcdsaParams',
+    HMAC: null,
+    Ed25519: null,
+    Ed448: 'Ed448Params',
   },
-  'verify': {
+  verify: {
     'RSASSA-PKCS1-v1_5': null,
     'RSA-PSS': 'RsaPssParams',
-    'ECDSA': 'EcdsaParams',
-    'HMAC': null,
-    'Ed25519': null,
-    'Ed448': 'Ed448Params',
+    ECDSA: 'EcdsaParams',
+    HMAC: null,
+    Ed25519: null,
+    Ed448: 'Ed448Params',
   },
-  'importKey': {
+  importKey: {
     'RSASSA-PKCS1-v1_5': 'RsaHashedImportParams',
     'RSA-PSS': 'RsaHashedImportParams',
     'RSA-OAEP': 'RsaHashedImportParams',
-    'ECDSA': 'EcKeyImportParams',
-    'ECDH': 'EcKeyImportParams',
-    'HMAC': 'HmacImportParams',
-    'HKDF': null,
-    'PBKDF2': null,
+    ECDSA: 'EcKeyImportParams',
+    ECDH: 'EcKeyImportParams',
+    HMAC: 'HmacImportParams',
+    HKDF: null,
+    PBKDF2: null,
     'AES-CTR': null,
     'AES-CBC': null,
     'AES-GCM': null,
     'AES-KW': null,
-    'Ed25519': null,
-    'X25519': null,
-    'Ed448': null,
-    'X448': null,
+    Ed25519: null,
+    X25519: null,
+    Ed448: null,
+    X448: null,
   },
-  'deriveBits': {
+  deriveBits: {
     HKDF: 'HkdfParams',
     PBKDF2: 'Pbkdf2Params',
     ECDH: 'EcdhKeyDeriveParams',
     X25519: 'EcdhKeyDeriveParams',
     X448: 'EcdhKeyDeriveParams',
   },
-  'encrypt': {
+  encrypt: {
     'RSA-OAEP': 'RsaOaepParams',
     'AES-CBC': 'AesCbcParams',
     'AES-GCM': 'AesGcmParams',
     'AES-CTR': 'AesCtrParams',
   },
-  'decrypt': {
+  decrypt: {
     'RSA-OAEP': 'RsaOaepParams',
     'AES-CBC': 'AesCbcParams',
     'AES-GCM': 'AesGcmParams',
@@ -485,14 +497,14 @@ const kSupportedAlgorithms: SupportedAlgorithms = {
     'AES-CTR': 'AesDerivedKeyParams',
     'AES-GCM': 'AesDerivedKeyParams',
     'AES-KW': 'AesDerivedKeyParams',
-    'HMAC': 'HmacImportParams',
-    'HKDF': null,
-    'PBKDF2': null,
+    HMAC: 'HmacImportParams',
+    HKDF: null,
+    PBKDF2: null,
   },
-  'wrapKey': {
+  wrapKey: {
     'AES-KW': null,
   },
-  'unwrapKey': {
+  unwrapKey: {
     'AES-KW': null,
   },
 };
@@ -523,15 +535,16 @@ const simpleAlgorithmDictionaries: AlgorithmDictionaries = {
 
 export const validateMaxBufferLength = (
   data: BinaryLike | BufferLike,
-  name: string
+  name: string,
 ): void => {
-  const length = (typeof data === 'string' || data instanceof SBuffer)
-    ? data.length
-    : data.byteLength;
+  const length =
+    typeof data === 'string' || data instanceof SBuffer
+      ? data.length
+      : data.byteLength;
   if (length > kMaxBufferLength) {
     throw lazyDOMException(
       `${name} must be less than ${kMaxBufferLength + 1} bits`,
-      'OperationError'
+      'OperationError',
     );
   }
 };
@@ -541,7 +554,7 @@ export const validateMaxBufferLength = (
 // https://github.com/denoland/deno/blob/v1.29.1/ext/crypto/00_crypto.js#L195
 export const normalizeAlgorithm = (
   algorithm: SubtleAlgorithm | EncryptDecryptParams | AnyAlgorithm,
-  op: Operation
+  op: Operation,
 ): SubtleAlgorithm | EncryptDecryptParams => {
   if (typeof algorithm === 'string') {
     return normalizeAlgorithm({ name: algorithm }, op);
@@ -568,7 +581,9 @@ export const normalizeAlgorithm = (
     }
     if (key.toUpperCase() === algName.toUpperCase()) {
       algName = key as AnyAlgorithm;
-      desiredType = (registeredAlgorithms as Record<string, typeof desiredType>)[algName];
+      desiredType = (
+        registeredAlgorithms as Record<string, typeof desiredType>
+      )[algName];
     }
   }
   if (desiredType === undefined)
@@ -623,7 +638,7 @@ export const normalizeAlgorithm = (
 export const validateBitLength = (
   length: number,
   name: string,
-  required: boolean = false
+  required: boolean = false,
 ) => {
   if (length !== undefined || required) {
     // validateNumber(length, name);
@@ -631,7 +646,7 @@ export const validateBitLength = (
     if (length % 8) {
       throw lazyDOMException(
         `${name}'s length (${length}) must be a multiple of 8`,
-        'InvalidArgument'
+        'InvalidArgument',
       );
     }
   }
@@ -640,15 +655,15 @@ export const validateBitLength = (
 export const validateByteLength = (
   buf: BufferLike,
   name: string,
-  target: number
+  target: number,
 ) => {
   if (
     (SBuffer.isBuffer(buf) && buf.length !== target) ||
-    ((buf as Buffer | ArrayBuffer | ArrayBufferView).byteLength !== target)
-   ) {
+    (buf as Buffer | ArrayBuffer | ArrayBufferView).byteLength !== target
+  ) {
     throw lazyDOMException(
       `${name} must contain exactly ${target} bytes`,
-      'OperationError'
+      'OperationError',
     );
   }
 };
@@ -678,7 +693,7 @@ const kKeyOps: {
 
 export const validateKeyOps = (
   keyOps: KeyUsage[] | undefined,
-  usagesSet: KeyUsage[]
+  usagesSet: KeyUsage[],
 ) => {
   if (keyOps === undefined) return;
   if (!Array.isArray(keyOps)) {
@@ -705,7 +720,7 @@ export const validateKeyOps = (
       if (!keyOps.includes(use)) {
         throw lazyDOMException(
           'Key operations and usage mismatch',
-          'DataError'
+          'DataError',
         );
       }
     }
@@ -720,7 +735,7 @@ export const validateKeyOps = (
 // https://github.com/chromium/chromium/blob/HEAD/third_party/blink/public/platform/web_crypto_algorithm_params.h, but ported to JavaScript
 // Returns undefined if the conversion was unsuccessful.
 export const bigIntArrayToUnsignedInt = (
-  input: Uint8Array
+  input: Uint8Array,
 ): number | undefined => {
   let result = 0;
 
@@ -742,7 +757,7 @@ export function abvToArrayBuffer(buffer: ArrayBufferView): ArrayBuffer {
     return buffer.buffer;
   }
   return buffer;
-};
+}
 
 // TODO: these used to be shipped by crypto-browserify in quickcrypto v0.6
 // could instead fetch from OpenSSL if needed and handle breaking changes
