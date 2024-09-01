@@ -19,8 +19,11 @@ jobs:
     name: C++ Lint
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
-      - uses: reviewdog/action-cpplint@master
+      - name: Checkout Code
+        uses: actions/checkout@v4
+
+      - name: Run C++ Lint
+        uses: reviewdog/action-cpplint@master
         with:
           github_token: ${{ secrets.github_token }}
           reporter: github-pr-review
