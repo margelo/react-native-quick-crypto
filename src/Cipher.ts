@@ -14,7 +14,6 @@ import {
   validateInt32,
   type BinaryLikeNode,
   type CipherType,
-  type CipherDesType,
 } from './Utils';
 import { type InternalCipher, KeyVariant } from './NativeQuickCrypto/Cipher';
 import type {
@@ -273,7 +272,7 @@ export function createDecipher(
   options?: CipherGCMOptions
 ): DecipherGCM;
 export function createDecipher(
-  algorithm: CipherType | CipherDesType,
+  algorithm: CipherType,
   password: BinaryLikeNode,
   options?: Stream.TransformOptions
 ): DecipherCCM | DecipherGCM | Decipher;
@@ -305,7 +304,7 @@ export function createDecipheriv(
   options?: CipherGCMOptions
 ): DecipherGCM;
 export function createDecipheriv(
-  algorithm: CipherType | CipherDesType,
+  algorithm: CipherType,
   key: BinaryLikeNode,
   iv: BinaryLike | null,
   options?: Stream.TransformOptions
@@ -334,7 +333,7 @@ export function createCipher(
   options?: CipherGCMOptions
 ): CipherGCM;
 export function createCipher(
-  algorithm: CipherType | CipherDesType,
+  algorithm: CipherType,
   password: BinaryLikeNode,
   options?: Stream.TransformOptions
 ): CipherCCM | CipherGCM | Cipher;
@@ -365,7 +364,7 @@ export function createCipheriv(
   options?: CipherGCMOptions
 ): CipherGCM;
 export function createCipheriv(
-  algorithm: CipherType | CipherDesType,
+  algorithm: CipherType,
   key: BinaryLikeNode,
   iv: BinaryLike | null,
   options?: Stream.TransformOptions

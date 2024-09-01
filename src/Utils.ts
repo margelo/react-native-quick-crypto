@@ -29,8 +29,19 @@ export type Encoding =
 // TODO(osp) should buffer be part of the Encoding type?
 export type CipherEncoding = Encoding | 'buffer';
 
-export type CipherType = 'aes128' | 'aes192' | 'aes256';
-export type CipherDesType =
+// These are for shortcomings in @types/node
+// Here we use "*Type" instead of "*Types" like node does.
+export type CipherType =
+  | 'aes128' | 'aes192' | 'aes256'
+  | CipherCBCType | CipherCFBType | CipherCTRType | CipherDESType
+  | CipherECBType  | CipherGCMType | CipherOFBType;
+export type CipherCBCType = 'aes-128-cbc' | 'aes-192-cbc' | 'aes-256-cbc';
+export type CipherCFBType =
+  | 'aes-128-cfb' | 'aes-192-cfb' | 'aes-256-cfb'
+  | 'aes-128-cfb1' | 'aes-192-cfb1' | 'aes-256-cfb1'
+  | 'aes-128-cfb8' | 'aes-192-cfb8' | 'aes-256-cfb8';
+export type CipherCTRType = 'aes-128-ctr' | 'aes-192-ctr' | 'aes-256-ctr';
+  export type CipherDESType =
   | 'des'
   | 'des3'
   | 'des-cbc'
@@ -39,6 +50,9 @@ export type CipherDesType =
   | 'des-ede-cbc'
   | 'des-ede3'
   | 'des-ede3-cbc';
+export type CipherECBType = 'aes-128-ecb' | 'aes-192-ecb' | 'aes-256-ecb';
+export type CipherGCMType = 'aes-128-gcm' | 'aes-192-gcm' | 'aes-256-gcm';
+export type CipherOFBType = 'aes-128-ofb' | 'aes-192-ofb' | 'aes-256-ofb';
 
 export type TypedArray =
   | Uint8Array
