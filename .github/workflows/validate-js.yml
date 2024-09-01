@@ -85,7 +85,7 @@ jobs:
       - name: Run ESLint/Prettier (rnqc)
         run: bun lint-fix && bun format-fix
 
-      - name: Run ESLint (example)
+      - name: Run ESLint/Prettier (example)
         run:
           cd example && bun lint-fix && bun format-fix
 

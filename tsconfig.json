@@ -24,10 +24,6 @@
     "strict": true,
     "target": "esnext",
     "verbatimModuleSyntax": true,
-    "declaration": true,
-    "declarationMap": true,
-    "sourceMap": true,
-    "allowSyntheticDefaultImports": true
   },
   "include": ["src"],
   "exclude": ["node_modules", "lib", "docs", "example"]

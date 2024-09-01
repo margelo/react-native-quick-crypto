@@ -22,12 +22,12 @@ import { ab2str } from '../../../../../src/Utils';
 
 export type RsaEncryptDecryptTestVector = {
   name: string;
-  // publicKey: Buffer | null;
+  publicKey: Buffer | null;
   publicKeyBuffer: ArrayBuffer;
-  // publicKeyFormat: string;
-  // privateKey: Buffer | null;
+  publicKeyFormat: string;
+  privateKey: Buffer | null;
   privateKeyBuffer: ArrayBuffer | null;
-  // privateKeyFormat: string | null;
+  privateKeyFormat: string | null;
   algorithm: RsaOaepParams;
   hash: DigestAlgorithm;
   plaintext: ArrayBuffer;
