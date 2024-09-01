@@ -79,14 +79,12 @@ describe('createCipher/createDecipher', () => {
   });
 
   it('Base64 padding regression test', () => {
-    // @ts-expect-error invalid algorithm
     const c = crypto.createCipher('aes-256-cbc', 'secret');
-    const s = c.update('test', 'utf8', 'base64') + c.final('base64');
+    const s = c.update('test', 'utf8', 'base64') as string + c.final('base64') as string;
     assert.strictEqual(s, '375oxUQCIocvxmC5At+rvA==');
   });
 
   it('Calling Cipher.final() or Decipher.final() twice should error', () => {
-    // @ts-expect-error invalid algorithm
     const c = crypto.createCipher('aes-256-cbc', 'secret');
     try {
       // @ts-expect-error bad encoding
@@ -106,7 +104,6 @@ describe('createCipher/createDecipher', () => {
     } catch {
       /* Ignore. */
     }
-    // @ts-expect-error invalid algorithm
     const d = crypto.createDecipher('aes-256-cbc', 'secret');
     try {
       // @ts-expect-error bad encoding

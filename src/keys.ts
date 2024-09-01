@@ -415,7 +415,7 @@ function prepareAsymmetricKey(
       data: binaryLikeToArrayBuffer(key),
     };
   } else if (typeof key === 'object') {
-    const { key: data, encoding } = key;
+    const { key: data, encoding } = key as EncodingOptions;
     // // The 'key' property can be a KeyObject as well to allow specifying
     // // additional options such as padding along with the key.
     // if (isKeyObject(data)) {
@@ -440,7 +440,7 @@ function prepareAsymmetricKey(
 
     return {
       data: binaryLikeToArrayBuffer(data, encoding),
-      ...parseKeyEncoding(key, undefined, isPublic),
+      ...parseKeyEncoding(key as EncodingOptions, undefined, isPublic),
     };
   }
 

@@ -694,13 +694,13 @@ describe('subtle - encrypt / decrypt', () => {
     failing.forEach((vector: AesEncryptDecryptTestVector) => {
       const { algorithm, keyLength } = vector;
       const { name } = algorithm as AesCbcParams;
-      it(`testEncrypt failing ${name} ${keyLength}`, async () => {
+      it(`testEncrypt failing cbc ${name} ${keyLength}`, async () => {
         await assertThrowsAsync(
           async () => await testAESEncrypt(vector),
           'algorithm.iv must contain exactly 16 bytes'
         );
       });
-      it(`testDecrypt failing ${name} ${keyLength}`, async () => {
+      it(`testDecrypt failing cbc ${name} ${keyLength}`, async () => {
         await assertThrowsAsync(
           async () => await testAESDecrypt(vector),
           'algorithm.iv must contain exactly 16 bytes'
@@ -746,13 +746,13 @@ describe('subtle - encrypt / decrypt', () => {
     failing.forEach((vector: AesEncryptDecryptTestVector) => {
       const { algorithm, keyLength } = vector;
       const { name } = algorithm as AesCtrParams;
-      it(`testEncrypt failing ${name} ${keyLength}`, async () => {
+      it(`testEncrypt failing ctr ${name} ${keyLength}`, async () => {
         await assertThrowsAsync(
           async () => await testAESEncrypt(vector),
           'AES-CTR algorithm.length must be between 1 and 128'
         );
       });
-      it(`testDecrypt failing ${name} ${keyLength}`, async () => {
+      it(`testDecrypt failing ctr ${name} ${keyLength}`, async () => {
         await assertThrowsAsync(
           async () => await testAESDecrypt(vector),
           'AES-CTR algorithm.length must be between 1 and 128'
@@ -796,13 +796,13 @@ describe('subtle - encrypt / decrypt', () => {
     failing.forEach((vector: AesEncryptDecryptTestVector) => {
       const { algorithm, keyLength } = vector;
       const { name, tagLength } = algorithm as AesGcmParams;
-      it(`testEncrypt failing ${name} ${keyLength} ${tagLength}`, async () => {
+      it(`testEncrypt failing gcm ${name} ${keyLength} ${tagLength}`, async () => {
         await assertThrowsAsync(
           async () => await testAESEncrypt(vector),
           'is not a valid AES-GCM tag length'
         );
       });
-      it(`testDecrypt failing ${name} ${keyLength} ${tagLength}`, async () => {
+      it(`testDecrypt failing gcm ${name} ${keyLength} ${tagLength}`, async () => {
         await assertThrowsAsync(
           async () => await testAESDecrypt(vector),
           'is not a valid AES-GCM tag length'

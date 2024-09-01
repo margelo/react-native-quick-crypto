@@ -1,3 +1,4 @@
+import { Buffer as SBuffer } from 'safe-buffer';
 import {
   type ImportFormat,
   type SubtleAlgorithm,
@@ -224,7 +225,7 @@ const importGenericSecretKey = async (
       }
 
       const checkLength =
-        typeof keyData === 'string'
+        (typeof keyData === 'string') || SBuffer.isBuffer(keyData)
           ? keyData.length * 8
           : keyData.byteLength * 8;
 

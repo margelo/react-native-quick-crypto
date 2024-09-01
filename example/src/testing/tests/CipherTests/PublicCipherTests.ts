@@ -11,8 +11,11 @@ function testEncryptDecrypt(publicKey: KeyPairKey, privateKey: KeyPairKey) {
   const message = 'Hello Node.js world!';
   const plaintext = Buffer.from(message, 'utf8');
   for (const key of [publicKey, privateKey]) {
-    const ciphertext = crypto.publicEncrypt({key} as EncodingOptions, plaintext);
-    const received = crypto.privateDecrypt({key: privateKey} as EncodingOptions, ciphertext);
+    // the EncodingOptions type is weird as shit, but it works.
+    // Someone else is welcome to wade through rsaFunctionFor and figure out a
+    // better way.  
+    const ciphertext = crypto.publicEncrypt(key as EncodingOptions, plaintext);
+    const received = crypto.privateDecrypt(privateKey as EncodingOptions, ciphertext);
     assert.strictEqual(received.toString('utf8'), message);
   }
 }

@@ -14,7 +14,7 @@ import type {
 } from './keys';
 import { type CipherKey } from 'crypto'; // @types/node
 
-export type BufferLike = ArrayBuffer | Buffer | ArrayBufferView;
+export type BufferLike = ArrayBuffer | Buffer | SBuffer | ArrayBufferView;
 export type BinaryLike = string | ArrayBuffer | Buffer | SBuffer | TypedArray;
 export type BinaryLikeNode = CipherKey | BinaryLike;
 
@@ -142,24 +142,29 @@ export const kEmptyObject = Object.freeze(Object.create(null));
 //   return slowCases(enc);
 // }
 
-export function toArrayBuffer(buf: Buffer): ArrayBuffer {
-  if (buf?.buffer?.slice) {
+export function toArrayBuffer(buf: Buffer | SBuffer): ArrayBuffer {
+  if (Buffer.isBuffer(buf) && buf?.buffer?.slice) {
     return buf.buffer.slice(buf.byteOffset, buf.byteOffset + buf.byteLength);
   }
   const ab = new ArrayBuffer(buf.length);
   const view = new Uint8Array(ab);
   for (let i = 0; i < buf.length; ++i) {
-    view[i] = buf[i]!;
+    view[i] = SBuffer.isBuffer(buf) ? buf.readUInt8(i) : buf[i]!;
   }
   return ab;
 }
 
 export function bufferLikeToArrayBuffer(buf: BufferLike): ArrayBuffer {
-  return Buffer.isBuffer(buf)
-    ? buf.buffer
-    : ArrayBuffer.isView(buf)
-      ? buf.buffer
-      : buf;
+  if (Buffer.isBuffer(buf)) {
+    return buf.buffer;
+  }
+  if (SBuffer.isBuffer(buf)) {
+    return toArrayBuffer(buf);
+  }
+  if (ArrayBuffer.isView(buf)) {
+    return buf.buffer;
+  }
+  return buf;
 }
 
 export function binaryLikeToArrayBuffer(
@@ -623,7 +628,10 @@ export const validateByteLength = (
   name: string,
   target: number
 ) => {
-  if (buf.byteLength !== target) {
+  if (
+    (SBuffer.isBuffer(buf) && buf.length !== target) ||
+    ((buf as Buffer | ArrayBuffer | ArrayBufferView).byteLength !== target)
+   ) {
     throw lazyDOMException(
       `${name} must contain exactly ${target} bytes`,
       'OperationError'
