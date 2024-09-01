@@ -13,9 +13,12 @@ function testEncryptDecrypt(publicKey: KeyPairKey, privateKey: KeyPairKey) {
   for (const key of [publicKey, privateKey]) {
     // the EncodingOptions type is weird as shit, but it works.
     // Someone else is welcome to wade through rsaFunctionFor and figure out a
-    // better way.  
+    // better way.
     const ciphertext = crypto.publicEncrypt(key as EncodingOptions, plaintext);
-    const received = crypto.privateDecrypt(privateKey as EncodingOptions, ciphertext);
+    const received = crypto.privateDecrypt(
+      privateKey as EncodingOptions,
+      ciphertext,
+    );
     assert.strictEqual(received.toString('utf8'), message);
   }
 }
@@ -109,10 +112,13 @@ describe('publicCipher', () => {
 
     const message = 'Hello RN world!';
     const plaintext = Buffer.from(message, 'utf8');
-    const ciphertext = crypto.publicEncrypt(publicKey as EncodingOptions, plaintext);
+    const ciphertext = crypto.publicEncrypt(
+      publicKey as EncodingOptions,
+      plaintext,
+    );
     const decrypted = crypto.privateDecrypt(
       { key: privateKey, passphrase: 'top secret' },
-      ciphertext
+      ciphertext,
     );
 
     expect(decrypted.toString('utf-8')).to.equal(message);
@@ -136,7 +142,7 @@ describe('publicCipher', () => {
     try {
       testEncryptDecrypt(publicKey, privateKey);
       assert.fail();
-    // eslint-disable-next-line @typescript-eslint/no-unused-vars
+      // eslint-disable-next-line @typescript-eslint/no-unused-vars
     } catch (_e) {
       // intentionally left blank
     }

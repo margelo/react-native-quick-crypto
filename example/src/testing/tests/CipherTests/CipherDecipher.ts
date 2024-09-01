@@ -80,7 +80,9 @@ describe('createCipher/createDecipher', () => {
 
   it('Base64 padding regression test', () => {
     const c = crypto.createCipher('aes-256-cbc', 'secret');
-    const s = c.update('test', 'utf8', 'base64') as string + c.final('base64') as string;
+    const s =
+      (c.update('test', 'utf8', 'base64') as string) +
+      (c.final('base64') as string);
     assert.strictEqual(s, '375oxUQCIocvxmC5At+rvA==');
   });
 

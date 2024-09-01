@@ -38,7 +38,7 @@ export const useTestList = (): [
         return tests;
       });
     },
-    [setSuites]
+    [setSuites],
   );
 
   const clearAll = useCallback(() => {

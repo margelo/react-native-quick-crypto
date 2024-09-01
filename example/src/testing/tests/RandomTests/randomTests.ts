@@ -142,30 +142,35 @@ describe('random', () => {
     });
   });
 
-  type BufTypes = Uint16Array | Uint32Array | Float32Array | Float64Array | DataView;
+  type BufTypes =
+    | Uint16Array
+    | Uint32Array
+    | Float32Array
+    | Float64Array
+    | DataView;
   const bufs: [BufTypes, string][] = [
     [new Uint16Array(10), 'Uint16Array'],
     [new Uint32Array(10), 'Uint32Array'],
     [new Float32Array(10), 'Float32Array'],
     [new Float64Array(10), 'Float64Array'],
     [new DataView(new ArrayBuffer(10)), 'DataView'],
-  ]
+  ];
   bufs.forEach(([buf, name]) => {
     it(`simple test 7, ${name}`, (done: Done) => {
-      const ab = abvToArrayBuffer(buf)
-      const before = ab2str(ab)
+      const ab = abvToArrayBuffer(buf);
+      const before = ab2str(ab);
 
       crypto.randomFill(ab, (_err: Error | null, buf2: ArrayBuffer) => {
         try {
-          const after = Buffer.from(buf2).toString('hex')
-          assert.notStrictEqual(before, after, 'before/after')
-          done()
+          const after = Buffer.from(buf2).toString('hex');
+          assert.notStrictEqual(before, after, 'before/after');
+          done();
         } catch (e) {
-          done(e)
+          done(e);
         }
-      })
-    })
-  })
+      });
+    });
+  });
 
   it('simple test (do sth) 8', (done: Done) => {
     let ctr = 0;
@@ -195,7 +200,7 @@ describe('random', () => {
     assert.deepStrictEqual(
       before.slice(0, 5),
       after.slice(0, 5),
-      'before/after slices'
+      'before/after slices',
     );
   });
 
@@ -228,7 +233,7 @@ describe('random', () => {
         assert.deepStrictEqual(
           before.slice(0, 5),
           after.slice(0, 5),
-          'before/after slices'
+          'before/after slices',
         );
       } catch (e) {
         done(e);
@@ -536,7 +541,7 @@ describe('random', () => {
         /ERR_OUT_OF_RANGE/,
         'The value of "max" is out of range. It must be greater than ' +
           `the value of "min" (${interval[interval.length - 2] || 0}). ` +
-          `Received ${interval[interval.length - 1]}`
+          `Received ${interval[interval.length - 1]}`,
       );
     });
   }
@@ -587,7 +592,7 @@ describe('random', () => {
       /ERR_OUT_OF_RANGE/,
       'The value of "max" is out of range. ' +
         `It must be <= ${MAX_RANGE}. ` +
-        'Received 281_474_976_710_657'
+        'Received 281_474_976_710_657',
     );
   });
 
@@ -597,7 +602,7 @@ describe('random', () => {
       /ERR_OUT_OF_RANGE/,
       'The value of "max" is out of range. ' +
         `It must be <= ${MAX_RANGE}. ` +
-        'Received 281_474_976_710_656'
+        'Received 281_474_976_710_656',
     );
   });
 
@@ -606,7 +611,7 @@ describe('random', () => {
       assert.throws(
         // @ts-expect-error bad callback
         () => crypto.randomInt(0, 1, val),
-        /callback must be a function or undefined/
+        /callback must be a function or undefined/,
       );
     });
   });

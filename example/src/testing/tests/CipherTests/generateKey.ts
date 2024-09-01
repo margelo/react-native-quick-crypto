@@ -13,12 +13,12 @@ describe('generateKey', () => {
     it(`bad type input: ${badType}`, async () => {
       // @ts-expect-error bad type
       expect(() => generateKey(badType, 1, () => {})).to.throw(
-        'Unsupported key type'
+        'Unsupported key type',
       );
 
       // @ts-expect-error bad type
       expect(() => generateKeySync(badType, 1)).to.throw(
-        'Unsupported key type'
+        'Unsupported key type',
       );
     });
   });
@@ -66,7 +66,7 @@ describe('generateKey', () => {
   it('bad callback (aes)', async () => {
     // @ts-expect-error bad callback
     expect(() => generateKey('aes', { length: 256 })).to.throw(
-      'Callback is not a function'
+      'Callback is not a function',
     );
   });
 
@@ -75,11 +75,11 @@ describe('generateKey', () => {
     it(`bad option length (hmac): ${badLength}`, async () => {
       expect(() =>
         // @ts-expect-error bad length
-        generateKey('hmac', { length: badLength }, () => {})
+        generateKey('hmac', { length: badLength }, () => {}),
       ).to.throw('HMAC key length must be between 8 and 2^31 - 1');
       // @ts-expect-error bad length
       expect(() => generateKeySync('hmac', { length: badLength })).to.throw(
-        'HMAC key length must be between 8 and 2^31 - 1'
+        'HMAC key length must be between 8 and 2^31 - 1',
       );
     });
   });

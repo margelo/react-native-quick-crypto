@@ -29,7 +29,7 @@ export const useRunTests = (): [SuiteResults, (suites: Suites) => void] => {
         return { ...prev };
       });
     },
-    [setResults]
+    [setResults],
   );
 
   const runTests = (suites: Suites) => {
@@ -42,7 +42,7 @@ export const useRunTests = (): [SuiteResults, (suites: Suites) => void] => {
 
 const run = (
   addTestResult: (testResult: TestResult) => void,
-  tests: Suites = {}
+  tests: Suites = {},
 ) => {
   const {
     EVENT_RUN_BEGIN,
@@ -68,7 +68,7 @@ const run = (
       s.tests.map((t) => {
         try {
           t.skip();
-        // eslint-disable-next-line @typescript-eslint/no-unused-vars
+          // eslint-disable-next-line @typescript-eslint/no-unused-vars
         } catch (_e) {
           // do nothing w error
         }

@@ -25,7 +25,7 @@ describe('createCipheriv/createDecipheriv', () => {
       assert.strictEqual(
         txt,
         plaintext,
-        `encryption/decryption with key ${key} and iv ${iv}`
+        `encryption/decryption with key ${key} and iv ${iv}`,
       );
 
       // Streaming cipher interface
@@ -43,7 +43,7 @@ describe('createCipheriv/createDecipheriv', () => {
       assert.strictEqual(
         txt,
         plaintext,
-        `streaming cipher with key ${key} and iv ${iv}`
+        `streaming cipher with key ${key} and iv ${iv}`,
       );
     });
   }
@@ -66,7 +66,7 @@ describe('createCipheriv/createDecipheriv', () => {
       assert.strictEqual(
         txt,
         plaintext,
-        `encryption/decryption with key ${key} and iv ${iv}`
+        `encryption/decryption with key ${key} and iv ${iv}`,
       );
     });
   }
@@ -105,7 +105,7 @@ describe('createCipheriv/createDecipheriv', () => {
       assert.strictEqual(
         decrypted,
         plaintext,
-        'Decrypted text should match the original plaintext'
+        'Decrypted text should match the original plaintext',
       );
     });
   }

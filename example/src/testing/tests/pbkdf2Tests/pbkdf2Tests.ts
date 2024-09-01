@@ -31,7 +31,7 @@ describe('pbkdf2', () => {
       hash: string,
       length: number,
       expected: string,
-      done: Done
+      done: Done,
     ) => {
       QuickCrypto.pbkdf2(
         pass,
@@ -48,7 +48,7 @@ describe('pbkdf2', () => {
           } catch (e) {
             done(e);
           }
-        }
+        },
       );
     };
 
@@ -87,11 +87,10 @@ describe('pbkdf2', () => {
     });
   }
 
-
   it('handles buffers', (done: Done) => {
     const resultSync = QuickCrypto.pbkdf2Sync('password', 'salt', 1, 32);
     expect(ab2str(resultSync)).to.eql(
-      '0c60c80f961f0e71f3a9b524af6012062fe037a6e0f0eb94fe8fc46bdc637164'
+      '0c60c80f961f0e71f3a9b524af6012062fe037a6e0f0eb94fe8fc46bdc637164',
     );
 
     QuickCrypto.pbkdf2(
@@ -102,41 +101,37 @@ describe('pbkdf2', () => {
       'sha1',
       function (_, result) {
         expect(ab2str(result as ArrayBuffer)).to.eql(
-          '0c60c80f961f0e71f3a9b524af6012062fe037a6e0f0eb94fe8fc46bdc637164'
+          '0c60c80f961f0e71f3a9b524af6012062fe037a6e0f0eb94fe8fc46bdc637164',
         );
         done();
-      }
+      },
     );
   });
 
   it('should throw if no callback is provided', function () {
     expect(
       // @ts-expect-error bad password
-      () => QuickCrypto.pbkdf2('password', 'salt', 1, 32, 'sha1')
-    ).to.throw(
-      /No callback provided to pbkdf2/
-    );
+      () => QuickCrypto.pbkdf2('password', 'salt', 1, 32, 'sha1'),
+    ).to.throw(/No callback provided to pbkdf2/);
   });
 
   it('should throw if the password is not a string or an ArrayBuffer', function () {
     expect(
       // @ts-expect-error bad password
-      () => QuickCrypto.pbkdf2(['a'], 'salt', 1, 32, 'sha1', () => {})
+      () => QuickCrypto.pbkdf2(['a'], 'salt', 1, 32, 'sha1', () => {}),
     ).to.throw(
-      /Password must be a string, a Buffer, a typed array or a DataView/
+      /Password must be a string, a Buffer, a typed array or a DataView/,
     );
   });
 
   it(' should throw if the salt is not a string or an ArrayBuffer', function () {
     expect(
       // @ts-expect-error bad salt
-      () => QuickCrypto.pbkdf2('a', ['salt'], 1, 32, 'sha1', () => {})
-    ).to.throw(
-      /Salt must be a string, a Buffer, a typed array or a DataView/
-    );
+      () => QuickCrypto.pbkdf2('a', ['salt'], 1, 32, 'sha1', () => {}),
+    ).to.throw(/Salt must be a string, a Buffer, a typed array or a DataView/);
   });
 
-const algos = ['sha1', 'sha224', 'sha256', 'sha384', 'sha512', 'ripemd160'];
+  const algos = ['sha1', 'sha224', 'sha256', 'sha384', 'sha512', 'ripemd160'];
   algos.forEach(function (algorithm) {
     fixtures.valid.forEach(function (f: Fixture) {
       let key: BinaryLike, keyType: string, salt: BinaryLike, saltType: string;
@@ -204,7 +199,7 @@ const algos = ['sha1', 'sha224', 'sha256', 'sha384', 'sha512', 'ripemd160'];
             } catch (e) {
               done(e);
             }
-          }
+          },
         );
       });
 
@@ -214,7 +209,7 @@ const algos = ['sha1', 'sha224', 'sha256', 'sha384', 'sha512', 'ripemd160'];
           salt,
           f.iterations as number,
           f.dkLen as number,
-          algorithm
+          algorithm,
         );
         expect(ab2str(result)).to.equal(expected);
       });

@@ -75,7 +75,7 @@ describe('sign/verify', () => {
         padding,
         saltLength,
       },
-      signature
+      signature,
     );
 
     expect(matches).to.equal(true);
@@ -100,7 +100,7 @@ MFkwEwYHKoZIzj0CAQYIKoZIzj0DAQcDQgAEtm3ESMYdvWH+PfG50ruMt25lQ4iY
 
     const data = Buffer.from(
       'lets try if we can check the crypto fun here',
-      'utf8'
+      'utf8',
     );
 
     // Do the signing
@@ -128,7 +128,7 @@ MFkwEwYHKoZIzj0CAQYIKoZIzj0DAQcDQgAEtm3ESMYdvWH+PfG50ruMt25lQ4iY
         type: 'spki',
         dsaEncoding: 'ieee-p1363',
       },
-      signature
+      signature,
     );
 
     expect(success).to.equal(true);

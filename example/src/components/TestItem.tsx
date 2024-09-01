@@ -53,8 +53,7 @@ export const TestItem: React.FC<TestItemProps> = ({
             results,
             suiteName: description,
           });
-        }}
-      >
+        }}>
         <Text style={styles.label} numberOfLines={1}>
           {description}
         </Text>

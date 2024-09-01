@@ -71,7 +71,7 @@ describe('subtle - encrypt / decrypt', () => {
           hash: 'SHA-384',
         },
         true,
-        ['encrypt', 'decrypt']
+        ['encrypt', 'decrypt'],
       )) as CryptoKeyPair;
 
       const ciphertext = await subtle.encrypt(
@@ -80,7 +80,7 @@ describe('subtle - encrypt / decrypt', () => {
           label: ec.encode('a label'),
         },
         publicKey as CryptoKey,
-        buf
+        buf,
       );
 
       const plaintext = await subtle.decrypt(
@@ -89,11 +89,11 @@ describe('subtle - encrypt / decrypt', () => {
           label: ec.encode('a label'),
         },
         privateKey as CryptoKey,
-        ciphertext
+        ciphertext,
       );
 
       expect(Buffer.from(plaintext).toString('hex')).to.equal(
-        Buffer.from(buf).toString('hex')
+        Buffer.from(buf).toString('hex'),
       );
     }
 
@@ -110,14 +110,14 @@ describe('subtle - encrypt / decrypt', () => {
     hash: DigestAlgorithm,
     publicUsages: KeyUsage[],
     // eslint-disable-next-line @typescript-eslint/no-unused-vars
-    _privateUsages: KeyUsage[]
+    _privateUsages: KeyUsage[],
   ): Promise<CryptoKeyPair> {
     const publicKey = await subtle.importKey(
       'spki',
       publicKeyBuffer,
       { name, hash },
       false,
-      publicUsages
+      publicUsages,
     );
     // const privateKey = await subtle.importKey(
     //   'pkcs8',
@@ -148,7 +148,7 @@ describe('subtle - encrypt / decrypt', () => {
       algorithm.name,
       hash,
       ['encrypt'],
-      ['decrypt']
+      ['decrypt'],
     );
 
     // TODO: remove condition when importKey() rsa pkcs8 is implemented
@@ -157,7 +157,7 @@ describe('subtle - encrypt / decrypt', () => {
       const result = await subtle.decrypt(
         algorithm,
         privateKey as CryptoKey,
-        ciphertext
+        ciphertext,
       );
 
       expect(Buffer.from(result).toString('hex')).to.equal(encodedPlaintext);
@@ -168,7 +168,7 @@ describe('subtle - encrypt / decrypt', () => {
       const result2 = await subtle.decrypt(
         algorithm,
         privateKey as CryptoKey,
-        ciphercopy
+        ciphercopy,
       );
       // @ts-expect-error possibly undefined
       ciphercopy[0] = 255 - ciphercopy[0];
@@ -185,7 +185,7 @@ describe('subtle - encrypt / decrypt', () => {
       publicKeyBuffer,
       privateKeyBuffer,
     }: RsaEncryptDecryptTestVector,
-    modify = false
+    modify = false,
   ) {
     const { publicKey, privateKey } = await importRSAVectorKey(
       publicKeyBuffer,
@@ -193,7 +193,7 @@ describe('subtle - encrypt / decrypt', () => {
       algorithm.name,
       hash,
       ['encrypt'],
-      ['decrypt']
+      ['decrypt'],
     );
 
     const plaintextCopy = Buffer.from(plaintext); // make a copy
@@ -204,7 +204,7 @@ describe('subtle - encrypt / decrypt', () => {
     const result = await subtle.encrypt(
       algorithm,
       publicKey as CryptoKey,
-      plaintext
+      plaintext,
     );
     if (modify) {
       // @ts-expect-error possibly undefined
@@ -217,13 +217,13 @@ describe('subtle - encrypt / decrypt', () => {
       const encodedPlaintext = Buffer.from(plaintext).toString('hex');
 
       expect(result.byteLength * 8).to.equal(
-        (privateKey as CryptoKey).algorithm.modulusLength
+        (privateKey as CryptoKey).algorithm.modulusLength,
       );
 
       const out = await subtle.decrypt(
         algorithm,
         privateKey as CryptoKey,
-        result
+        result,
       );
       expect(Buffer.from(out).toString('hex')).to.equal(encodedPlaintext);
     }
@@ -242,7 +242,7 @@ describe('subtle - encrypt / decrypt', () => {
       algorithm.name,
       hash,
       ['encrypt'],
-      ['decrypt']
+      ['decrypt'],
     );
     const newplaintext = new Uint8Array(plaintext.byteLength + 1);
     newplaintext.set(plaintext as Uint8Array, 0);
@@ -251,7 +251,7 @@ describe('subtle - encrypt / decrypt', () => {
     return assertThrowsAsync(
       async () =>
         await subtle.encrypt(algorithm, publicKey as CryptoKey, newplaintext),
-      'error in DoCipher, status: 2'
+      'error in DoCipher, status: 2',
     );
   }
 
@@ -268,12 +268,12 @@ describe('subtle - encrypt / decrypt', () => {
       algorithm.name,
       hash,
       ['encrypt'],
-      ['decrypt']
+      ['decrypt'],
     );
     return assertThrowsAsync(
       async () =>
         await subtle.encrypt(algorithm, privateKey as CryptoKey, plaintext),
-      "Cannot read property 'algorithm' of undefined"
+      "Cannot read property 'algorithm' of undefined",
     );
   }
 
@@ -290,12 +290,12 @@ describe('subtle - encrypt / decrypt', () => {
       algorithm.name,
       hash,
       ['wrapKey'],
-      ['decrypt']
+      ['decrypt'],
     );
     return assertThrowsAsync(
       async () =>
         await subtle.encrypt(algorithm, publicKey as CryptoKey, plaintext),
-      'The requested operation is not valid'
+      'The requested operation is not valid',
     );
   }
 
@@ -316,13 +316,13 @@ describe('subtle - encrypt / decrypt', () => {
       algorithm.name,
       hash,
       ['encrypt'],
-      ['decrypt']
+      ['decrypt'],
     );
 
     return assertThrowsAsync(
       async () =>
         await subtle.decrypt(algorithm, publicKey as CryptoKey, ciphertext),
-      'The requested operation is not valid'
+      'The requested operation is not valid',
     );
   }
 
@@ -343,13 +343,13 @@ describe('subtle - encrypt / decrypt', () => {
       algorithm.name,
       hash,
       ['encrypt'],
-      ['unwrapKey']
+      ['unwrapKey'],
     );
 
     return assertThrowsAsync(
       async () =>
         await subtle.decrypt(algorithm, publicKey as CryptoKey, ciphertext),
-      'The requested operation is not valid'
+      'The requested operation is not valid',
     );
   }
 
@@ -397,23 +397,23 @@ describe('subtle - encrypt / decrypt', () => {
           length: 256,
         },
         true,
-        ['encrypt', 'decrypt']
+        ['encrypt', 'decrypt'],
       );
 
       const ciphertext = await subtle.encrypt(
         { name: 'AES-CTR', counter, length: 64 },
         key as CryptoKey,
-        buf
+        buf,
       );
 
       const plaintext = await subtle.decrypt(
         { name: 'AES-CTR', counter, length: 64 },
         key as CryptoKey,
-        ciphertext
+        ciphertext,
       );
 
       expect(Buffer.from(plaintext).toString('hex')).to.equal(
-        Buffer.from(buf).toString('hex')
+        Buffer.from(buf).toString('hex'),
       );
     }
 
@@ -434,23 +434,23 @@ describe('subtle - encrypt / decrypt', () => {
           length: 256,
         },
         true,
-        ['encrypt', 'decrypt']
+        ['encrypt', 'decrypt'],
       );
 
       const ciphertext = await subtle.encrypt(
         { name: 'AES-CBC', iv },
         key as CryptoKey,
-        buf
+        buf,
       );
 
       const plaintext = await subtle.decrypt(
         { name: 'AES-CBC', iv },
         key as CryptoKey,
-        ciphertext
+        ciphertext,
       );
 
       expect(Buffer.from(plaintext).toString('hex')).to.equal(
-        Buffer.from(buf).toString('hex')
+        Buffer.from(buf).toString('hex'),
       );
     }
 
@@ -471,23 +471,23 @@ describe('subtle - encrypt / decrypt', () => {
           length: 256,
         },
         true,
-        ['encrypt', 'decrypt']
+        ['encrypt', 'decrypt'],
       );
 
       const ciphertext = await subtle.encrypt(
         { name: 'AES-GCM', iv },
         key as CryptoKey,
-        buf
+        buf,
       );
 
       const plaintext = await subtle.decrypt(
         { name: 'AES-GCM', iv },
         key as CryptoKey,
-        ciphertext
+        ciphertext,
       );
 
       expect(Buffer.from(plaintext).toString('hex')).to.equal(
-        Buffer.from(buf).toString('hex')
+        Buffer.from(buf).toString('hex'),
       );
     }
 
@@ -507,7 +507,7 @@ describe('subtle - encrypt / decrypt', () => {
           length: 256,
         },
         false,
-        ['encrypt', 'decrypt']
+        ['encrypt', 'decrypt'],
       )) as CryptoKey;
 
       const encrypted = await subtle.encrypt(
@@ -518,7 +518,7 @@ describe('subtle - encrypt / decrypt', () => {
           tagLength: 128,
         },
         secretKey,
-        crypto.getRandomValues(new Uint8Array(32))
+        crypto.getRandomValues(new Uint8Array(32)),
       );
 
       await subtle.decrypt(
@@ -529,7 +529,7 @@ describe('subtle - encrypt / decrypt', () => {
           tagLength: 128,
         },
         secretKey,
-        new Uint8Array(encrypted)
+        new Uint8Array(encrypted),
       );
     }
 
@@ -558,7 +558,7 @@ describe('subtle - encrypt / decrypt', () => {
       keyBuffer,
       { name: algorithm.name },
       false,
-      ['encrypt', 'decrypt']
+      ['encrypt', 'decrypt'],
     );
     const output = await subtle.encrypt(algorithm, key, plaintext);
     // @ts-expect-error possibly undefined
@@ -575,7 +575,7 @@ describe('subtle - encrypt / decrypt', () => {
 
     expect(ab2str(checkAB)).to.equal(
       ab2str(plaintextBuffer),
-      'check != plaintext'
+      'check != plaintext',
     );
   }
 
@@ -594,12 +594,12 @@ describe('subtle - encrypt / decrypt', () => {
       keyBuffer,
       { name: algorithm.name },
       false,
-      ['decrypt']
+      ['decrypt'],
     );
 
     await assertThrowsAsync(
       async () => await subtle.encrypt(algorithm, key, plaintext),
-      'The requested operation is not valid for the provided key'
+      'The requested operation is not valid for the provided key',
     );
   }
 
@@ -618,20 +618,20 @@ describe('subtle - encrypt / decrypt', () => {
       keyBuffer,
       { name: algorithm.name },
       false,
-      ['encrypt']
+      ['encrypt'],
     );
 
     const output = await subtle.encrypt(algorithm, key, plaintext);
 
     await assertThrowsAsync(
       async () => await subtle.decrypt(algorithm, key, output),
-      'The requested operation is not valid for the provided key'
+      'The requested operation is not valid for the provided key',
     );
   }
 
   async function testAESEncryptWrongAlg(
     { keyBuffer, algorithm, plaintext }: AesEncryptDecryptTestVector,
-    alg: AnyAlgorithm
+    alg: AnyAlgorithm,
   ): Promise<void> {
     // keeps typescript happy
     if (!keyBuffer || !algorithm || !plaintext) {
@@ -645,7 +645,7 @@ describe('subtle - encrypt / decrypt', () => {
 
     await assertThrowsAsync(
       async () => await subtle.encrypt(algorithm, key, plaintext),
-      'The requested operation is not valid for the provided key'
+      'The requested operation is not valid for the provided key',
     );
   }
 
@@ -664,7 +664,7 @@ describe('subtle - encrypt / decrypt', () => {
       keyBuffer,
       { name: algorithm.name },
       false,
-      ['encrypt', 'decrypt']
+      ['encrypt', 'decrypt'],
     );
 
     await subtle.decrypt(algorithm, key, result);
@@ -697,13 +697,13 @@ describe('subtle - encrypt / decrypt', () => {
       it(`testEncrypt failing cbc ${name} ${keyLength}`, async () => {
         await assertThrowsAsync(
           async () => await testAESEncrypt(vector),
-          'algorithm.iv must contain exactly 16 bytes'
+          'algorithm.iv must contain exactly 16 bytes',
         );
       });
       it(`testDecrypt failing cbc ${name} ${keyLength}`, async () => {
         await assertThrowsAsync(
           async () => await testAESDecrypt(vector),
-          'algorithm.iv must contain exactly 16 bytes'
+          'algorithm.iv must contain exactly 16 bytes',
         );
       });
     });
@@ -714,7 +714,7 @@ describe('subtle - encrypt / decrypt', () => {
       it(`testDecrypt decryptionFailing ${name} ${keyLength}`, async () => {
         await assertThrowsAsync(
           async () => await testAESDecrypt(vector),
-          'error in DoCipher, status: 2'
+          'error in DoCipher, status: 2',
         );
       });
     });
@@ -749,13 +749,13 @@ describe('subtle - encrypt / decrypt', () => {
       it(`testEncrypt failing ctr ${name} ${keyLength}`, async () => {
         await assertThrowsAsync(
           async () => await testAESEncrypt(vector),
-          'AES-CTR algorithm.length must be between 1 and 128'
+          'AES-CTR algorithm.length must be between 1 and 128',
         );
       });
       it(`testDecrypt failing ctr ${name} ${keyLength}`, async () => {
         await assertThrowsAsync(
           async () => await testAESDecrypt(vector),
-          'AES-CTR algorithm.length must be between 1 and 128'
+          'AES-CTR algorithm.length must be between 1 and 128',
         );
       });
     });
@@ -766,7 +766,7 @@ describe('subtle - encrypt / decrypt', () => {
       it(`testDecrypt decryptionFailing ${name} ${keyLength}`, async () => {
         await assertThrowsAsync(
           async () => await testAESDecrypt(vector),
-          'error in DoCipher, status: 2'
+          'error in DoCipher, status: 2',
         );
       });
     });
@@ -799,13 +799,13 @@ describe('subtle - encrypt / decrypt', () => {
       it(`testEncrypt failing gcm ${name} ${keyLength} ${tagLength}`, async () => {
         await assertThrowsAsync(
           async () => await testAESEncrypt(vector),
-          'is not a valid AES-GCM tag length'
+          'is not a valid AES-GCM tag length',
         );
       });
       it(`testDecrypt failing gcm ${name} ${keyLength} ${tagLength}`, async () => {
         await assertThrowsAsync(
           async () => await testAESDecrypt(vector),
-          'is not a valid AES-GCM tag length'
+          'is not a valid AES-GCM tag length',
         );
       });
     });
@@ -816,7 +816,7 @@ describe('subtle - encrypt / decrypt', () => {
       it(`testDecrypt decryptionFailing ${name} ${keyLength} ${tagLength}`, async () => {
         await assertThrowsAsync(
           async () => await testAESDecrypt(vector),
-          'error in DoCipher, status: 2'
+          'error in DoCipher, status: 2',
         );
       });
     });

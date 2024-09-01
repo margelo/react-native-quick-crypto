@@ -17,14 +17,14 @@ describe('subtle - deriveBits', () => {
     iterations: number,
     hash: HashAlgorithm,
     length: number,
-    expected: string
+    expected: string,
   ) => {
     const key = await subtle.importKey(
       'raw',
       pass,
       { name: 'PBKDF2', hash },
       false,
-      ['deriveBits']
+      ['deriveBits'],
     );
 
     const bits = await subtle.deriveBits(
@@ -35,7 +35,7 @@ describe('subtle - deriveBits', () => {
         hash,
       },
       key,
-      length
+      length,
     );
     expect(ab2str(bits)).to.equal(expected);
   };

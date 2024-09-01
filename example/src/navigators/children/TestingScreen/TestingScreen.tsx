@@ -42,8 +42,7 @@ export const TestingScreen: React.FC<TestingScreenProps> = ({
       </View>
       <ScrollView
         style={styles.scroll}
-        contentContainerStyle={styles.scrollContent}
-      >
+        contentContainerStyle={styles.scrollContent}>
         {results.map((it, index) => {
           let InnerElement = <View />;
           if (showPassed && it.type === 'correct') {

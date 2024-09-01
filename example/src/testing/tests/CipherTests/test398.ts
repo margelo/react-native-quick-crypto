@@ -35,7 +35,7 @@ const encrypt = ({ payload, publicKey }: EncryptRequest): EncryptResponse => {
       key: publicKey,
       padding: crypto.constants.RSA_PKCS1_OAEP_PADDING,
     },
-    secretKey
+    secretKey,
   );
 
   return {
@@ -58,12 +58,12 @@ const decrypt = ({
   const decipher = crypto.createDecipheriv(
     algo,
     secretKey,
-    Buffer.from(IV, 'base64')
+    Buffer.from(IV, 'base64'),
   );
 
   const encryptedPayload = Buffer.from(PAYLOAD, 'base64');
   let decrypted = decipher.update(
-    Buffer.from(encryptedPayload.subarray(0, encryptedPayload.length - 16))
+    Buffer.from(encryptedPayload.subarray(0, encryptedPayload.length - 16)),
   );
   decrypted = Buffer.concat([decrypted, decipher.final()]);
 

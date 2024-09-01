@@ -23,11 +23,11 @@ function assertApproximateSize(kpk: KeyPairKey, expectedSize: number) {
   const max = Math.ceil(1.1 * expectedSize);
   assert(
     key.length >= min,
-    `Key (${key.length} ${u}) is shorter than expected (${min} ${u})`
+    `Key (${key.length} ${u}) is shorter than expected (${min} ${u})`,
   );
   assert(
     key.length <= max,
-    `Key (${key.length} ${u}) is longer than expected (${max} ${u})`
+    `Key (${key.length} ${u}) is longer than expected (${max} ${u})`,
   );
 }
 
@@ -130,7 +130,7 @@ describe('generateKeyPair', () => {
         // assertApproximateSize(privateKey, 512);
 
         done();
-      }
+      },
     );
   });
 });

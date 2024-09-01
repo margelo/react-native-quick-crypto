@@ -136,7 +136,7 @@ describe('subtle - generateKey', () => {
             // The extractable and usages values are invalid here also,
             // but the unrecognized algorithm name should be caught first.
             await subtle.generateKey(algorithm, 7, []),
-          errorText
+          errorText,
         );
       });
     }
@@ -180,9 +180,9 @@ describe('subtle - generateKey', () => {
                 ...vectors[name]?.algorithm,
               },
               true,
-              []
+              [],
             ),
-          'Usages cannot be empty'
+          'Usages cannot be empty',
         );
 
         // For CryptoKeyPair results the private key
@@ -202,9 +202,9 @@ describe('subtle - generateKey', () => {
                   ...vectors[name]?.algorithm,
                 },
                 true,
-                ['verify']
+                ['verify'],
               ),
-            'Usages cannot be empty'
+            'Usages cannot be empty',
           );
         }
 
@@ -223,9 +223,9 @@ describe('subtle - generateKey', () => {
                   ...vectors[name]?.algorithm,
                 },
                 true,
-                [...(vectors[name]?.usages as KeyUsage[]), invalidUsage]
+                [...(vectors[name]?.usages as KeyUsage[]), invalidUsage],
               ),
-            'Unsupported key usage'
+            'Unsupported key usage',
           );
         }
       });
@@ -441,7 +441,7 @@ describe('subtle - generateKey', () => {
       name: AnyAlgorithm,
       namedCurve: NamedCurve,
       privateUsages: KeyUsage[],
-      publicUsages: KeyUsage[] = privateUsages
+      publicUsages: KeyUsage[] = privateUsages,
     ) {
       it(`EC keygen: ${name} ${namedCurve} ${privateUsages} ${publicUsages}`, async () => {
         let usages = privateUsages;
@@ -455,7 +455,7 @@ describe('subtle - generateKey', () => {
             namedCurve,
           },
           true,
-          usages
+          usages,
         );
         const { publicKey, privateKey } = pair as CryptoKeyPair;
         const pub = publicKey as CryptoKey;
@@ -484,9 +484,9 @@ describe('subtle - generateKey', () => {
                 // @ts-expect-error bad named curve
                 { name, namedCurve: curve },
                 true,
-                privateUsages
+                privateUsages,
               ),
-            'NotSupportedError'
+            'NotSupportedError',
           );
         });
         await assertThrowsAsync(
@@ -494,9 +494,9 @@ describe('subtle - generateKey', () => {
             subtle.generateKey(
               { name, namedCurve: undefined },
               true,
-              privateUsages
+              privateUsages,
             ),
-          "Unrecognized namedCurve 'undefined'"
+          "Unrecognized namedCurve 'undefined'",
         );
       });
     }
@@ -533,11 +533,11 @@ describe('subtle - generateKey', () => {
                   // @ts-expect-error bad length
                   { name, length: invalidParam },
                   true,
-                  usages
+                  usages,
                 ),
-              'AES key length must be 128, 192, or 256 bits'
+              'AES key length must be 128, 192, or 256 bits',
             );
-          }
+          },
         );
       });
     }
