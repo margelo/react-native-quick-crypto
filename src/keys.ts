@@ -196,10 +196,10 @@ export type EncodingOptions = {
   format?: KFormat;
   padding?: number;
   cipher?: string;
-  passphrase?: string | ArrayBuffer;
+  passphrase?: BinaryLike;
   saltLength?: number;
-  oaepHash?: ArrayBuffer;
-  oaepLabel?: ArrayBuffer;
+  oaepHash?: string;
+  oaepLabel?: BinaryLike;
 };
 
 export type AsymmetricKeyType = 'rsa' | 'rsa-pss' | 'dsa' | 'ec' | undefined;
@@ -395,7 +395,7 @@ function prepareAsymmetricKey(
   format: KFormatType;
   data: ArrayBuffer;
   type?: KeyEncoding;
-  passphrase?: string | ArrayBuffer;
+  passphrase?: BinaryLike;
 } {
   // TODO(osp) check, KeyObject some node object
   // if (isKeyObject(key)) {

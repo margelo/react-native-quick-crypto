@@ -15,6 +15,7 @@ import type {
 } from './keygen';
 import type { KeyVariant } from './Cipher';
 import type { RSACipher } from './rsa';
+import type { BinaryLike } from '../Utils';
 
 type KeyDetail = {
   length?: number;
@@ -42,7 +43,7 @@ export type KeyObjectHandle = {
     format?: KFormatType,
     type?: KeyEncoding,
     cipher?: string,
-    passphrase?: ArrayBuffer,
+    passphrase?: BinaryLike,
   ): ArrayBuffer;
   exportJwk(key: JWK, handleRsaPss: boolean): JWK;
   getAsymmetricKeyType(): AsymmetricKeyType;
@@ -51,7 +52,7 @@ export type KeyObjectHandle = {
     key: string | ArrayBuffer,
     format?: KFormatType,
     type?: KeyEncoding,
-    passphrase?: string | ArrayBuffer,
+    passphrase?: BinaryLike,
   ): boolean;
   initECRaw(curveName: string, keyData: ArrayBuffer): boolean;
   initJwk(keyData: JWK, namedCurve?: NamedCurve): KeyType | undefined;

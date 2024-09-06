@@ -62,21 +62,21 @@ export type PublicEncryptMethod = (
   data: ArrayBuffer,
   format: number,
   type: KeyEncoding | undefined,
-  passphrase: string | ArrayBuffer | undefined,
+  passphrase: BinaryLike | undefined,
   buffer: ArrayBuffer,
   padding: number,
-  oaepHash: ArrayBuffer | undefined,
-  oaepLabel: ArrayBuffer | undefined,
+  oaepHash: string | undefined,
+  oaepLabel: BinaryLike | undefined,
 ) => Buffer;
 export type PrivateDecryptMethod = (
   data: ArrayBuffer,
   format: number,
   type: KeyEncoding | undefined,
-  passphrase: string | ArrayBuffer | undefined,
+  passphrase: BinaryLike | undefined,
   buffer: ArrayBuffer,
   padding: number,
-  oaepHash: ArrayBuffer | undefined,
-  oaepLabel: ArrayBuffer | undefined,
+  oaepHash: string | undefined,
+  oaepLabel: BinaryLike | undefined,
 ) => Buffer;
 
 export type GenerateKeyPairMethod = (
