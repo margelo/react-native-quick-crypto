@@ -181,5 +181,8 @@ lib/
 # TypeScript
 tsconfig.tsbuildinfo
 
+# jenv
+.java-version
+
 # development stuffs
 example0/
