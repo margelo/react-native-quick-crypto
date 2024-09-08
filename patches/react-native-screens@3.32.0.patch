@@ -1,0 +1,26 @@
+diff --git a/common/cpp/react/renderer/components/rnscreens/RNSModalScreenShadowNode.h b/common/cpp/react/renderer/components/rnscreens/RNSModalScreenShadowNode.h
+index 32d55119511f03fe94367fe81c672a7d83e1168e..3ede30c142f8e465fba41029b1d72ebc7a4268e3 100644
+--- a/common/cpp/react/renderer/components/rnscreens/RNSModalScreenShadowNode.h
++++ b/common/cpp/react/renderer/components/rnscreens/RNSModalScreenShadowNode.h
+@@ -20,7 +20,7 @@ class JSI_EXPORT RNSModalScreenShadowNode final
+  public:
+   using ConcreteViewShadowNode::ConcreteViewShadowNode;
+ 
+-  Point getContentOriginOffset() const override;
++  Point getContentOriginOffset() const;
+   static ShadowNodeTraits BaseTraits() {
+     auto traits = ConcreteViewShadowNode::BaseTraits();
+     traits.set(ShadowNodeTraits::Trait::RootNodeKind);
+diff --git a/common/cpp/react/renderer/components/rnscreens/RNSScreenShadowNode.h b/common/cpp/react/renderer/components/rnscreens/RNSScreenShadowNode.h
+index 0de3b2f32feee6a99c297291ee1d301822a18ad7..baa04882c66832b765123848ae1538c37bfb7fac 100644
+--- a/common/cpp/react/renderer/components/rnscreens/RNSScreenShadowNode.h
++++ b/common/cpp/react/renderer/components/rnscreens/RNSScreenShadowNode.h
+@@ -19,7 +19,7 @@ class JSI_EXPORT RNSScreenShadowNode final : public ConcreteViewShadowNode<
+  public:
+   using ConcreteViewShadowNode::ConcreteViewShadowNode;
+ 
+-  Point getContentOriginOffset() const override;
++  Point getContentOriginOffset() const;
+ };
+ 
+ } // namespace react
