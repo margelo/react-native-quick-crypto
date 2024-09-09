@@ -79,7 +79,7 @@ describe('createCipheriv/createDecipheriv', () => {
       defaultCipher.update(plaintext, 'utf8', 'hex');
       defaultCipher.final('hex');
       const defaultAuthTag = defaultCipher.getAuthTag();
-      assert.strictEqual(Buffer.from(defaultAuthTag).length, 16);
+      assert.strictEqual(defaultAuthTag.length, 16);
     });
 
     it('AES-GCM with key and iv ', () => {
@@ -91,14 +91,14 @@ describe('createCipheriv/createDecipheriv', () => {
       let encrypted = cipher.update(plaintext, 'utf8', 'hex');
       encrypted += cipher.final('hex');
       const authTag = cipher.getAuthTag();
-      assert.strictEqual(Buffer.from(authTag).length, 4);
+      assert.strictEqual(authTag.length, 4);
 
       // Decryption
       const decipher = crypto.createDecipheriv('aes-256-gcm', key, iv, {
         // using an uncommon auth tag length for corner case checking. default is usually 16.
         authTagLength: 4,
       });
-      decipher.setAuthTag(Buffer.from(authTag));
+      decipher.setAuthTag(authTag);
       let decrypted = decipher.update(encrypted, 'hex', 'utf8');
       decrypted += decipher.final('utf8');
 
