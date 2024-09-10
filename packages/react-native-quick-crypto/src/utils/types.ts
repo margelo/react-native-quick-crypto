@@ -129,9 +129,12 @@ export enum KeyEncoding {
 
 export type AsymmetricKeyType = 'rsa' | 'rsa-pss' | 'dsa' | 'ec' | undefined;
 
+export type JWKkty = 'AES' | 'RSA' | 'EC' | 'oct';
+export type JWKuse = 'sig' | 'enc';
+
 export type JWK = {
-  kty?: 'AES' | 'RSA' | 'EC' | 'oct';
-  use?: 'sig' | 'enc';
+  kty?: JWKkty;
+  use?: JWKuse;
   key_ops?: KeyUsage[];
   alg?: string; // TODO: enumerate these (RFC-7517)
   crv?: string;

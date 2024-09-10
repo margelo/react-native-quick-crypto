@@ -1,7 +1,6 @@
 import { type HybridObject } from 'react-native-nitro-modules';
 import type {
   AsymmetricKeyType,
-  BinaryLike,
   JWK,
   KeyDetail,
   KeyEncoding,
@@ -16,7 +15,7 @@ export interface KeyObjectHandle
     format?: KFormatType,
     type?: KeyEncoding,
     cipher?: string,
-    passphrase?: BinaryLike,
+    passphrase?: ArrayBuffer,
   ): ArrayBuffer;
   exportJwk(key: JWK, handleRsaPss: boolean): JWK;
   getAsymmetricKeyType(): AsymmetricKeyType;
@@ -25,7 +24,7 @@ export interface KeyObjectHandle
     key: string | ArrayBuffer,
     format?: KFormatType,
     type?: KeyEncoding,
-    passphrase?: BinaryLike,
+    passphrase?: ArrayBuffer,
   ): boolean;
   initECRaw(curveName: string, keyData: ArrayBuffer): boolean;
   initJwk(keyData: JWK, namedCurve?: NamedCurve): KeyType | undefined;
