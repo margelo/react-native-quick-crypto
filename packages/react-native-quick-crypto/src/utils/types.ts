@@ -129,10 +129,10 @@ export enum KeyEncoding {
 
 export type AsymmetricKeyType = 'rsa' | 'rsa-pss' | 'dsa' | 'ec' | undefined;
 
-export type JWKkty = 'AES' | 'RSA' | 'EC' | 'oct';
-export type JWKuse = 'sig' | 'enc';
+type JWKkty = 'AES' | 'RSA' | 'EC' | 'oct';
+type JWKuse = 'sig' | 'enc';
 
-export type JWK = {
+export interface JWK {
   kty?: JWKkty;
   use?: JWKuse;
   key_ops?: KeyUsage[];
