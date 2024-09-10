@@ -130,28 +130,28 @@ export enum KeyEncoding {
 export type AsymmetricKeyType = 'rsa' | 'rsa-pss' | 'dsa' | 'ec' | undefined;
 
 export type JWK = {
-  'kty'?: 'AES' | 'RSA' | 'EC' | 'oct';
-  'use'?: 'sig' | 'enc';
-  'key_ops'?: KeyUsage[];
-  'alg'?: string; // TODO: enumerate these (RFC-7517)
-  'crv'?: string;
-  'kid'?: string;
-  'x5u'?: string;
-  'x5c'?: string[];
-  'x5t'?: string;
+  kty?: 'AES' | 'RSA' | 'EC' | 'oct';
+  use?: 'sig' | 'enc';
+  key_ops?: KeyUsage[];
+  alg?: string; // TODO: enumerate these (RFC-7517)
+  crv?: string;
+  kid?: string;
+  x5u?: string;
+  x5c?: string[];
+  x5t?: string;
   'x5t#256'?: string;
-  'n'?: string;
-  'e'?: string;
-  'd'?: string;
-  'p'?: string;
-  'q'?: string;
-  'x'?: string;
-  'y'?: string;
-  'k'?: string;
-  'dp'?: string;
-  'dq'?: string;
-  'qi'?: string;
-  'ext'?: boolean;
+  n?: string;
+  e?: string;
+  d?: string;
+  p?: string;
+  q?: string;
+  x?: string;
+  y?: string;
+  k?: string;
+  dp?: string;
+  dq?: string;
+  qi?: string;
+  ext?: boolean;
 };
 
 export type KTypePrivate = 'pkcs1' | 'pkcs8' | 'sec1';

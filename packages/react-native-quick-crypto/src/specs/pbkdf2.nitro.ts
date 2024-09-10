@@ -6,13 +6,13 @@ export interface Pbkdf2 extends HybridObject<{ ios: 'c++'; android: 'c++' }> {
     salt: ArrayBuffer,
     iterations: number,
     keylen: number,
-    digest: string
+    digest: string,
   ) => Promise<ArrayBuffer>;
   pbkdf2Sync: (
     password: ArrayBuffer,
     salt: ArrayBuffer,
     iterations: number,
     keylen: number,
-    digest: string
+    digest: string,
   ) => ArrayBuffer;
-};
+}

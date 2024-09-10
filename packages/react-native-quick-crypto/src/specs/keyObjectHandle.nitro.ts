@@ -1,7 +1,17 @@
 import { type HybridObject } from 'react-native-nitro-modules';
-import type { AsymmetricKeyType, BinaryLike, JWK, KeyDetail, KeyEncoding, KeyType, KFormatType, NamedCurve } from '../utils';
+import type {
+  AsymmetricKeyType,
+  BinaryLike,
+  JWK,
+  KeyDetail,
+  KeyEncoding,
+  KeyType,
+  KFormatType,
+  NamedCurve,
+} from '../utils';
 
-export interface KeyObjectHandle extends HybridObject<{ ios: 'c++'; android: 'c++' }> {
+export interface KeyObjectHandle
+  extends HybridObject<{ ios: 'c++'; android: 'c++' }> {
   export(
     format?: KFormatType,
     type?: KeyEncoding,
@@ -20,4 +30,4 @@ export interface KeyObjectHandle extends HybridObject<{ ios: 'c++'; android: 'c+
   initECRaw(curveName: string, keyData: ArrayBuffer): boolean;
   initJwk(keyData: JWK, namedCurve?: NamedCurve): KeyType | undefined;
   keyDetail(): KeyDetail;
-};
+}

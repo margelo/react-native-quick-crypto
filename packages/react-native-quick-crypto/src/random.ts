@@ -16,20 +16,20 @@ function getNative(): Random {
 
 export function randomFill<T extends ArrayBufferView>(
   buffer: T,
-  callback: RandomCallback<T>
+  callback: RandomCallback<T>,
 ): void;
 
 export function randomFill<T extends ArrayBufferView>(
   buffer: T,
   offset: number,
-  callback: RandomCallback<T>
+  callback: RandomCallback<T>,
 ): void;
 
 export function randomFill<T extends ArrayBufferView>(
   buffer: T,
   offset: number,
   size: number,
-  callback: RandomCallback<T>
+  callback: RandomCallback<T>,
 ): void;
 
 export function randomFill(buffer: ArrayBufferView, ...rest: unknown[]): void {
@@ -39,7 +39,7 @@ export function randomFill(buffer: ArrayBufferView, ...rest: unknown[]): void {
 
   const callback = rest[rest.length - 1] as unknown as (
     err: Error | null,
-    buf?: ArrayBuffer
+    buf?: ArrayBuffer,
   ) => void;
 
   let offset: number = 0;
@@ -61,20 +61,20 @@ export function randomFill(buffer: ArrayBufferView, ...rest: unknown[]): void {
     },
     (e: Error) => {
       callback(e);
-    }
+    },
   );
 }
 
 export function randomFillSync<T extends ArrayBufferView>(
   buffer: T,
   offset?: number,
-  size?: number
+  size?: number,
 ): T;
 
 export function randomFillSync(
   buffer: ArrayBufferView,
   offset: number = 0,
-  size?: number
+  size?: number,
 ) {
   getNative();
   buffer = abvToArrayBuffer(buffer);
@@ -87,12 +87,12 @@ export function randomBytes(size: number): Buffer;
 
 export function randomBytes(
   size: number,
-  callback: (err: Error | null, buf?: Buffer) => void
+  callback: (err: Error | null, buf?: Buffer) => void,
 ): void;
 
 export function randomBytes(
   size: number,
-  callback?: (err: Error | null, buf?: Buffer) => void
+  callback?: (err: Error | null, buf?: Buffer) => void,
 ): void | Buffer {
   const buf = new Buffer(size);
 
@@ -141,13 +141,13 @@ export function randomInt(max: number): number;
 export function randomInt(
   min: number,
   max: number,
-  callback: RandomIntCallback
+  callback: RandomIntCallback,
 ): void;
 export function randomInt(min: number, max: number): number;
 export function randomInt(
   arg1: number,
   arg2?: number | RandomIntCallback,
-  callback?: RandomIntCallback
+  callback?: RandomIntCallback,
 ): void | number {
   // Detect optional min syntax
   // randomInt(max)
@@ -253,7 +253,7 @@ function asyncRefillRandomIntCache() {
     // callback (errorReceiver) about it. This way, every async call to
     // randomInt has a chance of being successful, and it avoids complex
     // exception handling here.
-    tasks.splice(0).forEach((task) => {
+    tasks.splice(0).forEach(task => {
       randomInt(task.min, task.max, task.callback);
     });
 

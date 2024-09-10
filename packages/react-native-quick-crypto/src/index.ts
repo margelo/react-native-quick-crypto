@@ -2,10 +2,11 @@
 import { Buffer } from '@craftzdog/react-native-buffer';
 
 // API imports
+import { pbkdf2 } from './pbkdf2';
 import * as random from './random';
 
 // utils import
-import { utils } from './utils';
+import * as conversion_utils from './utils/conversion';
 
 /**
  * Loosely matches Node.js {crypto} with some unimplemented functionality.
@@ -34,12 +35,12 @@ const QuickCrypto = {
   // createVerify,
   // subtle,
   // constants,
-  // ...pbkdf2,
+  ...pbkdf2,
   ...random,
   // getCiphers,
   // getHashes,
   // webcrypto,
-  utils,
+  ...conversion_utils,
 };
 
 /**

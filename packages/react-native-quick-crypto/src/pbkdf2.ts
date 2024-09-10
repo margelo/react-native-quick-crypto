@@ -1,14 +1,12 @@
 import { Buffer } from '@craftzdog/react-native-buffer';
 import { NitroModules } from 'react-native-nitro-modules';
-import type {
-  BinaryLike,
-} from './utils';
+import type { BinaryLike } from './utils';
 import {
   HashContext,
   binaryLikeToArrayBuffer,
   bufferLikeToArrayBuffer,
   lazyDOMException,
-  normalizeHashName
+  normalizeHashName,
 } from './utils';
 import type { HashAlgorithm, SubtleAlgorithm } from './utils';
 import type { Pbkdf2 } from './specs/pbkdf2.nitro';
@@ -58,7 +56,8 @@ export function pbkdf2(
   const normalizedDigest = normalizeHashName(digest, HashContext.Node);
 
   getNative();
-  native.pbkdf2(
+  native
+    .pbkdf2(
       sanitizedPassword,
       sanitizedSalt,
       iterations,
@@ -80,7 +79,7 @@ export function pbkdf2Sync(
   salt: Salt,
   iterations: number,
   keylen: number,
-  digest?: HashAlgorithm
+  digest?: HashAlgorithm,
 ): ArrayBuffer {
   const sanitizedPassword = sanitizeInput(password, WRONG_PASS);
   const sanitizedSalt = sanitizeInput(salt, WRONG_SALT);
@@ -92,7 +91,7 @@ export function pbkdf2Sync(
     sanitizedSalt,
     iterations,
     keylen,
-    algo
+    algo,
   );
 
   return Buffer.from(result);
@@ -106,14 +105,14 @@ const pbkdf2WithDigest = (
   iterations: number,
   keylen: number,
   digest: HashAlgorithm,
-  callback: Pbkdf2Callback
+  callback: Pbkdf2Callback,
 ) => pbkdf2(password, salt, iterations, keylen, digest, callback);
 
 const pbkdf2Promise = promisify(pbkdf2WithDigest);
 export async function pbkdf2DeriveBits(
   algorithm: SubtleAlgorithm,
   baseKey: CryptoKey,
-  length: number
+  length: number,
 ): Promise<ArrayBuffer> {
   const { iterations, hash, salt } = algorithm;
   const normalizedHash = normalizeHashName(hash);
@@ -143,12 +142,12 @@ export async function pbkdf2DeriveBits(
     sanitizedSalt,
     iterations,
     length / 8,
-    normalizedHash as HashAlgorithm
+    normalizedHash as HashAlgorithm,
   );
   if (!result) {
     throw lazyDOMException(
       'received bad result from pbkdf2()',
-      'OperationError'
+      'OperationError',
     );
   }
   return bufferLikeToArrayBuffer(result);

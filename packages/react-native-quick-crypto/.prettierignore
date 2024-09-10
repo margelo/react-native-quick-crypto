@@ -1,0 +1,5 @@
+# ts generated files
+lib/*
+
+# holding old code while we migrate to new architecture
+zzz/*

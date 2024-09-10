@@ -1,5 +1,5 @@
-import type { KeyObjectHandle } from "../specs/keyObjectHandle.nitro";
-import type { EncodingOptions, KeyUsage, SubtleAlgorithm } from "../utils";
+import type { KeyObjectHandle } from '../specs/keyObjectHandle.nitro';
+import type { EncodingOptions, KeyUsage, SubtleAlgorithm } from '../utils';
 
 export class CryptoKey {
   keyObject: KeyObject;
@@ -11,7 +11,7 @@ export class CryptoKey {
     keyObject: KeyObject,
     keyAlgorithm: SubtleAlgorithm,
     keyUsages: KeyUsage[],
-    keyExtractable: boolean
+    keyExtractable: boolean,
   ) {
     this.keyObject = keyObject;
     this.keyAlgorithm = keyAlgorithm;

@@ -32,6 +32,8 @@
     "typescript": "tsc --noEmit",
     "lint": "eslint \"**/*.{js,ts,tsx}\"",
     "lint-fix": "eslint \"**/*.{js,ts,tsx}\" --fix",
+    "format": "prettier --check \"**/*.{js,ts,tsx}\"",
+    "format-fix": "prettier --write \"**/*.{js,ts,tsx}\"",
     "prepare": "bun clean && bob build",
     "release-it": "bun prepare && release-it",
     "test": "jest",

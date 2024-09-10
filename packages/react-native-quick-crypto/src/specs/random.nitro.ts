@@ -4,11 +4,11 @@ export interface Random extends HybridObject<{ ios: 'c++'; android: 'c++' }> {
   randomFill(
     buffer: ArrayBuffer,
     offset: number,
-    size: number
+    size: number,
   ): Promise<ArrayBuffer>;
   randomFillSync(
     buffer: ArrayBuffer,
     offset: number,
-    size: number
+    size: number,
   ): ArrayBuffer;
-};
+}
