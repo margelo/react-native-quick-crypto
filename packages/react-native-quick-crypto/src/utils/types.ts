@@ -1,5 +1,5 @@
-import { Buffer } from '@craftzdog/react-native-buffer';
-import { Buffer as SBuffer } from 'safe-buffer';
+import { type Buffer } from '@craftzdog/react-native-buffer';
+import { type Buffer as SBuffer } from 'safe-buffer';
 import { type CipherKey } from 'crypto'; // @types/node
 
 export type ArrayBufferView = TypedArray | DataView | ArrayBufferLike | Buffer;
