@@ -1,6 +1,6 @@
 import { Buffer } from '@craftzdog/react-native-buffer';
-import type { ArrayBufferView, RandomCallback } from './utils/types';
-import { abvToArrayBuffer } from './utils/conversion';
+import type { ArrayBufferView, RandomCallback } from './utils';
+import { abvToArrayBuffer } from './utils';
 import { NitroModules } from 'react-native-nitro-modules';
 import type { Random } from './specs/random.nitro';
 

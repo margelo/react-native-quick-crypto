@@ -1,4 +1,3 @@
-import { Buffer } from '@craftzdog/react-native-buffer';
 import type {
   AnyAlgorithm,
   DeriveBitsAlgorithm,
@@ -11,11 +10,6 @@ import type {
   SignVerifyAlgorithm,
   SubtleAlgorithm,
 } from './keys';
-import { type CipherKey } from 'crypto'; // @types/node
-
-export type BufferLike = ArrayBuffer | Buffer | ArrayBufferView;
-export type BinaryLike = string | ArrayBuffer | Buffer | TypedArray;
-export type BinaryLikeNode = CipherKey | BinaryLike;
 
 export type BinaryToTextEncoding = 'base64' | 'base64url' | 'hex' | 'binary';
 export type CharacterEncoding = 'utf8' | 'utf-8' | 'utf16le' | 'latin1';
@@ -27,24 +21,6 @@ export type Encoding =
 
 // TODO(osp) should buffer be part of the Encoding type?
 export type CipherEncoding = Encoding | 'buffer';
-
-export type TypedArray =
-  | Uint8Array
-  | Uint8ClampedArray
-  | Uint16Array
-  | Uint32Array
-  | Int8Array
-  | Int16Array
-  | Int32Array
-  | Float32Array
-  | Float64Array;
-
-type DOMName =
-  | string
-  | {
-      name: string;
-      cause: any;
-    };
 
 // Mimics node behavior for default global encoding
 let defaultEncoding: CipherEncoding = 'buffer';
@@ -130,76 +106,6 @@ export const kEmptyObject = Object.freeze(Object.create(null));
 //   return slowCases(enc);
 // }
 
-export function toArrayBuffer(buf: Buffer): ArrayBuffer {
-  if (buf?.buffer?.slice) {
-    return buf.buffer.slice(buf.byteOffset, buf.byteOffset + buf.byteLength);
-  }
-  const ab = new ArrayBuffer(buf.length);
-  const view = new Uint8Array(ab);
-  for (let i = 0; i < buf.length; ++i) {
-    view[i] = buf[i]!;
-  }
-  return ab;
-}
-
-export function bufferLikeToArrayBuffer(buf: BufferLike): ArrayBuffer {
-  return Buffer.isBuffer(buf)
-    ? buf.buffer
-    : ArrayBuffer.isView(buf)
-      ? buf.buffer
-      : buf;
-}
-
-export function binaryLikeToArrayBuffer(
-  input: BinaryLikeNode, // CipherKey adds compat with node types
-  encoding: string = 'utf-8'
-): ArrayBuffer {
-  if (typeof input === 'string') {
-    if (encoding === 'buffer') {
-      throw new Error(
-        'Cannot create a buffer from a string with a buffer encoding'
-      );
-    }
-
-    const buffer = Buffer.from(input, encoding);
-
-    return buffer.buffer.slice(
-      buffer.byteOffset,
-      buffer.byteOffset + buffer.byteLength
-    );
-  }
-
-  if (Buffer.isBuffer(input)) {
-    return toArrayBuffer(input);
-  }
-
-  // TODO add further binary types to BinaryLike, UInt8Array and so for have this array as property
-  if (ArrayBuffer.isView(input)) {
-    return input.buffer;
-  }
-
-  if (!(input instanceof ArrayBuffer)) {
-    try {
-      // this is a strange fallback case and input is unknown at this point
-      // @ts-expect-error
-      const buffer = Buffer.from(input);
-      return buffer.buffer.slice(
-        buffer.byteOffset,
-        buffer.byteOffset + buffer.byteLength
-      );
-    } catch {
-      throw 'error';
-    }
-  }
-
-  // TODO: handle if input is KeyObject?
-
-  return input;
-}
-
-export function ab2str(buf: ArrayBuffer, encoding: string = 'hex') {
-  return Buffer.from(buf).toString(encoding);
-}
 
 export function validateString(str: any, name?: string): str is string {
   const isString = typeof str === 'string';
@@ -300,15 +206,6 @@ export function hasAnyNotIn(set: string[], checks: string[]) {
     }
   }
   return false;
-}
-
-export function lazyDOMException(message: string, domName: DOMName): Error {
-  let cause = '';
-  if (typeof domName !== 'string') {
-    cause = `\nCaused by: ${domName.cause}`;
-  }
-
-  return new Error(`[${domName}]: ${message}${cause}`);
 }
 
 // from lib/internal/crypto/util.js

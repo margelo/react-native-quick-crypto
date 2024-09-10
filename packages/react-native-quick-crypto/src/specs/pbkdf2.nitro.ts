@@ -1,4 +1,6 @@
-export type Pbkdf2Object = {
+import { type HybridObject } from 'react-native-nitro-modules';
+
+export interface Pbkdf2 extends HybridObject<{ ios: 'c++'; android: 'c++' }> {
   pbkdf2: (
     password: ArrayBuffer,
     salt: ArrayBuffer,

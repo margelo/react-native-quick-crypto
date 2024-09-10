@@ -11,4 +11,4 @@ export interface Random extends HybridObject<{ ios: 'c++'; android: 'c++' }> {
     offset: number,
     size: number
   ): ArrayBuffer;
-}
+};
