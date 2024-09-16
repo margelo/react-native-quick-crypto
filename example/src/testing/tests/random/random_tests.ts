@@ -7,7 +7,7 @@ import { Buffer } from '@craftzdog/react-native-buffer'
 import { assert } from 'chai'
 import type { Done } from 'mocha'
 
-const { ab2str, abvToArrayBuffer } = crypto.utils;
+const { ab2str, abvToArrayBuffer } = crypto;
 
 describe('random', () => {
   ;[crypto.randomBytes, crypto.pseudoRandomBytes].forEach((f) => {
@@ -591,10 +591,12 @@ describe('random', () => {
         `It must be <= ${MAX_RANGE}. ` +
         'Received 281_474_976_710_656'
     )
-  })
-  ;[true, NaN, [], 10].forEach((val) => {
+  });
+
+  [true, NaN, [], 10].forEach((val) => {
     it(`expect type error: ${val}`, () => {
       assert.throws(
+        // @ts-expect-error - testing bad args
         () => crypto.randomInt(0, 1, val),
         /callback must be a function or undefined/
       )

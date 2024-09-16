@@ -127,7 +127,7 @@ export enum KeyEncoding {
   kKeyEncodingSEC1,
 }
 
-export type AsymmetricKeyType = 'rsa' | 'rsa-pss' | 'dsa' | 'ec' | undefined;
+export type AsymmetricKeyType = 'rsa' | 'rsa-pss' | 'dsa' | 'ec';
 
 type JWKkty = 'AES' | 'RSA' | 'EC' | 'oct';
 type JWKuse = 'sig' | 'enc';
@@ -155,7 +155,7 @@ export interface JWK {
   dq?: string;
   qi?: string;
   ext?: boolean;
-};
+}
 
 export type KTypePrivate = 'pkcs1' | 'pkcs8' | 'sec1';
 export type KTypePublic = 'pkcs1' | 'spki';
@@ -180,7 +180,7 @@ export type EncodingOptions = {
   oaepLabel?: BinaryLike;
 };
 
-export type KeyDetail = {
+export interface KeyDetail {
   length?: number;
   publicExponent?: number;
   modulusLength?: number;
@@ -188,4 +188,4 @@ export type KeyDetail = {
   mgf1HashAlgorithm?: string;
   saltLength?: number;
   namedCurve?: string;
-};
+}

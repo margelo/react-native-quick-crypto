@@ -7,5 +7,11 @@
   "android": {
     "androidNamespace": ["crypto"],
     "androidCxxLibName": "QuickCrypto"
-  }
+  },
+  "autolinking": {
+    "HybridRandom": {
+      "cpp": "HybridRandom"
+    }
+  },
+  "ignorePaths": ["node_modules"]
 }
