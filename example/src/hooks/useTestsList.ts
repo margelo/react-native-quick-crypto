@@ -1,10 +1,9 @@
-
-import { useState, useCallback } from 'react'
-import type { Suites, TestSuite } from '../types/Suite'
-import { rootSuite } from '../testing/MochaRNAdapter'
+import { useState, useCallback } from 'react';
+import type { Suites, TestSuite } from '../types/Suite';
+import { rootSuite } from '../testing/MochaRNAdapter';
 
 // import '../testing/tests/pbkdf2Tests/pbkdf2Tests';
-import '../testing/tests/random/random_tests'
+import '../testing/tests/random/random_tests';
 // import '../testing/tests/HmacTests/HmacTests';
 // import '../testing/tests/HashTests/HashTests';
 // import '../testing/tests/CipherTests/CipherTestFirst';
@@ -29,48 +28,48 @@ export const useTestsList = (): [
   () => void,
   () => void,
 ] => {
-  const [suites, setSuites] = useState<Suites<TestSuite>>(getInitialSuites())
+  const [suites, setSuites] = useState<Suites<TestSuite>>(getInitialSuites());
 
   const toggle = useCallback(
     (description: string) => {
-      setSuites((tests) => {
-        tests[description]!.value = !tests[description]!.value
-        return tests
-      })
+      setSuites(tests => {
+        tests[description]!.value = !tests[description]!.value;
+        return tests;
+      });
     },
-    [setSuites]
-  )
+    [setSuites],
+  );
 
   const clearAll = useCallback(() => {
-    setSuites((suites) => {
-      Object.values(suites).forEach((suite) => {
-        suite.value = false
-      })
-      return { ...suites }
-    })
-  }, [setSuites])
+    setSuites(suites => {
+      Object.values(suites).forEach(suite => {
+        suite.value = false;
+      });
+      return { ...suites };
+    });
+  }, [setSuites]);
 
   const checkAll = useCallback(() => {
-    setSuites((suites) => {
-      Object.values(suites).forEach((suite) => {
-        suite.value = true
-      })
-      return { ...suites }
-    })
-  }, [setSuites])
+    setSuites(suites => {
+      Object.values(suites).forEach(suite => {
+        suite.value = true;
+      });
+      return { ...suites };
+    });
+  }, [setSuites]);
 
-  return [suites, toggle, clearAll, checkAll]
-}
+  return [suites, toggle, clearAll, checkAll];
+};
 
 const getInitialSuites = () => {
-  const suites: Suites = {}
+  const suites: Suites = {};
 
   // interrogate the loaded mocha suites/tests via a temporary runner
-  const runner = new Mocha.Runner(rootSuite)
-  runner.suite.suites.map((s) => {
-    suites[s.title] = { value: false, count: s.total() }
-  })
+  const runner = new Mocha.Runner(rootSuite);
+  runner.suite.suites.map(s => {
+    suites[s.title] = { value: false, count: s.total() };
+  });
 
   // return count-enhanced list and totals
-  return suites
-}
+  return suites;
+};
