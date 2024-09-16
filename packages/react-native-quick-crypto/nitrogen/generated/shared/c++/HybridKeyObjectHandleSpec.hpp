@@ -70,7 +70,7 @@ namespace margelo::nitro::crypto {
 
     public:
       // Methods
-      virtual std::shared_ptr<ArrayBuffer> export(std::optional<KFormatType> format, std::optional<KeyEncoding> type, const std::optional<std::string>& cipher, const std::optional<std::shared_ptr<ArrayBuffer>>& passphrase) = 0;
+      virtual std::shared_ptr<ArrayBuffer> exportKey(std::optional<KFormatType> format, std::optional<KeyEncoding> type, const std::optional<std::string>& cipher, const std::optional<std::shared_ptr<ArrayBuffer>>& passphrase) = 0;
       virtual JWK exportJwk(const JWK& key, bool handleRsaPss) = 0;
       virtual AsymmetricKeyType getAsymmetricKeyType() = 0;
       virtual bool init(KeyType keyType, const std::variant<std::string, std::shared_ptr<ArrayBuffer>>& key, std::optional<KFormatType> format, std::optional<KeyEncoding> type, const std::optional<std::shared_ptr<ArrayBuffer>>& passphrase) = 0;

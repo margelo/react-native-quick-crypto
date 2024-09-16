@@ -36,7 +36,7 @@
     "format:fix": "prettier --write \"**/*.{js,ts,tsx}\"",
     "prepare": "bun clean && bob build",
     "release-it": "bun prepare && release-it",
-    "specs": "bun run --filter=\"**\" typescript && bun nitro-codegen --logLevel=\"debug\"",
+    "specs": "bun run --filter=\"**\" typescript && bun nitro-codegen",
     "test": "jest",
     "postinstall": "tsc || exit 0;"
   },

@@ -11,7 +11,7 @@ import type {
 
 export interface KeyObjectHandle
   extends HybridObject<{ ios: 'c++'; android: 'c++' }> {
-  export(
+  exportKey(
     format?: KFormatType,
     type?: KeyEncoding,
     cipher?: string,

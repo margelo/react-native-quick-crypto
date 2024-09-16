@@ -14,7 +14,7 @@ namespace margelo::nitro::crypto {
     HybridObject::loadHybridMethods();
     // load custom methods/properties
     registerHybrids(this, [](Prototype& prototype) {
-      prototype.registerHybridMethod("export", &HybridKeyObjectHandleSpec::export);
+      prototype.registerHybridMethod("exportKey", &HybridKeyObjectHandleSpec::exportKey);
       prototype.registerHybridMethod("exportJwk", &HybridKeyObjectHandleSpec::exportJwk);
       prototype.registerHybridMethod("getAsymmetricKeyType", &HybridKeyObjectHandleSpec::getAsymmetricKeyType);
       prototype.registerHybridMethod("init", &HybridKeyObjectHandleSpec::init);
