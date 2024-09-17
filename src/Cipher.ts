@@ -222,8 +222,8 @@ class CipherCommon extends Stream.Transform {
     return this;
   }
 
-  public getAuthTag(): ArrayBuffer {
-    return this.internal.getAuthTag();
+  public getAuthTag(): Buffer {
+    return Buffer.from(this.internal.getAuthTag());
   }
 
   public setAuthTag(tag: Buffer): this {
