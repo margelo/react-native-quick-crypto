@@ -83,7 +83,7 @@ export function normalizeHashName(
   context: HashContext = HashContext.Node,
 ): HashAlgorithm {
   if (typeof algo !== 'undefined') {
-    if(typeof algo === 'object') {
+    if (typeof algo === 'object') {
       algo = algo.name;
     }
     const normAlgo = algo.toString().toLowerCase();
