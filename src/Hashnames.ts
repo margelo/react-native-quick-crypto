@@ -1,4 +1,4 @@
-import type { HashAlgorithm } from './keys';
+import type { HashAlgorithm, SubtleAlgorithm } from './keys';
 
 export enum HashContext {
   Node,
@@ -79,10 +79,13 @@ const kHashNames: HashNames = {
 }
 
 export function normalizeHashName(
-  algo: string | HashAlgorithm | undefined,
+  algo: string | HashAlgorithm | SubtleAlgorithm | undefined,
   context: HashContext = HashContext.Node,
 ): HashAlgorithm {
   if (typeof algo !== 'undefined') {
+    if (typeof algo === 'object') {
+      algo = algo.name;
+    }
     const normAlgo = algo.toString().toLowerCase();
     try {
       const alias = kHashNames[normAlgo]![context] as HashAlgorithm;
