@@ -38,4 +38,12 @@ inline size_t checkOffset(double size, double offset) {
   return static_cast<size_t>(offset);
 }
 
+inline void printData(int num, uint8_t* data, size_t size) {
+  printf("data %d - ", num);
+  for (size_t i = 0; i < size; i++) {
+      printf("%u ", data[i]);
+  }
+  printf("\n");
+}
+
 } // namespace margelo::nitro::crypto
