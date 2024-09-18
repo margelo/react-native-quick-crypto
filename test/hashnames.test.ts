@@ -5,6 +5,7 @@ test('normalizeHashName happy', () => {
   expect(normalizeHashName('SHA-256')).toBe('sha256');
   expect(normalizeHashName('SHA-384')).toBe('sha384');
   expect(normalizeHashName('SHA-512')).toBe('sha512');
+  expect(normalizeHashName({name:'SHA-256'})).toBe('sha256');
 });
 
 test('normalizeHashName sad', () => {
