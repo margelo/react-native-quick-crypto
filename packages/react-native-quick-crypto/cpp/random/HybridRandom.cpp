@@ -3,10 +3,7 @@
 #include <openssl/err.h>
 #include <openssl/rand.h>
 
-namespace margelo::crypto {
-
-using namespace margelo::nitro;
-using namespace margelo::nitro::crypto;
+namespace margelo::nitro::crypto {
 
 std::future<std::shared_ptr<ArrayBuffer>>
 HybridRandom::randomFill(const std::shared_ptr<ArrayBuffer>& buffer,
@@ -41,4 +38,4 @@ HybridRandom::randomFillSync(const std::shared_ptr<ArrayBuffer>& buffer,
   return std::make_shared<NativeArrayBuffer>(data, size, nullptr);
 };
 
-} // namespace margelo::crypto
+} // namespace margelo::nitro::crypto

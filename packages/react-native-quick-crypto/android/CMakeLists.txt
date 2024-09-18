@@ -1,8 +1,7 @@
+project(QuickCrypto)
 cmake_minimum_required(VERSION 3.9.0)
 
-project(QuickCrypto)
 set(PACKAGE_NAME QuickCrypto)
-
 set(CMAKE_VERBOSE_MAKEFILE ON)
 set(CMAKE_CXX_STANDARD 20)
 
@@ -13,8 +12,15 @@ add_library(
   ../cpp/random/HybridRandom.cpp
 )
 
-include_directories(../cpp)
+# add Nitrogen specs
 include(${CMAKE_SOURCE_DIR}/../nitrogen/generated/android/QuickCrypto+autolinking.cmake)
+
+# local includes
+include_directories(
+  "src/main/cpp"
+  "../cpp/random"
+  "../cpp/utils"
+)
 
 # Third party libraries (Prefabs)
 find_library(LOG_LIB log)

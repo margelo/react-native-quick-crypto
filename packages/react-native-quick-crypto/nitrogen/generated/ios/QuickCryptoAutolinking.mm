@@ -22,7 +22,7 @@
   using namespace margelo::nitro::crypto;
 
   HybridObjectRegistry::registerHybridObjectConstructor(
-    "HybridRandom",
+    "Random",
     []() -> std::shared_ptr<HybridObject> {
       static_assert(std::is_default_constructible_v<HybridRandom>,
                     "The HybridObject \"HybridRandom\" is not default-constructible! "

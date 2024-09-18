@@ -1,22 +1,19 @@
-#include <NitroModules/ArrayBuffer.hpp>
 #include <cmath>
 #include <future>
 
 #include "HybridRandomSpec.hpp"
-
-#ifdef ANDROID
-#include "utils/Utils.hpp"
-#else
 #include "Utils.hpp"
-#endif
 
-namespace margelo::crypto {
+namespace margelo::nitro::crypto {
 
-using namespace margelo::nitro;
-using namespace margelo::nitro::crypto;
+using namespace facebook;
 
 class HybridRandom : public HybridRandomSpec {
 public:
+  HybridRandom() : HybridObject(TAG) {}
+
+public:
+  // Methods
   std::future<std::shared_ptr<ArrayBuffer>> randomFill(const std::shared_ptr<ArrayBuffer>& buffer, double dOffset, double dSize) override;
   std::shared_ptr<ArrayBuffer> randomFillSync(const std::shared_ptr<ArrayBuffer>& buffer, double dOffset, double dSize) override;
 };
@@ -41,4 +38,4 @@ inline size_t checkOffset(double size, double offset) {
   return static_cast<size_t>(offset);
 }
 
-} // namespace margelo::crypto
+} // namespace margelo::nitro::crypto

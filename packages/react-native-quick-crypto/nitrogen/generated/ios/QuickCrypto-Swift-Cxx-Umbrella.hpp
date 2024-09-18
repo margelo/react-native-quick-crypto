@@ -12,6 +12,12 @@
 namespace NitroModules { class ArrayBuffer; }
 // Forward declaration of `AsymmetricKeyType` to properly resolve imports.
 namespace margelo::nitro::crypto { enum class AsymmetricKeyType; }
+// Forward declaration of `HybridKeyObjectHandleSpec` to properly resolve imports.
+namespace margelo::nitro::crypto { class HybridKeyObjectHandleSpec; }
+// Forward declaration of `HybridPbkdf2Spec` to properly resolve imports.
+namespace margelo::nitro::crypto { class HybridPbkdf2Spec; }
+// Forward declaration of `HybridRandomSpec` to properly resolve imports.
+namespace margelo::nitro::crypto { class HybridRandomSpec; }
 // Forward declaration of `JWK` to properly resolve imports.
 namespace margelo::nitro::crypto { struct JWK; }
 // Forward declaration of `JWKkty` to properly resolve imports.
@@ -33,6 +39,9 @@ namespace margelo::nitro::crypto { enum class NamedCurve; }
 
 // Include C++ defined types
 #include "AsymmetricKeyType.hpp"
+#include "HybridKeyObjectHandleSpec.hpp"
+#include "HybridPbkdf2Spec.hpp"
+#include "HybridRandomSpec.hpp"
 #include "JWK.hpp"
 #include "JWKkty.hpp"
 #include "JWKuse.hpp"
@@ -45,6 +54,7 @@ namespace margelo::nitro::crypto { enum class NamedCurve; }
 #include <NitroModules/ArrayBuffer.hpp>
 #include <functional>
 #include <future>
+#include <memory>
 #include <optional>
 #include <string>
 #include <variant>
@@ -60,7 +70,12 @@ namespace margelo::nitro::crypto { enum class NamedCurve; }
 #include <NitroModules/PromiseHolder.hpp>
 
 // Forward declarations of Swift defined types
-
+// Forward declaration of `HybridKeyObjectHandleSpecCxx` to properly resolve imports.
+namespace QuickCrypto { class HybridKeyObjectHandleSpecCxx; }
+// Forward declaration of `HybridPbkdf2SpecCxx` to properly resolve imports.
+namespace QuickCrypto { class HybridPbkdf2SpecCxx; }
+// Forward declaration of `HybridRandomSpecCxx` to properly resolve imports.
+namespace QuickCrypto { class HybridRandomSpecCxx; }
 
 // Include Swift defined types
 #if __has_include("QuickCrypto-Swift.h")

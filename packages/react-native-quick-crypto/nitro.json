@@ -1,5 +1,4 @@
 {
-  "logLevel": "debug",
   "cxxNamespace": ["crypto"],
   "ios": {
     "iosModulename": "QuickCrypto"
@@ -9,7 +8,7 @@
     "androidCxxLibName": "QuickCrypto"
   },
   "autolinking": {
-    "HybridRandom": {
+    "Random": {
       "cpp": "HybridRandom"
     }
   },

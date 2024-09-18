@@ -12,7 +12,7 @@ const Tab = createBottomTabNavigator();
 export const Root: React.FC = () => {
   return (
     <NavigationContainer>
-      <Tab.Navigator initialRouteName="Benchmarks">
+      <Tab.Navigator initialRouteName="Tests">
         <Tab.Screen
           name="Tests"
           component={TestStack}
