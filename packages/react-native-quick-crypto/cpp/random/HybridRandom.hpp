@@ -1,5 +1,6 @@
 #include <cmath>
 #include <future>
+#include <iostream>
 
 #include "HybridRandomSpec.hpp"
 #include "Utils.hpp"
@@ -38,8 +39,8 @@ inline size_t checkOffset(double size, double offset) {
   return static_cast<size_t>(offset);
 }
 
-inline void printData(int num, uint8_t* data, size_t size) {
-  printf("data %d - ", num);
+inline void printData(std::string name, uint8_t* data, size_t size) {
+  std::cout << "data - " << name << std::endl;
   for (size_t i = 0; i < size; i++) {
       printf("%u ", data[i]);
   }

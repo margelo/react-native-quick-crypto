@@ -10,7 +10,6 @@ import type { Done } from 'mocha';
 const { ab2str, abvToArrayBuffer } = crypto;
 
 describe('random', () => {
-  /*
   [crypto.randomBytes, crypto.pseudoRandomBytes].forEach(f => {
     // TODO (Szymon)
     // [undefined, null, false, true, {}, []].forEach((value) => {
@@ -211,7 +210,7 @@ describe('random', () => {
       'before/after slices',
     );
   });
-  */
+
   it('randomFill - deepStringEqual - Buffer', (done: Done) => {
     const buf = Buffer.alloc(10);
     const before = buf.toString('hex');
@@ -219,7 +218,6 @@ describe('random', () => {
     crypto.randomFill(buf, 5, 5, (_err: Error | null, res: Buffer) => {
       try {
         const after = Buffer.from(res).toString('hex');
-        console.log('after', after);
         assert.notStrictEqual(before, after, 'before/after');
         assert.deepStrictEqual(
           before.slice(0, 5),
@@ -252,7 +250,6 @@ describe('random', () => {
     });
   });
 
-  /*
   //   finish
   // describe('errors checks', () => {
   //   [Buffer.alloc(10), new Uint8Array(new Array(10).fill(0))].forEach((buf) => {
@@ -628,5 +625,5 @@ describe('random', () => {
       done();
     });
   });
-  */
+
 });

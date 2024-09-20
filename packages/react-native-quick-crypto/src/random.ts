@@ -1,6 +1,6 @@
 import { Buffer } from '@craftzdog/react-native-buffer';
 import type { ArrayBufferView, RandomCallback } from './utils';
-import { ab2str, abvToArrayBuffer } from './utils';
+import { abvToArrayBuffer } from './utils';
 import { NitroModules } from 'react-native-nitro-modules';
 import type { Random } from './specs/random.nitro';
 
@@ -57,7 +57,6 @@ export function randomFill(buffer: ArrayBufferView, ...rest: unknown[]): void {
   getNative();
   random.randomFill(abvToArrayBuffer(buffer), offset, size).then(
     (res: ArrayBuffer) => {
-      console.log('res', ab2str(res));
       callback(null, res);
     },
     (e: Error) => {
