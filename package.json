@@ -2,22 +2,23 @@
   "version": "1.0.0-beta.3",
   "scripts": {
     "check-all": "./scripts/clang-format.sh",
-    "nitro": "cd packages/react-native-quick-crypto && bunx nitro-codegen",
-    "pods": "bun --filter=\"react-native-quick-crypto-example\" pods",
-    "example": "cd example && bun start",
+    "clean": "bun --filter='*' clean",
+    "specs": "bun --filter='react-native-quick-crypto' specs",
+    "pods": "bun --filter='react-native-quick-crypto-example' pods",
+    "example": "bun --filter='react-native-quick-crypto-example' start",
     "bootstrap": "bun install && bun pods",
-    "tsc": "bun --filter=\"*\" typescript",
-    "lint": "bun --filter=\"*\" lint",
-    "lint:fix": "bun --filter=\"*\" lint:fix",
-    "format": "bun --filter=\"*\" format",
-    "format:fix": "bun --filter=\"*\" format:fix",
+    "tsc": "bun --filter='*' typescript",
+    "lint": "bun --filter='*' lint",
+    "lint:fix": "bun --filter='*' lint:fix",
+    "format": "bun --filter='*' format",
+    "format:fix": "bun --filter='*' format:fix",
     "prepare": "bun --filter=\"react-native-quick-crypto\" prepare",
     "pre-release": "./scripts/prepare-release.sh",
     "release-git": "bun pre-release && release-it",
     "release-npm": "bun pre-release && cd packages/react-native-quick-crypto && release-it"
   },
   "workspaces": [
-    "packages/*",
+    "packages/react-native-quick-crypto",
     "example"
   ],
   "devDependencies": {

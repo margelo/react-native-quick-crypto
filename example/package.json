@@ -6,7 +6,7 @@
   "scripts": {
     "android": "react-native run-android",
     "ios": "react-native run-ios",
-    "clean": "del-cli android/build node_modules/**/android/build lib",
+    "clean": "del-cli android/build android/app/build ios/build lib",
     "tsc": "tsc --noEmit",
     "typescript": "tsc --noEmit",
     "lint": "eslint \"**/*.{js,ts,tsx}\"",
