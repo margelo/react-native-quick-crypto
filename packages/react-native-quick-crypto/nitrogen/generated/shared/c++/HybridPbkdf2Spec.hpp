@@ -16,7 +16,6 @@
 // Forward declaration of `ArrayBuffer` to properly resolve imports.
 namespace NitroModules { class ArrayBuffer; }
 
-#include <functional>
 #include <future>
 #include <NitroModules/ArrayBuffer.hpp>
 #include <string>
@@ -45,14 +44,12 @@ namespace margelo::nitro::crypto {
 
     public:
       // Properties
-      virtual std::function<std::future<std::future<std::shared_ptr<ArrayBuffer>>>(const std::shared_ptr<ArrayBuffer>& /* password */, const std::shared_ptr<ArrayBuffer>& /* salt */, double /* iterations */, double /* keylen */, const std::string& /* digest */)> getPbkdf2() = 0;
-      virtual void setPbkdf2(const std::function<std::future<std::future<std::shared_ptr<ArrayBuffer>>>(const std::shared_ptr<ArrayBuffer>& /* password */, const std::shared_ptr<ArrayBuffer>& /* salt */, double /* iterations */, double /* keylen */, const std::string& /* digest */)>& pbkdf2) = 0;
-      virtual std::function<std::future<std::shared_ptr<ArrayBuffer>>(const std::shared_ptr<ArrayBuffer>& /* password */, const std::shared_ptr<ArrayBuffer>& /* salt */, double /* iterations */, double /* keylen */, const std::string& /* digest */)> getPbkdf2Sync() = 0;
-      virtual void setPbkdf2Sync(const std::function<std::future<std::shared_ptr<ArrayBuffer>>(const std::shared_ptr<ArrayBuffer>& /* password */, const std::shared_ptr<ArrayBuffer>& /* salt */, double /* iterations */, double /* keylen */, const std::string& /* digest */)>& pbkdf2Sync) = 0;
+      
 
     public:
       // Methods
-      
+      virtual std::future<std::shared_ptr<ArrayBuffer>> pbkdf2(const std::shared_ptr<ArrayBuffer>& password, const std::shared_ptr<ArrayBuffer>& salt, double iterations, double keylen, const std::string& digest) = 0;
+      virtual std::shared_ptr<ArrayBuffer> pbkdf2Sync(const std::shared_ptr<ArrayBuffer>& password, const std::shared_ptr<ArrayBuffer>& salt, double iterations, double keylen, const std::string& digest) = 0;
 
     protected:
       // Hybrid Setup

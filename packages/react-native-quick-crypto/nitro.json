@@ -8,9 +8,8 @@
     "androidCxxLibName": "QuickCrypto"
   },
   "autolinking": {
-    "Random": {
-      "cpp": "HybridRandom"
-    }
+    "Pbkdf2": { "cpp": "HybridPbkdf2" },
+    "Random": { "cpp": "HybridRandom" }
   },
   "ignorePaths": ["node_modules", "lib"]
 }

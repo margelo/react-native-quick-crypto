@@ -27,7 +27,7 @@
     "!**/__mocks__"
   ],
   "scripts": {
-    "clean": "del-cli lib",
+    "clean": "del-cli android/build lib",
     "tsc": "tsc --noEmit",
     "typescript": "tsc --noEmit",
     "lint": "eslint \"**/*.{js,ts,tsx}\"",
@@ -36,7 +36,7 @@
     "format:fix": "prettier --write \"**/*.{js,ts,tsx}\"",
     "prepare": "bun clean && bob build",
     "release-it": "bun prepare && release-it",
-    "specs": "bun run --filter=\"**\" typescript && bun nitro-codegen",
+    "specs": "nitro-codegen",
     "test": "jest",
     "postinstall": "tsc || exit 0;"
   },

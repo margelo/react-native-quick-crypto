@@ -11,6 +11,7 @@
 #include <fbjni/fbjni.h>
 #include <NitroModules/HybridObjectRegistry.hpp>
 
+#include "HybridPbkdf2.hpp"
 #include "HybridRandom.hpp"
 
 namespace margelo::nitro::crypto {
@@ -25,6 +26,15 @@ int initialize(JavaVM* vm) {
     
 
     // Register Nitro Hybrid Objects
+    HybridObjectRegistry::registerHybridObjectConstructor(
+      "Pbkdf2",
+      []() -> std::shared_ptr<HybridObject> {
+        static_assert(std::is_default_constructible_v<HybridPbkdf2>,
+                      "The HybridObject \"HybridPbkdf2\" is not default-constructible! "
+                      "Create a public constructor that takes zero arguments to be able to autolink this HybridObject.");
+        return std::make_shared<HybridPbkdf2>();
+      }
+    );
     HybridObjectRegistry::registerHybridObjectConstructor(
       "Random",
       []() -> std::shared_ptr<HybridObject> {

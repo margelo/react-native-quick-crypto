@@ -52,7 +52,6 @@ namespace margelo::nitro::crypto { enum class NamedCurve; }
 #include "KeyUsage.hpp"
 #include "NamedCurve.hpp"
 #include <NitroModules/ArrayBuffer.hpp>
-#include <functional>
 #include <future>
 #include <memory>
 #include <optional>

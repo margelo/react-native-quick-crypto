@@ -58,14 +58,8 @@ namespace margelo::nitro::crypto { enum class NamedCurve; }
 #if __has_include(<NitroModules/PromiseHolder.hpp>)
  #include <NitroModules/PromiseHolder.hpp>
 #endif
-#if __has_include(<functional>)
- #include <functional>
-#endif
 #if __has_include(<future>)
  #include <future>
-#endif
-#if __has_include(<memory>)
- #include <memory>
 #endif
 #if __has_include(<optional>)
  #include <optional>
@@ -225,74 +219,6 @@ namespace margelo::nitro::crypto::bridge::swift {
   using PromiseHolder_std__shared_ptr_ArrayBuffer__ = PromiseHolder<std::shared_ptr<ArrayBuffer>>;
   inline PromiseHolder<std::shared_ptr<ArrayBuffer>> create_PromiseHolder_std__shared_ptr_ArrayBuffer__() {
     return PromiseHolder<std::shared_ptr<ArrayBuffer>>();
-  }
-  
-  /**
-   * Specialized version of `std::function<std::future<std::future<std::shared_ptr<ArrayBuffer>>>(const std::shared_ptr<ArrayBuffer>&, const std::shared_ptr<ArrayBuffer>&, double, double, const std::string&)>`.
-   */
-  using Func_std__future_std__future_std__shared_ptr_ArrayBuffer____std__shared_ptr_ArrayBuffer__std__shared_ptr_ArrayBuffer__double_double_std__string = std::function<std::future<std::future<std::shared_ptr<ArrayBuffer>>>(const std::shared_ptr<ArrayBuffer>& /* password */, const std::shared_ptr<ArrayBuffer>& /* salt */, double /* iterations */, double /* keylen */, const std::string& /* digest */)>;
-  /**
-   * Wrapper class for a `std::function<std::future<std::future<std::shared_ptr<ArrayBuffer>>>(const std::shared_ptr<ArrayBuffer>& / * password * /, const std::shared_ptr<ArrayBuffer>& / * salt * /, double / * iterations * /, double / * keylen * /, const std::string& / * digest * /)>`, this can be used from Swift.
-   */
-  class Func_std__future_std__future_std__shared_ptr_ArrayBuffer____std__shared_ptr_ArrayBuffer__std__shared_ptr_ArrayBuffer__double_double_std__string_Wrapper {
-  public:
-    explicit Func_std__future_std__future_std__shared_ptr_ArrayBuffer____std__shared_ptr_ArrayBuffer__std__shared_ptr_ArrayBuffer__double_double_std__string_Wrapper(const std::function<std::future<std::future<std::shared_ptr<ArrayBuffer>>>(const std::shared_ptr<ArrayBuffer>& /* password */, const std::shared_ptr<ArrayBuffer>& /* salt */, double /* iterations */, double /* keylen */, const std::string& /* digest */)>& func): function(func) {}
-    explicit Func_std__future_std__future_std__shared_ptr_ArrayBuffer____std__shared_ptr_ArrayBuffer__std__shared_ptr_ArrayBuffer__double_double_std__string_Wrapper(std::function<std::future<std::future<std::shared_ptr<ArrayBuffer>>>(const std::shared_ptr<ArrayBuffer>& /* password */, const std::shared_ptr<ArrayBuffer>& /* salt */, double /* iterations */, double /* keylen */, const std::string& /* digest */)>&& func): function(std::move(func)) {}
-  
-    PromiseHolder<std::future<std::shared_ptr<ArrayBuffer>>> call(ArrayBufferHolder password, ArrayBufferHolder salt, double iterations, double keylen, std::string digest) const {
-      auto result = function(password.getArrayBuffer(), salt.getArrayBuffer(), iterations, keylen, digest);
-      return []() -> PromiseHolder<std::future<std::shared_ptr<ArrayBuffer>>> { throw std::runtime_error("Promise<..> cannot be converted to Swift yet!"); }();
-    }
-  
-    std::function<std::future<std::future<std::shared_ptr<ArrayBuffer>>>(const std::shared_ptr<ArrayBuffer>& /* password */, const std::shared_ptr<ArrayBuffer>& /* salt */, double /* iterations */, double /* keylen */, const std::string& /* digest */)> function;
-  };
-  inline Func_std__future_std__future_std__shared_ptr_ArrayBuffer____std__shared_ptr_ArrayBuffer__std__shared_ptr_ArrayBuffer__double_double_std__string create_Func_std__future_std__future_std__shared_ptr_ArrayBuffer____std__shared_ptr_ArrayBuffer__std__shared_ptr_ArrayBuffer__double_double_std__string(void* closureHolder, PromiseHolder<std::future<std::shared_ptr<ArrayBuffer>>>(*call)(void* /* closureHolder */, ArrayBufferHolder, ArrayBufferHolder, double, double, std::string), void(*destroy)(void*)) {
-    std::shared_ptr<void> sharedClosureHolder(closureHolder, destroy);
-    return Func_std__future_std__future_std__shared_ptr_ArrayBuffer____std__shared_ptr_ArrayBuffer__std__shared_ptr_ArrayBuffer__double_double_std__string([sharedClosureHolder, call](const std::shared_ptr<ArrayBuffer>& password, const std::shared_ptr<ArrayBuffer>& salt, double iterations, double keylen, const std::string& digest) -> std::future<std::future<std::shared_ptr<ArrayBuffer>>> {
-      auto result = call(sharedClosureHolder.get(), ArrayBufferHolder(password), ArrayBufferHolder(salt), iterations, keylen, digest);
-      return result.getFuture();
-    });
-  }
-  inline std::shared_ptr<Func_std__future_std__future_std__shared_ptr_ArrayBuffer____std__shared_ptr_ArrayBuffer__std__shared_ptr_ArrayBuffer__double_double_std__string_Wrapper> share_Func_std__future_std__future_std__shared_ptr_ArrayBuffer____std__shared_ptr_ArrayBuffer__std__shared_ptr_ArrayBuffer__double_double_std__string(const Func_std__future_std__future_std__shared_ptr_ArrayBuffer____std__shared_ptr_ArrayBuffer__std__shared_ptr_ArrayBuffer__double_double_std__string& value) {
-    return std::make_shared<Func_std__future_std__future_std__shared_ptr_ArrayBuffer____std__shared_ptr_ArrayBuffer__std__shared_ptr_ArrayBuffer__double_double_std__string_Wrapper>(value);
-  }
-  
-  /**
-   * Specialized version of `PromiseHolder<std::future<std::shared_ptr<ArrayBuffer>>>`.
-   */
-  using PromiseHolder_std__future_std__shared_ptr_ArrayBuffer___ = PromiseHolder<std::future<std::shared_ptr<ArrayBuffer>>>;
-  inline PromiseHolder<std::future<std::shared_ptr<ArrayBuffer>>> create_PromiseHolder_std__future_std__shared_ptr_ArrayBuffer___() {
-    return PromiseHolder<std::future<std::shared_ptr<ArrayBuffer>>>();
-  }
-  
-  /**
-   * Specialized version of `std::function<std::future<std::shared_ptr<ArrayBuffer>>(const std::shared_ptr<ArrayBuffer>&, const std::shared_ptr<ArrayBuffer>&, double, double, const std::string&)>`.
-   */
-  using Func_std__future_std__shared_ptr_ArrayBuffer___std__shared_ptr_ArrayBuffer__std__shared_ptr_ArrayBuffer__double_double_std__string = std::function<std::future<std::shared_ptr<ArrayBuffer>>(const std::shared_ptr<ArrayBuffer>& /* password */, const std::shared_ptr<ArrayBuffer>& /* salt */, double /* iterations */, double /* keylen */, const std::string& /* digest */)>;
-  /**
-   * Wrapper class for a `std::function<std::future<std::shared_ptr<ArrayBuffer>>(const std::shared_ptr<ArrayBuffer>& / * password * /, const std::shared_ptr<ArrayBuffer>& / * salt * /, double / * iterations * /, double / * keylen * /, const std::string& / * digest * /)>`, this can be used from Swift.
-   */
-  class Func_std__future_std__shared_ptr_ArrayBuffer___std__shared_ptr_ArrayBuffer__std__shared_ptr_ArrayBuffer__double_double_std__string_Wrapper {
-  public:
-    explicit Func_std__future_std__shared_ptr_ArrayBuffer___std__shared_ptr_ArrayBuffer__std__shared_ptr_ArrayBuffer__double_double_std__string_Wrapper(const std::function<std::future<std::shared_ptr<ArrayBuffer>>(const std::shared_ptr<ArrayBuffer>& /* password */, const std::shared_ptr<ArrayBuffer>& /* salt */, double /* iterations */, double /* keylen */, const std::string& /* digest */)>& func): function(func) {}
-    explicit Func_std__future_std__shared_ptr_ArrayBuffer___std__shared_ptr_ArrayBuffer__std__shared_ptr_ArrayBuffer__double_double_std__string_Wrapper(std::function<std::future<std::shared_ptr<ArrayBuffer>>(const std::shared_ptr<ArrayBuffer>& /* password */, const std::shared_ptr<ArrayBuffer>& /* salt */, double /* iterations */, double /* keylen */, const std::string& /* digest */)>&& func): function(std::move(func)) {}
-  
-    PromiseHolder<std::shared_ptr<ArrayBuffer>> call(ArrayBufferHolder password, ArrayBufferHolder salt, double iterations, double keylen, std::string digest) const {
-      auto result = function(password.getArrayBuffer(), salt.getArrayBuffer(), iterations, keylen, digest);
-      return []() -> PromiseHolder<std::shared_ptr<ArrayBuffer>> { throw std::runtime_error("Promise<..> cannot be converted to Swift yet!"); }();
-    }
-  
-    std::function<std::future<std::shared_ptr<ArrayBuffer>>(const std::shared_ptr<ArrayBuffer>& /* password */, const std::shared_ptr<ArrayBuffer>& /* salt */, double /* iterations */, double /* keylen */, const std::string& /* digest */)> function;
-  };
-  inline Func_std__future_std__shared_ptr_ArrayBuffer___std__shared_ptr_ArrayBuffer__std__shared_ptr_ArrayBuffer__double_double_std__string create_Func_std__future_std__shared_ptr_ArrayBuffer___std__shared_ptr_ArrayBuffer__std__shared_ptr_ArrayBuffer__double_double_std__string(void* closureHolder, PromiseHolder<std::shared_ptr<ArrayBuffer>>(*call)(void* /* closureHolder */, ArrayBufferHolder, ArrayBufferHolder, double, double, std::string), void(*destroy)(void*)) {
-    std::shared_ptr<void> sharedClosureHolder(closureHolder, destroy);
-    return Func_std__future_std__shared_ptr_ArrayBuffer___std__shared_ptr_ArrayBuffer__std__shared_ptr_ArrayBuffer__double_double_std__string([sharedClosureHolder, call](const std::shared_ptr<ArrayBuffer>& password, const std::shared_ptr<ArrayBuffer>& salt, double iterations, double keylen, const std::string& digest) -> std::future<std::shared_ptr<ArrayBuffer>> {
-      auto result = call(sharedClosureHolder.get(), ArrayBufferHolder(password), ArrayBufferHolder(salt), iterations, keylen, digest);
-      return result.getFuture();
-    });
-  }
-  inline std::shared_ptr<Func_std__future_std__shared_ptr_ArrayBuffer___std__shared_ptr_ArrayBuffer__std__shared_ptr_ArrayBuffer__double_double_std__string_Wrapper> share_Func_std__future_std__shared_ptr_ArrayBuffer___std__shared_ptr_ArrayBuffer__std__shared_ptr_ArrayBuffer__double_double_std__string(const Func_std__future_std__shared_ptr_ArrayBuffer___std__shared_ptr_ArrayBuffer__std__shared_ptr_ArrayBuffer__double_double_std__string& value) {
-    return std::make_shared<Func_std__future_std__shared_ptr_ArrayBuffer___std__shared_ptr_ArrayBuffer__std__shared_ptr_ArrayBuffer__double_double_std__string_Wrapper>(value);
   }
 
 } // namespace margelo::nitro::crypto::bridge::swift

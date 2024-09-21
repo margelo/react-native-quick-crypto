@@ -14,10 +14,8 @@ namespace margelo::nitro::crypto {
     HybridObject::loadHybridMethods();
     // load custom methods/properties
     registerHybrids(this, [](Prototype& prototype) {
-      prototype.registerHybridGetter("pbkdf2", &HybridPbkdf2Spec::getPbkdf2);
-      prototype.registerHybridSetter("pbkdf2", &HybridPbkdf2Spec::setPbkdf2);
-      prototype.registerHybridGetter("pbkdf2Sync", &HybridPbkdf2Spec::getPbkdf2Sync);
-      prototype.registerHybridSetter("pbkdf2Sync", &HybridPbkdf2Spec::setPbkdf2Sync);
+      prototype.registerHybridMethod("pbkdf2", &HybridPbkdf2Spec::pbkdf2);
+      prototype.registerHybridMethod("pbkdf2Sync", &HybridPbkdf2Spec::pbkdf2Sync);
     });
   }
 
