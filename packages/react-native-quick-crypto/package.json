@@ -17,6 +17,7 @@
     "android/src",
     "ios",
     "cpp",
+    "deps",
     "nitrogen",
     "react-native.config.js",
     "app.plugin.js",
