@@ -11,6 +11,7 @@ add_library(
   src/main/cpp/cpp-adapter.cpp
   ../cpp/pbkdf2/HybridPbkdf2.cpp
   ../cpp/random/HybridRandom.cpp
+  ../deps/fastpbkdf2/fastpbkdf2.c
 )
 
 # add Nitrogen specs

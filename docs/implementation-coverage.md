@@ -125,8 +125,8 @@ This document attempts to describe the implementation status of Crypto APIs/Inte
   * ❌ `crypto.getRandomValues(typedArray)`
   * ❌ `crypto.hkdf(digest, ikm, salt, info, keylen, callback)`
   * ❌ `crypto.hkdfSync(digest, ikm, salt, info, keylen)`
-  * ❌ `crypto.pbkdf2(password, salt, iterations, keylen, digest, callback)`
-  * ❌ `crypto.pbkdf2Sync(password, salt, iterations, keylen, digest)`
+  * ✅ `crypto.pbkdf2(password, salt, iterations, keylen, digest, callback)`
+  * ✅ `crypto.pbkdf2Sync(password, salt, iterations, keylen, digest)`
   * ❌ `crypto.privateDecrypt(privateKey, buffer)`
   * ❌ `crypto.privateEncrypt(privateKey, buffer)`
   * ❌ `crypto.publicDecrypt(key, buffer)`
