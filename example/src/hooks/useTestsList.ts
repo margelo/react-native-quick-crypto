@@ -2,7 +2,7 @@ import { useState, useCallback } from 'react';
 import type { Suites, TestSuite } from '../types/Suite';
 import { rootSuite } from '../testing/MochaRNAdapter';
 
-// import '../testing/tests/pbkdf2Tests/pbkdf2Tests';
+import '../testing/tests/pbkdf2/pbkdf2_tests';
 import '../testing/tests/random/random_tests';
 // import '../testing/tests/HmacTests/HmacTests';
 // import '../testing/tests/HashTests/HashTests';

@@ -6,7 +6,7 @@ import * as pbkdf2 from './pbkdf2';
 import * as random from './random';
 
 // utils import
-import * as conversion_utils from './utils/conversion';
+import * as utils from './utils';
 
 /**
  * Loosely matches Node.js {crypto} with some unimplemented functionality.
@@ -40,7 +40,7 @@ const QuickCrypto = {
   // getCiphers,
   // getHashes,
   // webcrypto,
-  ...conversion_utils,
+  ...utils,
 };
 
 /**
