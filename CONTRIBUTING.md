@@ -23,14 +23,16 @@ bun example
 Make sure your code passes TypeScript and ESLint. Run the following to verify:
 
 ```sh
-bun tsx
+bun tsc
 bun lint
+bun format
 ```
 
 To fix formatting errors, run the following:
 
 ```sh
-bun lint-fix
+bun lint:fix
+bun format:fix
 ```
 
 Remember to add tests for your change if possible. Run the unit tests by:

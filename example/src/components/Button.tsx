@@ -1,12 +1,12 @@
-import React from 'react'
-import { View, Text, TouchableOpacity, StyleSheet } from 'react-native'
-import { colors } from '../styles/colors'
+import React from 'react';
+import { View, Text, TouchableOpacity, StyleSheet } from 'react-native';
+import { colors } from '../styles/colors';
 
 type ButtonProps = {
-  title: string
-  onPress: () => void
-  color?: string
-}
+  title: string;
+  onPress: () => void;
+  color?: string;
+};
 
 export const Button: React.FC<ButtonProps> = ({
   title,
@@ -17,13 +17,12 @@ export const Button: React.FC<ButtonProps> = ({
     <View>
       <TouchableOpacity
         style={[styles.container, { backgroundColor: colors[color] }]}
-        onPress={onPress}
-      >
+        onPress={onPress}>
         <Text style={styles.label}>{title}</Text>
       </TouchableOpacity>
     </View>
-  )
-}
+  );
+};
 
 const styles = StyleSheet.create({
   container: {
@@ -37,4 +36,4 @@ const styles = StyleSheet.create({
     color: colors.white,
     alignSelf: 'center',
   },
-})
+});
