@@ -1,5 +1,4 @@
 {
-  "logLevel": "debug",
   "cxxNamespace": ["crypto"],
   "ios": {
     "iosModulename": "QuickCrypto"
@@ -7,5 +6,10 @@
   "android": {
     "androidNamespace": ["crypto"],
     "androidCxxLibName": "QuickCrypto"
-  }
+  },
+  "autolinking": {
+    "Pbkdf2": { "cpp": "HybridPbkdf2" },
+    "Random": { "cpp": "HybridRandom" }
+  },
+  "ignorePaths": ["node_modules", "lib"]
 }

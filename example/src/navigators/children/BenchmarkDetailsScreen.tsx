@@ -1,23 +1,23 @@
-import React from 'react'
-import { SafeAreaView, ScrollView, StyleSheet, Text, View } from 'react-native'
+import React from 'react';
+import { SafeAreaView, ScrollView, StyleSheet, Text, View } from 'react-native';
 import {
   BenchmarkResultItem,
   BenchmarkResultItemHeader,
-} from '../../components/BenchmarkResultItem'
-import type { BenchmarkResult } from '../../types/Results'
+} from '../../components/BenchmarkResultItem';
+import type { BenchmarkResult } from '../../types/Results';
 
 // @ts-expect-error - not dealing with navigation types rn
-type BenchmarkDetailsScreenProps = { route }
+type BenchmarkDetailsScreenProps = { route };
 
 type RouteParams = {
-  results: BenchmarkResult[]
-  suiteName: string
-}
+  results: BenchmarkResult[];
+  suiteName: string;
+};
 
 export const BenchmarkDetailsScreen = ({
   route,
 }: BenchmarkDetailsScreenProps) => {
-  const { results, suiteName }: RouteParams = route.params
+  const { results, suiteName }: RouteParams = route.params;
 
   return (
     <SafeAreaView style={styles.container}>
@@ -29,15 +29,14 @@ export const BenchmarkDetailsScreen = ({
       <BenchmarkResultItemHeader />
       <ScrollView
         style={styles.scroll}
-        contentContainerStyle={styles.scrollContent}
-      >
+        contentContainerStyle={styles.scrollContent}>
         {results.map((it, index: number) => {
-          return <BenchmarkResultItem key={index} result={it} />
+          return <BenchmarkResultItem key={index} result={it} />;
         })}
       </ScrollView>
     </SafeAreaView>
-  )
-}
+  );
+};
 
 const styles = StyleSheet.create({
   container: {
@@ -54,4 +53,4 @@ const styles = StyleSheet.create({
   scrollContent: {
     paddingHorizontal: 5,
   },
-})
+});

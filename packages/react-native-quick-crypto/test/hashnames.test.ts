@@ -12,6 +12,6 @@ test('normalizeHashName happy', () => {
 test('normalizeHashName sad', () => {
   expect(normalizeHashName('SHA-2')).toBe('sha-2');
   expect(normalizeHashName('NOT-a-hash', HashContext.JwkRsaPss)).toBe(
-    'not-a-hash'
+    'not-a-hash',
   );
 });

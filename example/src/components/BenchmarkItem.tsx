@@ -1,18 +1,18 @@
-import React from 'react'
-import { View, Text, StyleSheet, TouchableOpacity } from 'react-native'
-import BouncyCheckbox from 'react-native-bouncy-checkbox'
-import type { BenchmarkResult } from '../types/Results'
-import { useNavigation } from '@react-navigation/native'
-import { calculateTimes, formatNumber } from '../benchmarks/utils'
-import { colors } from '../styles/colors'
+import React from 'react';
+import { View, Text, StyleSheet, TouchableOpacity } from 'react-native';
+import BouncyCheckbox from 'react-native-bouncy-checkbox';
+import type { BenchmarkResult } from '../types/Results';
+import { useNavigation } from '@react-navigation/native';
+import { calculateTimes, formatNumber } from '../benchmarks/utils';
+import { colors } from '../styles/colors';
 
 type BenchmarkItemProps = {
-  description: string
-  value: boolean
-  count: number
-  results: BenchmarkResult[]
-  onToggle: (description: string) => void
-}
+  description: string;
+  value: boolean;
+  count: number;
+  results: BenchmarkResult[];
+  onToggle: (description: string) => void;
+};
 
 export const BenchmarkItem: React.FC<BenchmarkItemProps> = ({
   description,
@@ -21,17 +21,17 @@ export const BenchmarkItem: React.FC<BenchmarkItemProps> = ({
   results,
   onToggle,
 }: BenchmarkItemProps) => {
-  const navigation = useNavigation()
+  const navigation = useNavigation();
   const stats = {
     us: 0,
     them: 0,
-  }
-  results.map((r) => {
-    stats.us += r.us
-    stats.them += r.them
-  })
-  const timesType = stats.us < stats.them ? 'faster' : 'slower'
-  const timesStyle = timesType === 'faster' ? styles.faster : styles.slower
+  };
+  results.map(r => {
+    stats.us += r.us;
+    stats.them += r.them;
+  });
+  const timesType = stats.us < stats.them ? 'faster' : 'slower';
+  const timesStyle = timesType === 'faster' ? styles.faster : styles.slower;
   const times = calculateTimes({
     type: timesType,
     ...stats,
@@ -39,14 +39,14 @@ export const BenchmarkItem: React.FC<BenchmarkItemProps> = ({
     description: '',
     indentation: 0,
     suiteName: '',
-  })
+  });
 
   return (
     <View style={styles.container}>
       <BouncyCheckbox
         isChecked={value}
         onPress={() => {
-          onToggle(description)
+          onToggle(description);
         }}
         disableText={true}
         fillColor={colors.blue}
@@ -59,9 +59,8 @@ export const BenchmarkItem: React.FC<BenchmarkItemProps> = ({
           navigation.navigate('BenchmarkDetailsScreen', {
             results,
             suiteName: description,
-          })
-        }}
-      >
+          });
+        }}>
         <Text style={styles.label} numberOfLines={1}>
           {description}
         </Text>
@@ -73,8 +72,8 @@ export const BenchmarkItem: React.FC<BenchmarkItemProps> = ({
         </Text>
       </TouchableOpacity>
     </View>
-  )
-}
+  );
+};
 
 const styles = StyleSheet.create({
   container: {
@@ -117,4 +116,4 @@ const styles = StyleSheet.create({
     flex: 1,
     textAlign: 'right',
   },
-})
+});

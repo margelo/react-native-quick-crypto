@@ -1,1 +1,1 @@
-export type BenchmarkFn = () => void
+export type BenchmarkFn = () => void;
