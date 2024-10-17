@@ -37,7 +37,7 @@ jobs:
             ${{ runner.os }}-pods-
 
       - name: Install Gems
-        # working-directory: example/ios
+        working-directory: example/ios
         run: bundle config set deployment 'true' && bundle install
 
       - name: Checkout Code
