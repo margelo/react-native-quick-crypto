@@ -15,6 +15,12 @@ jobs:
     # if: github.actor == 'dependabot[bot]'
     runs-on: ubuntu-latest
     steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          ref: ${{ github.event.pull_request.head.ref }}
+
       - name: Setup Bun
         uses: oven-sh/setup-bun@v2
 
@@ -23,7 +29,7 @@ jobs:
         with:
           ruby-version: 3.3
           bundler-cache: true
-          # working-directory: ./example/ios
+          working-directory: ./example/ios
 
       - name: Restore Pods cache
         uses: actions/cache@v4
@@ -39,12 +45,6 @@ jobs:
       - name: Install Gems
         working-directory: example/ios
         run: bundle config set deployment 'true' && bundle install
-
-      - name: Checkout Code
-        uses: actions/checkout@v4
-        with:
-          fetch-depth: 0
-          ref: ${{ github.event.pull_request.head.ref }}
 
       - name: Update & Commit Lockfiles
         run: |
