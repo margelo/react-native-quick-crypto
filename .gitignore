@@ -157,3 +157,4 @@ tsconfig.tsbuildinfo
 package-lock.json
 packages/*
 yarn.lock
+.java-version
