@@ -12,19 +12,46 @@ permissions:
 jobs:
   update-lockfiles:
     name: "Update lockfiles (bun.lockb + Podfile.lock)"
-    if: github.actor == 'dependabot[bot]'
-    runs-on: ubuntu-latest
+    # if: github.actor == 'dependabot[bot]'
+    runs-on: macOS-latest
     steps:
-      - uses: oven-sh/setup-bun@v2
-      - uses: ruby/setup-ruby@v1
-      - uses: actions/checkout@v4
+      - name: Checkout Code
+        uses: actions/checkout@v4
         with:
           fetch-depth: 0
           ref: ${{ github.event.pull_request.head.ref }}
-      - run: |
-          bun install --frozen-lockfile
+
+      - name: Setup Bun
+        uses: oven-sh/setup-bun@v2
+
+      - name: Setup Ruby
+        uses: ruby/setup-ruby@v1
+        with:
+          ruby-version: 3.3
+          bundler-cache: true
+          working-directory: example/ios
+
+      - name: Restore Pods cache
+        uses: actions/cache@v4
+        with:
+          path: |
+            example/ios/Pods
+            ~/Library/Caches/CocoaPods
+            ~/.cocoapods
+          key: ${{ runner.os }}-pods-${{ hashFiles('**/Podfile.lock') }}
+          restore-keys: |
+            ${{ runner.os }}-pods-
+
+      - name: Install Gems
+        working-directory: example/ios
+        run: bundle config set deployment 'true' && bundle install
+
+      - name: Update & Commit Lockfiles
+        run: |
+          bun install
           git add bun.lockb
           cd example
+          bun install
           bun pods
           git add ios/Podfile.lock
           cd ..
