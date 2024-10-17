@@ -3,7 +3,7 @@ name: 'Update Lockfiles (bun.lockb + Podfile.lock)'
 on:
   pull_request:
     paths:
-      - "package.json"
+      - "packages/react-native-quick-crypto/package.json"
       - "example/package.json"
 
 permissions:
