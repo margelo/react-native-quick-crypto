@@ -9,12 +9,17 @@
 
 @implementation QuickCryptoModule
 
+@synthesize bridge=_bridge;
+
 RCT_EXPORT_MODULE(QuickCrypto)
+
+- (void)setBridge:(RCTBridge *)bridge {
+  _bridge = bridge;
+}
 
 RCT_EXPORT_BLOCKING_SYNCHRONOUS_METHOD(install) {
   NSLog(@"Installing JSI bindings for react-native-quick-crypto...");
-  RCTBridge* bridge = [RCTBridge currentBridge];
-  RCTCxxBridge* cxxBridge = (RCTCxxBridge*)bridge;
+  RCTCxxBridge* cxxBridge = (RCTCxxBridge*)_bridge;
   if (cxxBridge == nil) {
     return @false;
   }
@@ -26,7 +31,7 @@ RCT_EXPORT_BLOCKING_SYNCHRONOUS_METHOD(install) {
     return @false;
   }
   auto& runtime = *jsiRuntime;
-  auto callInvoker = bridge.jsCallInvoker;
+  auto callInvoker = _bridge.jsCallInvoker;
 
   auto workerQueue =
       std::make_shared<margelo::DispatchQueue::dispatch_queue>("margelo crypto thread");
