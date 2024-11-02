@@ -65,12 +65,23 @@ target_include_directories(
 
 target_link_libraries(
   ${PACKAGE_NAME}
-  ReactAndroid::turbomodulejsijni
   fbjni::fbjni                           # <-- fbjni
   ${LOG_LIB}                             # <-- Logcat logger
   ReactAndroid::jsi                      # <-- RN: JSI
-  ReactAndroid::reactnativejni           # <-- RN: React Native JNI bindings
-  ReactAndroid::react_nativemodule_core  # <-- RN: React Native native module core
   android                                # <-- Android JNI core
   openssl::crypto                        # <-- OpenSSL (Crypto)
 )
+
+if(ReactAndroid_VERSION_MINOR GREATER_EQUAL 76)
+  target_link_libraries(
+    ${PACKAGE_NAME}
+    ReactAndroid::reactnative             # <-- RN: Native Modules umbrella prefab
+  )
+else()
+  target_link_libraries(
+    ${PACKAGE_NAME}
+    ReactAndroid::turbomodulejsijni
+    ReactAndroid::reactnativejni           # <-- RN: React Native JNI bindings
+    ReactAndroid::react_nativemodule_core  # <-- RN: React Native native module core
+  )
+endif()
