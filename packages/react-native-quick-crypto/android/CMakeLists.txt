@@ -31,8 +31,6 @@ target_link_libraries(
   fbjni::fbjni                           # <-- Facebook C++ JNI helpers
   openssl::crypto                        # <-- OpenSSL (Crypto)
   ReactAndroid::jsi
-  ReactAndroid::turbomodulejsijni
-  ReactAndroid::react_nativemodule_core
   ReactAndroid::react_render_core
   ReactAndroid::runtimeexecutor
   ReactAndroid::fabricjni
@@ -42,3 +40,16 @@ target_link_libraries(
   ReactAndroid::rrc_view
   ReactAndroid::folly_runtime
   )
+
+if(ReactAndroid_VERSION_MINOR GREATER_EQUAL 76)
+  target_link_libraries(
+    ${PACKAGE_NAME}
+    ReactAndroid::reactnative             # <-- RN: Native Modules umbrella prefab
+  )
+else()
+  target_link_libraries(
+    ${PACKAGE_NAME}
+    ReactAndroid::turbomodulejsijni
+    ReactAndroid::react_nativemodule_core  # <-- RN: React Native native module core
+  )
+endif()
