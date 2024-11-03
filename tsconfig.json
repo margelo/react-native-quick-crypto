@@ -1,9 +1,7 @@
 {
   "compilerOptions": {
-    "paths": {
-      "react-native-quick-crypto": ["./src/index"]
-    },
     "composite": true,
+    "rootDir": "src",
     "allowUnreachableCode": false,
     "allowUnusedLabels": false,
     "esModuleInterop": true,
@@ -12,6 +10,7 @@
     "lib": ["esnext"],
     "module": "esnext",
     "moduleResolution": "node",
+    "noEmit": false,
     "noFallthroughCasesInSwitch": true,
     "noImplicitReturns": true,
     "noImplicitUseStrict": false,

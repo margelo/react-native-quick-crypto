@@ -5,8 +5,8 @@
   "packageManager": "bun@1.1.26",
   "main": "lib/commonjs/index",
   "module": "lib/module/index",
-  "types": "lib/typescript/src/index.d.ts",
-  "react-native": "lib/module/index",
+  "types": "lib/typescript/index.d.ts",
+  "react-native": "src/index",
   "source": "src/index",
   "files": [
     "src",
@@ -26,13 +26,13 @@
     "!**/__mocks__"
   ],
   "scripts": {
-    "tsc": "tsc --noEmit",
+    "tsc": "tsc --noEmit false",
     "typescript": "tsc --noEmit",
     "lint": "eslint \"**/*.{js,ts,tsx}\"",
     "lint-fix": "eslint \"**/*.{js,ts,tsx}\" --fix",
     "format": "prettier --check \"**/*.{js,ts,tsx}\"",
     "format-fix": "prettier --write \"**/*.{js,ts,tsx}\"",
-    "prepare": "bob build",
+    "postinstall": "bob build",
     "release": "release-it",
     "example": "cd example && bun start",
     "pods": "cd example && bun install && bun pods",
