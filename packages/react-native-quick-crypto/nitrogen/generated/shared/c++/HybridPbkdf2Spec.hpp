@@ -27,9 +27,12 @@ namespace margelo::nitro::crypto {
   /**
    * An abstract base class for `Pbkdf2`
    * Inherit this class to create instances of `HybridPbkdf2Spec` in C++.
+   * You must explicitly call `HybridObject`'s constructor yourself, because it is virtual.
    * @example
    * ```cpp
    * class HybridPbkdf2: public HybridPbkdf2Spec {
+   * public:
+   *   HybridPbkdf2(...): HybridObject(TAG) { ... }
    *   // ...
    * };
    * ```

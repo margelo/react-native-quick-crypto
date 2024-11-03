@@ -52,7 +52,7 @@ namespace margelo::nitro {
         case hashString("dsa"): return AsymmetricKeyType::DSA;
         case hashString("ec"): return AsymmetricKeyType::EC;
         default: [[unlikely]]
-          throw std::runtime_error("Cannot convert \"" + unionValue + "\" to enum AsymmetricKeyType - invalid value!");
+          throw std::invalid_argument("Cannot convert \"" + unionValue + "\" to enum AsymmetricKeyType - invalid value!");
       }
     }
     static inline jsi::Value toJSI(jsi::Runtime& runtime, AsymmetricKeyType arg) {
@@ -62,7 +62,7 @@ namespace margelo::nitro {
         case AsymmetricKeyType::DSA: return JSIConverter<std::string>::toJSI(runtime, "dsa");
         case AsymmetricKeyType::EC: return JSIConverter<std::string>::toJSI(runtime, "ec");
         default: [[unlikely]]
-          throw std::runtime_error("Cannot convert AsymmetricKeyType to JS - invalid value: "
+          throw std::invalid_argument("Cannot convert AsymmetricKeyType to JS - invalid value: "
                                     + std::to_string(static_cast<int>(arg)) + "!");
       }
     }

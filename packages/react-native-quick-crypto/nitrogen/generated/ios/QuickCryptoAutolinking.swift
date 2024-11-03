@@ -6,5 +6,7 @@
 ///
 
 public final class QuickCryptoAutolinking {
+  public typealias bridge = margelo.nitro.crypto.bridge.swift
+
   
 }

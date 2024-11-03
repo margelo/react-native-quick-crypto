@@ -60,7 +60,7 @@ namespace margelo::nitro {
         case hashString("wrapKey"): return KeyUsage::WRAPKEY;
         case hashString("unwrapKey"): return KeyUsage::UNWRAPKEY;
         default: [[unlikely]]
-          throw std::runtime_error("Cannot convert \"" + unionValue + "\" to enum KeyUsage - invalid value!");
+          throw std::invalid_argument("Cannot convert \"" + unionValue + "\" to enum KeyUsage - invalid value!");
       }
     }
     static inline jsi::Value toJSI(jsi::Runtime& runtime, KeyUsage arg) {
@@ -74,7 +74,7 @@ namespace margelo::nitro {
         case KeyUsage::WRAPKEY: return JSIConverter<std::string>::toJSI(runtime, "wrapKey");
         case KeyUsage::UNWRAPKEY: return JSIConverter<std::string>::toJSI(runtime, "unwrapKey");
         default: [[unlikely]]
-          throw std::runtime_error("Cannot convert KeyUsage to JS - invalid value: "
+          throw std::invalid_argument("Cannot convert KeyUsage to JS - invalid value: "
                                     + std::to_string(static_cast<int>(arg)) + "!");
       }
     }

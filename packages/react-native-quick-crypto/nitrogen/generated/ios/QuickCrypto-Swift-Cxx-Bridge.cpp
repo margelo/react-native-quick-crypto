@@ -6,3 +6,12 @@
 ///
 
 #include "QuickCrypto-Swift-Cxx-Bridge.hpp"
+
+// Include C++ implementation defined types
+
+
+namespace margelo::nitro::crypto::bridge::swift {
+
+  
+
+} // namespace margelo::nitro::crypto::bridge::swift

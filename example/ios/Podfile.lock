@@ -7,7 +7,7 @@ PODS:
   - hermes-engine (0.74.5):
     - hermes-engine/Pre-built (= 0.74.5)
   - hermes-engine/Pre-built (0.74.5)
-  - NitroModules (0.9.2):
+  - NitroModules (0.14.0):
     - DoubleConversion
     - glog
     - hermes-engine
@@ -1564,16 +1564,16 @@ SPEC CHECKSUMS:
   fmt: 4c2741a687cc09f0634a2e2c72a838b99f1ff120
   glog: fdfdfe5479092de0c4bdbebedd9056951f092c4f
   hermes-engine: 8c1577f3fdb849cbe7729c2e7b5abc4b845e88f8
-  NitroModules: 38b7870be128f26cb82a2ef256fa8eea04933fa2
+  NitroModules: a5daf9eaf57c450d4f464bfe8ec30fe550b0fa68
   OpenSSL-Universal: f8a9c4fdab7e21cb70bda471c269e86e9212439c
-  QuickCrypto: 551d63cf0fdd977e6b8e0e78e853ab47e80de518
+  QuickCrypto: b7afd2e6f9bd3ea7257896860579c85a9c6984ea
   RCT-Folly: 02617c592a293bd6d418e0a88ff4ee1f88329b47
   RCTDeprecation: 3afceddffa65aee666dafd6f0116f1d975db1584
   RCTRequired: ec1239bc9d8bf63e10fb92bd8b26171a9258e0c1
   RCTTypeSafety: f5ecbc86c5c5fa163c05acb7a1c5012e15b5f994
   React: fc9fa7258eff606f44d58c5b233a82dc9cf09018
   React-callinvoker: e3fab14d69607fb7e8e3a57e5a415aed863d3599
-  React-Codegen: 49efb5917c904b5b01ef708311a2f1773f4fe73e
+  React-Codegen: 6fa87b7c6b8efcd0cef4bfeaec8c8bc8a6abe75a
   React-Core: 3a5fd9e781cecf87803e5b091496a606a3df774a
   React-CoreModules: cbf4707dafab8f9f826ac0c63a07d0bf5d01e256
   React-cxxreact: 7b188556271e3c7fdf22a04819f6a6225045b9dd
@@ -1621,6 +1621,6 @@ SPEC CHECKSUMS:
   SocketRocket: abac6f5de4d4d62d24e11868d7a2f427e0ef940d
   Yoga: 950bbfd7e6f04790fdb51149ed51df41f329fcc8
 
-PODFILE CHECKSUM: 684599d0e4b0f60fab3a5ad6c896bb5e77f7b4f2
+PODFILE CHECKSUM: 35be88c88b1bb1be062e9004965b962528d32ae6
 
 COCOAPODS: 1.14.3

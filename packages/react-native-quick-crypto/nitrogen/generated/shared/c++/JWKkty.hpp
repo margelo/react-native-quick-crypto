@@ -52,7 +52,7 @@ namespace margelo::nitro {
         case hashString("EC"): return JWKkty::EC;
         case hashString("oct"): return JWKkty::OCT;
         default: [[unlikely]]
-          throw std::runtime_error("Cannot convert \"" + unionValue + "\" to enum JWKkty - invalid value!");
+          throw std::invalid_argument("Cannot convert \"" + unionValue + "\" to enum JWKkty - invalid value!");
       }
     }
     static inline jsi::Value toJSI(jsi::Runtime& runtime, JWKkty arg) {
@@ -62,7 +62,7 @@ namespace margelo::nitro {
         case JWKkty::EC: return JSIConverter<std::string>::toJSI(runtime, "EC");
         case JWKkty::OCT: return JSIConverter<std::string>::toJSI(runtime, "oct");
         default: [[unlikely]]
-          throw std::runtime_error("Cannot convert JWKkty to JS - invalid value: "
+          throw std::invalid_argument("Cannot convert JWKkty to JS - invalid value: "
                                     + std::to_string(static_cast<int>(arg)) + "!");
       }
     }

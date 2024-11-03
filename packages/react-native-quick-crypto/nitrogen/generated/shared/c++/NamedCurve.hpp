@@ -50,7 +50,7 @@ namespace margelo::nitro {
         case hashString("P-384"): return NamedCurve::P_384;
         case hashString("P-521"): return NamedCurve::P_521;
         default: [[unlikely]]
-          throw std::runtime_error("Cannot convert \"" + unionValue + "\" to enum NamedCurve - invalid value!");
+          throw std::invalid_argument("Cannot convert \"" + unionValue + "\" to enum NamedCurve - invalid value!");
       }
     }
     static inline jsi::Value toJSI(jsi::Runtime& runtime, NamedCurve arg) {
@@ -59,7 +59,7 @@ namespace margelo::nitro {
         case NamedCurve::P_384: return JSIConverter<std::string>::toJSI(runtime, "P-384");
         case NamedCurve::P_521: return JSIConverter<std::string>::toJSI(runtime, "P-521");
         default: [[unlikely]]
-          throw std::runtime_error("Cannot convert NamedCurve to JS - invalid value: "
+          throw std::invalid_argument("Cannot convert NamedCurve to JS - invalid value: "
                                     + std::to_string(static_cast<int>(arg)) + "!");
       }
     }

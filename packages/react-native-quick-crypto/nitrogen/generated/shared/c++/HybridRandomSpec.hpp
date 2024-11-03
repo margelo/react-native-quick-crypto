@@ -26,9 +26,12 @@ namespace margelo::nitro::crypto {
   /**
    * An abstract base class for `Random`
    * Inherit this class to create instances of `HybridRandomSpec` in C++.
+   * You must explicitly call `HybridObject`'s constructor yourself, because it is virtual.
    * @example
    * ```cpp
    * class HybridRandom: public HybridRandomSpec {
+   * public:
+   *   HybridRandom(...): HybridObject(TAG) { ... }
    *   // ...
    * };
    * ```

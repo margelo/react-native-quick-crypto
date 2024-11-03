@@ -1,7 +1,7 @@
 {
   "cxxNamespace": ["crypto"],
   "ios": {
-    "iosModulename": "QuickCrypto"
+    "iosModuleName": "QuickCrypto"
   },
   "android": {
     "androidNamespace": ["crypto"],

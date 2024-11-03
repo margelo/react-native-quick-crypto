@@ -1,7 +1,6 @@
 {
   "compilerOptions": {
     "composite": true,
-    "outDir": "lib",
     "rootDir": "src",
     "allowUnreachableCode": false,
     "allowUnusedLabels": false,

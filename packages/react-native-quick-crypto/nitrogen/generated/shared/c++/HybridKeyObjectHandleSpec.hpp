@@ -49,9 +49,12 @@ namespace margelo::nitro::crypto {
   /**
    * An abstract base class for `KeyObjectHandle`
    * Inherit this class to create instances of `HybridKeyObjectHandleSpec` in C++.
+   * You must explicitly call `HybridObject`'s constructor yourself, because it is virtual.
    * @example
    * ```cpp
    * class HybridKeyObjectHandle: public HybridKeyObjectHandleSpec {
+   * public:
+   *   HybridKeyObjectHandle(...): HybridObject(TAG) { ... }
    *   // ...
    * };
    * ```
