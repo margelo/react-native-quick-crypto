@@ -32,7 +32,7 @@
     "lint-fix": "eslint \"**/*.{js,ts,tsx}\" --fix",
     "format": "prettier --check \"**/*.{js,ts,tsx}\"",
     "format-fix": "prettier --write \"**/*.{js,ts,tsx}\"",
-    "postinstall": "bob build",
+    "prepare": "bob build",
     "release": "release-it",
     "example": "cd example && bun start",
     "pods": "cd example && bun install && bun pods",
