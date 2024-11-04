@@ -4,7 +4,6 @@
 import crypto from 'react-native-quick-crypto';
 import { describe, it } from '../../MochaRNAdapter';
 import { Buffer } from '@craftzdog/react-native-buffer';
-import { assert } from 'chai';
 import type { Done } from 'mocha';
 
 const { ab2str, abvToArrayBuffer } = crypto;
@@ -42,9 +41,9 @@ describe('random', () => {
       it('function ' + funn + ' & len ' + length, (done: Done) => {
         funn(length, (ex: Error | null, buf?: Buffer) => {
           try {
-            assert.strictEqual(ex, null);
-            assert.strictEqual(buf?.length, Math.floor(len));
-            assert.ok(Buffer.isBuffer(buf));
+            expect(ex).toBeNull();
+            expect(buf?.length).toEqual(Math.floor(len));
+            expect(Buffer.isBuffer(buf)).toBe(true);
           } catch (e) {
             done(e);
           }
@@ -58,7 +57,7 @@ describe('random', () => {
     const buf = Buffer.alloc(10);
     const before = buf.toString('hex');
     const after = crypto.randomFillSync(buf).toString('hex');
-    assert.notStrictEqual(before, after);
+    expect(before).not.toEqual(after);
   });
 
   it('simple test 2', () => {
@@ -66,7 +65,7 @@ describe('random', () => {
     const before = Buffer.from(buf).toString('hex');
     crypto.randomFillSync(buf);
     const after = Buffer.from(buf).toString('hex');
-    assert.notStrictEqual(before, after);
+    expect(before).not.toEqual(after);
   });
 
   it('simple test 3', () => {
@@ -80,7 +79,7 @@ describe('random', () => {
       const before = Buffer.from(buf.buffer).toString('hex');
       crypto.randomFillSync(buf);
       const after = Buffer.from(buf.buffer).toString('hex');
-      assert.notStrictEqual(before, after);
+      expect(before).not.toEqual(after);
     });
   });
 
@@ -89,7 +88,7 @@ describe('random', () => {
       const before = Buffer.from(buf).toString('hex');
       crypto.randomFillSync(buf);
       const after = Buffer.from(buf).toString('hex');
-      assert.notStrictEqual(before, after);
+      expect(before).not.toEqual(after);
     });
   });
 
@@ -100,7 +99,7 @@ describe('random', () => {
     crypto.randomFill(buf, (_err: Error | null, res: Buffer) => {
       try {
         const after = res?.toString('hex');
-        assert.notStrictEqual(before, after);
+        expect(before).not.toEqual(after);
         done();
       } catch (e) {
         done(e);
@@ -115,7 +114,7 @@ describe('random', () => {
     crypto.randomFill(buf, (_err: Error | null, res: Uint8Array) => {
       try {
         const after = Buffer.from(res).toString('hex');
-        assert.notStrictEqual(before, after);
+        expect(before).not.toEqual(after);
         done();
       } catch (e) {
         done(e);
@@ -144,7 +143,7 @@ describe('random', () => {
       crypto.randomFill(ab, (_err: Error | null, buf2: ArrayBuffer) => {
         try {
           const after = Buffer.from(buf2).toString('hex');
-          assert.notStrictEqual(before, after, 'before/after');
+          expect(before).not.toEqual(after);
           done();
         } catch (e) {
           done(e);
@@ -160,7 +159,7 @@ describe('random', () => {
       crypto.randomFill(buf, (_err: Error | null, res: ArrayBuffer) => {
         try {
           const after = Buffer.from(res).toString('hex');
-          assert.notStrictEqual(before, after);
+          expect(before).not.toEqual(after);
         } catch (e) {
           done(e);
         }
@@ -177,12 +176,8 @@ describe('random', () => {
     const before = buf.toString('hex');
     crypto.randomFillSync(buf, 5, 5);
     const after = buf.toString('hex');
-    assert.notStrictEqual(before, after, 'before/after');
-    assert.deepStrictEqual(
-      before.slice(0, 5),
-      after.slice(0, 5),
-      'before/after slices',
-    );
+    expect(before).not.toEqual(after);
+    expect(before.slice(0, 5)).toEqual(after.slice(0, 5));
   });
 
   it('randomFillSync - deepStringEqual - Uint8Array', () => {
@@ -190,12 +185,8 @@ describe('random', () => {
     const before = Buffer.from(buf).toString('hex');
     crypto.randomFillSync(buf, 5, 5);
     const after = Buffer.from(buf).toString('hex');
-    assert.notStrictEqual(before, after, 'before/after');
-    assert.deepStrictEqual(
-      before.slice(0, 5),
-      after.slice(0, 5),
-      'before/after slices',
-    );
+    expect(before).not.toEqual(after);
+    expect(before.slice(0, 5)).toEqual(after.slice(0, 5));
   });
 
   it('randomFillSync - deepStringEqual - Buffer no size', () => {
@@ -203,12 +194,8 @@ describe('random', () => {
     const before = buf.toString('hex');
     crypto.randomFillSync(buf, 5);
     const after = buf.toString('hex');
-    assert.notStrictEqual(before, after, 'before/after');
-    assert.deepStrictEqual(
-      before.slice(0, 5),
-      after.slice(0, 5),
-      'before/after slices',
-    );
+    expect(before).not.toEqual(after);
+    expect(before.slice(0, 5)).toEqual(after.slice(0, 5));
   });
 
   it('randomFill - deepStringEqual - Buffer', (done: Done) => {
@@ -218,12 +205,8 @@ describe('random', () => {
     crypto.randomFill(buf, 5, 5, (_err: Error | null, res: Buffer) => {
       try {
         const after = Buffer.from(res).toString('hex');
-        assert.notStrictEqual(before, after, 'before/after');
-        assert.deepStrictEqual(
-          before.slice(0, 5),
-          after.slice(0, 5),
-          'before/after slices',
-        );
+        expect(before).not.toEqual(after);
+        expect(before.slice(0, 5)).toEqual(after.slice(0, 5));
         done();
       } catch (e) {
         done(e);
@@ -237,12 +220,8 @@ describe('random', () => {
     crypto.randomFill(buf, 5, 5, (_err: Error | null, res: Uint8Array) => {
       try {
         const after = Buffer.from(res).toString('hex');
-        assert.notStrictEqual(before, after, 'before/after');
-        assert.deepStrictEqual(
-          before.slice(0, 5),
-          after.slice(0, 5),
-          'before/after slices',
-        );
+        expect(before).not.toEqual(after);
+        expect(before.slice(0, 5)).toEqual(after.slice(0, 5));
         done();
       } catch (e) {
         done(e);
@@ -373,10 +352,9 @@ describe('random', () => {
   ['pseudoRandomBytes', 'prng', 'rng'].forEach(name => {
     it(name, () => {
       const desc = Object.getOwnPropertyDescriptor(crypto, name);
-      assert.ok(desc, 'descriptor');
-      assert.strictEqual(desc?.configurable, true, `${name} configurable`);
-      // TODO: re-enable this?
-      // assert.strictEqual(desc?.enumerable, false, `${name} enumerable`);
+      expect(desc).toBeDefined();
+      expect(desc?.configurable).toBe(true);
+      // expect(desc?.enumerable).toBe(false);
     });
   });
 
@@ -386,15 +364,15 @@ describe('random', () => {
     for (let i = 0; i < 100; i++) {
       crypto.randomInt(3, (_err: Error | null, n: number) => {
         try {
-          assert.ok(n >= 0, `${n} >= 0`);
-          assert.ok(n < 3, `${n} < 3`);
+          expect(n).toBeGreaterThanOrEqual(0);
+          expect(n).toBeLessThan(3);
           randomInts.push(n);
           if (randomInts.length === 100) {
-            assert.ok(!randomInts.includes(-1), '!includes(-1)');
-            assert.ok(randomInts.includes(0), 'includes(0)');
-            assert.ok(randomInts.includes(1), 'includes(1)');
-            assert.ok(randomInts.includes(2), 'includes(2)');
-            assert.ok(!randomInts.includes(3), 'includes(3)');
+            expect(randomInts).not.toContain(-1);
+            expect(randomInts).toContain(0);
+            expect(randomInts).toContain(1);
+            expect(randomInts).toContain(2);
+            expect(randomInts).not.toContain(3);
             done();
           }
         } catch (e) {
@@ -411,16 +389,16 @@ describe('random', () => {
     const randomInts = [];
     for (let i = 0; i < 100; i++) {
       const n = crypto.randomInt(3);
-      assert.ok(n >= 0);
-      assert.ok(n < 3);
+      expect(n).toBeGreaterThanOrEqual(0);
+      expect(n).toBeLessThan(3);
       randomInts.push(n);
     }
 
-    assert.ok(!randomInts.includes(-1), '!includes(-1)');
-    assert.ok(randomInts.includes(0), 'includes(0)');
-    assert.ok(randomInts.includes(1), 'includes(1)');
-    assert.ok(randomInts.includes(2), 'includes(2)');
-    assert.ok(!randomInts.includes(3), 'includes(3)');
+    expect(randomInts).not.toContain(-1);
+    expect(randomInts).toContain(0);
+    expect(randomInts).toContain(1);
+    expect(randomInts).toContain(2);
+    expect(randomInts).not.toContain(3);
   });
 
   it('randomInt positive range', (done: Done) => {
@@ -429,12 +407,12 @@ describe('random', () => {
     for (let i = 0; i < 100; i++) {
       crypto.randomInt(1, 3, (_err: Error | null, n: number) => {
         try {
-          assert.ok(n >= 1);
-          assert.ok(n < 3);
+          expect(n).toBeGreaterThanOrEqual(1);
+          expect(n).toBeLessThan(3);
           randomInts.push(n);
           if (randomInts.length === 100) {
-            assert.ok(randomInts.includes(1));
-            assert.ok(randomInts.includes(2));
+            expect(randomInts).toContain(1);
+            expect(randomInts).toContain(2);
             done();
           }
         } catch (e) {
@@ -453,14 +431,14 @@ describe('random', () => {
     for (let i = 0; i < 100; i++) {
       crypto.randomInt(-10, -8, (_err: Error | null, n: number) => {
         try {
-          assert.ok(n >= -10);
-          assert.ok(n < -8);
+          expect(n).toBeGreaterThanOrEqual(-10);
+          expect(n).toBeLessThan(-8);
           randomInts.push(n);
           if (randomInts.length === 100) {
-            assert.ok(!randomInts.includes(-11));
-            assert.ok(randomInts.includes(-10));
-            assert.ok(randomInts.includes(-9));
-            assert.ok(!randomInts.includes(-8));
+            expect(randomInts).not.toContain(-11);
+            expect(randomInts).toContain(-10);
+            expect(randomInts).toContain(-9);
+            expect(randomInts).not.toContain(-8);
             done();
           }
         } catch (e) {
@@ -528,9 +506,9 @@ describe('random', () => {
   for (const arg of [[0], [1, 1], [3, 2], [-5, -5], [11, -10]]) {
     const interval = arg;
     it('range' + interval.toString(), () => {
-      assert.throws(
-        () => crypto.randomInt(1, MAX_RANGE + 2, () => {}),
-        /ERR_OUT_OF_RANGE/,
+      expect(() => {
+        crypto.randomInt(1, MAX_RANGE + 2, () => {});
+      }).toThrow(
         'The value of "max" is out of range. It must be greater than ' +
           `the value of "min" (${interval[interval.length - 2] || 0}). ` +
           `Received ${interval[interval.length - 1]}`,
@@ -579,9 +557,9 @@ describe('random', () => {
   });
 
   it('ERR_OUT_OF_RANGE 1', () => {
-    assert.throws(
-      () => crypto.randomInt(1, MAX_RANGE + 2, () => {}),
-      /ERR_OUT_OF_RANGE/,
+    expect(() => {
+      crypto.randomInt(1, MAX_RANGE + 2, () => {});
+    }).toThrow(
       'The value of "max" is out of range. ' +
         `It must be <= ${MAX_RANGE}. ` +
         'Received 281_474_976_710_657',
@@ -589,9 +567,9 @@ describe('random', () => {
   });
 
   it('ERR_OUT_OF_RANGE 2', () => {
-    assert.throws(
-      () => crypto.randomInt(MAX_RANGE + 1, () => {}),
-      /ERR_OUT_OF_RANGE/,
+    expect(() => {
+      crypto.randomInt(MAX_RANGE + 1, () => {});
+    }).toThrow(
       'The value of "max" is out of range. ' +
         `It must be <= ${MAX_RANGE}. ` +
         'Received 281_474_976_710_656',
@@ -600,11 +578,10 @@ describe('random', () => {
 
   [true, NaN, [], 10].forEach(val => {
     it(`expect type error: ${val}`, () => {
-      assert.throws(
+      expect(() => {
         // @ts-expect-error - testing bad args
-        () => crypto.randomInt(0, 1, val),
-        /callback must be a function or undefined/,
-      );
+        crypto.randomInt(0, 1, val);
+      }).toThrow(/callback must be a function or undefined/);
     });
   });
 

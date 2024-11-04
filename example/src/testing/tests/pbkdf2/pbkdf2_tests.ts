@@ -1,7 +1,7 @@
 import crypto, { ab2str } from 'react-native-quick-crypto';
 import { describe, it } from '../../MochaRNAdapter';
 import { Buffer } from 'safe-buffer';
-import { expect } from 'chai';
+// import { expect } from '@jest/globals';
 import type { Done } from 'mocha';
 import { fixtures, type Fixture } from './fixtures';
 import type { HashAlgorithm, TypedArray } from 'react-native-quick-crypto';
@@ -34,9 +34,9 @@ describe('pbkdf2', () => {
         hash as HashAlgorithm,
         function (err, result) {
           try {
-            expect(err).to.eql(null);
-            expect(result).to.not.eql(null);
-            expect(ab2str(result as ArrayBuffer)).to.equal(expected);
+            expect(err).toBeNull();
+            expect(result).not.toBeNull();
+            expect(ab2str(result as ArrayBuffer)).toEqual(expected);
             done();
           } catch (e) {
             done(e);
@@ -82,7 +82,7 @@ describe('pbkdf2', () => {
 
   it('handles buffers', (done: Done) => {
     const resultSync = crypto.pbkdf2Sync('password', 'salt', 1, 32);
-    expect(ab2str(resultSync)).to.eql(
+    expect(ab2str(resultSync)).toEqual(
       '0c60c80f961f0e71f3a9b524af6012062fe037a6e0f0eb94fe8fc46bdc637164',
     );
 
@@ -93,7 +93,7 @@ describe('pbkdf2', () => {
       32,
       'sha1',
       function (_, result) {
-        expect(ab2str(result)).to.eql(
+        expect(ab2str(result)).toEqual(
           '0c60c80f961f0e71f3a9b524af6012062fe037a6e0f0eb94fe8fc46bdc637164',
         );
         done();
@@ -187,9 +187,9 @@ describe('pbkdf2', () => {
           algorithm as HashAlgorithm,
           function (err, result) {
             try {
-              expect(err).to.eql(null);
-              expect(result).to.not.eql(null);
-              expect(ab2str(result as ArrayBuffer)).to.equal(expected);
+              expect(err).toBeNull();
+              expect(result).not.toBeNull();
+              expect(ab2str(result as ArrayBuffer)).toEqual(expected);
               done();
             } catch (e) {
               done(e);
@@ -206,7 +206,7 @@ describe('pbkdf2', () => {
           f.dkLen as number,
           algorithm as HashAlgorithm,
         );
-        expect(ab2str(result)).to.equal(expected);
+        expect(ab2str(result)).toEqual(expected);
       });
     });
 
