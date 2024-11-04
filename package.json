@@ -73,7 +73,7 @@
     "@eslint/compat": "^1.1.1",
     "@eslint/js": "10.0.0",
     "@react-native/babel-preset": "^0.75.0-main",
-    "@react-native/eslint-config": "^0.75.0-main",
+    "@react-native/eslint-config": "^0.76.1",
     "@react-native/eslint-plugin": "^0.75.0-main",
     "@release-it/conventional-changelog": "^8.0.1",
     "@types/jest": "^29.5.11",
