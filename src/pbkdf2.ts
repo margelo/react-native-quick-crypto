@@ -22,9 +22,7 @@ type Pbkdf2Callback = (err: Error | null, derivedKey?: Buffer) => void;
 
 function sanitizeInput(input: BinaryLike, errorMsg: string): ArrayBuffer {
   try {
-    const ab = binaryLikeToArrayBuffer(input);
-    console.log('sanitized input', ab);
-    return ab;
+    return binaryLikeToArrayBuffer(input);
     // eslint-disable-next-line @typescript-eslint/no-unused-vars
   } catch (_e: unknown) {
     throw new Error(errorMsg);
