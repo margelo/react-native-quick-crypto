@@ -6,7 +6,11 @@ export type Suites<T = TestSuite | BenchmarkSuite> = {
 
 export interface TestSuite {
   value: boolean;
-  count: number;
+  tests: Tests;
+}
+
+export interface Tests {
+  [key: string]: () => void;
 }
 
 export interface BenchmarkSuite extends TestSuite {

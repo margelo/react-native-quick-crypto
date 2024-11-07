@@ -1,13 +1,12 @@
 import React from 'react';
 import { Text, View, ScrollView, StyleSheet, SafeAreaView } from 'react-native';
-import 'mocha';
 import { Button } from '../../components/Button';
 import { TestItem } from '../../components/TestItem';
 import { useTestsList } from '../../hooks/useTestsList';
 import { useTestsRun } from '../../hooks/useTestsRun';
 
 export const TestSuitesScreen = () => {
-  const [tests, toggle, clearAll, checkAll] = useTestsList();
+  const [suites, toggle, clearAll, checkAll] = useTestsList();
   const [results, runTests] = useTestsRun();
   let totalCount = 0;
 
@@ -15,14 +14,15 @@ export const TestSuitesScreen = () => {
     <SafeAreaView style={styles.mainContainer}>
       <View style={styles.testList}>
         <ScrollView style={styles.scrollView}>
-          {Object.entries(tests).map(([suiteName, suite], index) => {
-            totalCount += suite.count;
+          {Object.entries(suites).map(([suiteName, suite], index) => {
+            const suiteTestCount = Object.keys(suite.tests).length;
+            totalCount += suiteTestCount;
             return (
               <TestItem
                 key={index.toString()}
                 description={suiteName}
                 value={suite.value}
-                count={suite.count}
+                count={suiteTestCount}
                 results={results[suiteName]?.results || []}
                 onToggle={toggle}
               />
@@ -39,7 +39,7 @@ export const TestSuitesScreen = () => {
         <Button
           title="Run"
           onPress={() => {
-            runTests(tests);
+            runTests(suites);
           }}
           color="green"
         />

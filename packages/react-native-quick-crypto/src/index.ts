@@ -58,7 +58,9 @@ export const install = () => {
 // random, cipher, hash use nextTick
 global.process.nextTick = setImmediate;
 
+// exports
 export default QuickCrypto;
+export * from './utils';
 
 // Additional exports for CommonJS compatibility
 module.exports = QuickCrypto;

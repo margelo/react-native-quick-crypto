@@ -1,38 +1,19 @@
 {
-  "references": [
-    {
-      "path": "../packages/react-native-quick-crypto"
-    }
+  "extends": [
+    "@tsconfig/react-native/tsconfig.json",
+    "../config/tsconfig.json"
   ],
   "include": [
     "index.ts",
     "app.json",
-    "src"
+    "src",
+    "**.*.ts",
+    "**.*.tsx",
   ],
   "compilerOptions": {
-    "composite": true,
-    "noEmit": true,
-    "outDir": "lib",
-    "rootDir": ".",
-    "allowUnreachableCode": false,
-    "allowUnusedLabels": false,
-    "esModuleInterop": true,
-    "forceConsistentCasingInFileNames": true,
-    "jsx": "react",
-    "lib": ["esnext"],
-    "module": "esnext",
-    "moduleResolution": "node",
-    "noFallthroughCasesInSwitch": true,
-    "noImplicitReturns": true,
-    "noImplicitUseStrict": false,
-    "noStrictGenericChecks": false,
-    "noUncheckedIndexedAccess": true,
-    "noUnusedLocals": true,
-    "noUnusedParameters": true,
-    "resolveJsonModule": true,
-    "skipLibCheck": true,
-    "strict": true,
-    "target": "esnext",
-    "verbatimModuleSyntax": true
-  }
+    "jsx": "react"
+  },
+  "references": [
+    { "path": "../packages/react-native-quick-crypto" },
+  ],
 }

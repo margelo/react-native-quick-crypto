@@ -31,8 +31,12 @@ const styles = StyleSheet.create({
   },
   text: {
     flexShrink: 1,
+    fontSize: 9,
+    paddingRight: 5,
   },
   error: {
     color: colors.red,
+    fontSize: 9,
+    paddingRight: 5,
   },
 });
