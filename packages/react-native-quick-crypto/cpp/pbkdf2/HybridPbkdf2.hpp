@@ -8,8 +8,8 @@ namespace margelo::nitro::crypto {
 using namespace facebook;
 
 class HybridPbkdf2 : public HybridPbkdf2Spec {
-// public:
-//   HybridPbkdf2() : HybridObject(TAG) {}
+public:
+  HybridPbkdf2() : HybridObject(TAG) {}
 
 public:
   // Methods

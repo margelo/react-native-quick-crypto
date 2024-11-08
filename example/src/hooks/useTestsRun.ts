@@ -58,6 +58,7 @@ const run = (addTestResult: (testResult: TestResult) => void, suites: Suites<Tes
           indentation: 0,
           suiteName,
         });
+        console.log(`✅ Test "${suiteName} - ${testName}" passed!`);
       } catch (e: unknown) {
         const err = e as Error;
         stats.failures++;
@@ -68,6 +69,7 @@ const run = (addTestResult: (testResult: TestResult) => void, suites: Suites<Tes
           suiteName,
           errorMsg: err.message,
         });
+        console.log(`❌ Test "${suiteName} - ${testName}" failed! ${err.message}`);
       }
       stats.tests++;
     });
