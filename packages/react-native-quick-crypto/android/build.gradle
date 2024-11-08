@@ -104,7 +104,11 @@ dependencies {
   //noinspection GradleDynamicVersion
   implementation "com.facebook.react:react-native:+"
 
+  // Add a dependency on NitroModules
   implementation project(":react-native-nitro-modules")
+
+  // Add a dependency on OpenSSL
+  // TODO: update to v3 (see #351)
   implementation "com.android.ndk.thirdparty:openssl:1.1.1q-beta-1"
 }
 

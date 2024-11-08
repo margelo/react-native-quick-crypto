@@ -6,7 +6,7 @@ import { BenchmarkStack } from './children/BenchmarkStack';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import Icon from 'react-native-vector-icons/MaterialCommunityIcons';
 
-enableFreeze(true)
+enableFreeze(true);
 const Tab = createBottomTabNavigator();
 
 export const Root: React.FC = () => {
@@ -35,5 +35,5 @@ export const Root: React.FC = () => {
         />
       </Tab.Navigator>
     </NavigationContainer>
-  )
-}
+  );
+};

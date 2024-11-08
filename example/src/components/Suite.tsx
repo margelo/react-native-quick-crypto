@@ -1,20 +1,20 @@
-import React from 'react'
-import { View, Text, StyleSheet } from 'react-native'
+import React from 'react';
+import { View, Text, StyleSheet } from 'react-native';
 
 type SuiteProps = {
-  description: string
-}
+  description: string;
+};
 
 export const Suite: React.FC<SuiteProps> = ({ description }: SuiteProps) => {
-  const emoji = '↘️ '
-  const fullText = emoji + description
+  const emoji = '↘️ ';
+  const fullText = emoji + description;
 
   return (
     <View style={styles.itemContainer}>
       <Text style={styles.text}>{fullText}</Text>
     </View>
-  )
-}
+  );
+};
 
 const styles = StyleSheet.create({
   itemContainer: {
@@ -27,4 +27,4 @@ const styles = StyleSheet.create({
   text: {
     flexShrink: 1,
   },
-})
+});

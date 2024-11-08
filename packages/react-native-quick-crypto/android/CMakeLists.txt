@@ -1,8 +1,7 @@
+project(QuickCrypto)
 cmake_minimum_required(VERSION 3.9.0)
 
-project(QuickCrypto)
 set(PACKAGE_NAME QuickCrypto)
-
 set(CMAKE_VERBOSE_MAKEFILE ON)
 set(CMAKE_CXX_STANDARD 20)
 
@@ -10,11 +9,22 @@ set(CMAKE_CXX_STANDARD 20)
 add_library(
   ${PACKAGE_NAME} SHARED
   src/main/cpp/cpp-adapter.cpp
+  ../cpp/pbkdf2/HybridPbkdf2.cpp
   ../cpp/random/HybridRandom.cpp
+  ../deps/fastpbkdf2/fastpbkdf2.c
 )
 
-include_directories(../cpp)
+# add Nitrogen specs
 include(${CMAKE_SOURCE_DIR}/../nitrogen/generated/android/QuickCrypto+autolinking.cmake)
+
+# local includes
+include_directories(
+  "src/main/cpp"
+  "../cpp/pbkdf2"
+  "../cpp/random"
+  "../cpp/utils"
+  "../deps/fastpbkdf2"
+)
 
 # Third party libraries (Prefabs)
 find_library(LOG_LIB log)
@@ -31,14 +41,6 @@ target_link_libraries(
   fbjni::fbjni                           # <-- Facebook C++ JNI helpers
   openssl::crypto                        # <-- OpenSSL (Crypto)
   ReactAndroid::jsi
-  ReactAndroid::react_render_core
-  ReactAndroid::runtimeexecutor
-  ReactAndroid::fabricjni
-  ReactAndroid::react_debug
-  ReactAndroid::react_render_core
-  ReactAndroid::react_render_componentregistry
-  ReactAndroid::rrc_view
-  ReactAndroid::folly_runtime
   )
 
 if(ReactAndroid_VERSION_MINOR GREATER_EQUAL 76)

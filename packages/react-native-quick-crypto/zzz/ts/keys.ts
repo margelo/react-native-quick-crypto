@@ -15,59 +15,12 @@ export const kNamedCurveAliases = {
   'P-521': 'secp521r1',
 } as const;
 
-export type NamedCurve = 'P-256' | 'P-384' | 'P-521';
-
 export type ImportFormat = 'raw' | 'pkcs8' | 'spki' | 'jwk';
-
-export type AnyAlgorithm =
-  | HashAlgorithm
-  | KeyPairAlgorithm
-  | SecretKeyAlgorithm
-  | SignVerifyAlgorithm
-  | DeriveBitsAlgorithm
-  | EncryptDecryptAlgorithm
-  | 'PBKDF2'
-  | 'HKDF';
-
-export type HashAlgorithm =
-  | 'SHA-1'
-  | 'SHA-224'
-  | 'SHA-256'
-  | 'SHA-384'
-  | 'SHA-512'
-  | 'RIPEMD-160';
-
-export type DigestAlgorithm = 'SHA-1' | 'SHA-256' | 'SHA-384' | 'SHA-512';
 
 export type KeyPairType = 'rsa' | 'rsa-pss' | 'ec';
 
-export type RSAKeyPairAlgorithm = 'RSASSA-PKCS1-v1_5' | 'RSA-PSS' | 'RSA-OAEP';
-export type ECKeyPairAlgorithm = 'ECDSA' | 'ECDH';
-export type CFRGKeyPairAlgorithm = 'Ed25519' | 'Ed448' | 'X25519' | 'X448';
-export type AESAlgorithm = 'AES-CTR' | 'AES-CBC' | 'AES-GCM' | 'AES-KW';
 
-export type KeyPairAlgorithm =
-  | RSAKeyPairAlgorithm
-  | ECKeyPairAlgorithm
-  | CFRGKeyPairAlgorithm;
-
-export type SecretKeyAlgorithm = 'HMAC' | AESAlgorithm;
 export type SecretKeyType = 'hmac' | 'aes';
-
-export type SignVerifyAlgorithm =
-  | 'RSASSA-PKCS1-v1_5'
-  | 'RSA-PSS'
-  | 'ECDSA'
-  | 'HMAC'
-  | 'Ed25519'
-  | 'Ed448';
-
-export type DeriveBitsAlgorithm =
-  | 'PBKDF2'
-  | 'HKDF'
-  | 'ECDH'
-  | 'X25519'
-  | 'X448';
 
 export type RsaOaepParams = {
   name: 'RSA-OAEP';
@@ -112,53 +65,8 @@ export type EncryptDecryptParams =
   | AesGcmParams
   | RsaOaepParams;
 
-export type EncryptDecryptAlgorithm =
-  | 'RSA-OAEP'
-  | 'AES-CTR'
-  | 'AES-CBC'
-  | 'AES-GCM';
 
-export type SubtleAlgorithm = {
-  name: AnyAlgorithm;
-  salt?: string;
-  iterations?: number;
-  hash?: HashAlgorithm;
-  namedCurve?: NamedCurve;
-  length?: number;
-  modulusLength?: number;
-  publicExponent?: any;
-};
 
-export type KeyUsage =
-  | 'encrypt'
-  | 'decrypt'
-  | 'sign'
-  | 'verify'
-  | 'deriveKey'
-  | 'deriveBits'
-  | 'wrapKey'
-  | 'unwrapKey';
-
-// On node this value is defined on the native side, for now I'm just creating it here in JS
-// TODO(osp) move this into native side to make sure they always match
-export enum KFormatType {
-  kKeyFormatDER,
-  kKeyFormatPEM,
-  kKeyFormatJWK,
-}
-
-export type KFormat = 'der' | 'pem' | 'jwk';
-
-// Same as KFormatType, this enum needs to be defined on the native side
-export enum KeyType {
-  Secret,
-  Public,
-  Private,
-}
-
-export type KTypePrivate = 'pkcs1' | 'pkcs8' | 'sec1';
-export type KTypePublic = 'pkcs1' | 'spki';
-export type KType = KTypePrivate | KTypePublic;
 
 // Same as KFormatType, this enum needs to be defined on the native side
 export enum KWebCryptoKeyFormat {
@@ -180,54 +88,6 @@ enum KeyInputContext {
   kCreatePublic,
   kCreatePrivate,
 }
-
-export enum KeyEncoding {
-  kKeyEncodingPKCS1,
-  kKeyEncodingPKCS8,
-  kKeyEncodingSPKI,
-  kKeyEncodingSEC1,
-}
-
-export type DSAEncoding = 'der' | 'ieee-p1363';
-
-export type EncodingOptions = {
-  key?: any;
-  type?: KType;
-  encoding?: string;
-  dsaEncoding?: DSAEncoding;
-  format?: KFormat;
-  padding?: number;
-  cipher?: string;
-  passphrase?: string | ArrayBuffer;
-  saltLength?: number;
-};
-
-export type AsymmetricKeyType = 'rsa' | 'rsa-pss' | 'dsa' | 'ec' | undefined;
-
-export type JWK = {
-  'kty'?: 'AES' | 'RSA' | 'EC' | 'oct';
-  'use'?: 'sig' | 'enc';
-  'key_ops'?: KeyUsage[];
-  'alg'?: string; // TODO: enumerate these (RFC-7517)
-  'crv'?: string;
-  'kid'?: string;
-  'x5u'?: string;
-  'x5c'?: string[];
-  'x5t'?: string;
-  'x5t#256'?: string;
-  'n'?: string;
-  'e'?: string;
-  'd'?: string;
-  'p'?: string;
-  'q'?: string;
-  'x'?: string;
-  'y'?: string;
-  'k'?: string;
-  'dp'?: string;
-  'dq'?: string;
-  'qi'?: string;
-  'ext'?: boolean;
-};
 
 const encodingNames = {
   [KeyEncoding.kKeyEncodingPKCS1]: 'pkcs1',
@@ -580,101 +440,7 @@ export const createPrivateKey = (
 //   return obj != null && obj.keyType !== undefined;
 // };
 
-export class CryptoKey {
-  keyObject: KeyObject;
-  keyAlgorithm: SubtleAlgorithm;
-  keyUsages: KeyUsage[];
-  keyExtractable: boolean;
 
-  constructor(
-    keyObject: KeyObject,
-    keyAlgorithm: SubtleAlgorithm,
-    keyUsages: KeyUsage[],
-    keyExtractable: boolean
-  ) {
-    this.keyObject = keyObject;
-    this.keyAlgorithm = keyAlgorithm;
-    this.keyUsages = keyUsages;
-    this.keyExtractable = keyExtractable;
-  }
-
-  inspect(_depth: number, _options: any): any {
-    throw new Error('CryptoKey.inspect is not implemented');
-    // if (depth < 0) return this;
-
-    // const opts = {
-    //   ...options,
-    //   depth: options.depth == null ? null : options.depth - 1,
-    // };
-
-    // return `CryptoKey ${inspect(
-    //   {
-    //     type: this.type,
-    //     extractable: this.extractable,
-    //     algorithm: this.algorithm,
-    //     usages: this.usages,
-    //   },
-    //   opts
-    // )}`;
-  }
-
-  get type() {
-    // if (!(this instanceof CryptoKey)) throw new Error('Invalid CryptoKey');
-    return this.keyObject.type;
-  }
-
-  get extractable() {
-    return this.keyExtractable;
-  }
-
-  get algorithm() {
-    return this.keyAlgorithm;
-  }
-
-  get usages() {
-    return this.keyUsages;
-  }
-}
-
-class KeyObject {
-  handle: KeyObjectHandle;
-  type: 'public' | 'secret' | 'private' | 'unknown' = 'unknown';
-  export(_options?: EncodingOptions): ArrayBuffer {
-    return new ArrayBuffer(0);
-  }
-
-  constructor(type: string, handle: KeyObjectHandle) {
-    if (type !== 'secret' && type !== 'public' && type !== 'private')
-      throw new Error(`invalid KeyObject type: ${type}`);
-    this.handle = handle;
-    this.type = type;
-  }
-
-  // get type(): string {
-  //   return this.type;
-  // }
-
-  // static from(key) {
-  //   if (!isCryptoKey(key))
-  //     throw new ERR_INVALID_ARG_TYPE('key', 'CryptoKey', key);
-  //   return key[kKeyObject];
-  // }
-
-  // equals(otherKeyObject) {
-  //   if (!isKeyObject(otherKeyObject)) {
-  //     throw new ERR_INVALID_ARG_TYPE(
-  //       'otherKeyObject',
-  //       'KeyObject',
-  //       otherKeyObject
-  //     );
-  //   }
-
-  //   return (
-  //     otherKeyObject.type === this.type &&
-  //     this[kHandle].equals(otherKeyObject[kHandle])
-  //   );
-  // }
-}
 
 export class SecretKeyObject extends KeyObject {
   constructor(handle: KeyObjectHandle) {

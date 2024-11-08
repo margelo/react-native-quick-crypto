@@ -1,20 +1,32 @@
-import type { BenchmarkFn } from "../benchmarks/types"
+import type { BenchmarkFn } from '../benchmarks/types';
 
 export type Suites<T = TestSuite | BenchmarkSuite> = {
-  [key: string]: T
+  [key: string]: T;
+};
+
+export interface Suite {
+  value: boolean;
 }
 
-export interface TestSuite {
-  value: boolean
-  count: number
+// test types
+export interface Tests {
+  [key: string]: () => void;
 }
 
-export interface BenchmarkSuite extends TestSuite {
-  benchmarks: Benchmark[]
+export interface TestSuite extends Suite {
+  tests: Tests;
 }
 
+// benchmark types
 export type Benchmark = {
-  name: string
-  us?: BenchmarkFn,
-  them?: BenchmarkFn,
+  us?: BenchmarkFn;
+  them?: BenchmarkFn;
+};
+
+export interface Benchmarks {
+  [key: string]: Benchmark;
+}
+
+export interface BenchmarkSuite extends Suite {
+  benchmarks: Benchmarks;
 }

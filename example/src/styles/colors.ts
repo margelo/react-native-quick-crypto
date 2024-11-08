@@ -1,4 +1,3 @@
-
 export const colors: Record<string, string> = {
   gray: '#ccc',
   white: '#fff',
