@@ -68,7 +68,7 @@ jobs:
 
       - name: Bootstrap JS
         run: |
-          bun install
+          bun install --frozen-lockfile
 
       - name: Run ESLint (rnqc)
         run: |
