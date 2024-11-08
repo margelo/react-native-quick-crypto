@@ -1,10 +1,16 @@
 name: 'Update Lockfiles (bun.lockb + Podfile.lock)'
 
 on:
+  push:
+    branches:
+      - main
+    paths:
+      - ".github/workflows/update-lockfiles.yml"
   pull_request:
     paths:
-      - "packages/react-native-quick-crypto/package.json"
-      - "example/package.json"
+      - ".github/workflows/update-lockfiles.yml"
+      - "package.json"
+      - "**/package.json"
 
 permissions:
   contents: write
@@ -13,20 +19,31 @@ jobs:
   update-lockfiles:
     name: "Update lockfiles (bun.lockb + Podfile.lock)"
     if: github.actor == 'dependabot[bot]'
-    runs-on: ubuntu-latest
+    runs-on: macOS-latest
     steps:
-      - uses: oven-sh/setup-bun@v2
-      - uses: ruby/setup-ruby@v1
       - uses: actions/checkout@v4
         with:
           fetch-depth: 0
           ref: ${{ github.event.pull_request.head.ref }}
+
+      - uses: oven-sh/setup-bun@v2
+
+      - name: Setup Ruby (bundle)
+        uses: ruby/setup-ruby@v1
+        with:
+          ruby-version: 3.3
+          bundler-cache: true
+          working-directory: example/ios
+
       - run: |
-          bun install --frozen-lockfile
+          bun install
           git add bun.lockb
+
           cd example
+          bundle install
           bun pods
           git add ios/Podfile.lock
+
           cd ..
           git config --global user.name 'dependabot[bot]'
           git config --global user.email 'dependabot[bot]@users.noreply.github.com'
