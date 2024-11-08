@@ -41,14 +41,6 @@ target_link_libraries(
   fbjni::fbjni                           # <-- Facebook C++ JNI helpers
   openssl::crypto                        # <-- OpenSSL (Crypto)
   ReactAndroid::jsi
-  ReactAndroid::react_render_core
-  ReactAndroid::runtimeexecutor
-  ReactAndroid::fabricjni
-  ReactAndroid::react_debug
-  ReactAndroid::react_render_core
-  ReactAndroid::react_render_componentregistry
-  ReactAndroid::rrc_view
-  ReactAndroid::folly_runtime
   )
 
 if(ReactAndroid_VERSION_MINOR GREATER_EQUAL 76)

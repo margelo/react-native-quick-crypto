@@ -68,8 +68,5 @@
         }
       }
     }
-  },
-  "patchedDependencies": {
-    "react-native-screens@3.32.0": "patches/react-native-screens@3.32.0.patch"
   }
 }
