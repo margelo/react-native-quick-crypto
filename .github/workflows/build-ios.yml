@@ -42,9 +42,9 @@ jobs:
       - name: Setup Ruby (bundle)
         uses: ruby/setup-ruby@v1
         with:
-          ruby-version: 3.3
+          ruby-version: 3.4
           bundler-cache: true
-          working-directory: example/ios
+          working-directory: example
 
       - name: Restore Pods cache
         uses: actions/cache@v4
@@ -75,6 +75,6 @@ jobs:
           -scheme QuickCryptoExample \
           -sdk iphonesimulator \
           -configuration Debug \
-          -destination 'platform=iOS Simulator,name=iPhone 11 Pro' \
+          -destination 'platform=iOS Simulator,name=iPhone 16 Pro' \
           build \
           CODE_SIGNING_ALLOWED=NO | xcpretty"
