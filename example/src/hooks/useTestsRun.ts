@@ -40,7 +40,10 @@ export const useTestsRun = (): [
   return [results, runTests];
 };
 
-const run = (addTestResult: (testResult: TestResult) => void, suites: Suites<TestSuite> = {}) => {
+const run = (
+  addTestResult: (testResult: TestResult) => void,
+  suites: Suites<TestSuite> = {},
+) => {
   const stats: Stats = { ...defaultStats };
   stats.start = new Date();
 
@@ -69,7 +72,9 @@ const run = (addTestResult: (testResult: TestResult) => void, suites: Suites<Tes
           suiteName,
           errorMsg: err.message,
         });
-        console.log(`❌ Test "${suiteName} - ${testName}" failed! ${err.message}`);
+        console.log(
+          `❌ Test "${suiteName} - ${testName}" failed! ${err.message}`,
+        );
       }
       stats.tests++;
     });

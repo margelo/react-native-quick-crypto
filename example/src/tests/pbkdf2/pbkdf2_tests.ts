@@ -25,7 +25,7 @@ const SUITE = 'pbkdf2';
     iterations: number,
     hash: string,
     length: number,
-    expected: string
+    expected: string,
   ) => {
     crypto.pbkdf2(
       pass,
@@ -44,13 +44,7 @@ const SUITE = 'pbkdf2';
   const kTests: TestFixture[] = [
     ['password', 'salt', 1, 20, '120fb6cffcf8b32c43e7225256c4f837a86548c9'],
     ['password', 'salt', 2, 20, 'ae4d0c95af6b46d32d0adff928f06dd02a303f8e'],
-    [
-      'password',
-      'salt',
-      4096,
-      20,
-      'c5e478d59288c841aa530db6845c4c8d962893a0',
-    ],
+    ['password', 'salt', 4096, 20, 'c5e478d59288c841aa530db6845c4c8d962893a0'],
     [
       'passwordPASSWORDpassword',
       'saltSALTsaltSALTsaltSALTsaltSALTsalt',
@@ -70,9 +64,13 @@ const SUITE = 'pbkdf2';
 
   kTests.forEach(([pass, salt, iterations, length, expected]) => {
     const hash = 'sha256';
-    test(SUITE, `RFC 6070 - ${pass} ${salt} ${iterations} ${hash} ${length}`, () => {
-      testFn(pass, salt, iterations, hash, length, expected);
-    });
+    test(
+      SUITE,
+      `RFC 6070 - ${pass} ${salt} ${iterations} ${hash} ${length}`,
+      () => {
+        testFn(pass, salt, iterations, hash, length, expected);
+      },
+    );
   });
 }
 
@@ -100,37 +98,36 @@ test(SUITE, 'should throw if no callback is provided', function () {
   expect(() => {
     // @ts-expect-error - testing no callback
     crypto.pbkdf2('password', 'salt', 1, 32, 'sha1');
-  }).to.throw(
-    /No callback provided to pbkdf2/,
-  );
+  }).to.throw(/No callback provided to pbkdf2/);
 });
 
-test(SUITE, 'should throw if the password is not a string or an ArrayBuffer', function () {
-  expect(() => {
-    // @ts-expect-error - testing bad password
-    crypto.pbkdf2(['a'], 'salt', 1, 32, 'sha1');
-  }).to.throw(
-    /No callback provided to pbkdf2/,
-  );
-});
+test(
+  SUITE,
+  'should throw if the password is not a string or an ArrayBuffer',
+  function () {
+    expect(() => {
+      // @ts-expect-error - testing bad password
+      crypto.pbkdf2(['a'], 'salt', 1, 32, 'sha1');
+    }).to.throw(/No callback provided to pbkdf2/);
+  },
+);
 
-test(SUITE, ' should throw if the salt is not a string or an ArrayBuffer', function () {
-  expect(() => {
-    // @ts-expect-error - testing bad salt
-    crypto.pbkdf2('a', ['salt'], 1, 32, 'sha1');
-  }).to.throw(
-    /No callback provided to pbkdf2/,
-  );
-});
+test(
+  SUITE,
+  ' should throw if the salt is not a string or an ArrayBuffer',
+  function () {
+    expect(() => {
+      // @ts-expect-error - testing bad salt
+      crypto.pbkdf2('a', ['salt'], 1, 32, 'sha1');
+    }).to.throw(/No callback provided to pbkdf2/);
+  },
+);
 
 const algos = ['sha1', 'sha224', 'sha256', 'sha384', 'sha512', 'ripemd160'];
 algos.forEach(function (algorithm) {
   fixtures.valid.forEach(function (f: Fixture) {
     // TODO: check these types once nitro port is done
-    let key: BinaryLike,
-      keyType: string,
-      salt: BinaryLike,
-      saltType: string;
+    let key: BinaryLike, keyType: string, salt: BinaryLike, saltType: string;
     if (f.keyUint8Array) {
       key = new Uint8Array(f.keyUint8Array);
       keyType = 'Uint8Array';
@@ -236,5 +233,4 @@ algos.forEach(function (algorithm) {
   //     }).to.throw(f.exception);
   //   });
   // });
-
 });

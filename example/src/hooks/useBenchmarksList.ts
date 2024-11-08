@@ -2,16 +2,14 @@ import { useCallback, useState } from 'react';
 import type { Benchmarks, BenchmarkSuite, Suites } from '../types/Suite';
 import type { BenchmarkFn } from '../benchmarks/types';
 
-export const useBenchmarksList = (
-): [
+export const useBenchmarksList = (): [
   Suites<BenchmarkSuite>,
   (description: string) => void,
   () => void,
   () => void,
 ] => {
-  const [suites, setSuites] = useState<Suites<BenchmarkSuite>>(
-    getInitialSuites(),
-  );
+  const [suites, setSuites] =
+    useState<Suites<BenchmarkSuite>>(getInitialSuites());
 
   const toggle = useCallback(
     (description: string) => {

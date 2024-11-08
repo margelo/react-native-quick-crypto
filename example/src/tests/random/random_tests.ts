@@ -47,7 +47,8 @@ test(SUITE, 'simple test 4 - randomFillSync ArrayBuffer', () => {
   });
 });
 
-test(SUITE, 'simple test 5 - randomFill Buffer ', () => {  // done: Done
+test(SUITE, 'simple test 5 - randomFill Buffer ', () => {
+  // done: Done
   const buf = Buffer.alloc(10);
   const before = buf.toString('hex');
 
@@ -56,14 +57,15 @@ test(SUITE, 'simple test 5 - randomFill Buffer ', () => {  // done: Done
       const after = res?.toString('hex');
       expect(before).not.to.equal(after);
       // done();
-    // eslint-disable-next-line @typescript-eslint/no-unused-vars
+      // eslint-disable-next-line @typescript-eslint/no-unused-vars
     } catch (e) {
       // done(e);
     }
   });
 });
 
-test(SUITE, 'simple test 6', () => {  // done: Done
+test(SUITE, 'simple test 6', () => {
+  // done: Done
   const buf = new Uint8Array(new Array(10).fill(0));
   const before = Buffer.from(buf).toString('hex');
 
@@ -72,7 +74,7 @@ test(SUITE, 'simple test 6', () => {  // done: Done
       const after = Buffer.from(res).toString('hex');
       expect(before).not.to.equal(after);
       // done();
-    // eslint-disable-next-line @typescript-eslint/no-unused-vars
+      // eslint-disable-next-line @typescript-eslint/no-unused-vars
     } catch (e) {
       // done(e);
     }
@@ -93,7 +95,8 @@ const bufs: [BufTypes, string][] = [
   [new DataView(new ArrayBuffer(10)), 'DataView'],
 ];
 bufs.forEach(([buf, name]) => {
-  test(SUITE, `simple test 7, ${name}`, () => {  // done: Done
+  test(SUITE, `simple test 7, ${name}`, () => {
+    // done: Done
     const ab = abvToArrayBuffer(buf);
     const before = ab2str(ab);
 
@@ -102,7 +105,7 @@ bufs.forEach(([buf, name]) => {
         const after = Buffer.from(buf2).toString('hex');
         expect(before).not.to.equal(after);
         // done();
-      // eslint-disable-next-line @typescript-eslint/no-unused-vars
+        // eslint-disable-next-line @typescript-eslint/no-unused-vars
       } catch (e) {
         // done(e);
       }
@@ -110,7 +113,8 @@ bufs.forEach(([buf, name]) => {
   });
 });
 
-test(SUITE, 'simple test 8', () => {  // done: Done
+test(SUITE, 'simple test 8', () => {
+  // done: Done
   let ctr = 0;
   [new ArrayBuffer(10), new ArrayBuffer(10)].forEach(buf => {
     const before = Buffer.from(buf).toString('hex');
@@ -118,7 +122,7 @@ test(SUITE, 'simple test 8', () => {  // done: Done
       try {
         const after = Buffer.from(res).toString('hex');
         expect(before).not.to.equal(after);
-      // eslint-disable-next-line @typescript-eslint/no-unused-vars
+        // eslint-disable-next-line @typescript-eslint/no-unused-vars
       } catch (e) {
         // done(e);
       }
@@ -157,7 +161,8 @@ test(SUITE, 'randomFillSync - deepStringEqual - Buffer no size', () => {
   expect(before.slice(0, 5)).to.equal(after.slice(0, 5));
 });
 
-test(SUITE, 'randomFill - deepStringEqual - Buffer', () => {  // done: Done
+test(SUITE, 'randomFill - deepStringEqual - Buffer', () => {
+  // done: Done
   const buf = Buffer.alloc(10);
   const before = buf.toString('hex');
 
@@ -167,14 +172,15 @@ test(SUITE, 'randomFill - deepStringEqual - Buffer', () => {  // done: Done
       expect(before).not.to.equal(after);
       expect(before.slice(0, 5)).to.equal(after.slice(0, 5));
       // done();
-    // eslint-disable-next-line @typescript-eslint/no-unused-vars
+      // eslint-disable-next-line @typescript-eslint/no-unused-vars
     } catch (e) {
       // done(e);
     }
   });
 });
 
-test(SUITE, 'randomFill - deepStringEqual - Uint8Array', () => {  // done: Done
+test(SUITE, 'randomFill - deepStringEqual - Uint8Array', () => {
+  // done: Done
   const buf = new Uint8Array(new Array(10).fill(0));
   const before = Buffer.from(buf).toString('hex');
   crypto.randomFill(buf, 5, 5, (_err: Error | null, res: Uint8Array) => {
@@ -183,7 +189,7 @@ test(SUITE, 'randomFill - deepStringEqual - Uint8Array', () => {  // done: Done
       expect(before).not.to.equal(after);
       expect(before.slice(0, 5)).to.equal(after.slice(0, 5));
       // done();
-    // eslint-disable-next-line @typescript-eslint/no-unused-vars
+      // eslint-disable-next-line @typescript-eslint/no-unused-vars
     } catch (e) {
       // done(e);
     }
@@ -327,7 +333,6 @@ test(SUITE, 'randomFill - deepStringEqual - Uint8Array', () => {  // done: Done
   });
 });
 
-
 ['pseudoRandomBytes', 'prng', 'rng'].forEach(name => {
   test(SUITE, name, () => {
     const desc = Object.getOwnPropertyDescriptor(crypto, name);
@@ -337,7 +342,8 @@ test(SUITE, 'randomFill - deepStringEqual - Uint8Array', () => {  // done: Done
   });
 });
 
-test(SUITE, 'randomInt - Asynchronous API', () => {  // done: Done
+test(SUITE, 'randomInt - Asynchronous API', () => {
+  // done: Done
   const randomInts: number[] = [];
   let failed = false;
   for (let i = 0; i < 100; i++) {
@@ -354,7 +360,7 @@ test(SUITE, 'randomInt - Asynchronous API', () => {  // done: Done
           expect(randomInts).not.to.contain(3);
           // done();
         }
-      // eslint-disable-next-line @typescript-eslint/no-unused-vars
+        // eslint-disable-next-line @typescript-eslint/no-unused-vars
       } catch (e) {
         if (!failed) {
           // done(e);
@@ -381,7 +387,8 @@ test(SUITE, 'randomInt - Synchronous API', () => {
   expect(randomInts).not.to.contain(3);
 });
 
-test(SUITE, 'randomInt positive range', () => {  // done: Done
+test(SUITE, 'randomInt positive range', () => {
+  // done: Done
   const randomInts: number[] = [];
   let failed = false;
   for (let i = 0; i < 100; i++) {
@@ -395,7 +402,7 @@ test(SUITE, 'randomInt positive range', () => {  // done: Done
           expect(randomInts).to.contain(2);
           // done();
         }
-      // eslint-disable-next-line @typescript-eslint/no-unused-vars
+        // eslint-disable-next-line @typescript-eslint/no-unused-vars
       } catch (e) {
         if (!failed) {
           // done(e);
@@ -422,7 +429,7 @@ test(SUITE, 'randomInt negative range', () => {
           expect(randomInts).not.to.contain(-8);
           // done();
         }
-      // eslint-disable-next-line @typescript-eslint/no-unused-vars
+        // eslint-disable-next-line @typescript-eslint/no-unused-vars
       } catch (e) {
         if (!failed) {
           // done(e);

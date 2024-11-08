@@ -15,8 +15,7 @@ import { colors } from '../../styles/colors';
 
 export const BenchmarkSuitesScreen = () => {
   const [runCount, setRunCount] = useState<number>(1000);
-  const [benchmarks, toggle, clearAll, checkAll] =
-    useBenchmarksList();
+  const [benchmarks, toggle, clearAll, checkAll] = useBenchmarksList();
   const [results, runBenchmarks] = useBenchmarksRun(runCount);
   let totalCount = 0;
 
@@ -31,8 +30,7 @@ export const BenchmarkSuitesScreen = () => {
             onChangeText={(s: string) => setRunCount(parseInt(s, 10))}
           />
         </View>
-        <View style={styles.option}>
-        </View>
+        <View style={styles.option}></View>
       </View>
       <View style={styles.benchmarkList}>
         <ScrollView style={styles.scrollView}>
