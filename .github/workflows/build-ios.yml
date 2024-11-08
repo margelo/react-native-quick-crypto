@@ -20,6 +20,10 @@ on:
       - '*.podspec'
       - 'example/ios/**'
 
+defaults:
+  run:
+    working-directory: example
+
 jobs:
   build_ios_example:
     name: Build iOS Example App
@@ -54,7 +58,6 @@ jobs:
             ${{ runner.os }}-pods-
 
       - name: Install Gems
-        working-directory: example
         run: bundle config set deployment 'true' && bundle install
 
       - name: Install Pods
