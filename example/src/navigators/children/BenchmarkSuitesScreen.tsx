@@ -15,9 +15,8 @@ import { colors } from '../../styles/colors';
 
 export const BenchmarkSuitesScreen = () => {
   const [runCount, setRunCount] = useState<number>(1000);
-  const [challenger, setChallenger] = useState<string>('crypto-browserify');
   const [benchmarks, toggle, clearAll, checkAll] =
-    useBenchmarksList(challenger);
+    useBenchmarksList();
   const [results, runBenchmarks] = useBenchmarksRun(runCount);
   let totalCount = 0;
 
@@ -27,25 +26,25 @@ export const BenchmarkSuitesScreen = () => {
         <View style={styles.option}>
           <Text style={styles.optionLabel}>run count</Text>
           <TextInput
+            style={styles.textInput}
             value={runCount.toString()}
             onChangeText={(s: string) => setRunCount(parseInt(s, 10))}
           />
         </View>
         <View style={styles.option}>
-          <Text style={styles.optionLabel}>challenger</Text>
-          <TextInput value={challenger} onChangeText={setChallenger} />
         </View>
       </View>
       <View style={styles.benchmarkList}>
         <ScrollView style={styles.scrollView}>
           {Object.entries(benchmarks).map(([suiteName, suite], index) => {
-            totalCount += suite.count;
+            const suiteBenchmarkCount = Object.keys(suite.benchmarks).length;
+            totalCount += suiteBenchmarkCount;
             return (
               <BenchmarkItem
                 key={index.toString()}
                 description={suiteName}
                 value={suite.value}
-                count={suite.count}
+                count={suiteBenchmarkCount}
                 results={results[suiteName]?.results || []}
                 onToggle={toggle}
               />
@@ -80,16 +79,28 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-around',
-    paddingTop: 5,
-    maxHeight: 60,
+    // paddingTop: 5,
+    maxHeight: 45,
     borderBottomWidth: 1,
     borderColor: colors.gray,
   },
-  option: {},
+  option: {
+    flexDirection: 'row',
+  },
   optionLabel: {
     fontSize: 10,
     fontWeight: 'bold',
-    alignSelf: 'flex-start',
+    paddingRight: 5,
+    alignSelf: 'center',
+  },
+  textInput: {
+    backgroundColor: colors.white,
+    borderRadius: 3,
+    borderColor: colors.gray,
+    borderWidth: 1,
+    padding: 5,
+    width: 75,
+    textAlign: 'right',
   },
   benchmarkList: {
     flex: 9,

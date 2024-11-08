@@ -4,21 +4,29 @@ export type Suites<T = TestSuite | BenchmarkSuite> = {
   [key: string]: T;
 };
 
-export interface TestSuite {
+export interface Suite {
   value: boolean;
-  tests: Tests;
 }
 
+// test types
 export interface Tests {
   [key: string]: () => void;
 }
 
-export interface BenchmarkSuite extends TestSuite {
-  benchmarks: Benchmark[];
+export interface TestSuite extends Suite {
+  tests: Tests;
 }
 
+// benchmark types
 export type Benchmark = {
-  name: string;
   us?: BenchmarkFn;
   them?: BenchmarkFn;
 };
+
+export interface Benchmarks {
+  [key: string]: Benchmark;
+}
+
+export interface BenchmarkSuite extends Suite {
+  benchmarks: Benchmarks;
+}

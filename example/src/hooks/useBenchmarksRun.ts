@@ -38,7 +38,7 @@ const run = (
 ) => {
   Object.entries(suites).forEach(([suiteName, suite]) => {
     if (suite.value) {
-      suite.benchmarks.map(benchmark => {
+      Object.entries(suite.benchmarks).forEach(([benchmarkName, benchmark]) => {
         if (!benchmark.them || !benchmark.us) {
           return;
         }
@@ -46,7 +46,7 @@ const run = (
         const us = runBenchmark(benchmark.us, runCount);
         addBenchmarkResult({
           indentation: 0,
-          description: benchmark.name,
+          description: benchmarkName,
           suiteName,
           us,
           them,
