@@ -1,6 +1,6 @@
 import React from 'react';
 import { View, Text, StyleSheet } from 'react-native';
-import type { BenchmarkResult } from '../types/Results';
+import type { BenchmarkResult } from '../types/results';
 import { calculateTimes, formatNumber } from '../benchmarks/utils';
 import { colors } from '../styles/colors';
 

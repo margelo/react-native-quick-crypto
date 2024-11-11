@@ -186,3 +186,5 @@ tsconfig.tsbuildinfo
 
 # development stuffs
 example0/
+*scratch*
+

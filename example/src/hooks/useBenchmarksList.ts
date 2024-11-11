@@ -1,6 +1,6 @@
 import { useCallback, useState } from 'react';
-import type { Benchmarks, BenchmarkSuite, Suites } from '../types/Suite';
-import type { BenchmarkFn } from '../benchmarks/types';
+import type { Suites } from '../types/suite';
+import type { BenchmarkFn, Benchmarks, BenchmarkSuite } from '../types/benchmarks';
 
 export const useBenchmarksList = (): [
   Suites<BenchmarkSuite>,
@@ -58,8 +58,8 @@ const getInitialSuites = () => {
 };
 
 const loadBenchmarks = (suiteName: string): Benchmarks => {
-  const us = allBenchmarks[`rnqc/${suiteName}`];
-  const them = allBenchmarks[`them/${suiteName}`];
+  const us = allBenchmarks[`${suiteName}/rnqc`];
+  const them = allBenchmarks[`${suiteName}/`];
   if (!us || !them) {
     throw new Error(`Could not load benchmarks for ${suiteName}`);
   }
@@ -81,6 +81,11 @@ const loadBenchmarks = (suiteName: string): Benchmarks => {
 // can't use dynamic strings here, as require() is compile-time
 /* eslint-disable @typescript-eslint/no-require-imports */
 const allBenchmarks: Record<string, Record<string, BenchmarkFn>> = {
-  'rnqc/random': require('../benchmarks/rnqc/random').default,
-  'them/random': require('../benchmarks/them/random').default,
+  // random
+  'random/rnqc': require('../benchmarks/random/rnqc').default,
+  'random/crypto-browserify': require('../benchmarks/random/crypto-browserify')
+    .default,
+  // pbkdf2
+  'pbkdf2/rnqc': require('../benchmarks/pbkdf2/rnqc').default,
+  'pbkdf2/noble': require('../benchmarks/pbkdf2/noble').default,
 };

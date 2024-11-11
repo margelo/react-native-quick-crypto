@@ -1,7 +1,7 @@
 import React from 'react';
 import { View, Text, StyleSheet, TouchableOpacity } from 'react-native';
 import BouncyCheckbox from 'react-native-bouncy-checkbox';
-import type { BenchmarkResult } from '../types/Results';
+import type { BenchmarkResult } from '../types/results';
 import { useNavigation } from '@react-navigation/native';
 import { calculateTimes, formatNumber } from '../benchmarks/utils';
 import { colors } from '../styles/colors';

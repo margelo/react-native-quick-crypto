@@ -1,6 +1,6 @@
 import { useCallback, useState } from 'react';
-import type { BenchmarkSuite, Suites } from '../types/Suite';
-import type { SuiteResults, BenchmarkResult } from '../types/Results';
+import type { BenchmarkSuite, Suites } from '../types/suite';
+import type { SuiteResults, BenchmarkResult } from '../types/results';
 
 export const useBenchmarksRun = (
   runCount: number,

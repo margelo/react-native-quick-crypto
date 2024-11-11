@@ -1,4 +1,4 @@
-import type { Suites, TestSuite } from '../types/Suite';
+import type { Suites, TestSuite } from '../types/suite';
 
 export const TestsContext: Suites<TestSuite> = {};
 

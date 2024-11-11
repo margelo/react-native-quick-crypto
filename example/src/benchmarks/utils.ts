@@ -1,4 +1,4 @@
-import type { BenchmarkResult } from '../types/Results';
+import type { BenchmarkResult } from '../types/results';
 
 export const formatNumber = (
   n: number,

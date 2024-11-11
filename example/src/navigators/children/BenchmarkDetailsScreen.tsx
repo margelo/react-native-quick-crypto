@@ -4,7 +4,7 @@ import {
   BenchmarkResultItem,
   BenchmarkResultItemHeader,
 } from '../../components/BenchmarkResultItem';
-import type { BenchmarkResult } from '../../types/Results';
+import type { BenchmarkResult } from '../../types/results';
 
 // @ts-expect-error - not dealing with navigation types rn
 type BenchmarkDetailsScreenProps = { route };

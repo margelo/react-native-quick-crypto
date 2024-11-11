@@ -131,7 +131,7 @@ This document attempts to describe the implementation status of Crypto APIs/Inte
   * ❌ `crypto.privateEncrypt(privateKey, buffer)`
   * ❌ `crypto.publicDecrypt(key, buffer)`
   * ❌ `crypto.publicEncrypt(key, buffer)`
-  * ❌ `crypto.randomBytes(size[, callback])`
+  * ✅ `crypto.randomBytes(size[, callback])`
   * ✅ `crypto.randomFillSync(buffer[, offset][, size])`
   * ✅ `crypto.randomFill(buffer[, offset][, size], callback)`
   * ✅ `crypto.randomInt([min, ]max[, callback])`

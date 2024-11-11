@@ -1,6 +1,6 @@
 import { useCallback, useState } from 'react';
-import type { Suites, TestSuite } from '../types/Suite';
-import type { Stats, SuiteResults, TestResult } from '../types/Results';
+import type { Suites, TestSuite } from '../types/suite';
+import type { Stats, SuiteResults, TestResult } from '../types/results';
 
 export const defaultStats = {
   start: new Date(),
