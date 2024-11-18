@@ -134,6 +134,7 @@ android {
             "**/libreact_nativemodule_core.so",
             "**/libturbomodulejsijni.so",
             "**/MANIFEST.MF",
+            "**/libreactnative.so",
     ]
   }
 
