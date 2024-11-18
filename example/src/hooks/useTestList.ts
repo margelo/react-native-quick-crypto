@@ -9,7 +9,6 @@ import '../testing/tests/HmacTests/HmacTests';
 import '../testing/tests/HashTests/HashTests';
 import '../testing/tests/CipherTests/CipherDecipher';
 import '../testing/tests/CipherTests/CipherivDecipheriv';
-import '../testing/tests/CipherTests/test398';
 import '../testing/tests/CipherTests/PublicCipherTests';
 import '../testing/tests/CipherTests/generateKey';
 import '../testing/tests/CipherTests/GenerateKeyPairTests';
@@ -22,6 +21,7 @@ import '../testing/tests/webcryptoTests/generateKey';
 import '../testing/tests/webcryptoTests/encrypt_decrypt';
 import '../testing/tests/webcryptoTests/import_export';
 import '../testing/tests/webcryptoTests/sign_verify';
+import '../testing/tests/issues/specific_issues';
 
 export const useTestList = (): [
   Suites,
