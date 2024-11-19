@@ -15,12 +15,12 @@ describe('specific issues', () => {
       'MFkwEwYHKoZIzj0CAQYIKoZIzj0DAQcDQgAENlFpbMBNfCY6Lhj9A/clefyxJVIXGJ0y6CcZ/cbbyyebvN6T0aNPvpQyFdUwRtYvFHlYbqIZOM8AoqdPcnSMIA==';
 
     const publicKey = getPublicKeyInPEMFormat(publicKeySpkiBase64);
-    console.log('\n' + publicKey);
+    // console.log('\n' + publicKey);
     const encrypted = encrypt({
       payload: JSON.stringify({ a: 1 }),
       publicKey,
     });
-    console.log({ encrypted });
+    // console.log({ encrypted });
     const { response: decrypted } = decrypt({
       response: encrypted,
       secretKey: encrypted.secretKey,
@@ -28,14 +28,11 @@ describe('specific issues', () => {
     expect(decrypted).to.equal({ a: 1 });
   });
 
-
   const largeKey = crypto.randomBytes(64);
-
   it('issue 505 - craftzdog buffer', () => {
     // an instance of CraftzdogBuffer
     testBufferConversion('test', largeKey);
   });
-
   it('issue 505 - feross buffer', () => {
     // not an instance of CraftzdogBuffer
     const largeKeyFeross = FerossBuffer.from(largeKey.toString('base64'), 'base64');
@@ -127,7 +124,7 @@ const getPublicKeyInPEMFormat = (key: string): ArrayBuffer => {
 
 // -----------------------------------------------------------------------------
 // #505
-const testBufferConversion = (clearText: string, largeKey: Buffer) => {
+const testBufferConversion = (clearText: string, largeKey: CraftzdogBuffer | FerossBuffer) => {
   const key = largeKey.subarray(32);
   const iv = crypto.randomBytes(16);
   const cipher = crypto.createCipheriv('aes-256-cbc', key, iv);

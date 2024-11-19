@@ -1,5 +1,6 @@
-import { Buffer } from '@craftzdog/react-native-buffer';
-import { Buffer as SBuffer } from 'safe-buffer';
+import { Buffer as CraftzdogBuffer } from '@craftzdog/react-native-buffer';
+import { Buffer as SafeBuffer } from 'safe-buffer';
+import { Buffer as FerossBuffer } from 'buffer';
 import type {
   AnyAlgorithm,
   DeriveBitsAlgorithm,
@@ -14,12 +15,13 @@ import type {
 } from './keys';
 import { type CipherKey } from 'crypto'; // @types/node
 
-export type BufferLike = ArrayBuffer | Buffer | SBuffer | ArrayBufferView;
+export type BufferLike = ArrayBuffer | CraftzdogBuffer | FerossBuffer | SafeBuffer | ArrayBufferView;
 export type BinaryLike =
   | string
   | ArrayBuffer
-  | Buffer
-  | SBuffer
+  | CraftzdogBuffer
+  | FerossBuffer
+  | SafeBuffer
   | TypedArray
   | DataView;
 export type BinaryLikeNode = CipherKey | BinaryLike;
@@ -175,27 +177,28 @@ export const kEmptyObject = Object.freeze(Object.create(null));
 //   return slowCases(enc);
 // }
 
-export function toArrayBuffer(buf: Buffer | SBuffer): ArrayBuffer {
-  if (Buffer.isBuffer(buf) && buf?.buffer?.slice) {
-    return buf.buffer.slice(buf.byteOffset, buf.byteOffset + buf.byteLength);
+export function toArrayBuffer(buf: CraftzdogBuffer | FerossBuffer | SafeBuffer | ArrayBufferView): ArrayBuffer {
+  if (CraftzdogBuffer.isBuffer(buf) || FerossBuffer.isBuffer(buf) || ArrayBuffer.isView(buf)) {
+    if (buf?.buffer?.slice) {
+      return buf.buffer.slice(buf.byteOffset, buf.byteOffset + buf.byteLength);
+    } else {
+      return buf.buffer;
+    }
   }
   const ab = new ArrayBuffer(buf.length);
   const view = new Uint8Array(ab);
   for (let i = 0; i < buf.length; ++i) {
-    view[i] = SBuffer.isBuffer(buf) ? buf.readUInt8(i) : buf[i]!;
+    view[i] = SafeBuffer.isBuffer(buf) ? buf.readUInt8(i) : buf[i]!;
   }
   return ab;
 }
 
 export function bufferLikeToArrayBuffer(buf: BufferLike): ArrayBuffer {
-  if (Buffer.isBuffer(buf)) {
-    return buf.buffer;
-  }
-  if (SBuffer.isBuffer(buf)) {
+  if (CraftzdogBuffer.isBuffer(buf) || FerossBuffer.isBuffer(buf) || SafeBuffer.isBuffer(buf)) {
     return toArrayBuffer(buf);
   }
   if (ArrayBuffer.isView(buf)) {
-    return buf.buffer;
+    return toArrayBuffer(buf);
   }
   return buf;
 }
@@ -212,7 +215,7 @@ export function binaryLikeToArrayBuffer(
       );
     }
 
-    const buffer = Buffer.from(input, encoding);
+    const buffer = CraftzdogBuffer.from(input, encoding);
 
     return buffer.buffer.slice(
       buffer.byteOffset,
@@ -221,14 +224,14 @@ export function binaryLikeToArrayBuffer(
   }
 
   // Buffer
-  if (Buffer.isBuffer(input)) {
+  if (CraftzdogBuffer.isBuffer(input) || FerossBuffer.isBuffer(input) || SafeBuffer.isBuffer(input)) {
     return toArrayBuffer(input);
   }
 
   // ArrayBufferView
   // TODO add further binary types to BinaryLike, UInt8Array and so for have this array as property
   if (ArrayBuffer.isView(input)) {
-    return input.buffer;
+    return toArrayBuffer(input);
   }
 
   // ArrayBuffer
@@ -257,7 +260,7 @@ export function binaryLikeToArrayBuffer(
 }
 
 export function ab2str(buf: ArrayBuffer, encoding: string = 'hex') {
-  return Buffer.from(buf).toString(encoding);
+  return CraftzdogBuffer.from(buf).toString(encoding);
 }
 
 export function validateString(str: unknown, name?: string): str is string {
@@ -544,7 +547,7 @@ export const validateMaxBufferLength = (
   name: string,
 ): void => {
   const length =
-    typeof data === 'string' || data instanceof SBuffer
+    typeof data === 'string' || data instanceof SafeBuffer
       ? data.length
       : data.byteLength;
   if (length > kMaxBufferLength) {
@@ -664,8 +667,8 @@ export const validateByteLength = (
   target: number,
 ) => {
   if (
-    (SBuffer.isBuffer(buf) && buf.length !== target) ||
-    (buf as Buffer | ArrayBuffer | ArrayBufferView).byteLength !== target
+    (SafeBuffer.isBuffer(buf) && buf.length !== target) ||
+    (buf as CraftzdogBuffer | ArrayBuffer | ArrayBufferView).byteLength !== target
   ) {
     throw lazyDOMException(
       `${name} must contain exactly ${target} bytes`,
@@ -756,7 +759,7 @@ export const bigIntArrayToUnsignedInt = (
 };
 
 export function abvToArrayBuffer(buffer: ArrayBufferView): ArrayBuffer {
-  if (Buffer.isBuffer(buffer)) {
+  if (CraftzdogBuffer.isBuffer(buffer)) {
     return buffer.buffer;
   }
   if (ArrayBuffer.isView(buffer)) {
