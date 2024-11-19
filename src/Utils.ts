@@ -15,7 +15,12 @@ import type {
 } from './keys';
 import { type CipherKey } from 'crypto'; // @types/node
 
-export type BufferLike = ArrayBuffer | CraftzdogBuffer | FerossBuffer | SafeBuffer | ArrayBufferView;
+export type BufferLike =
+  | ArrayBuffer
+  | CraftzdogBuffer
+  | FerossBuffer
+  | SafeBuffer
+  | ArrayBufferView;
 export type BinaryLike =
   | string
   | ArrayBuffer
@@ -177,8 +182,14 @@ export const kEmptyObject = Object.freeze(Object.create(null));
 //   return slowCases(enc);
 // }
 
-export function toArrayBuffer(buf: CraftzdogBuffer | FerossBuffer | SafeBuffer | ArrayBufferView): ArrayBuffer {
-  if (CraftzdogBuffer.isBuffer(buf) || FerossBuffer.isBuffer(buf) || ArrayBuffer.isView(buf)) {
+export function toArrayBuffer(
+  buf: CraftzdogBuffer | FerossBuffer | SafeBuffer | ArrayBufferView,
+): ArrayBuffer {
+  if (
+    CraftzdogBuffer.isBuffer(buf) ||
+    FerossBuffer.isBuffer(buf) ||
+    ArrayBuffer.isView(buf)
+  ) {
     if (buf?.buffer?.slice) {
       return buf.buffer.slice(buf.byteOffset, buf.byteOffset + buf.byteLength);
     } else {
@@ -194,7 +205,11 @@ export function toArrayBuffer(buf: CraftzdogBuffer | FerossBuffer | SafeBuffer |
 }
 
 export function bufferLikeToArrayBuffer(buf: BufferLike): ArrayBuffer {
-  if (CraftzdogBuffer.isBuffer(buf) || FerossBuffer.isBuffer(buf) || SafeBuffer.isBuffer(buf)) {
+  if (
+    CraftzdogBuffer.isBuffer(buf) ||
+    FerossBuffer.isBuffer(buf) ||
+    SafeBuffer.isBuffer(buf)
+  ) {
     return toArrayBuffer(buf);
   }
   if (ArrayBuffer.isView(buf)) {
@@ -224,7 +239,11 @@ export function binaryLikeToArrayBuffer(
   }
 
   // Buffer
-  if (CraftzdogBuffer.isBuffer(input) || FerossBuffer.isBuffer(input) || SafeBuffer.isBuffer(input)) {
+  if (
+    CraftzdogBuffer.isBuffer(input) ||
+    FerossBuffer.isBuffer(input) ||
+    SafeBuffer.isBuffer(input)
+  ) {
     return toArrayBuffer(input);
   }
 
@@ -668,7 +687,8 @@ export const validateByteLength = (
 ) => {
   if (
     (SafeBuffer.isBuffer(buf) && buf.length !== target) ||
-    (buf as CraftzdogBuffer | ArrayBuffer | ArrayBufferView).byteLength !== target
+    (buf as CraftzdogBuffer | ArrayBuffer | ArrayBufferView).byteLength !==
+      target
   ) {
     throw lazyDOMException(
       `${name} must contain exactly ${target} bytes`,
