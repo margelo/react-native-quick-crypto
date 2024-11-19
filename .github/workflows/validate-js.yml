@@ -88,11 +88,11 @@ jobs:
           bun install
 
       - name: Run ESLint/Prettier (rnqc)
-        run: bun lint-fix && bun format-fix
+        run: bun lint:fix && bun format:fix
 
       - name: Run ESLint/Prettier (example)
         run:
-          cd example && bun lint-fix && bun format-fix
+          cd example && bun lint:fix && bun format:fix
 
       - name: Verify no files have changed after auto-fix
         run: git diff --exit-code HEAD -- . ':(exclude)bun.lockb'
