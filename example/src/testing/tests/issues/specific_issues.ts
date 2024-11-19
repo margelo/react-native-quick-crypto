@@ -9,7 +9,6 @@ import { expect } from 'chai';
 // tests
 
 describe('specific issues', () => {
-
   it('issue 398', () => {
     const publicKeySpkiBase64 =
       'MFkwEwYHKoZIzj0CAQYIKoZIzj0DAQcDQgAENlFpbMBNfCY6Lhj9A/clefyxJVIXGJ0y6CcZ/cbbyyebvN6T0aNPvpQyFdUwRtYvFHlYbqIZOM8AoqdPcnSMIA==';
@@ -35,12 +34,13 @@ describe('specific issues', () => {
   });
   it('issue 505 - feross buffer', () => {
     // not an instance of CraftzdogBuffer
-    const largeKeyFeross = FerossBuffer.from(largeKey.toString('base64'), 'base64');
+    const largeKeyFeross = FerossBuffer.from(
+      largeKey.toString('base64'),
+      'base64',
+    );
     testBufferConversion('test', largeKeyFeross);
-
   });
 });
-
 
 // -----------------------------------------------------------------------------
 // #398
@@ -102,7 +102,9 @@ const decrypt = ({
 
   const encryptedPayload = FerossBuffer.from(PAYLOAD, 'base64');
   let decrypted = decipher.update(
-    FerossBuffer.from(encryptedPayload.subarray(0, encryptedPayload.length - 16)),
+    FerossBuffer.from(
+      encryptedPayload.subarray(0, encryptedPayload.length - 16),
+    ),
   );
   decrypted = FerossBuffer.concat([decrypted, decipher.final()]);
 
@@ -124,18 +126,25 @@ const getPublicKeyInPEMFormat = (key: string): ArrayBuffer => {
 
 // -----------------------------------------------------------------------------
 // #505
-const testBufferConversion = (clearText: string, largeKey: CraftzdogBuffer | FerossBuffer) => {
+const testBufferConversion = (
+  clearText: string,
+  largeKey: CraftzdogBuffer | FerossBuffer,
+) => {
   const key = largeKey.subarray(32);
   const iv = crypto.randomBytes(16);
   const cipher = crypto.createCipheriv('aes-256-cbc', key, iv);
   const enc = CraftzdogBuffer.concat([
-    cipher.update(CraftzdogBuffer.from(clearText)) as unknown as CraftzdogBuffer,
+    cipher.update(
+      CraftzdogBuffer.from(clearText),
+    ) as unknown as CraftzdogBuffer,
     cipher.final() as unknown as CraftzdogBuffer,
   ]);
   const encB64 = enc.toString('base64');
   const decipher = crypto.createDecipheriv('aes-256-cbc', key, iv);
   const dec = CraftzdogBuffer.concat([
-    decipher.update(CraftzdogBuffer.from(encB64, 'base64')) as unknown as CraftzdogBuffer,
+    decipher.update(
+      CraftzdogBuffer.from(encB64, 'base64'),
+    ) as unknown as CraftzdogBuffer,
     decipher.final() as unknown as CraftzdogBuffer,
   ]);
   expect(dec.toString()).to.equal(clearText);
