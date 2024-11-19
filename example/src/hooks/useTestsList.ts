@@ -1,5 +1,6 @@
 import { useState, useCallback } from 'react';
-import type { Suites, TestSuite } from '../types/suite';
+import type { Suites } from '../types/suite';
+import type { TestSuite } from '../types/tests';
 import { TestsContext } from '../tests/util';
 
 import '../tests/pbkdf2/pbkdf2_tests';

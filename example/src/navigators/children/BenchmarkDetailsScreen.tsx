@@ -31,7 +31,7 @@ export const BenchmarkDetailsScreen = ({
         style={styles.scroll}
         contentContainerStyle={styles.scrollContent}>
         {results.map((it, index: number) => {
-          return <BenchmarkResultItem key={index} result={it} />;
+          return <BenchmarkResultItem key={index} benchmarkResult={it} />;
         })}
       </ScrollView>
     </SafeAreaView>

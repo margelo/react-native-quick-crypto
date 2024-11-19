@@ -15,13 +15,19 @@ export type TestResult = {
 };
 
 export type BenchmarkResult = {
-  type: 'faster' | 'slower' | 'grouping';
-  description: string;
-  errorMsg?: string;
-  indentation: number;
-  us: number;
-  them: number;
   suiteName: string;
+  results: FnResult[];
+};
+
+export type FnResult = {
+  errorMsg?: string;
+  libName: string;
+  challenger?: string;
+  notes?: string;
+  fnName: string;
+  time: number;
+  us?: number;
+  type?: 'faster' | 'slower';
 };
 
 export type Stats = {

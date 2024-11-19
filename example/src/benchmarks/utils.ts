@@ -1,5 +1,3 @@
-import type { BenchmarkResult } from '../types/results';
-
 export const formatNumber = (
   n: number,
   decimals: number,
@@ -11,8 +9,8 @@ export const formatNumber = (
   return n.toFixed(decimals) + suffix;
 };
 
-export const calculateTimes = (result: BenchmarkResult): number => {
-  return result.type === 'faster'
-    ? 1 + (result.them - result.us) / result.us
-    : 1 + (result.us - result.them) / result.them;
+export const calculateTimes = (typ: 'faster' | 'slower', us: number, them: number): number => {
+  return typ === 'faster'
+    ? 1 + (them - us) / us
+    : 1 + (us - them) / them;
 };

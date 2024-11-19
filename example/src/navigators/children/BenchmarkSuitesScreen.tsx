@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useContext } from 'react';
 import {
   View,
   Text,
@@ -6,18 +6,32 @@ import {
   SafeAreaView,
   ScrollView,
   TextInput,
+  FlatList,
 } from 'react-native';
 import { Button } from '../../components/Button';
 import { BenchmarkItem } from '../../components/BenchmarkItem';
-import { useBenchmarksList } from '../../hooks/useBenchmarksList';
-import { useBenchmarksRun } from '../../hooks/useBenchmarksRun';
 import { colors } from '../../styles/colors';
+import { BenchmarkContext } from '../../components/BenchmarkContext';
+// import type { FnResult } from '../../types/results';
 
 export const BenchmarkSuitesScreen = () => {
-  const [runCount, setRunCount] = useState<number>(1000);
-  const [benchmarks, toggle, clearAll, checkAll] = useBenchmarksList();
-  const [results, runBenchmarks] = useBenchmarksRun(runCount);
+  const {
+    suites,
+    toggle,
+    clearAll,
+    checkAll,
+    runCount,
+    setRunCount,
+    results,
+    // setResults,
+    // setRunning,
+    // addResult,
+  } = useContext(BenchmarkContext);
   let totalCount = 0;
+
+  const runBenchmarks = () => {
+    console.log('runBenchmarks');
+  };
 
   return (
     <SafeAreaView style={styles.mainContainer}>
@@ -33,22 +47,24 @@ export const BenchmarkSuitesScreen = () => {
         <View style={styles.option}></View>
       </View>
       <View style={styles.benchmarkList}>
-        <ScrollView style={styles.scrollView}>
-          {Object.entries(benchmarks).map(([suiteName, suite], index) => {
-            const suiteBenchmarkCount = Object.keys(suite.benchmarks).length;
+        <FlatList
+          data={suites}
+          renderItem={({ item, index }) => {
+            const suiteBenchmarkCount = Object.keys(item.benchmarks).length;
             totalCount += suiteBenchmarkCount;
             return (
               <BenchmarkItem
                 key={index.toString()}
-                description={suiteName}
-                value={suite.value}
+                description={item.name}
+                value={item.value}
                 count={suiteBenchmarkCount}
-                results={results[suiteName]?.results || []}
+                results={results[item.name]?.results || []}
+                running={item.running}
                 onToggle={toggle}
               />
             );
-          })}
-        </ScrollView>
+          }}
+        />
       </View>
       <View>
         <Text style={styles.totalCount}>{totalCount}</Text>
@@ -59,7 +75,7 @@ export const BenchmarkSuitesScreen = () => {
         <Button
           title="Run"
           onPress={() => {
-            runBenchmarks(benchmarks);
+            runBenchmarks();
           }}
           color="green"
         />

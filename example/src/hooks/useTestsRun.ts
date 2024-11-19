@@ -1,5 +1,6 @@
 import { useCallback, useState } from 'react';
-import type { Suites, TestSuite } from '../types/suite';
+import type { Suites } from '../types/suite';
+import type { TestSuite } from '../types/tests';
 import type { Stats, SuiteResults, TestResult } from '../types/results';
 
 export const defaultStats = {
