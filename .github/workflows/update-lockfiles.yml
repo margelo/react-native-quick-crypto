@@ -1,8 +1,14 @@
 name: 'Update Lockfiles (bun.lockb + Podfile.lock)'
 
 on:
+  push:
+    branches:
+      - main
+    paths:
+      - ".github/workflows/update-lockfiles.yml"
   pull_request:
     paths:
+      - ".github/workflows/update-lockfiles.yml"
       - "package.json"
       - "example/package.json"
 
@@ -12,7 +18,7 @@ permissions:
 jobs:
   update-lockfiles:
     name: "Update lockfiles (bun.lockb + Podfile.lock)"
-    # if: github.actor == 'dependabot[bot]'
+    if: github.actor == 'dependabot[bot]'
     runs-on: macOS-latest
     steps:
       - name: Checkout Code
