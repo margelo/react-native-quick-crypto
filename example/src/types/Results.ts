@@ -14,12 +14,12 @@ export type TestResult = {
   suiteName: string;
 };
 
-export type BenchmarkResult = {
-  suiteName: string;
-  results: FnResult[];
-};
+// export type BenchmarkResult = {
+//   suiteName: string;
+//   results: FnResult[];
+// };
 
-export type FnResult = {
+export type BenchmarkResult = {
   errorMsg?: string;
   libName: string;
   challenger?: string;

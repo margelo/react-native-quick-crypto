@@ -1,47 +1,32 @@
-import React, { useContext } from 'react';
+import React, { useState } from 'react';
 import {
   View,
   Text,
   StyleSheet,
   SafeAreaView,
-  ScrollView,
   TextInput,
   FlatList,
 } from 'react-native';
-import { Button } from '../../components/Button';
 import { BenchmarkItem } from '../../components/BenchmarkItem';
 import { colors } from '../../styles/colors';
-import { BenchmarkContext } from '../../components/BenchmarkContext';
-// import type { FnResult } from '../../types/results';
+import { useBenchmarks } from '../../hooks/useBenchmarks';
+import { Button } from '../../components/Button';
 
 export const BenchmarkSuitesScreen = () => {
-  const {
-    suites,
-    toggle,
-    clearAll,
-    checkAll,
-    runCount,
-    setRunCount,
-    results,
-    // setResults,
-    // setRunning,
-    // addResult,
-  } = useContext(BenchmarkContext);
-  let totalCount = 0;
+  const [suites, toggle, checkAll, clearAll, runBenchmarks] = useBenchmarks();
+  const [multiplier, setMultiplier] = useState<number>(1);
 
-  const runBenchmarks = () => {
-    console.log('runBenchmarks');
-  };
+  let totalCount = 0;
 
   return (
     <SafeAreaView style={styles.mainContainer}>
       <View style={styles.options}>
         <View style={styles.option}>
-          <Text style={styles.optionLabel}>run count</Text>
+          <Text style={styles.optionLabel}>run count multiplier</Text>
           <TextInput
             style={styles.textInput}
-            value={runCount.toString()}
-            onChangeText={(s: string) => setRunCount(parseInt(s, 10))}
+            value={multiplier.toString()}
+            onChangeText={(s: string) => setMultiplier(parseInt(s, 10))}
           />
         </View>
         <View style={styles.option}></View>
@@ -50,17 +35,14 @@ export const BenchmarkSuitesScreen = () => {
         <FlatList
           data={suites}
           renderItem={({ item, index }) => {
-            const suiteBenchmarkCount = Object.keys(item.benchmarks).length;
+            const suiteBenchmarkCount = item.benchmarks.length;
             totalCount += suiteBenchmarkCount;
             return (
               <BenchmarkItem
                 key={index.toString()}
-                description={item.name}
-                value={item.value}
-                count={suiteBenchmarkCount}
-                results={results[item.name]?.results || []}
-                running={item.running}
-                onToggle={toggle}
+                suite={item}
+                toggle={() => toggle(item.name)}
+                multiplier={multiplier}
               />
             );
           }}
@@ -74,9 +56,7 @@ export const BenchmarkSuitesScreen = () => {
         <Button title="Clear All" onPress={clearAll} />
         <Button
           title="Run"
-          onPress={() => {
-            runBenchmarks();
-          }}
+          onPress={() => runBenchmarks()}
           color="green"
         />
       </View>
@@ -126,7 +106,6 @@ const styles = StyleSheet.create({
     alignContent: 'space-around',
     justifyContent: 'space-around',
   },
-  scrollView: {},
   totalCount: {
     fontSize: 12,
     fontWeight: 'bold',

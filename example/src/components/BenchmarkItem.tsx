@@ -1,43 +1,47 @@
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import { View, Text, StyleSheet, TouchableOpacity, ActivityIndicator } from 'react-native';
 import BouncyCheckbox from 'react-native-bouncy-checkbox';
-import type { BenchmarkResult } from '../types/results';
 import { useNavigation } from '@react-navigation/native';
 // import { calculateTimes, formatNumber } from '../benchmarks/utils';
 import { colors } from '../styles/colors';
+import type { BenchmarkSuite } from '../benchmarks/benchmarks';
 
 type BenchmarkItemProps = {
-  description: string;
-  value: boolean;
-  count: number;
-  results: BenchmarkResult[];
-  running: boolean;
-  onToggle: (description: string) => void;
+  suite: BenchmarkSuite;
+  toggle: () => void;
+  multiplier: number;
 };
 
 export const BenchmarkItem: React.FC<BenchmarkItemProps> = ({
-  description,
-  value,
-  count,
-  results,
-  running,
-  onToggle,
+  suite,
+  toggle,
+  multiplier,
 }: BenchmarkItemProps) => {
-  // console.log('BenchmarkItem', description, running);
+  const [running, setRunning] = useState(false);
   const navigation = useNavigation();
+
+  useEffect(() => {
+    setRunning(suite.state === 'running');
+  }, [suite.state]);
+
+  useEffect(() => {
+    if (running) {
+      suite.run(multiplier);
+      suite.state = 'done';
+      setRunning(false);
+    }
+  }, [running]);
 
   return (
     <View style={styles.container}>
       {running ? (
-        <View style={styles.checkbox}>
-          <ActivityIndicator size="small" color={colors.white} />
+        <View style={styles.spinner}>
+          <ActivityIndicator size="small" color={colors.blue} />
         </View>
       ) : (
         <BouncyCheckbox
-          isChecked={value}
-          onPress={() => {
-            onToggle(description);
-          }}
+          isChecked={suite.enabled}
+          onPress={() => toggle()}
           disableText={true}
           fillColor={colors.blue}
           style={styles.checkbox}
@@ -48,18 +52,18 @@ export const BenchmarkItem: React.FC<BenchmarkItemProps> = ({
         onPress={() => {
           // @ts-expect-error - not dealing with navigation types rn
           navigation.navigate('BenchmarkDetailsScreen', {
-            results,
-            suiteName: description,
+            results: suite.results,
+            suiteName: suite.name,
           });
         }}>
         <Text style={styles.label} numberOfLines={1}>
-          {description} {running ? '(running)' : '(not running)'}
+          {suite.name}
         </Text>
         {/* <Text style={[styles.times, timesStyle]} numberOfLines={1}>
           {formatNumber(times, 2, 'x')}
         </Text> */}
         <Text style={styles.count} numberOfLines={1}>
-          {count}
+          {suite.benchmarks.length}
         </Text>
       </TouchableOpacity>
     </View>
@@ -80,6 +84,10 @@ const styles = StyleSheet.create({
   },
   checkbox: {
     transform: [{ scaleX: 0.7 }, { scaleY: 0.7 }],
+  },
+  spinner: {
+    padding: 2.5,
+    transform: [{ scaleX: 0.8 }, { scaleY: 0.8 }],
   },
   label: {
     fontSize: 12,
