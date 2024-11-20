@@ -1,6 +1,11 @@
-import type { BenchmarkFn, Challenger, ImportedBenchmark, SuiteState } from "../types/benchmarks";
-import type { BenchmarkResult } from "../types/results";
-
+import type {
+  BenchmarkFn,
+  BenchmarkResult,
+  Challenger,
+  ImportedBenchmark,
+  SuiteState,
+} from '../types/benchmarks';
+import { calculateTimes } from './utils';
 
 export class BenchmarkSuite {
   name: string;
@@ -21,6 +26,10 @@ export class BenchmarkSuite {
     this.benchmarks.push(new Benchmark(imported));
   }
 
+  addResult(result: BenchmarkResult) {
+    this.results.push(result);
+  }
+
   run(multiplier: number = 1) {
     this.results = [];
     this.benchmarks.forEach(benchmark => {
@@ -28,7 +37,6 @@ export class BenchmarkSuite {
     });
   }
 }
-
 
 export class Benchmark {
   name: string; // function name
@@ -47,7 +55,20 @@ export class Benchmark {
     const usTime = this.timeFn(this.us!, multiplier);
     this.them.forEach(them => {
       const themTime = this.timeFn(them.fn, multiplier);
-      console.log(suite.name, this.name, 'us', usTime, 'them', themTime, them.name);
+      const type = usTime < themTime ? 'faster' : 'slower';
+      const times = calculateTimes(usTime, themTime);
+      const result: BenchmarkResult = {
+        errorMsg: undefined,
+        challenger: them.name,
+        notes: them.notes,
+        runCount: this.runCount * multiplier,
+        fnName: this.name,
+        time: themTime,
+        us: usTime,
+        type,
+        times,
+      };
+      suite.addResult(result);
     });
   }
 

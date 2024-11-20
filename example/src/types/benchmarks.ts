@@ -14,3 +14,15 @@ export type Challenger = {
   notes: string;
   fn: BenchmarkFn;
 };
+
+export type BenchmarkResult = {
+  errorMsg?: string;
+  challenger?: string;
+  notes?: string;
+  runCount: number;
+  fnName: string;
+  time: number;
+  us: number;
+  type: 'faster' | 'slower';
+  times: number;
+};

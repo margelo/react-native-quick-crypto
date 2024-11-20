@@ -15,6 +15,7 @@ export const useBenchmarks = (): [
   useEffect(() => {
     const newSuites: BenchmarkSuite[] = [];
     newSuites.push(random());
+    newSuites.push(pbkdf2());
     setSuites(newSuites);
   }, []);
 
@@ -52,5 +53,12 @@ const random = () => {
   const suite = new BenchmarkSuite('random');
   suite.addBenchmark(require('../benchmarks/random/randomBytes').randomBytes10);
   suite.addBenchmark(require('../benchmarks/random/randomBytes').randomBytes1024);
+  return suite;
+};
+
+const pbkdf2 = () => {
+  const suite = new BenchmarkSuite('pbkdf2');
+  suite.addBenchmark(require('../benchmarks/pbkdf2/pbkdf2').pbkdf2_256_1_32_async);
+  suite.addBenchmark(require('../benchmarks/pbkdf2/pbkdf2').pbkdf2_256_1_32_sync);
   return suite;
 };

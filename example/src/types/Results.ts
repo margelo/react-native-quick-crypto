@@ -1,4 +1,4 @@
-export type SuiteResults<T = TestResult | BenchmarkResult> = {
+export type SuiteResults<T = TestResult> = {
   [key: string]: SuiteResult<T>;
 };
 
@@ -12,22 +12,6 @@ export type TestResult = {
   errorMsg?: string;
   indentation: number;
   suiteName: string;
-};
-
-// export type BenchmarkResult = {
-//   suiteName: string;
-//   results: FnResult[];
-// };
-
-export type BenchmarkResult = {
-  errorMsg?: string;
-  libName: string;
-  challenger?: string;
-  notes?: string;
-  fnName: string;
-  time: number;
-  us?: number;
-  type?: 'faster' | 'slower';
 };
 
 export type Stats = {

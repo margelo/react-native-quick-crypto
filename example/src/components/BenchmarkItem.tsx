@@ -5,6 +5,7 @@ import { useNavigation } from '@react-navigation/native';
 // import { calculateTimes, formatNumber } from '../benchmarks/utils';
 import { colors } from '../styles/colors';
 import type { BenchmarkSuite } from '../benchmarks/benchmarks';
+import { calculateTimes, formatNumber } from '../benchmarks/utils';
 
 type BenchmarkItemProps = {
   suite: BenchmarkSuite;
@@ -32,6 +33,15 @@ export const BenchmarkItem: React.FC<BenchmarkItemProps> = ({
     }
   }, [running]);
 
+  const usTime = suite.results.reduce((acc, result) => {
+    return acc + result.us;
+  }, 0);
+  const themTime = suite.results.reduce((acc, result) => {
+    return acc + result.time;
+  }, 0);
+  const times = calculateTimes(usTime, themTime);
+  const timesStyle = usTime < themTime ? styles.faster : styles.slower;
+
   return (
     <View style={styles.container}>
       {running ? (
@@ -53,15 +63,15 @@ export const BenchmarkItem: React.FC<BenchmarkItemProps> = ({
           // @ts-expect-error - not dealing with navigation types rn
           navigation.navigate('BenchmarkDetailsScreen', {
             results: suite.results,
-            suiteName: suite.name,
+            name: suite.name,
           });
         }}>
         <Text style={styles.label} numberOfLines={1}>
           {suite.name}
         </Text>
-        {/* <Text style={[styles.times, timesStyle]} numberOfLines={1}>
+        <Text style={[styles.times, timesStyle]} numberOfLines={1}>
           {formatNumber(times, 2, 'x')}
-        </Text> */}
+        </Text>
         <Text style={styles.count} numberOfLines={1}>
           {suite.benchmarks.length}
         </Text>
@@ -91,24 +101,24 @@ const styles = StyleSheet.create({
   },
   label: {
     fontSize: 12,
-    flex: 8,
+    flex: 3,
   },
   touchable: {
     flex: 1,
     flexDirection: 'row',
   },
-  // faster: {
-  //   color: colors.green,
-  // },
-  // slower: {
-  //   color: colors.red,
-  // },
-  // times: {
-  //   fontSize: 12,
-  //   fontWeight: 'bold',
-  //   flex: 1,
-  //   textAlign: 'right',
-  // },
+  faster: {
+    color: colors.green,
+  },
+  slower: {
+    color: colors.red,
+  },
+  times: {
+    fontSize: 12,
+    fontWeight: 'bold',
+    flex: 1,
+    textAlign: 'right',
+  },
   count: {
     fontSize: 12,
     fontWeight: 'bold',
