@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { View, Text, StyleSheet, TouchableOpacity, ActivityIndicator } from 'react-native';
+import { View, Text, StyleSheet, TouchableOpacity, ActivityIndicator, InteractionManager } from 'react-native';
 import BouncyCheckbox from 'react-native-bouncy-checkbox';
 import { useNavigation } from '@react-navigation/native';
 // import { calculateTimes, formatNumber } from '../benchmarks/utils';
@@ -21,18 +21,37 @@ export const BenchmarkItem: React.FC<BenchmarkItemProps> = ({
   const [running, setRunning] = useState(false);
   const navigation = useNavigation();
 
+  // suite runs
   useEffect(() => {
     setRunning(suite.state === 'running');
   }, [suite.state]);
 
   useEffect(() => {
-    if (running) {
+    const run = async () => {
+      await waitForGc();
       suite.run(multiplier);
       suite.state = 'done';
       setRunning(false);
-    }
+    };
+    if (running) run();
   }, [running]);
 
+  function delay(ms: number): Promise<void> {
+    return new Promise((resolve) => setTimeout(resolve, ms))
+  }
+
+  async function waitForGc(): Promise<void> {
+    await delay(500)
+    return new Promise((resolve) => {
+      requestAnimationFrame(() => {
+        InteractionManager.runAfterInteractions(() => {
+          resolve()
+        })
+      })
+    })
+  }
+
+  // results handling
   const usTime = suite.results.reduce((acc, result) => {
     return acc + result.us;
   }, 0);
@@ -42,6 +61,7 @@ export const BenchmarkItem: React.FC<BenchmarkItemProps> = ({
   const times = calculateTimes(usTime, themTime);
   const timesStyle = usTime < themTime ? styles.faster : styles.slower;
 
+  // render component
   return (
     <View style={styles.container}>
       {running ? (

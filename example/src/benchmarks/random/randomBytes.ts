@@ -5,7 +5,7 @@ import type { ImportedBenchmark } from '../../types/benchmarks';
 
 export const randomBytes10: ImportedBenchmark = {
   name: 'randomBytes10',
-  runCount: 100000,
+  runCount: 10000,
   us: () => rnqc.randomBytes(10),
   them: [
     {
@@ -18,7 +18,7 @@ export const randomBytes10: ImportedBenchmark = {
 
 export const randomBytes1024: ImportedBenchmark = {
   name: 'randomBytes1024',
-  runCount: 50000,
+  runCount: 5000,
   us: () => rnqc.randomBytes(1024),
   them: [
     {
