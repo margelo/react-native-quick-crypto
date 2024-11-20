@@ -1,6 +1,6 @@
 import { useCallback, useState } from 'react';
-import type { Suites, TestSuite } from '../types/Suite';
-import type { Stats, SuiteResults, TestResult } from '../types/Results';
+import type { TestSuites } from '../types/tests';
+import type { Stats, SuiteResults, TestResult } from '../types/results';
 
 export const defaultStats = {
   start: new Date(),
@@ -15,7 +15,7 @@ export const defaultStats = {
 
 export const useTestsRun = (): [
   SuiteResults<TestResult>,
-  (suites: Suites<TestSuite>) => void,
+  (suites: TestSuites) => void,
 ] => {
   const [results, setResults] = useState<SuiteResults<TestResult>>({});
 
@@ -32,7 +32,7 @@ export const useTestsRun = (): [
     [setResults],
   );
 
-  const runTests = (suites: Suites<TestSuite>) => {
+  const runTests = (suites: TestSuites) => {
     setResults({});
     run(addResult, suites);
   };
@@ -42,7 +42,7 @@ export const useTestsRun = (): [
 
 const run = (
   addTestResult: (testResult: TestResult) => void,
-  suites: Suites<TestSuite> = {},
+  suites: TestSuites = {},
 ) => {
   const stats: Stats = { ...defaultStats };
   stats.start = new Date();
@@ -87,7 +87,7 @@ const run = (
 
 // const run = (
 //   addTestResult: (testResult: TestResult) => void,
-//   tests: Suites<TestSuite> = {},
+//   tests: Suites = {},
 // ) => {
 //   const {
 //     EVENT_RUN_BEGIN,

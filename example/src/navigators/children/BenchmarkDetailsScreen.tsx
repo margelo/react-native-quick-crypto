@@ -1,39 +1,42 @@
 import React from 'react';
-import { SafeAreaView, ScrollView, StyleSheet, Text, View } from 'react-native';
+import { FlatList, SafeAreaView, StyleSheet, Text, View } from 'react-native';
 import {
   BenchmarkResultItem,
   BenchmarkResultItemHeader,
 } from '../../components/BenchmarkResultItem';
-import type { BenchmarkResult } from '../../types/Results';
+import type { BenchmarkResult } from '../../types/benchmarks';
 
 // @ts-expect-error - not dealing with navigation types rn
 type BenchmarkDetailsScreenProps = { route };
 
 type RouteParams = {
   results: BenchmarkResult[];
-  suiteName: string;
+  name: string;
 };
 
 export const BenchmarkDetailsScreen = ({
   route,
 }: BenchmarkDetailsScreenProps) => {
-  const { results, suiteName }: RouteParams = route.params;
+  const { results, name }: RouteParams = route.params;
 
   return (
     <SafeAreaView style={styles.container}>
       <View>
-        <Text style={styles.title}>
-          Benchmark Results for '{suiteName}' Suite
-        </Text>
+        <Text style={styles.title}>Benchmark Results for '{name}' Suite</Text>
       </View>
       <BenchmarkResultItemHeader />
-      <ScrollView
+      <FlatList
         style={styles.scroll}
-        contentContainerStyle={styles.scrollContent}>
-        {results.map((it, index: number) => {
-          return <BenchmarkResultItem key={index} result={it} />;
-        })}
-      </ScrollView>
+        contentContainerStyle={styles.scrollContent}
+        data={results}
+        renderItem={({
+          item,
+          index,
+        }: {
+          item: BenchmarkResult;
+          index: number;
+        }) => <BenchmarkResultItem key={index} result={item} />}
+      />
     </SafeAreaView>
   );
 };

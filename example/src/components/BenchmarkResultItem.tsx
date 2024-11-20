@@ -1,7 +1,7 @@
 import React from 'react';
 import { View, Text, StyleSheet } from 'react-native';
-import type { BenchmarkResult } from '../types/Results';
-import { calculateTimes, formatNumber } from '../benchmarks/utils';
+import type { BenchmarkResult } from '../types/benchmarks';
+import { formatNumber } from '../benchmarks/utils';
 import { colors } from '../styles/colors';
 
 type BenchmarkResultItemProps = {
@@ -24,21 +24,30 @@ export const BenchmarkResultItem: React.FC<BenchmarkResultItemProps> = ({
   result,
 }: BenchmarkResultItemProps) => {
   const emoji = result.type === 'faster' ? '🐇' : '🐢';
-  const times = calculateTimes(result);
   const timesType = result.type === 'faster' ? 'faster' : 'slower';
   const timesStyle = timesType === 'faster' ? styles.faster : styles.slower;
 
   return (
-    <View style={styles.itemContainer}>
-      <Text style={styles.text}>{emoji}</Text>
-      <Text style={[styles.text, styles.description]}>
-        {result.description}
-      </Text>
-      <Text style={[styles.value, timesStyle]}>
-        {formatNumber(times, 2, 'x')}
-      </Text>
-      <Text style={styles.value}>{formatNumber(result.us, 2, 'ms')}</Text>
-      <Text style={styles.value}>{formatNumber(result.them, 2, 'ms')}</Text>
+    <View>
+      <View style={styles.itemContainer}>
+        <Text style={styles.text}>{emoji}</Text>
+        <Text style={[styles.text, styles.description]}>{result.fnName}</Text>
+        <Text style={[styles.value, timesStyle]}>
+          {formatNumber(result.times, 2, 'x')}
+        </Text>
+        <Text style={styles.value}>{formatNumber(result.us, 2, 'ms')}</Text>
+        <Text style={styles.value}>{formatNumber(result.time, 2, 'ms')}</Text>
+      </View>
+      <View style={styles.subContainer}>
+        <Text style={[styles.sub, styles.subLabel]}>challenger</Text>
+        <Text style={[styles.sub, styles.subValue]}>{result.challenger}</Text>
+        <Text style={[styles.sub, styles.subLabel]}>runs</Text>
+        <Text style={[styles.sub, styles.subValue]}>{result.runCount}</Text>
+      </View>
+      <View style={styles.subContainer}>
+        <Text style={[styles.sub, styles.subLabel]}>notes</Text>
+        <Text style={[styles.sub, styles.notes]}>{result.notes}</Text>
+      </View>
     </View>
   );
 };
@@ -46,7 +55,11 @@ export const BenchmarkResultItem: React.FC<BenchmarkResultItemProps> = ({
 const styles = StyleSheet.create({
   itemContainer: {
     flexDirection: 'row',
-    padding: 5,
+    padding: 4,
+  },
+  subContainer: {
+    flexDirection: 'row',
+    paddingHorizontal: 4,
   },
   text: {
     flexShrink: 1,
@@ -76,5 +89,20 @@ const styles = StyleSheet.create({
   slower: {
     color: colors.red,
     fontWeight: 'bold',
+  },
+  sub: {
+    fontSize: 8,
+  },
+  subLabel: {
+    flex: 1,
+    fontWeight: 'bold',
+    marginRight: 5,
+  },
+  subValue: {
+    flex: 2,
+  },
+  notes: {
+    paddingTop: 2,
+    flex: 5,
   },
 });

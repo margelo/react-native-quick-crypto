@@ -1939,7 +1939,7 @@ SPEC CHECKSUMS:
   NitroModules: 69a6524b390ed8ca220e15f00bcfbd2f7c24472e
   OpenSSL-Universal: f8a9c4fdab7e21cb70bda471c269e86e9212439c
   QuickCrypto: 452b6fe586fa5c0a93e7ccca0a619387763d5adf
-  RCT-Folly: bf5c0376ffe4dd2cf438dcf86db385df9fdce648
+  RCT-Folly: 84578c8756030547307e4572ab1947de1685c599
   RCTDeprecation: fde92935b3caa6cb65cbff9fbb7d3a9867ffb259
   RCTRequired: 75c6cee42d21c1530a6f204ba32ff57335d19007
   RCTTypeSafety: 7e6fe47bfb693c50d4669db1a480ca5331795f5b

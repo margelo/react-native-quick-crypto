@@ -4,7 +4,7 @@ import BouncyCheckbox from 'react-native-bouncy-checkbox';
 import { CorrectResultItem } from '../../components/CorrectResultItem';
 import { IncorrectResultItem } from '../../components/IncorrectResultItem';
 import { Suite } from '../../components/Suite';
-import type { TestResult } from '../../types/Results';
+import type { TestResult } from '../../types/results';
 import { colors } from '../../styles/colors';
 
 type RouteParams = {

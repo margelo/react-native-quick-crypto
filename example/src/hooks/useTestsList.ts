@@ -1,5 +1,5 @@
 import { useState, useCallback } from 'react';
-import type { Suites, TestSuite } from '../types/Suite';
+import type { TestSuites } from '../types/tests';
 import { TestsContext } from '../tests/util';
 
 import '../tests/pbkdf2/pbkdf2_tests';
@@ -23,12 +23,12 @@ import '../tests/random/random_tests';
 // import '../tests/webcryptoTests/sign_verify';
 
 export const useTestsList = (): [
-  Suites<TestSuite>,
+  TestSuites,
   (description: string) => void,
   () => void,
   () => void,
 ] => {
-  const [suites, setSuites] = useState<Suites<TestSuite>>(TestsContext);
+  const [suites, setSuites] = useState<TestSuites>(TestsContext);
 
   const toggle = useCallback(
     (description: string) => {

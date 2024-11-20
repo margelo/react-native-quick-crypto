@@ -6,7 +6,6 @@
 .expo/
 
 # VSCode
-.vscode/
 jsconfig.json
 
 # Xcode
@@ -186,3 +185,5 @@ tsconfig.tsbuildinfo
 
 # development stuffs
 example0/
+*scratch*
+

@@ -4,51 +4,54 @@ import {
   Text,
   StyleSheet,
   SafeAreaView,
-  ScrollView,
   TextInput,
+  FlatList,
 } from 'react-native';
-import { Button } from '../../components/Button';
 import { BenchmarkItem } from '../../components/BenchmarkItem';
-import { useBenchmarksList } from '../../hooks/useBenchmarksList';
-import { useBenchmarksRun } from '../../hooks/useBenchmarksRun';
 import { colors } from '../../styles/colors';
+import { useBenchmarks } from '../../hooks/useBenchmarks';
+import { Button } from '../../components/Button';
 
 export const BenchmarkSuitesScreen = () => {
-  const [runCount, setRunCount] = useState<number>(1000);
-  const [benchmarks, toggle, clearAll, checkAll] = useBenchmarksList();
-  const [results, runBenchmarks] = useBenchmarksRun(runCount);
+  const [suites, toggle, checkAll, clearAll, runBenchmarks] = useBenchmarks();
+  const [multiplier, setMultiplier] = useState<number>(1);
+
   let totalCount = 0;
 
   return (
     <SafeAreaView style={styles.mainContainer}>
       <View style={styles.options}>
         <View style={styles.option}>
-          <Text style={styles.optionLabel}>run count</Text>
+          <Text style={styles.optionLabel}>run count multiplier</Text>
           <TextInput
             style={styles.textInput}
-            value={runCount.toString()}
-            onChangeText={(s: string) => setRunCount(parseInt(s, 10))}
+            value={multiplier.toString()}
+            onChangeText={(s: string) => setMultiplier(parseInt(s, 10))}
           />
         </View>
+        <Text style={styles.optionCaption}>
+          Each benchmark has a distinct run count. If you want to really
+          exercise the device, you can increase this number to multiply the run
+          count of each benchmark. Recommended values are 1-5.
+        </Text>
         <View style={styles.option}></View>
       </View>
       <View style={styles.benchmarkList}>
-        <ScrollView style={styles.scrollView}>
-          {Object.entries(benchmarks).map(([suiteName, suite], index) => {
-            const suiteBenchmarkCount = Object.keys(suite.benchmarks).length;
+        <FlatList
+          data={suites}
+          renderItem={({ item, index }) => {
+            const suiteBenchmarkCount = item.benchmarks.length;
             totalCount += suiteBenchmarkCount;
             return (
               <BenchmarkItem
                 key={index.toString()}
-                description={suiteName}
-                value={suite.value}
-                count={suiteBenchmarkCount}
-                results={results[suiteName]?.results || []}
-                onToggle={toggle}
+                suite={item}
+                toggle={() => toggle(item.name)}
+                multiplier={multiplier}
               />
             );
-          })}
-        </ScrollView>
+          }}
+        />
       </View>
       <View>
         <Text style={styles.totalCount}>{totalCount}</Text>
@@ -56,13 +59,7 @@ export const BenchmarkSuitesScreen = () => {
       <View style={styles.menu}>
         <Button title="Check All" onPress={checkAll} />
         <Button title="Clear All" onPress={clearAll} />
-        <Button
-          title="Run"
-          onPress={() => {
-            runBenchmarks(benchmarks);
-          }}
-          color="green"
-        />
+        <Button title="Run" onPress={() => runBenchmarks()} color="green" />
       </View>
     </SafeAreaView>
   );
@@ -73,12 +70,8 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   options: {
-    flex: 2,
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-around',
-    // paddingTop: 5,
-    maxHeight: 45,
+    flex: 1,
+    padding: 5,
     borderBottomWidth: 1,
     borderColor: colors.gray,
   },
@@ -88,6 +81,12 @@ const styles = StyleSheet.create({
   optionLabel: {
     fontSize: 10,
     fontWeight: 'bold',
+    paddingRight: 5,
+    alignSelf: 'center',
+  },
+  optionCaption: {
+    fontSize: 8,
+    color: colors.darkgray,
     paddingRight: 5,
     alignSelf: 'center',
   },
@@ -110,7 +109,6 @@ const styles = StyleSheet.create({
     alignContent: 'space-around',
     justifyContent: 'space-around',
   },
-  scrollView: {},
   totalCount: {
     fontSize: 12,
     fontWeight: 'bold',
