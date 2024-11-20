@@ -29,6 +29,12 @@ export const BenchmarkSuitesScreen = () => {
             onChangeText={(s: string) => setMultiplier(parseInt(s, 10))}
           />
         </View>
+        <Text style={styles.optionCaption}>
+          Each benchmark has a distinct run count.  If you want
+          to really exercise the device, you can increase this number to
+          multiply the run count of each benchmark.
+          Recommended values are 1-5.
+        </Text>
         <View style={styles.option}></View>
       </View>
       <View style={styles.benchmarkList}>
@@ -69,12 +75,8 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   options: {
-    flex: 2,
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-around',
-    // paddingTop: 5,
-    maxHeight: 45,
+    flex: 1,
+    padding: 5,
     borderBottomWidth: 1,
     borderColor: colors.gray,
   },
@@ -84,6 +86,12 @@ const styles = StyleSheet.create({
   optionLabel: {
     fontSize: 10,
     fontWeight: 'bold',
+    paddingRight: 5,
+    alignSelf: 'center',
+  },
+  optionCaption: {
+    fontSize: 8,
+    color: colors.darkgray,
     paddingRight: 5,
     alignSelf: 'center',
   },
