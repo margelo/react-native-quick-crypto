@@ -10,7 +10,5 @@ export const formatNumber = (
 };
 
 export const calculateTimes = (us: number, them: number): number => {
-  return us < them
-    ? 1 + (them - us) / us
-    : 1 + (us - them) / them;
+  return us < them ? 1 + (them - us) / us : 1 + (us - them) / them;
 };

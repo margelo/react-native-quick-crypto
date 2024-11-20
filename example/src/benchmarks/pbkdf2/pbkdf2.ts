@@ -14,12 +14,14 @@ export const pbkdf2_256_1_32_async: ImportedBenchmark = {
     {
       name: '@noble/hashes/pbkdf2',
       notes: '',
-      fn: () => noble.pbkdf2Async(sha256, 'password', 'salt', { c: 1, dkLen: 32 }),
+      fn: () =>
+        noble.pbkdf2Async(sha256, 'password', 'salt', { c: 1, dkLen: 32 }),
     },
     {
       name: 'browserify/pbkdf2',
       notes: '',
-      fn: () => browserify.pbkdf2('password', 'salt', 1, 32, 'sha256', () => {}),
+      fn: () =>
+        browserify.pbkdf2('password', 'salt', 1, 32, 'sha256', () => {}),
     },
   ],
 };
@@ -27,7 +29,8 @@ export const pbkdf2_256_1_32_async: ImportedBenchmark = {
 export const pbkdf2_256_1_32_sync: ImportedBenchmark = {
   name: 'pbkdf2_256_1_32_sync',
   runCount: 1000,
-  us: () => rnqc.pbkdf2Sync('password', 'salt', 1, 32, 'sha256' as HashAlgorithm),
+  us: () =>
+    rnqc.pbkdf2Sync('password', 'salt', 1, 32, 'sha256' as HashAlgorithm),
   them: [
     {
       name: '@noble/hashes/pbkdf2',

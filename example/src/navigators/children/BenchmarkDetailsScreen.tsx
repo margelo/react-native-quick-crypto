@@ -22,18 +22,20 @@ export const BenchmarkDetailsScreen = ({
   return (
     <SafeAreaView style={styles.container}>
       <View>
-        <Text style={styles.title}>
-          Benchmark Results for '{name}' Suite
-        </Text>
+        <Text style={styles.title}>Benchmark Results for '{name}' Suite</Text>
       </View>
       <BenchmarkResultItemHeader />
       <FlatList
         style={styles.scroll}
         contentContainerStyle={styles.scrollContent}
         data={results}
-        renderItem={({item, index}: {item: BenchmarkResult, index: number}) => (
-          <BenchmarkResultItem key={index} result={item} />
-        )}
+        renderItem={({
+          item,
+          index,
+        }: {
+          item: BenchmarkResult;
+          index: number;
+        }) => <BenchmarkResultItem key={index} result={item} />}
       />
     </SafeAreaView>
   );

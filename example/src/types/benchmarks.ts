@@ -3,7 +3,7 @@ export type ImportedBenchmark = {
   runCount: number;
   us: BenchmarkFn;
   them: Challenger[];
-}
+};
 
 export type SuiteState = 'idle' | 'running' | 'done';
 

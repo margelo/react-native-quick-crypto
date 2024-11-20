@@ -1,5 +1,12 @@
 import React, { useEffect, useState } from 'react';
-import { View, Text, StyleSheet, TouchableOpacity, ActivityIndicator, InteractionManager } from 'react-native';
+import {
+  View,
+  Text,
+  StyleSheet,
+  TouchableOpacity,
+  ActivityIndicator,
+  InteractionManager,
+} from 'react-native';
 import BouncyCheckbox from 'react-native-bouncy-checkbox';
 import { useNavigation } from '@react-navigation/native';
 // import { calculateTimes, formatNumber } from '../benchmarks/utils';
@@ -37,18 +44,18 @@ export const BenchmarkItem: React.FC<BenchmarkItemProps> = ({
   }, [running]);
 
   function delay(ms: number): Promise<void> {
-    return new Promise((resolve) => setTimeout(resolve, ms))
+    return new Promise(resolve => setTimeout(resolve, ms));
   }
 
   async function waitForGc(): Promise<void> {
-    await delay(500)
-    return new Promise((resolve) => {
+    await delay(500);
+    return new Promise(resolve => {
       requestAnimationFrame(() => {
         InteractionManager.runAfterInteractions(() => {
-          resolve()
-        })
-      })
-    })
+          resolve();
+        });
+      });
+    });
   }
 
   // results handling

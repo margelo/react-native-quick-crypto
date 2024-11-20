@@ -3,7 +3,6 @@ import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import { BenchmarkSuitesScreen } from './BenchmarkSuitesScreen';
 import { BenchmarkDetailsScreen } from './BenchmarkDetailsScreen';
 
-
 const Stack = createNativeStackNavigator();
 
 export const BenchmarkStack = () => {

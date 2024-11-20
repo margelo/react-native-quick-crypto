@@ -1,6 +1,6 @@
 export type TestSuites = {
   [key: string]: TestSuite;
-}
+};
 
 export interface TestSuite {
   value: boolean;

@@ -31,9 +31,7 @@ export const BenchmarkResultItem: React.FC<BenchmarkResultItemProps> = ({
     <View>
       <View style={styles.itemContainer}>
         <Text style={styles.text}>{emoji}</Text>
-        <Text style={[styles.text, styles.description]}>
-          {result.fnName}
-        </Text>
+        <Text style={[styles.text, styles.description]}>{result.fnName}</Text>
         <Text style={[styles.value, timesStyle]}>
           {formatNumber(result.times, 2, 'x')}
         </Text>
@@ -106,5 +104,5 @@ const styles = StyleSheet.create({
   notes: {
     paddingTop: 2,
     flex: 5,
-  }
+  },
 });

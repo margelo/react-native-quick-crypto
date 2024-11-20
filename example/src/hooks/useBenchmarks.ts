@@ -1,6 +1,6 @@
 /* eslint-disable @typescript-eslint/no-require-imports */
-import { useEffect, useState } from "react";
-import { BenchmarkSuite } from "../benchmarks/benchmarks";
+import { useEffect, useState } from 'react';
+import { BenchmarkSuite } from '../benchmarks/benchmarks';
 
 export const useBenchmarks = (): [
   BenchmarkSuite[],
@@ -21,30 +21,34 @@ export const useBenchmarks = (): [
 
   const updateSuites = (fn: (suite: BenchmarkSuite) => void) => {
     if (!suites.length) return;
-    const copy = [ ...suites ];
+    const copy = [...suites];
     copy.forEach(fn);
     setSuites(copy);
   };
 
-  const toggle = (name: string) => updateSuites(suite => {
-    if (suite.name === name) {
-      suite.enabled = !suite.enabled;
-    }
-  });
+  const toggle = (name: string) =>
+    updateSuites(suite => {
+      if (suite.name === name) {
+        suite.enabled = !suite.enabled;
+      }
+    });
 
-  const checkAll = () => updateSuites(suite => {
-    suite.enabled = true;
-  });
+  const checkAll = () =>
+    updateSuites(suite => {
+      suite.enabled = true;
+    });
 
-  const clearAll = () => updateSuites(suite => {
-    suite.enabled = false;
-  });
+  const clearAll = () =>
+    updateSuites(suite => {
+      suite.enabled = false;
+    });
 
-  const runBenchmarks = () => updateSuites(suite => {
-    if (suite.enabled && suite.state !== 'running') {
-      suite.state = 'running';
-    }
-  });
+  const runBenchmarks = () =>
+    updateSuites(suite => {
+      if (suite.enabled && suite.state !== 'running') {
+        suite.state = 'running';
+      }
+    });
 
   return [suites, toggle, checkAll, clearAll, runBenchmarks];
 };
@@ -52,13 +56,19 @@ export const useBenchmarks = (): [
 const random = () => {
   const suite = new BenchmarkSuite('random');
   suite.addBenchmark(require('../benchmarks/random/randomBytes').randomBytes10);
-  suite.addBenchmark(require('../benchmarks/random/randomBytes').randomBytes1024);
+  suite.addBenchmark(
+    require('../benchmarks/random/randomBytes').randomBytes1024,
+  );
   return suite;
 };
 
 const pbkdf2 = () => {
   const suite = new BenchmarkSuite('pbkdf2');
-  suite.addBenchmark(require('../benchmarks/pbkdf2/pbkdf2').pbkdf2_256_1_32_async);
-  suite.addBenchmark(require('../benchmarks/pbkdf2/pbkdf2').pbkdf2_256_1_32_sync);
+  suite.addBenchmark(
+    require('../benchmarks/pbkdf2/pbkdf2').pbkdf2_256_1_32_async,
+  );
+  suite.addBenchmark(
+    require('../benchmarks/pbkdf2/pbkdf2').pbkdf2_256_1_32_sync,
+  );
   return suite;
 };

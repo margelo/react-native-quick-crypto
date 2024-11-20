@@ -11,7 +11,7 @@ export const randomBytes10: ImportedBenchmark = {
     {
       name: 'crypto-browserify',
       notes: `crypto-browserify uses 'globalThis.crypto' under the hood, which on RN is this library, if polyfilled.  So this benchmark doesn't make a lot of sense.`,
-      fn: () => browserify.randomBytes(10)
+      fn: () => browserify.randomBytes(10),
     },
   ],
 };
@@ -24,7 +24,7 @@ export const randomBytes1024: ImportedBenchmark = {
     {
       name: 'crypto-browserify',
       notes: `crypto-browserify uses 'globalThis.crypto' under the hood, which on RN is this library, if polyfilled.  So this benchmark doesn't make a lot of sense.`,
-      fn: () => browserify.randomBytes(1024)
+      fn: () => browserify.randomBytes(1024),
     },
   ],
 };

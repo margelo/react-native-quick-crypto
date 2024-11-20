@@ -30,10 +30,9 @@ export const BenchmarkSuitesScreen = () => {
           />
         </View>
         <Text style={styles.optionCaption}>
-          Each benchmark has a distinct run count.  If you want
-          to really exercise the device, you can increase this number to
-          multiply the run count of each benchmark.
-          Recommended values are 1-5.
+          Each benchmark has a distinct run count. If you want to really
+          exercise the device, you can increase this number to multiply the run
+          count of each benchmark. Recommended values are 1-5.
         </Text>
         <View style={styles.option}></View>
       </View>
@@ -60,11 +59,7 @@ export const BenchmarkSuitesScreen = () => {
       <View style={styles.menu}>
         <Button title="Check All" onPress={checkAll} />
         <Button title="Clear All" onPress={clearAll} />
-        <Button
-          title="Run"
-          onPress={() => runBenchmarks()}
-          color="green"
-        />
+        <Button title="Run" onPress={() => runBenchmarks()} color="green" />
       </View>
     </SafeAreaView>
   );
