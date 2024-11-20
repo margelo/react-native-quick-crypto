@@ -1,4 +1,4 @@
-import { abvToArrayBuffer } from './Utils';
+import { bufferLikeToArrayBuffer } from './Utils';
 import { NativeQuickCrypto } from './NativeQuickCrypto/NativeQuickCrypto';
 import { Buffer } from '@craftzdog/react-native-buffer';
 import type { RandomBuffer } from './Utils';
@@ -46,7 +46,7 @@ export function randomFill(buffer: RandomBuffer, ...rest: unknown[]): void {
   }
 
   random
-    .randomFill(abvToArrayBuffer(buffer), offset, size)
+    .randomFill(bufferLikeToArrayBuffer(buffer), offset, size)
     .then(
       (res: ArrayBuffer) => {
         callback(null, res);
@@ -69,7 +69,7 @@ export function randomFillSync(
   size?: number,
 ) {
   return random.randomFillSync(
-    abvToArrayBuffer(buffer),
+    bufferLikeToArrayBuffer(buffer),
     offset,
     size ?? buffer.byteLength,
   );

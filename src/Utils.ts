@@ -775,13 +775,6 @@ export const bigIntArrayToUnsignedInt = (
   return result;
 };
 
-export function abvToArrayBuffer(buffer: RandomBuffer): ArrayBuffer {
-  if (CraftzdogBuffer.isBuffer(buffer) || ArrayBuffer.isView(buffer)) {
-    return buffer.buffer;
-  }
-  return buffer;
-}
-
 // TODO: these used to be shipped by crypto-browserify in quickcrypto v0.6
 // could instead fetch from OpenSSL if needed and handle breaking changes
 export const getHashes = () => [
