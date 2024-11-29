@@ -1,6 +1,6 @@
 {
   "name": "react-native-quick-crypto-example",
-  "version": "1.0.0",
+  "version": "1.0.0-beta.5",
   "private": true,
   "type": "module",
   "scripts": {
@@ -16,7 +16,8 @@
     "start": "react-native start",
     "pods": "RCT_NEW_ARCH_ENABLED=1 bundle exec pod install --project-directory=ios",
     "build:android": "cd android && ./gradlew assembleDebug --no-daemon --console=plain -PreactNativeArchitectures=arm64-v8a",
-    "build:ios": "cd ios && xcodebuild -workspace QuickCrytpExample.xcworkspace -scheme QuickCrytpExample -configuration Debug -sdk iphonesimulator CC=clang CPLUSPLUS=clang++ LD=clang LDPLUSPLUS=clang++ GCC_OPTIMIZATION_LEVEL=0 GCC_PRECOMPILE_PREFIX_HEADER=YES ASSETCATALOG_COMPILER_OPTIMIZATION=time DEBUG_INFORMATION_FORMAT=dwarf COMPILER_INDEX_STORE_ENABLE=NO"
+    "build:ios": "cd ios && xcodebuild -workspace QuickCrytpExample.xcworkspace -scheme QuickCrytpExample -configuration Debug -sdk iphonesimulator CC=clang CPLUSPLUS=clang++ LD=clang LDPLUSPLUS=clang++ GCC_OPTIMIZATION_LEVEL=0 GCC_PRECOMPILE_PREFIX_HEADER=YES ASSETCATALOG_COMPILER_OPTIMIZATION=time DEBUG_INFORMATION_FORMAT=dwarf COMPILER_INDEX_STORE_ENABLE=NO",
+    "release": "release-it"
   },
   "dependencies": {
     "@craftzdog/react-native-buffer": "6.0.5",
@@ -33,7 +34,7 @@
     "react-native-bouncy-checkbox": "4.0.1",
     "react-native-nitro-modules": "0.14.0",
     "react-native-quick-base64": "2.1.2",
-    "react-native-quick-crypto": "workspace:*",
+    "react-native-quick-crypto": "1.0.0-beta.5",
     "react-native-safe-area-context": "4.14.0",
     "react-native-screens": "3.35.0",
     "react-native-vector-icons": "^10.1.0",
@@ -72,5 +73,22 @@
   },
   "engines": {
     "node": ">=18"
+  },
+  "release-it": {
+    "npm": {
+      "publish": false
+    },
+    "git": false,
+    "github": {
+      "release": false
+    },
+    "plugins": {
+      "@release-it/bumper": {
+        "out": {
+          "file": "package.json",
+          "path": ["dependencies.react-native-quick-crypto"]
+        }
+      }
+    }
   }
 }
