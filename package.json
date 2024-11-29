@@ -1,5 +1,5 @@
 {
-  "version": "1.0.0-beta.3",
+  "version": "1.0.0-beta.4",
   "scripts": {
     "check-all": "./scripts/clang-format.sh",
     "clean": "bun --filter='*' clean",
@@ -14,8 +14,7 @@
     "format:fix": "bun --filter='*' format:fix",
     "prepare": "bun --filter=\"react-native-quick-crypto\" prepare",
     "pre-release": "./scripts/prepare-release.sh",
-    "release-git": "bun pre-release && release-it",
-    "release-npm": "bun pre-release && cd packages/react-native-quick-crypto && release-it"
+    "release": "bun pre-release && release-it"
   },
   "workspaces": [
     "packages/react-native-quick-crypto",
@@ -66,8 +65,7 @@
             }
           ]
         }
-      },
-      "@release-it-plugins/workspaces": true
+      }
     }
   }
 }

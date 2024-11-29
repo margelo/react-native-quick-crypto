@@ -36,7 +36,7 @@
     "format": "prettier --check \"**/*.{js,ts,tsx}\"",
     "format:fix": "prettier --write \"**/*.{js,ts,tsx}\"",
     "prepare": "bun clean && bob build",
-    "release-it": "bun prepare && release-it",
+    "release": "release-it",
     "specs": "nitro-codegen",
     "test": "jest"
   },
