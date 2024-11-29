@@ -1,6 +1,6 @@
 {
   "name": "react-native-quick-crypto",
-  "version": "1.0.0-beta.4",
+  "version": "1.0.0-beta.5",
   "description": "A fast implementation of Node's `crypto` module written in C/C++ JSI",
   "type": "module",
   "main": "lib/commonjs/index",
@@ -106,7 +106,11 @@
     "github": {
       "release": false
     },
-    "plugins": {}
+    "plugins": {
+      "@release-it/bumper": {
+        "out": "package.json"
+      }
+    }
   },
   "react-native-builder-bob": {
     "source": "src",

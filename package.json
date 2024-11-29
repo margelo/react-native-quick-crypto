@@ -1,5 +1,5 @@
 {
-  "version": "1.0.0-beta.4",
+  "version": "1.0.0-beta.5",
   "scripts": {
     "check-all": "./scripts/clang-format.sh",
     "clean": "bun --filter='*' clean",
@@ -14,7 +14,7 @@
     "format:fix": "bun --filter='*' format:fix",
     "prepare": "bun --filter=\"react-native-quick-crypto\" prepare",
     "pre-release": "./scripts/prepare-release.sh",
-    "release": "bun pre-release && release-it"
+    "release": "bun pre-release && release-it --github.release=false"
   },
   "workspaces": [
     "packages/react-native-quick-crypto",
@@ -39,32 +39,8 @@
       "release": true
     },
     "plugins": {
-      "@release-it/conventional-changelog": {
-        "preset": {
-          "name": "conventionalcommits",
-          "types": [
-            {
-              "type": "feat",
-              "section": "✨ Features"
-            },
-            {
-              "type": "perf",
-              "section": "💨 Performance Improvements"
-            },
-            {
-              "type": "fix",
-              "section": "🐛 Bug Fixes"
-            },
-            {
-              "type": "chore(deps)",
-              "section": "🛠️ Dependency Upgrades"
-            },
-            {
-              "type": "docs",
-              "section": "📚 Documentation"
-            }
-          ]
-        }
+      "@release-it/bumper": {
+        "out": "package.json"
       }
     }
   }
