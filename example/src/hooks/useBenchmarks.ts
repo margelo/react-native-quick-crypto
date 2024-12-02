@@ -20,7 +20,12 @@ export const useBenchmarks = (): [
     const newSuites: BenchmarkSuite[] = [];
     newSuites.push(new BenchmarkSuite('ed', ed));
     newSuites.push(new BenchmarkSuite('pbkdf2', pbkdf2));
-    newSuites.push(new BenchmarkSuite('random', random));
+    newSuites.push(
+      new BenchmarkSuite('random', random, {
+        'browserify/randombytes':
+          'polyfilled with RNQC, so a somewhat senseless benchmark',
+      }),
+    );
     setSuites(newSuites);
   }, []);
 

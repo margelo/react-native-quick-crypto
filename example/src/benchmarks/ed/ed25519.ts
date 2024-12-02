@@ -4,13 +4,12 @@ import { ed25519 as noble } from '@noble/curves/ed25519';
 import type { BenchFn } from '../../types/benchmarks';
 
 const TIME_MS = 1000;
+const message = 'hello world';
+const buffer = Buffer.from(message);
+const ab = buffer.buffer;
+const arr = new Uint8Array(buffer);
 
 const ed25519_sign_verify_async: BenchFn = async () => {
-  const message = 'hello world';
-  const buffer = Buffer.from(message);
-  const ab = buffer.buffer;
-  const arr = new Uint8Array(buffer);
-
   // rnqc setup
   const ed = new rnqc.Ed('ed25519', {});
   await ed.generateKeyPair();
@@ -45,11 +44,6 @@ const ed25519_sign_verify_async: BenchFn = async () => {
 };
 
 const ed25519_sign_verify_sync: BenchFn = () => {
-  const message = 'hello world';
-  const buffer = Buffer.from(message);
-  const ab = buffer.buffer;
-  const arr = new Uint8Array(buffer);
-
   // rnqc setup
   const ed = new rnqc.Ed('ed25519', {});
   ed.generateKeyPairSync();

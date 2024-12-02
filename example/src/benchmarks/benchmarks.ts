@@ -7,13 +7,19 @@ export class BenchmarkSuite {
   benchmarks: BenchFn[];
   state: SuiteState;
   results: BenchmarkResult[] = [];
+  notes?: Record<string, string>;
 
-  constructor(name: string, benchmarks: BenchFn[]) {
+  constructor(
+    name: string,
+    benchmarks: BenchFn[],
+    notes?: Record<string, string>,
+  ) {
     this.name = name;
     this.enabled = false;
     this.state = 'idle';
     this.benchmarks = benchmarks;
     this.results = [];
+    this.notes = notes;
   }
 
   addResult(result: BenchmarkResult) {
@@ -37,10 +43,11 @@ export class BenchmarkSuite {
     const themTasks = tasks.filter(t => t.name !== 'rnqc');
 
     themTasks.map(them => {
+      const notes = this.notes?.[them.name] ?? '';
       this.addResult({
         errorMsg: undefined,
         challenger: them.name,
-        notes: '',
+        notes,
         benchName: b.name,
         them: them.result,
         us: us?.result,

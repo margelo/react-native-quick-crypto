@@ -61,6 +61,12 @@ export const BenchmarkResultItem: React.FC<BenchmarkResultItemProps> = ({
         <Text style={[styles.sub, styles.subLabel]}>challenger</Text>
         <Text style={[styles.sub, styles.subValue]}>{result.challenger}</Text>
       </View>
+      {result.notes !== '' && (
+        <View style={styles.subContainer}>
+          <Text style={[styles.sub, styles.subLabel]}>notes</Text>
+          <Text style={[styles.sub, styles.subValue]}>{result.notes}</Text>
+        </View>
+      )}
     </View>
   );
 };

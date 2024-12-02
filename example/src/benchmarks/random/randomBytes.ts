@@ -16,7 +16,7 @@ const randomBytes10: BenchFn = () => {
     .add('rnqc', () => {
       rnqc.randomBytes(10);
     })
-    .add('crypto-browserify', () => browserify.randomBytes(10));
+    .add('browserify/randombytes', () => browserify.randomBytes(10));
 
   bench.warmupTime = 100;
   return bench;
@@ -30,7 +30,7 @@ const randomBytes1024: BenchFn = () => {
 
   bench
     .add('rnqc', () => rnqc.randomBytes(1024))
-    .add('crypto-browserify', () => browserify.randomBytes(1024));
+    .add('browserify/randombytes', () => browserify.randomBytes(1024));
   bench.warmupTime = 100;
 
   return bench;

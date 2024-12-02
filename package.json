@@ -5,7 +5,7 @@
     "clean": "bun --filter='*' clean",
     "specs": "bun --filter='react-native-quick-crypto' specs",
     "pods": "bun --filter='react-native-quick-crypto-example' pods",
-    "example": "bun --filter='react-native-quick-crypto-example' start",
+    "start": "bun --filter='react-native-quick-crypto-example' start",
     "bootstrap": "bun install && bun pods",
     "tsc": "bun --filter='*' typescript",
     "lint": "bun --filter='*' lint",
