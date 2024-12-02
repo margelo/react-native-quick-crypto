@@ -1,11 +1,11 @@
-import type { Suites, TestSuite } from '../types/suite';
+import type { TestSuites } from '../types/tests';
 
-export const TestsContext: Suites<TestSuite> = {};
+export const TestsContext: TestSuites = {};
 
 export const test = (
   suiteName: string,
   testName: string,
-  fn: () => void,
+  fn: () => void | Promise<void>,
 ): void => {
   if (!TestsContext[suiteName]) {
     TestsContext[suiteName] = { value: false, tests: {} };

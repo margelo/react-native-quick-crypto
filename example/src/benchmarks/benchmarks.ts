@@ -1,92 +1,50 @@
-import type {
-  BenchmarkFn,
-  BenchmarkResult,
-  Challenger,
-  ImportedBenchmark,
-  SuiteState,
-} from '../types/benchmarks';
-import { calculateTimes } from './utils';
+import type { Bench } from 'tinybench';
+import type { BenchFn, BenchmarkResult, SuiteState } from '../types/benchmarks';
 
 export class BenchmarkSuite {
   name: string;
   enabled: boolean;
-  benchmarks: Benchmark[];
+  benchmarks: BenchFn[];
   state: SuiteState;
   results: BenchmarkResult[] = [];
 
-  constructor(name: string) {
+  constructor(name: string, benchmarks: BenchFn[]) {
     this.name = name;
     this.enabled = false;
     this.state = 'idle';
-    this.benchmarks = [];
+    this.benchmarks = benchmarks;
     this.results = [];
-  }
-
-  addBenchmark(imported: ImportedBenchmark) {
-    this.benchmarks.push(new Benchmark(imported));
   }
 
   addResult(result: BenchmarkResult) {
     this.results.push(result);
   }
 
-  run(multiplier: number = 1) {
+  async run() {
     this.results = [];
-    this.benchmarks.forEach(benchmark => {
-      benchmark.run(this, multiplier);
+    const promises = this.benchmarks.map(async benchFn => {
+      const b = await benchFn();
+      await b.run();
+      this.processResults(b);
+      this.state = 'done';
     });
-  }
-}
-
-export class Benchmark {
-  name: string; // function name
-  runCount: number;
-  us?: BenchmarkFn;
-  them: Challenger[];
-
-  constructor(benchmark: ImportedBenchmark) {
-    this.name = benchmark.name;
-    this.runCount = benchmark.runCount;
-    this.us = benchmark.us;
-    this.them = benchmark.them;
+    await Promise.all(promises);
   }
 
-  run(suite: BenchmarkSuite, multiplier: number = 1) {
-    const usTime = this.timeFn(this.us!, multiplier);
-    this.them.forEach(them => {
-      const themTime = this.timeFn(them.fn, multiplier);
-      const type = usTime < themTime ? 'faster' : 'slower';
-      const times = calculateTimes(usTime, themTime);
-      const result: BenchmarkResult = {
+  processResults = (b: Bench): void => {
+    const tasks = b.tasks;
+    const us = tasks.find(t => t.name === 'rnqc');
+    const themTasks = tasks.filter(t => t.name !== 'rnqc');
+
+    themTasks.map(them => {
+      this.addResult({
         errorMsg: undefined,
         challenger: them.name,
-        notes: them.notes,
-        runCount: this.runCount * multiplier,
-        fnName: this.name,
-        time: themTime,
-        us: usTime,
-        type,
-        times,
-      };
-      suite.addResult(result);
+        notes: '',
+        benchName: b.name,
+        them: them.result,
+        us: us?.result,
+      });
     });
-  }
-
-  /**
-   * @returns time in ms
-   */
-  timeFn = (fn: BenchmarkFn, multiplier: number = 1): number => {
-    // warm up imports, etc.
-    fn();
-
-    const totalRunCount = this.runCount * multiplier;
-
-    // do the actual benchmark
-    const start = performance.now();
-    for (let i = 0; i < totalRunCount; i++) {
-      fn();
-    }
-    const end = performance.now();
-    return end - start;
   };
 }

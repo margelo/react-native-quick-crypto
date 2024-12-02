@@ -1,6 +1,8 @@
-/* eslint-disable @typescript-eslint/no-require-imports */
 import { useEffect, useState } from 'react';
 import { BenchmarkSuite } from '../benchmarks/benchmarks';
+import ed from '../benchmarks/ed/ed25519';
+import pbkdf2 from '../benchmarks/pbkdf2/pbkdf2';
+import random from '../benchmarks/random/randomBytes';
 
 export const useBenchmarks = (): [
   BenchmarkSuite[],
@@ -8,16 +10,41 @@ export const useBenchmarks = (): [
   () => void,
   () => void,
   () => void,
+  () => void,
 ] => {
   const [suites, setSuites] = useState<BenchmarkSuite[]>([]);
+  const [runCurrent, setRunCurrent] = useState<number>(-1);
 
   // initial load of benchmark suites
   useEffect(() => {
     const newSuites: BenchmarkSuite[] = [];
-    newSuites.push(random());
-    newSuites.push(pbkdf2());
+    newSuites.push(new BenchmarkSuite('ed', ed));
+    newSuites.push(new BenchmarkSuite('pbkdf2', pbkdf2));
+    newSuites.push(new BenchmarkSuite('random', random));
     setSuites(newSuites);
   }, []);
+
+  // This jank is used to trick async functions into running synchronously
+  // so we run one benchmark at a time and have dedicated resources instead of
+  // conflicting with other benchmarks.
+  useEffect(() => {
+    if (runCurrent < 0) return; // not running benchmarks
+    // reset to -1 if we're past the end
+    if (runCurrent >= suites.length) {
+      setRunCurrent(-1);
+      return;
+    }
+    const s = suites[runCurrent];
+    if (s?.enabled) {
+      updateSuites(suite => {
+        if (suite.name === s.name) {
+          suite.state = 'running';
+        }
+      });
+    } else {
+      setRunCurrent(runCurrent + 1);
+    }
+  }, [runCurrent]);
 
   const updateSuites = (fn: (suite: BenchmarkSuite) => void) => {
     if (!suites.length) return;
@@ -43,32 +70,13 @@ export const useBenchmarks = (): [
       suite.enabled = false;
     });
 
-  const runBenchmarks = () =>
-    updateSuites(suite => {
-      if (suite.enabled && suite.state !== 'running') {
-        suite.state = 'running';
-      }
-    });
+  const runBenchmarks = () => {
+    setRunCurrent(0);
+  };
 
-  return [suites, toggle, checkAll, clearAll, runBenchmarks];
-};
+  const bumpRunCurrent = () => {
+    setRunCurrent(runCurrent + 1);
+  };
 
-const random = () => {
-  const suite = new BenchmarkSuite('random');
-  suite.addBenchmark(require('../benchmarks/random/randomBytes').randomBytes10);
-  suite.addBenchmark(
-    require('../benchmarks/random/randomBytes').randomBytes1024,
-  );
-  return suite;
-};
-
-const pbkdf2 = () => {
-  const suite = new BenchmarkSuite('pbkdf2');
-  suite.addBenchmark(
-    require('../benchmarks/pbkdf2/pbkdf2').pbkdf2_256_1_32_async,
-  );
-  suite.addBenchmark(
-    require('../benchmarks/pbkdf2/pbkdf2').pbkdf2_256_1_32_sync,
-  );
-  return suite;
+  return [suites, toggle, checkAll, clearAll, runBenchmarks, bumpRunCurrent];
 };

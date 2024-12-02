@@ -13,7 +13,4 @@
   "compilerOptions": {
     "jsx": "react"
   },
-  "references": [
-    { "path": "../packages/react-native-quick-crypto" },
-  ],
 }

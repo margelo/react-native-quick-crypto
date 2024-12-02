@@ -50,10 +50,10 @@ const run = (
   Object.entries(suites).map(([suiteName, suite]) => {
     stats.suites++;
 
-    Object.entries(suite.tests).map(([testName, test]) => {
+    Object.entries(suite.tests).map(async ([testName, test]) => {
       if (!suite.value) return;
       try {
-        test();
+        await test();
         stats.passes++;
         addTestResult({
           type: 'correct',

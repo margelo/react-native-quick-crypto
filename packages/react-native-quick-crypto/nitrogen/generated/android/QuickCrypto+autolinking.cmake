@@ -27,6 +27,7 @@ target_sources(
   # Autolinking Setup
   ../nitrogen/generated/android/QuickCryptoOnLoad.cpp
   # Shared Nitrogen C++ sources
+  ../nitrogen/generated/shared/c++/HybridEdKeyPairSpec.cpp
   ../nitrogen/generated/shared/c++/HybridKeyObjectHandleSpec.cpp
   ../nitrogen/generated/shared/c++/HybridPbkdf2Spec.cpp
   ../nitrogen/generated/shared/c++/HybridRandomSpec.cpp

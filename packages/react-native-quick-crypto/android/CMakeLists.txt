@@ -9,6 +9,7 @@ set(CMAKE_CXX_STANDARD 20)
 add_library(
   ${PACKAGE_NAME} SHARED
   src/main/cpp/cpp-adapter.cpp
+  ../cpp/ed25519/HybridEdKeyPair.cpp
   ../cpp/pbkdf2/HybridPbkdf2.cpp
   ../cpp/random/HybridRandom.cpp
   ../deps/fastpbkdf2/fastpbkdf2.c
@@ -20,6 +21,7 @@ include(${CMAKE_SOURCE_DIR}/../nitrogen/generated/android/QuickCrypto+autolinkin
 # local includes
 include_directories(
   "src/main/cpp"
+  "../cpp/ed25519"
   "../cpp/pbkdf2"
   "../cpp/random"
   "../cpp/utils"

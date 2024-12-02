@@ -8,5 +8,5 @@ export interface TestSuite {
 }
 
 export interface Tests {
-  [key: string]: () => void;
+  [key: string]: () => void | Promise<void>;
 }
