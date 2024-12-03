@@ -1,5 +1,6 @@
 #include <cmath>
 #include <future>
+#include <memory>
 #include <iostream>
 
 #include "HybridRandomSpec.hpp"
