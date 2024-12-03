@@ -5,7 +5,7 @@
 
 namespace margelo::nitro::crypto {
 
-std::future<void>
+std::shared_ptr<Promise<void>>
 HybridEdKeyPair::generateKeyPair(
   double publicFormat,
   double publicType,
@@ -20,8 +20,7 @@ HybridEdKeyPair::generateKeyPair(
     nativePassphrase = ToNativeArrayBuffer(passphrase.value());
   }
 
-  return std::async(
-    std::launch::async,
+  return Promise<void>::async(
     [this, publicFormat, publicType, privateFormat, privateType, cipher,
      nativePassphrase]() {
       this->generateKeyPairSync(
@@ -71,15 +70,14 @@ HybridEdKeyPair::generateKeyPairSync(
 }
 
 
-std::future<std::shared_ptr<ArrayBuffer>>
+std::shared_ptr<Promise<std::shared_ptr<ArrayBuffer>>>
 HybridEdKeyPair::sign(
   const std::shared_ptr<ArrayBuffer>& message
 ) {
   // get owned NativeArrayBuffer before passing to sync function
   auto nativeMessage = ToNativeArrayBuffer(message);
 
-  return std::async(
-    std::launch::async, [this, nativeMessage]() {
+  return Promise<std::shared_ptr<ArrayBuffer>>::async([this, nativeMessage]() {
       return this->signSync(nativeMessage);
     }
   );
@@ -141,7 +139,7 @@ HybridEdKeyPair::signSync(
   return signature;
 }
 
-std::future<bool>
+std::shared_ptr<Promise<bool>>
 HybridEdKeyPair::verify(
   const std::shared_ptr<ArrayBuffer>& signature,
   const std::shared_ptr<ArrayBuffer>& message
@@ -150,8 +148,7 @@ HybridEdKeyPair::verify(
   auto nativeSignature = ToNativeArrayBuffer(signature);
   auto nativeMessage = ToNativeArrayBuffer(message);
 
-  return std::async(
-    std::launch::async, [this, nativeSignature, nativeMessage]() {
+  return Promise<bool>::async([this, nativeSignature, nativeMessage]() {
       return this->verifySync(nativeSignature, nativeMessage);
     }
   );

@@ -8,12 +8,12 @@ namespace margelo::nitro::crypto {
 using namespace facebook;
 
 class HybridPbkdf2 : public HybridPbkdf2Spec {
-public:
+ public:
   HybridPbkdf2() : HybridObject(TAG) {}
 
-public:
+ public:
   // Methods
-  virtual std::future<std::shared_ptr<ArrayBuffer>>
+  std::shared_ptr<Promise<std::shared_ptr<ArrayBuffer>>>
   pbkdf2(
     const std::shared_ptr<ArrayBuffer>& password,
     const std::shared_ptr<ArrayBuffer>& salt,
@@ -22,7 +22,7 @@ public:
     const std::string& digest
   ) override;
 
-  virtual std::shared_ptr<ArrayBuffer>
+  std::shared_ptr<ArrayBuffer>
   pbkdf2Sync(
     const std::shared_ptr<ArrayBuffer>& password,
     const std::shared_ptr<ArrayBuffer>& salt,

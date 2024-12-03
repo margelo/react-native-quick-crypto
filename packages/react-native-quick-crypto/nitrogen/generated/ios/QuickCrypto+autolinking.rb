@@ -20,7 +20,7 @@
 # ```
 
 def add_nitrogen_files(spec)
-  Pod::UI.puts "[NitroModules] Adding QuickCrypto specs..."
+  Pod::UI.puts "[NitroModules] 🔥 QuickCrypto is boosted by nitro!"
 
   spec.dependency "NitroModules"
 

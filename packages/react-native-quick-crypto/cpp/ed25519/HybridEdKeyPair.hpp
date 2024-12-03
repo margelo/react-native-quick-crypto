@@ -16,7 +16,7 @@ class HybridEdKeyPair : public HybridEdKeyPairSpec {
 
  public:
   // Methods
-  std::future<void>
+  std::shared_ptr<Promise<void>>
   generateKeyPair(
     double publicFormat,
     double publicType,
@@ -36,13 +36,13 @@ class HybridEdKeyPair : public HybridEdKeyPairSpec {
     const std::optional<std::shared_ptr<ArrayBuffer>>& passphrase
   ) override;
 
-  std::future<std::shared_ptr<ArrayBuffer>>
+  std::shared_ptr<Promise<std::shared_ptr<ArrayBuffer>>>
   sign(const std::shared_ptr<ArrayBuffer>& message) override;
 
   std::shared_ptr<ArrayBuffer>
   signSync(const std::shared_ptr<ArrayBuffer>& message) override;
 
-  std::future<bool>
+  std::shared_ptr<Promise<bool>>
   verify(
     const std::shared_ptr<ArrayBuffer>& signature,
     const std::shared_ptr<ArrayBuffer>& message

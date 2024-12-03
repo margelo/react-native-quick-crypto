@@ -7,19 +7,21 @@ PODS:
   - hermes-engine (0.76.1):
     - hermes-engine/Pre-built (= 0.76.1)
   - hermes-engine/Pre-built (0.76.1)
-  - NitroModules (0.14.0):
+  - NitroModules (0.18.1):
     - DoubleConversion
     - glog
     - hermes-engine
     - RCT-Folly (= 2024.01.01.00)
     - RCTRequired
     - RCTTypeSafety
+    - React-callinvoker
     - React-Core
     - React-debug
     - React-Fabric
     - React-featureflags
     - React-graphics
     - React-ImageManager
+    - React-jsi
     - React-NativeModulesApple
     - React-RCTFabric
     - React-rendererdebug
@@ -1936,7 +1938,7 @@ SPEC CHECKSUMS:
   fmt: 10c6e61f4be25dc963c36bd73fc7b1705fe975be
   glog: 08b301085f15bcbb6ff8632a8ebaf239aae04e6a
   hermes-engine: 46f1ffbf0297f4298862068dd4c274d4ac17a1fd
-  NitroModules: 69a6524b390ed8ca220e15f00bcfbd2f7c24472e
+  NitroModules: 55f64932b4581a7d02103bc35b84c7bd3204106b
   OpenSSL-Universal: b60a3702c9fea8b3145549d421fdb018e53ab7b4
   QuickCrypto: 8d76ae3a0bf60509f671193eb4ed666a80da34cb
   RCT-Folly: 84578c8756030547307e4572ab1947de1685c599

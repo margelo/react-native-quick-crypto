@@ -13,6 +13,8 @@
 /// apply from: '../nitrogen/generated/android/QuickCrypto+autolinking.gradle'
 /// ```
 
+logger.warn("[NitroModules] 🔥 QuickCrypto is boosted by nitro!")
+
 android {
   sourceSets {
     main {

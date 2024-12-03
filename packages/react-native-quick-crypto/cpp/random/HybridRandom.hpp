@@ -9,13 +9,16 @@ namespace margelo::nitro::crypto {
 using namespace facebook;
 
 class HybridRandom : public HybridRandomSpec {
-public:
+ public:
   HybridRandom() : HybridObject(TAG) {}
 
-public:
+ public:
   // Methods
-  std::future<std::shared_ptr<ArrayBuffer>> randomFill(const std::shared_ptr<ArrayBuffer>& buffer, double dOffset, double dSize) override;
-  std::shared_ptr<ArrayBuffer> randomFillSync(const std::shared_ptr<ArrayBuffer>& buffer, double dOffset, double dSize) override;
+  std::shared_ptr<Promise<std::shared_ptr<ArrayBuffer>>>
+  randomFill(const std::shared_ptr<ArrayBuffer>& buffer, double dOffset, double dSize) override;
+
+  std::shared_ptr<ArrayBuffer>
+  randomFillSync(const std::shared_ptr<ArrayBuffer>& buffer, double dOffset, double dSize) override;
 };
 
 inline void printData(std::string name, uint8_t* data, size_t size) {
