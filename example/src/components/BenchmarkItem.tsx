@@ -5,11 +5,9 @@ import {
   StyleSheet,
   TouchableOpacity,
   ActivityIndicator,
-  InteractionManager,
 } from 'react-native';
 import BouncyCheckbox from 'react-native-bouncy-checkbox';
 import { useNavigation } from '@react-navigation/native';
-// import { calculateTimes, formatNumber } from '../benchmarks/utils';
 import { colors } from '../styles/colors';
 import type { BenchmarkSuite } from '../benchmarks/benchmarks';
 import { calculateTimes, formatNumber } from '../benchmarks/utils';
@@ -17,13 +15,13 @@ import { calculateTimes, formatNumber } from '../benchmarks/utils';
 type BenchmarkItemProps = {
   suite: BenchmarkSuite;
   toggle: () => void;
-  multiplier: number;
+  bumpRunCurrent: () => void;
 };
 
 export const BenchmarkItem: React.FC<BenchmarkItemProps> = ({
   suite,
   toggle,
-  multiplier,
+  bumpRunCurrent,
 }: BenchmarkItemProps) => {
   const [running, setRunning] = useState(false);
   const navigation = useNavigation();
@@ -35,38 +33,24 @@ export const BenchmarkItem: React.FC<BenchmarkItemProps> = ({
 
   useEffect(() => {
     const run = async () => {
-      await waitForGc();
-      suite.run(multiplier);
-      suite.state = 'done';
+      await suite.run();
       setRunning(false);
+      bumpRunCurrent();
     };
-    if (running) run();
+    if (running) {
+      run();
+    }
   }, [running]);
 
-  function delay(ms: number): Promise<void> {
-    return new Promise(resolve => setTimeout(resolve, ms));
-  }
-
-  async function waitForGc(): Promise<void> {
-    await delay(500);
-    return new Promise(resolve => {
-      requestAnimationFrame(() => {
-        InteractionManager.runAfterInteractions(() => {
-          resolve();
-        });
-      });
-    });
-  }
-
   // results handling
-  const usTime = suite.results.reduce((acc, result) => {
-    return acc + result.us;
+  const usTput = suite.results.reduce((acc, result) => {
+    return acc + (result.us?.throughput.mean || 0);
   }, 0);
-  const themTime = suite.results.reduce((acc, result) => {
-    return acc + result.time;
+  const themTput = suite.results.reduce((acc, result) => {
+    return acc + (result.them?.throughput.mean || 0);
   }, 0);
-  const times = calculateTimes(usTime, themTime);
-  const timesStyle = usTime < themTime ? styles.faster : styles.slower;
+  const times = calculateTimes(usTput, themTput);
+  const timesStyle = usTput > themTput ? styles.faster : styles.slower;
 
   // render component
   return (

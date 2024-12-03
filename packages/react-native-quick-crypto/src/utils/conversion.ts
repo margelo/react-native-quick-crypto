@@ -96,3 +96,5 @@ export function binaryLikeToArrayBuffer(
 export function ab2str(buf: ArrayBuffer, encoding: string = 'hex') {
   return Buffer.from(buf).toString(encoding);
 }
+
+export const kEmptyObject = Object.freeze(Object.create(null));

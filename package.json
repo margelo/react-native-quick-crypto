@@ -5,7 +5,7 @@
     "clean": "bun --filter='*' clean",
     "specs": "bun --filter='react-native-quick-crypto' specs",
     "pods": "bun --filter='react-native-quick-crypto-example' pods",
-    "example": "bun --filter='react-native-quick-crypto-example' start",
+    "start": "bun --filter='react-native-quick-crypto-example' start",
     "bootstrap": "bun install && bun pods",
     "tsc": "bun --filter='*' typescript",
     "lint": "bun --filter='*' lint",
@@ -16,10 +16,6 @@
     "pre-release": "./scripts/prepare-release.sh",
     "release": "bun pre-release && release-it --github.release=false"
   },
-  "workspaces": [
-    "packages/react-native-quick-crypto",
-    "example"
-  ],
   "devDependencies": {
     "@release-it/bumper": "^6.0.1",
     "@release-it/conventional-changelog": "^8.0.1",
@@ -43,5 +39,9 @@
         "out": "package.json"
       }
     }
-  }
+  },
+  "workspaces": [
+    "packages/react-native-quick-crypto",
+    "example"
+  ]
 }

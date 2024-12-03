@@ -111,8 +111,8 @@ This document attempts to describe the implementation status of Crypto APIs/Inte
   * ❌ `crypto.diffieHellman(options)`
   * ❌ `crypto.hash(algorithm, data[, outputEncoding])`
   * ❌ `crypto.generateKey(type, options, callback)`
-  * ❌ `crypto.generateKeyPair(type, options, callback)`
-  * ❌ `crypto.generateKeyPairSync(type, options)`
+  * 🚧 `crypto.generateKeyPair(type, options, callback)`
+  * 🚧 `crypto.generateKeyPairSync(type, options)`
   * ❌ `crypto.generateKeySync(type, options)`
   * ❌ `crypto.generatePrime(size[, options[, callback]])`
   * ❌ `crypto.generatePrimeSync(size[, options])`
@@ -141,10 +141,10 @@ This document attempts to describe the implementation status of Crypto APIs/Inte
   * ❌ `crypto.secureHeapUsed()`
   * ❌ `crypto.setEngine(engine[, flags])`
   * ❌ `crypto.setFips(bool)`
-  * ❌ `crypto.sign(algorithm, data, key[, callback])`
+  * 🚧 `crypto.sign(algorithm, data, key[, callback])`
   * ❌ `crypto.subtle` (see below)
   * ❌ `crypto.timingSafeEqual(a, b)`
-  * ❌ `crypto.verify(algorithm, data, key, signature[, callback])`
+  * 🚧 `crypto.verify(algorithm, data, key, signature[, callback])`
   * ❌ `crypto.webcrypto` (see below)
 
 🚧 Details below still a work in progress 🚧
@@ -162,10 +162,10 @@ This document attempts to describe the implementation status of Crypto APIs/Inte
 | `rsa-pss` | ❌ |
 | `dsa`     | ❌ |
 | `ec`      | ❌ |
-| `ed25519` | ❌ |
-| `ed448`   | ❌ |
-| `x25519`  | ❌ |
-| `x448`    | ❌ |
+| `ed25519` | ✅ |
+| `ed448`   | ✅ |
+| `x25519`  | ✅ |
+| `x448`    | ✅ |
 | `dh`      | ❌ |
 
 ## `crypto.generateKeyPairSync`
@@ -175,10 +175,10 @@ This document attempts to describe the implementation status of Crypto APIs/Inte
 | `rsa-pss` | ❌ |
 | `dsa`     | ❌ |
 | `ec`      | ❌ |
-| `ed25519` | ❌ |
-| `ed448`   | ❌ |
-| `x25519`  | ❌ |
-| `x448`    | ❌ |
+| `ed25519` | ✅ |
+| `ed448`   | ✅ |
+| `x25519`  | ✅ |
+| `x448`    | ✅ |
 | `dh`      | ❌ |
 
 ## `crypto.generateKeySync`
@@ -187,6 +187,25 @@ This document attempts to describe the implementation status of Crypto APIs/Inte
 | `aes`      | ❌ |
 | `hmac`     | ❌ |
 
+## `crypto.sign`
+| Algorithm           | Status |
+| ---------           | :----: |
+| `RSASSA-PKCS1-v1_5` |  |
+| `RSA-PSS`           |  |
+| `ECDSA`             |  |
+| `Ed25519`           | ✅ |
+| `Ed448`             | ✅ |
+| `HMAC`              |  |
+
+## `crypto.verify`
+| Algorithm           | Status |
+| ---------           | :----: |
+| `RSASSA-PKCS1-v1_5` |  |
+| `RSA-PSS`           |  |
+| `ECDSA`             |  |
+| `Ed25519`           | ✅ |
+| `Ed448`             | ✅ |
+| `HMAC`              |  |
 
 # `WebCrypto`
 

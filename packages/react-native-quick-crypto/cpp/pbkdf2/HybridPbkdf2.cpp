@@ -3,7 +3,7 @@
 
 namespace margelo::nitro::crypto {
 
-std::future<std::shared_ptr<ArrayBuffer>>
+std::shared_ptr<Promise<std::shared_ptr<ArrayBuffer>>>
 HybridPbkdf2::pbkdf2(
   const std::shared_ptr<ArrayBuffer>& password,
   const std::shared_ptr<ArrayBuffer>& salt,
@@ -15,10 +15,11 @@ HybridPbkdf2::pbkdf2(
   auto nativePassword = ToNativeArrayBuffer(password);
   auto nativeSalt = ToNativeArrayBuffer(salt);
 
-  return std::async(std::launch::async,
-                    [this, nativePassword, nativeSalt, iterations, keylen, digest]() {
-                      return this->pbkdf2Sync(nativePassword, nativeSalt, iterations, keylen, digest);
-                    });
+  return Promise<std::shared_ptr<ArrayBuffer>>::async(
+    [this, nativePassword, nativeSalt, iterations, keylen, digest]() {
+      return this->pbkdf2Sync(nativePassword, nativeSalt, iterations, keylen, digest);
+    }
+  );
 }
 
 std::shared_ptr<ArrayBuffer>

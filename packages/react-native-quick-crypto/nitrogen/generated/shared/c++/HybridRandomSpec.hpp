@@ -16,7 +16,7 @@
 // Forward declaration of `ArrayBuffer` to properly resolve imports.
 namespace NitroModules { class ArrayBuffer; }
 
-#include <future>
+#include <NitroModules/Promise.hpp>
 #include <NitroModules/ArrayBuffer.hpp>
 
 namespace margelo::nitro::crypto {
@@ -50,7 +50,7 @@ namespace margelo::nitro::crypto {
 
     public:
       // Methods
-      virtual std::future<std::shared_ptr<ArrayBuffer>> randomFill(const std::shared_ptr<ArrayBuffer>& buffer, double offset, double size) = 0;
+      virtual std::shared_ptr<Promise<std::shared_ptr<ArrayBuffer>>> randomFill(const std::shared_ptr<ArrayBuffer>& buffer, double offset, double size) = 0;
       virtual std::shared_ptr<ArrayBuffer> randomFillSync(const std::shared_ptr<ArrayBuffer>& buffer, double offset, double size) = 0;
 
     protected:

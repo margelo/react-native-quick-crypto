@@ -28,17 +28,18 @@ size_t checkOffset(double size, double offset) {
 
 namespace margelo::nitro::crypto {
 
-std::future<std::shared_ptr<ArrayBuffer>>
+std::shared_ptr<Promise<std::shared_ptr<ArrayBuffer>>>
 HybridRandom::randomFill(const std::shared_ptr<ArrayBuffer>& buffer,
                          double dOffset,
                          double dSize) {
   // get owned NativeArrayBuffer before passing to sync function
   auto nativeBuffer = ToNativeArrayBuffer(buffer);
 
-  return std::async(std::launch::async,
-                    [this, nativeBuffer, dOffset, dSize]() {
-                      return this->randomFillSync(nativeBuffer, dOffset, dSize);
-                    });
+  return Promise<std::shared_ptr<ArrayBuffer>>::async(
+    [this, nativeBuffer, dOffset, dSize]() {
+      return this->randomFillSync(nativeBuffer, dOffset, dSize);
+    }
+  );
 };
 
 std::shared_ptr<ArrayBuffer>

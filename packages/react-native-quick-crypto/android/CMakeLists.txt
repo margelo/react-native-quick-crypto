@@ -9,6 +9,7 @@ set(CMAKE_CXX_STANDARD 20)
 add_library(
   ${PACKAGE_NAME} SHARED
   src/main/cpp/cpp-adapter.cpp
+  ../cpp/ed25519/HybridEdKeyPair.cpp
   ../cpp/pbkdf2/HybridPbkdf2.cpp
   ../cpp/random/HybridRandom.cpp
   ../deps/fastpbkdf2/fastpbkdf2.c
@@ -20,6 +21,7 @@ include(${CMAKE_SOURCE_DIR}/../nitrogen/generated/android/QuickCrypto+autolinkin
 # local includes
 include_directories(
   "src/main/cpp"
+  "../cpp/ed25519"
   "../cpp/pbkdf2"
   "../cpp/random"
   "../cpp/utils"
@@ -29,8 +31,6 @@ include_directories(
 # Third party libraries (Prefabs)
 find_library(LOG_LIB log)
 
-find_package(ReactAndroid REQUIRED CONFIG)
-find_package(fbjni REQUIRED CONFIG)
 find_package(openssl REQUIRED CONFIG)
 
 # Link all libraries together
@@ -38,9 +38,7 @@ target_link_libraries(
   ${PACKAGE_NAME}
   ${LOG_LIB}                             # <-- Logcat logger
   android                                # <-- Android core
-  fbjni::fbjni                           # <-- Facebook C++ JNI helpers
   openssl::crypto                        # <-- OpenSSL (Crypto)
-  ReactAndroid::jsi
   )
 
 if(ReactAndroid_VERSION_MINOR GREATER_EQUAL 76)

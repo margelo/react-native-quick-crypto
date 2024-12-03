@@ -2,6 +2,7 @@ import { useState, useCallback } from 'react';
 import type { TestSuites } from '../types/tests';
 import { TestsContext } from '../tests/util';
 
+import '../tests/ed25519/ed25519_tests';
 import '../tests/pbkdf2/pbkdf2_tests';
 import '../tests/random/random_tests';
 // import '../tests/HmacTests/HmacTests';

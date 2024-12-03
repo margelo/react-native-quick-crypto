@@ -1,6 +1,7 @@
-import { type Buffer } from '@craftzdog/react-native-buffer';
-import { type Buffer as SBuffer } from 'safe-buffer';
-import { type CipherKey } from 'crypto'; // @types/node
+import type { Buffer } from '@craftzdog/react-native-buffer';
+import type { Buffer as SBuffer } from 'safe-buffer';
+import type { CipherKey } from 'crypto'; // @types/node
+import type { KeyObjectHandle } from '../specs/keyObjectHandle.nitro';
 
 export type ArrayBufferView = TypedArray | DataView | ArrayBufferLike | Buffer;
 
@@ -38,6 +39,7 @@ export type RSAKeyPairAlgorithm = 'RSASSA-PKCS1-v1_5' | 'RSA-PSS' | 'RSA-OAEP';
 export type ECKeyPairAlgorithm = 'ECDSA' | 'ECDH';
 
 export type CFRGKeyPairAlgorithm = 'Ed25519' | 'Ed448' | 'X25519' | 'X448';
+export type CFRGKeyPairType = 'ed25519' | 'ed448' | 'x25519' | 'x448';
 
 export type KeyPairAlgorithm =
   | RSAKeyPairAlgorithm
@@ -95,6 +97,8 @@ export type SubtleAlgorithm = {
   publicExponent?: number | Uint8Array;
 };
 
+export type KeyPairType = CFRGKeyPairType;
+
 export type KeyUsage =
   | 'encrypt'
   | 'decrypt'
@@ -127,7 +131,22 @@ export enum KeyEncoding {
   kKeyEncodingSEC1,
 }
 
-export type AsymmetricKeyType = 'rsa' | 'rsa-pss' | 'dsa' | 'ec';
+export type KeyPairGenConfig = {
+  publicFormat?: KFormatType;
+  publicType?: KeyEncoding;
+  privateFormat?: KFormatType;
+  privateType?: KeyEncoding;
+  cipher?: string;
+  passphrase?: ArrayBuffer;
+};
+
+export type AsymmetricKeyType =
+  // 'rsa' |
+  // 'rsa-pss' |
+  // 'dsa' |
+  // 'ec' |
+  // 'dh' |
+  CFRGKeyPairType;
 
 type JWKkty = 'AES' | 'RSA' | 'EC' | 'oct';
 type JWKuse = 'sig' | 'enc';
@@ -189,3 +208,64 @@ export interface KeyDetail {
   saltLength?: number;
   namedCurve?: string;
 }
+
+export type GenerateKeyPairOptions = {
+  modulusLength?: number; // Key size in bits (RSA, DSA).
+  publicExponent?: number; // Public exponent (RSA). Default: 0x10001.
+  hashAlgorithm?: string; // Name of the message digest (RSA-PSS).
+  mgf1HashAlgorithm?: string; // string Name of the message digest used by MGF1 (RSA-PSS).
+  saltLength?: number; // Minimal salt length in bytes (RSA-PSS).
+  divisorLength?: number; // Size of q in bits (DSA).
+  namedCurve?: string; // Name of the curve to use (EC).
+  prime?: Buffer; // The prime parameter (DH).
+  primeLength?: number; // Prime length in bits (DH).
+  generator?: number; // Custom generator (DH). Default: 2.
+  groupName?: string; // Diffie-Hellman group name (DH). See crypto.getDiffieHellman().
+  publicKeyEncoding?: EncodingOptions; // See keyObject.export().
+  privateKeyEncoding?: EncodingOptions; // See keyObject.export().
+  paramEncoding?: string;
+  hash?: string;
+  mgf1Hash?: string;
+};
+
+// Note: removed CryptoKey class from this type (from 0.x) because Nitro doesn't
+//       handle custom JS objects.  We might need to make it a JS object.
+export type KeyPairKey = ArrayBuffer | KeyObjectHandle | undefined;
+
+export type GenerateKeyPairReturn = [
+  error?: Error,
+  privateKey?: KeyPairKey,
+  publicKey?: KeyPairKey,
+];
+
+export type GenerateKeyPairCallback = (
+  error?: Error,
+  publicKey?: KeyPairKey,
+  privateKey?: KeyPairKey,
+) => GenerateKeyPairReturn | void;
+
+export type KeyPair = {
+  publicKey?: KeyPairKey;
+  privateKey?: KeyPairKey;
+};
+
+export type GenerateKeyPairPromiseReturn = [error?: Error, keypair?: KeyPair];
+
+export type CryptoKeyPair = {
+  publicKey: KeyPairKey;
+  privateKey: KeyPairKey;
+};
+
+export enum KeyVariant {
+  RSA_SSA_PKCS1_v1_5,
+  RSA_PSS,
+  RSA_OAEP,
+  DSA,
+  EC,
+  NID,
+  DH,
+}
+
+export type SignCallback = (err: Error | null, signature?: ArrayBuffer) => void;
+
+export type VerifyCallback = (err: Error | null, valid?: boolean) => void;

@@ -16,7 +16,7 @@
 // Forward declaration of `ArrayBuffer` to properly resolve imports.
 namespace NitroModules { class ArrayBuffer; }
 
-#include <future>
+#include <NitroModules/Promise.hpp>
 #include <NitroModules/ArrayBuffer.hpp>
 #include <string>
 
@@ -51,7 +51,7 @@ namespace margelo::nitro::crypto {
 
     public:
       // Methods
-      virtual std::future<std::shared_ptr<ArrayBuffer>> pbkdf2(const std::shared_ptr<ArrayBuffer>& password, const std::shared_ptr<ArrayBuffer>& salt, double iterations, double keylen, const std::string& digest) = 0;
+      virtual std::shared_ptr<Promise<std::shared_ptr<ArrayBuffer>>> pbkdf2(const std::shared_ptr<ArrayBuffer>& password, const std::shared_ptr<ArrayBuffer>& salt, double iterations, double keylen, const std::string& digest) = 0;
       virtual std::shared_ptr<ArrayBuffer> pbkdf2Sync(const std::shared_ptr<ArrayBuffer>& password, const std::shared_ptr<ArrayBuffer>& salt, double iterations, double keylen, const std::string& digest) = 0;
 
     protected:
