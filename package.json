@@ -1,9 +1,10 @@
 {
-  "version": "1.0.0-beta.5",
+  "version": "1.0.0-beta.6",
   "scripts": {
     "check-all": "./scripts/clang-format.sh",
     "clean": "bun --filter='*' clean",
     "specs": "bun --filter='react-native-quick-crypto' specs",
+    "bundle-install": "bun --filter='react-native-quick-crypto-example' bundle-install",
     "pods": "bun --filter='react-native-quick-crypto-example' pods",
     "start": "bun --filter='react-native-quick-crypto-example' start",
     "bootstrap": "bun install && bun pods",
@@ -34,13 +35,13 @@
       "release": true
     },
     "hooks": {
-      "before:release": "bun example bundle-install && bun example pods && git add example/ios/Podfile.lock"
+      "before:release": "bun bundle-install && bun pods && git add example/ios/Podfile.lock"
     },
     "plugins": {
       "@release-it/bumper": {
         "out": [
           {
-            "file": "packages/react-native-nitro-image/package.json",
+            "file": "packages/react-native-quick-crypto/package.json",
             "path": "version"
           },
           {
@@ -77,7 +78,8 @@
         }
       }
     }
-  },  "workspaces": [
+  },
+  "workspaces": [
     "packages/react-native-quick-crypto",
     "example"
   ]

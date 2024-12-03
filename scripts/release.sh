@@ -8,12 +8,8 @@ cp README.md packages/react-native-quick-crypto/README.md
 cd packages/react-native-quick-crypto
 bun release $@
 
-echo "Bumping version on example app"
-cd ../../example
-bun release $@
-
 echo "Creating a Git bump commit and GitHub release"
-cd ../
+cd ../..
 bun run release-it $@
 
 echo "Successfully released QuickCrypto!"
