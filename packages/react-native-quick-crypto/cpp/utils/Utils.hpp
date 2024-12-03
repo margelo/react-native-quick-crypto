@@ -18,8 +18,3 @@ inline bool CheckIsUint32(double value) {
 inline bool CheckIsInt32(double value) {
   return (value >= std::numeric_limits<int32_t>::lowest() && value <= std::numeric_limits<int32_t>::max());
 }
-
-namespace margelo::nitro::crypto {
-
-
-} // namespace margelo::nitro::crypto

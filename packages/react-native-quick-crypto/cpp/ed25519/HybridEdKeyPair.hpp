@@ -58,14 +58,11 @@ class HybridEdKeyPair : public HybridEdKeyPairSpec {
   std::shared_ptr<ArrayBuffer>
   getPublicKey() override;
 
-  virtual std::shared_ptr<ArrayBuffer>
-  getPrivateKey();
+  std::shared_ptr<ArrayBuffer> getPrivateKey();
 
-  virtual void
-  checkKeyPair();
+  void checkKeyPair();
 
-  void
-  setCurve(const std::string& curve) override;
+  void setCurve(const std::string& curve);
 
  private:
   std::string curve;
