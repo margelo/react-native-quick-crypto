@@ -31,8 +31,6 @@ include_directories(
 # Third party libraries (Prefabs)
 find_library(LOG_LIB log)
 
-find_package(ReactAndroid REQUIRED CONFIG)
-find_package(fbjni REQUIRED CONFIG)
 find_package(openssl REQUIRED CONFIG)
 
 # Link all libraries together
@@ -40,9 +38,7 @@ target_link_libraries(
   ${PACKAGE_NAME}
   ${LOG_LIB}                             # <-- Logcat logger
   android                                # <-- Android core
-  fbjni::fbjni                           # <-- Facebook C++ JNI helpers
   openssl::crypto                        # <-- OpenSSL (Crypto)
-  ReactAndroid::jsi
   )
 
 if(ReactAndroid_VERSION_MINOR GREATER_EQUAL 76)
