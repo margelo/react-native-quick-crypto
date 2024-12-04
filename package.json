@@ -1,6 +1,6 @@
 {
   "name": "react-native-quick-crypto",
-  "version": "0.7.7",
+  "version": "0.7.8",
   "description": "A fast implementation of Node's `crypto` module written in C/C++ JSI",
   "packageManager": "bun@1.1.26",
   "main": "lib/commonjs/index",
