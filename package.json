@@ -74,7 +74,7 @@
     "@eslint/js": "10.0.0",
     "@react-native/babel-preset": "^0.75.0-main",
     "@react-native/eslint-config": "^0.75.0-main",
-    "@react-native/eslint-plugin": "^0.75.0-main",
+    "@react-native/eslint-plugin": "^0.76.3",
     "@release-it/conventional-changelog": "^9.0.3",
     "@types/jest": "^29.5.11",
     "@types/node": "^22.0.0",
