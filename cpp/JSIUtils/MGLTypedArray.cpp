@@ -50,7 +50,13 @@ class PropNameIDCache {
   const jsi::PropNameID &getConstructorNameProp(jsi::Runtime &runtime,
                                                 MGLTypedArrayKind kind);
 
-  void invalidate() { props.erase(props.begin(), props.end()); }
+  void invalidate() {
+    /** This call (and attempts to use props.clear()) crash 💥 when the
+     *  JSI runtime has already been destroyed.  So we are commenting it out
+     *  and waiting for Nitro and 1.0 to fix this the proper way.
+     */
+    //props.erase(props.begin(), props.end());
+  }
 
  private:
   std::unordered_map<Prop, std::unique_ptr<jsi::PropNameID>> props;
