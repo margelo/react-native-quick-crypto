@@ -1,5 +1,5 @@
 /* eslint-disable @typescript-eslint/no-unused-expressions */
-import { Ed } from 'react-native-quick-crypto';
+import { Ed, randomBytes, ab2str } from 'react-native-quick-crypto';
 // import type {
 //   // KeyObject,
 //   // CFRGKeyPairType,
@@ -46,11 +46,32 @@ types.map((type) => {
 });
 */
 
-test(SUITE, 'sign/verify', async () => {
+test(SUITE, 'sign/verify - round trip happy', async () => {
   const data = Buffer.from('hello world');
   const ed = new Ed('ed25519', {});
   await ed.generateKeyPair();
   const signature = await ed.sign(data.buffer);
   const verified = await ed.verify(signature, data.buffer);
   expect(verified).to.be.true;
+});
+
+test(SUITE, 'sign/verify - round trip sad', async () => {
+  const data1 = Buffer.from('hello world');
+  const data2 = Buffer.from('goodbye cruel world');
+  const ed = new Ed('ed25519', {});
+  await ed.generateKeyPair();
+  const signature = await ed.sign(data1.buffer);
+  const verified = await ed.verify(signature, data2.buffer);
+  expect(verified).to.be.false;
+});
+
+test(SUITE, 'sign/verify - bad signature does not verify', async () => {
+  const data = Buffer.from('hello world');
+  const ed = new Ed('ed25519', {});
+  await ed.generateKeyPair();
+  const signature = await ed.sign(data.buffer);
+  const signature2 = randomBytes(64).buffer;
+  expect(ab2str(signature2)).not.to.equal(ab2str(signature));
+  const verified = await ed.verify(signature2, data.buffer);
+  expect(verified).to.be.false;
 });

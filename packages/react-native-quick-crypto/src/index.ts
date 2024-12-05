@@ -60,6 +60,8 @@ global.process.nextTick = setImmediate;
 // exports
 export default QuickCrypto;
 export * from './ed';
+export * from './pbkdf2';
+export * from './random';
 export * from './utils';
 
 // Additional exports for CommonJS compatibility
