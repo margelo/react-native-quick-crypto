@@ -47,7 +47,7 @@
   "devDependencies": {
     "@babel/core": "7.25.2",
     "@babel/plugin-transform-class-static-block": "7.26.0",
-    "@babel/preset-env": "7.25.3",
+    "@babel/preset-env": "7.26.0",
     "@babel/runtime": "7.25.0",
     "@eslint/compat": "^1.1.1",
     "@eslint/js": "^9.9.0",
