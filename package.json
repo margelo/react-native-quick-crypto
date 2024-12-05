@@ -46,7 +46,10 @@
           },
           {
             "file": "example/package.json",
-            "path": "version"
+            "path": [
+              "version",
+              "dependencies.react-native-quick-crypto"
+            ]
           }
         ]
       },
