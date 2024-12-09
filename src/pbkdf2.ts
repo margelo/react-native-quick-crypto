@@ -29,6 +29,8 @@ function sanitizeInput(input: BinaryLike, errorMsg: string): ArrayBuffer {
   }
 }
 
+const nativePbkdf2 = NativeQuickCrypto.pbkdf2;
+
 export function pbkdf2(
   password: Password,
   salt: Salt,
@@ -44,7 +46,6 @@ export function pbkdf2(
   const sanitizedSalt = sanitizeInput(salt, WRONG_SALT);
   const normalizedDigest = normalizeHashName(digest, HashContext.Node);
 
-  const nativePbkdf2 = NativeQuickCrypto.pbkdf2;
   nativePbkdf2
     .pbkdf2(
       sanitizedPassword,
@@ -74,7 +75,6 @@ export function pbkdf2Sync(
   const sanitizedSalt = sanitizeInput(salt, WRONG_SALT);
   const algo = digest ? normalizeHashName(digest, HashContext.Node) : 'sha1';
 
-  const nativePbkdf2 = NativeQuickCrypto.pbkdf2;
   const result: ArrayBuffer = nativePbkdf2.pbkdf2Sync(
     sanitizedPassword,
     sanitizedSalt,
