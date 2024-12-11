@@ -1,5 +1,5 @@
 {
-  "version": "1.0.0-beta.6",
+  "version": "1.0.0-beta.7",
   "scripts": {
     "check-all": "./scripts/clang-format.sh",
     "clean": "bun --filter='*' clean",
@@ -38,21 +38,6 @@
       "before:release": "bun bundle-install && bun pods && git add example/ios/Podfile.lock"
     },
     "plugins": {
-      "@release-it/bumper": {
-        "out": [
-          {
-            "file": "packages/react-native-quick-crypto/package.json",
-            "path": "version"
-          },
-          {
-            "file": "example/package.json",
-            "path": [
-              "version",
-              "dependencies.react-native-quick-crypto"
-            ]
-          }
-        ]
-      },
       "@release-it/conventional-changelog": {
         "preset": {
           "name": "conventionalcommits",
