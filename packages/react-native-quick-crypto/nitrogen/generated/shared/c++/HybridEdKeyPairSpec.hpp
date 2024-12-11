@@ -55,10 +55,11 @@ namespace margelo::nitro::crypto {
       virtual std::shared_ptr<Promise<void>> generateKeyPair(double publicFormat, double publicType, double privateFormat, double privateType, const std::optional<std::string>& cipher, const std::optional<std::shared_ptr<ArrayBuffer>>& passphrase) = 0;
       virtual void generateKeyPairSync(double publicFormat, double publicType, double privateFormat, double privateType, const std::optional<std::string>& cipher, const std::optional<std::shared_ptr<ArrayBuffer>>& passphrase) = 0;
       virtual std::shared_ptr<ArrayBuffer> getPublicKey() = 0;
-      virtual std::shared_ptr<Promise<std::shared_ptr<ArrayBuffer>>> sign(const std::shared_ptr<ArrayBuffer>& message) = 0;
-      virtual std::shared_ptr<ArrayBuffer> signSync(const std::shared_ptr<ArrayBuffer>& message) = 0;
-      virtual std::shared_ptr<Promise<bool>> verify(const std::shared_ptr<ArrayBuffer>& signature, const std::shared_ptr<ArrayBuffer>& message) = 0;
-      virtual bool verifySync(const std::shared_ptr<ArrayBuffer>& signature, const std::shared_ptr<ArrayBuffer>& message) = 0;
+      virtual std::shared_ptr<ArrayBuffer> getPrivateKey() = 0;
+      virtual std::shared_ptr<Promise<std::shared_ptr<ArrayBuffer>>> sign(const std::shared_ptr<ArrayBuffer>& message, const std::optional<std::shared_ptr<ArrayBuffer>>& key) = 0;
+      virtual std::shared_ptr<ArrayBuffer> signSync(const std::shared_ptr<ArrayBuffer>& message, const std::optional<std::shared_ptr<ArrayBuffer>>& key) = 0;
+      virtual std::shared_ptr<Promise<bool>> verify(const std::shared_ptr<ArrayBuffer>& message, const std::shared_ptr<ArrayBuffer>& signature, const std::optional<std::shared_ptr<ArrayBuffer>>& key) = 0;
+      virtual bool verifySync(const std::shared_ptr<ArrayBuffer>& message, const std::shared_ptr<ArrayBuffer>& signature, const std::optional<std::shared_ptr<ArrayBuffer>>& key) = 0;
       virtual void setCurve(const std::string& curve) = 0;
 
     protected:

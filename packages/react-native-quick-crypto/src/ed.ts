@@ -40,19 +40,37 @@ export class Ed {
     return this.native.getPublicKey();
   }
 
-  async sign(message: ArrayBuffer): Promise<ArrayBuffer> {
-    return this.native.sign(message);
+  getPrivateKey(): ArrayBuffer {
+    return this.native.getPrivateKey();
   }
 
-  signSync(message: ArrayBuffer): ArrayBuffer {
-    return this.native.signSync(message);
+  async sign(message: ArrayBuffer, key?: ArrayBuffer): Promise<ArrayBuffer> {
+    return key ? this.native.sign(message, key) : this.native.sign(message);
   }
 
-  async verify(signature: ArrayBuffer, message: ArrayBuffer): Promise<boolean> {
-    return this.native.verify(signature, message);
+  signSync(message: ArrayBuffer, key?: ArrayBuffer): ArrayBuffer {
+    return key
+      ? this.native.signSync(message, key)
+      : this.native.signSync(message);
   }
 
-  verifySync(signature: ArrayBuffer, message: ArrayBuffer): boolean {
-    return this.native.verifySync(signature, message);
+  async verify(
+    message: ArrayBuffer,
+    signature: ArrayBuffer,
+    key?: ArrayBuffer,
+  ): Promise<boolean> {
+    return key
+      ? this.native.verify(message, signature, key)
+      : this.native.verify(message, signature);
+  }
+
+  verifySync(
+    message: ArrayBuffer,
+    signature: ArrayBuffer,
+    key?: ArrayBuffer,
+  ): boolean {
+    return key
+      ? this.native.verifySync(message, signature, key)
+      : this.native.verifySync(message, signature);
   }
 }

@@ -30,6 +30,7 @@ export const TestDetailsScreen = ({ route }) => {
             onPress={() => setShowFailed(!showFailed)}
             disableText={true}
             fillColor="red"
+            style={styles.checkbox}
           />
           <Text style={styles.showMenuLabel}>Show Failed</Text>
         </View>
@@ -39,6 +40,7 @@ export const TestDetailsScreen = ({ route }) => {
             onPress={() => setShowPassed(!showPassed)}
             disableText={true}
             fillColor={colors.green}
+            style={styles.checkbox}
           />
           <Text style={styles.showMenuLabel}>Show Passed</Text>
         </View>
@@ -100,5 +102,8 @@ const styles = StyleSheet.create({
   },
   scrollContent: {
     paddingHorizontal: 5,
+  },
+  checkbox: {
+    transform: [{ scaleX: 0.8 }, { scaleY: 0.8 }],
   },
 });
