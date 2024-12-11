@@ -17,6 +17,7 @@ namespace margelo::nitro::crypto {
       prototype.registerHybridMethod("generateKeyPair", &HybridEdKeyPairSpec::generateKeyPair);
       prototype.registerHybridMethod("generateKeyPairSync", &HybridEdKeyPairSpec::generateKeyPairSync);
       prototype.registerHybridMethod("getPublicKey", &HybridEdKeyPairSpec::getPublicKey);
+      prototype.registerHybridMethod("getPrivateKey", &HybridEdKeyPairSpec::getPrivateKey);
       prototype.registerHybridMethod("sign", &HybridEdKeyPairSpec::sign);
       prototype.registerHybridMethod("signSync", &HybridEdKeyPairSpec::signSync);
       prototype.registerHybridMethod("verify", &HybridEdKeyPairSpec::verify);

@@ -61,7 +61,7 @@ Creating a Wallet took 289 ms
 </h3>
 
 ```sh
-yarn add react-native-quick-crypto
+bun add react-native-quick-crypto react-native-nitro-modules
 cd ios && pod install
 ```
 

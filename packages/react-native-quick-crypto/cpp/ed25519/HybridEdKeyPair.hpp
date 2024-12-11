@@ -37,36 +37,49 @@ class HybridEdKeyPair : public HybridEdKeyPairSpec {
   ) override;
 
   std::shared_ptr<Promise<std::shared_ptr<ArrayBuffer>>>
-  sign(const std::shared_ptr<ArrayBuffer>& message) override;
+  sign(
+    const std::shared_ptr<ArrayBuffer>& message,
+    const std::optional<std::shared_ptr<ArrayBuffer>>& key
+  ) override;
 
   std::shared_ptr<ArrayBuffer>
-  signSync(const std::shared_ptr<ArrayBuffer>& message) override;
+  signSync(
+    const std::shared_ptr<ArrayBuffer>& message,
+    const std::optional<std::shared_ptr<ArrayBuffer>>& key
+  ) override;
 
   std::shared_ptr<Promise<bool>>
   verify(
     const std::shared_ptr<ArrayBuffer>& signature,
-    const std::shared_ptr<ArrayBuffer>& message
+    const std::shared_ptr<ArrayBuffer>& message,
+    const std::optional<std::shared_ptr<ArrayBuffer>>& key
   ) override;
 
   bool
   verifySync(
     const std::shared_ptr<ArrayBuffer>& signature,
-    const std::shared_ptr<ArrayBuffer>& message
+    const std::shared_ptr<ArrayBuffer>& message,
+    const std::optional<std::shared_ptr<ArrayBuffer>>& key
   ) override;
 
  protected:
   std::shared_ptr<ArrayBuffer>
   getPublicKey() override;
 
-  std::shared_ptr<ArrayBuffer> getPrivateKey();
+  std::shared_ptr<ArrayBuffer>
+  getPrivateKey() override;
 
   void checkKeyPair();
 
-  void setCurve(const std::string& curve);
+  void setCurve(const std::string& curve) override;
 
  private:
   std::string curve;
   EVP_PKEY* pkey = nullptr;
+
+  EVP_PKEY* importPrivateKey(
+    const std::optional<std::shared_ptr<ArrayBuffer>>& key
+  );
 };
 
 } // namespace margelo::nitro::crypto

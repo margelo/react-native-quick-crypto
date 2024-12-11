@@ -21,12 +21,21 @@ export interface EdKeyPair
   ): void;
 
   getPublicKey(): ArrayBuffer;
+  getPrivateKey(): ArrayBuffer;
 
-  sign(message: ArrayBuffer): Promise<ArrayBuffer>;
-  signSync(message: ArrayBuffer): ArrayBuffer;
+  sign(message: ArrayBuffer, key?: ArrayBuffer): Promise<ArrayBuffer>;
+  signSync(message: ArrayBuffer, key?: ArrayBuffer): ArrayBuffer;
 
-  verify(signature: ArrayBuffer, message: ArrayBuffer): Promise<boolean>;
-  verifySync(signature: ArrayBuffer, message: ArrayBuffer): boolean;
+  verify(
+    message: ArrayBuffer,
+    signature: ArrayBuffer,
+    key?: ArrayBuffer,
+  ): Promise<boolean>;
+  verifySync(
+    message: ArrayBuffer,
+    signature: ArrayBuffer,
+    key?: ArrayBuffer,
+  ): boolean;
 
   setCurve(curve: string): void;
 }
