@@ -75,28 +75,36 @@ test(SUITE, 'sign/verify - bad signature does not verify', async () => {
   expect(verified).to.be.false;
 });
 
-test(SUITE, 'sign/verify with non-internally generated private key', async () => {
-  let ed1: Ed | null = new Ed('ed25519', {});
-  await ed1.generateKeyPair();
-  const priv = ed1.getPrivateKey();
-  ed1 = null;
+test(
+  SUITE,
+  'sign/verify with non-internally generated private key',
+  async () => {
+    let ed1: Ed | null = new Ed('ed25519', {});
+    await ed1.generateKeyPair();
+    const priv = ed1.getPrivateKey();
+    ed1 = null;
 
-  const ed2 = new Ed('ed25519', {});
-  const signature = await ed2.sign(data1.buffer, priv);
-  const verified = await ed2.verify(signature, data1.buffer, priv);
-  expect(verified).to.be.true;
-});
+    const ed2 = new Ed('ed25519', {});
+    const signature = await ed2.sign(data1.buffer, priv);
+    const verified = await ed2.verify(signature, data1.buffer, priv);
+    expect(verified).to.be.true;
+  },
+);
 
-test(SUITE, 'sign/verify with bad non-internally generated private key', async () => {
-  let ed1: Ed | null = new Ed('ed25519', {});
-  await ed1.generateKeyPair();
-  const priv = ed1.getPrivateKey();
-  ed1 = null;
+test(
+  SUITE,
+  'sign/verify with bad non-internally generated private key',
+  async () => {
+    let ed1: Ed | null = new Ed('ed25519', {});
+    await ed1.generateKeyPair();
+    const priv = ed1.getPrivateKey();
+    ed1 = null;
 
-  const ed2 = new Ed('ed25519', {});
-  const signature = await ed2.sign(data1.buffer, priv);
-  const signature2 = randomBytes(64).buffer;
-  expect(ab2str(signature2)).not.to.equal(ab2str(signature));
-  const verified = await ed2.verify(signature2, data1.buffer, priv);
-  expect(verified).to.be.false;
-});
+    const ed2 = new Ed('ed25519', {});
+    const signature = await ed2.sign(data1.buffer, priv);
+    const signature2 = randomBytes(64).buffer;
+    expect(ab2str(signature2)).not.to.equal(ab2str(signature));
+    const verified = await ed2.verify(signature2, data1.buffer, priv);
+    expect(verified).to.be.false;
+  },
+);
