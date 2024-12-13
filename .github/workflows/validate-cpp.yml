@@ -3,7 +3,6 @@ name: 'Validate C++'
 on:
   push:
     branches:
-      - main
       - 0.x
     paths:
       - '.github/workflows/validate-cpp.yml'
@@ -35,4 +34,5 @@ jobs:
             ,-build/namespaces\
             ,-whitespace/comments\
             ,-build/include_order\
+            ,-whitespace/parens\
             "

@@ -10,6 +10,8 @@
 
 #include <algorithm>
 #include <memory>
+#include <utility>
+#include <vector>
 #include <string>
 #include <unordered_map>
 
@@ -40,33 +42,37 @@ enum class Prop {
 class PropNameIDCache {
  public:
   const jsi::PropNameID &get(jsi::Runtime &runtime, Prop prop) {
-    if (!this->props[prop]) {
-      this->props[prop] =
-          std::make_unique<jsi::PropNameID>(createProp(runtime, prop));
+    auto key = reinterpret_cast<uintptr_t>(&runtime);
+    if (this->props.find(key) == this->props.end()) {
+      this->props[key] = std::unordered_map<Prop, std::unique_ptr<jsi::PropNameID>>();
     }
-    return *(this->props[prop]);
+    if (!this->props[key][prop]) {
+      this->props[key][prop] = std::make_unique<jsi::PropNameID>(createProp(runtime, prop));
+    }
+    return *(this->props[key][prop]);
   }
 
-  const jsi::PropNameID &getConstructorNameProp(jsi::Runtime &runtime,
-                                                MGLTypedArrayKind kind);
+  const jsi::PropNameID &getConstructorNameProp(jsi::Runtime &runtime, MGLTypedArrayKind kind);
 
-  void invalidate() {
-    /** This call (and attempts to use props.clear()) crash 💥 when the
-     *  JSI runtime has already been destroyed.  So we are commenting it out
-     *  and waiting for Nitro and 1.0 to fix this the proper way.
-     */
-    //props.erase(props.begin(), props.end());
+  void invalidate(uintptr_t key) {
+    if (props.find(key) != props.end()) {
+      props[key].clear();
+    }
   }
-
  private:
-  std::unordered_map<Prop, std::unique_ptr<jsi::PropNameID>> props;
+  std::unordered_map<uintptr_t, std::unordered_map<Prop, std::unique_ptr<jsi::PropNameID>>> props;
 
   jsi::PropNameID createProp(jsi::Runtime &runtime, Prop prop);
 };
 
 PropNameIDCache propNameIDCache;
 
-void invalidateJsiPropNameIDCache() { propNameIDCache.invalidate(); }
+InvalidateCacheOnDestroy::InvalidateCacheOnDestroy(jsi::Runtime &runtime) {
+  key = reinterpret_cast<uintptr_t>(&runtime);
+}
+InvalidateCacheOnDestroy::~InvalidateCacheOnDestroy() {
+  propNameIDCache.invalidate(key);
+}
 
 MGLTypedArrayKind getTypedArrayKindForName(const std::string &name);
 
@@ -75,8 +81,9 @@ MGLTypedArrayBase::MGLTypedArrayBase(jsi::Runtime &runtime, size_t size,
     : MGLTypedArrayBase(
           runtime,
           runtime.global()
-              .getProperty(runtime, propNameIDCache.getConstructorNameProp(
-                                        runtime, kind))
+              .getProperty(
+                runtime,
+                propNameIDCache.getConstructorNameProp(runtime, kind))
               .asObject(runtime)
               .asFunction(runtime)
               .callAsConstructor(runtime, {static_cast<double>(size)})
@@ -234,6 +241,20 @@ void MGLTypedArray<T>::update(jsi::Runtime &runtime,
   uint8_t *rawData = getBuffer(runtime).data(runtime) + byteOffset(runtime);
   std::copy(data.begin(), data.end(),
             reinterpret_cast<ContentType<T> *>(rawData));
+}
+
+template <MGLTypedArrayKind T>
+void MGLTypedArray<T>::updateUnsafe(jsi::Runtime &runtime, ContentType<T> *data, size_t length) {
+    if (length != size(runtime)) {
+    throw jsi::JSError(runtime, "TypedArray can only be updated with an array of the same size");
+  }
+  uint8_t *rawData = getBuffer(runtime).data(runtime) + byteOffset(runtime);
+  memcpy(rawData, data, length);
+}
+
+template <MGLTypedArrayKind T>
+uint8_t* MGLTypedArray<T>::data(jsi::Runtime &runtime) {
+  return getBuffer(runtime).data(runtime) + byteOffset(runtime);
 }
 
 const jsi::PropNameID &PropNameIDCache::getConstructorNameProp(

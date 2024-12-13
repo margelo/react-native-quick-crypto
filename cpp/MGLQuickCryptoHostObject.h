@@ -22,7 +22,7 @@ class JSI_EXPORT MGLQuickCryptoHostObject : public MGLSmartHostObject {
       std::shared_ptr<react::CallInvoker> jsCallInvoker,
       std::shared_ptr<DispatchQueue::dispatch_queue> workerQueue);
 
-  virtual ~MGLQuickCryptoHostObject() { invalidateJsiPropNameIDCache(); }
+  virtual ~MGLQuickCryptoHostObject() {}
 };
 
 }  // namespace margelo

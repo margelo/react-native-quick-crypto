@@ -6,6 +6,7 @@
 #import <jsi/jsi.h>
 
 #import "../cpp/MGLQuickCryptoHostObject.h"
+#import "../cpp/JSIUtils/MGLTypedArray.h"
 
 @implementation QuickCryptoModule
 
@@ -39,6 +40,15 @@ RCT_EXPORT_BLOCKING_SYNCHRONOUS_METHOD(install) {
       std::make_shared<margelo::MGLQuickCryptoHostObject>(callInvoker, workerQueue));
   auto object = jsi::Object::createFromHostObject(runtime, hostObject);
   runtime.global().setProperty(runtime, "__QuickCryptoProxy", std::move(object));
+
+  // Adds the PropNameIDCache object to the Runtime. If the Runtime gets
+  // destroyed, the Object gets destroyed and the cache gets invalidated.
+  auto propNameIdCache = std::make_shared<InvalidateCacheOnDestroy>(runtime);
+  runtime.global().setProperty(
+    runtime,
+    "rnqcArrayBufferPropNameIdCache",
+    jsi::Object::createFromHostObject(runtime, propNameIdCache)
+  );
 
   NSLog(@"Successfully installed JSI bindings for react-native-quick-crypto!");
   return @true;

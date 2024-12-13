@@ -3,7 +3,6 @@ name: Build Android
 on:
   push:
     branches:
-      - main
       - 0.x
     paths:
       - '.github/workflows/build-android.yml'

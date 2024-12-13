@@ -69,7 +69,24 @@ struct typedArrayTypeMap<MGLTypedArrayKind::Float64Array> {
   typedef double type;
 };
 
-void invalidateJsiPropNameIDCache();
+// Instance of this class will invalidate PropNameIDCache when destructor is called.
+// Attach this object to global in specific jsi::Runtime to make sure lifecycle of
+// the cache object is connected to the lifecycle of the js runtime
+class InvalidateCacheOnDestroy : public jsi::HostObject {
+ public:
+  explicit InvalidateCacheOnDestroy(jsi::Runtime &runtime);
+  virtual ~InvalidateCacheOnDestroy();
+  virtual jsi::Value get(jsi::Runtime &, const jsi::PropNameID &name) {
+    return jsi::Value::null();
+  }
+  virtual void set(jsi::Runtime &, const jsi::PropNameID &name, const jsi::Value &value) {}
+  virtual std::vector<jsi::PropNameID> getPropertyNames(jsi::Runtime &rt) {
+    return {};
+  }
+
+ private:
+  uintptr_t key;
+};
 
 class MGLTypedArrayBase : public jsi::Object {
  public:
@@ -126,6 +143,8 @@ class MGLTypedArray : public MGLTypedArrayBase {
 
   std::vector<ContentType<T>> toVector(jsi::Runtime &runtime);
   void update(jsi::Runtime &runtime, const std::vector<ContentType<T>> &data);
+  void updateUnsafe(jsi::Runtime &runtime, ContentType<T> *data, size_t length);
+  uint8_t* data(jsi::Runtime &runtime);
 };
 
 template <MGLTypedArrayKind T>

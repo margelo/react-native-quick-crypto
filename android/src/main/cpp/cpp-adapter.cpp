@@ -2,8 +2,10 @@
 #include <fbjni/fbjni.h>
 #include <jni.h>
 #include <jsi/jsi.h>
+#include <memory>
 
 #include "MGLQuickCryptoHostObject.h"
+#include "JSIUtils/MGLTypedArray.h"
 
 using namespace facebook;
 
@@ -28,6 +30,13 @@ class CryptoCppAdapter : public jni::HybridClass<CryptoCppAdapter> {
     auto object = jsi::Object::createFromHostObject(runtime, hostObject);
     runtime.global().setProperty(runtime, "__QuickCryptoProxy",
                                  std::move(object));
+    // Adds the PropNameIDCache object to the Runtime. If the Runtime gets destroyed, the Object gets destroyed and the cache gets invalidated.
+    auto propNameIdCache = std::make_shared<InvalidateCacheOnDestroy>(runtime);
+    runtime.global().setProperty(
+      runtime,
+      "rnqcArrayBufferPropNameIdCache",
+      jsi::Object::createFromHostObject(runtime, propNameIdCache)
+    );
   }
 
   void nativeInstall(

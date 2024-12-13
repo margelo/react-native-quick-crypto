@@ -3,7 +3,7 @@ name: 'Update Lockfiles (bun.lockb + Podfile.lock)'
 on:
   push:
     branches:
-      - main
+      - 0.x
     paths:
       - ".github/workflows/update-lockfiles.yml"
   pull_request:
