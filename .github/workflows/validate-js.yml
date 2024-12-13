@@ -3,7 +3,6 @@ name: Validate JS
 on:
   push:
     branches:
-      - main
       - 0.x
     paths:
       - '.github/workflows/validate-js.yml'

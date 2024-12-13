@@ -3,7 +3,6 @@ name: Validate Android
 on:
   push:
     branches:
-      - main
       - 0.x
     paths:
       - '.github/workflows/validate-android.yml'
