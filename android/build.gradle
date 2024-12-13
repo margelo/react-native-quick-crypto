@@ -171,8 +171,9 @@ repositories {
 dependencies {
   //noinspection GradleDynamicVersion
   implementation "com.facebook.react:react-android:+"
-  // https://mvnrepository.com/artifact/com.android.ndk.thirdparty/openssl
-  implementation 'com.android.ndk.thirdparty:openssl:1.1.1q-beta-1'
+
+  // Add a dependency on OpenSSL
+  implementation 'io.github.ronickg:openssl:3.3.2'
 }
 
 // Resolves "LOCAL_SRC_FILES points to a missing file, Check that libfb.so exists or that its path is correct".
