@@ -2,6 +2,7 @@
 #include <fbjni/fbjni.h>
 #include <jni.h>
 #include <jsi/jsi.h>
+#include <memory>
 
 #include "MGLQuickCryptoHostObject.h"
 #include "JSIUtils/MGLTypedArray.h"

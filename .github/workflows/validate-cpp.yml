@@ -35,4 +35,5 @@ jobs:
             ,-build/namespaces\
             ,-whitespace/comments\
             ,-build/include_order\
+            ,-whitespace/parens\
             "
