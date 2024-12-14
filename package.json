@@ -107,6 +107,9 @@
     "github": {
       "release": true
     },
+    "hooks": {
+      "before:release": "bun install && bun pods && git add example/ios/Podfile.lock"
+    },
     "plugins": {
       "@release-it/conventional-changelog": {
         "preset": {
