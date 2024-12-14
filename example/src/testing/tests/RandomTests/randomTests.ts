@@ -73,14 +73,14 @@ describe('random', () => {
     });
   });
 
-  it('simple test (do sth)', () => {
+  it('simple test 1', () => {
     const buf = Buffer.alloc(10);
     const before = buf.toString('hex');
     const after = crypto.randomFillSync(buf).toString('hex');
     assert.notStrictEqual(before, after);
   });
 
-  it('simple test (do sth) 2', () => {
+  it('simple test 2', () => {
     const buf = new Uint8Array(new Array(10).fill(0));
     const before = Buffer.from(buf).toString('hex');
     crypto.randomFillSync(buf);
@@ -88,7 +88,7 @@ describe('random', () => {
     assert.notStrictEqual(before, after);
   });
 
-  it('simple test (do sth) 3', () => {
+  it('simple test 3', () => {
     [
       new Uint16Array(10),
       new Uint32Array(10),
@@ -103,7 +103,7 @@ describe('random', () => {
     });
   });
 
-  it('simple test (do sth) 4 - random Fill Sync AB', () => {
+  it('simple test 4 - random Fill Sync AB', () => {
     [new ArrayBuffer(10), new ArrayBuffer(10)].forEach((buf) => {
       const before = Buffer.from(buf).toString('hex');
       crypto.randomFillSync(buf);
@@ -112,7 +112,7 @@ describe('random', () => {
     });
   });
 
-  it('simple test (do sth) 5- random Fill ', (done: Done) => {
+  it('simple test 5- random Fill ', (done: Done) => {
     const buf = Buffer.alloc(10);
     const before = buf.toString('hex');
 
@@ -127,7 +127,7 @@ describe('random', () => {
     });
   });
 
-  it('simple test (do sth) 6 ', (done: Done) => {
+  it('simple test 6 ', (done: Done) => {
     const buf = new Uint8Array(new Array(10).fill(0));
     const before = Buffer.from(buf).toString('hex');
 
@@ -172,7 +172,7 @@ describe('random', () => {
     });
   });
 
-  it('simple test (do sth) 8', (done: Done) => {
+  it('simple test 8', (done: Done) => {
     let ctr = 0;
     [new ArrayBuffer(10), new ArrayBuffer(10)].forEach((buf) => {
       const before = Buffer.from(buf).toString('hex');
@@ -416,7 +416,7 @@ describe('random', () => {
   });
 
   it('randomInt - Synchronous API', () => {
-    const randomInts = [];
+    const randomInts: number[] = [];
     for (let i = 0; i < 100; i++) {
       const n = crypto.randomInt(3);
       assert.ok(n >= 0);
@@ -609,7 +609,6 @@ describe('random', () => {
   [true, NaN, null, {}, [], 10].forEach((val) => {
     it(`expect type error: ${val}`, () => {
       assert.throws(
-        // @ts-expect-error bad callback
         () => crypto.randomInt(0, 1, val),
         /callback must be a function or undefined/,
       );

@@ -1,6 +1,6 @@
 import { Buffer as CraftzdogBuffer } from '@craftzdog/react-native-buffer';
 import { Buffer as SafeBuffer } from 'safe-buffer';
-import { Buffer as FerossBuffer } from 'buffer';
+
 import type {
   AnyAlgorithm,
   DeriveBitsAlgorithm,
@@ -18,14 +18,12 @@ import { type CipherKey } from 'crypto'; // @types/node
 export type BufferLike =
   | ArrayBuffer
   | CraftzdogBuffer
-  | FerossBuffer
   | SafeBuffer
   | ArrayBufferView;
 export type BinaryLike =
   | string
   | ArrayBuffer
   | CraftzdogBuffer
-  | FerossBuffer
   | SafeBuffer
   | TypedArray
   | DataView;
@@ -90,6 +88,8 @@ export type TypedArray =
   | Int32Array
   | Float32Array
   | Float64Array;
+
+export type ABV = TypedArray | DataView | ArrayBufferLike | CraftzdogBuffer;
 
 type DOMName =
   | string
@@ -183,17 +183,16 @@ export const kEmptyObject = Object.freeze(Object.create(null));
 // }
 
 export function toArrayBuffer(
-  buf: CraftzdogBuffer | FerossBuffer | SafeBuffer | ArrayBufferView,
+  buf: CraftzdogBuffer | SafeBuffer | ArrayBufferView,
 ): ArrayBuffer {
-  if (
-    CraftzdogBuffer.isBuffer(buf) ||
-    FerossBuffer.isBuffer(buf) ||
-    ArrayBuffer.isView(buf)
-  ) {
+  if (CraftzdogBuffer.isBuffer(buf) || ArrayBuffer.isView(buf)) {
     if (buf?.buffer?.slice) {
-      return buf.buffer.slice(buf.byteOffset, buf.byteOffset + buf.byteLength);
+      return buf.buffer.slice(
+        buf.byteOffset,
+        buf.byteOffset + buf.byteLength,
+      ) as ArrayBuffer;
     } else {
-      return buf.buffer;
+      throw new Error('This implementation of buffer does not implement slice');
     }
   }
   const ab = new ArrayBuffer(buf.length);
@@ -205,11 +204,7 @@ export function toArrayBuffer(
 }
 
 export function bufferLikeToArrayBuffer(buf: BufferLike): ArrayBuffer {
-  if (
-    CraftzdogBuffer.isBuffer(buf) ||
-    FerossBuffer.isBuffer(buf) ||
-    SafeBuffer.isBuffer(buf)
-  ) {
+  if (CraftzdogBuffer.isBuffer(buf) || SafeBuffer.isBuffer(buf)) {
     return toArrayBuffer(buf);
   }
   if (ArrayBuffer.isView(buf)) {
@@ -239,11 +234,7 @@ export function binaryLikeToArrayBuffer(
   }
 
   // Buffer
-  if (
-    CraftzdogBuffer.isBuffer(input) ||
-    FerossBuffer.isBuffer(input) ||
-    SafeBuffer.isBuffer(input)
-  ) {
+  if (CraftzdogBuffer.isBuffer(input) || SafeBuffer.isBuffer(input)) {
     return toArrayBuffer(input);
   }
 
@@ -778,16 +769,12 @@ export const bigIntArrayToUnsignedInt = (
   return result;
 };
 
-export function abvToArrayBuffer(buffer: ArrayBufferView): ArrayBuffer {
-  if (CraftzdogBuffer.isBuffer(buffer)) {
-    return buffer.buffer;
+export function abvToArrayBuffer(buffer: ABV): ArrayBuffer {
+  if (CraftzdogBuffer.isBuffer(buffer) || ArrayBuffer.isView(buffer)) {
+    return buffer.buffer as ArrayBuffer;
   }
-  if (ArrayBuffer.isView(buffer)) {
-    return buffer.buffer;
-  }
-  return buffer;
+  return buffer as ArrayBuffer;
 }
-
 // TODO: these used to be shipped by crypto-browserify in quickcrypto v0.6
 // could instead fetch from OpenSSL if needed and handle breaking changes
 export const getHashes = () => [
