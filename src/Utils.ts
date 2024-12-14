@@ -182,6 +182,28 @@ export const kEmptyObject = Object.freeze(Object.create(null));
 //   return slowCases(enc);
 // }
 
+
+/**
+ * Converts supplied argument to an ArrayBuffer.  Note this does not copy the
+ * data so it is faster than toArrayBuffer.  Not copying is important for
+ * functions like randomFill which need to be able to write to the underlying
+ * buffer.
+ * @param buf
+ * @returns ArrayBuffer
+ */
+export function abvToArrayBuffer(buffer: ABV): ArrayBuffer {
+  if (CraftzdogBuffer.isBuffer(buffer) || ArrayBuffer.isView(buffer)) {
+    return buffer.buffer as ArrayBuffer;
+  }
+  return buffer as ArrayBuffer;
+}
+
+/**
+ * Converts supplied argument to an ArrayBuffer.  Note this copies data if the
+ * supplied buffer has the .slice() method, so can be a bit slow.
+ * @param buf
+ * @returns ArrayBuffer
+ */
 export function toArrayBuffer(
   buf: CraftzdogBuffer | SafeBuffer | ArrayBufferView,
 ): ArrayBuffer {
@@ -769,12 +791,6 @@ export const bigIntArrayToUnsignedInt = (
   return result;
 };
 
-export function abvToArrayBuffer(buffer: ABV): ArrayBuffer {
-  if (CraftzdogBuffer.isBuffer(buffer) || ArrayBuffer.isView(buffer)) {
-    return buffer.buffer as ArrayBuffer;
-  }
-  return buffer as ArrayBuffer;
-}
 // TODO: these used to be shipped by crypto-browserify in quickcrypto v0.6
 // could instead fetch from OpenSSL if needed and handle breaking changes
 export const getHashes = () => [
