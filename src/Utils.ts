@@ -182,7 +182,6 @@ export const kEmptyObject = Object.freeze(Object.create(null));
 //   return slowCases(enc);
 // }
 
-
 /**
  * Converts supplied argument to an ArrayBuffer.  Note this does not copy the
  * data so it is faster than toArrayBuffer.  Not copying is important for
