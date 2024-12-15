@@ -2,7 +2,7 @@ require "json"
 
 package = JSON.parse(File.read(File.join(__dir__, "package.json")))
 
-Pod::UI.puts "[QuickCrypto] crypto just got quicker 💨"
+Pod::UI.puts "[QuickCrypto]  💨 crypto just got quicker"
 
 Pod::Spec.new do |s|
   s.name         = "QuickCrypto"
@@ -12,7 +12,11 @@ Pod::Spec.new do |s|
   s.license      = package["license"]
   s.authors      = package["authors"]
 
-  s.platforms    = { :ios => min_ios_version_supported }
+  s.ios.deployment_target = min_ios_version_supported
+  s.visionos.deployment_target = 1.0
+  s.macos.deployment_target = 10.13
+  s.tvos.deployment_target = 13.4
+
   s.source       = { :git => "https://github.com/margelo/react-native-quick-crypto.git", :tag => "#{s.version}" }
 
   s.source_files = [
@@ -32,7 +36,6 @@ Pod::Spec.new do |s|
   load 'nitrogen/generated/ios/QuickCrypto+autolinking.rb'
   add_nitrogen_files(s)
 
-  install_modules_dependencies(s)
   s.dependency "OpenSSL-Universal"
-
+  install_modules_dependencies(s)
 end

@@ -1,5 +1,5 @@
 import { Buffer } from '@craftzdog/react-native-buffer';
-import type { ArrayBufferView, RandomCallback } from './utils';
+import type { ABV, RandomCallback } from './utils';
 import { abvToArrayBuffer } from './utils';
 import { NitroModules } from 'react-native-nitro-modules';
 import type { Random } from './specs/random.nitro';
@@ -14,25 +14,25 @@ function getNative(): Random {
   return random;
 }
 
-export function randomFill<T extends ArrayBufferView>(
+export function randomFill<T extends ABV>(
   buffer: T,
   callback: RandomCallback<T>,
 ): void;
 
-export function randomFill<T extends ArrayBufferView>(
+export function randomFill<T extends ABV>(
   buffer: T,
   offset: number,
   callback: RandomCallback<T>,
 ): void;
 
-export function randomFill<T extends ArrayBufferView>(
+export function randomFill<T extends ABV>(
   buffer: T,
   offset: number,
   size: number,
   callback: RandomCallback<T>,
 ): void;
 
-export function randomFill(buffer: ArrayBufferView, ...rest: unknown[]): void {
+export function randomFill(buffer: ABV, ...rest: unknown[]): void {
   if (typeof rest[rest.length - 1] !== 'function') {
     throw new Error('No callback provided to randomFill');
   }
@@ -65,17 +65,13 @@ export function randomFill(buffer: ArrayBufferView, ...rest: unknown[]): void {
   );
 }
 
-export function randomFillSync<T extends ArrayBufferView>(
+export function randomFillSync<T extends ABV>(
   buffer: T,
   offset?: number,
   size?: number,
 ): T;
 
-export function randomFillSync(
-  buffer: ArrayBufferView,
-  offset: number = 0,
-  size?: number,
-) {
+export function randomFillSync(buffer: ABV, offset: number = 0, size?: number) {
   getNative();
   buffer = abvToArrayBuffer(buffer);
   const res = random.randomFillSync(buffer, offset, size ?? buffer.byteLength);

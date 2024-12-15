@@ -1,9 +1,9 @@
-import type { Buffer } from '@craftzdog/react-native-buffer';
-import type { Buffer as SBuffer } from 'safe-buffer';
+import type { Buffer as CraftzdogBuffer } from '@craftzdog/react-native-buffer';
+import type { Buffer as SafeBuffer } from 'safe-buffer';
 import type { CipherKey } from 'crypto'; // @types/node
 import type { KeyObjectHandle } from '../specs/keyObjectHandle.nitro';
 
-export type ArrayBufferView = TypedArray | DataView | ArrayBufferLike | Buffer;
+export type ABV = TypedArray | DataView | ArrayBufferLike | CraftzdogBuffer;
 
 export type TypedArray =
   | Uint8Array
@@ -18,13 +18,17 @@ export type TypedArray =
 
 export type RandomCallback<T> = (err: Error | null, value: T) => void;
 
-export type BufferLike = ArrayBuffer | Buffer | SBuffer | ArrayBufferView;
+export type BufferLike =
+  | ArrayBuffer
+  | CraftzdogBuffer
+  | SafeBuffer
+  | ArrayBufferView;
 
 export type BinaryLike =
   | string
   | ArrayBuffer
-  | Buffer
-  | SBuffer
+  | CraftzdogBuffer
+  | SafeBuffer
   | TypedArray
   | DataView;
 
@@ -217,7 +221,7 @@ export type GenerateKeyPairOptions = {
   saltLength?: number; // Minimal salt length in bytes (RSA-PSS).
   divisorLength?: number; // Size of q in bits (DSA).
   namedCurve?: string; // Name of the curve to use (EC).
-  prime?: Buffer; // The prime parameter (DH).
+  prime?: CraftzdogBuffer; // The prime parameter (DH).
   primeLength?: number; // Prime length in bits (DH).
   generator?: number; // Custom generator (DH). Default: 2.
   groupName?: string; // Diffie-Hellman group name (DH). See crypto.getDiffieHellman().

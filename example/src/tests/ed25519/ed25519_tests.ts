@@ -1,5 +1,6 @@
 /* eslint-disable @typescript-eslint/no-unused-expressions */
 import { Ed, randomBytes, ab2str } from 'react-native-quick-crypto';
+import { Buffer } from '@craftzdog/react-native-buffer';
 // import type {
 //   // KeyObject,
 //   // CFRGKeyPairType,
@@ -11,6 +12,10 @@ import { expect } from 'chai';
 import { test } from '../util';
 
 const SUITE = 'ed25519';
+
+const encoder = new TextEncoder();
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+const encode = (data: any): Uint8Array => encoder.encode(JSON.stringify(data));
 
 /*
 const jwkOptions: GenerateKeyPairOptions = {
@@ -75,9 +80,18 @@ test(SUITE, 'sign/verify - bad signature does not verify', async () => {
   expect(verified).to.be.false;
 });
 
+test(SUITE, 'sign/verify - switched args does not verify', async () => {
+  const ed = new Ed('ed25519', {});
+  await ed.generateKeyPair();
+  const signature = await ed.sign(data1.buffer);
+  // verify(message, signature) is switched
+  const verified = await ed.verify(data1.buffer, signature);
+  expect(verified).to.be.false;
+});
+
 test(
   SUITE,
-  'sign/verify with non-internally generated private key',
+  'sign/verify - non-internally generated private key',
   async () => {
     let ed1: Ed | null = new Ed('ed25519', {});
     await ed1.generateKeyPair();
@@ -93,7 +107,7 @@ test(
 
 test(
   SUITE,
-  'sign/verify with bad non-internally generated private key',
+  'sign/verify - bad non-internally generated private key',
   async () => {
     let ed1: Ed | null = new Ed('ed25519', {});
     await ed1.generateKeyPair();
@@ -108,3 +122,16 @@ test(
     expect(verified).to.be.false;
   },
 );
+
+test(SUITE, 'sign/verify - Uint8Arrays', () => {
+  const data = { b: 'world', a: 'hello' };
+
+  const ed1 = new Ed('ed25519', {});
+  ed1.generateKeyPairSync();
+  const priv = new Uint8Array(ed1.getPrivateKey());
+
+  const ed2 = new Ed('ed25519', {});
+  const signature = new Uint8Array(ed2.signSync(encode(data), priv));
+  const verified = ed2.verifySync(signature, encode(data), priv);
+  expect(verified).to.be.true;
+});
