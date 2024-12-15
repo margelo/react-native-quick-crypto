@@ -89,21 +89,17 @@ test(SUITE, 'sign/verify - switched args does not verify', async () => {
   expect(verified).to.be.false;
 });
 
-test(
-  SUITE,
-  'sign/verify - non-internally generated private key',
-  async () => {
-    let ed1: Ed | null = new Ed('ed25519', {});
-    await ed1.generateKeyPair();
-    const priv = ed1.getPrivateKey();
-    ed1 = null;
+test(SUITE, 'sign/verify - non-internally generated private key', async () => {
+  let ed1: Ed | null = new Ed('ed25519', {});
+  await ed1.generateKeyPair();
+  const priv = ed1.getPrivateKey();
+  ed1 = null;
 
-    const ed2 = new Ed('ed25519', {});
-    const signature = await ed2.sign(data1.buffer, priv);
-    const verified = await ed2.verify(signature, data1.buffer, priv);
-    expect(verified).to.be.true;
-  },
-);
+  const ed2 = new Ed('ed25519', {});
+  const signature = await ed2.sign(data1.buffer, priv);
+  const verified = await ed2.verify(signature, data1.buffer, priv);
+  expect(verified).to.be.true;
+});
 
 test(
   SUITE,
