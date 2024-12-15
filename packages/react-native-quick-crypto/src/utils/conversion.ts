@@ -1,39 +1,62 @@
-import { Buffer } from '@craftzdog/react-native-buffer';
-import { Buffer as SBuffer } from 'safe-buffer';
-import type { ArrayBufferView, BinaryLikeNode, BufferLike } from './types';
+import { Buffer as CraftzdogBuffer } from '@craftzdog/react-native-buffer';
+import { Buffer as SafeBuffer } from 'safe-buffer';
+import type { ABV, BinaryLikeNode, BufferLike } from './types';
 
-export const abvToArrayBuffer = (buffer: ArrayBufferView) => {
-  if (Buffer.isBuffer(buffer)) {
-    return buffer.buffer;
+/**
+ * Converts supplied argument to an ArrayBuffer.  Note this does not copy the
+ * data so it is faster than toArrayBuffer.  Not copying is important for
+ * functions like randomFill which need to be able to write to the underlying
+ * buffer.
+ * @param buf
+ * @returns ArrayBuffer
+ */
+export const abvToArrayBuffer = (buf: ABV) => {
+  if (CraftzdogBuffer.isBuffer(buf)) {
+    return buf.buffer as ArrayBuffer;
   }
-  if (ArrayBuffer.isView(buffer)) {
-    return buffer.buffer;
+  if (ArrayBuffer.isView(buf)) {
+    return buf.buffer as ArrayBuffer;
   }
-  return buffer;
+  return buf as ArrayBuffer;
 };
 
-export function toArrayBuffer(buf: Buffer | SBuffer): ArrayBuffer {
-  if (Buffer.isBuffer(buf) && buf?.buffer?.slice) {
-    return buf.buffer.slice(buf.byteOffset, buf.byteOffset + buf.byteLength);
+/**
+ * Converts supplied argument to an ArrayBuffer.  Note this copies data if the
+ * supplied buffer has the .slice() method, so can be a bit slow.
+ * @param buf
+ * @returns ArrayBuffer
+ */
+export function toArrayBuffer(
+  buf: CraftzdogBuffer | SafeBuffer | ArrayBufferView,
+): ArrayBuffer {
+  if (CraftzdogBuffer.isBuffer(buf) || ArrayBuffer.isView(buf)) {
+    if (buf?.buffer?.slice) {
+      return buf.buffer.slice(
+        buf.byteOffset,
+        buf.byteOffset + buf.byteLength,
+      ) as ArrayBuffer;
+    } else {
+      return buf.buffer as ArrayBuffer;
+    }
   }
   const ab = new ArrayBuffer(buf.length);
   const view = new Uint8Array(ab);
   for (let i = 0; i < buf.length; ++i) {
-    view[i] = SBuffer.isBuffer(buf) ? buf.readUInt8(i) : buf[i]!;
+    view[i] = SafeBuffer.isBuffer(buf) ? buf.readUInt8(i) : buf[i]!;
   }
   return ab;
 }
 
 export function bufferLikeToArrayBuffer(buf: BufferLike): ArrayBuffer {
-  if (Buffer.isBuffer(buf)) {
-    return buf.buffer;
-  }
-  if (SBuffer.isBuffer(buf)) {
+  // Buffer
+  if (CraftzdogBuffer.isBuffer(buf) || SafeBuffer.isBuffer(buf)) {
     return toArrayBuffer(buf);
   }
+  // ArrayBufferView
   if (ArrayBuffer.isView(buf)) {
-    return buf.buffer;
+    return toArrayBuffer(buf);
   }
+  // ArrayBuffer
   return buf;
 }
 
@@ -49,7 +72,7 @@ export function binaryLikeToArrayBuffer(
       );
     }
 
-    const buffer = Buffer.from(input, encoding);
+    const buffer = CraftzdogBuffer.from(input, encoding);
 
     return buffer.buffer.slice(
       buffer.byteOffset,
@@ -58,14 +81,14 @@ export function binaryLikeToArrayBuffer(
   }
 
   // Buffer
-  if (Buffer.isBuffer(input)) {
+  if (CraftzdogBuffer.isBuffer(input) || SafeBuffer.isBuffer(input)) {
     return toArrayBuffer(input);
   }
 
   // ArrayBufferView
   // TODO add further binary types to BinaryLike, UInt8Array and so for have this array as property
   if (ArrayBuffer.isView(input)) {
-    return input.buffer;
+    return toArrayBuffer(input);
   }
 
   // ArrayBuffer
@@ -94,7 +117,7 @@ export function binaryLikeToArrayBuffer(
 }
 
 export function ab2str(buf: ArrayBuffer, encoding: string = 'hex') {
-  return Buffer.from(buf).toString(encoding);
+  return CraftzdogBuffer.from(buf).toString(encoding);
 }
 
 export const kEmptyObject = Object.freeze(Object.create(null));

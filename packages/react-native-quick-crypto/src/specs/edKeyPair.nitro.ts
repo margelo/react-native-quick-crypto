@@ -27,13 +27,13 @@ export interface EdKeyPair
   signSync(message: ArrayBuffer, key?: ArrayBuffer): ArrayBuffer;
 
   verify(
-    message: ArrayBuffer,
     signature: ArrayBuffer,
+    message: ArrayBuffer,
     key?: ArrayBuffer,
   ): Promise<boolean>;
   verifySync(
-    message: ArrayBuffer,
     signature: ArrayBuffer,
+    message: ArrayBuffer,
     key?: ArrayBuffer,
   ): boolean;
 

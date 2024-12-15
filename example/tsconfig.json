@@ -11,6 +11,9 @@
     "**.*.tsx",
   ],
   "compilerOptions": {
-    "jsx": "react"
+    "jsx": "react",
+    "paths": {
+      "react-native-quick-crypto": ["../packages/react-native-quick-crypto/src"],
+    },
   },
 }

@@ -1,6 +1,7 @@
 import { NitroModules } from 'react-native-nitro-modules';
+import { binaryLikeToArrayBuffer as toAB } from './utils';
 import type { EdKeyPair } from './specs/edKeyPair.nitro';
-import type { CFRGKeyPairType, KeyPairGenConfig } from './utils';
+import type { BinaryLike, CFRGKeyPairType, KeyPairGenConfig } from './utils';
 
 export class Ed {
   type: CFRGKeyPairType;
@@ -44,33 +45,35 @@ export class Ed {
     return this.native.getPrivateKey();
   }
 
-  async sign(message: ArrayBuffer, key?: ArrayBuffer): Promise<ArrayBuffer> {
-    return key ? this.native.sign(message, key) : this.native.sign(message);
+  async sign(message: BinaryLike, key?: BinaryLike): Promise<ArrayBuffer> {
+    return key
+      ? this.native.sign(toAB(message), toAB(key))
+      : this.native.sign(toAB(message));
   }
 
-  signSync(message: ArrayBuffer, key?: ArrayBuffer): ArrayBuffer {
+  signSync(message: BinaryLike, key?: BinaryLike): ArrayBuffer {
     return key
-      ? this.native.signSync(message, key)
-      : this.native.signSync(message);
+      ? this.native.signSync(toAB(message), toAB(key))
+      : this.native.signSync(toAB(message));
   }
 
   async verify(
-    message: ArrayBuffer,
-    signature: ArrayBuffer,
-    key?: ArrayBuffer,
+    signature: BinaryLike,
+    message: BinaryLike,
+    key?: BinaryLike,
   ): Promise<boolean> {
     return key
-      ? this.native.verify(message, signature, key)
-      : this.native.verify(message, signature);
+      ? this.native.verify(toAB(signature), toAB(message), toAB(key))
+      : this.native.verify(toAB(signature), toAB(message));
   }
 
   verifySync(
-    message: ArrayBuffer,
-    signature: ArrayBuffer,
-    key?: ArrayBuffer,
+    signature: BinaryLike,
+    message: BinaryLike,
+    key?: BinaryLike,
   ): boolean {
     return key
-      ? this.native.verifySync(message, signature, key)
-      : this.native.verifySync(message, signature);
+      ? this.native.verifySync(toAB(signature), toAB(message), toAB(key))
+      : this.native.verifySync(toAB(signature), toAB(message));
   }
 }
