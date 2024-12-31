@@ -119,11 +119,15 @@ export type SubtleAlgorithm = {
   name: AnyAlgorithm;
   salt?: string;
   iterations?: number;
-  hash?: HashAlgorithm;
+  hash?: HashAlgorithm | HashAlgorithmIdentifier;
   namedCurve?: NamedCurve;
   length?: number;
   modulusLength?: number;
   publicExponent?: number | Uint8Array;
+};
+
+export type HashAlgorithmIdentifier = {
+  name: HashAlgorithm;
 };
 
 export type KeyUsage =

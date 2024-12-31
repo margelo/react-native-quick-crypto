@@ -4,6 +4,7 @@ import { describe, it } from '../../MochaRNAdapter';
 import { expect } from 'chai';
 
 const { subtle } = crypto;
+const encoder = new TextEncoder();
 
 describe('subtle - sign / verify', () => {
   // // Test Sign/Verify RSASSA-PKCS1-v1_5
@@ -57,35 +58,25 @@ describe('subtle - sign / verify', () => {
   // Test Sign/Verify ECDSA
   {
     async function test(data: string) {
-      const ec = new TextEncoder();
       const pair = await subtle.generateKey(
-        {
-          name: 'ECDSA',
-          namedCurve: 'P-384',
-        },
+        { name: 'ECDSA', namedCurve: 'P-384' },
         true,
         ['sign', 'verify'],
       );
       const { publicKey, privateKey } = pair as CryptoKeyPair;
 
       const signature = await subtle.sign(
-        {
-          name: 'ECDSA',
-          hash: 'SHA-384',
-        },
+        { name: 'ECDSA', hash: 'SHA-384' },
         privateKey as CryptoKey,
-        ec.encode(data),
+        encoder.encode(data),
       );
 
       expect(
         await subtle.verify(
-          {
-            name: 'ECDSA',
-            hash: 'SHA-384',
-          },
+          { name: 'ECDSA', hash: 'SHA-384' },
           publicKey as CryptoKey,
           signature,
-          ec.encode(data),
+          encoder.encode(data),
         ),
       ).to.equal(true);
     }
@@ -94,6 +85,28 @@ describe('subtle - sign / verify', () => {
       await test('hello world');
     });
   }
+
+  it('ECDSA with HashAlgorithmIdentifier', async () => {
+    const pair = await subtle.generateKey(
+      { name: 'ECDSA', namedCurve: 'P-256' },
+      true,
+      ['sign', 'verify'],
+    );
+    const { publicKey, privateKey } = pair as CryptoKeyPair;
+    const signature = await subtle.sign(
+      { name: 'ECDSA', hash: { name: 'SHA-256' } },
+      privateKey as CryptoKey,
+      encoder.encode('hello world'),
+    );
+    expect(
+      await subtle.verify(
+        { name: 'ECDSA', hash: { name: 'SHA-256' } },
+        publicKey as CryptoKey,
+        signature,
+        encoder.encode('hello world'),
+      ),
+    ).to.equal(true);
+  });
 
   // // Test Sign/Verify HMAC
   // {

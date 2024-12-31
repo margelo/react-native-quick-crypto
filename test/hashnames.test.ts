@@ -9,8 +9,8 @@ test('normalizeHashName happy', () => {
 });
 
 test('normalizeHashName sad', () => {
-  expect(normalizeHashName('SHA-2')).toBe('sha-2');
-  expect(normalizeHashName('NOT-a-hash', HashContext.JwkRsaPss)).toBe(
-    'not-a-hash',
+  expect(() => normalizeHashName('SHA-2')).toThrow(/Invalid Hash Algorithm/);
+  expect(() => normalizeHashName('NOT-a-hash', HashContext.JwkRsaPss)).toThrow(
+    /Invalid Hash Algorithm/,
   );
 });
