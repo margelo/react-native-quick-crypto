@@ -17,11 +17,9 @@ import {
   hasAnyNotIn,
   type BufferLike,
   type BinaryLike,
-  normalizeAlgorithm,
   lazyDOMException,
   normalizeHashName,
   HashContext,
-  type Operation,
   validateMaxBufferLength,
   bufferLikeToArrayBuffer,
 } from './Utils';
@@ -35,6 +33,7 @@ import {
   getAlgorithmName,
 } from './aes';
 import { rsaCipher, rsaExportKey, rsaImportKey, rsaKeyGenerate } from './rsa';
+import { normalizeAlgorithm, type Operation } from './Algorithms';
 
 const exportKeySpki = async (
   key: CryptoKey,
