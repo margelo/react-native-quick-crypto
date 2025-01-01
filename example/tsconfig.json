@@ -1,9 +1,0 @@
-{
-  "extends": "../tsconfig.json",
-  "exclude": ["node_modules"],
-  "compilerOptions": {
-    "paths": {
-      "react-native-quick-crypto": ["../src/index"]
-    },
-  },
-}

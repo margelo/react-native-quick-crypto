@@ -1,0 +1,20 @@
+{
+  "extends": [
+    "../../packages/react-native-quick-crypto/tsconfig.json"
+  ],
+  "include": [
+    "index.js",
+    "app.json",
+    "src/**.*.ts",
+    "src/**.*.tsx"
+  ],
+  "exclude": [
+    "node_modules"
+  ],
+  "compilerOptions": {
+    "jsx": "react",
+    "paths": {
+      "react-native-quick-crypto": ["../../packages/react-native-quick-crypto/src"]
+    }
+  }
+}
