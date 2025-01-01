@@ -6,27 +6,29 @@ on:
       - 0.x
     paths:
       - '.github/workflows/validate-js.yml'
-      - 'src/**'
-      - '*.json'
-      - '*.js'
-      - '*.lock'
-      - 'example/src/**'
-      - 'example/*.json'
-      - 'example/*.js'
-      - 'example/*.lock'
-      - 'example/*.tsx'
+      - '*.lock*'
+      - 'packages/react-native-quick-crypto/src/**'
+      - 'packages/react-native-quick-crypto/*.json'
+      - 'packages/react-native-quick-crypto/*.js'
+      - 'packages/react-native-quick-crypto/*.lock*'
+      - 'packages/example/src/**'
+      - 'packages/example/*.json'
+      - 'packages/example/*.js'
+      - 'packages/example/*.lock*'
+      - 'packages/example/*.tsx'
   pull_request:
     paths:
       - '.github/workflows/validate-js.yml'
-      - 'src/**'
-      - '*.json'
-      - '*.js'
-      - '*.lock'
-      - 'example/src/**'
-      - 'example/*.json'
-      - 'example/*.js'
-      - 'example/*.lock'
-      - 'example/*.tsx'
+      - '*.lock*'
+      - 'packages/react-native-quick-crypto/src/**'
+      - 'packages/react-native-quick-crypto/*.json'
+      - 'packages/react-native-quick-crypto/*.js'
+      - 'packages/react-native-quick-crypto/*.lock*'
+      - 'packages/example/src/**'
+      - 'packages/example/*.json'
+      - 'packages/example/*.js'
+      - 'packages/example/*.lock*'
+      - 'packages/example/*.tsx'
 
 jobs:
   compile_js:
@@ -80,7 +82,9 @@ jobs:
           bun install
 
       - name: Run ESLint/Prettier
-        run: bun lint:fix && bun format:fix
+        run: |
+          bun lint:fix
+          bun format:fix
 
       - name: Verify no files have changed after auto-fix
         run: git diff --exit-code HEAD -- . ':(exclude)bun.lockb'

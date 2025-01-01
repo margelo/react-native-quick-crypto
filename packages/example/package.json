@@ -13,7 +13,6 @@
     "typescript": "tsc --noEmit",
     "lint": "eslint \"**/*.{js,ts,tsx}\"",
     "lint:fix": "eslint \"**/*.{js,ts,tsx}\" --fix",
-    "lint-ci": "bun lint -f ../node_modules/@firmnav/eslint-github-actions-formatter/dist/formatter.js",
     "format": "prettier --check \"**/*.{js,ts,tsx}\"",
     "format:fix": "prettier --write \"**/*.{js,ts,tsx}\"",
     "start": "react-native start",
