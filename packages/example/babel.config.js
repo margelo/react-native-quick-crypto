@@ -1,5 +1,5 @@
 const path = require('path');
-const pak = require('../package.json');
+const pak = require('../../packages/react-native-quick-crypto/package.json');
 
 module.exports = {
   presets: ['module:@react-native/babel-preset'],
@@ -10,7 +10,9 @@ module.exports = {
       {
         extensions: ['.tsx', '.ts', '.js', '.json'],
         alias: {
-          [pak.name]: path.join(__dirname, '..', pak.source),
+          crypto: 'react-native-quick-crypto',
+          stream: 'readable-stream',
+          buffer: '@craftzdog/react-native-buffer',
         },
       },
     ],

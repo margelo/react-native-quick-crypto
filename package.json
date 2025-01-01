@@ -2,6 +2,7 @@
   "version": "0.7.10",
   "scripts": {
     "clean": "bun --filter='*' clean",
+    "deepclean": "bun --filter='*' deepclean && del-cli node_modules",
     "specs": "bun --filter='react-native-quick-crypto' specs",
     "bundle-install": "bun --filter='react-native-quick-crypto-example' bundle-install",
     "pods": "bun --filter='react-native-quick-crypto-example' pods",
@@ -18,6 +19,7 @@
   "devDependencies": {
     "@release-it/bumper": "^6.0.1",
     "@release-it/conventional-changelog": "9.0.4",
+    "del-cli": "^6.0.0",
     "release-it": "17.11.0"
   },
   "packageManager": "bun@1.1.26",

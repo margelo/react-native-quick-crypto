@@ -11,7 +11,7 @@ Pod::Spec.new do |s|
   s.authors      = package["authors"]
 
   s.platforms    = { :ios => "12.4", :tvos => "12.0", :osx => "10.14" }
-  s.source       = { :git => "https://github.com/mrousavy/react-native-quick-crypto.git", :tag => "#{s.version}" }
+  s.source       = { :git => "https://github.com/margelo/react-native-quick-crypto.git", :tag => "#{s.version}" }
 
   s.source_files = [
     "ios/**/*.{h,m,mm}",
