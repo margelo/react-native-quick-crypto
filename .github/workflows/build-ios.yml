@@ -12,9 +12,9 @@ on:
   pull_request:
     paths:
       - '.github/workflows/build-ios.yml'
-      - 'ios/**'
+      - 'packages/react-native-quick-crypto/ios/**'
       - '*.podspec'
-      - 'example/ios/**'
+      - 'packages/example/ios/**'
 
 jobs:
   build_ios_example:
@@ -22,7 +22,7 @@ jobs:
     runs-on: macOS-latest
     defaults:
       run:
-        working-directory: example
+        working-directory: packages/example
     steps:
       - name: Checkout Code
         uses: actions/checkout@v4
@@ -41,32 +41,32 @@ jobs:
         with:
           ruby-version: 3.3
           bundler-cache: true
-          working-directory: example/ios
+          working-directory: packages/example/ios
 
       - name: Restore Pods cache
         uses: actions/cache@v4
         with:
           path: |
-            example/ios/Pods
+            packages/example/ios/Pods
             ~/Library/Caches/CocoaPods
             ~/.cocoapods
-          key: ${{ runner.os }}-pods-${{ hashFiles('**/Podfile.lock') }}
+          key: ${{ runner.os }}-pods-0.x-${{ hashFiles('**/Podfile.lock') }}
           restore-keys: |
-            ${{ runner.os }}-pods-
+            ${{ runner.os }}-pods-0.x-
 
       - name: Install Gems
-        working-directory: example/ios
+        working-directory: packages/example/ios
         run: bundle config set deployment 'true' && bundle install
 
       - name: Install Pods
         run: bun pods
 
       - name: Install xcpretty
-        working-directory: example/ios
+        working-directory: packages/example/ios
         run: gem install xcpretty
 
       - name: Build App
-        working-directory: example/ios
+        working-directory: packages/example/ios
         run: "set -o pipefail && xcodebuild \
           CC=clang CPLUSPLUS=clang++ LD=clang LDPLUSPLUS=clang++ \
           -derivedDataPath build -UseModernBuildSystem=YES \

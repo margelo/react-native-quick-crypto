@@ -6,12 +6,12 @@ on:
       - 0.x
     paths:
       - '.github/workflows/validate-android.yml'
-      - 'android/**'
+      - 'packages/react-native-quick-crypto/android/**'
       - '.editorconfig'
   pull_request:
     paths:
       - '.github/workflows/validate-android.yml'
-      - 'android/**'
+      - 'packages/react-native-quick-crypto/android/**'
       - '.editorconfig'
 
 jobs:
@@ -45,12 +45,7 @@ jobs:
           accept-android-sdk-licenses: true
           log-accepted-android-sdk-licenses: false
 
-      - name: Bootstrap JS (rnqc)
-        run: |
-          bun install
-
-      - name: Bootstrap JS (example)
-        working-directory: example
+      - name: Bootstrap JS
         run: |
           bun install
 
@@ -60,15 +55,16 @@ jobs:
           path: |
             ~/.gradle/caches
             ~/.gradle/wrapper
-          key: ${{ runner.os }}-gradle-${{ hashFiles('**/*.gradle*', '**/gradle-wrapper.properties') }}
+          key: ${{ runner.os }}-gradle-0.x-${{ hashFiles('**/*.gradle*', '**/gradle-wrapper.properties') }}
           restore-keys: |
-            ${{ runner.os }}-gradle-
+            ${{ runner.os }}-gradle-0.x-
 
       - name: Run Gradle Lint
-        run: cd example/android && ./gradlew lint
+        working-directory: packages/example/android
+        run: ./gradlew lint
 
       - name: Parse Gradle Lint Report
         uses: yutailang0119/action-android-lint@v4
         with:
           # ignore-warnings: true
-          report-path: example/android/app/build/reports/*.xml
+          report-path: packages/example/android/app/build/reports/*.xml

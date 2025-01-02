@@ -9,8 +9,8 @@ on:
   pull_request:
     paths:
       - ".github/workflows/update-lockfiles.yml"
-      - "package.json"
-      - "example/package.json"
+      - "packages/react-native-quick-crypto/package.json"
+      - "packages/example/package.json"
 
 permissions:
   contents: write
@@ -35,32 +35,31 @@ jobs:
         with:
           ruby-version: 3.3
           bundler-cache: true
-          working-directory: example/ios
+          working-directory: packages/example/ios
 
       - name: Restore Pods cache
         uses: actions/cache@v4
         with:
           path: |
-            example/ios/Pods
+            packages/example/ios/Pods
             ~/Library/Caches/CocoaPods
             ~/.cocoapods
-          key: ${{ runner.os }}-pods-${{ hashFiles('**/Podfile.lock') }}
+          key: ${{ runner.os }}-pods-0.x-${{ hashFiles('**/Podfile.lock') }}
           restore-keys: |
-            ${{ runner.os }}-pods-
+            ${{ runner.os }}-pods-0.x-
 
       - name: Install Gems
-        working-directory: example/ios
+        working-directory: packages/example/ios
         run: bundle config set deployment 'true' && bundle install
 
       - name: Update & Commit Lockfiles
         run: |
           bun install
-          git add bun.lockb
-          cd example
-          bun install
           bun pods
-          git add ios/Podfile.lock
-          cd ..
+          git add bun.lockb
+          git add packages/react-native-quick-crypto/bun.lockb
+          git add packages/example/bun.lockb
+          git add packages/example/ios/Podfile.lock
           git config --global user.name 'dependabot[bot]'
           git config --global user.email 'dependabot[bot]@users.noreply.github.com'
           git commit --amend --no-edit

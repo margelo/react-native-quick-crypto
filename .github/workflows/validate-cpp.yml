@@ -6,13 +6,13 @@ on:
       - 0.x
     paths:
       - '.github/workflows/validate-cpp.yml'
-      - 'cpp/**'
-      - 'android/src/main/cpp/**'
+      - 'packages/react-native-quick-crypto/cpp/**'
+      - 'packages/react-native-quick-crypto/android/src/main/cpp/**'
   pull_request:
     paths:
       - '.github/workflows/validate-cpp.yml'
-      - 'cpp/**'
-      - 'android/src/main/cpp/**'
+      - 'packages/react-native-quick-crypto/cpp/**'
+      - 'packages/react-native-quick-crypto/android/src/main/cpp/**'
 
 jobs:
   validate_cpp:
@@ -28,7 +28,7 @@ jobs:
           github_token: ${{ secrets.github_token }}
           reporter: github-pr-review
           flags: --linelength=230
-          targets: --recursive cpp android/src/main/cpp
+          targets: --recursive packages/react-native-quick-crypto/cpp packages/react-native-quick-crypto/android/src/main/cpp
           filter: "-legal/copyright\
             ,-readability/todo\
             ,-build/namespaces\

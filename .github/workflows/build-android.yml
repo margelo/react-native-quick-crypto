@@ -6,17 +6,17 @@ on:
       - 0.x
     paths:
       - '.github/workflows/build-android.yml'
-      - 'android/**'
-      - 'example/android/**'
-      - 'bun.lockb'
-      - 'example/bun.lockb'
+      - 'packages/react-native-quick-crypto/android/**'
+      - 'packages/example/android/**'
+      - 'packages/react-native-quick-crypto/bun.lockb'
+      - 'packages/example/bun.lockb'
   pull_request:
     paths:
       - '.github/workflows/build-android.yml'
-      - 'android/**'
-      - 'example/android/**'
-      - 'bun.lockb'
-      - 'example/bun.lockb'
+      - 'packages/react-native-quick-crypto/android/**'
+      - 'packages/example/android/**'
+      - 'packages/react-native-quick-crypto/bun.lockb'
+      - 'packages/example/bun.lockb'
 
 jobs:
   build_android_example:
@@ -49,12 +49,7 @@ jobs:
           accept-android-sdk-licenses: true
           log-accepted-android-sdk-licenses: false
 
-      - name: Bootstrap JS (rnqc)
-        run: |
-          bun install
-
-      - name: Bootstrap JS (example)
-        working-directory: example
+      - name: Bootstrap JS
         run: |
           bun install
 
@@ -64,9 +59,10 @@ jobs:
           path: |
             ~/.gradle/caches
             ~/.gradle/wrapper
-          key: ${{ runner.os }}-gradle-${{ hashFiles('**/*.gradle*', '**/gradle-wrapper.properties') }}
+          key: ${{ runner.os }}-gradle-0.x-${{ hashFiles('**/*.gradle*', '**/gradle-wrapper.properties') }}
           restore-keys: |
-            ${{ runner.os }}-gradle-
+            ${{ runner.os }}-gradle-0.x-
 
-      - name: Run Gradle Build for example/android/
-        run: cd example/android && ./gradlew assembleDebug --build-cache && cd ../..
+      - name: Run Gradle Build for Example App
+        working-directory: packages/example/android
+        run: ./gradlew assembleDebug --build-cache && cd ../..

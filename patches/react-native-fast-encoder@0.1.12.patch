@@ -1,0 +1,22 @@
+diff --git a/android/CMakeLists.txt b/android/CMakeLists.txt
+index 9f4bfc091bd2619361b88eac7c7f6c439760b479..c6b63fefd6b0142e5c2f058615ca3c723cc6b816 100644
+--- a/android/CMakeLists.txt
++++ b/android/CMakeLists.txt
+@@ -17,7 +17,7 @@ set_target_properties(encoder_bridge
+
+ add_library(fast-encoder
+         SHARED
+-        "${NODE_MODULES_DIR}/react-native/ReactCommon/jsi/jsi/jsi.cpp"
++        "${NODE_MODULES_DIR}/../../../node_modules/react-native/ReactCommon/jsi/jsi/jsi.cpp"
+         ../cpp/react-native-fast-encoder.cpp
+         ../cpp/react-native-fast-encoder.h
+         fast-encoder-adapter.cpp
+@@ -26,7 +26,7 @@ add_library(fast-encoder
+ include_directories(
+         fast-encoder
+         PRIVATE
+-        "${NODE_MODULES_DIR}/react-native/ReactCommon/jsi"
++        "${NODE_MODULES_DIR}/../../../node_modules/react-native/ReactCommon/jsi"
+         ../cpp
+ )
+
