@@ -2,7 +2,6 @@ import 'mocha';
 import type * as MochaTypes from 'mocha';
 
 // polyfill encoders for all tests
-// @ts-expect-error - can't import but it's there
 import { polyfillGlobal } from 'react-native/Libraries/Utilities/PolyfillFunctions';
 import RNFE from 'react-native-fast-encoder';
 polyfillGlobal('TextEncoder', () => RNFE);

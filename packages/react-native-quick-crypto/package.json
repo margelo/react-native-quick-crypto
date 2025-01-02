@@ -75,9 +75,9 @@
   "devDependencies": {
     "@eslint/compat": "^1.1.1",
     "@eslint/js": "9.17.0",
-    "@react-native/babel-preset": "^0.75.0-main",
-    "@react-native/eslint-config": "^0.75.0-main",
-    "@react-native/eslint-plugin": "^0.75.0-main",
+    "@react-native/babel-preset": "0.76.5",
+    "@react-native/eslint-config": "0.76.5",
+    "@react-native/eslint-plugin": "0.76.5",
     "@release-it/conventional-changelog": "^9.0.3",
     "@types/jest": "^29.5.11",
     "@types/node": "^22.0.0",
@@ -94,7 +94,7 @@
     "release-it": "17.11.0",
     "sscrypto": "^1.1.1",
     "typescript": "5.7.2",
-    "typescript-eslint": "8.15.0"
+    "typescript-eslint": "8.19.0"
   },
   "release-it": {
     "git": {

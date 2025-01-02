@@ -7,15 +7,13 @@ def agpVersionMinor = agpVersion.tokenize('.')[1].toInteger()
 
 buildscript {
   repositories {
-    maven {
-      url "https://plugins.gradle.org/m2/"
-    }
-    mavenCentral()
     google()
+    mavenCentral()
   }
 
   dependencies {
-    classpath("com.android.tools.build:gradle:8.3.1")
+    classpath("com.android.tools.build:gradle:8.7.3")
+    classpath "org.jetbrains.kotlin:kotlin-gradle-plugin:${kotlinVersion}"
   }
 }
 
@@ -34,10 +32,12 @@ def resolveBuildType() {
     return tskReqStr.contains('Release') ? 'release' : 'debug'
 }
 
+apply plugin: 'com.android.library'
+apply plugin: "org.jetbrains.kotlin.android"
+
 if (isNewArchitectureEnabled()) {
   apply plugin: "com.facebook.react"
 }
-apply plugin: 'com.android.library'
 
 def safeExtGet(prop, fallback) {
   rootProject.ext.has(prop) ? rootProject.ext.get(prop) : fallback
@@ -112,7 +112,7 @@ android {
     externalNativeBuild {
       cmake {
         cppFlags "-O2 -frtti -fexceptions -Wall -Wno-unused-variable -fstack-protector-all -DANDROID"
-        arguments "-DANDROID_STL=c++_shared", "-DNODE_MODULES_DIR=${nodeModules}"
+        arguments "-DANDROID_STL=c++_shared"
         abiFilters (*reactNativeArchitectures())
       }
     }

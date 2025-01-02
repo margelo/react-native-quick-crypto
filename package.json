@@ -71,5 +71,9 @@
   "workspaces": [
     "packages/example",
     "packages/react-native-quick-crypto"
-  ]
+  ],
+  "patchedDependencies": {
+    "react-native@0.72.7": "patches/react-native@0.72.7.patch",
+    "react-native-fast-encoder@0.1.12": "patches/react-native-fast-encoder@0.1.12.patch"
+  }
 }
