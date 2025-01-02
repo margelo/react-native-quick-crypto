@@ -1,6 +1,6 @@
 {
   "name": "react-native-quick-crypto",
-  "version": "0.7.10",
+  "version": "0.7.11",
   "description": "A fast implementation of Node's `crypto` module written in C/C++ JSI",
   "packageManager": "bun@1.1.26",
   "main": "lib/commonjs/index",
@@ -97,46 +97,27 @@
     "typescript-eslint": "8.19.0"
   },
   "release-it": {
-    "git": {
-      "commitMessage": "chore: release ${version}",
-      "tagName": "v${version}"
-    },
     "npm": {
       "publish": true
     },
+    "git": false,
     "github": {
-      "release": true
+      "release": false
     },
     "hooks": {
-      "before:release": "bun install && bun pods && git add example/ios/Podfile.lock"
+      "after:bump": "bun tsc && bun lint && bun format && bun prepare"
     },
     "plugins": {
-      "@release-it/conventional-changelog": {
-        "preset": {
-          "name": "conventionalcommits",
-          "types": [
-            {
-              "type": "feat",
-              "section": "✨ Features"
-            },
-            {
-              "type": "fix",
-              "section": "🐛 Bug Fixes"
-            },
-            {
-              "type": "perf",
-              "section": "💨 Performance Improvements"
-            },
-            {
-              "type": "chore(deps)",
-              "section": "🛠️ Dependency Upgrades"
-            },
-            {
-              "type": "docs",
-              "section": "📚 Documentation"
-            }
-          ]
-        }
+      "@release-it/bumper": {
+        "out": [
+          {
+            "file": "../../packages/example/package.json",
+            "path": [
+              "version",
+              "dependencies.react-native-quick-crypto"
+            ]
+          }
+        ]
       }
     }
   },

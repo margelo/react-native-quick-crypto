@@ -1,5 +1,5 @@
 {
-  "version": "0.7.10",
+  "version": "0.7.11",
   "scripts": {
     "clean": "bun --filter='*' clean",
     "deepclean": "bun --filter='*' deepclean && del-cli node_modules",

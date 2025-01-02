@@ -152,9 +152,9 @@ lint/tmp/
 .npmrc
 
 # v1.x and higher stuff
-example0/
 tsconfig.tsbuildinfo
 package-lock.json
-packages/*
 yarn.lock
 .java-version
+
+README.md
