@@ -19,3 +19,4 @@ index 9f4bfc091bd2619361b88eac7c7f6c439760b479..c6b63fefd6b0142e5c2f058615ca3c72
 +        "${NODE_MODULES_DIR}/../../../node_modules/react-native/ReactCommon/jsi"
          ../cpp
  )
+

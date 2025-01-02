@@ -81,7 +81,14 @@ jobs:
         run: |
           bun install
 
-      - name: Run ESLint/Prettier
+      - name: Run ESLint/Prettier (rnqc)
+        working-directory: packages/react-native-quick-crypto
+        run: |
+          bun lint:fix
+          bun format:fix
+
+      - name: Run ESLint/Prettier (example)
+        working-directory: packages/example
         run: |
           bun lint:fix
           bun format:fix
