@@ -18,6 +18,8 @@ namespace margelo::nitro::crypto {
       prototype.registerHybridSetter("final", &HybridCipherSpec::setFinal);
       prototype.registerHybridGetter("copy", &HybridCipherSpec::getCopy);
       prototype.registerHybridSetter("copy", &HybridCipherSpec::setCopy);
+      prototype.registerHybridGetter("setArgs", &HybridCipherSpec::getSetArgs);
+      prototype.registerHybridSetter("setArgs", &HybridCipherSpec::setSetArgs);
       prototype.registerHybridGetter("setAAD", &HybridCipherSpec::getSetAAD);
       prototype.registerHybridSetter("setAAD", &HybridCipherSpec::setSetAAD);
       prototype.registerHybridGetter("setAutoPadding", &HybridCipherSpec::getSetAutoPadding);
