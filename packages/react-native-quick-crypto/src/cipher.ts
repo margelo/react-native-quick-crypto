@@ -20,38 +20,46 @@ import type {
 import type { Cipher as NativeCipher } from './specs/cipher.nitro';
 import { binaryLikeToArrayBuffer } from './utils';
 import type { BinaryLike, BinaryLikeNode, CipherType, Encoding } from './utils';
-import { getDecoder, getDefaultEncoding, getUIntOption, normalizeEncoding, validateEncoding } from './utils/cipher';
+import {
+  getDecoder,
+  getDefaultEncoding,
+  getUIntOption,
+  normalizeEncoding,
+  validateEncoding,
+} from './utils/cipher';
+
+type CipherArgs = {
+  cipherType: string,
+  cipherKey: BinaryLikeNode,
+  isCipher: boolean,
+  options: Record<string, TransformOptions>,
+  iv: BinaryLike,
+};
 
 class CipherCommon extends Stream.Transform {
   private native: NativeCipher;
   private decoder: StringDecoder | undefined;
 
-  constructor(
-    cipherType: string,
-    cipherKey: BinaryLikeNode,
-    isCipher: boolean,
-    options: Record<string, TransformOptions> = {},
-    iv: BinaryLike,
-  ) {
+  constructor({
+    cipherType,
+    cipherKey,
+    isCipher,
+    options = {},
+    iv,
+  }: CipherArgs) {
     super(options);
     this.native = NitroModules.createHybridObject<NativeCipher>('Cipher');
-
-    const cipherKeyBuffer = binaryLikeToArrayBuffer(cipherKey);
-    // defaults to 16 bytes
-    const authTagLength =
+    const authTagLen: number =
       getUIntOption(options, 'authTagLength') !== -1
         ? getUIntOption(options, 'authTagLength')
-        : 16;
-    const args = {
-      cipher_type: cipherType,
-      cipher_key: cipherKeyBuffer,
-      iv,
-      ...options,
-      auth_tag_len: authTagLength,
-    };
-    this.native = isCipher
-      ? createInternalCipher(args)
-      : createInternalDecipher(args);
+        : 16; // defaults to 16 bytes
+    this.native.setArgs({
+      isCipher,
+      cipherType,
+      cipherKey: binaryLikeToArrayBuffer(cipherKey),
+      iv: binaryLikeToArrayBuffer(iv),
+      authTagLen,
+    });
   }
 
   update(
@@ -95,7 +103,11 @@ class CipherCommon extends Stream.Transform {
     return ret;
   }
 
-  _transform(chunk: BinaryLike, encoding: BufferEncoding, callback: () => void) {
+  _transform(
+    chunk: BinaryLike,
+    encoding: BufferEncoding,
+    callback: () => void,
+  ) {
     this.push(this.update(chunk, normalizeEncoding(encoding)));
     callback();
   }
@@ -147,7 +159,7 @@ class Cipher extends CipherCommon {
     iv: BinaryLike,
   ) {
     iv = binaryLikeToArrayBuffer(iv);
-    super(cipherType, cipherKey, true, options, iv);
+    super({cipherType, cipherKey, isCipher: true, options, iv});
   }
 }
 
@@ -159,7 +171,7 @@ class Decipher extends CipherCommon {
     iv: BinaryLike,
   ) {
     iv = binaryLikeToArrayBuffer(iv);
-    super(cipherType, cipherKey, false, options, iv);
+    super({cipherType, cipherKey, isCipher: false, options, iv});
   }
 }
 
