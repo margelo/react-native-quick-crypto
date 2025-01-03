@@ -1,5 +1,5 @@
-import { StringDecoder } from "string_decoder";
-import type { Encoding } from "./types";
+import { StringDecoder } from 'string_decoder';
+import type { Encoding } from './types';
 
 // Mimics node behavior for default global encoding
 let defaultEncoding: Encoding = 'buffer';

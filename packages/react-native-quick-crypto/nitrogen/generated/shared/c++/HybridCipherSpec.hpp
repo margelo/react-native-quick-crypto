@@ -15,10 +15,13 @@
 
 // Forward declaration of `ArrayBuffer` to properly resolve imports.
 namespace NitroModules { class ArrayBuffer; }
+// Forward declaration of `CipherArgs` to properly resolve imports.
+namespace margelo::nitro::crypto { struct CipherArgs; }
 
 #include <functional>
 #include <NitroModules/Promise.hpp>
 #include <NitroModules/ArrayBuffer.hpp>
+#include "CipherArgs.hpp"
 #include <optional>
 
 namespace margelo::nitro::crypto {
@@ -52,6 +55,8 @@ namespace margelo::nitro::crypto {
       virtual void setFinal(const std::function<std::future<std::shared_ptr<ArrayBuffer>>()>& final) = 0;
       virtual std::function<void()> getCopy() = 0;
       virtual void setCopy(const std::function<void()>& copy) = 0;
+      virtual std::function<void(const CipherArgs& /* args */)> getSetArgs() = 0;
+      virtual void setSetArgs(const std::function<void(const CipherArgs& /* args */)>& setArgs) = 0;
       virtual std::function<std::future<bool>(const std::shared_ptr<ArrayBuffer>& /* data */, std::optional<double> /* plaintextLength */)> getSetAAD() = 0;
       virtual void setSetAAD(const std::function<std::future<bool>(const std::shared_ptr<ArrayBuffer>& /* data */, std::optional<double> /* plaintextLength */)>& setAAD) = 0;
       virtual std::function<std::future<bool>(bool /* autoPad */)> getSetAutoPadding() = 0;
