@@ -59,7 +59,7 @@
     "babel-plugin-module-resolver": "^5.0.0",
     "eslint": "9.9.1",
     "metro-react-native-babel-preset": "0.76.8",
-    "prettier": "3.3.3",
+    "prettier": "3.4.2",
     "typescript": "5.7.2",
     "typescript-eslint": "8.3.0"
   },
