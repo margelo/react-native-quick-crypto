@@ -78,6 +78,7 @@ MGLCipherHostObject::MGLCipherHostObject(
   installMethods();
 }
 
+// TODO: remove this ctor when we finally remove Cipher/Decipher
 MGLCipherHostObject::MGLCipherHostObject(
     const std::string &cipher_type,
     jsi::ArrayBuffer *cipher_key,
