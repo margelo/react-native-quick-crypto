@@ -1,5 +1,5 @@
 #include <openssl/evp.h>
-#include <openssl/err.h>
+#include <optional>
 
 #include "HybridCipherSpec.hpp"
 #include "CipherArgs.hpp"
@@ -25,17 +25,15 @@ class HybridCipher : public HybridCipherSpec {
   void
   copy() override;
 
-  inline void
+  void
   setArgs(
     const CipherArgs& args
-  ) {
-    this->args = args;
-  };
+  ) override;
 
   bool
   setAAD(
     const std::shared_ptr<ArrayBuffer>& data,
-    const std::optional<double>& plaintextLength
+    std::optional<double> plaintextLength
   ) override;
 
   bool
@@ -52,7 +50,13 @@ class HybridCipher : public HybridCipherSpec {
   getAuthTag() override;
 
  private:
-  CipherArgs args;
+  // Methods
+  void init();
+
+ private:
+  // Properties
+  std::optional<CipherArgs> args = std::nullopt;
 };
+
 
 } // namespace margelo::nitro::crypto

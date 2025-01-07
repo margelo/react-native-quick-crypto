@@ -10,9 +10,10 @@
 
 #import <type_traits>
 
-#include "HybridHmac.hpp"
-#include "HybridHash.hpp"
+#include "HybridCipher.hpp"
 #include "HybridEdKeyPair.hpp"
+#include "HybridHash.hpp"
+#include "HybridHmac.hpp"
 #include "HybridPbkdf2.hpp"
 #include "HybridRandom.hpp"
 
@@ -26,12 +27,21 @@
   using namespace margelo::nitro::crypto;
 
   HybridObjectRegistry::registerHybridObjectConstructor(
-    "Hmac",
+    "Cipher",
     []() -> std::shared_ptr<HybridObject> {
-      static_assert(std::is_default_constructible_v<HybridHmac>,
-                    "The HybridObject \"HybridHmac\" is not default-constructible! "
+      static_assert(std::is_default_constructible_v<HybridCipher>,
+                    "The HybridObject \"HybridCipher\" is not default-constructible! "
                     "Create a public constructor that takes zero arguments to be able to autolink this HybridObject.");
-      return std::make_shared<HybridHmac>();
+      return std::make_shared<HybridCipher>();
+    }
+  );
+  HybridObjectRegistry::registerHybridObjectConstructor(
+    "EdKeyPair",
+    []() -> std::shared_ptr<HybridObject> {
+      static_assert(std::is_default_constructible_v<HybridEdKeyPair>,
+                    "The HybridObject \"HybridEdKeyPair\" is not default-constructible! "
+                    "Create a public constructor that takes zero arguments to be able to autolink this HybridObject.");
+      return std::make_shared<HybridEdKeyPair>();
     }
   );
   HybridObjectRegistry::registerHybridObjectConstructor(
@@ -44,12 +54,12 @@
     }
   );
   HybridObjectRegistry::registerHybridObjectConstructor(
-    "EdKeyPair",
+    "Hmac",
     []() -> std::shared_ptr<HybridObject> {
-      static_assert(std::is_default_constructible_v<HybridEdKeyPair>,
-                    "The HybridObject \"HybridEdKeyPair\" is not default-constructible! "
+      static_assert(std::is_default_constructible_v<HybridHmac>,
+                    "The HybridObject \"HybridHmac\" is not default-constructible! "
                     "Create a public constructor that takes zero arguments to be able to autolink this HybridObject.");
-      return std::make_shared<HybridEdKeyPair>();
+      return std::make_shared<HybridHmac>();
     }
   );
   HybridObjectRegistry::registerHybridObjectConstructor(
