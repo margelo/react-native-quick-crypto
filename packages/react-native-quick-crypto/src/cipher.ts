@@ -151,27 +151,37 @@ class CipherCommon extends Stream.Transform {
   }
 }
 
-class Cipher extends CipherCommon {
+export class Cipher extends CipherCommon {
   constructor(
     cipherType: string,
     cipherKey: BinaryLikeNode,
     options: Record<string, TransformOptions> = {},
     iv: BinaryLike,
   ) {
-    iv = binaryLikeToArrayBuffer(iv);
-    super({cipherType, cipherKey, isCipher: true, options, iv});
+    super({
+      cipherType,
+      cipherKey: binaryLikeToArrayBuffer(cipherKey),
+      iv: binaryLikeToArrayBuffer(iv),
+      isCipher: true,
+      options,
+    });
   }
 }
 
-class Decipher extends CipherCommon {
+export class Decipher extends CipherCommon {
   constructor(
     cipherType: string,
     cipherKey: BinaryLikeNode,
     options: Record<string, TransformOptions> = {},
     iv: BinaryLike,
   ) {
-    iv = binaryLikeToArrayBuffer(iv);
-    super({cipherType, cipherKey, isCipher: false, options, iv});
+    super({
+      cipherType,
+      cipherKey: binaryLikeToArrayBuffer(cipherKey),
+      iv: binaryLikeToArrayBuffer(iv),
+      isCipher: false,
+      options,
+    });
   }
 }
 

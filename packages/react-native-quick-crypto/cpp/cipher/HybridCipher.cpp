@@ -22,7 +22,7 @@ HybridCipher::copy() {
 bool
 HybridCipher::setAAD(
   const std::shared_ptr<ArrayBuffer>& data,
-  const std::optional<double>& plaintextLength
+  std::optional<double> plaintextLength
 ) {
   return false;
 }
@@ -44,6 +44,30 @@ HybridCipher::setAuthTag(
 std::shared_ptr<ArrayBuffer>
 HybridCipher::getAuthTag() {
   return nullptr;
+}
+
+void
+HybridCipher::setArgs(
+  const CipherArgs& args
+) {
+  this->args = args;
+  init();
+};
+
+void
+HybridCipher::init() {
+  // check if args are set
+  if (!args.has_value()) {
+    throw std::runtime_error("CipherArgs not set");
+  }
+  auto args = this->args.value();
+
+  // check if cipherType is valid
+  const EVP_CIPHER *const cipher = EVP_get_cipherbyname(args.cipherType.c_str());
+  if (cipher == nullptr) {
+    throw std::runtime_error("Invalid Cipher Algorithm: " + args.cipherType);
+  }
+
 }
 
 } // namespace margelo::nitro::crypto
