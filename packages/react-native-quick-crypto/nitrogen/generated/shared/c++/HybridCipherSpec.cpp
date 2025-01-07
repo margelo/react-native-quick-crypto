@@ -14,21 +14,14 @@ namespace margelo::nitro::crypto {
     HybridObject::loadHybridMethods();
     // load custom methods/properties
     registerHybrids(this, [](Prototype& prototype) {
-      prototype.registerHybridGetter("final", &HybridCipherSpec::getFinal);
-      prototype.registerHybridSetter("final", &HybridCipherSpec::setFinal);
-      prototype.registerHybridGetter("copy", &HybridCipherSpec::getCopy);
-      prototype.registerHybridSetter("copy", &HybridCipherSpec::setCopy);
-      prototype.registerHybridGetter("setArgs", &HybridCipherSpec::getSetArgs);
-      prototype.registerHybridSetter("setArgs", &HybridCipherSpec::setSetArgs);
-      prototype.registerHybridGetter("setAAD", &HybridCipherSpec::getSetAAD);
-      prototype.registerHybridSetter("setAAD", &HybridCipherSpec::setSetAAD);
-      prototype.registerHybridGetter("setAutoPadding", &HybridCipherSpec::getSetAutoPadding);
-      prototype.registerHybridSetter("setAutoPadding", &HybridCipherSpec::setSetAutoPadding);
-      prototype.registerHybridGetter("setAuthTag", &HybridCipherSpec::getSetAuthTag);
-      prototype.registerHybridSetter("setAuthTag", &HybridCipherSpec::setSetAuthTag);
-      prototype.registerHybridGetter("getAuthTag", &HybridCipherSpec::getGetAuthTag);
-      prototype.registerHybridSetter("getAuthTag", &HybridCipherSpec::setGetAuthTag);
       prototype.registerHybridMethod("update", &HybridCipherSpec::update);
+      prototype.registerHybridMethod("final", &HybridCipherSpec::final);
+      prototype.registerHybridMethod("copy", &HybridCipherSpec::copy);
+      prototype.registerHybridMethod("setArgs", &HybridCipherSpec::setArgs);
+      prototype.registerHybridMethod("setAAD", &HybridCipherSpec::setAAD);
+      prototype.registerHybridMethod("setAutoPadding", &HybridCipherSpec::setAutoPadding);
+      prototype.registerHybridMethod("setAuthTag", &HybridCipherSpec::setAuthTag);
+      prototype.registerHybridMethod("getAuthTag", &HybridCipherSpec::getAuthTag);
     });
   }
 

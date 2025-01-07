@@ -18,8 +18,6 @@ namespace NitroModules { class ArrayBuffer; }
 // Forward declaration of `CipherArgs` to properly resolve imports.
 namespace margelo::nitro::crypto { struct CipherArgs; }
 
-#include <functional>
-#include <NitroModules/Promise.hpp>
 #include <NitroModules/ArrayBuffer.hpp>
 #include "CipherArgs.hpp"
 #include <optional>
@@ -51,24 +49,18 @@ namespace margelo::nitro::crypto {
 
     public:
       // Properties
-      virtual std::function<std::future<std::shared_ptr<ArrayBuffer>>()> getFinal() = 0;
-      virtual void setFinal(const std::function<std::future<std::shared_ptr<ArrayBuffer>>()>& final) = 0;
-      virtual std::function<void()> getCopy() = 0;
-      virtual void setCopy(const std::function<void()>& copy) = 0;
-      virtual std::function<void(const CipherArgs& /* args */)> getSetArgs() = 0;
-      virtual void setSetArgs(const std::function<void(const CipherArgs& /* args */)>& setArgs) = 0;
-      virtual std::function<std::future<bool>(const std::shared_ptr<ArrayBuffer>& /* data */, std::optional<double> /* plaintextLength */)> getSetAAD() = 0;
-      virtual void setSetAAD(const std::function<std::future<bool>(const std::shared_ptr<ArrayBuffer>& /* data */, std::optional<double> /* plaintextLength */)>& setAAD) = 0;
-      virtual std::function<std::future<bool>(bool /* autoPad */)> getSetAutoPadding() = 0;
-      virtual void setSetAutoPadding(const std::function<std::future<bool>(bool /* autoPad */)>& setAutoPadding) = 0;
-      virtual std::function<std::future<bool>(const std::shared_ptr<ArrayBuffer>& /* tag */)> getSetAuthTag() = 0;
-      virtual void setSetAuthTag(const std::function<std::future<bool>(const std::shared_ptr<ArrayBuffer>& /* tag */)>& setAuthTag) = 0;
-      virtual std::function<std::future<std::shared_ptr<ArrayBuffer>>()> getGetAuthTag() = 0;
-      virtual void setGetAuthTag(const std::function<std::future<std::shared_ptr<ArrayBuffer>>()>& getAuthTag) = 0;
+      
 
     public:
       // Methods
       virtual std::shared_ptr<ArrayBuffer> update(const std::shared_ptr<ArrayBuffer>& data) = 0;
+      virtual std::shared_ptr<ArrayBuffer> final() = 0;
+      virtual void copy() = 0;
+      virtual void setArgs(const CipherArgs& args) = 0;
+      virtual bool setAAD(const std::shared_ptr<ArrayBuffer>& data, std::optional<double> plaintextLength) = 0;
+      virtual bool setAutoPadding(bool autoPad) = 0;
+      virtual bool setAuthTag(const std::shared_ptr<ArrayBuffer>& tag) = 0;
+      virtual std::shared_ptr<ArrayBuffer> getAuthTag() = 0;
 
     protected:
       // Hybrid Setup
