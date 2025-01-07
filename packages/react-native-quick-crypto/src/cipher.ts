@@ -29,11 +29,11 @@ import {
 } from './utils/cipher';
 
 type CipherArgs = {
-  cipherType: string,
-  cipherKey: BinaryLikeNode,
-  isCipher: boolean,
-  options: Record<string, TransformOptions>,
-  iv: BinaryLike,
+  cipherType: string;
+  cipherKey: BinaryLikeNode;
+  isCipher: boolean;
+  options: Record<string, TransformOptions>;
+  iv: BinaryLike;
 };
 
 class CipherCommon extends Stream.Transform {

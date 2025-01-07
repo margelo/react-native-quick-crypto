@@ -1,7 +1,7 @@
-#include "HybridEdKeyPair.hpp"
-
 #include <memory>
 #include <string>
+
+#include "HybridEdKeyPair.hpp"
 
 namespace margelo::nitro::crypto {
 

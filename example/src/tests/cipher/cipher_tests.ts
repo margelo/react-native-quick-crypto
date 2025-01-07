@@ -1,9 +1,13 @@
-import { Cipher, createCipheriv, randomFillSync } from 'react-native-quick-crypto';
+import {
+  Cipher,
+  createCipheriv,
+  randomFillSync,
+} from 'react-native-quick-crypto';
 import { expect } from 'chai';
 import { test } from '../util';
 
 const SUITE = 'cipher';
-const key = "secret";
+const key = 'secret';
 const iv = randomFillSync(new Uint8Array(16));
 
 test(SUITE, 'cipher - valid algorithm', async () => {
