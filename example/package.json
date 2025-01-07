@@ -33,7 +33,7 @@
     "events": "3.3.0",
     "react": "18.3.1",
     "react-native": "0.76.1",
-    "react-native-bouncy-checkbox": "4.0.1",
+    "react-native-bouncy-checkbox": "4.1.2",
     "react-native-nitro-modules": "0.21.0",
     "react-native-quick-base64": "2.1.2",
     "react-native-quick-crypto": "workspace:*",
