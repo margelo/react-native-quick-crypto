@@ -24,10 +24,8 @@ export type LegacyCharacterEncoding = 'ascii' | 'binary' | 'ucs2' | 'ucs-2';
 export type Encoding =
   | BinaryToTextEncoding
   | CharacterEncoding
-  | LegacyCharacterEncoding;
-
-// TODO(osp) should buffer be part of the Encoding type?
-export type CipherEncoding = Encoding | 'buffer';
+  | LegacyCharacterEncoding
+  | 'buffer';
 
 // These are for shortcomings in @types/node
 // Here we use "*Type" instead of "*Types" like node does.
@@ -88,13 +86,13 @@ type DOMName =
     };
 
 // Mimics node behavior for default global encoding
-let defaultEncoding: CipherEncoding = 'buffer';
+let defaultEncoding: Encoding = 'buffer';
 
-export function setDefaultEncoding(encoding: CipherEncoding) {
+export function setDefaultEncoding(encoding: Encoding) {
   defaultEncoding = encoding;
 }
 
-export function getDefaultEncoding(): CipherEncoding {
+export function getDefaultEncoding(): Encoding {
   return defaultEncoding;
 }
 

@@ -79,8 +79,11 @@ MGLCipherHostObject::MGLCipherHostObject(
 }
 
 MGLCipherHostObject::MGLCipherHostObject(
-    const std::string &cipher_type, jsi::ArrayBuffer *cipher_key, bool isCipher,
-    unsigned int auth_tag_len, jsi::Runtime &runtime,
+    const std::string &cipher_type,
+    jsi::ArrayBuffer *cipher_key,
+    bool isCipher,
+    unsigned int auth_tag_len,
+    jsi::Runtime &runtime,
     std::shared_ptr<react::CallInvoker> jsCallInvoker,
     std::shared_ptr<DispatchQueue::dispatch_queue> workerQueue)
     : MGLSmartHostObject(jsCallInvoker, workerQueue),
@@ -132,8 +135,12 @@ MGLCipherHostObject::MGLCipherHostObject(
 }
 
 MGLCipherHostObject::MGLCipherHostObject(
-    const std::string &cipher_type, jsi::ArrayBuffer *cipher_key, bool isCipher,
-    unsigned int auth_tag_len, jsi::ArrayBuffer *iv, jsi::Runtime &runtime,
+    const std::string &cipher_type,
+    jsi::ArrayBuffer *cipher_key,
+    bool isCipher,
+    unsigned int auth_tag_len,
+    jsi::ArrayBuffer *iv,
+    jsi::Runtime &runtime,
     std::shared_ptr<react::CallInvoker> jsCallInvoker,
     std::shared_ptr<DispatchQueue::dispatch_queue> workerQueue)
     : MGLSmartHostObject(jsCallInvoker, workerQueue),

@@ -34,7 +34,7 @@ export const KeyVariantLookup: Record<string, KeyVariant> = {
 };
 
 export type InternalCipher = {
-  update: (data: BinaryLike | ArrayBufferView) => ArrayBuffer;
+  update: (data: ArrayBuffer) => ArrayBuffer;
   final: () => ArrayBuffer;
   copy: () => void;
   setAAD: (args: {

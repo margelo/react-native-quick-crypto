@@ -3,7 +3,6 @@ import Stream, { type TransformOptions } from 'readable-stream';
 import {
   type BinaryLike,
   binaryLikeToArrayBuffer,
-  type CipherEncoding,
   type Encoding,
   getDefaultEncoding,
   kEmptyObject,
@@ -124,7 +123,7 @@ class CipherCommon extends Stream.Transform {
     cipherKey: BinaryLikeNode,
     isCipher: boolean,
     options: Record<string, TransformOptions> = {},
-    iv?: BinaryLike | null,
+    iv: BinaryLike,
   ) {
     super(options);
     const cipherKeyBuffer = binaryLikeToArrayBuffer(cipherKey);
@@ -147,8 +146,8 @@ class CipherCommon extends Stream.Transform {
 
   update(
     data: BinaryLike,
-    inputEncoding?: CipherEncoding,
-    outputEncoding?: CipherEncoding,
+    inputEncoding?: Encoding,
+    outputEncoding?: Encoding,
   ): ArrayBuffer | string {
     const defaultEncoding = getDefaultEncoding();
     inputEncoding = inputEncoding ?? defaultEncoding;
@@ -160,15 +159,7 @@ class CipherCommon extends Stream.Transform {
       throw new Error('Invalid data argument');
     }
 
-    if (typeof data === 'string') {
-      // On node this is handled on the native side
-      // on our case we need to correctly send the arraybuffer to the jsi side
-      inputEncoding = inputEncoding === 'buffer' ? 'utf8' : inputEncoding;
-      data = binaryLikeToArrayBuffer(data, inputEncoding);
-    } else {
-      data = binaryLikeToArrayBuffer(data as BinaryLikeNode, inputEncoding);
-    }
-
+    data = binaryLikeToArrayBuffer(data, inputEncoding);
     const ret = this.internal.update(data);
 
     if (outputEncoding && outputEncoding !== 'buffer') {
@@ -194,8 +185,8 @@ class CipherCommon extends Stream.Transform {
     return ret;
   }
 
-  _transform(chunk: BinaryLike, encoding: Encoding, callback: () => void) {
-    this.push(this.update(chunk, encoding));
+  _transform(chunk: BinaryLike, encoding: BufferEncoding, callback: () => void) {
+    this.push(this.update(chunk, normalizeEncoding(encoding)));
     callback();
   }
 
@@ -237,11 +228,9 @@ class Cipher extends CipherCommon {
     cipherType: string,
     cipherKey: BinaryLikeNode,
     options: Record<string, TransformOptions> = {},
-    iv?: BinaryLike | null,
+    iv: BinaryLike,
   ) {
-    if (iv != null) {
-      iv = binaryLikeToArrayBuffer(iv);
-    }
+    iv = binaryLikeToArrayBuffer(iv);
     super(cipherType, cipherKey, true, options, iv);
   }
 }
@@ -251,42 +240,11 @@ class Decipher extends CipherCommon {
     cipherType: string,
     cipherKey: BinaryLikeNode,
     options: Record<string, TransformOptions> = {},
-    iv?: BinaryLike | null,
+    iv: BinaryLike,
   ) {
-    if (iv != null) {
-      iv = binaryLikeToArrayBuffer(iv);
-    }
-
+    iv = binaryLikeToArrayBuffer(iv);
     super(cipherType, cipherKey, false, options, iv);
   }
-}
-
-export function createDecipher(
-  algorithm: CipherCCMTypes,
-  password: BinaryLikeNode,
-  options: CipherCCMOptions,
-): DecipherCCM;
-export function createDecipher(
-  algorithm: CipherGCMTypes,
-  password: BinaryLikeNode,
-  options?: CipherGCMOptions,
-): DecipherGCM;
-export function createDecipher(
-  algorithm: CipherType,
-  password: BinaryLikeNode,
-  options?: Stream.TransformOptions,
-): DecipherCCM | DecipherGCM | Decipher;
-export function createDecipher(
-  algorithm: string,
-  password: BinaryLikeNode,
-  options?: CipherCCMOptions | CipherGCMOptions | Stream.TransformOptions,
-): DecipherCCM | DecipherGCM | Decipher {
-  if (options === undefined) options = {};
-  return new Decipher(
-    algorithm,
-    password,
-    options as Record<string, TransformOptions>,
-  );
 }
 
 export function createDecipheriv(
@@ -310,13 +268,13 @@ export function createDecipheriv(
 export function createDecipheriv(
   algorithm: CipherType,
   key: BinaryLikeNode,
-  iv: BinaryLike | null,
+  iv: BinaryLike,
   options?: Stream.TransformOptions,
 ): DecipherCCM | DecipherOCB | DecipherGCM | Decipher;
 export function createDecipheriv(
   algorithm: string,
   key: BinaryLikeNode,
-  iv: BinaryLike | null,
+  iv: BinaryLike,
   options?:
     | CipherCCMOptions
     | CipherOCBOptions
@@ -328,33 +286,6 @@ export function createDecipheriv(
     key,
     options as Record<string, TransformOptions>,
     iv,
-  );
-}
-
-export function createCipher(
-  algorithm: CipherCCMTypes,
-  password: BinaryLikeNode,
-  options: CipherCCMOptions,
-): CipherCCM;
-export function createCipher(
-  algorithm: CipherGCMTypes,
-  password: BinaryLikeNode,
-  options?: CipherGCMOptions,
-): CipherGCM;
-export function createCipher(
-  algorithm: CipherType,
-  password: BinaryLikeNode,
-  options?: Stream.TransformOptions,
-): CipherCCM | CipherGCM | Cipher;
-export function createCipher(
-  algorithm: string,
-  password: BinaryLikeNode,
-  options?: CipherGCMOptions | CipherCCMOptions | Stream.TransformOptions,
-): CipherCCM | CipherGCM | Cipher {
-  return new Cipher(
-    algorithm,
-    password,
-    options as Record<string, TransformOptions>,
   );
 }
 
@@ -379,13 +310,13 @@ export function createCipheriv(
 export function createCipheriv(
   algorithm: CipherType,
   key: BinaryLikeNode,
-  iv: BinaryLike | null,
+  iv: BinaryLike,
   options?: Stream.TransformOptions,
 ): CipherCCM | CipherOCB | CipherGCM | Cipher;
 export function createCipheriv(
   algorithm: string,
   key: BinaryLikeNode,
-  iv: BinaryLike | null,
+  iv: BinaryLike,
   options?:
     | CipherCCMOptions
     | CipherOCBOptions
