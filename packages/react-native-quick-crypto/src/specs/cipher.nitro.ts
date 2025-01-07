@@ -13,7 +13,7 @@ export interface Cipher extends HybridObject<{ ios: 'c++'; android: 'c++' }> {
   final(): ArrayBuffer;
   copy(): void;
   setArgs(args: CipherArgs): void;
-  setAAD(data: ArrayBuffer, plaintextLength?: number) : boolean;
+  setAAD(data: ArrayBuffer, plaintextLength?: number): boolean;
   setAutoPadding(autoPad: boolean): boolean;
   setAuthTag(tag: ArrayBuffer): boolean;
   getAuthTag(): ArrayBuffer;

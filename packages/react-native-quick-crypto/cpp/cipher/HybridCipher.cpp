@@ -1,3 +1,5 @@
+#include <memory>
+
 #include "HybridCipher.hpp"
 
 namespace margelo::nitro::crypto {
@@ -15,9 +17,7 @@ HybridCipher::final() {
 }
 
 void
-HybridCipher::copy() {
-
-}
+HybridCipher::copy() {}
 
 bool
 HybridCipher::setAAD(
@@ -52,7 +52,7 @@ HybridCipher::setArgs(
 ) {
   this->args = args;
   init();
-};
+}
 
 void
 HybridCipher::init() {
@@ -67,7 +67,6 @@ HybridCipher::init() {
   if (cipher == nullptr) {
     throw std::runtime_error("Invalid Cipher Algorithm: " + args.cipherType);
   }
-
 }
 
 } // namespace margelo::nitro::crypto

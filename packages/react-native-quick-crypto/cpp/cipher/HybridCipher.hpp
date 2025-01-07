@@ -1,3 +1,4 @@
+#include <memory>
 #include <openssl/evp.h>
 #include <optional>
 
