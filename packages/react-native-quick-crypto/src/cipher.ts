@@ -28,7 +28,7 @@ import {
   validateEncoding,
 } from './utils/cipher';
 
-type CipherArgs = {
+interface CipherArgs {
   cipherType: string;
   cipherKey: BinaryLikeNode;
   isCipher: boolean;
