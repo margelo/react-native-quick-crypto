@@ -21,6 +21,8 @@ namespace margelo::nitro::crypto { struct CipherArgs; }
 #include <NitroModules/ArrayBuffer.hpp>
 #include "CipherArgs.hpp"
 #include <optional>
+#include <vector>
+#include <string>
 
 namespace margelo::nitro::crypto {
 
@@ -61,6 +63,7 @@ namespace margelo::nitro::crypto {
       virtual bool setAutoPadding(bool autoPad) = 0;
       virtual bool setAuthTag(const std::shared_ptr<ArrayBuffer>& tag) = 0;
       virtual std::shared_ptr<ArrayBuffer> getAuthTag() = 0;
+      virtual std::vector<std::string> getSupportedCiphers() = 0;
 
     protected:
       // Hybrid Setup

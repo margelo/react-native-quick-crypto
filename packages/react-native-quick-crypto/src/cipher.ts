@@ -28,6 +28,13 @@ import {
   validateEncoding,
 } from './utils/cipher';
 
+export class CipherUtils {
+  private static native = NitroModules.createHybridObject<NativeCipher>('Cipher');
+  public static getSupportedCiphers(): string[] {
+    return this.native.getSupportedCiphers();
+  }
+}
+
 interface CipherArgs {
   cipherType: string;
   cipherKey: BinaryLikeNode;
@@ -148,6 +155,10 @@ class CipherCommon extends Stream.Transform {
       throw new Error('setAuthTag failed');
     }
     return this;
+  }
+
+  public getSupportedCiphers(): string[] {
+    return this.native.getSupportedCiphers();
   }
 }
 
