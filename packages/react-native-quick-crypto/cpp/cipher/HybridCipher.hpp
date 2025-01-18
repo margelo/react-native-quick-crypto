@@ -14,6 +14,7 @@ using namespace facebook;
 class HybridCipher : public HybridCipherSpec {
  public:
   HybridCipher() : HybridObject(TAG) {}
+  ~HybridCipher();
 
  public:
   // Methods
@@ -62,6 +63,8 @@ class HybridCipher : public HybridCipherSpec {
  private:
   // Properties
   std::optional<CipherArgs> args = std::nullopt;
+  EVP_CIPHER_CTX *ctx = nullptr;
+  EVP_CIPHER *cipher = nullptr;
 };
 
 } // namespace margelo::nitro::crypto

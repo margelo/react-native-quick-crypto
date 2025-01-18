@@ -1,5 +1,4 @@
 import {
-  Cipher,
   getCiphers,
   createCipheriv,
   randomFillSync,
@@ -12,8 +11,9 @@ const key = 'secret';
 const iv = randomFillSync(new Uint8Array(16));
 
 test(SUITE, 'cipher - valid algorithm', async () => {
-  const cipher = createCipheriv('aes-128-cbc', key, iv, {});
-  expect(cipher).to.be.instanceOf(Cipher);
+  expect(() => {
+    createCipheriv('aes-128-cbc', key, iv, {});
+  }).to.not.throw();
 });
 
 test(SUITE, 'cipher - invalid algorithm', async () => {

@@ -29,7 +29,8 @@ import {
 } from './utils/cipher';
 
 class CipherUtils {
-  private static native = NitroModules.createHybridObject<NativeCipher>('Cipher');
+  private static native =
+    NitroModules.createHybridObject<NativeCipher>('Cipher');
   public static getSupportedCiphers(): string[] {
     return this.native.getSupportedCiphers();
   }
@@ -40,23 +41,23 @@ export function getCiphers(): string[] {
 }
 
 interface CipherArgs {
+  isCipher: boolean;
   cipherType: string;
   cipherKey: BinaryLikeNode;
-  isCipher: boolean;
-  options: Record<string, TransformOptions>;
   iv: BinaryLike;
-};
+  options: Record<string, TransformOptions>;
+}
 
 class CipherCommon extends Stream.Transform {
   private native: NativeCipher;
   private decoder: StringDecoder | undefined;
 
   constructor({
+    isCipher,
     cipherType,
     cipherKey,
-    isCipher,
-    options = {},
     iv,
+    options = {},
   }: CipherArgs) {
     super(options);
     this.native = NitroModules.createHybridObject<NativeCipher>('Cipher');
@@ -166,35 +167,35 @@ class CipherCommon extends Stream.Transform {
   }
 }
 
-export class Cipher extends CipherCommon {
+class Cipheriv extends CipherCommon {
   constructor(
     cipherType: string,
     cipherKey: BinaryLikeNode,
-    options: Record<string, TransformOptions> = {},
     iv: BinaryLike,
+    options: Record<string, TransformOptions> = {},
   ) {
     super({
+      isCipher: true,
       cipherType,
       cipherKey: binaryLikeToArrayBuffer(cipherKey),
       iv: binaryLikeToArrayBuffer(iv),
-      isCipher: true,
       options,
     });
   }
 }
 
-export class Decipher extends CipherCommon {
+class Decipheriv extends CipherCommon {
   constructor(
     cipherType: string,
     cipherKey: BinaryLikeNode,
-    options: Record<string, TransformOptions> = {},
     iv: BinaryLike,
+    options: Record<string, TransformOptions> = {},
   ) {
     super({
+      isCipher: false,
       cipherType,
       cipherKey: binaryLikeToArrayBuffer(cipherKey),
       iv: binaryLikeToArrayBuffer(iv),
-      isCipher: false,
       options,
     });
   }
@@ -223,7 +224,7 @@ export function createDecipheriv(
   key: BinaryLikeNode,
   iv: BinaryLike,
   options?: Stream.TransformOptions,
-): DecipherCCM | DecipherOCB | DecipherGCM | Decipher;
+): DecipherCCM | DecipherOCB | DecipherGCM | Decipheriv;
 export function createDecipheriv(
   algorithm: string,
   key: BinaryLikeNode,
@@ -233,12 +234,12 @@ export function createDecipheriv(
     | CipherOCBOptions
     | CipherGCMOptions
     | Stream.TransformOptions,
-): DecipherCCM | DecipherOCB | DecipherGCM | Decipher {
-  return new Decipher(
+): DecipherCCM | DecipherOCB | DecipherGCM | Decipheriv {
+  return new Decipheriv(
     algorithm,
     key,
-    options as Record<string, TransformOptions>,
     iv,
+    options as Record<string, TransformOptions>,
   );
 }
 
@@ -265,7 +266,7 @@ export function createCipheriv(
   key: BinaryLikeNode,
   iv: BinaryLike,
   options?: Stream.TransformOptions,
-): CipherCCM | CipherOCB | CipherGCM | Cipher;
+): CipherCCM | CipherOCB | CipherGCM | Cipheriv;
 export function createCipheriv(
   algorithm: string,
   key: BinaryLikeNode,
@@ -275,11 +276,11 @@ export function createCipheriv(
     | CipherOCBOptions
     | CipherGCMOptions
     | Stream.TransformOptions,
-): CipherCCM | CipherOCB | CipherGCM | Cipher {
-  return new Cipher(
+): CipherCCM | CipherOCB | CipherGCM | Cipheriv {
+  return new Cipheriv(
     algorithm,
     key,
-    options as Record<string, TransformOptions>,
     iv,
+    options as Record<string, TransformOptions>,
   );
 }
