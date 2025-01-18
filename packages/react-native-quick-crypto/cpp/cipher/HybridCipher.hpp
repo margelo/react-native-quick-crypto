@@ -1,6 +1,7 @@
 #include <memory>
 #include <openssl/evp.h>
 #include <optional>
+#include <vector>
 
 #include "HybridCipherSpec.hpp"
 #include "CipherArgs.hpp"
@@ -49,6 +50,9 @@ class HybridCipher : public HybridCipherSpec {
 
   std::shared_ptr<ArrayBuffer>
   getAuthTag() override;
+
+  std::vector<std::string>
+  getSupportedCiphers() override;
 
  private:
   // Methods
