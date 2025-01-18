@@ -1,6 +1,7 @@
 #include <memory>
 #include <openssl/evp.h>
 #include <optional>
+#include <string>
 #include <vector>
 
 #include "HybridCipherSpec.hpp"
@@ -62,6 +63,5 @@ class HybridCipher : public HybridCipherSpec {
   // Properties
   std::optional<CipherArgs> args = std::nullopt;
 };
-
 
 } // namespace margelo::nitro::crypto
