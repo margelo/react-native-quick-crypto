@@ -7,6 +7,15 @@
 
 namespace margelo::nitro::crypto {
 
+HybridCipher::~HybridCipher() {
+  if (this->ctx) {
+    EVP_CIPHER_CTX_free(this->ctx);
+  }
+  if (this->cipher) {
+    EVP_CIPHER_free(this->cipher);
+  }
+}
+
 std::shared_ptr<ArrayBuffer>
 HybridCipher::update(
   const std::shared_ptr<ArrayBuffer>& data
@@ -65,11 +74,38 @@ HybridCipher::init() {
   }
   auto args = this->args.value();
 
-  // check if cipherType is valid
-  const EVP_CIPHER *const cipher = EVP_get_cipherbyname(args.cipherType.c_str());
+  // fetch cipher
+  this->cipher = EVP_CIPHER_fetch(
+    nullptr,
+    args.cipherType.c_str(),
+    nullptr
+  );
   if (cipher == nullptr) {
     throw std::runtime_error("Invalid Cipher Algorithm: " + args.cipherType);
   }
+
+  // Create cipher context
+  this->ctx = EVP_CIPHER_CTX_new();
+  if (!this->ctx) {
+    throw std::runtime_error("Failed to create cipher context");
+  }
+
+  // Initialize cipher operation
+  if (
+    EVP_CipherInit_ex2(
+      this->ctx,
+      this->cipher,
+      this->args->cipherKey->data(),
+      this->args->iv->data(),
+      this->args->isCipher ? 1 : 0,
+      nullptr
+    ) != 1
+  ) {
+    EVP_CIPHER_CTX_free(this->ctx);
+    this->ctx = nullptr;
+    throw std::runtime_error("Failed to initialize encryption");
+  }
+}
 
 void collect_ciphers(EVP_CIPHER *cipher, void *arg) {
   auto ciphers = static_cast<std::vector<std::string>*>(arg);
