@@ -1,4 +1,6 @@
 #include <memory>
+#include <vector>
+#include <openssl/evp.h>
 
 #include "HybridCipher.hpp"
 
@@ -67,6 +69,25 @@ HybridCipher::init() {
   if (cipher == nullptr) {
     throw std::runtime_error("Invalid Cipher Algorithm: " + args.cipherType);
   }
+
+void collect_ciphers(EVP_CIPHER *cipher, void *arg) {
+  auto ciphers = static_cast<std::vector<std::string>*>(arg);
+  const char* name = EVP_CIPHER_get0_name(cipher);
+  if (name != nullptr) {
+    ciphers->push_back(name);
+  }
+}
+std::vector<std::string>
+HybridCipher::getSupportedCiphers() {
+  std::vector<std::string> ciphers;
+
+  EVP_CIPHER_do_all_provided(
+    nullptr, // nullptr is default library context
+    collect_ciphers,
+    &ciphers
+  );
+
+  return ciphers;
 }
 
 } // namespace margelo::nitro::crypto

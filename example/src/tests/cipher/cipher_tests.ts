@@ -1,5 +1,6 @@
 import {
   Cipher,
+  CipherUtils,
   createCipheriv,
   randomFillSync,
 } from 'react-native-quick-crypto';
@@ -20,4 +21,10 @@ test(SUITE, 'cipher - invalid algorithm', async () => {
     // @ts-expect-error - testing bad algorithm
     createCipheriv('aes-128-boorad', key, iv, {});
   }).to.throw(/Invalid Cipher Algorithm: aes-128-boorad/);
+});
+
+test(SUITE, 'cipher - getSupportedCiphers', async () => {
+  const ciphers = CipherUtils.getSupportedCiphers();
+  expect(ciphers).to.be.instanceOf(Array);
+  expect(ciphers).to.have.length.greaterThan(0);
 });

@@ -17,4 +17,5 @@ export interface Cipher extends HybridObject<{ ios: 'c++'; android: 'c++' }> {
   setAutoPadding(autoPad: boolean): boolean;
   setAuthTag(tag: ArrayBuffer): boolean;
   getAuthTag(): ArrayBuffer;
+  getSupportedCiphers(): string[];
 }
