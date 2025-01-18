@@ -1,6 +1,6 @@
 import {
   Cipher,
-  CipherUtils,
+  getCiphers,
   createCipheriv,
   randomFillSync,
 } from 'react-native-quick-crypto';
@@ -24,7 +24,7 @@ test(SUITE, 'cipher - invalid algorithm', async () => {
 });
 
 test(SUITE, 'cipher - getSupportedCiphers', async () => {
-  const ciphers = CipherUtils.getSupportedCiphers();
+  const ciphers = getCiphers();
   expect(ciphers).to.be.instanceOf(Array);
   expect(ciphers).to.have.length.greaterThan(0);
 });
