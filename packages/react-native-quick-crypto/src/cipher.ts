@@ -284,3 +284,9 @@ export function createCipheriv(
     options as Record<string, TransformOptions>,
   );
 }
+
+export const cipherExports = {
+  createCipheriv,
+  createDecipheriv,
+  getCiphers,
+};
