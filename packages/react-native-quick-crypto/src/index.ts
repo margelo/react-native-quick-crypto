@@ -3,7 +3,7 @@ import { Buffer } from '@craftzdog/react-native-buffer';
 
 // API imports
 import * as keys from './keys';
-import * as cipher from './cipher';
+import { cipherExports as cipher } from './cipher';
 import * as ed from './ed';
 import * as pbkdf2 from './pbkdf2';
 import * as random from './random';
@@ -16,27 +16,11 @@ import * as utils from './utils';
  * See `docs/implementation-coverage.md` for status.
  */
 const QuickCrypto = {
-  // createHmac,
-  // Hmac: createHmac,
-  // Hash: createHash,
-  // createHash,
-  // publicEncrypt,
-  // publicDecrypt,
-  // privateDecrypt,
-  // generateKey,
-  // generateKeySync,
-  // createSign,
-  // createVerify,
-  // subtle,
-  // constants,
   ...keys,
   ...cipher,
   ...ed,
   ...pbkdf2,
   ...random,
-  // getCiphers,
-  // getHashes,
-  // webcrypto,
   ...utils,
 };
 
