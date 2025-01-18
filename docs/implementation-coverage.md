@@ -12,18 +12,18 @@ This document attempts to describe the implementation status of Crypto APIs/Inte
    * ❌ Static method: `Certificate.exportChallenge(spkac[, encoding])`
    * ❌ Static method: `Certificate.exportPublicKey(spkac[, encoding])`
    * ❌ Static method: `Certificate.verifySpkac(spkac[, encoding])`
-* ❌ Class: `Cipher`
-  * ❌ `cipher.final([outputEncoding])`
-  * ❌ `cipher.getAuthTag()`
-  * ❌ `cipher.setAAD(buffer[, options])`
-  * ❌ `cipher.setAutoPadding([autoPadding])`
-  * ❌ `cipher.update(data[, inputEncoding][, outputEncoding])`
-* ❌ Class: `Decipher`
-  * ❌ `decipher.final([outputEncoding])`
-  * ❌ `decipher.setAAD(buffer[, options])`
-  * ❌ `decipher.setAuthTag(buffer[, encoding])`
-  * ❌ `decipher.setAutoPadding([autoPadding])`
-  * ❌ `decipher.update(data[, inputEncoding][, outputEncoding])`
+* ✅ Class: `Cipher`
+  * ✅ `cipher.final([outputEncoding])`
+  * ✅ `cipher.getAuthTag()`
+  * ✅ `cipher.setAAD(buffer[, options])`
+  * ✅ `cipher.setAutoPadding([autoPadding])`
+  * ✅ `cipher.update(data[, inputEncoding][, outputEncoding])`
+* ✅ Class: `Decipher`
+  * ✅ `decipher.final([outputEncoding])`
+  * ✅ `decipher.setAAD(buffer[, options])`
+  * ✅ `decipher.setAuthTag(buffer[, encoding])`
+  * ✅ `decipher.setAutoPadding([autoPadding])`
+  * ✅ `decipher.update(data[, inputEncoding][, outputEncoding])`
 * ❌ Class: `DiffieHellman`
   * ❌ `diffieHellman.computeSecret(otherPublicKey[, inputEncoding][, outputEncoding])`
   * ❌ `diffieHellman.generateKeys([encoding])`
@@ -95,8 +95,8 @@ This document attempts to describe the implementation status of Crypto APIs/Inte
   * ❌ `crypto.fips`
   * ❌ `crypto.checkPrime(candidate[, options], callback)`
   * ❌ `crypto.checkPrimeSync(candidate[, options])`
-  * ❌ `crypto.createCipheriv(algorithm, key, iv[, options])`
-  * ❌ `crypto.createDecipheriv(algorithm, key, iv[, options])`
+  * ✅ `crypto.createCipheriv(algorithm, key, iv[, options])`
+  * ✅ `crypto.createDecipheriv(algorithm, key, iv[, options])`
   * ❌ `crypto.createDiffieHellman(prime[, primeEncoding][, generator][, generatorEncoding])`
   * ❌ `crypto.createDiffieHellman(primeLength[, generator])`
   * ❌ `crypto.createDiffieHellmanGroup(name)`
@@ -117,7 +117,7 @@ This document attempts to describe the implementation status of Crypto APIs/Inte
   * ❌ `crypto.generatePrime(size[, options[, callback]])`
   * ❌ `crypto.generatePrimeSync(size[, options])`
   * ❌ `crypto.getCipherInfo(nameOrNid[, options])`
-  * ❌ `crypto.getCiphers()`
+  * ✅ `crypto.getCiphers()`
   * ❌ `crypto.getCurves()`
   * ❌ `crypto.getDiffieHellman(groupName)`
   * ❌ `crypto.getFips()`

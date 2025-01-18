@@ -28,11 +28,15 @@ import {
   validateEncoding,
 } from './utils/cipher';
 
-export class CipherUtils {
+class CipherUtils {
   private static native = NitroModules.createHybridObject<NativeCipher>('Cipher');
   public static getSupportedCiphers(): string[] {
     return this.native.getSupportedCiphers();
   }
+}
+
+export function getCiphers(): string[] {
+  return CipherUtils.getSupportedCiphers();
 }
 
 interface CipherArgs {
