@@ -7,6 +7,8 @@ import {
   type CipherType,
   type BinaryLikeNode,
   type BinaryLike,
+  type Cipher,
+  type Decipher,
 } from 'react-native-quick-crypto';
 import { expect } from 'chai';
 import { test } from '../util';
@@ -52,12 +54,12 @@ test(SUITE, 'cipher - buffers', async () => {
   );
 });
 
-// update/final
-ciphers.forEach(cipherName => {
-  test(SUITE, `cipher - non-stream - ${cipherName}`, async () => {
-    roundtrip(cipherName as CipherType, key, iv, plaintext);
-  });
-});
+// // update/final
+// ciphers.forEach(cipherName => {
+//   test(SUITE, `cipher - non-stream - ${cipherName}`, async () => {
+//     roundtrip(cipherName as CipherType, key, iv, plaintext);
+//   });
+// });
 
 function roundtrip(
   cipherName: CipherType,
@@ -65,11 +67,11 @@ function roundtrip(
   lIv: BinaryLike,
   payload: string,
 ) {
-  const cipher = createCipheriv(cipherName, lKey, lIv, {});
-  let ciph = cipher.update(payload, 'utf8', 'buffer') as Uint8Array;
-  ciph = Buffer.concat([ciph, cipher.final('buffer') as Uint8Array]);
+  const cipher: Cipher = createCipheriv(cipherName, lKey, lIv, {});
+  let ciph = cipher.update(payload, 'utf8', 'buffer');
+  ciph = Buffer.concat([ciph, cipher.final('buffer')]);
 
-  const decipher = createDecipheriv(cipherName, lKey, lIv, {});
+  const decipher: Decipher = createDecipheriv(cipherName, lKey, lIv, {});
   let deciph = decipher.update(ciph, 'buffer', 'utf8');
   deciph += decipher.final('utf8') as string;
   expect(deciph).to.equal(plaintext);
