@@ -1,14 +1,24 @@
+import { Buffer } from '@craftzdog/react-native-buffer';
 import {
   getCiphers,
   createCipheriv,
+  createDecipheriv,
   randomFillSync,
+  type CipherType,
+  type BinaryLikeNode,
+  type BinaryLike,
 } from 'react-native-quick-crypto';
 import { expect } from 'chai';
 import { test } from '../util';
 
 const SUITE = 'cipher';
+const ciphers = getCiphers();
 const key = 'secret';
 const iv = randomFillSync(new Uint8Array(16));
+const plaintext =
+  '32|RmVZZkFUVmpRRkp0TmJaUm56ZU9qcnJkaXNNWVNpTTU*|iXmckfRWZBGWWELw' +
+  'eCBsThSsfUHLeRe0KCsK8ooHgxie0zOINpXxfZi/oNG7uq9JWFVCk70gfzQH8ZUJ' +
+  'jAfaFg**';
 
 test(SUITE, 'cipher - valid algorithm', async () => {
   expect(() => {
@@ -24,7 +34,43 @@ test(SUITE, 'cipher - invalid algorithm', async () => {
 });
 
 test(SUITE, 'cipher - getSupportedCiphers', async () => {
-  const ciphers = getCiphers();
   expect(ciphers).to.be.instanceOf(Array);
   expect(ciphers).to.have.length.greaterThan(0);
 });
+
+// different value types
+test(SUITE, 'cipher - strings', async () => {
+  roundtrip('aes-128-cbc', '0123456789abcd0123456789', '12345678', plaintext);
+});
+
+test(SUITE, 'cipher - buffers', async () => {
+  roundtrip(
+    'aes-128-cbc',
+    Buffer.from('0123456789abcd0123456789'),
+    Buffer.from('12345678'),
+    plaintext,
+  );
+});
+
+// update/final
+ciphers.forEach(cipherName => {
+  test(SUITE, `cipher - non-stream - ${cipherName}`, async () => {
+    roundtrip(cipherName as CipherType, key, iv, plaintext);
+  });
+});
+
+function roundtrip(
+  cipherName: CipherType,
+  lKey: BinaryLikeNode,
+  lIv: BinaryLike,
+  payload: string,
+) {
+  const cipher = createCipheriv(cipherName, lKey, lIv, {});
+  let ciph = cipher.update(payload, 'utf8', 'buffer') as Uint8Array;
+  ciph = Buffer.concat([ciph, cipher.final('buffer') as Uint8Array]);
+
+  const decipher = createDecipheriv(cipherName, lKey, lIv, {});
+  let deciph = decipher.update(ciph, 'buffer', 'utf8');
+  deciph += decipher.final('utf8') as string;
+  expect(deciph).to.equal(plaintext);
+}
