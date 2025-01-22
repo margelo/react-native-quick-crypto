@@ -78,7 +78,7 @@ class CipherCommon extends Stream.Transform {
     data: BinaryLike,
     inputEncoding?: Encoding,
     outputEncoding?: Encoding,
-  ): ArrayBuffer | string {
+  ): Buffer | string {
     const defaultEncoding = getDefaultEncoding();
     inputEncoding = inputEncoding ?? defaultEncoding;
     outputEncoding = outputEncoding ?? defaultEncoding;
@@ -98,12 +98,12 @@ class CipherCommon extends Stream.Transform {
       return this.decoder!.write(SBuffer.from(ret) as any);
     }
 
-    return ret;
+    return Buffer.from(ret);
   }
 
-  final(): ArrayBuffer;
+  final(): Buffer;
   final(outputEncoding: BufferEncoding | 'buffer'): string;
-  final(outputEncoding?: BufferEncoding | 'buffer'): ArrayBuffer | string {
+  final(outputEncoding?: BufferEncoding | 'buffer'): Buffer | string {
     const ret = this.native.final();
 
     if (outputEncoding && outputEncoding !== 'buffer') {
@@ -112,7 +112,7 @@ class CipherCommon extends Stream.Transform {
       return this.decoder!.end(SBuffer.from(ret) as any);
     }
 
-    return ret;
+    return Buffer.from(ret);
   }
 
   _transform(
@@ -184,6 +184,8 @@ class Cipheriv extends CipherCommon {
   }
 }
 
+type Cipher = CipherCCM | CipherOCB | CipherGCM | Cipheriv;
+
 class Decipheriv extends CipherCommon {
   constructor(
     cipherType: string,
@@ -200,6 +202,8 @@ class Decipheriv extends CipherCommon {
     });
   }
 }
+
+type Decipher = DecipherCCM | DecipherOCB | DecipherGCM | Decipheriv;
 
 export function createDecipheriv(
   algorithm: CipherCCMTypes,
@@ -224,7 +228,7 @@ export function createDecipheriv(
   key: BinaryLikeNode,
   iv: BinaryLike,
   options?: Stream.TransformOptions,
-): DecipherCCM | DecipherOCB | DecipherGCM | Decipheriv;
+): Decipher;
 export function createDecipheriv(
   algorithm: string,
   key: BinaryLikeNode,
@@ -234,7 +238,7 @@ export function createDecipheriv(
     | CipherOCBOptions
     | CipherGCMOptions
     | Stream.TransformOptions,
-): DecipherCCM | DecipherOCB | DecipherGCM | Decipheriv {
+): Decipher {
   return new Decipheriv(
     algorithm,
     key,
@@ -266,7 +270,7 @@ export function createCipheriv(
   key: BinaryLikeNode,
   iv: BinaryLike,
   options?: Stream.TransformOptions,
-): CipherCCM | CipherOCB | CipherGCM | Cipheriv;
+): Cipher;
 export function createCipheriv(
   algorithm: string,
   key: BinaryLikeNode,
@@ -276,7 +280,7 @@ export function createCipheriv(
     | CipherOCBOptions
     | CipherGCMOptions
     | Stream.TransformOptions,
-): CipherCCM | CipherOCB | CipherGCM | Cipheriv {
+): Cipher {
   return new Cipheriv(
     algorithm,
     key,
@@ -290,3 +294,5 @@ export const cipherExports = {
   createDecipheriv,
   getCiphers,
 };
+
+export type { Cipher, Decipher };
