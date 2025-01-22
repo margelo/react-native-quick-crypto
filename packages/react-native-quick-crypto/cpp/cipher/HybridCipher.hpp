@@ -6,6 +6,7 @@
 
 #include "HybridCipherSpec.hpp"
 #include "CipherArgs.hpp"
+#include <NitroModules/ArrayBuffer.hpp>
 
 namespace margelo::nitro::crypto {
 
@@ -64,7 +65,6 @@ class HybridCipher : public HybridCipherSpec {
   // Properties
   std::optional<CipherArgs> args = std::nullopt;
   EVP_CIPHER_CTX *ctx = nullptr;
-  EVP_CIPHER *cipher = nullptr;
 };
 
 } // namespace margelo::nitro::crypto
