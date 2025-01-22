@@ -1,6 +1,8 @@
 #include <memory>
 #include <string>
 #include <vector>
+
+#include <openssl/err.h>
 #include <openssl/evp.h>
 
 #include "HybridCipher.hpp"
@@ -109,7 +111,8 @@ HybridCipher::final() {
         ctx,
         tempBuf,
         &finalLen) != 1) {
-    throw std::runtime_error("Failed to finalize cipher");
+    throw std::runtime_error("Failed to finalize cipher: " +
+      std::to_string(ERR_get_error()));
   }
 
   // Create and return a new buffer of exact size needed
