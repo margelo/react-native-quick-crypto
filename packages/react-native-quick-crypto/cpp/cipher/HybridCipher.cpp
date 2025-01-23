@@ -104,13 +104,14 @@ HybridCipher::final() {
   }
 
   int finalLen = 0;
-  unsigned char tempBuf[EVP_MAX_BLOCK_LENGTH];
+  uint8_t* tempBuf = new uint8_t[EVP_MAX_BLOCK_LENGTH];
 
   // Finalize the encryption/decryption
   if (EVP_CipherFinal_ex(
         ctx,
         tempBuf,
         &finalLen) != 1) {
+    delete[] tempBuf;
     throw std::runtime_error("Failed to finalize cipher: " +
       std::to_string(ERR_get_error()));
   }
@@ -119,7 +120,7 @@ HybridCipher::final() {
   return std::make_shared<NativeArrayBuffer>(
     tempBuf,
     finalLen,
-    nullptr
+    [=]() { delete[] tempBuf; }
   );
 }
 
