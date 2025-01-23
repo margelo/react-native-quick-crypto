@@ -10,12 +10,6 @@ import type {
   CipherGCMOptions,
   CipherOCBOptions,
   CipherOCBTypes,
-  DecipherGCM,
-  DecipherOCB,
-  DecipherCCM,
-  CipherCCM,
-  CipherOCB,
-  CipherGCM,
 } from 'crypto'; // @types/node
 import type { Cipher as NativeCipher } from './specs/cipher.nitro';
 import { binaryLikeToArrayBuffer } from './utils';
@@ -184,7 +178,7 @@ class Cipheriv extends CipherCommon {
   }
 }
 
-type Cipher = CipherCCM | CipherOCB | CipherGCM | Cipheriv;
+type Cipher = Cipheriv;
 
 class Decipheriv extends CipherCommon {
   constructor(
@@ -203,26 +197,26 @@ class Decipheriv extends CipherCommon {
   }
 }
 
-type Decipher = DecipherCCM | DecipherOCB | DecipherGCM | Decipheriv;
+type Decipher = Decipheriv;
 
 export function createDecipheriv(
   algorithm: CipherCCMTypes,
   key: BinaryLikeNode,
   iv: BinaryLike,
   options: CipherCCMOptions,
-): DecipherCCM;
+): Decipher;
 export function createDecipheriv(
   algorithm: CipherOCBTypes,
   key: BinaryLikeNode,
   iv: BinaryLike,
   options: CipherOCBOptions,
-): DecipherOCB;
+): Decipher;
 export function createDecipheriv(
   algorithm: CipherGCMTypes,
   key: BinaryLikeNode,
   iv: BinaryLike,
   options?: CipherGCMOptions,
-): DecipherGCM;
+): Decipher;
 export function createDecipheriv(
   algorithm: CipherType,
   key: BinaryLikeNode,
@@ -252,19 +246,19 @@ export function createCipheriv(
   key: BinaryLikeNode,
   iv: BinaryLike,
   options: CipherCCMOptions,
-): CipherCCM;
+): Cipher;
 export function createCipheriv(
   algorithm: CipherOCBTypes,
   key: BinaryLikeNode,
   iv: BinaryLike,
   options: CipherOCBOptions,
-): CipherOCB;
+): Cipher;
 export function createCipheriv(
   algorithm: CipherGCMTypes,
   key: BinaryLikeNode,
   iv: BinaryLike,
   options?: CipherGCMOptions,
-): CipherGCM;
+): Cipher;
 export function createCipheriv(
   algorithm: CipherType,
   key: BinaryLikeNode,

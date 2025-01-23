@@ -54,12 +54,12 @@ test(SUITE, 'cipher - buffers', async () => {
   );
 });
 
-// // update/final
-// ciphers.forEach(cipherName => {
-//   test(SUITE, `cipher - non-stream - ${cipherName}`, async () => {
-//     roundtrip(cipherName as CipherType, key, iv, plaintext);
-//   });
-// });
+// update/final
+ciphers.forEach(cipherName => {
+  test(SUITE, `cipher - non-stream - ${cipherName}`, async () => {
+    roundtrip(cipherName as CipherType, key, iv, plaintext);
+  });
+});
 
 function roundtrip(
   cipherName: CipherType,
@@ -68,8 +68,8 @@ function roundtrip(
   payload: string,
 ) {
   const cipher: Cipher = createCipheriv(cipherName, lKey, lIv, {});
-  let ciph = cipher.update(payload, 'utf8', 'buffer');
-  ciph = Buffer.concat([ciph, cipher.final('buffer')]);
+  let ciph = cipher.update(payload, 'utf8', 'buffer') as Buffer;
+  ciph = Buffer.concat([ciph, cipher.final()]);
 
   const decipher: Decipher = createDecipheriv(cipherName, lKey, lIv, {});
   let deciph = decipher.update(ciph, 'buffer', 'utf8');
