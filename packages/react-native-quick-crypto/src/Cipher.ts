@@ -417,14 +417,35 @@ function rsaFunctionFor(
   defaultPadding: number,
   keyType: 'public' | 'private',
 ) {
-  return (options: EncodingOptions, buffer: BinaryLike) => {
+  return (options: EncodingOptions | BinaryLike, buffer: BinaryLike) => {
     const { format, type, data, passphrase } =
       keyType === 'private'
         ? preparePrivateKey(options)
         : preparePublicOrPrivateKey(options);
-    const padding = options.padding || defaultPadding;
-    const { oaepHash, encoding } = options;
-    let { oaepLabel } = options;
+
+    const padding =
+      options &&
+      typeof options === 'object' &&
+      'padding' in options &&
+      typeof options.padding === 'number'
+        ? options.padding
+        : defaultPadding;
+
+    const oaepHash =
+      options && typeof options === 'object' && 'oaepHash' in options
+        ? options.oaepHash
+        : undefined;
+
+    const encoding =
+      options && typeof options === 'object' && 'encoding' in options
+        ? options.encoding
+        : undefined;
+
+    let oaepLabel =
+      options && typeof options === 'object' && 'oaepLabel' in options
+        ? options.oaepLabel
+        : undefined;
+
     if (oaepHash !== undefined) validateString(oaepHash, 'key.oaepHash');
     if (oaepLabel !== undefined)
       oaepLabel = binaryLikeToArrayBuffer(oaepLabel, encoding);
