@@ -1,4 +1,5 @@
 #include <memory>
+#include <NitroModules/ArrayBuffer.hpp>
 #include <openssl/evp.h>
 #include <optional>
 #include <string>
@@ -6,7 +7,6 @@
 
 #include "HybridCipherSpec.hpp"
 #include "CipherArgs.hpp"
-#include <NitroModules/ArrayBuffer.hpp>
 
 namespace margelo::nitro::crypto {
 
