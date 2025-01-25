@@ -1,9 +1,8 @@
 #include <memory>
-#include <string>
-#include <vector>
-
 #include <openssl/err.h>
 #include <openssl/evp.h>
+#include <string>
+#include <vector>
 
 #include "HybridCipher.hpp"
 
