@@ -1,5 +1,5 @@
 {
-  "version": "1.0.0-beta.10",
+  "version": "1.0.0-beta.11",
   "scripts": {
     "check-all": "./scripts/clang-format.sh",
     "clean": "bun --filter='*' clean",
