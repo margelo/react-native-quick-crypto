@@ -33,5 +33,12 @@ target 'QuickCryptoExample' do
       :mac_catalyst_enabled => false,
       # :ccache_enabled => true
     )
+
+    # https://github.com/mrousavy/nitro/issues/422#issuecomment-2545988256
+    installer.pods_project.targets.each do |target|
+      target.build_configurations.each do |config|
+        config.build_settings['IPHONEOS_DEPLOYMENT_TARGET'] = '16.0'
+      end
+    end
   end
 end
