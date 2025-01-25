@@ -70,8 +70,5 @@
   "workspaces": [
     "packages/react-native-quick-crypto",
     "example"
-  ],
-  "patchedDependencies": {
-    "react-native-nitro-modules@0.21.0": "patches/react-native-nitro-modules@0.21.0.patch"
-  }
+  ]
 }
