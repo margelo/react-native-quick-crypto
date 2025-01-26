@@ -2,6 +2,7 @@
 import { Buffer } from '@craftzdog/react-native-buffer';
 
 // API imports
+import { hashExports as hash } from './hash';
 import * as keys from './keys';
 import { cipherExports as cipher } from './cipher';
 import * as ed from './ed';
@@ -18,6 +19,7 @@ import * as utils from './utils';
 const QuickCrypto = {
   ...keys,
   ...cipher,
+  ...hash,
   ...ed,
   ...pbkdf2,
   ...random,
