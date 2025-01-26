@@ -13,7 +13,7 @@ import type {
 } from 'crypto'; // @types/node
 import type { Cipher as NativeCipher } from './specs/cipher.nitro';
 import { binaryLikeToArrayBuffer } from './utils';
-import type { BinaryLike, BinaryLikeNode, CipherType, Encoding } from './utils';
+import type { BinaryLike, BinaryLikeNode, Encoding } from './utils';
 import {
   getDecoder,
   getDefaultEncoding,
@@ -218,7 +218,7 @@ export function createDecipheriv(
   options?: CipherGCMOptions,
 ): Decipher;
 export function createDecipheriv(
-  algorithm: CipherType,
+  algorithm: string,
   key: BinaryLikeNode,
   iv: BinaryLike,
   options?: Stream.TransformOptions,
@@ -260,7 +260,7 @@ export function createCipheriv(
   options?: CipherGCMOptions,
 ): Cipher;
 export function createCipheriv(
-  algorithm: CipherType,
+  algorithm: string,
   key: BinaryLikeNode,
   iv: BinaryLike,
   options?: Stream.TransformOptions,

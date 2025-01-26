@@ -285,18 +285,7 @@ export type Encoding =
 
 // These are for shortcomings in @types/node
 // Here we use "*Type" instead of "*Types" like node does.
-export type CipherType =
-  | 'aes128'
-  | 'aes192'
-  | 'aes256'
-  | CipherCBCType
-  | CipherCFBType
-  | CipherCTRType
-  | CipherDESType
-  | CipherECBType
-  | CipherGCMType
-  | CipherOFBType;
-export type CipherCBCType = 'aes-128-cbc' | 'aes-192-cbc' | 'aes-256-cbc';
+// export type CipherCBCType = 'aes-128-cbc' | 'aes-192-cbc' | 'aes-256-cbc';
 export type CipherCFBType =
   | 'aes-128-cfb'
   | 'aes-192-cfb'

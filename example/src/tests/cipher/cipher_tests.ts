@@ -4,7 +4,6 @@ import {
   createCipheriv,
   createDecipheriv,
   randomFillSync,
-  type CipherType,
   type BinaryLikeNode,
   type BinaryLike,
   type Cipher,
@@ -30,7 +29,6 @@ test(SUITE, 'cipher - valid algorithm', async () => {
 
 test(SUITE, 'cipher - invalid algorithm', async () => {
   expect(() => {
-    // @ts-expect-error - testing bad algorithm
     createCipheriv('aes-128-boorad', key, iv, {});
   }).to.throw(/Invalid Cipher Algorithm: aes-128-boorad/);
 });
@@ -57,12 +55,12 @@ test(SUITE, 'cipher - buffers', async () => {
 // update/final
 ciphers.forEach(cipherName => {
   test(SUITE, `cipher - non-stream - ${cipherName}`, async () => {
-    roundtrip(cipherName as CipherType, key, iv, plaintext);
+    roundtrip(cipherName, key, iv, plaintext);
   });
 });
 
 function roundtrip(
-  cipherName: CipherType,
+  cipherName: string,
   lKey: BinaryLikeNode,
   lIv: BinaryLike,
   payload: string,
