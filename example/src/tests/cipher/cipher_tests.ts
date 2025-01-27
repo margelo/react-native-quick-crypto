@@ -14,36 +14,36 @@ import { test } from '../util';
 
 const SUITE = 'cipher';
 const ciphers = getCiphers();
-const key = 'secret';
+const key = randomFillSync(new Uint8Array(32));
 const iv = randomFillSync(new Uint8Array(16));
 const plaintext =
   '32|RmVZZkFUVmpRRkp0TmJaUm56ZU9qcnJkaXNNWVNpTTU*|iXmckfRWZBGWWELw' +
   'eCBsThSsfUHLeRe0KCsK8ooHgxie0zOINpXxfZi/oNG7uq9JWFVCk70gfzQH8ZUJ' +
   'jAfaFg**';
 
-test(SUITE, 'cipher - valid algorithm', async () => {
+test(SUITE, 'valid algorithm', async () => {
   expect(() => {
     createCipheriv('aes-128-cbc', key, iv, {});
   }).to.not.throw();
 });
 
-test(SUITE, 'cipher - invalid algorithm', async () => {
+test(SUITE, 'invalid algorithm', async () => {
   expect(() => {
     createCipheriv('aes-128-boorad', key, iv, {});
   }).to.throw(/Invalid Cipher Algorithm: aes-128-boorad/);
 });
 
-test(SUITE, 'cipher - getSupportedCiphers', async () => {
+test(SUITE, 'getSupportedCiphers', async () => {
   expect(ciphers).to.be.instanceOf(Array);
   expect(ciphers).to.have.length.greaterThan(0);
 });
 
 // different value types
-test(SUITE, 'cipher - strings', async () => {
+test(SUITE, 'strings', async () => {
   roundtrip('aes-128-cbc', '0123456789abcd0123456789', '12345678', plaintext);
 });
 
-test(SUITE, 'cipher - buffers', async () => {
+test(SUITE, 'buffers', async () => {
   roundtrip(
     'aes-128-cbc',
     Buffer.from('0123456789abcd0123456789'),
@@ -54,7 +54,7 @@ test(SUITE, 'cipher - buffers', async () => {
 
 // update/final
 ciphers.forEach(cipherName => {
-  test(SUITE, `cipher - non-stream - ${cipherName}`, async () => {
+  test(SUITE, `non-stream - ${cipherName}`, async () => {
     roundtrip(cipherName, key, iv, plaintext);
   });
 });
