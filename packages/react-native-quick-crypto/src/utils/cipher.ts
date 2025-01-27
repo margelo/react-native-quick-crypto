@@ -1,4 +1,3 @@
-import { StringDecoder } from 'string_decoder';
 import type { Encoding } from './types';
 
 // Mimics node behavior for default global encoding
@@ -47,10 +46,6 @@ export function validateEncoding(data: string, encoding: string) {
   if (normalizedEncoding === 'hex' && length % 2 !== 0) {
     throw new Error(`Encoding ${encoding} not valid for data length ${length}`);
   }
-}
-
-export function getDecoder(decoder?: StringDecoder, encoding?: BufferEncoding) {
-  return decoder ?? new StringDecoder(encoding);
 }
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any

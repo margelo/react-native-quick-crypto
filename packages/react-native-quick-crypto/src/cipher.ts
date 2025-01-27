@@ -1,8 +1,6 @@
 import { NitroModules } from 'react-native-nitro-modules';
 import Stream, { type TransformOptions } from 'readable-stream';
-import { StringDecoder } from 'string_decoder';
 import { Buffer } from '@craftzdog/react-native-buffer';
-import { Buffer as SBuffer } from 'safe-buffer';
 import type {
   CipherCCMOptions,
   CipherCCMTypes,
@@ -12,10 +10,9 @@ import type {
   CipherOCBTypes,
 } from 'crypto'; // @types/node
 import type { Cipher as NativeCipher } from './specs/cipher.nitro';
-import { binaryLikeToArrayBuffer } from './utils';
+import { ab2str, binaryLikeToArrayBuffer } from './utils';
 import type { BinaryLike, BinaryLikeNode, Encoding } from './utils';
 import {
-  getDecoder,
   getDefaultEncoding,
   getUIntOption,
   normalizeEncoding,
@@ -44,7 +41,6 @@ interface CipherArgs {
 
 class CipherCommon extends Stream.Transform {
   private native: NativeCipher;
-  private decoder: StringDecoder | undefined;
 
   constructor({
     isCipher,
@@ -83,13 +79,12 @@ class CipherCommon extends Stream.Transform {
       throw new Error('Invalid data argument');
     }
 
-    data = binaryLikeToArrayBuffer(data, inputEncoding);
-    const ret = this.native.update(data);
+    const ret = this.native.update(
+      binaryLikeToArrayBuffer(data, inputEncoding),
+    );
 
     if (outputEncoding && outputEncoding !== 'buffer') {
-      this.decoder = getDecoder(this.decoder, outputEncoding);
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      return this.decoder!.write(SBuffer.from(ret) as any);
+      return ab2str(ret, outputEncoding);
     }
 
     return Buffer.from(ret);
@@ -101,9 +96,7 @@ class CipherCommon extends Stream.Transform {
     const ret = this.native.final();
 
     if (outputEncoding && outputEncoding !== 'buffer') {
-      this.decoder = getDecoder(this.decoder, outputEncoding);
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      return this.decoder!.end(SBuffer.from(ret) as any);
+      return ab2str(ret, outputEncoding);
     }
 
     return Buffer.from(ret);
