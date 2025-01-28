@@ -2,26 +2,10 @@ import { useState, useCallback } from 'react';
 import type { TestSuites } from '../types/tests';
 import { TestsContext } from '../tests/util';
 
+import '../tests/cipher/cipher_tests';
 import '../tests/ed25519/ed25519_tests';
 import '../tests/pbkdf2/pbkdf2_tests';
 import '../tests/random/random_tests';
-// import '../tests/HmacTests/HmacTests';
-// import '../tests/HashTests/HashTests';
-// import '../tests/CipherTests/CipherTestFirst';
-// import '../tests/CipherTests/CipherTestSecond';
-// import '../tests/CipherTests/PublicCipherTests';
-// import '../tests/CipherTests/test398';
-// import '../tests/CipherTests/generateKey';
-// import '../tests/CipherTests/GenerateKeyPairTests';
-// import '../tests/ConstantsTests/ConstantsTests';
-// import '../tests/SignTests/SignTests';
-// import '../tests/SmokeTests/bundlerTests';
-// import '../tests/webcryptoTests/deriveBits';
-// import '../tests/webcryptoTests/digest';
-// import '../tests/webcryptoTests/generateKey';
-// import '../tests/webcryptoTests/encrypt_decrypt';
-// import '../tests/webcryptoTests/import_export';
-// import '../tests/webcryptoTests/sign_verify';
 
 export const useTestsList = (): [
   TestSuites,

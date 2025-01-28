@@ -15,6 +15,7 @@
 #include <fbjni/fbjni.h>
 #include <NitroModules/HybridObjectRegistry.hpp>
 
+#include "HybridCipher.hpp"
 #include "HybridEdKeyPair.hpp"
 #include "HybridPbkdf2.hpp"
 #include "HybridRandom.hpp"
@@ -31,6 +32,15 @@ int initialize(JavaVM* vm) {
     
 
     // Register Nitro Hybrid Objects
+    HybridObjectRegistry::registerHybridObjectConstructor(
+      "Cipher",
+      []() -> std::shared_ptr<HybridObject> {
+        static_assert(std::is_default_constructible_v<HybridCipher>,
+                      "The HybridObject \"HybridCipher\" is not default-constructible! "
+                      "Create a public constructor that takes zero arguments to be able to autolink this HybridObject.");
+        return std::make_shared<HybridCipher>();
+      }
+    );
     HybridObjectRegistry::registerHybridObjectConstructor(
       "EdKeyPair",
       []() -> std::shared_ptr<HybridObject> {
