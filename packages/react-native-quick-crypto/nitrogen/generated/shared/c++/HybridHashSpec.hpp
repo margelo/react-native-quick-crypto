@@ -13,10 +13,9 @@
 #error NitroModules cannot be found! Are you sure you installed NitroModules properly?
 #endif
 
-// Forward declaration of `ArrayBuffer` to properly resolve imports.
-namespace NitroModules { class ArrayBuffer; }
 
-#include <NitroModules/ArrayBuffer.hpp>
+
+
 
 namespace margelo::nitro::crypto {
 
@@ -49,7 +48,8 @@ namespace margelo::nitro::crypto {
 
     public:
       // Methods
-      virtual std::shared_ptr<ArrayBuffer> copy() = 0;
+      virtual void update() = 0;
+      virtual void digest() = 0;
 
     protected:
       // Hybrid Setup

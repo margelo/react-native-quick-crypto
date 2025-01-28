@@ -14,7 +14,8 @@ namespace margelo::nitro::crypto {
     HybridObject::loadHybridMethods();
     // load custom methods/properties
     registerHybrids(this, [](Prototype& prototype) {
-      prototype.registerHybridMethod("copy", &HybridHashSpec::copy);
+      prototype.registerHybridMethod("update", &HybridHashSpec::update);
+      prototype.registerHybridMethod("digest", &HybridHashSpec::digest);
     });
   }
 
