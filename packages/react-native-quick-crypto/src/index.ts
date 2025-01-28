@@ -2,9 +2,9 @@
 import { Buffer } from '@craftzdog/react-native-buffer';
 
 // API imports
-import { hashExports as hash } from './hash';
 import * as keys from './keys';
 import { cipherExports as cipher } from './cipher';
+import { hashExports as hash } from './hash';
 import * as ed from './ed';
 import * as pbkdf2 from './pbkdf2';
 import * as random from './random';
@@ -44,6 +44,7 @@ global.process.nextTick = setImmediate;
 // exports
 export default QuickCrypto;
 export * from './cipher';
+export * from './hash';
 export * from './ed';
 export * from './pbkdf2';
 export * from './random';

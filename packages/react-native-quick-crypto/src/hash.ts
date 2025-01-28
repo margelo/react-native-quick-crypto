@@ -2,10 +2,9 @@ import { Stream } from 'readable-stream';
 import { NitroModules } from 'react-native-nitro-modules';
 import type { TransformOptions } from 'readable-stream';
 import type { Hash as NativeHash } from './specs/hash.nitro';
-import type { HashAlgorithm } from './utils';
 
 interface HashArgs {
-  algorithm: HashAlgorithm;
+  algorithm: string;
   options: Record<string, TransformOptions>;
 }
 
@@ -20,7 +19,7 @@ class Hash extends Stream.Transform {
 }
 
 export function createHash(
-  algorithm: HashAlgorithm,
+  algorithm: string,
   options?: TransformOptions,
 ): Hash {
   return new Hash({
