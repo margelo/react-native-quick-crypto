@@ -11,13 +11,19 @@ namespace margelo::nitro::crypto {
 
 using namespace facebook;
 
-class HybridHash : public HybridHashSpec {
+class HybridHash : public HybridHashSpec
+{
 public:
-  HybridHash() : HybridObject(TAG) {}
+  HybridHash()
+    : HybridObject(TAG)
+  {
+  }
   ~HybridHash();
 
 public:
   // Methods
+  std::shared_ptr<ArrayBuffer> createHash(
+    const std::string& algorithm) override;
   void update() override;
   void digest() override;
 
