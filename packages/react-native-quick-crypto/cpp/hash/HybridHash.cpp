@@ -1,6 +1,6 @@
-#include <memory>
 #include <NitroModules/ArrayBuffer.hpp>
 #include <OpenSSL/evp.h>
+#include <memory>
 #include <optional>
 #include <string>
 #include <vector>
@@ -15,13 +15,11 @@ HybridHash::~HybridHash() {
   }
 }
 
-void
-HybridHash::update() {
-  //  TODO
+void HybridHash::update() {
+  // TODO
 }
 
-void
-HybridHash::digest() {
+void HybridHash::digest() {
   // TODO
 }
 

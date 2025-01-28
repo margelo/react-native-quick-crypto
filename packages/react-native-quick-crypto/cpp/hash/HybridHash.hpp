@@ -1,6 +1,6 @@
-#include <memory>
 #include <NitroModules/ArrayBuffer.hpp>
 #include <OpenSSL/evp.h>
+#include <memory>
 #include <optional>
 #include <string>
 #include <vector>
@@ -15,17 +15,15 @@ class HybridHash : public HybridHashSpec {
 public:
   HybridHash() : HybridObject(TAG) {}
   ~HybridHash();
-  
+
 public:
   // Methods
-  void
-  update() override;
-  void
-  digest() override;
-  
+  void update() override;
+  void digest() override;
+
 private:
- // Properties
-  EVP_MD_CTX *ctx = nullptr;
+  // Properties
+  EVP_MD_CTX* ctx = nullptr;
 };
 
-} // margelo::nitro::crypto
+} // namespace margelo::nitro::crypto
