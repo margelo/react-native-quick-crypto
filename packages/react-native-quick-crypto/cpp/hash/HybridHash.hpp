@@ -30,6 +30,8 @@ public:
 private:
   // Properties
   EVP_MD_CTX* ctx = nullptr;
+  const EVP_MD* md = nullptr;
+  std::string algorithm;
 };
 
 } // namespace margelo::nitro::crypto
