@@ -57,7 +57,6 @@ namespace margelo::nitro::crypto {
       // Methods
       virtual std::shared_ptr<ArrayBuffer> update(const std::shared_ptr<ArrayBuffer>& data) = 0;
       virtual std::shared_ptr<ArrayBuffer> final() = 0;
-      virtual void copy() = 0;
       virtual void setArgs(const CipherArgs& args) = 0;
       virtual bool setAAD(const std::shared_ptr<ArrayBuffer>& data, std::optional<double> plaintextLength) = 0;
       virtual bool setAutoPadding(bool autoPad) = 0;

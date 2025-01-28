@@ -28,9 +28,6 @@ class HybridCipher : public HybridCipherSpec {
   final() override;
 
   void
-  copy() override;
-
-  void
   setArgs(
     const CipherArgs& args
   ) override;
@@ -61,10 +58,19 @@ class HybridCipher : public HybridCipherSpec {
   // Methods
   void init();
 
+  inline
+  int getMode() {
+    if (!ctx) {
+      throw std::runtime_error("Cipher not initialized. Did you call setArgs()?");
+    }
+    return EVP_CIPHER_CTX_get_mode(ctx);
+  }
+
  private:
   // Properties
   std::optional<CipherArgs> args = std::nullopt;
   EVP_CIPHER_CTX *ctx = nullptr;
+
 };
 
 } // namespace margelo::nitro::crypto

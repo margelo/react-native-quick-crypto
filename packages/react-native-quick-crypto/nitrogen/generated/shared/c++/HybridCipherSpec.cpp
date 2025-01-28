@@ -16,7 +16,6 @@ namespace margelo::nitro::crypto {
     registerHybrids(this, [](Prototype& prototype) {
       prototype.registerHybridMethod("update", &HybridCipherSpec::update);
       prototype.registerHybridMethod("final", &HybridCipherSpec::final);
-      prototype.registerHybridMethod("copy", &HybridCipherSpec::copy);
       prototype.registerHybridMethod("setArgs", &HybridCipherSpec::setArgs);
       prototype.registerHybridMethod("setAAD", &HybridCipherSpec::setAAD);
       prototype.registerHybridMethod("setAutoPadding", &HybridCipherSpec::setAutoPadding);

@@ -123,9 +123,6 @@ HybridCipher::final() {
   );
 }
 
-void
-HybridCipher::copy() { /* TODO */ }
-
 bool
 HybridCipher::setAAD(
   const std::shared_ptr<ArrayBuffer>& data,
@@ -181,6 +178,7 @@ void collect_ciphers(EVP_CIPHER *cipher, void *arg) {
     ciphers->push_back(name);
   }
 }
+
 std::vector<std::string>
 HybridCipher::getSupportedCiphers() {
   std::vector<std::string> ciphers;
