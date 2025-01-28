@@ -12,10 +12,10 @@ interface HashArgs {
 class Hash extends Stream.Transform {
   private native: NativeHash;
 
-  constructor({ options }: HashArgs) {
+  constructor({ algorithm, options }: HashArgs) {
     super(options);
     this.native = NitroModules.createHybridObject<NativeHash>('Hash');
-    console.log(`${this.native.name} created`);
+    this.native.createHash(algorithm);
   }
 }
 
