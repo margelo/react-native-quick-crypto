@@ -54,15 +54,17 @@ HybridHash::createHash(const std::string& hashAlgorithm)
 }
 
 void
-HybridHash::update()
+HybridHash::update(const std::shared_ptr<ArrayBuffer>& data)
 {
   // TODO
 }
 
-void
-HybridHash::digest()
+std::string
+HybridHash::digest(const std::optional<std::string>& encoding)
 {
   // TODO
+
+  return "mocked_hash_digest_result";
 }
 
 } // namespace margelo::nitro::crypto

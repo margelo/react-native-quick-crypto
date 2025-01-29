@@ -18,6 +18,7 @@ namespace NitroModules { class ArrayBuffer; }
 
 #include <NitroModules/ArrayBuffer.hpp>
 #include <string>
+#include <optional>
 
 namespace margelo::nitro::crypto {
 
@@ -51,8 +52,8 @@ namespace margelo::nitro::crypto {
     public:
       // Methods
       virtual std::shared_ptr<ArrayBuffer> createHash(const std::string& algorithm) = 0;
-      virtual void update() = 0;
-      virtual void digest() = 0;
+      virtual void update(const std::shared_ptr<ArrayBuffer>& data) = 0;
+      virtual std::string digest(const std::optional<std::string>& encoding) = 0;
 
     protected:
       // Hybrid Setup
