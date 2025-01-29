@@ -73,9 +73,40 @@ HybridHash::update(const std::shared_ptr<ArrayBuffer>& data)
 std::string
 HybridHash::digest(const std::optional<std::string>& encoding)
 {
-  // TODO
+  if (!ctx) {
+    throw std::runtime_error("Hash context not initialized");
+  }
+  
+  // Get the size of the digest
+  const int digestSize = EVP_MD_get_size(md);
+  if (digestSize <= 0) {
+    throw std::runtime_error("Invalid digest size");
+  }
+  
+  // Create a buffer for the hash output and length
+  std::vector<unsigned char> hashBuffer(digestSize);
+  unsigned int hashLength = 0;
+  
+  // TODO: create ctx copy here to keep the original intact?
+  
+  // Finalize the digest
+  if (EVP_DigestFinal_ex(ctx, hashBuffer.data(), &hashLength) != 1) {
+    throw std::runtime_error("Failed to finalize hash digest");
+  }
+  
+  //  TODO: implement other encodings, just doing HEX for now...
+  
+  // Convert to hex string
+  std::string result;
+  result.reserve(hashLength * 2);
+  static const char hex[] = "0123456789abcdef";
+  
+  for (unsigned int i = 0; i < hashLength; i++) {
+    result.push_back(hex[hashBuffer[i] >> 4]);
+    result.push_back(hex[hashBuffer[i] & 0xF]);
+  }
 
-  return "mocked_hash_digest_result";
+  return result;
 }
 
 } // namespace margelo::nitro::crypto
