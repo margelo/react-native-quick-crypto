@@ -43,6 +43,8 @@ HybridHash::createHash(const std::string& hashAlgorithm)
     throw std::runtime_error("Failed to initialize hash digest");
   }
 
+  // TODO: maybe just change the return type to void here?
+
   // Mock a 32 byte hash output
   uint8_t* mockHash = new uint8_t[32];
   for (int i = 0; i < 32; i++) {
@@ -56,7 +58,16 @@ HybridHash::createHash(const std::string& hashAlgorithm)
 void
 HybridHash::update(const std::shared_ptr<ArrayBuffer>& data)
 {
-  // TODO
+  if (!ctx) {
+    throw std::runtime_error("Hash context not initialized");
+  }
+
+  // Update the digest with the data
+  if (EVP_DigestUpdate(ctx,
+                       reinterpret_cast<const unsigned char*>(data->data()),
+                       data->size()) != 1) {
+    throw std::runtime_error("Failed to update hash digest");
+  }
 }
 
 std::string

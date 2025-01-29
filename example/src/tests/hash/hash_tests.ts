@@ -4,18 +4,20 @@ import { test } from '../util';
 
 const SUITE = 'hash';
 
-test(SUITE, 'valid algorithm', async () => {
+test(SUITE, 'valid algorithm', () => {
   expect(() => {
     createHash('sha256');
   }).to.not.throw();
 });
 
-test(SUITE, 'invalid algorithm', async () => {
+test(SUITE, 'invalid algorithm', () => {
   expect(() => {
     createHash('sha123');
   }).to.throw(/Unknown hash algorithm: sha123/);
 });
 
+// @ts-expect-error unused
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
 function _roundtrip(algorithm: string, payload: string) {
   const hash = createHash(algorithm);
   hash.update(payload);
