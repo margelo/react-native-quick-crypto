@@ -2,6 +2,8 @@ import { Stream } from 'readable-stream';
 import { NitroModules } from 'react-native-nitro-modules';
 import type { TransformOptions } from 'readable-stream';
 import type { Hash as NativeHash } from './specs/hash.nitro';
+import type { BinaryLike, BinaryToTextEncoding, Encoding } from './utils';
+import { binaryLikeToArrayBuffer } from './utils';
 
 interface HashArgs {
   algorithm: string;
@@ -11,10 +13,30 @@ interface HashArgs {
 class Hash extends Stream.Transform {
   private native: NativeHash;
 
+  /**
+   * TODO: docs
+   */
   constructor({ algorithm, options }: HashArgs) {
     super(options);
     this.native = NitroModules.createHybridObject<NativeHash>('Hash');
     this.native.createHash(algorithm);
+  }
+
+  /**
+   * TODO: docs
+   */
+  update(data: BinaryLike, _inputEncoding?: Encoding): Hash;
+  update(data: BinaryLike): Hash {
+    this.native.update(binaryLikeToArrayBuffer(data));
+    return this;
+  }
+
+  /**
+   * TODO: docs
+   */
+  digest(_encoding?: BinaryToTextEncoding): string;
+  digest(): string {
+    return 'TODO';
   }
 }
 
