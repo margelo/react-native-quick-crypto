@@ -16,14 +16,7 @@ test(SUITE, 'invalid algorithm', () => {
   }).to.throw(/Unknown hash algorithm: sha123/);
 });
 
-// @ts-expect-error unused
-// eslint-disable-next-line @typescript-eslint/no-unused-vars
-function _roundtrip(algorithm: string, payload: string) {
-  const hash = createHash(algorithm);
-  hash.update(payload);
-  const digest = hash.digest('hex');
-
-  console.log({ algorithm, payload, digest });
-
-  return hash;
-}
+test(SUITE, 'valid update and digest', () => {
+  const hash = createHash('sha256').update('test').digest('hex');
+  expect(hash).to.equal('9f86d081884c7d659a2feaa0c55ad015a3bf4f1b2b0b822cd15d6c15b0f00a08');
+});

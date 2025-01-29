@@ -6,7 +6,7 @@
 
 import { createHash } from 'node:crypto';
 
-const payload = 'hello from bun';
+const payload = 'test';
 const hash = createHash('sha256');
 hash.update(payload);
 const digest = hash.digest('hex');

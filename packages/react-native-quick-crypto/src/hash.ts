@@ -34,9 +34,8 @@ class Hash extends Stream.Transform {
   /**
    * TODO: docs
    */
-  digest(_encoding?: BinaryToTextEncoding): string;
-  digest(): string {
-    return 'TODO';
+  digest(encoding?: BinaryToTextEncoding): string {
+    return this.native.digest(encoding);
   }
 }
 
