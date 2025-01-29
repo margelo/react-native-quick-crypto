@@ -22,8 +22,7 @@ public:
 
 public:
   // Methods
-  std::shared_ptr<ArrayBuffer> createHash(
-    const std::string& algorithm) override;
+  void createHash(const std::string& algorithm) override;
   void update(const std::shared_ptr<ArrayBuffer>& data) override;
   std::string digest(const std::optional<std::string>& encoding) override;
 

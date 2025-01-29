@@ -17,7 +17,7 @@ HybridHash::~HybridHash()
   }
 }
 
-std::shared_ptr<ArrayBuffer>
+void
 HybridHash::createHash(const std::string& hashAlgorithm)
 {
   algorithm = hashAlgorithm;
@@ -42,17 +42,6 @@ HybridHash::createHash(const std::string& hashAlgorithm)
     ctx = nullptr;
     throw std::runtime_error("Failed to initialize hash digest");
   }
-
-  // TODO: maybe just change the return type to void here?
-
-  // Mock a 32 byte hash output
-  uint8_t* mockHash = new uint8_t[32];
-  for (int i = 0; i < 32; i++) {
-    mockHash[i] = i;
-  }
-
-  return std::make_shared<NativeArrayBuffer>(
-    mockHash, 32, [=]() { delete[] mockHash; });
 }
 
 void
