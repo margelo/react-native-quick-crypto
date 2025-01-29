@@ -25,8 +25,10 @@ class Hash extends Stream.Transform {
   /**
    * TODO: docs
    */
-  update(data: BinaryLike, _inputEncoding?: Encoding): Hash;
-  update(data: BinaryLike): Hash {
+  update(data: BinaryLike): Hash 
+  update(data: BinaryLike, inputEncoding: Encoding): Hash;
+  update(data: BinaryLike, inputEncoding?: Encoding): Hash {
+    console.log('TODO: implement inputEncoding', inputEncoding);
     this.native.update(binaryLikeToArrayBuffer(data));
     return this;
   }
@@ -34,7 +36,10 @@ class Hash extends Stream.Transform {
   /**
    * TODO: docs
    */
-  digest(encoding?: BinaryToTextEncoding): string {
+  digest(): Buffer;
+  digest(encoding: 'buffer'): Buffer;
+  digest(encoding: BinaryToTextEncoding): string;
+  digest(encoding?: BinaryToTextEncoding | 'buffer'): Buffer | string {
     return this.native.digest(encoding);
   }
 }
