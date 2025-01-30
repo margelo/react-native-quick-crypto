@@ -1,5 +1,5 @@
 #include <NitroModules/ArrayBuffer.hpp>
-#include <OpenSSL/evp.h>
+#include <openssl/evp.h>
 #include <memory>
 #include <optional>
 #include <string>
