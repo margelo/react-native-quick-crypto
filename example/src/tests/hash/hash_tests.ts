@@ -23,16 +23,22 @@ test(SUITE, 'createHash with invalid algorithm', () => {
 });
 
 // test hashing
+const a0 = createHash('md5').update('Test123').digest('latin1');
 const a1 = createHash('sha1').update('Test123').digest('hex');
 const a2 = createHash('sha256').update('Test123').digest('base64');
 const a3 = createHash('sha512').update('Test123').digest(); // buffer
 const a4 = createHash('sha1').update('Test123').digest('buffer');
 
+test(SUITE, 'non stream - digest with latin1 argument', () => {
+  expect(a0).to.deep.equal(
+    'h\u00ea\u00cb\u0097\u00d8o\fF!\u00fa+\u000e\u0017\u00ca\u00bd\u008c',
+  );
+});
 test(SUITE, 'non stream - digest with hex argument', () => {
-  expect(a1).to.equal('8308651804facb7b9af8ffc53a33a22d6a1c8ac2');
+  expect(a1).to.deep.equal('8308651804facb7b9af8ffc53a33a22d6a1c8ac2');
 });
 test(SUITE, 'non stream - digest with base64 argument', () => {
-  expect(a2).to.equal('2bX1jws4GYKTlxhloUB09Z66PoJZW+y+hq5R8dnx9l4=');
+  expect(a2).to.deep.equal('2bX1jws4GYKTlxhloUB09Z66PoJZW+y+hq5R8dnx9l4=');
 });
 test(SUITE, 'non stream - digest with buffer argument', () => {
   expect(a4).to.deep.equal(
@@ -52,11 +58,40 @@ test(SUITE, 'non stream - digest without argument defaults to buffer', () => {
   );
 });
 
+test(SUITE, 'non stream - multiple updates to same hash', () => {
+  const h1 = createHash('sha1').update('Test').update('123').digest('hex');
+  expect(h1).to.deep.equal(a1);
+});
+
 // stream interface
 let a5 = createHash('sha512');
 a5.end('Test123');
 a5 = a5.read();
+let a6 = createHash('sha512');
+a6.write('Te');
+a6.write('st');
+a6.write('123');
+a6.end();
+a6 = a6.read();
+let a7 = createHash('sha512');
+a7.end();
+a7 = a7.read();
+let a8 = createHash('sha512');
+a8.write('');
+a8.end();
+a8 = a8.read();
 
 test(SUITE, 'stream - should produce the same output as non-stream', () => {
   expect(a5).to.deep.equal(a3);
+  expect(a6).to.deep.equal(a3);
 });
+test(SUITE, 'stream - empty', () => {
+  expect(a7).to.deep.equal(a8);
+  expect(a7).not.to.deep.equal(undefined);
+  expect(a8).not.to.deep.equal(undefined);
+});
+
+// errors
+// TODO: segfault
+// TODO: calling update without argument
+// TODO: calling digest without calling update first

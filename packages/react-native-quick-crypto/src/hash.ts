@@ -2,7 +2,7 @@ import { Stream } from 'readable-stream';
 import { NitroModules } from 'react-native-nitro-modules';
 import type { TransformOptions } from 'readable-stream';
 import type { Hash as NativeHash } from './specs/hash.nitro';
-import type { BinaryLike, BinaryToTextEncoding, Encoding } from './utils';
+import type { BinaryLike, Encoding } from './utils';
 import { ab2str, binaryLikeToArrayBuffer } from './utils';
 import { normalizeEncoding, validateEncoding } from './utils/cipher';
 
@@ -53,9 +53,8 @@ class Hash extends Stream.Transform {
    * TODO: docs
    */
   digest(): Buffer;
-  digest(encoding: 'buffer'): Buffer;
-  digest(encoding: BinaryToTextEncoding): string;
-  digest(encoding?: BinaryToTextEncoding | 'buffer'): Buffer | string {
+  digest(encoding: Encoding): Buffer;
+  digest(encoding?: Encoding): Buffer | string {
     const nativeDigest = this.native.digest(encoding);
 
     if (encoding && encoding !== 'buffer') {
