@@ -1,3 +1,8 @@
+/**
+ * Tests are based on Node.js tests
+ * https://github.com/nodejs/node/blob/master/test/parallel/test-crypto-hash.js
+ */
+
 import { Buffer } from '@craftzdog/react-native-buffer';
 import { createHash } from 'react-native-quick-crypto';
 import { expect } from 'chai';
@@ -18,18 +23,24 @@ test(SUITE, 'createHash with invalid algorithm', () => {
 });
 
 // test hashing
-test(SUITE, 'digest with hex argument', () => {
-  expect(createHash('sha1').update('Test123').digest('hex')).to.equal(
-    '8308651804facb7b9af8ffc53a33a22d6a1c8ac2',
+const a1 = createHash('sha1').update('Test123').digest('hex');
+const a2 = createHash('sha256').update('Test123').digest('base64');
+const a3 = createHash('sha512').update('Test123').digest(); // buffer
+const a4 = createHash('sha1').update('Test123').digest('buffer');
+
+test(SUITE, 'non stream - digest with hex argument', () => {
+  expect(a1).to.equal('8308651804facb7b9af8ffc53a33a22d6a1c8ac2');
+});
+test(SUITE, 'non stream - digest with base64 argument', () => {
+  expect(a2).to.equal('2bX1jws4GYKTlxhloUB09Z66PoJZW+y+hq5R8dnx9l4=');
+});
+test(SUITE, 'non stream - digest with buffer argument', () => {
+  expect(a4).to.deep.equal(
+    Buffer.from('8308651804facb7b9af8ffc53a33a22d6a1c8ac2', 'hex'),
   );
 });
-test(SUITE, 'digest with base64 argument', () => {
-  expect(createHash('sha256').update('Test123').digest('base64')).to.equal(
-    '2bX1jws4GYKTlxhloUB09Z66PoJZW+y+hq5R8dnx9l4=',
-  );
-});
-test(SUITE, 'digest without argument defaults to buffer', () => {
-  expect(createHash('sha512').update('Test123').digest()).to.deep.equal(
+test(SUITE, 'non stream - digest without argument defaults to buffer', () => {
+  expect(a3).to.deep.equal(
     Buffer.from(
       "\u00c1(4\u00f1\u0003\u001fd\u0097!O'\u00d4C/&Qz\u00d4" +
         '\u0094\u0015l\u00b8\u008dQ+\u00db\u001d\u00c4\u00b5}\u00b2' +
@@ -40,8 +51,12 @@ test(SUITE, 'digest without argument defaults to buffer', () => {
     ),
   );
 });
-test(SUITE, 'digest with buffer argument', () => {
-  expect(createHash('sha1').update('Test123').digest('buffer')).to.deep.equal(
-    Buffer.from('8308651804facb7b9af8ffc53a33a22d6a1c8ac2', 'hex'),
-  );
+
+// stream interface
+let a5 = createHash('sha512');
+a5.end('Test123');
+a5 = a5.read();
+
+test(SUITE, 'stream - should produce the same output as non-stream', () => {
+  expect(a5).to.deep.equal(a3);
 });

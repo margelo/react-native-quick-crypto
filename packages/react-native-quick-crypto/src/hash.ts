@@ -4,6 +4,7 @@ import type { TransformOptions } from 'readable-stream';
 import type { Hash as NativeHash } from './specs/hash.nitro';
 import type { BinaryLike, BinaryToTextEncoding, Encoding } from './utils';
 import { ab2str, binaryLikeToArrayBuffer } from './utils';
+import { normalizeEncoding, validateEncoding } from './utils/cipher';
 
 interface HashArgs {
   algorithm: string;
@@ -25,12 +26,27 @@ class Hash extends Stream.Transform {
   /**
    * TODO: docs
    */
-  update(data: BinaryLike): Hash 
-  update(data: BinaryLike, inputEncoding: Encoding): Hash;
-  update(data: BinaryLike, inputEncoding?: Encoding): Hash {
-    console.log('TODO: implement inputEncoding', inputEncoding);
-    this.native.update(binaryLikeToArrayBuffer(data));
-    return this;
+  update(data: BinaryLike): Hash;
+  update(data: BinaryLike, inputEncoding: Encoding): Buffer;
+  update(data: BinaryLike, inputEncoding?: Encoding): Hash | Buffer {
+    const defaultEncoding: Encoding = 'utf-8';
+    inputEncoding = inputEncoding ?? defaultEncoding;
+
+    if (typeof data === 'string') {
+      validateEncoding(data, inputEncoding);
+    } else if (!ArrayBuffer.isView(data)) {
+      throw new Error('Invalid data argument');
+    }
+
+    // TODO: should this return a buffer?
+    this.native.update(binaryLikeToArrayBuffer(data, inputEncoding));
+
+    if (typeof data === 'string' && inputEncoding !== 'buffer') {
+      // to support chaining syntax createHash().update().digest()
+      return this;
+    }
+
+    return Buffer.from([]); // returning empty buffer as _flush calls digest
   }
 
   /**
@@ -47,6 +63,20 @@ class Hash extends Stream.Transform {
     }
 
     return Buffer.from(nativeDigest);
+  }
+
+  // stream interface
+  _transform(
+    chunk: BinaryLike,
+    encoding: BufferEncoding,
+    callback: () => void,
+  ) {
+    this.push(this.update(chunk, normalizeEncoding(encoding)));
+    callback();
+  }
+  _flush(callback: () => void) {
+    this.push(this.digest());
+    callback();
   }
 }
 
