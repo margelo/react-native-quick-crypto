@@ -95,3 +95,4 @@ test(SUITE, 'stream - empty', () => {
 // TODO: segfault
 // TODO: calling update without argument
 // TODO: calling digest without calling update first
+// TODO: calling copy or update after digest should throw ERR_CRYPTO_HASH_FINALIZED

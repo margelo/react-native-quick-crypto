@@ -54,6 +54,7 @@ namespace margelo::nitro::crypto {
       virtual void createHash(const std::string& algorithm) = 0;
       virtual void update(const std::shared_ptr<ArrayBuffer>& data) = 0;
       virtual std::shared_ptr<ArrayBuffer> digest(const std::optional<std::string>& encoding) = 0;
+      virtual void copy() = 0;
 
     protected:
       // Hybrid Setup

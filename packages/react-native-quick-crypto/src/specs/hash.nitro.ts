@@ -4,4 +4,5 @@ export interface Hash extends HybridObject<{ ios: 'c++'; android: 'c++' }> {
   createHash(algorithm: string): void;
   update(data: ArrayBuffer): void;
   digest(encoding?: string): ArrayBuffer;
+  copy(): void;
 }

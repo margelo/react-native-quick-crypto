@@ -18,10 +18,14 @@ const outputEncoding: Encoding = 'hex';
 /**
  * Hash
  */
-const hash = createHash('sha256');
-hash.update(payload);
-const digest = hash.digest(encoding);
-console.log('hash', { payload, encoding, digest });
+const hash1 = createHash('sha256');
+hash1.update(payload);
+const hash2 = hash1.copy();
+hash2.update(payload);
+const digest1 = hash1.digest(encoding);
+const digest2 = hash2.digest(encoding);
+console.log('hash1', { payload, encoding, digest1 });
+console.log('hash2', { payload: payload + payload, encoding, digest2 });
 
 /**
  * Cipher

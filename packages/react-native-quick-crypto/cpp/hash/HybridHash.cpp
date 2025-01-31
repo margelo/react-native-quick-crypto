@@ -85,4 +85,30 @@ HybridHash::digest(const std::optional<std::string>& encoding)
     hashBuffer, hashLength, [=]() { delete[] hashBuffer; });
 }
 
+void
+HybridHash::copy()
+{
+  if (!ctx) {
+    throw std::runtime_error("Hash context not initialized");
+  }
+
+  // Create a new context
+  EVP_MD_CTX* newCtx = EVP_MD_CTX_new();
+  if (!newCtx) {
+    throw std::runtime_error("Failed to create new hash context");
+  }
+
+  // Copy the existing context to the new one
+  if (EVP_MD_CTX_copy(newCtx, ctx) != 1) {
+    EVP_MD_CTX_free(newCtx);
+    throw std::runtime_error("Failed to copy hash context");
+  }
+
+  // Replace the current context with the new one
+  if (ctx) {
+    EVP_MD_CTX_free(ctx);
+  }
+  ctx = newCtx;
+}
+
 } // namespace margelo::nitro::crypto
