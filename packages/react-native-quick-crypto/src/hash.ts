@@ -20,7 +20,7 @@ class Hash extends Stream.Transform {
   /**
    * TODO: docs
    */
-  constructor({ algorithm, options, native}: HashArgs) {
+  constructor({ algorithm, options, native }: HashArgs) {
     super(options);
 
     this.algorithm = algorithm;
