@@ -91,9 +91,6 @@ HybridHash::copy()
   if (!ctx) {
     throw std::runtime_error("Hash context not initialized");
   }
-  
-  // Create a new HybridHash instance
-  auto newHash = std::make_shared<HybridHash>();
 
   // Create a new context
   EVP_MD_CTX* newCtx = EVP_MD_CTX_new();
@@ -106,13 +103,8 @@ HybridHash::copy()
     EVP_MD_CTX_free(newCtx);
     throw std::runtime_error("Failed to copy hash context");
   }
-  
-  // Initialize the new instance with the copied context
-  newHash->ctx = newCtx;
-  newHash->md = md;
-  newHash->algorithm = algorithm;
-  
-  return newHash;
+
+  return std::make_shared<HybridHash>(newCtx, md, algorithm);
 }
 
 } // namespace margelo::nitro::crypto

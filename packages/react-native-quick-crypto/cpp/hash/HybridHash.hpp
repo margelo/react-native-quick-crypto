@@ -15,6 +15,16 @@ class HybridHash : public HybridHashSpec
 public:
   HybridHash()
     : HybridObject(TAG)
+    , ctx(nullptr)
+    , md(nullptr)
+    , algorithm("")
+  {
+  }
+  HybridHash(EVP_MD_CTX* ctx, const EVP_MD* md, const std::string& algorithm)
+    : HybridObject(TAG)
+    , ctx(ctx)
+    , md(md)
+    , algorithm(algorithm)
   {
   }
   ~HybridHash();
