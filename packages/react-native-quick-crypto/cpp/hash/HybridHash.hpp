@@ -25,7 +25,7 @@ public:
   void update(const std::shared_ptr<ArrayBuffer>& data) override;
   std::shared_ptr<ArrayBuffer> digest(
     const std::optional<std::string>& encoding = std::nullopt) override;
-  void copy() override;
+  std::shared_ptr<margelo::nitro::crypto::HybridHashSpec> copy() override;
 
 private:
   // Properties

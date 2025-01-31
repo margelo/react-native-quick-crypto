@@ -9,18 +9,29 @@ import { normalizeEncoding, validateEncoding } from './utils/cipher';
 interface HashArgs {
   algorithm: string;
   options: Record<string, TransformOptions>;
+  native?: NativeHash;
 }
 
 class Hash extends Stream.Transform {
+  private algorithm: string;
+  private options: Record<string, TransformOptions>;
   private native: NativeHash;
 
   /**
    * TODO: docs
    */
-  constructor({ algorithm, options }: HashArgs) {
+  constructor({ algorithm, options, native}: HashArgs) {
     super(options);
-    this.native = NitroModules.createHybridObject<NativeHash>('Hash');
-    this.native.createHash(algorithm);
+
+    this.algorithm = algorithm;
+    this.options = options;
+
+    if (native) {
+      this.native = native;
+    } else {
+      this.native = NitroModules.createHybridObject<NativeHash>('Hash');
+      this.native.createHash(algorithm);
+    }
   }
 
   /**
@@ -62,6 +73,19 @@ class Hash extends Stream.Transform {
     }
 
     return Buffer.from(nativeDigest);
+  }
+
+  /**
+   * TODO: docs
+   */
+  copy(): Hash {
+    const newNativeHash = this.native.copy();
+    const hash = new Hash({
+      algorithm: this.algorithm,
+      options: this.options,
+      native: newNativeHash,
+    });
+    return hash;
   }
 
   // stream interface

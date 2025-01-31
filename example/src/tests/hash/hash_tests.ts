@@ -91,6 +91,12 @@ test(SUITE, 'stream - empty', () => {
   expect(a8).not.to.deep.equal(undefined);
 });
 
+test(SUITE, 'copy - should create identical hash state', () => {
+  const hash1 = createHash('sha256').update('Test123');
+  const hash2 = hash1.copy();
+  expect(hash1.digest('hex')).to.deep.equal(hash2.digest('hex'));
+});
+
 // errors
 // TODO: segfault
 // TODO: calling update without argument
