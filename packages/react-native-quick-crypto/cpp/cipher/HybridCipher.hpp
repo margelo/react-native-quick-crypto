@@ -13,6 +13,11 @@ namespace margelo::nitro::crypto {
 using namespace facebook;
 
 class HybridCipher : public HybridCipherSpec {
+ protected:
+  enum CipherKind { kCipher, kDecipher };
+  enum UpdateResult { kSuccess, kErrorMessageSize, kErrorState };
+  enum AuthTagState { kAuthTagUnknown, kAuthTagKnown, kAuthTagPassedToOpenSSL };
+
  public:
   HybridCipher() : HybridObject(TAG) {}
   ~HybridCipher();
@@ -58,8 +63,27 @@ class HybridCipher : public HybridCipherSpec {
   // Methods
   void init();
 
-  inline
-  int getMode() {
+  bool isAuthenticatedMode() const;
+
+  bool initAuthenticated(
+    const char *cipher_type,
+    int iv_len,
+    unsigned int auth_tag_len
+  );
+
+  bool maybePassAuthTagToOpenSSL();
+
+  bool checkCCMMessageLength(int message_len);
+
+  inline const CipherArgs& getArgs() {
+    // check if args are set
+    if (!args.has_value()) {
+      throw std::runtime_error("CipherArgs not set");
+    }
+    return args.value();
+  }
+
+  inline int getMode() {
     if (!ctx) {
       throw std::runtime_error("Cipher not initialized. Did you call setArgs()?");
     }
@@ -70,7 +94,11 @@ class HybridCipher : public HybridCipherSpec {
   // Properties
   std::optional<CipherArgs> args = std::nullopt;
   EVP_CIPHER_CTX *ctx = nullptr;
-
+  bool pending_auth_failed;
+  char auth_tag[EVP_GCM_TLS_TAG_LEN];
+  AuthTagState auth_tag_state;
+  unsigned int auth_tag_len;
+  int max_message_size;
 };
 
 } // namespace margelo::nitro::crypto
