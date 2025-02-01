@@ -14,18 +14,140 @@ HybridCipher::~HybridCipher() {
   }
 }
 
+constexpr unsigned kNoAuthTagLength = static_cast<unsigned>(-1);
+
+bool isSupportedAuthenticatedMode(const EVP_CIPHER *cipher) {
+  switch (EVP_CIPHER_mode(cipher)) {
+    case EVP_CIPH_CCM_MODE:
+    case EVP_CIPH_GCM_MODE:
+#ifndef OPENSSL_NO_OCB
+    case EVP_CIPH_OCB_MODE:
+#endif
+      return true;
+    case EVP_CIPH_STREAM_CIPHER:
+      return EVP_CIPHER_get_nid(cipher) == NID_chacha20_poly1305;
+    default:
+      return false;
+  }
+}
+
+bool isSupportedAuthenticatedMode(const EVP_CIPHER_CTX *ctx) {
+  const EVP_CIPHER *cipher = EVP_CIPHER_CTX_cipher(ctx);
+  return isSupportedAuthenticatedMode(cipher);
+}
+
+bool isValidGCMTagLength(unsigned int tag_len) {
+  return tag_len == 4 || tag_len == 8 || (tag_len >= 12 && tag_len <= 16);
+}
+
+
+bool HybridCipher::maybePassAuthTagToOpenSSL() {
+  if (auth_tag_state == kAuthTagKnown) {
+    if (!EVP_CIPHER_CTX_ctrl(ctx, EVP_CTRL_AEAD_SET_TAG, auth_tag_len,
+                             reinterpret_cast<unsigned char *>(auth_tag))) {
+      return false;
+    }
+    auth_tag_state = kAuthTagPassedToOpenSSL;
+  }
+  return true;
+}
+
+bool HybridCipher::isAuthenticatedMode() const {
+  // Check if this cipher operates in an AEAD mode that we support.
+  //  CHECK(ctx);
+  return isSupportedAuthenticatedMode(ctx);
+}
+
+bool HybridCipher::initAuthenticated(
+  const char *cipher_type,
+  int iv_len,
+  unsigned int auth_tag_len
+) {
+  // TODO(osp) implement this check
+  //      CHECK(IsAuthenticatedMode());
+  if (!EVP_CIPHER_CTX_ctrl(ctx, EVP_CTRL_AEAD_SET_IVLEN, iv_len, nullptr)) {
+    throw std::runtime_error("Invalid Cipher IV");
+    return false;
+  }
+
+  const int mode = getMode();
+  const CipherArgs& argsRef = getArgs();
+
+  if (mode == EVP_CIPH_GCM_MODE) {
+    if (auth_tag_len != kNoAuthTagLength) {
+      if (!isValidGCMTagLength(auth_tag_len)) {
+        throw std::runtime_error("Invalid Cipher authentication tag length");
+      }
+
+      // Remember the given authentication tag length for later.
+      this->auth_tag_len = auth_tag_len;
+    }
+  } else {
+    if (auth_tag_len == kNoAuthTagLength) {
+      // We treat ChaCha20-Poly1305 special. Like GCM, the authentication tag
+      // length defaults to 16 bytes when encrypting. Unlike GCM, the
+      // authentication tag length also defaults to 16 bytes when decrypting,
+      // whereas GCM would accept any valid authentication tag length.
+      if (EVP_CIPHER_CTX_nid(ctx) == NID_chacha20_poly1305) {
+        auth_tag_len = 16;
+      } else {
+        throw std::runtime_error("authTagLength required for cipher type");
+        return false;
+      }
+    }
+
+    if (
+      mode == EVP_CIPH_CCM_MODE && !argsRef.isCipher &&
+      EVP_default_properties_is_fips_enabled(nullptr)
+    ) {
+      throw std::runtime_error("CCM encryption not supported in FIPS mode");
+      return false;
+    }
+
+    // Tell OpenSSL about the desired length.
+    if (
+      !EVP_CIPHER_CTX_ctrl(ctx, EVP_CTRL_AEAD_SET_TAG, auth_tag_len, nullptr)
+    ) {
+      throw std::runtime_error("Invalid authentication tag length");
+      return false;
+    }
+
+    // Remember the given authentication tag length for later.
+    this->auth_tag_len = auth_tag_len;
+
+    if (mode == EVP_CIPH_CCM_MODE) {
+      // Restrict the message length to min(INT_MAX, 2^(8*(15-iv_len))-1) bytes.
+      if (iv_len < 7 || iv_len > 13) {
+        throw std::runtime_error("Invalid IV length (should be between 7 and 13 bytes)");
+      }
+      max_message_size = INT_MAX;
+      if (iv_len == 12) max_message_size = 16777215;
+      if (iv_len == 13) max_message_size = 65535;
+    }
+  }
+
+  return true;
+}
+
+bool HybridCipher::checkCCMMessageLength(int message_len) {
+  if (getMode() != EVP_CIPH_CCM_MODE) {
+    throw std::runtime_error("CCM encryption not supported in this mode");
+  };
+  if (message_len > max_message_size) {
+    throw std::runtime_error("Message too long");
+  }
+  return true;
+}
+
 void
 HybridCipher::init() {
-  // check if args are set
-  if (!args.has_value()) {
-    throw std::runtime_error("CipherArgs not set");
-  }
-  const auto& argsRef = args.value();
+  const CipherArgs& argsRef = getArgs();
+  auto cipher_type = argsRef.cipherType.c_str();
 
   // fetch cipher
   EVP_CIPHER *cipher = EVP_CIPHER_fetch(
     nullptr,
-    argsRef.cipherType.c_str(),
+    cipher_type,
     nullptr
   );
   if (cipher == nullptr) {
@@ -50,12 +172,32 @@ HybridCipher::init() {
       nullptr
     ) != 1
   ) {
+    // TODO: wrap these three calls into a macro?
     EVP_CIPHER_CTX_free(ctx);
     EVP_CIPHER_free(cipher);
     ctx = nullptr;
-    throw std::runtime_error("Failed to initialize encryption");
+    throw std::runtime_error("Failed to initialize cipher operation: " +
+      std::to_string(ERR_get_error()));
   }
 
+  // check authenticated mode
+  int iv_len = EVP_CIPHER_iv_length(cipher);
+  if (isSupportedAuthenticatedMode(cipher)) {
+    if (iv_len < 0) {
+      EVP_CIPHER_CTX_free(ctx);
+      EVP_CIPHER_free(cipher);
+      ctx = nullptr;
+      throw std::runtime_error("Invalid Cipher IV length");
+    }
+    if (!initAuthenticated(cipher_type, iv_len, auth_tag_len)) {
+      EVP_CIPHER_CTX_free(ctx);
+      EVP_CIPHER_free(cipher);
+      ctx = nullptr;
+      throw std::runtime_error("Failed to initialize authenticated mode");
+    }
+  }
+
+  // we've set up the context, free the cipher
   EVP_CIPHER_free(cipher);
 }
 
