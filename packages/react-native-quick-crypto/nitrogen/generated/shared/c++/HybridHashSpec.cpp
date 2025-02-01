@@ -18,6 +18,7 @@ namespace margelo::nitro::crypto {
       prototype.registerHybridMethod("update", &HybridHashSpec::update);
       prototype.registerHybridMethod("digest", &HybridHashSpec::digest);
       prototype.registerHybridMethod("copy", &HybridHashSpec::copy);
+      prototype.registerHybridMethod("getSupportedHashAlgorithms", &HybridHashSpec::getSupportedHashAlgorithms);
     });
   }
 

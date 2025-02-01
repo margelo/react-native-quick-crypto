@@ -6,6 +6,18 @@ import type { BinaryLike, Encoding } from './utils';
 import { ab2str, binaryLikeToArrayBuffer } from './utils';
 import { normalizeEncoding, validateEncoding } from './utils/cipher';
 
+class HashUtils {
+  private static native =
+    NitroModules.createHybridObject<NativeHash>('Hash');
+  public static getSupportedHashAlgorithms(): string[] {
+    return this.native.getSupportedHashAlgorithms();
+  }
+}
+
+export function getHashAlgorithms() {
+  return HashUtils.getSupportedHashAlgorithms();
+}
+
 interface HashArgs {
   algorithm: string;
   options: Record<string, TransformOptions>;
@@ -115,4 +127,5 @@ export function createHash(
 
 export const hashExports = {
   createHash,
+  getHashAlgorithms,
 };

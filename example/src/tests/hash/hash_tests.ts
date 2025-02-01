@@ -4,7 +4,7 @@
  */
 
 import { Buffer } from '@craftzdog/react-native-buffer';
-import { createHash } from 'react-native-quick-crypto';
+import { createHash, getHashAlgorithms } from 'react-native-quick-crypto';
 import { expect } from 'chai';
 import { test } from '../util';
 
@@ -102,3 +102,41 @@ test(SUITE, 'copy - should create identical hash state', () => {
 // TODO: calling update without argument
 // TODO: calling digest without calling update first
 // TODO: calling copy or update after digest should throw ERR_CRYPTO_HASH_FINALIZED
+
+test(
+  SUITE,
+  'getHashAlgorithms - should return array of supported algorithms',
+  () => {
+    const algorithms = getHashAlgorithms();
+    expect(algorithms).to.be.an('array');
+    expect(algorithms).to.deep.equal([
+      'SHA3-512',
+      'SHA2-512/256',
+      'SHA2-224',
+      'SHA1',
+      'SHA3-224',
+      'SHA3-384',
+      'RIPEMD-160',
+      'SHA2-512',
+      'SHA2-512/224',
+      'SHAKE-256',
+      'SHA2-384',
+      'SM3',
+      'SHA3-256',
+      'MD5',
+      'BLAKE2S-256',
+      'SHA2-256',
+      'BLAKE2B-512',
+      'MD5-SHA1',
+      'SHAKE-128',
+      'NULL',
+      'SHA2-256/192',
+      'KECCAK-224',
+      'KECCAK-256',
+      'KECCAK-384',
+      'KECCAK-512',
+      'KECCAK-KMAC-128',
+      'KECCAK-KMAC-256',
+    ]);
+  },
+);

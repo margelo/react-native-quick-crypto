@@ -3,6 +3,7 @@
 #include <memory>
 #include <optional>
 #include <string>
+#include <vector>
 
 #include "HybridHash.hpp"
 
@@ -105,6 +106,25 @@ HybridHash::copy()
   }
 
   return std::make_shared<HybridHash>(newCtx, md, algorithm);
+}
+
+std::vector<std::string>
+HybridHash::getSupportedHashAlgorithms()
+{
+  std::vector<std::string> hashAlgorithms;
+
+  EVP_MD_do_all_provided(
+    nullptr,
+    [](EVP_MD* md, void* arg) {
+      auto* algorithms = static_cast<std::vector<std::string>*>(arg);
+      const char* name = EVP_MD_get0_name(md);
+      if (name) {
+        algorithms->push_back(name);
+      }
+    },
+    &hashAlgorithms);
+
+  return hashAlgorithms;
 }
 
 } // namespace margelo::nitro::crypto

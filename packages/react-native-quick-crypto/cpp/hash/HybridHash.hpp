@@ -3,6 +3,7 @@
 #include <memory>
 #include <optional>
 #include <string>
+#include <vector>
 
 #include "HybridHashSpec.hpp"
 
@@ -36,6 +37,7 @@ public:
   std::shared_ptr<ArrayBuffer> digest(
     const std::optional<std::string>& encoding = std::nullopt) override;
   std::shared_ptr<margelo::nitro::crypto::HybridHashSpec> copy() override;
+  std::vector<std::string> getSupportedHashAlgorithms() override;
 
 private:
   // Properties

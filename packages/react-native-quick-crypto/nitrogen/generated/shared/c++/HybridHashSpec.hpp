@@ -23,6 +23,7 @@ namespace margelo::nitro::crypto { class HybridHashSpec; }
 #include <optional>
 #include <memory>
 #include "HybridHashSpec.hpp"
+#include <vector>
 
 namespace margelo::nitro::crypto {
 
@@ -59,6 +60,7 @@ namespace margelo::nitro::crypto {
       virtual void update(const std::shared_ptr<ArrayBuffer>& data) = 0;
       virtual std::shared_ptr<ArrayBuffer> digest(const std::optional<std::string>& encoding) = 0;
       virtual std::shared_ptr<margelo::nitro::crypto::HybridHashSpec> copy() = 0;
+      virtual std::vector<std::string> getSupportedHashAlgorithms() = 0;
 
     protected:
       // Hybrid Setup
