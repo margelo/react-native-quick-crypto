@@ -10,6 +10,7 @@ add_library(
   ${PACKAGE_NAME} SHARED
   src/main/cpp/cpp-adapter.cpp
   ../cpp/cipher/HybridCipher.cpp
+  ../cpp/hash/HybridHash.cpp
   ../cpp/ed25519/HybridEdKeyPair.cpp
   ../cpp/pbkdf2/HybridPbkdf2.cpp
   ../cpp/random/HybridRandom.cpp
@@ -23,6 +24,7 @@ include(${CMAKE_SOURCE_DIR}/../nitrogen/generated/android/QuickCrypto+autolinkin
 include_directories(
   "src/main/cpp"
   "../cpp/cipher"
+  "../cpp/hash"
   "../cpp/ed25519"
   "../cpp/pbkdf2"
   "../cpp/random"

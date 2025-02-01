@@ -3,6 +3,7 @@ import type { TestSuites } from '../types/tests';
 import { TestsContext } from '../tests/util';
 
 import '../tests/cipher/cipher_tests';
+import '../tests/hash/hash_tests';
 import '../tests/ed25519/ed25519_tests';
 import '../tests/pbkdf2/pbkdf2_tests';
 import '../tests/random/random_tests';

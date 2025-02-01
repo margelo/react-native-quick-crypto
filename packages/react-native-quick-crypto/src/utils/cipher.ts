@@ -11,7 +11,7 @@ export function getDefaultEncoding(): Encoding {
   return defaultEncoding;
 }
 
-export function normalizeEncoding(enc: string) {
+export function normalizeEncoding(enc: string): Encoding {
   if (!enc) return 'utf8';
   let retried;
   while (true) {
@@ -32,7 +32,7 @@ export function normalizeEncoding(enc: string) {
       case 'hex':
         return enc;
       default:
-        if (retried) return; // undefined
+        if (retried) return 'utf8';
         enc = ('' + enc).toLowerCase();
         retried = true;
     }
