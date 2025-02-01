@@ -7,8 +7,7 @@ import { ab2str, binaryLikeToArrayBuffer } from './utils';
 import { normalizeEncoding, validateEncoding } from './utils/cipher';
 
 class HashUtils {
-  private static native =
-    NitroModules.createHybridObject<NativeHash>('Hash');
+  private static native = NitroModules.createHybridObject<NativeHash>('Hash');
   public static getSupportedHashAlgorithms(): string[] {
     return this.native.getSupportedHashAlgorithms();
   }
