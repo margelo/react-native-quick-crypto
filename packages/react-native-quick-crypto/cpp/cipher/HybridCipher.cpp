@@ -54,7 +54,6 @@ bool HybridCipher::maybePassAuthTagToOpenSSL() {
 
 bool HybridCipher::isAuthenticatedMode() const {
   // Check if this cipher operates in an AEAD mode that we support.
-  //  CHECK(ctx);
   return isSupportedAuthenticatedMode(ctx);
 }
 
@@ -63,8 +62,11 @@ bool HybridCipher::initAuthenticated(
   int iv_len,
   unsigned int auth_tag_len
 ) {
-  // TODO(osp) implement this check
-  //      CHECK(IsAuthenticatedMode());
+  if (!isAuthenticatedMode()) {
+    throw std::runtime_error("Cannot initialize unauthenticated cipher");
+    return false;
+  }
+
   if (!EVP_CIPHER_CTX_ctrl(ctx, EVP_CTRL_AEAD_SET_IVLEN, iv_len, nullptr)) {
     throw std::runtime_error("Invalid Cipher IV");
     return false;
@@ -76,7 +78,7 @@ bool HybridCipher::initAuthenticated(
   if (mode == EVP_CIPH_GCM_MODE) {
     if (auth_tag_len != kNoAuthTagLength) {
       if (!isValidGCMTagLength(auth_tag_len)) {
-        throw std::runtime_error("Invalid Cipher authentication tag length");
+        throw std::runtime_error("Invalid authentication tag length (GCM)");
       }
 
       // Remember the given authentication tag length for later.
@@ -91,7 +93,7 @@ bool HybridCipher::initAuthenticated(
       if (EVP_CIPHER_CTX_nid(ctx) == NID_chacha20_poly1305) {
         auth_tag_len = 16;
       } else {
-        throw std::runtime_error("authTagLength required for cipher type");
+        throw std::runtime_error("Invalid authentication tag length (default)");
         return false;
       }
     }
@@ -132,7 +134,7 @@ bool HybridCipher::initAuthenticated(
 bool HybridCipher::checkCCMMessageLength(int message_len) {
   if (getMode() != EVP_CIPH_CCM_MODE) {
     throw std::runtime_error("CCM encryption not supported in this mode");
-  };
+  }
   if (message_len > max_message_size) {
     throw std::runtime_error("Message too long");
   }
@@ -209,12 +211,26 @@ HybridCipher::update(
     throw std::runtime_error("Cipher not initialized. Did you call setArgs()?");
   }
 
+  const CipherArgs& argsRef = getArgs();
+
   // Calculate the maximum output length
   int outLen = data->size() + EVP_MAX_BLOCK_LENGTH;
   int updateLen = 0;
 
   // Create a temporary buffer for the operation
   unsigned char* tempBuf = new unsigned char[outLen];
+
+  auto mode = getMode();
+  if (mode == EVP_CIPH_CCM_MODE && !checkCCMMessageLength(data->size())) {
+    delete[] tempBuf;
+    throw std::runtime_error("Invalid message size for CCM");
+  }
+
+  // Pass the authentication tag to OpenSSL if possible. This will only
+  // happen once, usually on the first update.
+  if (!argsRef.isCipher && isAuthenticatedMode()) {
+    maybePassAuthTagToOpenSSL();
+  }
 
   // Perform the cipher update operation
   if (
