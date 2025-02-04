@@ -43,10 +43,10 @@ This document attempts to describe the implementation status of Crypto APIs/Inte
   * ❌ `ecdh.getPublicKey([encoding][, format])`
   * ❌ `ecdh.setPrivateKey(privateKey[, encoding])`
   * ❌ `ecdh.setPublicKey(publicKey[, encoding])`
-* ❌ Class: `Hash`
-  * ❌ `hash.copy([options])`
-  * ❌ `hash.digest([encoding])`
-  * ❌ `hash.update(data[, inputEncoding])`
+* ✅ Class: `Hash`
+  * ✅ `hash.copy([options])`
+  * ✅ `hash.digest([encoding])`
+  * ✅ `hash.update(data[, inputEncoding])`
 * ❌ Class: `Hmac`
   * ❌ `hmac.digest([encoding])`
   * ❌ `hmac.update(data[, inputEncoding])`
@@ -101,7 +101,7 @@ This document attempts to describe the implementation status of Crypto APIs/Inte
   * ❌ `crypto.createDiffieHellman(primeLength[, generator])`
   * ❌ `crypto.createDiffieHellmanGroup(name)`
   * ❌ `crypto.createECDH(curveName)`
-  * ❌ `crypto.createHash(algorithm[, options])`
+  * ✅ `crypto.createHash(algorithm[, options])`
   * ❌ `crypto.createHmac(algorithm, key[, options])`
   * ❌ `crypto.createPrivateKey(key)`
   * ❌ `crypto.createPublicKey(key)`
@@ -121,7 +121,7 @@ This document attempts to describe the implementation status of Crypto APIs/Inte
   * ❌ `crypto.getCurves()`
   * ❌ `crypto.getDiffieHellman(groupName)`
   * ❌ `crypto.getFips()`
-  * ❌ `crypto.getHashes()`
+  * ✅ `crypto.getHashes()`
   * ❌ `crypto.getRandomValues(typedArray)`
   * ❌ `crypto.hkdf(digest, ikm, salt, info, keylen, callback)`
   * ❌ `crypto.hkdfSync(digest, ikm, salt, info, keylen)`

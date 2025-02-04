@@ -21,7 +21,7 @@
     "@release-it/conventional-changelog": "^9.0.3",
     "release-it": "^17.10.0"
   },
-  "packageManager": "bun@1.1.26",
+  "packageManager": "bun@1.2.0",
   "release-it": {
     "npm": {
       "publish": false

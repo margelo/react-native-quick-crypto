@@ -10,6 +10,7 @@
 
 #import <type_traits>
 
+#include "HybridHash.hpp"
 #include "HybridEdKeyPair.hpp"
 #include "HybridPbkdf2.hpp"
 #include "HybridRandom.hpp"
@@ -23,6 +24,15 @@
   using namespace margelo::nitro;
   using namespace margelo::nitro::crypto;
 
+  HybridObjectRegistry::registerHybridObjectConstructor(
+    "Hash",
+    []() -> std::shared_ptr<HybridObject> {
+      static_assert(std::is_default_constructible_v<HybridHash>,
+                    "The HybridObject \"HybridHash\" is not default-constructible! "
+                    "Create a public constructor that takes zero arguments to be able to autolink this HybridObject.");
+      return std::make_shared<HybridHash>();
+    }
+  );
   HybridObjectRegistry::registerHybridObjectConstructor(
     "EdKeyPair",
     []() -> std::shared_ptr<HybridObject> {
