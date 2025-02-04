@@ -119,37 +119,37 @@ test(SUITE, 'copy - calculate a rolling hash', () => {
 
 test(SUITE, 'getHashes - should return array of supported algorithms', () => {
   const algorithms = getHashes();
-  expect(algorithms).to.be.an('array');
-  console.log(algorithms);
-  expect(algorithms).to.deep.equal([
-    'SHA3-512',
-    'SHA2-512/256',
-    'SHA2-224',
-    'SHA1',
-    'SHA3-224',
-    'SHA3-384',
-    'RIPEMD-160',
-    'SHA2-512',
-    'SHA2-512/224',
-    'SHAKE-256',
-    'SHA2-384',
-    'SM3',
-    'SHA3-256',
-    'MD5',
-    'BLAKE2S-256',
-    'SHA2-256',
+  const expectedAlgorithms = [
     'BLAKE2B-512',
-    'MD5-SHA1',
-    'SHAKE-128',
-    'SHA2-256/192',
+    'BLAKE2S-256',
     'KECCAK-224',
     'KECCAK-256',
     'KECCAK-384',
     'KECCAK-512',
     'KECCAK-KMAC-128',
     'KECCAK-KMAC-256',
+    'MD5',
+    'MD5-SHA1',
     'NULL',
-  ]);
+    'RIPEMD-160',
+    'SHA1',
+    'SHA2-224',
+    'SHA2-256',
+    'SHA2-256/192',
+    'SHA2-384',
+    'SHA2-512',
+    'SHA2-512/224',
+    'SHA2-512/256',
+    'SHA3-224',
+    'SHA3-256',
+    'SHA3-384',
+    'SHA3-512',
+    'SHAKE-128',
+    'SHAKE-256',
+    'SM3',
+  ];
+  expect(algorithms).to.be.an('array');
+  expect(algorithms.sort()).to.deep.equal(expectedAlgorithms.sort());
 });
 
 // errors
