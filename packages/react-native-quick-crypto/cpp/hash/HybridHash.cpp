@@ -58,7 +58,7 @@ HybridHash::update(const std::shared_ptr<ArrayBuffer>& data)
 
   // Update the digest with the data
   if (EVP_DigestUpdate(ctx,
-                       reinterpret_cast<const unsigned char*>(data->data()),
+                       reinterpret_cast<const uint8_t*>(data->data()),
                        data->size()) != 1) {
     throw std::runtime_error("Failed to update hash digest: " +
                              std::to_string(ERR_get_error()));
@@ -85,7 +85,7 @@ HybridHash::digest(const std::optional<std::string>& encoding)
   }
 
   // Create a buffer for the hash output
-  unsigned char* hashBuffer = new unsigned char[digestSize];
+  uint8_t* hashBuffer = new uint8_t[digestSize];
   size_t hashLength = digestSize;
 
   // Finalize the digest
