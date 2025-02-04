@@ -258,24 +258,60 @@ HybridCipher::final() {
     throw std::runtime_error("Cipher not initialized. Did you call setArgs()?");
   }
 
-  int finalLen = 0;
-  uint8_t* tempBuf = new uint8_t[EVP_MAX_BLOCK_LENGTH];
+  int mode = getMode();
+  int buf_len = EVP_CIPHER_CTX_block_size(ctx);
 
-  // Finalize the encryption/decryption
-  if (EVP_CipherFinal_ex(
+  if (!is_cipher && isSupportedAuthenticatedMode(ctx)) {
+    maybePassAuthTagToOpenSSL();
+  }
+
+  bool ok;
+  int out_len = 0;
+  uint8_t* out = new uint8_t[buf_len];
+
+  // In CCM mode, final() only checks whether authentication failed in
+  // update(). EVP_CipherFinal_ex must not be called and will fail.
+  if (!is_cipher && mode == EVP_CIPH_CCM_MODE) {
+      ok = !pending_auth_failed;
+      out = new uint8_t[0];
+  } else {
+    ok = EVP_CipherFinal_ex(
+      ctx,
+      out,
+      &out_len
+    ) == 1;
+
+    // Additional operations for authenticated modes
+    if (ok && is_cipher && isAuthenticatedMode()) {
+      // In GCM mode: default to 16 bytes.
+      // In CCM, OCB mode: must be provided by user.
+
+      // Logic for default auth tag length
+      if (
+        auth_tag_len == kNoAuthTagLength &&
+        mode == EVP_CIPH_GCM_MODE
+      ) {
+        auth_tag_len = sizeof(auth_tag);
+      }
+      ok = EVP_CIPHER_CTX_ctrl(
         ctx,
-        tempBuf,
-        &finalLen) != 1) {
-    delete[] tempBuf;
-    throw std::runtime_error("Failed to finalize cipher: " +
-      std::to_string(ERR_get_error()));
+        EVP_CTRL_AEAD_GET_TAG,
+        auth_tag_len,
+        reinterpret_cast<unsigned char *>(auth_tag)
+      ) == 1;
+    }
+  }
+
+  if (!ok) {
+    delete[] out;
+    throw std::runtime_error("Failed to finalize cipher");
   }
 
   // Create and return a new buffer of exact size needed
   return std::make_shared<NativeArrayBuffer>(
-    tempBuf,
-    finalLen,
-    [=]() { delete[] tempBuf; }
+    out,
+    out_len,
+    [=]() { delete[] out; }
   );
 }
 

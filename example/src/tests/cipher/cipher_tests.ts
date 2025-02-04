@@ -13,8 +13,8 @@ import { expect } from 'chai';
 import { test } from '../util';
 
 const SUITE = 'cipher';
-// const ciphers = getCiphers();
-const ciphers = ['AES-128-GCM'];
+const ciphers = getCiphers().filter((c) => c.includes('GCM'));
+// const ciphers = ['AES-128-GCM'];
 const key = randomFillSync(new Uint8Array(32));
 const iv = randomFillSync(new Uint8Array(16));
 const plaintext =
