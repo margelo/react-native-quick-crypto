@@ -1,6 +1,6 @@
 {
   "name": "react-native-quick-crypto-example",
-  "version": "1.0.0-beta.11",
+  "version": "1.0.0-beta.12",
   "private": true,
   "type": "module",
   "scripts": {
@@ -36,7 +36,7 @@
     "react-native-bouncy-checkbox": "4.0.1",
     "react-native-nitro-modules": "0.21.0",
     "react-native-quick-base64": "2.1.2",
-    "react-native-quick-crypto": "1.0.0-beta.11",
+    "react-native-quick-crypto": "1.0.0-beta.12",
     "react-native-safe-area-context": "5.1.0",
     "react-native-screens": "3.35.0",
     "react-native-vector-icons": "^10.1.0",
