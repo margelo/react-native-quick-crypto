@@ -5,6 +5,7 @@
 #include <vector>
 
 #include "HybridCipher.hpp"
+#include "Utils.hpp"
 
 namespace margelo::nitro::crypto {
 
@@ -73,7 +74,6 @@ bool HybridCipher::initAuthenticated(
   }
 
   const int mode = getMode();
-  const CipherArgs& argsRef = getArgs();
 
   if (mode == EVP_CIPH_GCM_MODE) {
     if (auth_tag_len != kNoAuthTagLength) {
@@ -99,7 +99,7 @@ bool HybridCipher::initAuthenticated(
     }
 
     if (
-      mode == EVP_CIPH_CCM_MODE && !argsRef.isCipher &&
+      mode == EVP_CIPH_CCM_MODE && !is_cipher &&
       EVP_default_properties_is_fips_enabled(nullptr)
     ) {
       throw std::runtime_error("CCM encryption not supported in FIPS mode");
@@ -142,18 +142,18 @@ bool HybridCipher::checkCCMMessageLength(int message_len) {
 }
 
 void
-HybridCipher::init() {
-  const CipherArgs& argsRef = getArgs();
-  auto cipher_type = argsRef.cipherType.c_str();
-
+HybridCipher::init(
+  const std::shared_ptr<ArrayBuffer> cipher_key,
+  const std::shared_ptr<ArrayBuffer> iv
+) {
   // fetch cipher
   EVP_CIPHER *cipher = EVP_CIPHER_fetch(
     nullptr,
-    cipher_type,
+    cipher_type.c_str(),
     nullptr
   );
   if (cipher == nullptr) {
-    throw std::runtime_error("Invalid Cipher Algorithm: " + argsRef.cipherType);
+    throw std::runtime_error("Invalid Cipher Algorithm: " + cipher_type);
   }
 
   // Create cipher context
@@ -168,9 +168,9 @@ HybridCipher::init() {
     EVP_CipherInit_ex2(
       ctx,
       cipher,
-      argsRef.cipherKey->data(),
-      argsRef.iv->data(),
-      argsRef.isCipher ? 1 : 0,
+      cipher_key->data(),
+      iv->data(),
+      is_cipher ? 1 : 0,
       nullptr
     ) != 1
   ) {
@@ -191,7 +191,7 @@ HybridCipher::init() {
       ctx = nullptr;
       throw std::runtime_error("Invalid Cipher IV length");
     }
-    if (!initAuthenticated(cipher_type, iv_len, auth_tag_len)) {
+    if (!initAuthenticated(cipher_type.c_str(), iv_len, auth_tag_len)) {
       EVP_CIPHER_CTX_free(ctx);
       EVP_CIPHER_free(cipher);
       ctx = nullptr;
@@ -211,8 +211,6 @@ HybridCipher::update(
     throw std::runtime_error("Cipher not initialized. Did you call setArgs()?");
   }
 
-  const CipherArgs& argsRef = getArgs();
-
   // Calculate the maximum output length
   int outLen = data->size() + EVP_MAX_BLOCK_LENGTH;
   int updateLen = 0;
@@ -228,7 +226,7 @@ HybridCipher::update(
 
   // Pass the authentication tag to OpenSSL if possible. This will only
   // happen once, usually on the first update.
-  if (!argsRef.isCipher && isAuthenticatedMode()) {
+  if (!is_cipher && isAuthenticatedMode()) {
     maybePassAuthTagToOpenSSL();
   }
 
@@ -308,25 +306,31 @@ HybridCipher::getAuthTag() {
   return nullptr;
 }
 
+int
+HybridCipher::getMode() {
+  if (!ctx) {
+    throw std::runtime_error("Cipher not initialized. Did you call setArgs()?");
+  }
+  return EVP_CIPHER_CTX_get_mode(ctx);
+}
+
 void
 HybridCipher::setArgs(
   const CipherArgs& args
 ) {
-  if (this->args.has_value()) {
-    // Reset existing value if any
-    this->args.reset();
+  this->is_cipher = args.isCipher;
+  this->cipher_type = args.cipherType;
+  if (args.authTagLen.has_value()) {
+    if (!CheckIsUint32(args.authTagLen.value())) {
+      throw std::runtime_error("authTagLen must be uint32");
+    }
+    this->auth_tag_len = static_cast<uint32_t>(args.authTagLen.value());
   }
 
-  // Use std::optional::emplace with direct member initialization
-  this->args.emplace(CipherArgs{
-    args.isCipher,
-    args.cipherType,
+  init(
     args.cipherKey,
-    args.iv,
-    args.authTagLen
-  });
-
-  init();
+    args.iv
+  );
 }
 
 void collect_ciphers(EVP_CIPHER *cipher, void *arg) {

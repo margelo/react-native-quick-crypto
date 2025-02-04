@@ -61,7 +61,10 @@ class HybridCipher : public HybridCipherSpec {
 
  private:
   // Methods
-  void init();
+  void init(
+    const std::shared_ptr<ArrayBuffer> cipher_key,
+    const std::shared_ptr<ArrayBuffer> iv
+  );
 
   bool isAuthenticatedMode() const;
 
@@ -75,24 +78,12 @@ class HybridCipher : public HybridCipherSpec {
 
   bool checkCCMMessageLength(int message_len);
 
-  inline const CipherArgs& getArgs() {
-    // check if args are set
-    if (!args.has_value()) {
-      throw std::runtime_error("CipherArgs not set");
-    }
-    return args.value();
-  }
-
-  inline int getMode() {
-    if (!ctx) {
-      throw std::runtime_error("Cipher not initialized. Did you call setArgs()?");
-    }
-    return EVP_CIPHER_CTX_get_mode(ctx);
-  }
+  int getMode();
 
  private:
   // Properties
-  std::optional<CipherArgs> args = std::nullopt;
+  bool is_cipher = true;
+  std::string cipher_type;
   EVP_CIPHER_CTX *ctx = nullptr;
   bool pending_auth_failed;
   char auth_tag[EVP_GCM_TLS_TAG_LEN];
