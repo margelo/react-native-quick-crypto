@@ -9,8 +9,8 @@
   },
   "autolinking": {
     "Cipher": { "cpp": "HybridCipher" },
-    "Hash": { "cpp": "HybridHash" },
     "EdKeyPair": { "cpp": "HybridEdKeyPair" },
+    "Hash": { "cpp": "HybridHash" },
     "Pbkdf2": { "cpp": "HybridPbkdf2" },
     "Random": { "cpp": "HybridRandom" }
   },

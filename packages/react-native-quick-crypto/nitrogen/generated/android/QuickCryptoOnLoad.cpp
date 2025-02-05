@@ -16,8 +16,8 @@
 #include <NitroModules/HybridObjectRegistry.hpp>
 
 #include "HybridCipher.hpp"
-#include "HybridHash.hpp"
 #include "HybridEdKeyPair.hpp"
+#include "HybridHash.hpp"
 #include "HybridPbkdf2.hpp"
 #include "HybridRandom.hpp"
 
@@ -30,7 +30,7 @@ int initialize(JavaVM* vm) {
 
   return facebook::jni::initialize(vm, [] {
     // Register native JNI methods
-
+    
 
     // Register Nitro Hybrid Objects
     HybridObjectRegistry::registerHybridObjectConstructor(
@@ -43,21 +43,21 @@ int initialize(JavaVM* vm) {
       }
     );
     HybridObjectRegistry::registerHybridObjectConstructor(
-      "Hash",
-      []() -> std::shared_ptr<HybridObject> {
-        static_assert(std::is_default_constructible_v<HybridHash>,
-                      "The HybridObject \"HybridHash\" is not default-constructible! "
-                      "Create a public constructor that takes zero arguments to be able to autolink this HybridObject.");
-        return std::make_shared<HybridHash>();
-      }
-    );
-    HybridObjectRegistry::registerHybridObjectConstructor(
       "EdKeyPair",
       []() -> std::shared_ptr<HybridObject> {
         static_assert(std::is_default_constructible_v<HybridEdKeyPair>,
                       "The HybridObject \"HybridEdKeyPair\" is not default-constructible! "
                       "Create a public constructor that takes zero arguments to be able to autolink this HybridObject.");
         return std::make_shared<HybridEdKeyPair>();
+      }
+    );
+    HybridObjectRegistry::registerHybridObjectConstructor(
+      "Hash",
+      []() -> std::shared_ptr<HybridObject> {
+        static_assert(std::is_default_constructible_v<HybridHash>,
+                      "The HybridObject \"HybridHash\" is not default-constructible! "
+                      "Create a public constructor that takes zero arguments to be able to autolink this HybridObject.");
+        return std::make_shared<HybridHash>();
       }
     );
     HybridObjectRegistry::registerHybridObjectConstructor(
