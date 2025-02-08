@@ -1,4 +1,5 @@
 import crypto from 'react-native-quick-crypto';
+import { Buffer } from '@craftzdog/react-native-buffer';
 import { describe, it } from '../../MochaRNAdapter';
 import { expect } from 'chai';
 import type {
@@ -170,7 +171,6 @@ describe('subtle - encrypt / decrypt', () => {
         privateKey as CryptoKey,
         ciphercopy,
       );
-      // @ts-expect-error possibly undefined
       ciphercopy[0] = 255 - ciphercopy[0];
 
       expect(Buffer.from(result2).toString('hex')).to.equal(encodedPlaintext);
@@ -207,7 +207,6 @@ describe('subtle - encrypt / decrypt', () => {
       plaintext,
     );
     if (modify) {
-      // @ts-expect-error possibly undefined
       plaintext[0] = 255 - plaintext[0];
     }
     expect(result.byteLength).to.be.greaterThan(0);
@@ -561,7 +560,6 @@ describe('subtle - encrypt / decrypt', () => {
       ['encrypt', 'decrypt'],
     );
     const output = await subtle.encrypt(algorithm, key, plaintext);
-    // @ts-expect-error possibly undefined
     plaintextBuffer[0] = 255 - plaintextBuffer[0];
 
     expect(ab2str(output)).to.equal(ab2str(result), 'output != result');
@@ -570,7 +568,6 @@ describe('subtle - encrypt / decrypt', () => {
     // Converting the returned ArrayBuffer into a Buffer right away,
     // so that the next line works
     const check = Buffer.from(checkAB);
-    // @ts-expect-error possibly undefined
     check[0] = 255 - check[0];
 
     expect(ab2str(checkAB)).to.equal(

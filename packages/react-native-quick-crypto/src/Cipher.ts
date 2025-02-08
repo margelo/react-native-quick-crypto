@@ -261,21 +261,33 @@ class Decipher extends CipherCommon {
   }
 }
 
+/**
+ * @deprecated Use createDecipheriv instead.  This function will be removed in 1.0+
+ */
 export function createDecipher(
   algorithm: CipherCCMTypes,
   password: BinaryLikeNode,
   options: CipherCCMOptions,
 ): DecipherCCM;
+/**
+ * @deprecated Use createDecipheriv instead.  This function will be removed in 1.0+
+ */
 export function createDecipher(
   algorithm: CipherGCMTypes,
   password: BinaryLikeNode,
   options?: CipherGCMOptions,
 ): DecipherGCM;
+/**
+ * @deprecated Use createDecipheriv instead.  This function will be removed in 1.0+
+ */
 export function createDecipher(
   algorithm: CipherType,
   password: BinaryLikeNode,
   options?: Stream.TransformOptions,
 ): DecipherCCM | DecipherGCM | Decipher;
+/**
+ * @deprecated Use createDecipheriv instead.  This function will be removed in 1.0+
+ */
 export function createDecipher(
   algorithm: string,
   password: BinaryLikeNode,
@@ -331,21 +343,33 @@ export function createDecipheriv(
   );
 }
 
+/**
+ * @deprecated Use createCipheriv instead.  This function will be removed in 1.0+
+ */
 export function createCipher(
   algorithm: CipherCCMTypes,
   password: BinaryLikeNode,
   options: CipherCCMOptions,
 ): CipherCCM;
+/**
+ * @deprecated Use createCipheriv instead.  This function will be removed in 1.0+
+ */
 export function createCipher(
   algorithm: CipherGCMTypes,
   password: BinaryLikeNode,
   options?: CipherGCMOptions,
 ): CipherGCM;
+/**
+ * @deprecated Use createCipheriv instead.  This function will be removed in 1.0+
+ */
 export function createCipher(
   algorithm: CipherType,
   password: BinaryLikeNode,
   options?: Stream.TransformOptions,
 ): CipherCCM | CipherGCM | Cipher;
+/**
+ * @deprecated Use createCipheriv instead.  This function will be removed in 1.0+
+ */
 export function createCipher(
   algorithm: string,
   password: BinaryLikeNode,
