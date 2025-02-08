@@ -443,7 +443,7 @@ PODS:
   - RNCCheckbox (0.5.17):
     - BEMCheckBox (~> 1.4)
     - React-Core
-  - RNScreens (3.35.0):
+  - RNScreens (4.6.0):
     - RCT-Folly (= 2021.07.22.00)
     - React-Core
     - React-RCTImage
@@ -648,7 +648,7 @@ SPEC CHECKSUMS:
   React-utils: 56838edeaaf651220d1e53cd0b8934fb8ce68415
   ReactCommon: 5f704096ccf7733b390f59043b6fa9cc180ee4f6
   RNCCheckbox: a3ca9978cb0846b981d28da4e9914bd437403d77
-  RNScreens: 50ad6e3dbea9023272b3aa753e3ee2720b0c9b8f
+  RNScreens: 7a8df24e7f5fb645810583b942f6b41748bb948f
   SocketRocket: f32cd54efbe0f095c4d7594881e52619cfe80b17
   Yoga: 4c3aa327e4a6a23eeacd71f61c81df1bcdf677d5
 
