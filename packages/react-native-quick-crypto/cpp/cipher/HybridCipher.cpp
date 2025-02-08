@@ -211,16 +211,13 @@ HybridCipher::update(
     throw std::runtime_error("Cipher not initialized. Did you call setArgs()?");
   }
 
-  // Calculate the maximum output length
-  int outLen = data->size() + EVP_MAX_BLOCK_LENGTH;
-  int updateLen = 0;
-
-  // Create a temporary buffer for the operation
-  unsigned char* tempBuf = new unsigned char[outLen];
+  size_t in_len = data->size();
+  if (in_len > INT_MAX) {
+    throw std::runtime_error("Message too long");
+  }
 
   auto mode = getMode();
-  if (mode == EVP_CIPH_CCM_MODE && !checkCCMMessageLength(data->size())) {
-    delete[] tempBuf;
+  if (mode == EVP_CIPH_CCM_MODE && !checkCCMMessageLength(in_len)) {
     throw std::runtime_error("Invalid message size for CCM");
   }
 
@@ -230,25 +227,45 @@ HybridCipher::update(
     maybePassAuthTagToOpenSSL();
   }
 
-  // Perform the cipher update operation
-  if (
-    EVP_CipherUpdate(
-      ctx,
-      tempBuf,
-      &updateLen,
-      reinterpret_cast<const unsigned char*>(data->data()),
-      data->size()
-    ) != 1
+  int out_len = in_len + EVP_CIPHER_CTX_block_size(ctx);
+  // For key wrapping algorithms, get output size by calling
+  // EVP_CipherUpdate() with null output.
+  if (is_cipher && mode == EVP_CIPH_WRAP_MODE &&
+      EVP_CipherUpdate(
+        ctx,
+        nullptr,
+        &out_len,
+        data->data(),
+        data->size()
+      ) != 1
   ) {
-    delete[] tempBuf;
-    throw std::runtime_error("Failed to update cipher");
+    throw std::runtime_error("Failed to get output size for wrapping algorithm");
+  }
+
+  // Create output buffer for the operation
+  unsigned char* out = new unsigned char[out_len];
+
+  // Perform the cipher update operation.  The real size of the output is
+  // returned in out_len
+  bool ok = EVP_CipherUpdate(
+    ctx,
+    out,
+    &out_len,
+    data->data(),
+    in_len
+  ) == 1;
+
+  // When in CCM mode, EVP_CipherUpdate will fail if the authentication tag
+  // is invalid. In that case, remember the error and throw in final().
+  if (!ok && !is_cipher && mode == EVP_CIPH_CCM_MODE) {
+    pending_auth_failed = true;
   }
 
   // Create and return a new buffer of exact size needed
   return std::make_shared<NativeArrayBuffer>(
-    tempBuf,
-    updateLen,
-    [=]() { delete[] tempBuf; }
+    out,
+    out_len,
+    [=]() { delete[] out; }
   );
 }
 
@@ -259,15 +276,14 @@ HybridCipher::final() {
   }
 
   int mode = getMode();
-  int buf_len = EVP_CIPHER_CTX_block_size(ctx);
+  int out_len = EVP_CIPHER_CTX_block_size(ctx);
+  uint8_t* out = new uint8_t[out_len];
 
   if (!is_cipher && isSupportedAuthenticatedMode(ctx)) {
     maybePassAuthTagToOpenSSL();
   }
 
   bool ok;
-  int out_len = 0;
-  uint8_t* out = new uint8_t[buf_len];
 
   // In CCM mode, final() only checks whether authentication failed in
   // update(). EVP_CipherFinal_ex must not be called and will fail.
@@ -300,11 +316,6 @@ HybridCipher::final() {
         reinterpret_cast<unsigned char *>(auth_tag)
       ) == 1;
     }
-  }
-
-  if (!ok) {
-    delete[] out;
-    throw std::runtime_error("Failed to finalize cipher");
   }
 
   // Create and return a new buffer of exact size needed
