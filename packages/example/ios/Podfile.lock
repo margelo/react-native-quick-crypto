@@ -323,7 +323,7 @@ PODS:
   - react-native-quick-base64 (2.1.2):
     - RCT-Folly (= 2021.07.22.00)
     - React-Core
-  - react-native-quick-crypto (0.7.11):
+  - react-native-quick-crypto (0.7.12):
     - OpenSSL-Universal
     - RCT-Folly (= 2021.07.22.00)
     - React
@@ -628,7 +628,7 @@ SPEC CHECKSUMS:
   React-logger: 8edc785c47c8686c7962199a307015e2ce9a0e4f
   react-native-fast-encoder: 6f59e9b08e2bc5a8bf1f36e1630cdcfd66dd18af
   react-native-quick-base64: 61228d753294ae643294a75fece8e0e80b7558a6
-  react-native-quick-crypto: 5f87e8eb8386abb34e2a446fa1eca4101bf2eb2e
+  react-native-quick-crypto: f167927bdd2acb639be292b8bf14f0089b924801
   react-native-safe-area-context: 141eca0fd4e4191288dfc8b96a7c7e1c2983447a
   React-NativeModulesApple: b6868ee904013a7923128892ee4a032498a1024a
   React-perflogger: 31ea61077185eb1428baf60c0db6e2886f141a5a
