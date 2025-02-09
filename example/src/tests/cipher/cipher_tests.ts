@@ -14,7 +14,7 @@ import { test } from '../util';
 
 const SUITE = 'cipher';
 const ciphers = getCiphers()
-  .filter((c) => c.includes('OCB'))
+  .filter((c) => c.includes('SIV'))
   // .filter((c) => c.includes('CCM') || c.includes('OCB') || c.includes('SIV'))
 ;
 // const ciphers = ['AES-128-GCM'];
@@ -98,15 +98,15 @@ function roundtrip(
     decipher.setAAD(Buffer.alloc(0), {
       plaintextLength: ciph.length
     });
-  } else if (cipherName.includes('OCB')) {
-    // For OCB mode, we need to get and set the auth tag
+  } else if (cipherName.includes('OCB') || cipherName.includes('SIV')) {
+    // For OCB and SIV modes, we need to get and set the auth tag
     const tag = cipher.getAuthTag();
     decipher.setAuthTag(tag);
   }
 
   let deciph = decipher.update(ciph, 'buffer', 'utf8');
   deciph += decipher.final('utf8') as string;
-  console.log('actual  ', deciph);
-  console.log('expected', plaintext);
+  // console.log('actual  ', deciph);
+  // console.log('expected', plaintext);
   expect(deciph).to.equal(plaintext);
 }

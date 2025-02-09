@@ -80,17 +80,20 @@ bool HybridCipher::initAuthenticated(
   }
 
   const int mode = getMode();
-  if (mode == EVP_CIPH_GCM_MODE || mode == EVP_CIPH_OCB_MODE) {
-    // Set default tag length for OCB mode if not specified
-    if (mode == EVP_CIPH_OCB_MODE && auth_tag_len == kNoAuthTagLength) {
-      auth_tag_len = 16;  // Default to 16 bytes for OCB
+  if (mode == EVP_CIPH_GCM_MODE || mode == EVP_CIPH_OCB_MODE || mode == EVP_CIPH_SIV_MODE) {
+    // Set default tag length for OCB and SIV modes if not specified
+    if ((mode == EVP_CIPH_OCB_MODE || mode == EVP_CIPH_SIV_MODE) && auth_tag_len == kNoAuthTagLength) {
+      auth_tag_len = 16;  // Default to 16 bytes for OCB and SIV
     }
 
-    // Both GCM and OCB modes use similar tag length validation
+    // GCM, OCB and SIV modes use similar tag length validation
     if (!isValidAEADTagLength(auth_tag_len, mode)) {
-      throw std::runtime_error("Invalid authentication tag length (" +
-        std::string(mode == EVP_CIPH_GCM_MODE ? "GCM" : "OCB") +
-        ")");
+      std::string mode_str;
+      if (mode == EVP_CIPH_GCM_MODE) mode_str = "GCM";
+      else if (mode == EVP_CIPH_OCB_MODE) mode_str = "OCB";
+      else mode_str = "SIV";
+
+      throw std::runtime_error("Invalid authentication tag length (" + mode_str + ")");
     }
 
     // Remember the given authentication tag length for later.
@@ -103,7 +106,7 @@ bool HybridCipher::initAuthenticated(
       OSSL_PARAM_construct_end()
     };
     if (!EVP_CIPHER_CTX_set_params(ctx, params)) {
-      throw std::runtime_error("Failed to set OCB tag length: " +
+      throw std::runtime_error("Failed to set tag length: " +
         std::string(ERR_reason_error_string(ERR_get_error())));
       return false;
     }
@@ -187,6 +190,8 @@ HybridCipher::init(
   const std::shared_ptr<ArrayBuffer> cipher_key,
   const std::shared_ptr<ArrayBuffer> iv
 ) {
+  auto native_key = ToNativeArrayBuffer(cipher_key);
+  auto native_iv = ToNativeArrayBuffer(iv);
   // fetch cipher
   EVP_CIPHER *cipher = EVP_CIPHER_fetch(
     nullptr,
@@ -210,7 +215,7 @@ HybridCipher::init(
 
   if (mode == EVP_CIPH_CCM_MODE) {
     // CCM mode requires IV length between 7 and 13 bytes
-    if (iv->size() < 7 || iv->size() > 13) {
+    if (native_iv->size() < 7 || native_iv->size() > 13) {
       throw std::runtime_error("Invalid IV length for CCM mode (should be between 7 and 13 bytes)");
     }
   }
@@ -244,7 +249,7 @@ HybridCipher::init(
   if (isSupportedAuthenticatedMode(cipher)) {
     int iv_len;
     if (mode == EVP_CIPH_CCM_MODE) {
-      iv_len = static_cast<int>(iv->size());
+      iv_len = static_cast<int>(native_iv->size());
     } else {
       iv_len = EVP_CIPHER_iv_length(cipher);
     }
@@ -266,8 +271,8 @@ HybridCipher::init(
   if (EVP_CipherInit_ex2(
     ctx,
     cipher,
-    cipher_key->data(),
-    iv->data(),
+    native_key->data(),
+    native_iv->data(),
     is_cipher ? 1 : 0,
     nullptr
   ) != 1) {
@@ -286,11 +291,12 @@ std::shared_ptr<ArrayBuffer>
 HybridCipher::update(
   const std::shared_ptr<ArrayBuffer>& data
 ) {
+  auto native_data = ToNativeArrayBuffer(data);
   if (!ctx) {
     throw std::runtime_error("Cipher not initialized. Did you call setArgs()?");
   }
 
-  size_t in_len = data->size();
+  size_t in_len = native_data->size();
   if (in_len > INT_MAX) {
     throw std::runtime_error("Message too long");
   }
@@ -304,16 +310,16 @@ HybridCipher::update(
   int out_len = in_len + EVP_CIPHER_CTX_block_size(ctx);
   // For key wrapping algorithms, get output size by calling
   // EVP_CipherUpdate() with null output.
-  if (is_cipher && mode == EVP_CIPH_WRAP_MODE &&
-      EVP_CipherUpdate(
+  if (is_cipher && mode == EVP_CIPH_WRAP_MODE) {
+    if (EVP_CipherUpdate(
         ctx,
         nullptr,
         &out_len,
-        data->data(),
-        data->size()
-      ) != 1
-  ) {
-    throw std::runtime_error("Failed to get output size for wrapping algorithm");
+        native_data->data(),
+        native_data->size()
+      ) != 1) {
+      throw std::runtime_error("Failed to get output size for wrapping algorithm");
+    }
   }
 
   // Create output buffer for the operation
@@ -325,14 +331,19 @@ HybridCipher::update(
     ctx,
     out,
     &out_len,
-    data->data(),
+    native_data->data(),
     in_len
   ) == 1;
 
-  // When in CCM mode, EVP_CipherUpdate will fail if the authentication tag
-  // is invalid. In that case, remember the error and throw in final().
-  if (!ok && !is_cipher && mode == EVP_CIPH_CCM_MODE) {
-    pending_auth_failed = true;
+  if (!ok) {
+    delete[] out;
+    // When in CCM mode, EVP_CipherUpdate will fail if the authentication tag
+    // is invalid. In that case, remember the error and throw in final().
+    if (!is_cipher && mode == EVP_CIPH_CCM_MODE) {
+      pending_auth_failed = true;
+    } else {
+      throw std::runtime_error("Failed to update cipher");
+    }
   }
 
   // Create and return a new buffer of exact size needed
@@ -375,10 +386,14 @@ HybridCipher::final() {
     if (ok && is_cipher && isAuthenticatedMode() && mode != EVP_CIPH_CCM_MODE) {
       // For CCM mode, the tag is included in the final output
       // For other AEAD modes (GCM, OCB, SIV), get the tag explicitly
-      if (mode == EVP_CIPH_OCB_MODE && auth_tag_len == kNoAuthTagLength) {
-        // For OCB mode, if no tag length was specified, use 16 bytes
+      if ((mode == EVP_CIPH_OCB_MODE || mode == EVP_CIPH_SIV_MODE) && auth_tag_len == kNoAuthTagLength) {
+        // For OCB and SIV modes, if no tag length was specified, use 16 bytes
         auth_tag_len = 16;
       }
+
+      // Zero out auth_tag before getting new tag
+      std::memset(auth_tag, 0, EVP_GCM_TLS_TAG_LEN);
+
       OSSL_PARAM params[] = {
         OSSL_PARAM_construct_octet_string(OSSL_CIPHER_PARAM_AEAD_TAG,
                                           auth_tag,
@@ -386,9 +401,11 @@ HybridCipher::final() {
         OSSL_PARAM_construct_end()
       };
       if (!EVP_CIPHER_CTX_get_params(ctx, params)) {
+        delete[] out;
         throw std::runtime_error("Failed to get authentication tag: "
           + std::string(ERR_reason_error_string(ERR_get_error())));
       }
+      auth_tag_state = kAuthTagKnown;
     }
   }
 
@@ -405,6 +422,7 @@ HybridCipher::setAAD(
   const std::shared_ptr<ArrayBuffer>& data,
   std::optional<double> plaintextLength
 ) {
+  auto native_data = ToNativeArrayBuffer(data);
   if (!ctx || !isAuthenticatedMode()) {
     return false;
   }
@@ -434,7 +452,7 @@ HybridCipher::setAAD(
     }
   }
 
-  return EVP_CipherUpdate(ctx, nullptr, &out_len, data->data(), data->size()) == 1;
+  return EVP_CipherUpdate(ctx, nullptr, &out_len, native_data->data(), native_data->size()) == 1;
 }
 
 bool
@@ -452,6 +470,7 @@ bool
 HybridCipher::setAuthTag(
   const std::shared_ptr<ArrayBuffer>& tag
 ) {
+  auto native_tag = ToNativeArrayBuffer(tag);
   if (!ctx) {
     throw std::runtime_error("Cipher not initialized. Did you call setArgs()?");
   }
@@ -461,11 +480,13 @@ HybridCipher::setAuthTag(
   }
 
   // Copy the tag into our internal buffer
-  if (tag->size() > EVP_MAX_MD_SIZE) {
+  size_t tag_size = native_tag->size();
+  if (tag_size > EVP_GCM_TLS_TAG_LEN) {
     throw std::runtime_error("Authentication tag is too long");
   }
-  std::memcpy(auth_tag, tag->data(), tag->size());
-  auth_tag_len = tag->size();
+  std::memset(auth_tag, 0, EVP_GCM_TLS_TAG_LEN);
+  std::memcpy(auth_tag, native_tag->data(), tag_size);
+  auth_tag_len = tag_size;
   auth_tag_state = kAuthTagKnown;
 
   return true;
@@ -504,12 +525,20 @@ HybridCipher::setArgs(
   this->is_cipher = args.isCipher;
   this->cipher_type = args.cipherType;
 
+  // Reset auth tag state
+  auth_tag_state = kAuthTagUnknown;
+  std::memset(auth_tag, 0, EVP_GCM_TLS_TAG_LEN);
+
   // Set auth tag length from args or use default
   if (args.authTagLen.has_value()) {
     if (!CheckIsUint32(args.authTagLen.value())) {
       throw std::runtime_error("authTagLen must be uint32");
     }
-    this->auth_tag_len = static_cast<uint32_t>(args.authTagLen.value());
+    uint32_t requested_len = static_cast<uint32_t>(args.authTagLen.value());
+    if (requested_len > EVP_GCM_TLS_TAG_LEN) {
+      throw std::runtime_error("Authentication tag length too large");
+    }
+    this->auth_tag_len = requested_len;
   } else {
     // Default to 16 bytes for all authenticated modes
     this->auth_tag_len = 16;

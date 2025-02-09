@@ -86,7 +86,7 @@ class HybridCipher : public HybridCipherSpec {
   std::string cipher_type;
   EVP_CIPHER_CTX *ctx = nullptr;
   bool pending_auth_failed;
-  uint8_t* auth_tag[EVP_GCM_TLS_TAG_LEN];
+  uint8_t auth_tag[EVP_GCM_TLS_TAG_LEN];
   AuthTagState auth_tag_state;
   unsigned int auth_tag_len;
   int max_message_size;
