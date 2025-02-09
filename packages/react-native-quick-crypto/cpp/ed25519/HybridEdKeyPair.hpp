@@ -1,6 +1,6 @@
-#include <openssl/evp.h>
-#include <openssl/err.h>
 #include <memory>
+#include <openssl/err.h>
+#include <openssl/evp.h>
 #include <string>
 
 #include "HybridEdKeyPairSpec.hpp"
@@ -16,58 +16,30 @@ class HybridEdKeyPair : public HybridEdKeyPairSpec {
 
  public:
   // Methods
-  std::shared_ptr<Promise<void>>
-  generateKeyPair(
-    double publicFormat,
-    double publicType,
-    double privateFormat,
-    double privateType,
-    const std::optional<std::string>& cipher,
-    const std::optional<std::shared_ptr<ArrayBuffer>>& passphrase
-  ) override;
+  std::shared_ptr<Promise<void>> generateKeyPair(double publicFormat, double publicType, double privateFormat, double privateType,
+                                                 const std::optional<std::string>& cipher,
+                                                 const std::optional<std::shared_ptr<ArrayBuffer>>& passphrase) override;
 
-  void
-  generateKeyPairSync(
-    double publicFormat,
-    double publicType,
-    double privateFormat,
-    double privateType,
-    const std::optional<std::string>& cipher,
-    const std::optional<std::shared_ptr<ArrayBuffer>>& passphrase
-  ) override;
+  void generateKeyPairSync(double publicFormat, double publicType, double privateFormat, double privateType,
+                           const std::optional<std::string>& cipher,
+                           const std::optional<std::shared_ptr<ArrayBuffer>>& passphrase) override;
 
-  std::shared_ptr<Promise<std::shared_ptr<ArrayBuffer>>>
-  sign(
-    const std::shared_ptr<ArrayBuffer>& message,
-    const std::optional<std::shared_ptr<ArrayBuffer>>& key
-  ) override;
+  std::shared_ptr<Promise<std::shared_ptr<ArrayBuffer>>> sign(const std::shared_ptr<ArrayBuffer>& message,
+                                                              const std::optional<std::shared_ptr<ArrayBuffer>>& key) override;
 
-  std::shared_ptr<ArrayBuffer>
-  signSync(
-    const std::shared_ptr<ArrayBuffer>& message,
-    const std::optional<std::shared_ptr<ArrayBuffer>>& key
-  ) override;
+  std::shared_ptr<ArrayBuffer> signSync(const std::shared_ptr<ArrayBuffer>& message,
+                                        const std::optional<std::shared_ptr<ArrayBuffer>>& key) override;
 
-  std::shared_ptr<Promise<bool>>
-  verify(
-    const std::shared_ptr<ArrayBuffer>& signature,
-    const std::shared_ptr<ArrayBuffer>& message,
-    const std::optional<std::shared_ptr<ArrayBuffer>>& key
-  ) override;
+  std::shared_ptr<Promise<bool>> verify(const std::shared_ptr<ArrayBuffer>& signature, const std::shared_ptr<ArrayBuffer>& message,
+                                        const std::optional<std::shared_ptr<ArrayBuffer>>& key) override;
 
-  bool
-  verifySync(
-    const std::shared_ptr<ArrayBuffer>& signature,
-    const std::shared_ptr<ArrayBuffer>& message,
-    const std::optional<std::shared_ptr<ArrayBuffer>>& key
-  ) override;
+  bool verifySync(const std::shared_ptr<ArrayBuffer>& signature, const std::shared_ptr<ArrayBuffer>& message,
+                  const std::optional<std::shared_ptr<ArrayBuffer>>& key) override;
 
  protected:
-  std::shared_ptr<ArrayBuffer>
-  getPublicKey() override;
+  std::shared_ptr<ArrayBuffer> getPublicKey() override;
 
-  std::shared_ptr<ArrayBuffer>
-  getPrivateKey() override;
+  std::shared_ptr<ArrayBuffer> getPrivateKey() override;
 
   void checkKeyPair();
 
@@ -77,9 +49,7 @@ class HybridEdKeyPair : public HybridEdKeyPairSpec {
   std::string curve;
   EVP_PKEY* pkey = nullptr;
 
-  EVP_PKEY* importPrivateKey(
-    const std::optional<std::shared_ptr<ArrayBuffer>>& key
-  );
+  EVP_PKEY* importPrivateKey(const std::optional<std::shared_ptr<ArrayBuffer>>& key);
 };
 
 } // namespace margelo::nitro::crypto
