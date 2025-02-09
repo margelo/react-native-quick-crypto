@@ -8,8 +8,9 @@
     "androidCxxLibName": "QuickCrypto"
   },
   "autolinking": {
-    "Hash": { "cpp": "HybridHash" },
+    "Cipher": { "cpp": "HybridCipher" },
     "EdKeyPair": { "cpp": "HybridEdKeyPair" },
+    "Hash": { "cpp": "HybridHash" },
     "Pbkdf2": { "cpp": "HybridPbkdf2" },
     "Random": { "cpp": "HybridRandom" }
   },

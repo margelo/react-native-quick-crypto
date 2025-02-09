@@ -1,6 +1,6 @@
+#include <memory>
 #include <openssl/evp.h>
 #include <openssl/err.h>
-#include <memory>
 #include <string>
 
 #include "HybridEdKeyPairSpec.hpp"
