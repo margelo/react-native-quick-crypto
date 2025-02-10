@@ -96,7 +96,7 @@ function roundtrip(
   if (cipherName.includes('CCM')) {
     // For CCM mode, we need to set the message length before any data
     decipher.setAAD(Buffer.alloc(0), {
-      plaintextLength: ciph.length
+      plaintextLength: Buffer.byteLength(payload, 'utf8')
     });
   }
   if (
