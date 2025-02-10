@@ -1,7 +1,7 @@
 {
   "version": "1.0.0-beta.12",
   "scripts": {
-    "check-all": "./scripts/clang-format.sh",
+    "clang-format": "./scripts/clang-format.sh",
     "clean": "bun --filter='*' clean",
     "specs": "bun --filter='react-native-quick-crypto' specs",
     "bundle-install": "bun --filter='react-native-quick-crypto-example' bundle-install",

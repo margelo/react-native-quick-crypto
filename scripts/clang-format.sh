@@ -4,7 +4,6 @@ CPP_DIRS=(
   # react-native-quick-crypto
   "packages/react-native-quick-crypto/android/src/main/cpp"
   "packages/react-native-quick-crypto/cpp"
-  "packages/react-native-quick-crypto/ios"
 )
 
 if which clang-format >/dev/null; then

@@ -22,11 +22,18 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
+      - name: Set up clang-format
+        run: sudo apt-get install -y clang-format
+      - name: Run clang-format check
+        run: |
+          find packages/react-native-quick-crypto/cpp packages/react-native-quick-crypto/android/src/main/cpp \
+          -regex '.*\.\(cpp\|hpp\|cc\|cxx\|h\)' \
+          -exec clang-format --style=file --dry-run --Werror {} +
       - uses: reviewdog/action-cpplint@master
         with:
           github_token: ${{ secrets.github_token }}
           reporter: github-pr-review
-          flags: --linelength=230
+          flags: --linelength=140
           targets: --recursive packages/react-native-quick-crypto/cpp packages/react-native-quick-crypto/android/src/main/cpp
           filter: "-legal/copyright\
             ,-readability/todo\
@@ -35,4 +42,5 @@ jobs:
             ,-build/include_order\
             ,-whitespace/indent_namespace\
             ,-whitespace/parens\
+            ,-build/include_what_you_use\
             "

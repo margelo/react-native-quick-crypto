@@ -4,7 +4,6 @@
 #include "HybridRandom.hpp"
 #include "Utils.hpp"
 
-
 size_t checkSize(double size) {
   if (!CheckIsUint32(size)) {
     throw std::runtime_error("size must be uint32");
@@ -25,33 +24,23 @@ size_t checkOffset(double size, double offset) {
   return static_cast<size_t>(offset);
 }
 
-
 namespace margelo::nitro::crypto {
 
-std::shared_ptr<Promise<std::shared_ptr<ArrayBuffer>>>
-HybridRandom::randomFill(const std::shared_ptr<ArrayBuffer>& buffer,
-                         double dOffset,
-                         double dSize) {
+std::shared_ptr<Promise<std::shared_ptr<ArrayBuffer>>> HybridRandom::randomFill(const std::shared_ptr<ArrayBuffer>& buffer, double dOffset,
+                                                                                double dSize) {
   // get owned NativeArrayBuffer before passing to sync function
   auto nativeBuffer = ToNativeArrayBuffer(buffer);
 
   return Promise<std::shared_ptr<ArrayBuffer>>::async(
-    [this, nativeBuffer, dOffset, dSize]() {
-      return this->randomFillSync(nativeBuffer, dOffset, dSize);
-    }
-  );
+      [this, nativeBuffer, dOffset, dSize]() { return this->randomFillSync(nativeBuffer, dOffset, dSize); });
 };
 
-std::shared_ptr<ArrayBuffer>
-HybridRandom::randomFillSync(const std::shared_ptr<ArrayBuffer>& buffer,
-                             double dOffset,
-                             double dSize) {
+std::shared_ptr<ArrayBuffer> HybridRandom::randomFillSync(const std::shared_ptr<ArrayBuffer>& buffer, double dOffset, double dSize) {
   size_t size = checkSize(dSize);
   size_t offset = checkOffset(dSize, dOffset);
   uint8_t* data = buffer.get()->data();
   if (RAND_bytes(data + offset, (int)size) != 1) {
-    throw std::runtime_error("error calling RAND_bytes" +
-      std::to_string(ERR_get_error()));
+    throw std::runtime_error("error calling RAND_bytes" + std::to_string(ERR_get_error()));
   }
   return buffer;
 };

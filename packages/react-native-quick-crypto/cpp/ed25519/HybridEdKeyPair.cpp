@@ -5,45 +5,23 @@
 
 namespace margelo::nitro::crypto {
 
-std::shared_ptr<Promise<void>>
-HybridEdKeyPair::generateKeyPair(
-  double publicFormat,
-  double publicType,
-  double privateFormat,
-  double privateType,
-  const std::optional<std::string>& cipher,
-  const std::optional<std::shared_ptr<ArrayBuffer>>& passphrase
-) {
+std::shared_ptr<Promise<void>> HybridEdKeyPair::generateKeyPair(double publicFormat, double publicType, double privateFormat,
+                                                                double privateType, const std::optional<std::string>& cipher,
+                                                                const std::optional<std::shared_ptr<ArrayBuffer>>& passphrase) {
   // get owned NativeArrayBuffers before passing to sync function
   std::optional<std::shared_ptr<ArrayBuffer>> nativePassphrase = std::nullopt;
   if (passphrase.has_value()) {
     nativePassphrase = ToNativeArrayBuffer(passphrase.value());
   }
 
-  return Promise<void>::async(
-    [this, publicFormat, publicType, privateFormat, privateType, cipher,
-     nativePassphrase]() {
-      this->generateKeyPairSync(
-        publicFormat,
-        publicType,
-        privateFormat,
-        privateType,
-        cipher,
-        nativePassphrase
-      );
-    }
-  );
+  return Promise<void>::async([this, publicFormat, publicType, privateFormat, privateType, cipher, nativePassphrase]() {
+    this->generateKeyPairSync(publicFormat, publicType, privateFormat, privateType, cipher, nativePassphrase);
+  });
 }
 
-void
-HybridEdKeyPair::generateKeyPairSync(
-    double publicFormat,
-    double publicType,
-    double privateFormat,
-    double privateType,
-    const std::optional<std::string>& cipher,
-    const std::optional<std::shared_ptr<ArrayBuffer>>& passphrase
-) {
+void HybridEdKeyPair::generateKeyPairSync(double publicFormat, double publicType, double privateFormat, double privateType,
+                                          const std::optional<std::string>& cipher,
+                                          const std::optional<std::shared_ptr<ArrayBuffer>>& passphrase) {
   EVP_PKEY_CTX* pctx;
 
   // key context
@@ -69,12 +47,8 @@ HybridEdKeyPair::generateKeyPairSync(
   EVP_PKEY_CTX_free(pctx);
 }
 
-
-std::shared_ptr<Promise<std::shared_ptr<ArrayBuffer>>>
-HybridEdKeyPair::sign(
-  const std::shared_ptr<ArrayBuffer>& message,
-  const std::optional<std::shared_ptr<ArrayBuffer>>& key
-) {
+std::shared_ptr<Promise<std::shared_ptr<ArrayBuffer>>> HybridEdKeyPair::sign(const std::shared_ptr<ArrayBuffer>& message,
+                                                                             const std::optional<std::shared_ptr<ArrayBuffer>>& key) {
   // get owned NativeArrayBuffer before passing to sync function
   auto nativeMessage = ToNativeArrayBuffer(message);
   std::optional<std::shared_ptr<ArrayBuffer>> nativeKey = std::nullopt;
@@ -82,17 +56,12 @@ HybridEdKeyPair::sign(
     nativeKey = ToNativeArrayBuffer(key.value());
   }
 
-  return Promise<std::shared_ptr<ArrayBuffer>>::async([this, nativeMessage, nativeKey]() {
-      return this->signSync(nativeMessage, nativeKey);
-    }
-  );
+  return Promise<std::shared_ptr<ArrayBuffer>>::async(
+      [this, nativeMessage, nativeKey]() { return this->signSync(nativeMessage, nativeKey); });
 }
 
-std::shared_ptr<ArrayBuffer>
-HybridEdKeyPair::signSync(
-  const std::shared_ptr<ArrayBuffer>& message,
-  const std::optional<std::shared_ptr<ArrayBuffer>>& key
-) {
+std::shared_ptr<ArrayBuffer> HybridEdKeyPair::signSync(const std::shared_ptr<ArrayBuffer>& message,
+                                                       const std::optional<std::shared_ptr<ArrayBuffer>>& key) {
 
   size_t sig_len = 0;
   uint8_t* sig = NULL;
@@ -135,11 +104,7 @@ HybridEdKeyPair::signSync(
   }
 
   // return value for JS
-  std::shared_ptr<ArrayBuffer> signature = std::make_shared<NativeArrayBuffer>(
-    sig,
-    sig_len,
-    [=]() { delete[] sig; }
-  );
+  std::shared_ptr<ArrayBuffer> signature = std::make_shared<NativeArrayBuffer>(sig, sig_len, [=]() { delete[] sig; });
 
   // Clean up
   EVP_MD_CTX_free(md_ctx);
@@ -147,12 +112,9 @@ HybridEdKeyPair::signSync(
   return signature;
 }
 
-std::shared_ptr<Promise<bool>>
-HybridEdKeyPair::verify(
-  const std::shared_ptr<ArrayBuffer>& signature,
-  const std::shared_ptr<ArrayBuffer>& message,
-  const std::optional<std::shared_ptr<ArrayBuffer>>& key
-) {
+std::shared_ptr<Promise<bool>> HybridEdKeyPair::verify(const std::shared_ptr<ArrayBuffer>& signature,
+                                                       const std::shared_ptr<ArrayBuffer>& message,
+                                                       const std::optional<std::shared_ptr<ArrayBuffer>>& key) {
   // get owned NativeArrayBuffers before passing to sync function
   auto nativeSignature = ToNativeArrayBuffer(signature);
   auto nativeMessage = ToNativeArrayBuffer(message);
@@ -161,18 +123,12 @@ HybridEdKeyPair::verify(
     nativeKey = ToNativeArrayBuffer(key.value());
   }
 
-  return Promise<bool>::async([this, nativeSignature, nativeMessage, nativeKey]() {
-      return this->verifySync(nativeSignature, nativeMessage, nativeKey);
-    }
-  );
+  return Promise<bool>::async(
+      [this, nativeSignature, nativeMessage, nativeKey]() { return this->verifySync(nativeSignature, nativeMessage, nativeKey); });
 }
 
-bool
-HybridEdKeyPair::verifySync(
-  const std::shared_ptr<ArrayBuffer>& signature,
-  const std::shared_ptr<ArrayBuffer>& message,
-  const std::optional<std::shared_ptr<ArrayBuffer>>& key
-) {
+bool HybridEdKeyPair::verifySync(const std::shared_ptr<ArrayBuffer>& signature, const std::shared_ptr<ArrayBuffer>& message,
+                                 const std::optional<std::shared_ptr<ArrayBuffer>>& key) {
   // get key to use for verifying
   EVP_PKEY* pkey = this->importPrivateKey(key);
 
@@ -199,13 +155,9 @@ HybridEdKeyPair::verifySync(
   }
 
   // verify
-  auto res = EVP_DigestVerify(
-    md_ctx,
-    signature.get()->data(), signature.get()->size(),
-    message.get()->data(), message.get()->size()
-  );
+  auto res = EVP_DigestVerify(md_ctx, signature.get()->data(), signature.get()->size(), message.get()->data(), message.get()->size());
 
-  //return value for JS
+  // return value for JS
   if (res < 0) {
     EVP_MD_CTX_free(md_ctx);
     throw std::runtime_error("Failed to verify");
@@ -213,8 +165,7 @@ HybridEdKeyPair::verifySync(
   return res == 1; // true if 1, false if 0
 }
 
-std::shared_ptr<ArrayBuffer>
-HybridEdKeyPair::getPublicKey() {
+std::shared_ptr<ArrayBuffer> HybridEdKeyPair::getPublicKey() {
   this->checkKeyPair();
   size_t len = 32;
   uint8_t* publ = new uint8_t[len];
@@ -223,8 +174,7 @@ HybridEdKeyPair::getPublicKey() {
   return std::make_shared<NativeArrayBuffer>(publ, len, [=]() { delete[] publ; });
 }
 
-std::shared_ptr<ArrayBuffer>
-HybridEdKeyPair::getPrivateKey() {
+std::shared_ptr<ArrayBuffer> HybridEdKeyPair::getPrivateKey() {
   this->checkKeyPair();
   size_t len = 32;
   uint8_t* priv = new uint8_t[len];
@@ -233,28 +183,21 @@ HybridEdKeyPair::getPrivateKey() {
   return std::make_shared<NativeArrayBuffer>(priv, len, [=]() { delete[] priv; });
 }
 
-void
-HybridEdKeyPair::checkKeyPair() {
+void HybridEdKeyPair::checkKeyPair() {
   if (this->pkey == nullptr) {
     throw std::runtime_error("Keypair not initialized");
   }
 }
 
-void
-HybridEdKeyPair::setCurve(const std::string& curve) {
+void HybridEdKeyPair::setCurve(const std::string& curve) {
   this->curve = curve;
 }
 
-EVP_PKEY*
-HybridEdKeyPair::importPrivateKey(const std::optional<std::shared_ptr<ArrayBuffer>>& key) {
+EVP_PKEY* HybridEdKeyPair::importPrivateKey(const std::optional<std::shared_ptr<ArrayBuffer>>& key) {
   EVP_PKEY* pkey = nullptr;
   if (key.has_value()) {
-    pkey = EVP_PKEY_new_raw_private_key(
-      EVP_PKEY_ED25519, // TODO: use this->curve somehow
-      NULL,
-      key.value()->data(),
-      32
-    );
+    pkey = EVP_PKEY_new_raw_private_key(EVP_PKEY_ED25519, // TODO: use this->curve somehow
+                                        NULL, key.value()->data(), 32);
     if (pkey == nullptr) {
       throw std::runtime_error("Failed to read private key");
     }
