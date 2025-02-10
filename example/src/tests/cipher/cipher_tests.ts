@@ -14,7 +14,7 @@ import { test } from '../util';
 
 const SUITE = 'cipher';
 const ciphers = getCiphers()
-  .filter((c) => c.includes('SIV'))
+  // .filter((c) => c.includes('CCM'))
   // .filter((c) => c.includes('CCM') || c.includes('OCB') || c.includes('SIV'))
 ;
 // const ciphers = ['AES-128-GCM'];
@@ -98,7 +98,12 @@ function roundtrip(
     decipher.setAAD(Buffer.alloc(0), {
       plaintextLength: ciph.length
     });
-  } else if (cipherName.includes('OCB') || cipherName.includes('SIV')) {
+  }
+  if (
+    cipherName.includes('CCM') ||
+    cipherName.includes('OCB') ||
+    cipherName.includes('SIV')
+  ) {
     // For OCB and SIV modes, we need to get and set the auth tag
     const tag = cipher.getAuthTag();
     decipher.setAuthTag(tag);
