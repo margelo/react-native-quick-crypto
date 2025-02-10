@@ -14,6 +14,7 @@ using namespace facebook;
 
 class HybridCipher : public HybridCipherSpec {
  protected:
+  // Protected enums for state management
   enum CipherKind { kCipher, kDecipher };
   enum UpdateResult { kSuccess, kErrorMessageSize, kErrorState };
   enum AuthTagState { kAuthTagUnknown, kAuthTagKnown, kAuthTagPassedToOpenSSL };
@@ -65,32 +66,6 @@ class HybridCipher : public HybridCipherSpec {
     const std::shared_ptr<ArrayBuffer> cipher_key,
     const std::shared_ptr<ArrayBuffer> iv
   );
-
-  bool isAuthenticatedMode() const;
-
-  bool initAuthenticated(
-    const char *cipher_type,
-    int iv_len,
-    unsigned int auth_tag_len,
-    const std::shared_ptr<NativeArrayBuffer>& native_iv
-  );
-
-  bool maybePassAuthTagToOpenSSL();
-
-  bool checkCCMMessageLength(int message_len);
-
-  bool initCCMMode(
-    int iv_len,
-    const std::shared_ptr<NativeArrayBuffer>& native_iv
-  );
-  bool initGCMMode();
-  bool initOCBMode(const std::shared_ptr<NativeArrayBuffer>& native_iv);
-  bool initSIVMode();
-  bool initGCMSIVMode();
-  bool initChaCha20Poly1305();
-
-  // Helper function to set authentication tag length
-  bool setAuthTagLength(const char* mode_str);
 
   int getMode();
 
