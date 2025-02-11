@@ -118,13 +118,13 @@ HybridCipher::update(
   uint8_t* out = new uint8_t[out_len];
   // Perform the cipher update operation. The real size of the output is
   // returned in out_len
-  bool ok = EVP_CipherUpdate(
+  EVP_CipherUpdate(
     ctx,
     out,
     &out_len,
     native_data->data(),
     in_len
-  ) == 1;
+  );
 
   // Create and return a new buffer of exact size needed
   return std::make_shared<NativeArrayBuffer>(
@@ -159,7 +159,21 @@ bool HybridCipher::setAAD(
   const std::shared_ptr<ArrayBuffer>& data,
   std::optional<double> plaintextLength
 ) {
-  return false;
+  if (!ctx) {
+    throw std::runtime_error("Cipher not initialized. Did you call setArgs()?");
+  }
+
+  auto native_data = ToNativeArrayBuffer(data);
+  int plaintext_len = plaintextLength.has_value() ? static_cast<int>(plaintextLength.value()) : -1;
+
+  // Set the AAD
+  int out_len;
+  if (!EVP_CipherUpdate(ctx, nullptr, &out_len, native_data->data(), native_data->size())) {
+    return false;
+  }
+
+  has_aad = true;
+  return true;
 }
 
 bool HybridCipher::setAutoPadding(
@@ -175,28 +189,45 @@ bool HybridCipher::setAutoPadding(
 bool HybridCipher::setAuthTag(
   const std::shared_ptr<ArrayBuffer>& tag
 ) {
-  return false;
+  if (!ctx) {
+    throw std::runtime_error("Cipher not initialized. Did you call setArgs()?");
+  }
+
+  if (is_cipher) {
+    throw std::runtime_error("Auth tag cannot be set when encrypting");
+  }
+
+  auto native_tag = ToNativeArrayBuffer(tag);
+  if (native_tag->size() < 4 || native_tag->size() > 16) {
+    throw std::runtime_error("Invalid auth tag length. Must be between 4 and 16 bytes.");
+  }
+
+  // Store the auth tag for later verification
+  auth_tag_len = native_tag->size();
+  std::memcpy(auth_tag, native_tag->data(), auth_tag_len);
+  auth_tag_state = kAuthTagKnown;
+
+  return true;
 }
 
 std::shared_ptr<ArrayBuffer>
 HybridCipher::getAuthTag() {
   if (!ctx) {
-    throw std::runtime_error("Cannot getAuthTag while encryption is in progress");
-  }
-  if (!is_cipher) {
-    throw std::runtime_error("Cannot getAuthTag in decryption mode");
-  }
-  if (auth_tag_len == kNoAuthTagLength) {
-    throw std::runtime_error(
-      "No authentication tag is set.  Make sure to call final() before getting the auth tag."
-    );
+    throw std::runtime_error("Cipher not initialized. Did you call setArgs()?");
   }
 
-  // Create a new buffer and copy the auth tag data
+  if (!is_cipher) {
+    throw std::runtime_error("Auth tag can only be retrieved in encryption mode");
+  }
+
+  if (auth_tag_state != kAuthTagKnown) {
+    throw std::runtime_error("Auth tag not available. Call final() first.");
+  }
+
+  // Create a new buffer and copy the auth tag
   uint8_t* out = new uint8_t[auth_tag_len];
   std::memcpy(out, auth_tag, auth_tag_len);
 
-  // Create and return a new buffer with proper cleanup
   return std::make_shared<NativeArrayBuffer>(
     out,
     auth_tag_len,

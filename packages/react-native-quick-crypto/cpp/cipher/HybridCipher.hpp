@@ -58,16 +58,7 @@ class HybridCipher : public HybridCipherSpec {
   enum UpdateResult { kSuccess, kErrorMessageSize, kErrorState };
   enum AuthTagState { kAuthTagUnknown, kAuthTagKnown, kAuthTagPassedToOpenSSL };
 
- private:
-  // Methods
-  void init(
-    const std::shared_ptr<ArrayBuffer> cipher_key,
-    const std::shared_ptr<ArrayBuffer> iv
-  );
-
-  int getMode();
-
- private:
+ protected:
   // Properties
   bool is_cipher = true;
   std::string cipher_type;
@@ -78,6 +69,16 @@ class HybridCipher : public HybridCipherSpec {
   AuthTagState auth_tag_state;
   unsigned int auth_tag_len;
   int max_message_size;
+
+ private:
+  // Methods
+  void init(
+    const std::shared_ptr<ArrayBuffer> cipher_key,
+    const std::shared_ptr<ArrayBuffer> iv
+  );
+
+  int getMode();
+
 };
 
 } // namespace margelo::nitro::crypto
