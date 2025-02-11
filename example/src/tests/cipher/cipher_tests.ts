@@ -14,7 +14,7 @@ import { test } from '../util';
 
 const SUITE = 'cipher';
 const ciphers = getCiphers()
-  // .filter((c) => c.includes('CCM'))
+  .filter((c) => c.includes('CCM'))
   // .filter((c) => c.includes('CCM') || c.includes('OCB') || c.includes('SIV'))
 ;
 // const ciphers = ['AES-128-GCM'];

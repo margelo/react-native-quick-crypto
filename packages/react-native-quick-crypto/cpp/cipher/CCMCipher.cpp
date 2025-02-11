@@ -1,127 +1,196 @@
-#include "CCMCipher.hpp"
 #include <stdexcept>
-
-// bool CCMCipher::setAuthTag(const uint8_t* tag, int tag_len) {
-//   if (!tag || tag_len < 4 || tag_len > 16) {
-//     return false;
-//   }
-
-//   if (!EVP_CIPHER_CTX_ctrl(ctx, EVP_CTRL_CCM_SET_TAG, tag_len, const_cast<uint8_t*>(tag))) {
-//     return false;
-//   }
-
-//   auth_tag_state = kAuthTagPassedToOpenSSL;
-//   return true;
-// }
+#include "CCMCipher.hpp"
+#include "Utils.hpp"
 
 namespace margelo::nitro::crypto {
 
-// CCMCipher::CCMCipher(const EVP_CIPHER* cipher,
-//                      bool encrypt,
-//                      const uint8_t* key,
-//                      const uint8_t* iv,
-//                      int iv_len)
-//     : HybridCipher() {
+std::shared_ptr<ArrayBuffer> CCMCipher::update(const std::shared_ptr<ArrayBuffer>& data) {
+  if (!ctx) {
+    throw std::runtime_error("Cipher not initialized. Did you call setArgs()?");
+  }
 
-//   // Initialize EVP context
-//   ctx = EVP_CIPHER_CTX_new();
-//   if (!ctx) {
-//     throw std::runtime_error("Failed to create cipher context");
-//   }
+  if (!has_aad) {
+    throw std::runtime_error("For CCM mode, setAAD() must be called before update()");
+  }
 
-//   // Initialize with null key and IV first for CCM mode
-//   if (EVP_CipherInit_ex2(ctx, cipher, nullptr, nullptr, encrypt ? 1 : 0, nullptr) != 1) {
-//     EVP_CIPHER_CTX_free(ctx);
-//     throw std::runtime_error("Failed to initialize cipher");
-//   }
+  auto native_data = ToNativeArrayBuffer(data);
+  size_t in_len = native_data->size();
+  if (in_len > INT_MAX) {
+    throw std::runtime_error("Message too long");
+  }
 
-//   // Now set the key
-//   if (EVP_CipherInit_ex2(ctx, nullptr, key, nullptr, -1, nullptr) != 1) {
-//     EVP_CIPHER_CTX_free(ctx);
-//     throw std::runtime_error("Failed to set key");
-//   }
+  // For CCM mode, output length is the same as input length
+  uint8_t* out = new uint8_t[in_len];
+  int out_len;
 
-//   // Set IV length for CCM
-//   if (EVP_CIPHER_CTX_ctrl(ctx, EVP_CTRL_CCM_SET_IVLEN, iv_len, nullptr) != 1) {
-//     EVP_CIPHER_CTX_free(ctx);
-//     throw std::runtime_error("Failed to set IV length");
-//   }
+  if (EVP_CipherUpdate(ctx, out, &out_len, native_data->data(), in_len) != 1) {
+    delete[] out;
+    throw std::runtime_error("Failed to process data");
+  }
 
-//   // Set IV
-//   if (EVP_CipherInit_ex2(ctx, nullptr, nullptr, iv, -1, nullptr) != 1) {
-//     EVP_CIPHER_CTX_free(ctx);
-//     throw std::runtime_error("Failed to set IV");
-//   }
+  return std::make_shared<NativeArrayBuffer>(
+    out,
+    out_len,
+    [=]() { delete[] out; }
+  );
+}
 
-//   is_cipher = encrypt;
-// }
+void CCMCipher::setArgs(const CipherArgs& args) {
+  // For CCM mode, we need to:
+  // 1. Initialize cipher with key and IV
+  // 2. Set IV length
+  // 3. Set tag length
 
-// bool CCMCipher::initializeImpl() {
-//   // CCM requires message length to be known in advance
-//   has_aad = false;
-//   auth_tag_len = 16;  // Default CCM tag length
+  auto native_key = ToNativeArrayBuffer(args.cipherKey);
+  auto native_iv = ToNativeArrayBuffer(args.iv);
 
-//   // Set the tag length for CCM mode
-//   if (!EVP_CIPHER_CTX_ctrl(ctx, EVP_CTRL_CCM_SET_TAG, auth_tag_len, nullptr)) {
-//     throw std::runtime_error("Failed to set CCM tag length");
-//   }
+  // Create cipher context if needed
+  if (!ctx) {
+    ctx = EVP_CIPHER_CTX_new();
+    if (!ctx) {
+      throw std::runtime_error("Failed to create cipher context");
+    }
+  }
 
-//   return true;
-// }
+  // Get cipher
+  EVP_CIPHER* cipher = EVP_CIPHER_fetch(nullptr, args.cipherType.c_str(), nullptr);
+  if (!cipher) {
+    EVP_CIPHER_CTX_free(ctx);
+    throw std::runtime_error("Invalid cipher type: " + args.cipherType);
+  }
 
-// bool CCMCipher::updateImpl(const uint8_t* data, int data_len, uint8_t* out, int* out_len) {
-//   if (!has_aad) {
-//     throw std::runtime_error("setAAD() must be called before update() in CCM mode");
-//   }
+  // Initialize cipher first without key/IV
+  if (!EVP_CipherInit_ex2(ctx, cipher, nullptr, nullptr, args.isCipher ? 1 : 0, nullptr)) {
+    EVP_CIPHER_free(cipher);
+    EVP_CIPHER_CTX_free(ctx);
+    throw std::runtime_error("Failed to initialize cipher");
+  }
 
-//   // CCM mode requires one-shot encryption/decryption
-//   return EVP_CipherUpdate(ctx, out, out_len, data, data_len) == 1;
-// }
+  // Set IV length first (required for CCM)
+  if (!EVP_CIPHER_CTX_ctrl(ctx, EVP_CTRL_AEAD_SET_IVLEN, native_iv->size(), nullptr)) {
+    EVP_CIPHER_free(cipher);
+    EVP_CIPHER_CTX_free(ctx);
+    throw std::runtime_error("Failed to set IV length");
+  }
 
-// bool CCMCipher::finalImpl(uint8_t* out, int* out_len) {
-//   if (!EVP_CipherFinal_ex(ctx, out, out_len)) {
-//     return false;
-//   }
+  // For CCM mode, we need to set the tag length during initialization
+  if (args.isCipher) {
+    // When encrypting, set the tag length to 16 bytes (default for CCM)
+    auth_tag_len = 16;
+    if (!EVP_CIPHER_CTX_ctrl(ctx, EVP_CTRL_AEAD_SET_TAG, auth_tag_len, nullptr)) {
+      EVP_CIPHER_free(cipher);
+      EVP_CIPHER_CTX_free(ctx);
+      throw std::runtime_error("Failed to set CCM tag length");
+    }
 
-//   if (is_cipher) {
-//     // For CCM mode, we need to get the tag after finalization
-//     std::memset(auth_tag, 0, EVP_GCM_TLS_TAG_LEN);
-//     if (!EVP_CIPHER_CTX_ctrl(ctx, EVP_CTRL_CCM_GET_TAG, auth_tag_len, auth_tag)) {
-//       throw std::runtime_error("CCM tag retrieval failed (length: " + std::to_string(auth_tag_len) + ")");
-//     }
-//     auth_tag_state = kAuthTagKnown;
-//   }
+    // Now set key and IV after setting tag length
+    if (!EVP_CipherInit_ex2(ctx, nullptr, native_key->data(), native_iv->data(), -1, nullptr)) {
+      EVP_CIPHER_free(cipher);
+      EVP_CIPHER_CTX_free(ctx);
+      throw std::runtime_error("Failed to set key and IV");
+    }
+  }
 
-//   return true;
-// }
+  EVP_CIPHER_free(cipher);
+  is_cipher = args.isCipher;
+  cipher_type = args.cipherType;
+}
 
-// bool CCMCipher::setAADImpl(const uint8_t* aad, int aad_len, int plaintext_len) {
-//   if (!checkMessageLength(plaintext_len)) {
-//     return false;
-//   }
+bool CCMCipher::setAAD(const std::shared_ptr<ArrayBuffer>& data, std::optional<double> plaintextLength) {
+  if (!ctx) {
+    throw std::runtime_error("Cipher not initialized. Did you call setArgs()?");
+  }
 
-//   // For CCM mode, we must set the total plaintext length before processing AAD
-//   if (!EVP_CipherUpdate(ctx, nullptr, nullptr, nullptr, plaintext_len)) {
-//     return false;
-//   }
+  if (!plaintextLength.has_value()) {
+    throw std::runtime_error("CCM mode requires plaintextLength to be set");
+  }
 
-//   // Process AAD if present
-//   if (aad_len > 0 && aad != nullptr) {
-//     int temp_len;
-//     if (!EVP_CipherUpdate(ctx, nullptr, &temp_len, aad, aad_len)) {
-//       return false;
-//     }
-//   }
+  // For CCM mode, we must set the total plaintext length before processing AAD
+  int plaintext_len = static_cast<int>(plaintextLength.value());
+  if (plaintext_len > kMaxMessageSize) {
+    throw std::runtime_error("Message too long for CCM mode");
+  }
 
-//   has_aad = true;
-//   return true;
-// }
+  // For CCM mode in OpenSSL 3.3+, we need to set message length using OSSL_PARAM
+  size_t msg_len = plaintext_len;
+  OSSL_PARAM params[] = {
+    OSSL_PARAM_construct_size_t(OSSL_CIPHER_PARAM_AEAD_TLS1_AAD_PAD, &msg_len),
+    OSSL_PARAM_construct_end()
+  };
 
-// bool CCMCipher::checkMessageLength(int message_len) {
-//   if (message_len > kMaxMessageSize) {
-//     throw std::runtime_error("Cannot create larger than " + std::to_string(kMaxMessageSize) + " bytes");
-//   }
-//   return true;
-// }
+  if (!EVP_CIPHER_CTX_set_params(ctx, params)) {
+    throw std::runtime_error("Failed to set CCM message length");
+  }
+
+  // Process AAD if present
+  auto native_data = ToNativeArrayBuffer(data);
+  if (native_data->size() > 0) {
+    int out_len = 0;
+    // For CCM, we must pass nullptr as the output buffer when processing AAD
+    if (!EVP_CipherUpdate(ctx, nullptr, &out_len, native_data->data(), native_data->size())) {
+      throw std::runtime_error("Failed to process AAD");
+    }
+  }
+
+  has_aad = true;
+  return true;
+}
+
+bool CCMCipher::setAuthTag(const std::shared_ptr<ArrayBuffer>& tag) {
+  if (!ctx) {
+    throw std::runtime_error("Cipher not initialized. Did you call setArgs()?");
+  }
+
+  if (is_cipher) {
+    throw std::runtime_error("Auth tag cannot be set when encrypting");
+  }
+
+  auto native_tag = ToNativeArrayBuffer(tag);
+  if (native_tag->size() < 4 || native_tag->size() > 16) {
+    throw std::runtime_error("Invalid auth tag length. Must be between 4 and 16 bytes.");
+  }
+
+  // For CCM mode, we need to set the tag using EVP_CTRL_CCM_SET_TAG
+  if (!EVP_CIPHER_CTX_ctrl(ctx, EVP_CTRL_CCM_SET_TAG, native_tag->size(), const_cast<uint8_t*>(native_tag->data()))) {
+    throw std::runtime_error("Failed to set auth tag");
+  }
+
+  auth_tag_len = native_tag->size();
+  std::memcpy(auth_tag, native_tag->data(), auth_tag_len);
+  auth_tag_state = kAuthTagPassedToOpenSSL;
+
+  return true;
+}
+
+std::shared_ptr<ArrayBuffer> CCMCipher::final() {
+  if (!ctx) {
+    throw std::runtime_error("Cipher not initialized. Did you call setArgs()?");
+  }
+
+  int out_len = EVP_CIPHER_CTX_block_size(ctx);
+  uint8_t* out = new uint8_t[out_len];
+
+  // For CCM mode, finalize the cipher
+  if (EVP_CipherFinal_ex(ctx, out, &out_len) != 1) {
+    delete[] out;
+    throw std::runtime_error("Failed to finalize cipher");
+  }
+
+  // For CCM mode in encryption, get the tag after finalization
+  if (is_cipher) {
+    auth_tag_len = 16;  // Default CCM tag length
+    if (!EVP_CIPHER_CTX_ctrl(ctx, EVP_CTRL_AEAD_GET_TAG, auth_tag_len, auth_tag)) {
+      delete[] out;
+      throw std::runtime_error("Failed to get auth tag");
+    }
+    auth_tag_state = kAuthTagKnown;
+  }
+
+  return std::make_shared<NativeArrayBuffer>(
+    out,
+    out_len,
+    [=]() { delete[] out; }
+  );
+}
 
 }  // namespace margelo::nitro::crypto
