@@ -9,7 +9,10 @@ import type {
   CipherOCBOptions,
   CipherOCBTypes,
 } from 'crypto'; // @types/node
-import type { Cipher as NativeCipher } from './specs/cipher.nitro';
+import type {
+  Cipher as NativeCipher,
+  CipherFactory,
+} from './specs/cipher.nitro';
 import { ab2str, binaryLikeToArrayBuffer } from './utils';
 import type { BinaryLike, BinaryLikeNode, Encoding } from './utils';
 import {
@@ -50,12 +53,14 @@ class CipherCommon extends Stream.Transform {
     options = {},
   }: CipherArgs) {
     super(options);
-    this.native = NitroModules.createHybridObject<NativeCipher>('Cipher');
     const authTagLen: number =
       getUIntOption(options, 'authTagLength') !== -1
         ? getUIntOption(options, 'authTagLength')
         : 16; // defaults to 16 bytes
-    this.native.setArgs({
+
+    const factory =
+      NitroModules.createHybridObject<CipherFactory>('CipherFactory');
+    this.native = factory.createCipher({
       isCipher,
       cipherType,
       cipherKey: binaryLikeToArrayBuffer(cipherKey),

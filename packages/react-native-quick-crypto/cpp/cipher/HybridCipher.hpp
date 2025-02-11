@@ -1,24 +1,16 @@
+#pragma once
+
 #include <memory>
-#include <NitroModules/ArrayBuffer.hpp>
-#include <openssl/evp.h>
 #include <optional>
 #include <string>
 #include <vector>
+#include <openssl/evp.h>
 
 #include "HybridCipherSpec.hpp"
-#include "CipherArgs.hpp"
 
 namespace margelo::nitro::crypto {
 
-using namespace facebook;
-
 class HybridCipher : public HybridCipherSpec {
- protected:
-  // Protected enums for state management
-  enum CipherKind { kCipher, kDecipher };
-  enum UpdateResult { kSuccess, kErrorMessageSize, kErrorState };
-  enum AuthTagState { kAuthTagUnknown, kAuthTagKnown, kAuthTagPassedToOpenSSL };
-
  public:
   HybridCipher() : HybridObject(TAG) {}
   ~HybridCipher();
@@ -59,6 +51,12 @@ class HybridCipher : public HybridCipherSpec {
 
   std::vector<std::string>
   getSupportedCiphers() override;
+
+ protected:
+  // Protected enums for state management
+  enum CipherKind { kCipher, kDecipher };
+  enum UpdateResult { kSuccess, kErrorMessageSize, kErrorState };
+  enum AuthTagState { kAuthTagUnknown, kAuthTagKnown, kAuthTagPassedToOpenSSL };
 
  private:
   // Methods
