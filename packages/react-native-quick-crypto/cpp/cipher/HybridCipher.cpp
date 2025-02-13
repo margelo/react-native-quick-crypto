@@ -15,24 +15,23 @@ HybridCipher::~HybridCipher() {
   }
 }
 
-constexpr unsigned kNoAuthTagLength = static_cast<unsigned>(-1);
-constexpr unsigned kDefaultAuthTagLength = 16;  // Default tag length for OCB, SIV, CCM, ChaCha20-Poly1305
-
-// bool HybridCipher::maybePassAuthTagToOpenSSL() {
-//   if (auth_tag_state == kAuthTagKnown) {
-//     OSSL_PARAM params[] = {
-//       OSSL_PARAM_construct_octet_string(OSSL_CIPHER_PARAM_AEAD_TAG,
-//                                        auth_tag,
-//                                        auth_tag_len),
-//       OSSL_PARAM_construct_end()
-//     };
-//     if (!EVP_CIPHER_CTX_set_params(ctx, params)) {
-//       return false;
-//     }
-//     auth_tag_state = kAuthTagPassedToOpenSSL;
-//   }
-//   return true;
-// }
+bool HybridCipher::maybePassAuthTagToOpenSSL() {
+  if (auth_tag_state == kAuthTagKnown) {
+    OSSL_PARAM params[] = {
+      OSSL_PARAM_construct_octet_string(
+        OSSL_CIPHER_PARAM_AEAD_TAG,
+        auth_tag,
+        auth_tag_len
+      ),
+      OSSL_PARAM_construct_end()
+    };
+    if (!EVP_CIPHER_CTX_set_params(ctx, params)) {
+      return false;
+    }
+    auth_tag_state = kAuthTagPassedToOpenSSL;
+  }
+  return true;
+}
 
 // bool HybridCipher::isAuthenticatedMode() const {
 //   // Check if this cipher operates in an AEAD mode that we support.
@@ -49,6 +48,7 @@ void HybridCipher::init(
 ) {
   auto native_key = ToNativeArrayBuffer(cipher_key);
   auto native_iv = ToNativeArrayBuffer(iv);
+
   // fetch cipher
   EVP_CIPHER *cipher = EVP_CIPHER_fetch(
     nullptr,
@@ -71,7 +71,6 @@ void HybridCipher::init(
   has_aad = false;
   pending_auth_failed = false;
   auth_tag_state = kAuthTagUnknown;
-  auth_tag_len = kNoAuthTagLength;
 
   // Get cipher mode
   int mode = EVP_CIPHER_get_mode(cipher);
@@ -262,13 +261,8 @@ void HybridCipher::setArgs(const CipherArgs& args) {
     this->auth_tag_len = requested_len;
   } else {
     // Default to 16 bytes for all authenticated modes
-    this->auth_tag_len = 16;
+    this->auth_tag_len = kDefaultAuthTagLength;
   }
-
-  init(
-    args.cipherKey,
-    args.iv
-  );
 }
 
 void collect_ciphers(EVP_CIPHER *cipher, void *arg) {

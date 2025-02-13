@@ -29,20 +29,22 @@ class HybridCipherFactory : public HybridCipherFactorySpec {
     EVP_CIPHER_free(cipher);
 
     // Create the appropriate cipher instance based on mode
+    std::shared_ptr<HybridCipher> cipherInstance;
     switch (mode) {
       case EVP_CIPH_CCM_MODE: {
-        auto ccm = std::make_shared<CCMCipher>();
-        ccm->setArgs(args);
-        return ccm;
+        cipherInstance = std::make_shared<CCMCipher>();
+        break;
       }
       // Add other modes as they are implemented
       default: {
         // For all other modes, use the base HybridCipher
-        auto base = std::make_shared<HybridCipher>();
-        base->setArgs(args);
-        return base;
+        cipherInstance = std::make_shared<HybridCipher>();
+        break;
       }
     }
+    cipherInstance->setArgs(args);
+    cipherInstance->init(args.cipherKey, args.iv);
+    return cipherInstance;
   }
 };
 
