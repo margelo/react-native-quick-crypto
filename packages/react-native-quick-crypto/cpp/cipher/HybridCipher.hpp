@@ -4,11 +4,17 @@
 #include <optional>
 #include <string>
 #include <vector>
+#include <openssl/core_names.h>
+#include <openssl/err.h>
 #include <openssl/evp.h>
+#include <openssl/param_build.h>
 
 #include "HybridCipherSpec.hpp"
 
 namespace margelo::nitro::crypto {
+
+// Default tag length for OCB, SIV, CCM, ChaCha20-Poly1305
+constexpr unsigned kDefaultAuthTagLength = 16;
 
 class HybridCipher : public HybridCipherSpec {
  public:
@@ -24,6 +30,12 @@ class HybridCipher : public HybridCipherSpec {
 
   std::shared_ptr<ArrayBuffer>
   final() override;
+
+  virtual void
+  init(
+    const std::shared_ptr<ArrayBuffer> cipher_key,
+    const std::shared_ptr<ArrayBuffer> iv
+  );
 
   void
   setArgs(
@@ -67,18 +79,13 @@ class HybridCipher : public HybridCipherSpec {
   bool has_aad = false;
   uint8_t auth_tag[EVP_GCM_TLS_TAG_LEN];
   AuthTagState auth_tag_state;
-  unsigned int auth_tag_len;
+  unsigned int auth_tag_len = 0;
   int max_message_size;
 
- private:
+ protected:
   // Methods
-  void init(
-    const std::shared_ptr<ArrayBuffer> cipher_key,
-    const std::shared_ptr<ArrayBuffer> iv
-  );
-
   int getMode();
-
+  bool maybePassAuthTagToOpenSSL();
 };
 
 } // namespace margelo::nitro::crypto
