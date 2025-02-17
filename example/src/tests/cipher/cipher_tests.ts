@@ -24,10 +24,12 @@ const key = randomFillSync(new Uint8Array(32));
 const iv12 = randomFillSync(new Uint8Array(12));
 // Other modes use 16 bytes
 const iv16 = randomFillSync(new Uint8Array(16));
+const aad = Buffer.from('0001020304050607', 'hex');
 const plaintext =
   '32|RmVZZkFUVmpRRkp0TmJaUm56ZU9qcnJkaXNNWVNpTTU*|iXmckfRWZBGWWELw' +
   'eCBsThSsfUHLeRe0KCsK8ooHgxie0zOINpXxfZi/oNG7uq9JWFVCk70gfzQH8ZUJ' +
   'jAfaFg**';
+const ciphertext = Buffer.from(plaintext, 'utf8');
 
 // test(SUITE, 'valid algorithm', () => {
 //   expect(() => {
@@ -56,7 +58,7 @@ const plaintext =
 //     'aes-128-cbc',
 //     Buffer.from('0123456789abcd0123456789'),
 //     Buffer.from('12345678'),
-//     plaintext,
+//     ciphertext,
 //   );
 // });
 
@@ -67,7 +69,7 @@ ciphers.forEach(cipherName => {
     const testIv = cipherName.includes('CCM') || cipherName.includes('OCB')
       ? iv12
       : iv16;
-    roundtrip(cipherName, key, testIv, plaintext);
+    roundtrip(cipherName, key, testIv, ciphertext);
   });
 });
 
@@ -75,30 +77,13 @@ function roundtrip(
   cipherName: string,
   lKey: BinaryLikeNode,
   lIv: BinaryLike,
-  payload: string,
+  payload: Buffer,
 ) {
   const cipher: Cipher = createCipheriv(cipherName, lKey, lIv, {});
-
-  // For CCM mode, we need to set the message length before any data
-  if (cipherName.includes('CCM')) {
-    // For CCM mode, we need to set the message length before any data
-    cipher.setAAD(Buffer.alloc(0), {
-      plaintextLength: Buffer.byteLength(payload, 'utf8')
-    });
-  }
-
   let ciph = cipher.update(payload, 'utf8', 'buffer') as Buffer;
   ciph = Buffer.concat([ciph, cipher.final()]);
 
   const decipher: Decipher = createDecipheriv(cipherName, lKey, lIv, {});
-
-  // For CCM mode, set the same AAD and message length
-  if (cipherName.includes('CCM')) {
-    // For CCM mode, we need to set the message length before any data
-    decipher.setAAD(Buffer.alloc(0), {
-      plaintextLength: Buffer.byteLength(payload, 'utf8')
-    });
-  }
   if (
     cipherName.includes('CCM') ||
     cipherName.includes('OCB') ||

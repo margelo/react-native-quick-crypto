@@ -85,6 +85,7 @@ class HybridCipher : public HybridCipherSpec {
  protected:
   // Methods
   int getMode();
+  void checkCtx() const;
   bool maybePassAuthTagToOpenSSL();
 };
 
