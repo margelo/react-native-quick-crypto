@@ -15,6 +15,12 @@ HybridCipher::~HybridCipher() {
   }
 }
 
+void HybridCipher::checkCtx() const {
+  if (!ctx) {
+    throw std::runtime_error("Cipher not initialized. Did you call setArgs()?");
+  }
+}
+
 bool HybridCipher::maybePassAuthTagToOpenSSL() {
   if (auth_tag_state == kAuthTagKnown) {
     OSSL_PARAM params[] = {
@@ -32,15 +38,6 @@ bool HybridCipher::maybePassAuthTagToOpenSSL() {
   }
   return true;
 }
-
-// bool HybridCipher::isAuthenticatedMode() const {
-//   // Check if this cipher operates in an AEAD mode that we support.
-//   return isSupportedAuthenticatedMode(ctx);
-// }
-
-// bool HybridCipher::setAuthTagLength(const char* mode_str) {
-//   return false;
-// }
 
 void HybridCipher::init(
   const std::shared_ptr<ArrayBuffer> cipher_key,
@@ -72,9 +69,9 @@ void HybridCipher::init(
   pending_auth_failed = false;
   auth_tag_state = kAuthTagUnknown;
 
+  // TODO: WrapCipher child class?
   // Get cipher mode
   int mode = EVP_CIPHER_get_mode(cipher);
-
   if (mode == EVP_CIPH_WRAP_MODE) {
     EVP_CIPHER_CTX_set_flags(ctx, EVP_CIPHER_CTX_FLAG_WRAP_ALLOW);
   }
@@ -104,10 +101,7 @@ HybridCipher::update(
   const std::shared_ptr<ArrayBuffer>& data
 ) {
   auto native_data = ToNativeArrayBuffer(data);
-  if (!ctx) {
-    throw std::runtime_error("Cipher not initialized. Did you call setArgs()?");
-  }
-
+  checkCtx();
   size_t in_len = native_data->size();
   if (in_len > INT_MAX) {
     throw std::runtime_error("Message too long");
@@ -135,10 +129,7 @@ HybridCipher::update(
 
 std::shared_ptr<ArrayBuffer>
 HybridCipher::final() {
-  if (!ctx) {
-    throw std::runtime_error("Cipher not initialized. Did you call setArgs()?");
-  }
-
+  checkCtx();
   int out_len = EVP_CIPHER_CTX_block_size(ctx);
   uint8_t* out = new uint8_t[out_len];
   EVP_CipherFinal_ex(
@@ -158,10 +149,7 @@ bool HybridCipher::setAAD(
   const std::shared_ptr<ArrayBuffer>& data,
   std::optional<double> plaintextLength
 ) {
-  if (!ctx) {
-    throw std::runtime_error("Cipher not initialized. Did you call setArgs()?");
-  }
-
+  checkCtx();
   auto native_data = ToNativeArrayBuffer(data);
   int plaintext_len = plaintextLength.has_value() ? static_cast<int>(plaintextLength.value()) : -1;
 
@@ -178,20 +166,14 @@ bool HybridCipher::setAAD(
 bool HybridCipher::setAutoPadding(
   bool autoPad
 ) {
-  if (!ctx) {
-    throw std::runtime_error("Cipher not initialized. Did you call setArgs()?");
-  }
-
+  checkCtx();
   return EVP_CIPHER_CTX_set_padding(ctx, autoPad) == 1;
 }
 
 bool HybridCipher::setAuthTag(
   const std::shared_ptr<ArrayBuffer>& tag
 ) {
-  if (!ctx) {
-    throw std::runtime_error("Cipher not initialized. Did you call setArgs()?");
-  }
-
+  checkCtx();
   if (is_cipher) {
     throw std::runtime_error("Auth tag cannot be set when encrypting");
   }
@@ -211,10 +193,7 @@ bool HybridCipher::setAuthTag(
 
 std::shared_ptr<ArrayBuffer>
 HybridCipher::getAuthTag() {
-  if (!ctx) {
-    throw std::runtime_error("Cipher not initialized. Did you call setArgs()?");
-  }
-
+  checkCtx();
   if (!is_cipher) {
     throw std::runtime_error("Auth tag can only be retrieved in encryption mode");
   }
