@@ -35,21 +35,39 @@ class Hash extends Stream.Transform {
   private options: HashOptions;
   private native: NativeHash;
 
+  private validate(args: HashArgs) {
+    if (typeof args.algorithm !== 'string' || args.algorithm.length === 0)
+      throw new Error('Algorithm must be a non-empty string');
+    if (
+      args.options?.outputLength !== undefined &&
+      args.options.outputLength < 0
+    )
+      throw new Error('Output length must be a non-negative number');
+    if (
+      args.options?.outputLength !== undefined &&
+      typeof args.options.outputLength !== 'number'
+    )
+      throw new Error('Output length must be a number');
+  }
+
   /**
    * @internal use `createHash()` instead
    */
-  private constructor({ algorithm, options, native }: HashArgs) {
-    super(options);
+  private constructor(args: HashArgs) {
+    super(args.options);
 
-    this.algorithm = algorithm;
-    this.options = options ?? {};
+    this.validate(args);
 
-    if (native) {
-      this.native = native;
-    } else {
-      this.native = NitroModules.createHybridObject<NativeHash>('Hash');
-      this.native.createHash(algorithm, this.options.outputLength);
+    this.algorithm = args.algorithm;
+    this.options = args.options ?? {};
+
+    if (args.native) {
+      this.native = args.native;
+      return;
     }
+
+    this.native = NitroModules.createHybridObject<NativeHash>('Hash');
+    this.native.createHash(this.algorithm, this.options.outputLength);
   }
 
   /**
@@ -70,11 +88,7 @@ class Hash extends Stream.Transform {
 
     this.native.update(binaryLikeToArrayBuffer(data, inputEncoding));
 
-    if (typeof data === 'string' && inputEncoding !== 'buffer') {
-      return this; // to support chaining syntax createHash().update().digest()
-    }
-
-    return Buffer.from([]); // returning empty buffer as _flush calls digest
+    return this; // to support chaining syntax createHash().update().digest()
   }
 
   /**
@@ -149,7 +163,7 @@ class Hash extends Stream.Transform {
     encoding: BufferEncoding,
     callback: () => void,
   ) {
-    this.push(this.update(chunk, encoding as Encoding));
+    this.update(chunk, encoding as Encoding);
     callback();
   }
   _flush(callback: () => void) {
@@ -158,6 +172,28 @@ class Hash extends Stream.Transform {
   }
 }
 
+/**
+ * Creates and returns a `Hash` object that can be used to generate hash digests
+ * using the given `algorithm`. Optional `options` argument controls stream
+ * behavior. For XOF hash functions such as `'shake256'`, the `outputLength` option
+ * can be used to specify the desired output length in bytes.
+ *
+ * The `algorithm` is dependent on the available algorithms supported by the
+ * version of OpenSSL on the platform. Examples are `'sha256'`, `'sha512'`, etc.
+ * On recent releases of OpenSSL, `openssl list -digest-algorithms` will
+ * display the available digest algorithms.
+ *
+ * Example: generating the sha256 sum of a file
+ *
+ * ```js
+ * import crypto from 'react-native-quick-crypto';
+ *
+ * const hash = crypto.createHash('sha256').update('Test123').digest('hex');
+ * console.log('SHA-256 of "Test123":', hash);
+ * ```
+ * @since v1.0.0
+ * @param options `stream.transform` options
+ */
 export function createHash(algorithm: string, options?: HashOptions): Hash {
   // @ts-expect-error private constructor
   return new Hash({
