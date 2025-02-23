@@ -47,9 +47,9 @@ This document attempts to describe the implementation status of Crypto APIs/Inte
   * ✅ `hash.copy([options])`
   * ✅ `hash.digest([encoding])`
   * ✅ `hash.update(data[, inputEncoding])`
-* ❌ Class: `Hmac`
-  * ❌ `hmac.digest([encoding])`
-  * ❌ `hmac.update(data[, inputEncoding])`
+* ✅ Class: `Hmac`
+  * ✅ `hmac.digest([encoding])`
+  * ✅ `hmac.update(data[, inputEncoding])`
 * ❌ Class: `KeyObject`
   * ❌ `Static method: KeyObject.from(key)`
   * ❌ `keyObject.asymmetricKeyDetails`
@@ -102,7 +102,7 @@ This document attempts to describe the implementation status of Crypto APIs/Inte
   * ❌ `crypto.createDiffieHellmanGroup(name)`
   * ❌ `crypto.createECDH(curveName)`
   * ✅ `crypto.createHash(algorithm[, options])`
-  * ❌ `crypto.createHmac(algorithm, key[, options])`
+  * ✅ `crypto.createHmac(algorithm, key[, options])`
   * ❌ `crypto.createPrivateKey(key)`
   * ❌ `crypto.createPublicKey(key)`
   * ❌ `crypto.createSecretKey(key[, encoding])`
