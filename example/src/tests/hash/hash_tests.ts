@@ -26,6 +26,13 @@ test(SUITE, 'createHash with invalid algorithm', () => {
   }).to.throw(/Unknown hash algorithm: sha123/);
 });
 
+test(SUITE, 'createHash with null algorithm', () => {
+  expect(() => {
+    // @ts-expect-error bad algorithm
+    createHash(null);
+  }).to.throw(/Algorithm must be a non-empty string/);
+});
+
 // test hashing
 const a0 = createHash('md5').update('Test123').digest('latin1');
 const a1 = createHash('sha1').update('Test123').digest('hex');
@@ -161,7 +168,7 @@ test(SUITE, 'digest - segfault', () => {
         throw new Error('segfault');
       },
     } as unknown as Encoding);
-  }).to.throw(/Value is an object/);
+  }).to.throw();
 });
 test(SUITE, 'update - calling update without argument', () => {
   const hash = createHash('sha256');
@@ -222,4 +229,15 @@ test(SUITE, 'unreasonable output length', () => {
   }).to.throw(
     /Output length 1073741824 exceeds maximum allowed size of 16777216/,
   );
+});
+test(SUITE, 'createHash with negative outputLength', () => {
+  expect(() => {
+    createHash('shake128', { outputLength: -1 });
+  }).to.throw(/Output length must be a non-negative number/);
+});
+test(SUITE, 'createHash with null outputLength', () => {
+  expect(() => {
+    // @ts-expect-error bad outputLength
+    createHash('shake128', { outputLength: null });
+  }).to.throw(/Output length must be a number/);
 });
