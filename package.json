@@ -19,7 +19,7 @@
   "devDependencies": {
     "@release-it/bumper": "^6.0.1",
     "@release-it/conventional-changelog": "^9.0.3",
-    "release-it": "^17.10.0"
+    "release-it": "^18.1.2"
   },
   "packageManager": "bun@1.2.0",
   "release-it": {
