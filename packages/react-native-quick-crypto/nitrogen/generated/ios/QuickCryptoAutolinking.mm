@@ -10,6 +10,7 @@
 
 #import <type_traits>
 
+#include "HybridHmac.hpp"
 #include "HybridHash.hpp"
 #include "HybridEdKeyPair.hpp"
 #include "HybridPbkdf2.hpp"
@@ -24,6 +25,15 @@
   using namespace margelo::nitro;
   using namespace margelo::nitro::crypto;
 
+  HybridObjectRegistry::registerHybridObjectConstructor(
+    "Hmac",
+    []() -> std::shared_ptr<HybridObject> {
+      static_assert(std::is_default_constructible_v<HybridHmac>,
+                    "The HybridObject \"HybridHmac\" is not default-constructible! "
+                    "Create a public constructor that takes zero arguments to be able to autolink this HybridObject.");
+      return std::make_shared<HybridHmac>();
+    }
+  );
   HybridObjectRegistry::registerHybridObjectConstructor(
     "Hash",
     []() -> std::shared_ptr<HybridObject> {
