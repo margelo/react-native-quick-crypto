@@ -40,7 +40,7 @@ std::shared_ptr<ArrayBuffer> HybridRandom::randomFillSync(const std::shared_ptr<
   size_t offset = checkOffset(dSize, dOffset);
   uint8_t* data = buffer.get()->data();
   if (RAND_bytes(data + offset, (int)size) != 1) {
-    throw std::runtime_error("error calling RAND_bytes" + std::to_string(ERR_get_error()));
+    throw std::runtime_error("error calling RAND_bytes: " + std::to_string(ERR_get_error()));
   }
   return buffer;
 };
