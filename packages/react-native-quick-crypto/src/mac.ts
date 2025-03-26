@@ -1,4 +1,4 @@
-import { Buffer } from 'safe-buffer';
+import { Buffer } from '@craftzdog/react-native-buffer';
 import { createSecretKey, CryptoKey, type ImportFormat, type JWK, type KeyUsage, type SubtleAlgorithm } from './keys';
 import { 
   type BufferLike,
@@ -47,7 +47,7 @@ export async function hmacImportKey(
         );
       }
 
-      // Convert base64url to buffer
+      // Convert base64 to buffer
       keyMaterial = Buffer.from(jwk.k, 'base64');
       
       // If algorithm.length is specified, validate key length
