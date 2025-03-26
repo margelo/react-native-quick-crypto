@@ -321,7 +321,7 @@ This document attempts to describe the implementation status of Crypto APIs/Inte
 | `Ed25519`           | ❌ | ❌ | ❌ | ❌ |
 | `Ed448`             | ❌ | ❌ | ❌ | ❌ |
 | `HDKF`              |   |   |   |   |
-| `HMAC`              |   |   | ❌ | ❌ |
+| `HMAC`              |   |   | ✅ | ✅ |
 | `PBKDF2`            |   |   |   | ✅ |
 | `RSA-OAEP`          | ✅ | ❌ | ✅ |   |
 | `RSA-PSS`           | ✅ | ❌ | ✅ |   |
