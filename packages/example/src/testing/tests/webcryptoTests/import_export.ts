@@ -862,44 +862,134 @@ describe('subtle - importKey / exportKey', () => {
     }
   }
 
-  // // Import/Export HMAC Secret Key
-  // // TODO: enable this after implementing HMAC import/export
-  // // from Node.js https://github.com/nodejs/node/blob/main/test/parallel/test-webcrypto-export-import.js#L73-L113
-  // const keyData = globalThis.crypto.getRandomValues(new Uint8Array(32));
-  // const key = await subtle.importKey(
-  //   'raw',
-  //   keyData, {
-  //     name: 'HMAC',
-  //     hash: 'SHA-256'
-  //   }, true, ['sign', 'verify']);
+  // Import/Export HMAC Secret Key
+  describe('HMAC import/export', () => {
+    it('should import raw HMAC key', async () => {
+      const keyData = crypto.getRandomValues(new Uint8Array(32));
+      const key = await subtle.importKey(
+        'raw',
+        keyData,
+        {
+          name: 'HMAC',
+          hash: 'SHA-256'
+      },
+      true,
+        ['sign', 'verify']
+      );
 
-  // const raw = await subtle.exportKey('raw', key);
+      expect(key.type).to.equal('secret');
+      expect(key.extractable).to.equal(true);
+      expect(key.algorithm.name).to.equal('HMAC');
+      expect(key.usages).to.have.members(['sign', 'verify']);
+    });
 
-  // expect(
-  //   Buffer.from(keyData).toString('hex')).to.equal(
-  //   Buffer.from(raw).toString('hex'));
+    it('should import JWK HMAC key', async () => {
+      const jwk: JWK = {
+        kty: 'oct',
+        k: 'Y0zt37HgOx-BY7SQjYVmrqhPkO44Ii2Jcb9yydUDPfE',
+        alg: 'HS256',
+        ext: true,
+        key_ops: ['sign', 'verify']
+      };
 
-  // const jwk = await subtle.exportKey('jwk', key);
-  // expect(jwk.key_ops).to.have.all.members(['sign', 'verify']);
-  // assert(jwk.ext);
-  // expect(jwk.kty, 'oct');
+      const key = await subtle.importKey(
+      'jwk',
+        jwk,
+      {
+          name: 'HMAC',
+          hash: 'SHA-256'
+      },
+      true,
+        ['sign', 'verify']
+      );
 
-  // expect(
-  // TODO: gonna be ab2str(base64toArrayBuffer(jwk.k)) like above ^^^^
-  //   Buffer.from(jwk.k, 'base64').toString('hex')).to.equal(
-  //   Buffer.from(raw).toString('hex'));
+      expect(key.type).to.equal('secret');
+      expect(key.extractable).to.equal(true);
+      expect(key.algorithm.name).to.equal('HMAC');
+      expect(key.usages).to.have.members(['sign', 'verify']);
+    });
 
-  // await assert.rejects(
-  //   subtle.importKey(
-  //     'raw',
-  //     keyData,
-  //     {
-  //       name: 'HMAC',
-  //       hash: 'SHA-256'
-  //     },
-  //     true,
-  //     [// empty usages ]),
-  //   { name: 'SyntaxError', message: 'Usages cannot be empty when importing a secret key.' });
+    it('should reject invalid key usages', async () => {
+      const keyData = crypto.getRandomValues(new Uint8Array(32));
+      
+      await assertThrowsAsync(
+        async () => await subtle.importKey(
+          'raw',
+          keyData,
+          {
+            name: 'HMAC',
+            hash: 'SHA-256'
+          },
+          true,
+          ['encrypt'] // invalid usage for HMAC
+        ),
+        'Invalid key usages for HMAC'
+      );
+    });
+
+    it('should reject invalid JWK format', async () => {
+      const invalidJwk: JWK = {
+        kty: 'RSA', // wrong key type
+        k: 'Y0zt37HgOx-BY7SQjYVmrqhPkO44Ii2Jcb9yydUDPfE'
+      };
+
+      await assertThrowsAsync(
+        async () => await subtle.importKey(
+            'jwk',
+          invalidJwk,
+          {
+            name: 'HMAC',
+            hash: 'SHA-256'
+          },
+              true,
+          ['sign', 'verify']
+        ),
+        'Invalid JWK format for HMAC key'
+      );
+    });
+
+    it('should reject invalid key length', async () => {
+      const jwk: JWK = {
+        kty: 'oct',
+        k: 'Y0zt37HgOx-BY7SQjYVmrqhPkO44Ii2Jcb9yydUDPfE',
+        alg: 'HS256',
+        ext: true
+      };
+
+      await assertThrowsAsync(
+        async () => await subtle.importKey(
+          'jwk',
+          jwk,
+          {
+            name: 'HMAC',
+            hash: 'SHA-256',
+            length: 128 // Doesn't match the actual key length
+          },
+          true,
+          ['sign', 'verify']
+        ),
+        'Invalid key length'
+      );
+    });
+
+    it('should reject unsupported import format', async () => {
+      const keyData = crypto.getRandomValues(new Uint8Array(32));
+      
+      await assertThrowsAsync(
+        async () => await subtle.importKey(
+          'spki', // unsupported format for HMAC
+          keyData,
+          {
+            name: 'HMAC',
+            hash: 'SHA-256'
+          },
+          true,
+          ['sign', 'verify']
+        ),
+        'Unable to import HMAC key with format spki'
+      );
+    });
+  });
 
   // Import/Export RSA Key Pairs
   // from Node.js https://github.com/nodejs/node/blob/main/test/parallel/test-webcrypto-export-import.js#L157-L215
@@ -1273,52 +1363,32 @@ describe('subtle - importKey / exportKey', () => {
           'IERp7Vb-Vn2O-EELiXzv7lPhc6fTGQ0Nc',
         e: 'AQAB',
         d:
-          'uXPRXBhcE5-DWabBRKQuhxgU8ype5gTISWefeYP7U96ZHqu_sBByZ5ihdgyU9pgAZ' +
-          'GVx4Ep9rnVKnH2lNr2zrP9Qhyqy99nM0aMxmypIWLAuP__DwLj4t99M4sU29c48CA' +
-          'q1egHfccSFjzpNuetOTCA71EJuokt70pm0OmGzgTyvjuR7VTLxd5PMXitBowSn8_c' +
-          'phmnFpT8tkTiuy8CH0R3DU7MOuINomDD1s8-yPBcVAVTPUnwJiauNuzestLQKMLlh' +
-          'T5wn-cAbYk36XRKdgkjSc2AkhHRl4WDqT1nzWYdh_DVIYSLiKSktkPO9ovMrRYiPt' +
-          'ozfhl0m9SR9Ll0wXtcnnDlWXc_MSGpw18vmUBSJ4PIhkiFsvLn-db3wUkA8uve-iq' +
-          'qfk0sxlGWughWx03kGmZDmprWbXugCBHfsI4X93w4exznXH_tapxPnmjbhVUQR6p4' +
-          '1MvO2lcHWPLwGJgLIoejBHpnn3TmMN0UjFZki7q9B_dJ3fXh0mX9DzAlC0sil1NgC' +
-          'PhMPq02393_giinQquMknrBvgKxGSfGUrDKuflCx611ZZlRM3R7YMX2OIy1g4DyhP' +
-          'zBVjxRMtm8PnIs3m3Hi-O-C_PHF93w9J8Wqd0yIw7SpavDqZXLPC6Cqi8K7MBZyVE' +
-          'CXHtRj1bBqT-h_xZmFCDjSU0NqfOdgApE',
+          'WtKndYqqU9FaKkmQOzsKC3vuy1-uUOxNm_0BIFp74Sn2RR-5P2iI6kTSJe3j9cUQf' +
+          '8ztQVicNEx3MSdMyOqQpEzcghh6gaEtC_e6HnqwxZIKnfbbc5IB7mklDRBG4IQftR' +
+          'Qc1UbGDoe5SGmPP0PZhvoRAp9OasDEFUDHa18NxpDURf_iv3kuHmeZb6umiVjlVo5' +
+          'C7ogYSPgbK3Rl12Mn9tRv8YSpB_wTaKzpCCjjrCovJIYi1mHks9fBBN6BpQE72Ksy' +
+          'EWREx-JyrzEGX4F6vcaYEXFGeWgzSxLSG-1dV2gxQHB6xiI90QcGeRa_X5f4fAdXj' +
+          'y17FoCZxYLE9KTh8Q',
         p:
-          '9NrXwq4kY9kBBOwLoFZVQc4kJI_NbKa_W9FLdQdRIbMsZZHXJ3XDUR9vJAcaaR75W' +
-          'wIC7X6N55nVtWTq28Bys9flJ9RrCTfciOntHEphBhYaL5ZTUl-6khYmsOf_psff2V' +
-          'aOOCvHGff5ejuOmBQxkw2E-cv7knRgWFHoLWpku2NJIMuGHt9ks7OAUfIZVYl9YJn' +
-          'w4FYUzhgaxemknjLeZ8XTkGW2zckzF-d95YI9i8zD80Umubsw-YxriSfqFQ0rGHBs' +
-          'bQ8ZOTd_KJju42BWnXIjNDYmjFUqdzVjI4XQ8EGrCEf_8_iwphGyXD7LOJ4fqd97B' +
-          '3bYpoRTPnCgY_SEHQ',
+          '_N9tEtPffJJDitOOnJlmwMDsgRUOnhzkDLhF76XD0Qns8Fg7j2jHxXxTqMmm-Z6cQ' +
+          '54PdJvgU6xwuwHhf_6vr9bWJG_aVW0h5J3APcPPGYia9IZFEmfhrIMQqEYDHgVioi' +
+          '9Yv2Pxf10kBEhh4wdGPI0Zlk2qyVaBHWA8Kee-yGs',
         q:
-          '5J758_NeKr1XPZiLxXohYQQnh0Lb4QtGZ1xzCgjhBQLcIBeTOG_tYjCues9tmLt93' +
-          'LpJfypSJ-SjDLwkR2s069_IByYGpxyeGtV-ulqYhSw1nD2CXKMDGyO5jXDs9tJrS_' +
-          'UhfobXKQH03CRdFugyPkSNmXY-AafFynG7xLr7oYBC05FnhUXPm3VBTPt9K-BpqwY' +
-          'd_h9vkAWeprSPo83UlwcLMupSJY9LaHxhRdz2yi0ZKNwXXHRwcszGjDBvvzUcCYbq' +
-          'WqjzbEvFY6KtH8Jh4LhM46rHaoEOTernJsDF6a6W8Df88RthqTExcwnaQf0O_dlbj' +
-          'SxEIPfbxx8t1EQugw',
+          '3DYojMxPB5XxKOXtDQN2rEw9iQj9SN93vRNXxwM9xS1vEjrgeb6QLo_hB4EKmhiMY' +
+          'PbU4OiQQ2IGvKcR4NegtvmErvkVToo7urjvCkeSLr3OpTkyJvHmOalNTOU1LbhXFs' +
+          'JeMET2q_9JxRlADYQ4ePFkxfOrVPYgVjc32HlANDc',
         dp:
-          '4Y7Hu5tYAnLhMXuQqj9dgqU3PkcKYdCp7xc6f7Ah2P2JJHfYz4z4RD7Ez1eLyNKz' +
-          'ulZ8A_PVHUjlSZiRkaYTBAEaJDrV70P6cFWuC6WpA0ZREQ1V7EgrQnANbGILa8Qs' +
-          'PbYyhSQu4YlB1IwQq5_OmzyVBtgWA7AZIMMzMsMT0FuB_if-gWohBjmRN-vh0p45' +
-          'VUf6UW568-_YmgDFmMYbg1UFs7s_TwrNenPR0h7MO4CB8hP9vJLoZrooRczzIjlj' +
-          'Pbwy5bRG9CJfjTJ0vhj9MUT3kR1hHV1HJVGU5iBbfTfBKnvJGSI6-IDM4ZUm-B0R' +
-          '5hbs6s9cfOjhFmACIJIbMQ',
+          'bd29DCMVxI_f3J9SJOPZawHnP6Ygdb3jr0sYx6hjzZzcXwhWyFYkBb-gsYL7kxTA' +
+          'm_g-itF2w6P2TqngibXkKyfSXn5ihB8oTKXlcnByuItLl9YGiJqtyEAhqprQm-iH' +
+          'FCQyEOWhdU7IaTvxm6v7bi934H_aJiP5cQPw39waXgU',
         dq:
-          'gT4iPbfyHyVEwWyQb4X4grjvg7bXSKSwG1SXMDAOzV9tg7LwJjKYNy8gJAtJgNNV' +
-          'dsfVLs-E_Epzpoph1AIWO9YZZXkov6Yc9zyEVONMX9S7ReU74hTBd8E9b2lMfMg9' +
-          'ogYk9jtSPTt-6kigW4fOh4cHqZ6_tP3cgfLD3JZ8FDPHE4WaySvLDq49yUBO5dQK' +
-          'yIU_xV6OGhQjOUjP_yEoMmzn9tOittsIHTxbXTxqQ6c1FvU9O6YTv8Jl5_Cl66kh' +
-          'fX1I1RG38xvurcHULyUbYgeuZ_Iuo9XreT73h9_owo9RguGT29XH4vcNZmRGf5GI' +
-          'vRb4e5lvtleIZkwJA3u78w',
+          'lXG7uzG8QG2lqBfB9B7xnqRu7lzHZ3kgjZRe8ZRlizb2Nez3AigtOSwzjyAnzcPz' +
+          'IKridW_e15vi7oyDOY-cZhCX1xb7Or3dIy72Koe_0TDG2KIkQwHPODqJVzIGEO0V' +
+          'TUDDIwbqUHeD3Nrx-TpOCOXped2P3Kzb7Sa0I5jF1ak',
         qi:
-          'JHmVKb1zwW5iRR6RCeexYnh2fmY-3DrPSdM8Dxhr0F8dayi-tlRqEdnG0hvp45n8' +
-          'gLUskWWcB9EXlUJObZGKDfGuxgMa3g_xeLA2vmFQ12MxPsyH4iCNZvsgmGxx7TuO' +
-          'HrnDh5EBVnM4_de63crEJON2sYI8Ozi-xp2OEmAr2seWKq4sxkFni6exLhqb-NE4' +
-          'm9HMKlng1EtQh2rLBFG1VYD3SYYpMLc5fxzqGvSxn3Fa-Xgg-IZPY3ubrcm52KYg' +
-          'mLUGmnYStfVqGSWSdhDXHlNgI5pdAA0FzpyBk3ZX-JsxhwcnneKrYBBweq06kRMG' +
-          'WgvdbdAQ-7wSeGqqj5VPwA',
+          'nSIby2WhW-eV3_-6sq-oXcKjq2W6X24m-hcmEtVXISm7EgAVykRG7D_bnsmApmHS' +
+          'qtI4UFEYmPB8FIcWCVzRvWDWMUZKyJtSRmC9RllS0uV9h0C3w_PbeUkrFrh6XNF2' +
+          'fhNSbvZtecaR4sfyUotpZSwpuiEKXmedI7IaaAy_DQc',
       },
     },
   };

@@ -34,6 +34,7 @@ import {
 } from './aes';
 import { rsaCipher, rsaExportKey, rsaImportKey, rsaKeyGenerate } from './rsa';
 import { normalizeAlgorithm, type Operation } from './Algorithms';
+import { hmacImportKey } from './mac';
 
 const exportKeySpki = async (
   key: CryptoKey,
@@ -569,15 +570,15 @@ export class Subtle {
       //     keyUsages
       //   );
       //   break;
-      // case 'HMAC':
-      //   result = await require('internal/crypto/mac').hmacImportKey(
-      //     format,
-      //     keyData,
-      //     algorithm,
-      //     extractable,
-      //     keyUsages
-      //   );
-      //   break;
+      case 'HMAC':
+         result = await hmacImportKey(
+          normalizedAlgorithm,
+          format,
+          data as BufferLike | JWK,
+          extractable,
+          keyUsages,
+         );
+         break;
       case 'AES-CTR':
       // Fall through
       case 'AES-CBC':
