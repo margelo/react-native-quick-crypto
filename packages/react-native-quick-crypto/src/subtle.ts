@@ -571,14 +571,14 @@ export class Subtle {
       //   );
       //   break;
       case 'HMAC':
-         result = await hmacImportKey(
+        result = await hmacImportKey(
           normalizedAlgorithm,
           format,
           data as BufferLike | JWK,
           extractable,
           keyUsages,
-         );
-         break;
+        );
+        break;
       case 'AES-CTR':
       // Fall through
       case 'AES-CBC':

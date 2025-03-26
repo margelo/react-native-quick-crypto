@@ -793,10 +793,10 @@ describe('subtle - importKey / exportKey', () => {
       keyData,
       {
         name: 'HMAC',
-        hash: 'SHA-256'
-    },
-    true,
-      ['sign', 'verify']
+        hash: 'SHA-256',
+      },
+      true,
+      ['sign', 'verify'],
     );
 
     expect(key.type).to.equal('secret');
@@ -811,7 +811,7 @@ describe('subtle - importKey / exportKey', () => {
       k: 'Y0zt37HgOx-BY7SQjYVmrqhPkO44Ii2Jcb9yydUDPfE',
       alg: 'HS256',
       ext: true,
-      key_ops: ['sign', 'verify']
+      key_ops: ['sign', 'verify'],
     };
 
     const key = await subtle.importKey(
@@ -819,10 +819,10 @@ describe('subtle - importKey / exportKey', () => {
       jwk,
       {
         name: 'HMAC',
-        hash: 'SHA-256'
+        hash: 'SHA-256',
       },
       true,
-      ['sign', 'verify']
+      ['sign', 'verify'],
     );
 
     expect(key.type).to.equal('secret');
@@ -833,40 +833,42 @@ describe('subtle - importKey / exportKey', () => {
 
   it('HMAC should reject invalid key usages', async () => {
     const keyData = crypto.getRandomValues(new Uint8Array(32));
-    
+
     await assertThrowsAsync(
-      async () => await subtle.importKey(
-        'raw',
-        keyData,
-        {
-          name: 'HMAC',
-          hash: 'SHA-256'
-        },
-        true,
-        ['encrypt'] // invalid usage for HMAC
-      ),
-      'Invalid key usages for HMAC'
+      async () =>
+        await subtle.importKey(
+          'raw',
+          keyData,
+          {
+            name: 'HMAC',
+            hash: 'SHA-256',
+          },
+          true,
+          ['encrypt'], // invalid usage for HMAC
+        ),
+      'Invalid key usages for HMAC',
     );
   });
 
   it('HMAC should reject invalid JWK format', async () => {
     const invalidJwk: JWK = {
       kty: 'RSA', // wrong key type
-      k: 'Y0zt37HgOx-BY7SQjYVmrqhPkO44Ii2Jcb9yydUDPfE'
+      k: 'Y0zt37HgOx-BY7SQjYVmrqhPkO44Ii2Jcb9yydUDPfE',
     };
 
     await assertThrowsAsync(
-      async () => await subtle.importKey(
+      async () =>
+        await subtle.importKey(
           'jwk',
-        invalidJwk,
-        {
-          name: 'HMAC',
-          hash: 'SHA-256'
-        },
-            true,
-        ['sign', 'verify']
-      ),
-      'Invalid JWK format for HMAC key'
+          invalidJwk,
+          {
+            name: 'HMAC',
+            hash: 'SHA-256',
+          },
+          true,
+          ['sign', 'verify'],
+        ),
+      'Invalid JWK format for HMAC key',
     );
   });
 
@@ -875,40 +877,42 @@ describe('subtle - importKey / exportKey', () => {
       kty: 'oct',
       k: 'Y0zt37HgOx-BY7SQjYVmrqhPkO44Ii2Jcb9yydUDPfE',
       alg: 'HS256',
-      ext: true
+      ext: true,
     };
 
     await assertThrowsAsync(
-      async () => await subtle.importKey(
-        'jwk',
-        jwk,
-        {
-          name: 'HMAC',
-          hash: 'SHA-256',
-          length: 128 // Doesn't match the actual key length
-        },
-        true,
-        ['sign', 'verify']
-      ),
-      'Invalid key length'
+      async () =>
+        await subtle.importKey(
+          'jwk',
+          jwk,
+          {
+            name: 'HMAC',
+            hash: 'SHA-256',
+            length: 128, // Doesn't match the actual key length
+          },
+          true,
+          ['sign', 'verify'],
+        ),
+      'Invalid key length',
     );
   });
 
   it('HMAC should reject unsupported import format', async () => {
     const keyData = crypto.getRandomValues(new Uint8Array(32));
-    
+
     await assertThrowsAsync(
-      async () => await subtle.importKey(
-        'spki', // unsupported format for HMAC
-        keyData,
-        {
-          name: 'HMAC',
-          hash: 'SHA-256'
-        },
-        true,
-        ['sign', 'verify']
-      ),
-      'Unable to import HMAC key with format spki'
+      async () =>
+        await subtle.importKey(
+          'spki', // unsupported format for HMAC
+          keyData,
+          {
+            name: 'HMAC',
+            hash: 'SHA-256',
+          },
+          true,
+          ['sign', 'verify'],
+        ),
+      'Unable to import HMAC key with format spki',
     );
   });
 
