@@ -18,7 +18,14 @@ export async function hmacImportKey(
 ): Promise<CryptoKey> {
   // Validate key usages
   if (hasAnyNotIn(keyUsages, ['sign', 'verify'])) {
-    throw lazyDOMException('Invalid key usages for HMAC', 'SyntaxError');
+    throw lazyDOMException(
+      'Unsupported key usage for an HMAC key',
+      'SyntaxError',
+    );
+  }
+
+  if (!keyData) {
+    throw lazyDOMException('Invalid keyData', 'DataError');
   }
 
   let keyMaterial: Buffer;
@@ -27,7 +34,7 @@ export async function hmacImportKey(
     case 'raw': {
       // For raw format, keyData should be BufferLike
       if (typeof keyData === 'string') {
-        keyMaterial = Buffer.from(keyData, 'utf8');
+        keyMaterial = Buffer.from(keyData, 'base64');
       } else if (Buffer.isBuffer(keyData)) {
         keyMaterial = keyData;
       } else {
@@ -42,6 +49,18 @@ export async function hmacImportKey(
       // Validate required JWK properties
       if (typeof jwk !== 'object' || jwk.kty !== 'oct' || !jwk.k) {
         throw lazyDOMException('Invalid JWK format for HMAC key', 'DataError');
+      }
+
+      if (algorithm.length === 0) {
+        throw lazyDOMException('Zero-length key is not supported', 'DataError');
+      }
+
+      // The Web Crypto spec allows for key lengths that are not multiples of 8. We don't.
+      if (algorithm.length && algorithm.length % 8) {
+        throw lazyDOMException(
+          'Unsupported algorithm.length',
+          'NotSupportedError',
+        );
       }
 
       // Convert base64 to buffer
