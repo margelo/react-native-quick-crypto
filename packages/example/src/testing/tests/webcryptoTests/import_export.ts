@@ -108,83 +108,6 @@ describe('subtle - importKey / exportKey', () => {
         ]),
       'Invalid argument type for "key". Need ArrayBuffer, TypedArray, KeyObject, CryptoKey, string',
     );
-    await assertThrowsAsync(
-      async () =>
-        await subtle.importKey(
-          'raw',
-          keyData,
-          {
-            name: 'HMAC',
-          },
-          false,
-          ['sign', 'verify'],
-        ),
-      '"subtle.importKey()" is not implemented for HMAC',
-      // TODO: will be ERR_MISSING_OPTION or similar
-    );
-    await assertThrowsAsync(
-      async () =>
-        await subtle.importKey(
-          'raw',
-          keyData,
-          {
-            name: 'HMAC',
-            hash: 'SHA-256',
-          },
-          false,
-          ['deriveBits'],
-        ),
-      '"subtle.importKey()" is not implemented for HMAC',
-      // TODO: will be 'Unsupported key usage for an HMAC key'
-    );
-    await assertThrowsAsync(
-      async () =>
-        await subtle.importKey(
-          'raw',
-          keyData,
-          {
-            name: 'HMAC',
-            hash: 'SHA-256',
-            length: 0,
-          },
-          false,
-          ['sign', 'verify'],
-        ),
-      '"subtle.importKey()" is not implemented for HMAC',
-      // TODO: will be 'Zero-length key is not supported'
-    );
-    await assertThrowsAsync(
-      async () =>
-        await subtle.importKey(
-          'raw',
-          keyData,
-          {
-            name: 'HMAC',
-            hash: 'SHA-256',
-            length: 1,
-          },
-          false,
-          ['sign', 'verify'],
-        ),
-      '"subtle.importKey()" is not implemented for HMAC',
-      // TODO: will be 'Invalid key length'
-    );
-    await assertThrowsAsync(
-      async () =>
-        await subtle.importKey(
-          'jwk',
-          // @ts-expect-error bad key data
-          null,
-          {
-            name: 'HMAC',
-            hash: 'SHA-256',
-          },
-          false,
-          ['sign', 'verify'],
-        ),
-      '"subtle.importKey()" is not implemented for HMAC',
-      // TODO: will be 'Invalid keyData'
-    );
   });
 
   it('Good Input - Uint8Array', async () => {
@@ -863,132 +786,130 @@ describe('subtle - importKey / exportKey', () => {
   }
 
   // Import/Export HMAC Secret Key
-  describe('HMAC import/export', () => {
-    it('should import raw HMAC key', async () => {
-      const keyData = crypto.getRandomValues(new Uint8Array(32));
-      const key = await subtle.importKey(
+  it('HMAC should import raw HMAC key', async () => {
+    const keyData = crypto.getRandomValues(new Uint8Array(32));
+    const key = await subtle.importKey(
+      'raw',
+      keyData,
+      {
+        name: 'HMAC',
+        hash: 'SHA-256'
+    },
+    true,
+      ['sign', 'verify']
+    );
+
+    expect(key.type).to.equal('secret');
+    expect(key.extractable).to.equal(true);
+    expect(key.algorithm.name).to.equal('HMAC');
+    expect(key.usages).to.have.members(['sign', 'verify']);
+  });
+
+  it('HMAC should import JWK HMAC key', async () => {
+    const jwk: JWK = {
+      kty: 'oct',
+      k: 'Y0zt37HgOx-BY7SQjYVmrqhPkO44Ii2Jcb9yydUDPfE',
+      alg: 'HS256',
+      ext: true,
+      key_ops: ['sign', 'verify']
+    };
+
+    const key = await subtle.importKey(
+      'jwk',
+      jwk,
+      {
+        name: 'HMAC',
+        hash: 'SHA-256'
+      },
+      true,
+      ['sign', 'verify']
+    );
+
+    expect(key.type).to.equal('secret');
+    expect(key.extractable).to.equal(true);
+    expect(key.algorithm.name).to.equal('HMAC');
+    expect(key.usages).to.have.members(['sign', 'verify']);
+  });
+
+  it('HMAC should reject invalid key usages', async () => {
+    const keyData = crypto.getRandomValues(new Uint8Array(32));
+    
+    await assertThrowsAsync(
+      async () => await subtle.importKey(
         'raw',
         keyData,
         {
           name: 'HMAC',
           hash: 'SHA-256'
-      },
-      true,
-        ['sign', 'verify']
-      );
+        },
+        true,
+        ['encrypt'] // invalid usage for HMAC
+      ),
+      'Invalid key usages for HMAC'
+    );
+  });
 
-      expect(key.type).to.equal('secret');
-      expect(key.extractable).to.equal(true);
-      expect(key.algorithm.name).to.equal('HMAC');
-      expect(key.usages).to.have.members(['sign', 'verify']);
-    });
+  it('HMAC should reject invalid JWK format', async () => {
+    const invalidJwk: JWK = {
+      kty: 'RSA', // wrong key type
+      k: 'Y0zt37HgOx-BY7SQjYVmrqhPkO44Ii2Jcb9yydUDPfE'
+    };
 
-    it('should import JWK HMAC key', async () => {
-      const jwk: JWK = {
-        kty: 'oct',
-        k: 'Y0zt37HgOx-BY7SQjYVmrqhPkO44Ii2Jcb9yydUDPfE',
-        alg: 'HS256',
-        ext: true,
-        key_ops: ['sign', 'verify']
-      };
-
-      const key = await subtle.importKey(
-      'jwk',
-        jwk,
-      {
+    await assertThrowsAsync(
+      async () => await subtle.importKey(
+          'jwk',
+        invalidJwk,
+        {
           name: 'HMAC',
           hash: 'SHA-256'
-      },
-      true,
+        },
+            true,
         ['sign', 'verify']
-      );
+      ),
+      'Invalid JWK format for HMAC key'
+    );
+  });
 
-      expect(key.type).to.equal('secret');
-      expect(key.extractable).to.equal(true);
-      expect(key.algorithm.name).to.equal('HMAC');
-      expect(key.usages).to.have.members(['sign', 'verify']);
-    });
+  it('HMAC should reject invalid key length', async () => {
+    const jwk: JWK = {
+      kty: 'oct',
+      k: 'Y0zt37HgOx-BY7SQjYVmrqhPkO44Ii2Jcb9yydUDPfE',
+      alg: 'HS256',
+      ext: true
+    };
 
-    it('should reject invalid key usages', async () => {
-      const keyData = crypto.getRandomValues(new Uint8Array(32));
-      
-      await assertThrowsAsync(
-        async () => await subtle.importKey(
-          'raw',
-          keyData,
-          {
-            name: 'HMAC',
-            hash: 'SHA-256'
-          },
-          true,
-          ['encrypt'] // invalid usage for HMAC
-        ),
-        'Invalid key usages for HMAC'
-      );
-    });
+    await assertThrowsAsync(
+      async () => await subtle.importKey(
+        'jwk',
+        jwk,
+        {
+          name: 'HMAC',
+          hash: 'SHA-256',
+          length: 128 // Doesn't match the actual key length
+        },
+        true,
+        ['sign', 'verify']
+      ),
+      'Invalid key length'
+    );
+  });
 
-    it('should reject invalid JWK format', async () => {
-      const invalidJwk: JWK = {
-        kty: 'RSA', // wrong key type
-        k: 'Y0zt37HgOx-BY7SQjYVmrqhPkO44Ii2Jcb9yydUDPfE'
-      };
-
-      await assertThrowsAsync(
-        async () => await subtle.importKey(
-            'jwk',
-          invalidJwk,
-          {
-            name: 'HMAC',
-            hash: 'SHA-256'
-          },
-              true,
-          ['sign', 'verify']
-        ),
-        'Invalid JWK format for HMAC key'
-      );
-    });
-
-    it('should reject invalid key length', async () => {
-      const jwk: JWK = {
-        kty: 'oct',
-        k: 'Y0zt37HgOx-BY7SQjYVmrqhPkO44Ii2Jcb9yydUDPfE',
-        alg: 'HS256',
-        ext: true
-      };
-
-      await assertThrowsAsync(
-        async () => await subtle.importKey(
-          'jwk',
-          jwk,
-          {
-            name: 'HMAC',
-            hash: 'SHA-256',
-            length: 128 // Doesn't match the actual key length
-          },
-          true,
-          ['sign', 'verify']
-        ),
-        'Invalid key length'
-      );
-    });
-
-    it('should reject unsupported import format', async () => {
-      const keyData = crypto.getRandomValues(new Uint8Array(32));
-      
-      await assertThrowsAsync(
-        async () => await subtle.importKey(
-          'spki', // unsupported format for HMAC
-          keyData,
-          {
-            name: 'HMAC',
-            hash: 'SHA-256'
-          },
-          true,
-          ['sign', 'verify']
-        ),
-        'Unable to import HMAC key with format spki'
-      );
-    });
+  it('HMAC should reject unsupported import format', async () => {
+    const keyData = crypto.getRandomValues(new Uint8Array(32));
+    
+    await assertThrowsAsync(
+      async () => await subtle.importKey(
+        'spki', // unsupported format for HMAC
+        keyData,
+        {
+          name: 'HMAC',
+          hash: 'SHA-256'
+        },
+        true,
+        ['sign', 'verify']
+      ),
+      'Unable to import HMAC key with format spki'
+    );
   });
 
   // Import/Export RSA Key Pairs
