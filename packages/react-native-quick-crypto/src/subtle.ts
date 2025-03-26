@@ -169,6 +169,9 @@ const exportKeyJWK = (key: CryptoKey): ArrayBuffer | unknown => {
     case 'RSA-OAEP':
       jwk.alg = normalizeHashName(key.algorithm.hash, HashContext.JwkRsaOaep);
       return jwk;
+    case 'HMAC':
+      jwk.alg = normalizeHashName(key.algorithm.hash, HashContext.JwkHmac);
+      return jwk;
     case 'ECDSA':
     // Fall through
     case 'ECDH':
