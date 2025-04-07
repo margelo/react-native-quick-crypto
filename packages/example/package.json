@@ -61,7 +61,7 @@
     "metro-react-native-babel-preset": "0.76.8",
     "prettier": "3.4.2",
     "typescript": "5.7.2",
-    "typescript-eslint": "8.23.0"
+    "typescript-eslint": "8.29.1"
   },
   "jest": {
     "preset": "react-native"
