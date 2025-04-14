@@ -323,7 +323,7 @@ PODS:
   - react-native-quick-base64 (2.1.2):
     - RCT-Folly (= 2021.07.22.00)
     - React-Core
-  - react-native-quick-crypto (0.7.12):
+  - react-native-quick-crypto (0.7.13):
     - OpenSSL-Universal
     - RCT-Folly (= 2021.07.22.00)
     - React
@@ -443,7 +443,7 @@ PODS:
   - RNCCheckbox (0.5.17):
     - BEMCheckBox (~> 1.4)
     - React-Core
-  - RNScreens (4.6.0):
+  - RNScreens (3.35.0):
     - RCT-Folly (= 2021.07.22.00)
     - React-Core
     - React-RCTImage
@@ -496,7 +496,7 @@ DEPENDENCIES:
   - React-utils (from `../../../node_modules/react-native/ReactCommon/react/utils`)
   - ReactCommon/turbomodule/core (from `../../../node_modules/react-native/ReactCommon`)
   - "RNCCheckbox (from `../../../node_modules/@react-native-community/checkbox`)"
-  - RNScreens (from `../../../node_modules/react-native-screens`)
+  - RNScreens (from `../node_modules/react-native-screens`)
   - Yoga (from `../../../node_modules/react-native/ReactCommon/yoga`)
 
 SPEC REPOS:
@@ -596,7 +596,7 @@ EXTERNAL SOURCES:
   RNCCheckbox:
     :path: "../../../node_modules/@react-native-community/checkbox"
   RNScreens:
-    :path: "../../../node_modules/react-native-screens"
+    :path: "../node_modules/react-native-screens"
   Yoga:
     :path: "../../../node_modules/react-native/ReactCommon/yoga"
 
@@ -628,7 +628,7 @@ SPEC CHECKSUMS:
   React-logger: 8edc785c47c8686c7962199a307015e2ce9a0e4f
   react-native-fast-encoder: 6f59e9b08e2bc5a8bf1f36e1630cdcfd66dd18af
   react-native-quick-base64: 61228d753294ae643294a75fece8e0e80b7558a6
-  react-native-quick-crypto: f167927bdd2acb639be292b8bf14f0089b924801
+  react-native-quick-crypto: 64ea90b3b85d47e6cdcd6c357eb1a48b6cb13498
   react-native-safe-area-context: 141eca0fd4e4191288dfc8b96a7c7e1c2983447a
   React-NativeModulesApple: b6868ee904013a7923128892ee4a032498a1024a
   React-perflogger: 31ea61077185eb1428baf60c0db6e2886f141a5a
@@ -648,7 +648,7 @@ SPEC CHECKSUMS:
   React-utils: 56838edeaaf651220d1e53cd0b8934fb8ce68415
   ReactCommon: 5f704096ccf7733b390f59043b6fa9cc180ee4f6
   RNCCheckbox: a3ca9978cb0846b981d28da4e9914bd437403d77
-  RNScreens: 7a8df24e7f5fb645810583b942f6b41748bb948f
+  RNScreens: 50ad6e3dbea9023272b3aa753e3ee2720b0c9b8f
   SocketRocket: f32cd54efbe0f095c4d7594881e52619cfe80b17
   Yoga: 4c3aa327e4a6a23eeacd71f61c81df1bcdf677d5
 
