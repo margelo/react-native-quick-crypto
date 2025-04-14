@@ -16,14 +16,13 @@ class CCMCipher : public HybridCipher {
     const std::shared_ptr<ArrayBuffer> cipher_key,
     const std::shared_ptr<ArrayBuffer> iv
   );
-  // void init(
-  //   const std::shared_ptr<ArrayBuffer> cipher_key,
-  //   const std::shared_ptr<ArrayBuffer> iv
-  // ) override;
+  void init(
+    const std::shared_ptr<ArrayBuffer> cipher_key,
+    const std::shared_ptr<ArrayBuffer> iv
+  ) override;
   std::shared_ptr<ArrayBuffer> update(const std::shared_ptr<ArrayBuffer>& data) override;
   std::shared_ptr<ArrayBuffer> final() override;
   bool setAAD(const std::shared_ptr<ArrayBuffer>& data, std::optional<double> plaintextLength) override;
-  // bool setAuthTag(const std::shared_ptr<ArrayBuffer>& tag) override;
 
  private:
   // CCM mode supports messages up to 2^(8L) - 1 bytes where L is the length of nonce

@@ -32,6 +32,9 @@ bool HybridCipher::maybePassAuthTagToOpenSSL() {
       OSSL_PARAM_construct_end()
     };
     if (!EVP_CIPHER_CTX_set_params(ctx, params)) {
+      unsigned long err = ERR_get_error();
+      char err_buf[256];
+      ERR_error_string_n(err, err_buf, sizeof(err_buf));
       return false;
     }
     auth_tag_state = kAuthTagPassedToOpenSSL;
@@ -43,57 +46,35 @@ void HybridCipher::init(
   const std::shared_ptr<ArrayBuffer> cipher_key,
   const std::shared_ptr<ArrayBuffer> iv
 ) {
-  auto native_key = ToNativeArrayBuffer(cipher_key);
-  auto native_iv = ToNativeArrayBuffer(iv);
-
-  // fetch cipher
-  EVP_CIPHER *cipher = EVP_CIPHER_fetch(
-    nullptr,
-    cipher_type.c_str(),
-    nullptr
-  );
-  if (cipher == nullptr) {
-    throw std::runtime_error("Invalid Cipher Algorithm: " + cipher_type);
+  // Clean up any existing context
+  if (ctx) {
+    EVP_CIPHER_CTX_free(ctx);
+    ctx = nullptr;
   }
 
-  // Create cipher context
-  EVP_CIPHER_CTX_free(ctx);
+  // 1. Get cipher implementation by name
+  const EVP_CIPHER* cipher = EVP_get_cipherbyname(cipher_type.c_str());
+  if (!cipher) {
+    throw std::runtime_error("Unknown cipher " + cipher_type);
+  }
+
+  // 2. Create a new context
   ctx = EVP_CIPHER_CTX_new();
   if (!ctx) {
-    EVP_CIPHER_free(cipher);
     throw std::runtime_error("Failed to create cipher context");
   }
 
-  // Reset state
-  has_aad = false;
-  pending_auth_failed = false;
-  auth_tag_state = kAuthTagUnknown;
-
-  // TODO: WrapCipher child class?
-  // Get cipher mode
-  int mode = EVP_CIPHER_get_mode(cipher);
-  if (mode == EVP_CIPH_WRAP_MODE) {
-    EVP_CIPHER_CTX_set_flags(ctx, EVP_CIPHER_CTX_FLAG_WRAP_ALLOW);
-  }
-
-  // Initialize cipher context
-  if (EVP_CipherInit_ex2(
-    ctx,
-    cipher,
-    native_key->data(),
-    native_iv->data(),
-    is_cipher ? 1 : 0,
-    nullptr
-  ) != 1) {
+  // Initialise the encryption/decryption operation with the cipher type.
+  // Key and IV will be set later by the derived class if needed.
+  if (EVP_CipherInit_ex(ctx, cipher, nullptr, nullptr, nullptr, is_cipher) != 1) {
+    unsigned long err = ERR_get_error();
+    char err_buf[256];
+    ERR_error_string_n(err, err_buf, sizeof(err_buf));
     EVP_CIPHER_CTX_free(ctx);
-    EVP_CIPHER_free(cipher);
     ctx = nullptr;
-    throw std::runtime_error("Failed to initialize cipher operation: " +
-      std::string(ERR_reason_error_string(ERR_get_error())));
+    throw std::runtime_error("HybridCipher: Failed initial CipherInit setup: " + std::string(err_buf));
   }
 
-  // we've set up the context, free the cipher
-  EVP_CIPHER_free(cipher);
 }
 
 std::shared_ptr<ArrayBuffer>
@@ -151,7 +132,6 @@ bool HybridCipher::setAAD(
 ) {
   checkCtx();
   auto native_data = ToNativeArrayBuffer(data);
-  int plaintext_len = plaintextLength.has_value() ? static_cast<int>(plaintextLength.value()) : -1;
 
   // Set the AAD
   int out_len;
@@ -247,7 +227,11 @@ void HybridCipher::setArgs(const CipherArgs& args) {
 void collect_ciphers(EVP_CIPHER *cipher, void *arg) {
   auto ciphers = static_cast<std::vector<std::string>*>(arg);
   const char* name = EVP_CIPHER_get0_name(cipher);
-  if (name != nullptr) {
+  if (
+    name != nullptr
+    // TODO: implement SM4-CCM as it isn't working yet - for now exclude it
+    && strcmp(name, "SM4-CCM") != 0
+  ) {
     ciphers->push_back(name);
   }
 }
