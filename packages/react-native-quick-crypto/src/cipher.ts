@@ -51,21 +51,24 @@ interface CipherArgs {
 class CipherCommon extends Stream.Transform {
   private native: NativeCipher;
 
-  constructor({
-    isCipher,
-    cipherType,
-    cipherKey,
-    iv,
-    options,
-  }: CipherArgs) {
+  constructor({ isCipher, cipherType, cipherKey, iv, options }: CipherArgs) {
     // Explicitly create TransformOptions for super()
     const streamOptions: TransformOptions = {};
     if (options) {
       // List known TransformOptions keys (adjust if needed)
       const transformKeys: Array<keyof TransformOptions> = [
-        'readableHighWaterMark', 'writableHighWaterMark', 'decodeStrings',
-        'defaultEncoding', 'objectMode', 'destroy', 'read', 'write', 'writev',
-        'final', 'transform', 'flush'
+        'readableHighWaterMark',
+        'writableHighWaterMark',
+        'decodeStrings',
+        'defaultEncoding',
+        'objectMode',
+        'destroy',
+        'read',
+        'write',
+        'writev',
+        'final',
+        'transform',
+        'flush',
         // Add any other relevant keys from readable-stream's TransformOptions
       ];
       for (const key of transformKeys) {
