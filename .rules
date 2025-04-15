@@ -1,0 +1,24 @@
+# React Native Quick Crypto
+
+Every time you choose to apply a rule(s), explicitly state the rule(s) in the output You can abbreviate the rule description to a single word or phrase.
+
+## Project Context
+- This is a react native project that offers cryptographic operations in native
+code.
+- It uses Nitro Modules to bridge JS & C++.
+- Use the documentation of Nitro Modules if you have access locally to its llms.txt file.
+- Part of the API strives to be a polyfill of the Node.js {crypto} module.
+- The goal is to migrate 0.x of this library that uses OpenSSL 1.1.1 to now use OpenSSL 3.3and modern C++ with Nitro Modules.
+
+## Tech Stack
+- React Native
+- Typescript
+- Nitro Modules
+- C++ 20 and higher, modern
+- OpenSSL 3.3 and higher
+- don't ask to run tests.  They have to be run in an example React Native app.
+
+## Rules
+- for C++ includes, do not try to add absolute or relative paths.  They have to be resolved by the build system.
+- use smart pointers in C++
+- use modern C++ features

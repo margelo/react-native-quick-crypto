@@ -12,7 +12,6 @@ class CCMCipher : public HybridCipher {
     ctx = nullptr;
   }
 
-  void raw(const std::shared_ptr<ArrayBuffer> cipher_key, const std::shared_ptr<ArrayBuffer> iv);
   void init(const std::shared_ptr<ArrayBuffer> cipher_key, const std::shared_ptr<ArrayBuffer> iv) override;
   std::shared_ptr<ArrayBuffer> update(const std::shared_ptr<ArrayBuffer>& data) override;
   std::shared_ptr<ArrayBuffer> final() override;
