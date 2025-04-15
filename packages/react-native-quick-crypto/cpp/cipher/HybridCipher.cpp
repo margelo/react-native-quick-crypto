@@ -133,8 +133,6 @@ std::shared_ptr<ArrayBuffer> HybridCipher::final() {
 
   // Context should NOT be freed here. It might be needed for getAuthTag() for GCM/OCB.
   // The context will be freed by the destructor (~HybridCipher) when the object goes out of scope.
-  // EVP_CIPHER_CTX_free(ctx);
-  // ctx = nullptr; // Prevent further use
 
   // Return the shared_ptr<NativeArrayBuffer> (implicit upcast to shared_ptr<ArrayBuffer>)
   return native_final_chunk;

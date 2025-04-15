@@ -124,26 +124,20 @@ std::shared_ptr<ArrayBuffer> CCMCipher::final() {
     unsigned long err = ERR_get_error();
     char err_buf[256];
     ERR_error_string_n(err, err_buf, sizeof(err_buf));
-    if (!is_cipher) {
-      throw std::runtime_error("Decryption finalization failed (possibly invalid tag): " + std::string(err_buf));
-    } else {
-      throw std::runtime_error("Encryption finalization failed: " + std::string(err_buf));
-    }
+    throw std::runtime_error("Encryption finalization failed: " + std::string(err_buf));
   }
 
-  if (is_cipher) {
-    if (auth_tag_len == 0) {
-      auth_tag_len = sizeof(auth_tag);
-    }
-
-    if (EVP_CIPHER_CTX_ctrl(ctx, EVP_CTRL_CCM_GET_TAG, auth_tag_len, auth_tag) != 1) {
-      unsigned long err = ERR_get_error();
-      char err_buf[256];
-      ERR_error_string_n(err, err_buf, sizeof(err_buf));
-      throw std::runtime_error("Failed to get auth tag after finalization: " + std::string(err_buf));
-    }
-    auth_tag_state = kAuthTagKnown;
+  if (auth_tag_len == 0) {
+    auth_tag_len = sizeof(auth_tag);
   }
+
+  if (EVP_CIPHER_CTX_ctrl(ctx, EVP_CTRL_CCM_GET_TAG, auth_tag_len, auth_tag) != 1) {
+    unsigned long err = ERR_get_error();
+    char err_buf[256];
+    ERR_error_string_n(err, err_buf, sizeof(err_buf));
+    throw std::runtime_error("Failed to get auth tag after finalization: " + std::string(err_buf));
+  }
+  auth_tag_state = kAuthTagKnown;
 
   unsigned char* final_output = out_buf.release();
   return std::make_shared<NativeArrayBuffer>(final_output, out_len, [=]() { delete[] final_output; });
