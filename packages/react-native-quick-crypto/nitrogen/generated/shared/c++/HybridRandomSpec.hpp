@@ -42,7 +42,7 @@ namespace margelo::nitro::crypto {
       explicit HybridRandomSpec(): HybridObject(TAG) { }
 
       // Destructor
-      virtual ~HybridRandomSpec() { }
+      ~HybridRandomSpec() override = default;
 
     public:
       // Properties

@@ -38,7 +38,7 @@ namespace margelo::nitro {
 
   // C++ KeyType <> JS KeyType (enum)
   template <>
-  struct JSIConverter<KeyType> {
+  struct JSIConverter<KeyType> final {
     static inline KeyType fromJSI(jsi::Runtime& runtime, const jsi::Value& arg) {
       int enumValue = JSIConverter<int>::fromJSI(runtime, arg);
       return static_cast<KeyType>(enumValue);

@@ -19,7 +19,7 @@ constexpr unsigned kDefaultAuthTagLength = 16;
 class HybridCipher : public HybridCipherSpec {
  public:
   HybridCipher() : HybridObject(TAG) {}
-  ~HybridCipher();
+  ~HybridCipher() override;
 
  public:
   // Methods

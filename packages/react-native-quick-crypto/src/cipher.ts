@@ -134,10 +134,13 @@ class CipherCommon extends Stream.Transform {
     options?: {
       plaintextLength: number;
     },
-  ): this {
+  ): this {    // Check if native parts are initialized
+    if (!this.native || typeof this.native.setAAD !== 'function') {
+      throw new Error('Cipher native object or setAAD method not initialized.');
+    }
     const res = this.native.setAAD(buffer.buffer, options?.plaintextLength);
     if (!res) {
-      throw new Error('setAAD failed');
+      throw new Error('setAAD failed (native call returned false)');
     }
     return this;
   }

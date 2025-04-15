@@ -39,6 +39,7 @@ namespace margelo::nitro::crypto {
     std::optional<double> authTagLen     SWIFT_PRIVATE;
 
   public:
+    CipherArgs() = default;
     explicit CipherArgs(bool isCipher, std::string cipherType, std::shared_ptr<ArrayBuffer> cipherKey, std::shared_ptr<ArrayBuffer> iv, std::optional<double> authTagLen): isCipher(isCipher), cipherType(cipherType), cipherKey(cipherKey), iv(iv), authTagLen(authTagLen) {}
   };
 
@@ -50,7 +51,7 @@ namespace margelo::nitro {
 
   // C++ CipherArgs <> JS CipherArgs (object)
   template <>
-  struct JSIConverter<CipherArgs> {
+  struct JSIConverter<CipherArgs> final {
     static inline CipherArgs fromJSI(jsi::Runtime& runtime, const jsi::Value& arg) {
       jsi::Object obj = arg.asObject(runtime);
       return CipherArgs(

@@ -47,7 +47,7 @@ namespace margelo::nitro::crypto {
       explicit HybridCipherSpec(): HybridObject(TAG) { }
 
       // Destructor
-      virtual ~HybridCipherSpec() { }
+      ~HybridCipherSpec() override = default;
 
     public:
       // Properties

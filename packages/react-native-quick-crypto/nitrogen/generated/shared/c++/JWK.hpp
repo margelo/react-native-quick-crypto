@@ -63,6 +63,7 @@ namespace margelo::nitro::crypto {
     std::optional<bool> ext     SWIFT_PRIVATE;
 
   public:
+    JWK() = default;
     explicit JWK(std::optional<JWKkty> kty, std::optional<JWKuse> use, std::optional<std::vector<KeyUsage>> key_ops, std::optional<std::string> alg, std::optional<std::string> crv, std::optional<std::string> kid, std::optional<std::string> x5u, std::optional<std::vector<std::string>> x5c, std::optional<std::string> x5t, std::optional<std::string> x5t_256, std::optional<std::string> n, std::optional<std::string> e, std::optional<std::string> d, std::optional<std::string> p, std::optional<std::string> q, std::optional<std::string> x, std::optional<std::string> y, std::optional<std::string> k, std::optional<std::string> dp, std::optional<std::string> dq, std::optional<std::string> qi, std::optional<bool> ext): kty(kty), use(use), key_ops(key_ops), alg(alg), crv(crv), kid(kid), x5u(x5u), x5c(x5c), x5t(x5t), x5t_256(x5t_256), n(n), e(e), d(d), p(p), q(q), x(x), y(y), k(k), dp(dp), dq(dq), qi(qi), ext(ext) {}
   };
 
@@ -74,7 +75,7 @@ namespace margelo::nitro {
 
   // C++ JWK <> JS JWK (object)
   template <>
-  struct JSIConverter<JWK> {
+  struct JSIConverter<JWK> final {
     static inline JWK fromJSI(jsi::Runtime& runtime, const jsi::Value& arg) {
       jsi::Object obj = arg.asObject(runtime);
       return JWK(

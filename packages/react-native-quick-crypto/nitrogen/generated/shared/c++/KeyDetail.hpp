@@ -39,6 +39,7 @@ namespace margelo::nitro::crypto {
     std::optional<std::string> namedCurve     SWIFT_PRIVATE;
 
   public:
+    KeyDetail() = default;
     explicit KeyDetail(std::optional<double> length, std::optional<double> publicExponent, std::optional<double> modulusLength, std::optional<std::string> hashAlgorithm, std::optional<std::string> mgf1HashAlgorithm, std::optional<double> saltLength, std::optional<std::string> namedCurve): length(length), publicExponent(publicExponent), modulusLength(modulusLength), hashAlgorithm(hashAlgorithm), mgf1HashAlgorithm(mgf1HashAlgorithm), saltLength(saltLength), namedCurve(namedCurve) {}
   };
 
@@ -50,7 +51,7 @@ namespace margelo::nitro {
 
   // C++ KeyDetail <> JS KeyDetail (object)
   template <>
-  struct JSIConverter<KeyDetail> {
+  struct JSIConverter<KeyDetail> final {
     static inline KeyDetail fromJSI(jsi::Runtime& runtime, const jsi::Value& arg) {
       jsi::Object obj = arg.asObject(runtime);
       return KeyDetail(

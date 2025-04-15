@@ -43,7 +43,7 @@ namespace margelo::nitro::crypto {
       explicit HybridPbkdf2Spec(): HybridObject(TAG) { }
 
       // Destructor
-      virtual ~HybridPbkdf2Spec() { }
+      ~HybridPbkdf2Spec() override = default;
 
     public:
       // Properties

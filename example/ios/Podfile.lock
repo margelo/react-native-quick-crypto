@@ -7,7 +7,7 @@ PODS:
   - hermes-engine (0.76.1):
     - hermes-engine/Pre-built (= 0.76.1)
   - hermes-engine/Pre-built (0.76.1)
-  - NitroModules (0.21.0):
+  - NitroModules (0.25.2):
     - DoubleConversion
     - glog
     - hermes-engine
@@ -1940,9 +1940,9 @@ SPEC CHECKSUMS:
   fmt: 10c6e61f4be25dc963c36bd73fc7b1705fe975be
   glog: 08b301085f15bcbb6ff8632a8ebaf239aae04e6a
   hermes-engine: 46f1ffbf0297f4298862068dd4c274d4ac17a1fd
-  NitroModules: 3a58d9bc70815a0d5de4476ed6a36eff05a6a0ae
+  NitroModules: 3a9c88afc1ca3dba01759ed410e8c2902a5d3dbb
   OpenSSL-Universal: b60a3702c9fea8b3145549d421fdb018e53ab7b4
-  QuickCrypto: 8b714710db7acd4299e22db704ba85ea6e38c072
+  QuickCrypto: d56c13c2a864ef4400d7aca6631d57989d05a0a3
   RCT-Folly: 84578c8756030547307e4572ab1947de1685c599
   RCTDeprecation: fde92935b3caa6cb65cbff9fbb7d3a9867ffb259
   RCTRequired: 75c6cee42d21c1530a6f204ba32ff57335d19007
