@@ -1,9 +1,9 @@
+#include <algorithm> // For std::sort
+#include <cstring>   // For std::memcpy
 #include <memory>
 #include <stdexcept>
-#include <vector>
 #include <string>
-#include <cstring> // For std::memcpy
-#include <algorithm> // For std::sort
+#include <vector>
 
 #include "HybridCipher.hpp"
 #include "Utils.hpp"
@@ -22,21 +22,14 @@ HybridCipher::~HybridCipher() {
 
 void HybridCipher::checkCtx() const {
   if (!ctx) {
-    throw std::runtime_error(
-        "Cipher context is not initialized or has been disposed.");
+    throw std::runtime_error("Cipher context is not initialized or has been disposed.");
   }
 }
 
 bool HybridCipher::maybePassAuthTagToOpenSSL() {
   if (auth_tag_state == kAuthTagKnown) {
-    OSSL_PARAM params[] = {
-      OSSL_PARAM_construct_octet_string(
-        OSSL_CIPHER_PARAM_AEAD_TAG,
-        auth_tag,
-        auth_tag_len
-      ),
-      OSSL_PARAM_construct_end()
-    };
+    OSSL_PARAM params[] = {OSSL_PARAM_construct_octet_string(OSSL_CIPHER_PARAM_AEAD_TAG, auth_tag, auth_tag_len),
+                           OSSL_PARAM_construct_end()};
     if (!EVP_CIPHER_CTX_set_params(ctx, params)) {
       unsigned long err = ERR_get_error();
       char err_buf[256];
@@ -48,10 +41,7 @@ bool HybridCipher::maybePassAuthTagToOpenSSL() {
   return true;
 }
 
-void HybridCipher::init(
-  const std::shared_ptr<ArrayBuffer> cipher_key,
-  const std::shared_ptr<ArrayBuffer> iv
-) {
+void HybridCipher::init(const std::shared_ptr<ArrayBuffer> cipher_key, const std::shared_ptr<ArrayBuffer> iv) {
   // Clean up any existing context
   if (ctx) {
     EVP_CIPHER_CTX_free(ctx);
@@ -89,20 +79,16 @@ void HybridCipher::init(
   const unsigned char* iv_ptr = reinterpret_cast<const unsigned char*>(native_iv->data());
 
   if (EVP_CipherInit_ex(ctx, nullptr, nullptr, key_ptr, iv_ptr, is_cipher) != 1) {
-      unsigned long err = ERR_get_error();
-      char err_buf[256];
-      ERR_error_string_n(err, err_buf, sizeof(err_buf));
-      EVP_CIPHER_CTX_free(ctx);
-      ctx = nullptr;
-      throw std::runtime_error("HybridCipher: Failed to set key/IV: " + std::string(err_buf));
+    unsigned long err = ERR_get_error();
+    char err_buf[256];
+    ERR_error_string_n(err, err_buf, sizeof(err_buf));
+    EVP_CIPHER_CTX_free(ctx);
+    ctx = nullptr;
+    throw std::runtime_error("HybridCipher: Failed to set key/IV: " + std::string(err_buf));
   }
-
 }
 
-std::shared_ptr<ArrayBuffer>
-HybridCipher::update(
-  const std::shared_ptr<ArrayBuffer>& data
-) {
+std::shared_ptr<ArrayBuffer> HybridCipher::update(const std::shared_ptr<ArrayBuffer>& data) {
   auto native_data = ToNativeArrayBuffer(data);
   checkCtx();
   size_t in_len = native_data->size();
@@ -114,28 +100,18 @@ HybridCipher::update(
   uint8_t* out = new uint8_t[out_len];
   // Perform the cipher update operation. The real size of the output is
   // returned in out_len
-  EVP_CipherUpdate(
-    ctx,
-    out,
-    &out_len,
-    native_data->data(),
-    in_len
-  );
+  EVP_CipherUpdate(ctx, out, &out_len, native_data->data(), in_len);
 
   // Create and return a new buffer of exact size needed
-  return std::make_shared<NativeArrayBuffer>(
-    out,
-    out_len,
-    [=]() { delete[] out; }
-  );
+  return std::make_shared<NativeArrayBuffer>(out, out_len, [=]() { delete[] out; });
 }
 
-std::shared_ptr<ArrayBuffer>
-HybridCipher::final() {
+std::shared_ptr<ArrayBuffer> HybridCipher::final() {
   checkCtx();
   // Block size is max output size for final, unless EVP_CIPH_NO_PADDING is set
   int block_size = EVP_CIPHER_CTX_block_size(ctx);
-  if (block_size <= 0) block_size = 16; // Default if block size is weird (e.g., 0)
+  if (block_size <= 0)
+    block_size = 16; // Default if block size is weird (e.g., 0)
   auto out_buf = std::make_unique<uint8_t[]>(block_size);
   int out_len = 0;
 
@@ -152,7 +128,8 @@ HybridCipher::final() {
   // Get raw pointer before releasing unique_ptr
   uint8_t* raw_ptr = out_buf.get();
   // Create the specific NativeArrayBuffer first, using full namespace
-  auto native_final_chunk = std::make_shared<margelo::nitro::NativeArrayBuffer>(out_buf.release(), static_cast<size_t>(out_len), [raw_ptr]() { delete[] raw_ptr; });
+  auto native_final_chunk = std::make_shared<margelo::nitro::NativeArrayBuffer>(out_buf.release(), static_cast<size_t>(out_len),
+                                                                                [raw_ptr]() { delete[] raw_ptr; });
 
   // Context should NOT be freed here. It might be needed for getAuthTag() for GCM/OCB.
   // The context will be freed by the destructor (~HybridCipher) when the object goes out of scope.
@@ -163,10 +140,7 @@ HybridCipher::final() {
   return native_final_chunk;
 }
 
-bool HybridCipher::setAAD(
-  const std::shared_ptr<ArrayBuffer>& data,
-  std::optional<double> plaintextLength
-) {
+bool HybridCipher::setAAD(const std::shared_ptr<ArrayBuffer>& data, std::optional<double> plaintextLength) {
   checkCtx();
   auto native_data = ToNativeArrayBuffer(data);
 
@@ -180,16 +154,12 @@ bool HybridCipher::setAAD(
   return true;
 }
 
-bool HybridCipher::setAutoPadding(
-  bool autoPad
-) {
+bool HybridCipher::setAutoPadding(bool autoPad) {
   checkCtx();
   return EVP_CIPHER_CTX_set_padding(ctx, autoPad) == 1;
 }
 
-bool HybridCipher::setAuthTag(
-  const std::shared_ptr<ArrayBuffer>& tag
-) {
+bool HybridCipher::setAuthTag(const std::shared_ptr<ArrayBuffer>& tag) {
   checkCtx();
 
   if (is_cipher) {
@@ -212,7 +182,7 @@ bool HybridCipher::setAuthTag(
     // Add check for valid cipher in context before setting tag
     // Use the correct OpenSSL 3 function: EVP_CIPHER_CTX_cipher
     if (!EVP_CIPHER_CTX_cipher(ctx)) {
-        throw std::runtime_error("Context has no cipher set before setting GCM/OCB tag");
+      throw std::runtime_error("Context has no cipher set before setting GCM/OCB tag");
     }
     if (EVP_CIPHER_CTX_ctrl(ctx, EVP_CTRL_AEAD_SET_TAG, tag_len, tag_ptr) <= 0) {
       unsigned long err = ERR_get_error();
@@ -227,7 +197,7 @@ bool HybridCipher::setAuthTag(
   } else if (mode == EVP_CIPH_CCM_MODE) {
     // Store tag internally for CCM decryption (used in CCMCipher::final)
     if (tag_len < 4 || tag_len > 16) { // Check tag length bounds for CCM
-       throw std::runtime_error("Invalid auth tag length for CCM. Must be between 4 and 16 bytes.");
+      throw std::runtime_error("Invalid auth tag length for CCM. Must be between 4 and 16 bytes.");
     }
     auth_tag_state = kAuthTagKnown; // Correct state enum value
     auth_tag_len = tag_len;
@@ -241,8 +211,7 @@ bool HybridCipher::setAuthTag(
   }
 }
 
-std::shared_ptr<ArrayBuffer>
-HybridCipher::getAuthTag() {
+std::shared_ptr<ArrayBuffer> HybridCipher::getAuthTag() {
   checkCtx();
 
   int mode = EVP_CIPHER_CTX_mode(ctx);
@@ -267,11 +236,8 @@ HybridCipher::getAuthTag() {
 
     size_t actual_tag_len = static_cast<size_t>(ret);
     uint8_t* raw_ptr = tag_buf.get();
-    auto final_tag_buffer = std::make_shared<margelo::nitro::NativeArrayBuffer>(
-      tag_buf.release(),
-      actual_tag_len,
-      [raw_ptr]() { delete[] raw_ptr; }
-    );
+    auto final_tag_buffer =
+        std::make_shared<margelo::nitro::NativeArrayBuffer>(tag_buf.release(), actual_tag_len, [raw_ptr]() { delete[] raw_ptr; });
     return final_tag_buffer;
 
   } else if (mode == EVP_CIPH_CCM_MODE) {
@@ -281,11 +247,8 @@ HybridCipher::getAuthTag() {
       auto tag_buf = std::make_unique<uint8_t[]>(auth_tag_len);
       std::memcpy(tag_buf.get(), auth_tag, auth_tag_len);
       uint8_t* raw_ptr = tag_buf.get();
-      auto final_tag_buffer = std::make_shared<margelo::nitro::NativeArrayBuffer>(
-        tag_buf.release(),
-        auth_tag_len,
-        [raw_ptr]() { delete[] raw_ptr; }
-      );
+      auto final_tag_buffer =
+          std::make_shared<margelo::nitro::NativeArrayBuffer>(tag_buf.release(), auth_tag_len, [raw_ptr]() { delete[] raw_ptr; });
       return final_tag_buffer;
     } else {
       throw std::runtime_error("CCM: Auth tag not available. Ensure encryption is finalized before calling getAuthTag.");
@@ -328,37 +291,33 @@ void HybridCipher::setArgs(const CipherArgs& args) {
 }
 
 // Corrected callback signature for EVP_CIPHER_do_all_provided
-void collect_ciphers(EVP_CIPHER *cipher, void *arg) {
-    auto* names = static_cast<std::vector<std::string>*>(arg);
-    if (cipher == nullptr) return;
-    // Note: EVP_CIPHER_get0_name expects const EVP_CIPHER*, but the callback provides EVP_CIPHER*.
-    // This implicit const cast should be safe here.
-    const char* name = EVP_CIPHER_get0_name(cipher);
-    if (name != nullptr) {
-        std::string name_str(name);
-        if (name_str == "NULL" ||
-            name_str.find("CTS") != std::string::npos ||
-            name_str.find("SIV") != std::string::npos || // Covers -SIV and -GCM-SIV
-            name_str.find("WRAP") != std::string::npos || // Covers -WRAP-INV and -WRAP-PAD-INV
-            name_str.find("SM4-") != std::string::npos) {
-          return; // Skip adding this cipher
-        }
-
-        // If not filtered out, add it to the list
-        names->push_back(name_str); // Use name_str here
+void collect_ciphers(EVP_CIPHER* cipher, void* arg) {
+  auto* names = static_cast<std::vector<std::string>*>(arg);
+  if (cipher == nullptr)
+    return;
+  // Note: EVP_CIPHER_get0_name expects const EVP_CIPHER*, but the callback provides EVP_CIPHER*.
+  // This implicit const cast should be safe here.
+  const char* name = EVP_CIPHER_get0_name(cipher);
+  if (name != nullptr) {
+    std::string name_str(name);
+    if (name_str == "NULL" || name_str.find("CTS") != std::string::npos ||
+        name_str.find("SIV") != std::string::npos ||  // Covers -SIV and -GCM-SIV
+        name_str.find("WRAP") != std::string::npos || // Covers -WRAP-INV and -WRAP-PAD-INV
+        name_str.find("SM4-") != std::string::npos) {
+      return; // Skip adding this cipher
     }
+
+    // If not filtered out, add it to the list
+    names->push_back(name_str); // Use name_str here
+  }
 }
 
-std::vector<std::string>
-HybridCipher::getSupportedCiphers() {
+std::vector<std::string> HybridCipher::getSupportedCiphers() {
   std::vector<std::string> cipher_names;
 
   // Use the simpler approach with the separate callback
-  EVP_CIPHER_do_all_provided(
-    nullptr, // Default library context
-    collect_ciphers,
-    &cipher_names
-  );
+  EVP_CIPHER_do_all_provided(nullptr, // Default library context
+                             collect_ciphers, &cipher_names);
 
   // OpenSSL 3 doesn't guarantee sorted output with _do_all_provided, sort manually
   std::sort(cipher_names.begin(), cipher_names.end());

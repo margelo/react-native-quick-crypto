@@ -1,18 +1,15 @@
-#include <stdexcept>
-#include <openssl/evp.h>
-#include <openssl/err.h>
 #include "CCMCipher.hpp"
 #include "Utils.hpp"
+#include <openssl/err.h>
+#include <openssl/evp.h>
+#include <stdexcept>
 
 namespace margelo::nitro::crypto {
 
 /**
  * playground to test raw OpenSSL API calls for mode
  */
-void CCMCipher::raw(
-  const std::shared_ptr<ArrayBuffer> cipher_key,
-  const std::shared_ptr<ArrayBuffer> iv
-) {
+void CCMCipher::raw(const std::shared_ptr<ArrayBuffer> cipher_key, const std::shared_ptr<ArrayBuffer> iv) {
 
   // init context ==============================================================
 
@@ -36,19 +33,11 @@ void CCMCipher::raw(
   auto native_iv = ToNativeArrayBuffer(iv);
 
   // init
-  if (!EVP_CipherInit_ex2(
-    ctx,
-    cipher,
-    native_key->data(),
-    native_iv->data(),
-    is_cipher ? 1 : 0,
-    nullptr
-  )) {
+  if (!EVP_CipherInit_ex2(ctx, cipher, native_key->data(), native_iv->data(), is_cipher ? 1 : 0, nullptr)) {
     EVP_CIPHER_CTX_free(ctx);
     EVP_CIPHER_free(cipher);
     ctx = nullptr;
-    throw std::runtime_error("Failed to initialize cipher operation: " +
-      std::string(ERR_reason_error_string(ERR_get_error())));
+    throw std::runtime_error("Failed to initialize cipher operation: " + std::string(ERR_reason_error_string(ERR_get_error())));
   }
 
   // cleanup from init
@@ -58,8 +47,8 @@ void CCMCipher::raw(
 
   // data to update
   std::string raw = "32|RmVZZkFUVmpRRkp0TmJaUm56ZU9qcnJkaXNNWVNpTTU*|iXmckfRWZB"
-    "GWWELweCBsThSsfUHLeRe0KCsK8ooHgxie0zOINpXxfZi/oNG7uq9JWFVCk70gfzQH8ZUJjAfa"
-    "Fg**";
+                    "GWWELweCBsThSsfUHLeRe0KCsK8ooHgxie0zOINpXxfZi/oNG7uq9JWFVCk70gfzQH8ZUJjAfa"
+                    "Fg**";
   const uint8_t* in = reinterpret_cast<const uint8_t*>(raw.c_str());
   size_t in_len = raw.size();
   int out_len = 0;
@@ -68,8 +57,7 @@ void CCMCipher::raw(
   if (!EVP_CipherUpdate(ctx, nullptr, &out_len, nullptr, in_len)) {
     EVP_CIPHER_CTX_free(ctx);
     ctx = nullptr;
-    throw std::runtime_error("Failed to update cipher (set length): " +
-      std::string(ERR_reason_error_string(ERR_get_error())));
+    throw std::runtime_error("Failed to update cipher (set length): " + std::string(ERR_reason_error_string(ERR_get_error())));
   }
 
   // actual update operation
@@ -77,17 +65,13 @@ void CCMCipher::raw(
   if (!EVP_CipherUpdate(ctx, out, &out_len, in, in_len)) {
     EVP_CIPHER_CTX_free(ctx);
     ctx = nullptr;
-    throw std::runtime_error("Failed to update cipher (operation): " +
-      std::string(ERR_reason_error_string(ERR_get_error())));
+    throw std::runtime_error("Failed to update cipher (operation): " + std::string(ERR_reason_error_string(ERR_get_error())));
   }
 
   // final =====================================================================
 }
 
-void CCMCipher::init(
-  const std::shared_ptr<ArrayBuffer> cipher_key,
-  const std::shared_ptr<ArrayBuffer> iv
-) {
+void CCMCipher::init(const std::shared_ptr<ArrayBuffer> cipher_key, const std::shared_ptr<ArrayBuffer> iv) {
   // 1. Call the base class initializer first
   try {
     HybridCipher::init(cipher_key, iv);
@@ -104,19 +88,19 @@ void CCMCipher::init(
 
   // Set the IV length using CCM-specific control
   if (EVP_CIPHER_CTX_ctrl(ctx, EVP_CTRL_CCM_SET_IVLEN, iv_len, nullptr) != 1) {
-      unsigned long err = ERR_get_error();
-      char err_buf[256];
-      ERR_error_string_n(err, err_buf, sizeof(err_buf));
-      throw std::runtime_error("CCMCipher: Failed to set IV length: " + std::string(err_buf));
+    unsigned long err = ERR_get_error();
+    char err_buf[256];
+    ERR_error_string_n(err, err_buf, sizeof(err_buf));
+    throw std::runtime_error("CCMCipher: Failed to set IV length: " + std::string(err_buf));
   }
 
   // Set the expected/output tag length using CCM-specific control.
   // auth_tag_len should have been defaulted or set via setArgs in the base init.
   if (EVP_CIPHER_CTX_ctrl(ctx, EVP_CTRL_CCM_SET_TAG, auth_tag_len, nullptr) != 1) {
-      unsigned long err = ERR_get_error();
-      char err_buf[256];
-      ERR_error_string_n(err, err_buf, sizeof(err_buf));
-      throw std::runtime_error("CCMCipher: Failed to set tag length: " + std::string(err_buf));
+    unsigned long err = ERR_get_error();
+    char err_buf[256];
+    ERR_error_string_n(err, err_buf, sizeof(err_buf));
+    throw std::runtime_error("CCMCipher: Failed to set tag length: " + std::string(err_buf));
   }
 
   // Finally, initialize the key and IV using the parameters passed to this function.
@@ -126,10 +110,10 @@ void CCMCipher::init(
 
   // The last argument (is_cipher) should be consistent with the initial setup call.
   if (EVP_CipherInit_ex(ctx, nullptr, nullptr, key_ptr, iv_ptr, is_cipher) != 1) {
-      unsigned long err = ERR_get_error();
-      char err_buf[256];
-      ERR_error_string_n(err, err_buf, sizeof(err_buf));
-      throw std::runtime_error("CCMCipher: Failed to set key/IV: " + std::string(err_buf));
+    unsigned long err = ERR_get_error();
+    char err_buf[256];
+    ERR_error_string_n(err, err_buf, sizeof(err_buf));
+    throw std::runtime_error("CCMCipher: Failed to set key/IV: " + std::string(err_buf));
   }
 }
 
@@ -148,11 +132,11 @@ std::shared_ptr<ArrayBuffer> CCMCipher::update(const std::shared_ptr<ArrayBuffer
 
   int block_size = EVP_CIPHER_CTX_block_size(ctx);
   if (block_size <= 0) {
-      throw std::runtime_error("Invalid block size in update");
+    throw std::runtime_error("Invalid block size in update");
   }
   out_len = in_len + block_size - 1;
   if (out_len < 0 || out_len < in_len) {
-      throw std::runtime_error("Calculated output buffer size invalid in update");
+    throw std::runtime_error("Calculated output buffer size invalid in update");
   }
 
   auto out_buf = std::make_unique<unsigned char[]>(out_len);
@@ -180,11 +164,7 @@ std::shared_ptr<ArrayBuffer> CCMCipher::update(const std::shared_ptr<ArrayBuffer
   // If we reached here, the operation (encryption or decryption) succeeded
 
   unsigned char* final_output = out_buf.release();
-  return std::make_shared<NativeArrayBuffer>(
-    final_output,
-    actual_out_len,
-    [=]() { delete[] final_output; }
-  );
+  return std::make_shared<NativeArrayBuffer>(final_output, actual_out_len, [=]() { delete[] final_output; });
 }
 
 std::shared_ptr<ArrayBuffer> CCMCipher::final() {
@@ -200,7 +180,7 @@ std::shared_ptr<ArrayBuffer> CCMCipher::final() {
   // Proceed only for encryption
   int block_size = EVP_CIPHER_CTX_block_size(ctx);
   if (block_size <= 0) {
-      throw std::runtime_error("Invalid block size");
+    throw std::runtime_error("Invalid block size");
   }
   auto out_buf = std::make_unique<unsigned char[]>(block_size);
   int out_len = 0;
@@ -210,9 +190,9 @@ std::shared_ptr<ArrayBuffer> CCMCipher::final() {
     char err_buf[256];
     ERR_error_string_n(err, err_buf, sizeof(err_buf));
     if (!is_cipher) {
-         throw std::runtime_error("Decryption finalization failed (possibly invalid tag): " + std::string(err_buf));
+      throw std::runtime_error("Decryption finalization failed (possibly invalid tag): " + std::string(err_buf));
     } else {
-        throw std::runtime_error("Encryption finalization failed: " + std::string(err_buf));
+      throw std::runtime_error("Encryption finalization failed: " + std::string(err_buf));
     }
   }
 
@@ -231,11 +211,7 @@ std::shared_ptr<ArrayBuffer> CCMCipher::final() {
   }
 
   unsigned char* final_output = out_buf.release();
-  return std::make_shared<NativeArrayBuffer>(
-    final_output,
-    out_len,
-    [=]() { delete[] final_output; }
-  );
+  return std::make_shared<NativeArrayBuffer>(final_output, out_len, [=]() { delete[] final_output; });
 }
 
 bool CCMCipher::setAAD(const std::shared_ptr<ArrayBuffer>& data, std::optional<double> plaintextLength) {
@@ -271,12 +247,12 @@ bool CCMCipher::setAAD(const std::shared_ptr<ArrayBuffer>& data, std::optional<d
   //    BUT the wiki says "(only needed if AAD is passed)". Let's skip if decrypting and AAD length is 0.
   bool should_set_total_length = is_cipher || aad_len > 0;
   if (should_set_total_length) {
-      if (EVP_CipherUpdate(ctx, nullptr, &out_len, nullptr, data_len) != 1) {
-          unsigned long err = ERR_get_error();
-          char err_buf[256];
-          ERR_error_string_n(err, err_buf, sizeof(err_buf));
-          throw std::runtime_error("CCMCipher: Failed to set expected length: " + std::string(err_buf));
-      }
+    if (EVP_CipherUpdate(ctx, nullptr, &out_len, nullptr, data_len) != 1) {
+      unsigned long err = ERR_get_error();
+      char err_buf[256];
+      ERR_error_string_n(err, err_buf, sizeof(err_buf));
+      throw std::runtime_error("CCMCipher: Failed to set expected length: " + std::string(err_buf));
+    }
   }
 
   // 2. Process AAD Data
@@ -291,4 +267,4 @@ bool CCMCipher::setAAD(const std::shared_ptr<ArrayBuffer>& data, std::optional<d
   return true;
 }
 
-}  // namespace margelo::nitro::crypto
+} // namespace margelo::nitro::crypto

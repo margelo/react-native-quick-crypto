@@ -1,13 +1,13 @@
 #pragma once
 
 #include <memory>
-#include <optional>
-#include <string>
-#include <vector>
 #include <openssl/core_names.h>
 #include <openssl/err.h>
 #include <openssl/evp.h>
 #include <openssl/param_build.h>
+#include <optional>
+#include <string>
+#include <vector>
 
 #include "HybridCipherSpec.hpp"
 
@@ -23,46 +23,23 @@ class HybridCipher : public HybridCipherSpec {
 
  public:
   // Methods
-  std::shared_ptr<ArrayBuffer>
-  update(
-    const std::shared_ptr<ArrayBuffer>& data
-  ) override;
+  std::shared_ptr<ArrayBuffer> update(const std::shared_ptr<ArrayBuffer>& data) override;
 
-  std::shared_ptr<ArrayBuffer>
-  final() override;
+  std::shared_ptr<ArrayBuffer> final() override;
 
-  virtual void
-  init(
-    const std::shared_ptr<ArrayBuffer> cipher_key,
-    const std::shared_ptr<ArrayBuffer> iv
-  );
+  virtual void init(const std::shared_ptr<ArrayBuffer> cipher_key, const std::shared_ptr<ArrayBuffer> iv);
 
-  void
-  setArgs(
-    const CipherArgs& args
-  ) override;
+  void setArgs(const CipherArgs& args) override;
 
-  bool
-  setAAD(
-    const std::shared_ptr<ArrayBuffer>& data,
-    std::optional<double> plaintextLength
-  ) override;
+  bool setAAD(const std::shared_ptr<ArrayBuffer>& data, std::optional<double> plaintextLength) override;
 
-  bool
-  setAutoPadding(
-    bool autoPad
-  ) override;
+  bool setAutoPadding(bool autoPad) override;
 
-  bool
-  setAuthTag(
-    const std::shared_ptr<ArrayBuffer>& tag
-  ) override;
+  bool setAuthTag(const std::shared_ptr<ArrayBuffer>& tag) override;
 
-  std::shared_ptr<ArrayBuffer>
-  getAuthTag() override;
+  std::shared_ptr<ArrayBuffer> getAuthTag() override;
 
-  std::vector<std::string>
-  getSupportedCiphers() override;
+  std::vector<std::string> getSupportedCiphers() override;
 
  protected:
   // Protected enums for state management
@@ -74,7 +51,7 @@ class HybridCipher : public HybridCipherSpec {
   // Properties
   bool is_cipher = true;
   std::string cipher_type;
-  EVP_CIPHER_CTX *ctx = nullptr;
+  EVP_CIPHER_CTX* ctx = nullptr;
   bool pending_auth_failed = false;
   bool has_aad = false;
   uint8_t auth_tag[EVP_GCM_TLS_TAG_LEN];

@@ -1,11 +1,11 @@
 #pragma once
 
-#include <string>
 #include <memory>
 #include <openssl/evp.h>
+#include <string>
 
-#include "HybridCipherFactorySpec.hpp"
 #include "CCMCipher.hpp"
+#include "HybridCipherFactorySpec.hpp"
 #include "OCBCipher.hpp"
 
 namespace margelo::nitro::crypto {
