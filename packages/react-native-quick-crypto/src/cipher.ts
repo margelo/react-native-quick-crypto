@@ -1,6 +1,7 @@
 import { NitroModules } from 'react-native-nitro-modules';
 import Stream, { type TransformOptions } from 'readable-stream';
 import { Buffer } from '@craftzdog/react-native-buffer';
+import type { BinaryLike, BinaryLikeNode, Encoding } from './utils';
 import type {
   CipherCCMOptions,
   CipherCCMTypes,
@@ -14,13 +15,18 @@ import type {
   CipherFactory,
 } from './specs/cipher.nitro';
 import { ab2str, binaryLikeToArrayBuffer } from './utils';
-import type { BinaryLike, BinaryLikeNode, Encoding } from './utils';
 import {
   getDefaultEncoding,
   getUIntOption,
   normalizeEncoding,
   validateEncoding,
 } from './utils/cipher';
+
+export type CipherOptions =
+  | CipherCCMOptions
+  | CipherOCBOptions
+  | CipherGCMOptions
+  | TransformOptions;
 
 class CipherUtils {
   private static native =
@@ -39,7 +45,7 @@ interface CipherArgs {
   cipherType: string;
   cipherKey: BinaryLikeNode;
   iv: BinaryLike;
-  options: Record<string, TransformOptions>;
+  options?: CipherOptions;
 }
 
 class CipherCommon extends Stream.Transform {
@@ -50,12 +56,30 @@ class CipherCommon extends Stream.Transform {
     cipherType,
     cipherKey,
     iv,
-    options = {},
+    options,
   }: CipherArgs) {
-    super(options);
+    // Explicitly create TransformOptions for super()
+    const streamOptions: TransformOptions = {};
+    if (options) {
+      // List known TransformOptions keys (adjust if needed)
+      const transformKeys: Array<keyof TransformOptions> = [
+        'readableHighWaterMark', 'writableHighWaterMark', 'decodeStrings',
+        'defaultEncoding', 'objectMode', 'destroy', 'read', 'write', 'writev',
+        'final', 'transform', 'flush'
+        // Add any other relevant keys from readable-stream's TransformOptions
+      ];
+      for (const key of transformKeys) {
+        if (key in options) {
+          // eslint-disable-next-line @typescript-eslint/no-explicit-any
+          (streamOptions as any)[key] = (options as any)[key];
+        }
+      }
+    }
+    super(streamOptions); // Pass filtered options
+
     const authTagLen: number =
-      getUIntOption(options, 'authTagLength') !== -1
-        ? getUIntOption(options, 'authTagLength')
+      getUIntOption(options ?? {}, 'authTagLength') !== -1
+        ? getUIntOption(options ?? {}, 'authTagLength')
         : 16; // defaults to 16 bytes
 
     const factory =
@@ -168,7 +192,7 @@ class Cipheriv extends CipherCommon {
     cipherType: string,
     cipherKey: BinaryLikeNode,
     iv: BinaryLike,
-    options: Record<string, TransformOptions> = {},
+    options?: CipherOptions,
   ) {
     super({
       isCipher: true,
@@ -187,7 +211,7 @@ class Decipheriv extends CipherCommon {
     cipherType: string,
     cipherKey: BinaryLikeNode,
     iv: BinaryLike,
-    options: Record<string, TransformOptions> = {},
+    options?: CipherOptions,
   ) {
     super({
       isCipher: false,
@@ -223,24 +247,15 @@ export function createDecipheriv(
   algorithm: string,
   key: BinaryLikeNode,
   iv: BinaryLike,
-  options?: Stream.TransformOptions,
+  options?: TransformOptions,
 ): Decipher;
 export function createDecipheriv(
   algorithm: string,
   key: BinaryLikeNode,
   iv: BinaryLike,
-  options?:
-    | CipherCCMOptions
-    | CipherOCBOptions
-    | CipherGCMOptions
-    | Stream.TransformOptions,
+  options?: CipherOptions,
 ): Decipher {
-  return new Decipheriv(
-    algorithm,
-    key,
-    iv,
-    options as Record<string, TransformOptions>,
-  );
+  return new Decipheriv(algorithm, key, iv, options);
 }
 
 export function createCipheriv(
@@ -265,24 +280,15 @@ export function createCipheriv(
   algorithm: string,
   key: BinaryLikeNode,
   iv: BinaryLike,
-  options?: Stream.TransformOptions,
+  options?: TransformOptions,
 ): Cipher;
 export function createCipheriv(
   algorithm: string,
   key: BinaryLikeNode,
   iv: BinaryLike,
-  options?:
-    | CipherCCMOptions
-    | CipherOCBOptions
-    | CipherGCMOptions
-    | Stream.TransformOptions,
+  options?: CipherOptions,
 ): Cipher {
-  return new Cipheriv(
-    algorithm,
-    key,
-    iv,
-    options as Record<string, TransformOptions>,
-  );
+  return new Cipheriv(algorithm, key, iv, options);
 }
 
 export const cipherExports = {
