@@ -9,7 +9,7 @@ set(CMAKE_CXX_STANDARD 20)
 add_library(
   ${PACKAGE_NAME} SHARED
   src/main/cpp/cpp-adapter.cpp
-  ../cpp/cipher/CCMCipher.hpp
+  ../cpp/cipher/CCMCipher.cpp
   ../cpp/cipher/HybridCipher.cpp
   ../cpp/cipher/OCBCipher.cpp
   ../cpp/ed25519/HybridEdKeyPair.cpp
