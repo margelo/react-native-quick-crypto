@@ -174,8 +174,6 @@ bool HybridCipher::setAuthTag(const std::shared_ptr<ArrayBuffer>& tag) {
 
   if (mode == EVP_CIPH_GCM_MODE || mode == EVP_CIPH_OCB_MODE) {
     // Use EVP_CTRL_AEAD_SET_TAG for GCM/OCB decryption
-    if (mode == EVP_CIPH_OCB_MODE) {
-    }
     if (tag_len < 1 || tag_len > 16) { // Check tag length bounds for GCM/OCB
       throw std::runtime_error("Invalid auth tag length for GCM/OCB. Must be between 1 and 16 bytes.");
     }
