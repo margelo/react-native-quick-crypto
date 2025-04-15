@@ -134,7 +134,8 @@ class CipherCommon extends Stream.Transform {
     options?: {
       plaintextLength: number;
     },
-  ): this {    // Check if native parts are initialized
+  ): this {
+    // Check if native parts are initialized
     if (!this.native || typeof this.native.setAAD !== 'function') {
       throw new Error('Cipher native object or setAAD method not initialized.');
     }

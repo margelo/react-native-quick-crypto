@@ -59,12 +59,14 @@ function roundTripAuth(
   }
 
   // Keep original encrypted buffer for ChaChaPoly decryption
-  const originalEncryptedForChaCha = isChaChaPoly ? Buffer.concat([encryptedPart1, encryptedPart2]) : null;
+  const originalEncryptedForChaCha = isChaChaPoly
+    ? Buffer.concat([encryptedPart1, encryptedPart2])
+    : null;
 
   // Decrypt
   const decipher: Decipher | null = createDecipheriv(cipherName, key, iv, {
     authTagLength: tagLength,
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
   } as any);
   if (aad) {
     const options = isCCM ? { plaintextLength: plaintext.length } : undefined;
@@ -76,7 +78,9 @@ function roundTripAuth(
   }
 
   // For ChaChaPoly, pass the original buffer with tag appended
-  const bufferToDecrypt = isChaChaPoly ? originalEncryptedForChaCha! : encrypted;
+  const bufferToDecrypt = isChaChaPoly
+    ? originalEncryptedForChaCha!
+    : encrypted;
   const decryptedPart1: Buffer = decipher.update(bufferToDecrypt) as Buffer;
   const decryptedPart2: Buffer = decipher.final() as Buffer; // Final verifies tag for ChaChaPoly
   const decrypted = Buffer.concat([decryptedPart1, decryptedPart2]);
@@ -112,11 +116,9 @@ function roundTrip(
 /* ... existing generateCipherData function ... */
 
 // --- Tests ---
-const allCiphers = getCiphers()
-  // .filter(c => c.includes('SIV'))
-  // .filter(c => c.includes('CCM') || c.includes('OCB'))
-;
-
+const allCiphers = getCiphers();
+// .filter(c => c.includes('SIV'))
+// .filter(c => c.includes('CCM') || c.includes('OCB'))
 test(SUITE, 'valid algorithm', () => {
   expect(() => {
     createCipheriv('aes-128-cbc', Buffer.alloc(16), Buffer.alloc(16), {}); // Use alloc
@@ -135,7 +137,7 @@ test(SUITE, 'strings', () => {
     'aes-128-cbc',
     key, // Use globally defined key
     iv, // Use globally defined iv
-    plaintextBuffer // Use the correct plaintext buffer
+    plaintextBuffer, // Use the correct plaintext buffer
   );
 });
 
@@ -144,12 +146,12 @@ test(SUITE, 'buffers', () => {
     'aes-128-cbc',
     key, // Use globally defined key
     iv, // Use globally defined iv
-    plaintextBuffer // Use the correct plaintext buffer
+    plaintextBuffer, // Use the correct plaintext buffer
   );
 });
 
 // --- Main test dispatcher ---
-allCiphers.forEach((cipherName) => {
+allCiphers.forEach(cipherName => {
   // Define a test for each cipher algorithm
   test(SUITE, cipherName, () => {
     try {
@@ -168,7 +170,9 @@ allCiphers.forEach((cipherName) => {
         const keyBuffer = Buffer.from(testKey); // Create Buffer once
         // Ensure key halves are not identical for XTS
         const half = keyLen / 2;
-        while (keyBuffer.subarray(0, half).equals(keyBuffer.subarray(half, keyLen))) {
+        while (
+          keyBuffer.subarray(0, half).equals(keyBuffer.subarray(half, keyLen))
+        ) {
           testKey = randomFillSync(new Uint8Array(keyLen));
           Object.assign(keyBuffer, Buffer.from(testKey));
         }

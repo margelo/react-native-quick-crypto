@@ -19,6 +19,7 @@ export interface Cipher extends HybridObject<{ ios: 'c++'; android: 'c++' }> {
   getSupportedCiphers(): string[];
 }
 
-export interface CipherFactory extends HybridObject<{ ios: 'c++'; android: 'c++' }> {
+export interface CipherFactory
+  extends HybridObject<{ ios: 'c++'; android: 'c++' }> {
   createCipher(args: CipherArgs): Cipher;
 }
