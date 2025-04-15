@@ -11,8 +11,6 @@ class OCBCipher : public HybridCipher {
 
   std::shared_ptr<ArrayBuffer> getAuthTag() override;
   bool setAuthTag(const std::shared_ptr<ArrayBuffer>& tag) override;
-  bool setAAD(const std::shared_ptr<ArrayBuffer>& data, std::optional<double> plaintextLength) override;
-  std::shared_ptr<ArrayBuffer> update(const std::shared_ptr<ArrayBuffer>& data) override;
 
  protected:
   size_t auth_tag_len = 16;

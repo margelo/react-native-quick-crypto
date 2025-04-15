@@ -9,18 +9,6 @@
 
 namespace margelo::nitro::crypto {
 
-bool OCBCipher::setAAD(const std::shared_ptr<ArrayBuffer>& data, std::optional<double> plaintextLength) {
-  auto native_aad = ToNativeArrayBuffer(data);
-  size_t aad_len = native_aad->size();
-  return HybridCipher::setAAD(data, plaintextLength);
-}
-
-std::shared_ptr<ArrayBuffer> OCBCipher::update(const std::shared_ptr<ArrayBuffer>& data) {
-  auto native_data = ToNativeArrayBuffer(data);
-  size_t data_len = native_data->size();
-  return HybridCipher::update(data);
-}
-
 void OCBCipher::init(const std::shared_ptr<ArrayBuffer>& key, const std::shared_ptr<ArrayBuffer>& iv, size_t tag_len) {
   HybridCipher::init(key, iv);
   auth_tag_len = tag_len;
