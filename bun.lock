@@ -12,7 +12,7 @@
         "eslint": "9.24.0",
         "eslint-config-prettier": "10.1.2",
         "eslint-plugin-prettier": "5.2.6",
-        "eslint-plugin-react-native": "^4.0.0",
+        "eslint-plugin-react-native": "5.0.0",
         "prettier": "3.5.3",
         "release-it": "18.1.2",
         "typescript": "5.8.3",
@@ -1130,7 +1130,7 @@
 
     "eslint-plugin-react-hooks": ["eslint-plugin-react-hooks@4.6.2", "", { "peerDependencies": { "eslint": "^3.0.0 || ^4.0.0 || ^5.0.0 || ^6.0.0 || ^7.0.0 || ^8.0.0-0" } }, "sha512-QzliNJq4GinDBcD8gPB5v0wh6g8q3SUi6EFF0x8N/BL9PoVs0atuGc47ozMRyOWAKdwaZ5OnbOEa3WR+dSGKuQ=="],
 
-    "eslint-plugin-react-native": ["eslint-plugin-react-native@4.1.0", "", { "dependencies": { "eslint-plugin-react-native-globals": "^0.1.1" }, "peerDependencies": { "eslint": "^3.17.0 || ^4 || ^5 || ^6 || ^7 || ^8" } }, "sha512-QLo7rzTBOl43FvVqDdq5Ql9IoElIuTdjrz9SKAXCvULvBoRZ44JGSkx9z4999ZusCsb4rK3gjS8gOGyeYqZv2Q=="],
+    "eslint-plugin-react-native": ["eslint-plugin-react-native@5.0.0", "", { "dependencies": { "eslint-plugin-react-native-globals": "^0.1.1" }, "peerDependencies": { "eslint": "^3.17.0 || ^4 || ^5 || ^6 || ^7 || ^8 || ^9" } }, "sha512-VyWlyCC/7FC/aONibOwLkzmyKg4j9oI8fzrk9WYNs4I8/m436JuOTAFwLvEn1CVvc7La4cPfbCyspP4OYpP52Q=="],
 
     "eslint-plugin-react-native-globals": ["eslint-plugin-react-native-globals@0.1.2", "", {}, "sha512-9aEPf1JEpiTjcFAmmyw8eiIXmcNZOqaZyHO77wgm0/dWfT/oxC1SrIq8ET38pMxHYrcB6Uew+TzUVsBeczF88g=="],
 
@@ -2603,6 +2603,8 @@
     "@react-native/eslint-config/@typescript-eslint/parser": ["@typescript-eslint/parser@7.18.0", "", { "dependencies": { "@typescript-eslint/scope-manager": "7.18.0", "@typescript-eslint/types": "7.18.0", "@typescript-eslint/typescript-estree": "7.18.0", "@typescript-eslint/visitor-keys": "7.18.0", "debug": "^4.3.4" }, "peerDependencies": { "eslint": "^8.56.0" } }, "sha512-4Z+L8I2OqhZV8qA132M4wNL30ypZGYOQVBfMgxDH/K5UX0PNqTu1c6za9ST5r9+tavvHiTWmBnKzpCJ/GlVFtg=="],
 
     "@react-native/eslint-config/eslint-config-prettier": ["eslint-config-prettier@8.10.0", "", { "peerDependencies": { "eslint": ">=7.0.0" }, "bin": { "eslint-config-prettier": "bin/cli.js" } }, "sha512-SM8AMJdeQqRYT9O9zguiruQZaN7+z+E4eAP9oiLNGKMtomwaB1E9dcgUD6ZAn/eQAb52USbvezbiljfZUhbJcg=="],
+
+    "@react-native/eslint-config/eslint-plugin-react-native": ["eslint-plugin-react-native@4.1.0", "", { "dependencies": { "eslint-plugin-react-native-globals": "^0.1.1" }, "peerDependencies": { "eslint": "^3.17.0 || ^4 || ^5 || ^6 || ^7 || ^8" } }, "sha512-QLo7rzTBOl43FvVqDdq5Ql9IoElIuTdjrz9SKAXCvULvBoRZ44JGSkx9z4999ZusCsb4rK3gjS8gOGyeYqZv2Q=="],
 
     "@react-native/metro-babel-transformer/@babel/core": ["@babel/core@7.25.2", "", { "dependencies": { "@ampproject/remapping": "^2.2.0", "@babel/code-frame": "^7.24.7", "@babel/generator": "^7.25.0", "@babel/helper-compilation-targets": "^7.25.2", "@babel/helper-module-transforms": "^7.25.2", "@babel/helpers": "^7.25.0", "@babel/parser": "^7.25.0", "@babel/template": "^7.25.0", "@babel/traverse": "^7.25.2", "@babel/types": "^7.25.2", "convert-source-map": "^2.0.0", "debug": "^4.1.0", "gensync": "^1.0.0-beta.2", "json5": "^2.2.3", "semver": "^6.3.1" } }, "sha512-BBt3opiCOxUr9euZ5/ro/Xv8/V7yJ5bjYMqG/C1YAo8MIKAnumZalCN+msbci3Pigy4lIQfPUpfMM27HMGaYEA=="],
 

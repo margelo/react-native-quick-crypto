@@ -1,6 +1,6 @@
 {
   "name": "react-native-quick-crypto",
-  "version": "1.0.0-beta.13",
+  "version": "1.0.0-beta.14",
   "description": "A fast implementation of Node's `crypto` module written in C/C++ JSI",
   "type": "module",
   "main": "lib/commonjs/index",
@@ -75,14 +75,11 @@
     "util": "0.12.5"
   },
   "devDependencies": {
-
-
     "@types/jest": "29.5.11",
     "@types/node": "22.0.0",
     "@types/react": "18.3.3",
     "@types/readable-stream": "4.0.18",
     "del-cli": "6.0.0",
-
     "jest": "29.7.0",
     "nitro-codegen": "0.25.2",
     "react-native-builder-bob": "0.35.2",
