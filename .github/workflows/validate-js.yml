@@ -6,29 +6,29 @@ on:
       - main
     paths:
       - '.github/workflows/validate-js.yml'
-      - 'bun.lockb'
+      - 'bun.lock'
       - 'packages/react-native-quick-crypto/src/**'
       - 'packages/react-native-quick-crypto/*.json'
       - 'packages/react-native-quick-crypto/*.*s'
-      - 'packages/react-native-quick-crypto/bun.lockb'
+      - 'packages/react-native-quick-crypto/bun.lock'
       - 'example/src/**'
       - 'example/*.json'
       - 'example/*.*s'
       - 'example/*.*sx'
-      - 'example/bun.lockb'
+      - 'example/bun.lock'
   pull_request:
     paths:
       - '.github/workflows/validate-js.yml'
-      - 'bun.lockb'
+      - 'bun.lock'
       - 'packages/react-native-quick-crypto/src/**'
       - 'packages/react-native-quick-crypto/*.json'
       - 'packages/react-native-quick-crypto/*.*s'
-      - 'packages/react-native-quick-crypto/bun.lockb'
+      - 'packages/react-native-quick-crypto/bun.lock'
       - 'example/src/**'
       - 'example/*.json'
       - 'example/*.*s'
       - 'example/*.*sx'
-      - 'example/bun.lockb'
+      - 'example/bun.lock'
 
 jobs:
   compile_js:
@@ -39,7 +39,7 @@ jobs:
 
       - uses: oven-sh/setup-bun@v2
         with:
-          bun-version: 1.1.26
+          bun-version: 1.2.9
 
       - name: Install reviewdog
         uses: reviewdog/action-setup@v1
@@ -64,7 +64,7 @@ jobs:
       - name: Setup Bun
         uses: oven-sh/setup-bun@v2
         with:
-          bun-version: 1.1.26
+          bun-version: 1.2.9
 
       - name: Bootstrap JS
         run: |
@@ -83,4 +83,4 @@ jobs:
           bun format:fix
 
       - name: Verify no files have changed after auto-fix
-        run: git diff --exit-code HEAD -- . ':(exclude)bun.lockb'
+        run: git diff --exit-code HEAD -- . ':(exclude)bun.lock'

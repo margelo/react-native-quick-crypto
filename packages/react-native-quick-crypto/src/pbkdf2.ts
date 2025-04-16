@@ -80,7 +80,7 @@ export function pbkdf2Sync(
   iterations: number,
   keylen: number,
   digest?: HashAlgorithm,
-): ArrayBuffer {
+): Buffer {
   const sanitizedPassword = sanitizeInput(password, WRONG_PASS);
   const sanitizedSalt = sanitizeInput(salt, WRONG_SALT);
 

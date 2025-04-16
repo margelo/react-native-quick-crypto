@@ -3,25 +3,40 @@ import js from '@eslint/js';
 import eslintReactNative from 'eslint-plugin-react-native';
 import typescriptEslint from 'typescript-eslint';
 
-export default typescriptEslint.config(
+import eslintPluginPrettier from 'eslint-plugin-prettier';
+import eslintConfigPrettier from 'eslint-config-prettier';
+
+// Create a simplified config array
+export default [
+  // Base JS config
+  js.configs.recommended,
+
+  // TypeScript config
+  ...typescriptEslint.configs.recommended,
   {
-    plugins: {
-      '@typescript-eslint': typescriptEslint.plugin,
-    },
     languageOptions: {
-      parser: '@typescript-eslint/parser',
+      parser: typescriptEslint.parser,
       parserOptions: {
-        // project: './tsconfig.json',
         projectService: true,
       },
     },
-    rules: {},
+    plugins: {
+      '@typescript-eslint': typescriptEslint.plugin,
+    },
   },
-  js.configs.recommended,
-  ...typescriptEslint.configs.recommended,
-  // react-native
+
+  // Prettier integration
   {
-    name: 'eslint-plugin-react-native',
+    plugins: {
+      prettier: eslintPluginPrettier,
+    },
+    rules: {
+      'prettier/prettier': 'error',
+    },
+  },
+  eslintConfigPrettier,
+  // React Native config
+  {
     plugins: {
       'react-native': fixupPluginRules({
         rules: eslintReactNative.rules,
@@ -33,8 +48,9 @@ export default typescriptEslint.config(
       'react-native/no-inline-styles': 'warn',
     },
   },
-  // don't lint config files
+
+  // Ignore patterns
   {
     ignores: ['*.config.*js'],
   },
-);
+];
