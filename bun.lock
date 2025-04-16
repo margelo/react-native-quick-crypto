@@ -44,7 +44,7 @@
         "react-native-screens": "3.35.0",
         "react-native-vector-icons": "^10.1.0",
         "readable-stream": "4.5.2",
-        "tinybench": "^3.0.6",
+        "tinybench": "^4.0.1",
         "util": "0.12.5",
       },
       "devDependencies": {
@@ -2106,7 +2106,7 @@
 
     "through2": ["through2@2.0.5", "", { "dependencies": { "readable-stream": "~2.3.6", "xtend": "~4.0.1" } }, "sha512-/mrRod8xqpA+IHSLyGCQ2s8SPHiCDEeQJSep1jqLYeEUClOFG2Qsh+4FU6G9VeqpZnGW/Su8LQGc4YKni5rYSQ=="],
 
-    "tinybench": ["tinybench@3.0.6", "", {}, "sha512-ljQ0LM7ePiVrjM8KHkHUWH+eVo36hwpE34dqYvOJIvzVJvzqXwTpjjw/bLjduqU50Z8CuhVFgFN1U7yLaSCsCg=="],
+    "tinybench": ["tinybench@4.0.1", "", {}, "sha512-Nb1srn7dvzkVx0J5h1vq8f48e3TIcbrS7e/UfAI/cDSef/n8yLh4zsAEsFkfpw6auTY+ZaspEvam/xs8nMnotQ=="],
 
     "tmp": ["tmp@0.0.33", "", { "dependencies": { "os-tmpdir": "~1.0.2" } }, "sha512-jRCJlojKnZ3addtTOjdIqoRuPEKBvNXcGYqzO6zWZX8KfKEpnGY5jfggJQ3EjKuu8D4bJRr0y+cYJFmYbImXGw=="],
 
