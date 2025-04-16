@@ -136,12 +136,7 @@ test(SUITE, 'strings', () => {
 });
 
 test(SUITE, 'buffers', () => {
-  roundTrip(
-    'aes-128-cbc',
-    key,
-    iv,
-    plaintextBuffer,
-  );
+  roundTrip('aes-128-cbc', key, iv, plaintextBuffer);
 });
 
 // loop through each cipher and test roundtrip
