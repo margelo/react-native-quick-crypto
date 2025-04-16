@@ -92,8 +92,8 @@ function roundTripAuth(
 // Helper for non-authenticated modes
 function roundTrip(
   cipherName: string,
-  key: Buffer,
-  iv: Buffer,
+  key: Buffer | string,
+  iv: Buffer | string,
   plaintext: Buffer,
 ) {
   // Encrypt
@@ -112,13 +112,7 @@ function roundTrip(
   expect(decrypted).eql(plaintext); // Use Chai's eql for deep equality
 }
 
-// Helper function to generate random data (commented out as it's unused and incomplete)
-/* ... existing generateCipherData function ... */
-
 // --- Tests ---
-const allCiphers = getCiphers();
-// .filter(c => c.includes('SIV'))
-// .filter(c => c.includes('CCM') || c.includes('OCB'))
 test(SUITE, 'valid algorithm', () => {
   expect(() => {
     createCipheriv('aes-128-cbc', Buffer.alloc(16), Buffer.alloc(16), {}); // Use alloc
@@ -135,24 +129,24 @@ test(SUITE, 'strings', () => {
   // roundtrip expects Buffers, convert strings first
   roundTrip(
     'aes-128-cbc',
-    key, // Use globally defined key
-    iv, // Use globally defined iv
-    plaintextBuffer, // Use the correct plaintext buffer
+    key.toString('hex'),
+    iv.toString('hex'),
+    plaintextBuffer,
   );
 });
 
 test(SUITE, 'buffers', () => {
   roundTrip(
     'aes-128-cbc',
-    key, // Use globally defined key
-    iv, // Use globally defined iv
-    plaintextBuffer, // Use the correct plaintext buffer
+    key,
+    iv,
+    plaintextBuffer,
   );
 });
 
-// --- Main test dispatcher ---
+// loop through each cipher and test roundtrip
+const allCiphers = getCiphers();
 allCiphers.forEach(cipherName => {
-  // Define a test for each cipher algorithm
   test(SUITE, cipherName, () => {
     try {
       // Determine correct key length
@@ -162,7 +156,6 @@ allCiphers.forEach(cipherName => {
       } else if (cipherName.includes('192')) {
         keyLen = 24;
       }
-      // Always use Uint8Array for testKey generation
       let testKey: Uint8Array;
       if (cipherName.includes('XTS')) {
         keyLen *= 2; // XTS requires double length key
@@ -200,14 +193,11 @@ allCiphers.forEach(cipherName => {
         cipherName.includes('Poly1305') ||
         cipherName.includes('SIV') // SIV modes also use auth
       ) {
-        // Pass aad buffer defined globally
         roundTripAuth(cipherName, key, iv, plaintextBuffer, aad);
       } else {
         roundTrip(cipherName, key, iv, plaintextBuffer);
       }
     } catch (e: unknown) {
-      // console.error(`Error testing cipher ${cipherName}:`, e.message, e.stack);
-      // Use Chai's expect to fail the test explicitly on error
       const message = e instanceof Error ? e.message : String(e);
       expect.fail(`Cipher ${cipherName} threw an error: ${message}`);
     }
