@@ -1,10 +1,14 @@
-import { fixupPluginRules } from '@eslint/compat';
 import js from '@eslint/js';
-import eslintReactNative from 'eslint-plugin-react-native';
 import typescriptEslint from 'typescript-eslint';
 
+// Import prettier plugin and config directly
 import eslintPluginPrettier from 'eslint-plugin-prettier';
 import eslintConfigPrettier from 'eslint-config-prettier';
+
+// This is a root-level ESLint config that primarily serves to:
+// 1. Enable ESLint to find a config at the root level
+// 2. Provide basic linting for files outside workspaces
+// 3. Delegate to workspace-specific configs for workspace files
 
 // Create a simplified config array
 export default [
@@ -35,22 +39,14 @@ export default [
     },
   },
   eslintConfigPrettier,
-  // React Native config
+  // Ignore workspace-specific config files and node_modules
   {
-    plugins: {
-      'react-native': fixupPluginRules({
-        rules: eslintReactNative.rules,
-      }),
-    },
-    rules: {
-      ...eslintReactNative.configs.all.rules,
-      'react-native/sort-styles': 'off',
-      'react-native/no-inline-styles': 'warn',
-    },
-  },
-  
-  // Ignore patterns
-  {
-    ignores: ['*.config.*js'],
+    ignores: [
+      '**/node_modules/**',
+      'example/**',
+      'packages/**',
+      '.vscode/**',
+      '*.config.js',
+    ],
   },
 ];
