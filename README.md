@@ -26,7 +26,7 @@ QuickCrypto can be used as a drop-in replacement for your Web3/Crypto apps to sp
 
 | Version | RN Architecture | Modules |
 | ------- | ------ | ------- |
-| `1.x`     | new [->](https://github.com/reactwg/react-native-new-architecture/blob/main/docs/enable-apps.md)  | Nitro Modules [->](https://github.com/margelo/react-native-nitro) |
+| `1.x`     | new [->](https://github.com/reactwg/react-native-new-architecture/blob/main/docs/enable-apps.md)  | Nitro Modules [->](https://github.com/mrousavy/nitro) |
 | `0.x`     | old  | Bridge & JSI |
 
 ## Benchmarks

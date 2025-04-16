@@ -39,7 +39,7 @@ namespace margelo::nitro {
 
   // C++ KeyEncoding <> JS KeyEncoding (enum)
   template <>
-  struct JSIConverter<KeyEncoding> {
+  struct JSIConverter<KeyEncoding> final {
     static inline KeyEncoding fromJSI(jsi::Runtime& runtime, const jsi::Value& arg) {
       int enumValue = JSIConverter<int>::fromJSI(runtime, arg);
       return static_cast<KeyEncoding>(enumValue);

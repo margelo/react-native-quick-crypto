@@ -41,7 +41,7 @@ namespace margelo::nitro {
 
   // C++ JWKuse <> JS JWKuse (union)
   template <>
-  struct JSIConverter<JWKuse> {
+  struct JSIConverter<JWKuse> final {
     static inline JWKuse fromJSI(jsi::Runtime& runtime, const jsi::Value& arg) {
       std::string unionValue = JSIConverter<std::string>::fromJSI(runtime, arg);
       switch (hashString(unionValue.c_str(), unionValue.size())) {

@@ -9,9 +9,12 @@ set(CMAKE_CXX_STANDARD 20)
 add_library(
   ${PACKAGE_NAME} SHARED
   src/main/cpp/cpp-adapter.cpp
-  ../cpp/hmac/HybridHmac.cpp
-  ../cpp/hash/HybridHash.cpp
+  ../cpp/cipher/CCMCipher.cpp
+  ../cpp/cipher/HybridCipher.cpp
+  ../cpp/cipher/OCBCipher.cpp
   ../cpp/ed25519/HybridEdKeyPair.cpp
+  ../cpp/hash/HybridHash.cpp
+  ../cpp/hmac/HybridHmac.cpp
   ../cpp/pbkdf2/HybridPbkdf2.cpp
   ../cpp/random/HybridRandom.cpp
   ../deps/fastpbkdf2/fastpbkdf2.c
@@ -23,9 +26,10 @@ include(${CMAKE_SOURCE_DIR}/../nitrogen/generated/android/QuickCrypto+autolinkin
 # local includes
 include_directories(
   "src/main/cpp"
-  "../cpp/hmac"
-  "../cpp/hash"
+  "../cpp/cipher"
   "../cpp/ed25519"
+  "../cpp/hash"
+  "../cpp/hmac"
   "../cpp/pbkdf2"
   "../cpp/random"
   "../cpp/utils"

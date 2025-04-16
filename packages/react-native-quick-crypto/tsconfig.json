@@ -25,5 +25,4 @@
     "verbatimModuleSyntax": true,
   },
   "include": ["src"],
-  "exclude": ["zzz"]
 }

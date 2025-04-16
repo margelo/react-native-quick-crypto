@@ -15,9 +15,11 @@
 #include <fbjni/fbjni.h>
 #include <NitroModules/HybridObjectRegistry.hpp>
 
-#include "HybridHmac.hpp"
-#include "HybridHash.hpp"
+#include "HybridCipher.hpp"
+#include "HybridCipherFactory.hpp"
 #include "HybridEdKeyPair.hpp"
+#include "HybridHash.hpp"
+#include "HybridHmac.hpp"
 #include "HybridPbkdf2.hpp"
 #include "HybridRandom.hpp"
 
@@ -34,12 +36,30 @@ int initialize(JavaVM* vm) {
 
     // Register Nitro Hybrid Objects
     HybridObjectRegistry::registerHybridObjectConstructor(
-      "Hmac",
+      "Cipher",
       []() -> std::shared_ptr<HybridObject> {
-        static_assert(std::is_default_constructible_v<HybridHmac>,
-                      "The HybridObject \"HybridHmac\" is not default-constructible! "
+        static_assert(std::is_default_constructible_v<HybridCipher>,
+                      "The HybridObject \"HybridCipher\" is not default-constructible! "
                       "Create a public constructor that takes zero arguments to be able to autolink this HybridObject.");
-        return std::make_shared<HybridHmac>();
+        return std::make_shared<HybridCipher>();
+      }
+    );
+    HybridObjectRegistry::registerHybridObjectConstructor(
+      "CipherFactory",
+      []() -> std::shared_ptr<HybridObject> {
+        static_assert(std::is_default_constructible_v<HybridCipherFactory>,
+                      "The HybridObject \"HybridCipherFactory\" is not default-constructible! "
+                      "Create a public constructor that takes zero arguments to be able to autolink this HybridObject.");
+        return std::make_shared<HybridCipherFactory>();
+      }
+    );
+    HybridObjectRegistry::registerHybridObjectConstructor(
+      "EdKeyPair",
+      []() -> std::shared_ptr<HybridObject> {
+        static_assert(std::is_default_constructible_v<HybridEdKeyPair>,
+                      "The HybridObject \"HybridEdKeyPair\" is not default-constructible! "
+                      "Create a public constructor that takes zero arguments to be able to autolink this HybridObject.");
+        return std::make_shared<HybridEdKeyPair>();
       }
     );
     HybridObjectRegistry::registerHybridObjectConstructor(
@@ -52,12 +72,12 @@ int initialize(JavaVM* vm) {
       }
     );
     HybridObjectRegistry::registerHybridObjectConstructor(
-      "EdKeyPair",
+      "Hmac",
       []() -> std::shared_ptr<HybridObject> {
-        static_assert(std::is_default_constructible_v<HybridEdKeyPair>,
-                      "The HybridObject \"HybridEdKeyPair\" is not default-constructible! "
+        static_assert(std::is_default_constructible_v<HybridHmac>,
+                      "The HybridObject \"HybridHmac\" is not default-constructible! "
                       "Create a public constructor that takes zero arguments to be able to autolink this HybridObject.");
-        return std::make_shared<HybridEdKeyPair>();
+        return std::make_shared<HybridHmac>();
       }
     );
     HybridObjectRegistry::registerHybridObjectConstructor(

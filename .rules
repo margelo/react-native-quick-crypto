@@ -1,0 +1,55 @@
+# React Native Quick Crypto
+
+Every time you choose to apply a rule(s), explicitly state the rule(s) in the output. You can abbreviate the rule description to a single word or phrase.
+
+## Project Context
+
+- This is a React Native project that offers cryptographic operations in native code.
+- It uses Nitro Modules to bridge JS & C++.
+- Use the documentation of Nitro Modules if you have access locally to its `llms.txt` file.
+- Part of the API strives to be a polyfill of the Node.js `{crypto}` module.
+- The goal is to migrate 0.x of this library that uses OpenSSL 1.1.1 to now use OpenSSL 3.3 and modern C++ with Nitro Modules.
+
+## Tech Stack
+
+- React Native
+- TypeScript
+- Nitro Modules
+- C++ 20 and higher, modern
+- OpenSSL 3.3 and higher
+- TypeScript package manager is `bun` 1.2 or higher
+- Don't ask to run tests. They have to be run in an example React Native app.
+
+## Rules
+
+- For C++ includes, do not try to add absolute or relative paths. They have to be resolved by the build system.
+- Use smart pointers in C++.
+- Use modern C++ features.
+- Attempt to reduce the amount of code rather than add more.
+- Prefer iteration and modularization over code duplication.
+
+## TypeScript Best Practices
+
+- Use TypeScript for all code; prefer interfaces over types.
+- Use lowercase with dashes for directories (e.g., `components/auth-wizard`).
+- Favor named exports for components.
+- Avoid `any` and enums; use explicit types and maps instead.
+- Use functional components with TypeScript interfaces.
+- Enable strict mode in TypeScript for better type safety.
+- Suggest the optimal implementation considering:
+  - Performance impact
+  - Maintenance overhead
+  - Testing strategy
+- Code examples should follow TypeScript best practices.
+
+## React Best Practices
+
+- Minimize the use of `useEffect`. They should be a last resort.
+- Use named functions for `useEffect`s with a meaningful function name. Avoid adding unnecessary comments on effect behavior.
+
+## Syntax & Formatting
+
+- Use the `function` keyword for pure functions.
+- Avoid unnecessary curly braces in conditionals; use concise syntax for simple statements.
+- Use declarative JSX.
+- Use Prettier for consistent code formatting.

@@ -38,7 +38,7 @@ namespace margelo::nitro {
 
   // C++ KFormatType <> JS KFormatType (enum)
   template <>
-  struct JSIConverter<KFormatType> {
+  struct JSIConverter<KFormatType> final {
     static inline KFormatType fromJSI(jsi::Runtime& runtime, const jsi::Value& arg) {
       int enumValue = JSIConverter<int>::fromJSI(runtime, arg);
       return static_cast<KFormatType>(enumValue);

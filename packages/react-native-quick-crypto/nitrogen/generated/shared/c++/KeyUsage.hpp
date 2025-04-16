@@ -47,7 +47,7 @@ namespace margelo::nitro {
 
   // C++ KeyUsage <> JS KeyUsage (union)
   template <>
-  struct JSIConverter<KeyUsage> {
+  struct JSIConverter<KeyUsage> final {
     static inline KeyUsage fromJSI(jsi::Runtime& runtime, const jsi::Value& arg) {
       std::string unionValue = JSIConverter<std::string>::fromJSI(runtime, arg);
       switch (hashString(unionValue.c_str(), unionValue.size())) {

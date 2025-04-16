@@ -42,7 +42,7 @@ namespace margelo::nitro {
 
   // C++ NamedCurve <> JS NamedCurve (union)
   template <>
-  struct JSIConverter<NamedCurve> {
+  struct JSIConverter<NamedCurve> final {
     static inline NamedCurve fromJSI(jsi::Runtime& runtime, const jsi::Value& arg) {
       std::string unionValue = JSIConverter<std::string>::fromJSI(runtime, arg);
       switch (hashString(unionValue.c_str(), unionValue.size())) {

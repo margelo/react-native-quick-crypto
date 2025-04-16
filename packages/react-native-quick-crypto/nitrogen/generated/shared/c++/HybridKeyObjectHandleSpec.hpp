@@ -65,7 +65,7 @@ namespace margelo::nitro::crypto {
       explicit HybridKeyObjectHandleSpec(): HybridObject(TAG) { }
 
       // Destructor
-      virtual ~HybridKeyObjectHandleSpec() { }
+      ~HybridKeyObjectHandleSpec() override = default;
 
     public:
       // Properties

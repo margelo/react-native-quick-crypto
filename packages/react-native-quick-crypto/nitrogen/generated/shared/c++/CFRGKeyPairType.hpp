@@ -43,7 +43,7 @@ namespace margelo::nitro {
 
   // C++ CFRGKeyPairType <> JS CFRGKeyPairType (union)
   template <>
-  struct JSIConverter<CFRGKeyPairType> {
+  struct JSIConverter<CFRGKeyPairType> final {
     static inline CFRGKeyPairType fromJSI(jsi::Runtime& runtime, const jsi::Value& arg) {
       std::string unionValue = JSIConverter<std::string>::fromJSI(runtime, arg);
       switch (hashString(unionValue.c_str(), unionValue.size())) {
