@@ -90,7 +90,7 @@
     "prettier": "3.4.2",
     "react": "18.2.0",
     "react-native": "0.72.7",
-    "react-native-builder-bob": "0.35.2",
+    "react-native-builder-bob": "0.40.6",
     "release-it": "17.11.0",
     "sscrypto": "^1.1.1",
     "typescript": "5.7.2",
