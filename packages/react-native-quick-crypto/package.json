@@ -82,7 +82,7 @@
     "del-cli": "6.0.0",
     "jest": "29.7.0",
     "nitro-codegen": "0.25.2",
-    "react-native-builder-bob": "0.35.2",
+    "react-native-builder-bob": "0.40.6",
     "react-native-nitro-modules": "0.25.2"
   },
   "peerDependencies": {
