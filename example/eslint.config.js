@@ -10,7 +10,7 @@ import eslintConfigPrettier from 'eslint-config-prettier';
 export default [
   // Base JS config
   js.configs.recommended,
-  
+
   // TypeScript config
   ...typescriptEslint.configs.recommended,
   {
@@ -24,7 +24,7 @@ export default [
       '@typescript-eslint': typescriptEslint.plugin,
     },
   },
-  
+
   // Prettier integration
   {
     plugins: {
@@ -48,7 +48,7 @@ export default [
       'react-native/no-inline-styles': 'warn',
     },
   },
-  
+
   // Ignore patterns
   {
     ignores: ['*.config.*js'],
