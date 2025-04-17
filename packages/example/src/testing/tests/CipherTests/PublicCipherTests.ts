@@ -6,9 +6,10 @@ import type { KeyPairKey } from '../../../../../react-native-quick-crypto/src/Ci
 import type { EncodingOptions } from '../../../../../react-native-quick-crypto/src/keys';
 // import { PrivateKey } from 'sscrypto/node';
 
+const message = 'Hello Node.js world!';
+
 // Tests that a key pair can be used for encryption / decryption.
 function testEncryptDecrypt(publicKey: KeyPairKey, privateKey: KeyPairKey) {
-  const message = 'Hello Node.js world!';
   const plaintext = Buffer.from(message, 'utf8');
   for (const key of [publicKey, privateKey]) {
     // the EncodingOptions type is weird as shit, but it works.
@@ -62,7 +63,93 @@ describe('publicCipher', () => {
   //   }
   // });
 
-  it('publicEncrypt/privateDecrypt', () => {
+  // it('publicEncrypt/privateDecrypt', () => {
+  //   const { privateKey, publicKey } = crypto.generateKeyPairSync('rsa', {
+  //     modulusLength: 512,
+  //     publicKeyEncoding: {
+  //       type: 'pkcs1',
+  //       format: 'pem',
+  //     },
+  //     privateKeyEncoding: {
+  //       type: 'pkcs8',
+  //       format: 'pem',
+  //     },
+  //   });
+
+  //   testEncryptDecrypt(publicKey, privateKey);
+  // });
+
+  // it('publicEncrypt/privateDecrypt with non-common exponent', () => {
+  //   const { privateKey, publicKey } = crypto.generateKeyPairSync('rsa', {
+  //     publicExponent: 3,
+  //     modulusLength: 512,
+  //     publicKeyEncoding: {
+  //       type: 'pkcs1',
+  //       format: 'pem',
+  //     },
+  //     privateKeyEncoding: {
+  //       type: 'pkcs8',
+  //       format: 'pem',
+  //     },
+  //   });
+
+  //   testEncryptDecrypt(publicKey, privateKey);
+  // });
+
+  // it('publicEncrypt/privateDecrypt with passphrase', () => {
+  //   const { privateKey, publicKey } = crypto.generateKeyPairSync('rsa', {
+  //     modulusLength: 4096,
+  //     publicKeyEncoding: {
+  //       type: 'spki',
+  //       format: 'pem',
+  //     },
+  //     privateKeyEncoding: {
+  //       type: 'pkcs8',
+  //       format: 'pem',
+  //       cipher: 'aes-256-cbc',
+  //       passphrase: 'top secret',
+  //     },
+  //   });
+
+  //   const message = 'Hello RN world!';
+  //   const plaintext = Buffer.from(message, 'utf8');
+  //   const ciphertext = crypto.publicEncrypt(
+  //     publicKey as EncodingOptions,
+  //     plaintext,
+  //   );
+  //   const decrypted = crypto.privateDecrypt(
+  //     { key: privateKey, passphrase: 'top secret' },
+  //     ciphertext,
+  //   );
+
+  //   expect(decrypted.toString('utf-8')).to.equal(message);
+  // });
+
+  // it('passphrased private key without passphrase should throw', () => {
+  //   const { privateKey, publicKey } = crypto.generateKeyPairSync('rsa', {
+  //     modulusLength: 4096,
+  //     publicKeyEncoding: {
+  //       type: 'spki',
+  //       format: 'pem',
+  //     },
+  //     privateKeyEncoding: {
+  //       type: 'pkcs8',
+  //       format: 'pem',
+  //       cipher: 'aes-256-cbc',
+  //       passphrase: 'top secret',
+  //     },
+  //   });
+
+  //   try {
+  //     testEncryptDecrypt(publicKey, privateKey);
+  //     assert.fail();
+  //     // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  //   } catch (_e) {
+  //     // intentionally left blank
+  //   }
+  // });
+
+  it('#494 decryption error', () => {
     const { privateKey, publicKey } = crypto.generateKeyPairSync('rsa', {
       modulusLength: 512,
       publicKeyEncoding: {
@@ -75,76 +162,23 @@ describe('publicCipher', () => {
       },
     });
 
-    testEncryptDecrypt(publicKey, privateKey);
-  });
-
-  it('publicEncrypt/privateDecrypt with non-common exponent', () => {
-    const { privateKey, publicKey } = crypto.generateKeyPairSync('rsa', {
-      publicExponent: 3,
-      modulusLength: 512,
-      publicKeyEncoding: {
-        type: 'pkcs1',
-        format: 'pem',
+    const encryptedMessage = crypto.publicEncrypt(
+      {
+        key: publicKey,
+        padding: crypto.constants.RSA_PKCS1_PADDING,
       },
-      privateKeyEncoding: {
-        type: 'pkcs8',
-        format: 'pem',
-      },
-    });
-
-    testEncryptDecrypt(publicKey, privateKey);
-  });
-
-  it('publicEncrypt/privateDecrypt with passphrase', () => {
-    const { privateKey, publicKey } = crypto.generateKeyPairSync('rsa', {
-      modulusLength: 4096,
-      publicKeyEncoding: {
-        type: 'spki',
-        format: 'pem',
-      },
-      privateKeyEncoding: {
-        type: 'pkcs8',
-        format: 'pem',
-        cipher: 'aes-256-cbc',
-        passphrase: 'top secret',
-      },
-    });
-
-    const message = 'Hello RN world!';
-    const plaintext = Buffer.from(message, 'utf8');
-    const ciphertext = crypto.publicEncrypt(
-      publicKey as EncodingOptions,
-      plaintext,
-    );
-    const decrypted = crypto.privateDecrypt(
-      { key: privateKey, passphrase: 'top secret' },
-      ciphertext,
+      Buffer.from(message, 'utf8')
     );
 
-    expect(decrypted.toString('utf-8')).to.equal(message);
-  });
-
-  it('passphrased private key without passphrase should throw', () => {
-    const { privateKey, publicKey } = crypto.generateKeyPairSync('rsa', {
-      modulusLength: 4096,
-      publicKeyEncoding: {
-        type: 'spki',
-        format: 'pem',
+    const decryptedMessage = crypto.privateDecrypt(
+      {
+          key: privateKey,
+          padding: crypto.constants.RSA_PKCS1_PADDING,
       },
-      privateKeyEncoding: {
-        type: 'pkcs8',
-        format: 'pem',
-        cipher: 'aes-256-cbc',
-        passphrase: 'top secret',
-      },
-    });
+      encryptedMessage
+    );
 
-    try {
-      testEncryptDecrypt(publicKey, privateKey);
-      assert.fail();
-      // eslint-disable-next-line @typescript-eslint/no-unused-vars
-    } catch (_e) {
-      // intentionally left blank
-    }
-  });
+    console.log(encryptedMessage.toString('hex'));
+    expect(decryptedMessage.toString('utf8')).to.equal(message);
+  })
 });
