@@ -70,7 +70,7 @@ export function pbkdf2Sync(
   iterations: number,
   keylen: number,
   digest?: string,
-): ArrayBuffer {
+): Buffer {
   const sanitizedPassword = sanitizeInput(password, WRONG_PASS);
   const sanitizedSalt = sanitizeInput(salt, WRONG_SALT);
   const algo = digest ? normalizeHashName(digest, HashContext.Node) : 'sha1';
@@ -83,7 +83,7 @@ export function pbkdf2Sync(
     algo,
   );
 
-  return result;
+  return Buffer.from(result);
 }
 
 // We need this because the typescript  overload signatures in pbkdf2() above do
