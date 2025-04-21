@@ -29,7 +29,7 @@
     "chai": "^5.0.0",
     "events": "^3.3.0",
     "mocha": "^10.2.0",
-    "react": "18.2.0",
+    "react": "19.1.0",
     "react-native": "0.72.7",
     "react-native-fast-encoder": "^0.1.12",
     "react-native-quick-base64": "^2.1.2",
