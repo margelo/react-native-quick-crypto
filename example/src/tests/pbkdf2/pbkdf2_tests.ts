@@ -4,7 +4,7 @@ import { expect } from 'chai';
 import { test } from '../util';
 import { fixtures, type Fixture } from './fixtures';
 
-import crypto, { ab2str } from 'react-native-quick-crypto';
+import crypto from 'react-native-quick-crypto';
 import type { BinaryLike, HashAlgorithm } from 'react-native-quick-crypto';
 
 type TestFixture = [string, string, number, number, string];
@@ -36,7 +36,7 @@ const SUITE = 'pbkdf2';
       function (err, result) {
         expect(err).to.be.null;
         expect(result).not.to.be.null;
-        expect(ab2str(result as ArrayBuffer)).to.equal(expected);
+        expect(result?.toString('hex')).to.equal(expected);
       },
     );
   };
@@ -76,7 +76,7 @@ const SUITE = 'pbkdf2';
 
 test(SUITE, 'handles buffers', () => {
   const resultSync = crypto.pbkdf2Sync('password', 'salt', 1, 32);
-  expect(ab2str(resultSync)).to.equal(
+  expect(resultSync?.toString('hex')).to.equal(
     '0c60c80f961f0e71f3a9b524af6012062fe037a6e0f0eb94fe8fc46bdc637164',
   );
 
@@ -186,7 +186,7 @@ algos.forEach(function (algorithm) {
         function (err, result) {
           expect(err).to.be.null;
           expect(result).not.to.be.null;
-          expect(ab2str(result as ArrayBuffer)).to.equal(expected);
+          expect(result?.toString('hex')).to.equal(expected);
         },
       );
     });
@@ -199,7 +199,7 @@ algos.forEach(function (algorithm) {
         f.dkLen as number,
         algorithm as HashAlgorithm,
       );
-      expect(ab2str(result)).to.equal(expected);
+      expect(result?.toString('hex')).to.equal(expected);
     });
   });
 

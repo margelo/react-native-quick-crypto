@@ -130,7 +130,7 @@ std::shared_ptr<Promise<bool>> HybridEdKeyPair::verify(const std::shared_ptr<Arr
 bool HybridEdKeyPair::verifySync(const std::shared_ptr<ArrayBuffer>& signature, const std::shared_ptr<ArrayBuffer>& message,
                                  const std::optional<std::shared_ptr<ArrayBuffer>>& key) {
   // get key to use for verifying
-  EVP_PKEY* pkey = this->importPrivateKey(key);
+  EVP_PKEY* pkey = this->importPublicKey(key);
 
   EVP_MD_CTX* md_ctx = nullptr;
   EVP_PKEY_CTX* pkey_ctx = nullptr;
@@ -191,6 +191,21 @@ void HybridEdKeyPair::checkKeyPair() {
 
 void HybridEdKeyPair::setCurve(const std::string& curve) {
   this->curve = curve;
+}
+
+EVP_PKEY* HybridEdKeyPair::importPublicKey(const std::optional<std::shared_ptr<ArrayBuffer>>& key) {
+  EVP_PKEY* pkey = nullptr;
+  if (key.has_value()) {
+    pkey = EVP_PKEY_new_raw_public_key(EVP_PKEY_ED25519, // TODO: use this->curve somehow
+                                       NULL, key.value()->data(), 32);
+    if (pkey == nullptr) {
+      throw std::runtime_error("Failed to read public key");
+    }
+  } else {
+    this->checkKeyPair();
+    pkey = this->pkey;
+  }
+  return pkey;
 }
 
 EVP_PKEY* HybridEdKeyPair::importPrivateKey(const std::optional<std::shared_ptr<ArrayBuffer>>& key) {

@@ -27,6 +27,7 @@ Every time you choose to apply a rule(s), explicitly state the rule(s) in the ou
 - Use modern C++ features.
 - Attempt to reduce the amount of code rather than add more.
 - Prefer iteration and modularization over code duplication.
+- Do not add comments unless explicitly told to do so.
 
 ## TypeScript Best Practices
 

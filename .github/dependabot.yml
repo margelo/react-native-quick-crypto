@@ -17,6 +17,8 @@ updates:
       - "@react-native-community/cli-platform-android"
       - "@react-native-community/cli-platform-ios"
       - "@types/react"
+      - "chai"
+      - "@types/chai"
   - package-ecosystem: "bun"
     target-branch: "0.x"
     directory: "/"

@@ -20,6 +20,7 @@ export type RandomCallback<T> = (err: Error | null, value: T) => void;
 
 export type BufferLike =
   | ArrayBuffer
+  | ArrayBufferLike
   | CraftzdogBuffer
   | SafeBuffer
   | ArrayBufferView;
@@ -27,6 +28,7 @@ export type BufferLike =
 export type BinaryLike =
   | string
   | ArrayBuffer
+  | ArrayBufferLike
   | CraftzdogBuffer
   | SafeBuffer
   | TypedArray
