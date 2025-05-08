@@ -5,7 +5,7 @@
       "devDependencies": {
         "@eslint/compat": "1.2.8",
         "@eslint/js": "9.24.0",
-        "@release-it/bumper": "7.0.2",
+        "@release-it/bumper": "7.0.5",
         "@release-it/conventional-changelog": "10.0.0",
         "@typescript-eslint/eslint-plugin": "8.30.1",
         "@typescript-eslint/parser": "8.30.1",
@@ -597,7 +597,7 @@
 
     "@react-navigation/routers": ["@react-navigation/routers@6.1.9", "", { "dependencies": { "nanoid": "^3.1.23" } }, "sha512-lTM8gSFHSfkJvQkxacGM6VJtBt61ip2XO54aNfswD+KMw6eeZ4oehl7m0me3CR9hnDE4+60iAZR8sAhvCiI3NA=="],
 
-    "@release-it/bumper": ["@release-it/bumper@7.0.2", "", { "dependencies": { "@iarna/toml": "^3.0.0", "cheerio": "^1.0.0", "detect-indent": "7.0.1", "fast-glob": "^3.3.3", "ini": "^5.0.0", "js-yaml": "^4.1.0", "lodash-es": "^4.17.21", "semver": "^7.7.1" }, "peerDependencies": { "release-it": ">=18.0.0" } }, "sha512-OHcdArfUgSW//1GuzcjWOW2Sbx3tz9vgMyi2KQv8SEeLeWjIMAM2IxR+bXzbC2q40ACSa/cQRQE0HfHCMfkYwg=="],
+    "@release-it/bumper": ["@release-it/bumper@7.0.5", "", { "dependencies": { "@iarna/toml": "^3.0.0", "cheerio": "^1.0.0", "detect-indent": "7.0.1", "fast-glob": "^3.3.3", "ini": "^5.0.0", "js-yaml": "^4.1.0", "lodash-es": "^4.17.21", "semver": "^7.7.1" }, "peerDependencies": { "release-it": ">=18.0.0 || >=19.0.0" } }, "sha512-HCFMqDHreLYg4jjTWL//pW1GzZZMn3p7HDbwS2y7y5m0L6p8hEaOEixC3tEzwyVV7VP1VGjqxMvxfa360q8+Tg=="],
 
     "@release-it/conventional-changelog": ["@release-it/conventional-changelog@10.0.0", "", { "dependencies": { "concat-stream": "^2.0.0", "conventional-changelog": "^6.0.0", "conventional-recommended-bump": "^10.0.0", "git-semver-tags": "^8.0.0", "semver": "^7.6.3" }, "peerDependencies": { "release-it": "^18.0.0" } }, "sha512-49qf9phGmPUIGpY2kwfgehs9en1znbPv2zdNn1WMLAH9DtHUh4m6KNSB+mLFGAMUhv24JhsA8ruYRYgluc2UJw=="],
 
