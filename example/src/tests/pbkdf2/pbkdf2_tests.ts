@@ -5,7 +5,6 @@ import { test } from '../util';
 import { fixtures, type Fixture } from './fixtures';
 
 import crypto from 'react-native-quick-crypto';
-import crypto from 'react-native-quick-crypto';
 import type { BinaryLike, HashAlgorithm } from 'react-native-quick-crypto';
 
 type TestFixture = [string, string, number, number, string];
@@ -77,7 +76,7 @@ const SUITE = 'pbkdf2';
 
 test(SUITE, 'handles buffers', () => {
   const resultSync = crypto.pbkdf2Sync('password', 'salt', 1, 32);
-  expect(resultSync.toString('hex')).to.equal(
+  expect(resultSync?.toString('hex')).to.equal(
     '0c60c80f961f0e71f3a9b524af6012062fe037a6e0f0eb94fe8fc46bdc637164',
   );
 
@@ -188,7 +187,6 @@ algos.forEach(function (algorithm) {
           expect(err).to.be.null;
           expect(result).not.to.be.null;
           expect(result?.toString('hex')).to.equal(expected);
-          expect(result?.toString('hex')).to.equal(expected);
         },
       );
     });
@@ -201,7 +199,6 @@ algos.forEach(function (algorithm) {
         f.dkLen as number,
         algorithm as HashAlgorithm,
       );
-      expect(result?.toString('hex')).to.equal(expected);
       expect(result?.toString('hex')).to.equal(expected);
     });
   });
