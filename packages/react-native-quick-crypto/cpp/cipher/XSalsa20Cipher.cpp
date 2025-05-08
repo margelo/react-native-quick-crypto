@@ -7,21 +7,19 @@ namespace margelo::nitro::crypto {
 
 /**
  * Initialize the cipher with a key and a nonce (using iv argument as nonce)
-*/
+ */
 void XSalsa20Cipher::init(const std::shared_ptr<ArrayBuffer> cipher_key, const std::shared_ptr<ArrayBuffer> iv) {
   auto native_key = ToNativeArrayBuffer(cipher_key);
   auto native_iv = ToNativeArrayBuffer(iv);
 
   // Validate key size
   if (native_key->size() < crypto_stream_KEYBYTES) {
-    throw std::runtime_error("XSalsa20 key too short: expected " +
-                             std::to_string(crypto_stream_KEYBYTES) + " bytes, got " +
+    throw std::runtime_error("XSalsa20 key too short: expected " + std::to_string(crypto_stream_KEYBYTES) + " bytes, got " +
                              std::to_string(native_key->size()) + " bytes.");
   }
   // Validate nonce size
   if (native_iv->size() < crypto_stream_NONCEBYTES) {
-    throw std::runtime_error("XSalsa20 nonce too short: expected " +
-                             std::to_string(crypto_stream_NONCEBYTES) + " bytes, got " +
+    throw std::runtime_error("XSalsa20 nonce too short: expected " + std::to_string(crypto_stream_NONCEBYTES) + " bytes, got " +
                              std::to_string(native_iv->size()) + " bytes.");
   }
 
