@@ -1,13 +1,6 @@
 /* eslint-disable @typescript-eslint/no-unused-expressions */
 import { Ed, randomBytes, ab2str } from 'react-native-quick-crypto';
 import { Buffer } from '@craftzdog/react-native-buffer';
-// import type {
-//   // KeyObject,
-//   // CFRGKeyPairType,
-//   // GenerateKeyPairCallback,
-//   GenerateKeyPairOptions,
-//   // KeyPairKey,
-// } from 'react-native-quick-crypto';
 import { expect } from 'chai';
 import { test } from '../util';
 
@@ -90,20 +83,39 @@ test(SUITE, 'sign/verify - switched args does not verify', async () => {
 });
 
 test(SUITE, 'sign/verify - non-internally generated private key', async () => {
+  const pub = Buffer.from(
+    'e106bf015ad54a64022295c7af2c35f9511eb37264a7722a9642eaac6c59a494',
+    'hex',
+  );
+  const priv = Buffer.from(
+    '5f27e170afc5091c4933d980c5fe86af997b91375115c6ee2c0fe4ea12400ed0',
+    'hex',
+  );
+
+  const ed2 = new Ed('ed25519', {});
+  const signature = await ed2.sign(data1.buffer, priv);
+  const verified = await ed2.verify(signature, data1.buffer, pub);
+  expect(verified).to.be.true;
+});
+
+test(SUITE, 'sign/verify - bad signature', async () => {
   let ed1: Ed | null = new Ed('ed25519', {});
   await ed1.generateKeyPair();
+  const pub = ed1.getPublicKey();
   const priv = ed1.getPrivateKey();
   ed1 = null;
 
   const ed2 = new Ed('ed25519', {});
   const signature = await ed2.sign(data1.buffer, priv);
-  const verified = await ed2.verify(signature, data1.buffer, priv);
-  expect(verified).to.be.true;
+  const signature2 = randomBytes(64).buffer;
+  expect(ab2str(signature2)).not.to.equal(ab2str(signature));
+  const verified = await ed2.verify(signature2, data1.buffer, pub);
+  expect(verified).to.be.false;
 });
 
 test(
   SUITE,
-  'sign/verify - bad non-internally generated private key',
+  'sign/verify - bad verify with private key, not public',
   async () => {
     let ed1: Ed | null = new Ed('ed25519', {});
     await ed1.generateKeyPair();
@@ -112,9 +124,7 @@ test(
 
     const ed2 = new Ed('ed25519', {});
     const signature = await ed2.sign(data1.buffer, priv);
-    const signature2 = randomBytes(64).buffer;
-    expect(ab2str(signature2)).not.to.equal(ab2str(signature));
-    const verified = await ed2.verify(signature2, data1.buffer, priv);
+    const verified = await ed2.verify(signature, data1.buffer, priv);
     expect(verified).to.be.false;
   },
 );
@@ -124,10 +134,11 @@ test(SUITE, 'sign/verify - Uint8Arrays', () => {
 
   const ed1 = new Ed('ed25519', {});
   ed1.generateKeyPairSync();
+  const pub = new Uint8Array(ed1.getPublicKey());
   const priv = new Uint8Array(ed1.getPrivateKey());
 
   const ed2 = new Ed('ed25519', {});
   const signature = new Uint8Array(ed2.signSync(encode(data), priv));
-  const verified = ed2.verifySync(signature, encode(data), priv);
+  const verified = ed2.verifySync(signature, encode(data), pub);
   expect(verified).to.be.true;
 });

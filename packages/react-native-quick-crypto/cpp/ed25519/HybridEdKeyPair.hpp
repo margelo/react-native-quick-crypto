@@ -49,6 +49,7 @@ class HybridEdKeyPair : public HybridEdKeyPairSpec {
   std::string curve;
   EVP_PKEY* pkey = nullptr;
 
+  EVP_PKEY* importPublicKey(const std::optional<std::shared_ptr<ArrayBuffer>>& key);
   EVP_PKEY* importPrivateKey(const std::optional<std::shared_ptr<ArrayBuffer>>& key);
 };
 
