@@ -7,8 +7,9 @@
     "index.ts",
     "app.json",
     "src",
-    "**.*.ts",
-    "**.*.tsx",
+    "./**/*.ts",
+    "./**/*.tsx",
+    "../packages/react-native-quick-crypto/src/**/*.ts"
   ],
   "compilerOptions": {
     "jsx": "react",

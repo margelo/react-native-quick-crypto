@@ -56,8 +56,29 @@ export function bufferLikeToArrayBuffer(buf: BufferLike): ArrayBuffer {
   if (ArrayBuffer.isView(buf)) {
     return toArrayBuffer(buf);
   }
-  // ArrayBuffer
-  return buf;
+
+  // If buf is already an ArrayBuffer, return it.
+  if (buf instanceof ArrayBuffer) {
+    return buf;
+  }
+
+  // If buf is a SharedArrayBuffer, convert it to ArrayBuffer.
+  // This typically involves a copy of the data.
+  if (
+    typeof SharedArrayBuffer !== 'undefined' &&
+    buf instanceof SharedArrayBuffer
+  ) {
+    const arrayBuffer = new ArrayBuffer(buf.byteLength);
+    new Uint8Array(arrayBuffer).set(new Uint8Array(buf));
+    return arrayBuffer;
+  }
+
+  // If we reach here, 'buf' is of a type within BufferLike that has not been handled by the above checks.
+  // This indicates either an incomplete BufferLike definition or an unexpected input type.
+  // Throw an error to signal this, ensuring the function's contract (return ArrayBuffer or throw) is met.
+  throw new TypeError(
+    'Input must be a Buffer, ArrayBufferView, ArrayBuffer, or SharedArrayBuffer.',
+  );
 }
 
 export function binaryLikeToArrayBuffer(
