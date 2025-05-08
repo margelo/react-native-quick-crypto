@@ -4,6 +4,8 @@
 #include "HybridRandom.hpp"
 #include "Utils.hpp"
 
+namespace margelo::nitro::crypto {
+
 size_t checkSize(double size) {
   if (!CheckIsUint32(size)) {
     throw std::runtime_error("size must be uint32");
@@ -23,8 +25,6 @@ size_t checkOffset(double size, double offset) {
   }
   return static_cast<size_t>(offset);
 }
-
-namespace margelo::nitro::crypto {
 
 std::shared_ptr<Promise<std::shared_ptr<ArrayBuffer>>> HybridRandom::randomFill(const std::shared_ptr<ArrayBuffer>& buffer, double dOffset,
                                                                                 double dSize) {

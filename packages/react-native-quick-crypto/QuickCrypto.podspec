@@ -17,7 +17,11 @@ Pod::Spec.new do |s|
   s.macos.deployment_target = 10.13
   s.tvos.deployment_target = 13.4
 
-  s.source       = { :git => "https://github.com/margelo/react-native-quick-crypto.git", :tag => "#{s.version}" }
+  s.source = { :git => "https://github.com/margelo/react-native-quick-crypto.git", :tag => "#{s.version}" }
+
+  # TODO: handle libsodium
+  s.source = { :http => "file:///Users/brad/dev/rnqc/lib/libsodium-1.0.20/libsodium-apple/Clibsodium.xcframework.tar.gz" }
+  s.vendored_frameworks = "Clibsodium.xcframework"
 
   s.source_files = [
     # implementation (Swift)
@@ -44,5 +48,6 @@ Pod::Spec.new do |s|
   s.dependency 'React-jsi'
   s.dependency 'React-callinvoker'
   s.dependency "OpenSSL-Universal"
+  # s.dependency "libsodium"
   install_modules_dependencies(s)
 end

@@ -4,6 +4,7 @@ import {
   createCipheriv,
   createDecipheriv,
   randomFillSync,
+  xsalsa20,
   type Cipher,
   type Decipher,
 } from 'react-native-quick-crypto';
@@ -197,4 +198,12 @@ allCiphers.forEach(cipherName => {
       expect.fail(`Cipher ${cipherName} threw an error: ${message}`);
     }
   });
+});
+
+// libsodium cipher tests
+test(SUITE, 'xsalsa20', () => {
+  const nonce = Buffer.from('0123456789abcdef', 'hex');
+  const ciphertext = xsalsa20(key, nonce, plaintextBuffer);
+  const decrypted = xsalsa20(key, nonce, ciphertext);
+  expect(decrypted).eql(plaintextBuffer);
 });

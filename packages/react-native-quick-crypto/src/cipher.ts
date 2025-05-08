@@ -207,7 +207,7 @@ class Cipheriv extends CipherCommon {
   }
 }
 
-type Cipher = Cipheriv;
+export type Cipher = Cipheriv;
 
 class Decipheriv extends CipherCommon {
   constructor(
@@ -226,7 +226,7 @@ class Decipheriv extends CipherCommon {
   }
 }
 
-type Decipher = Decipheriv;
+export type Decipher = Decipheriv;
 
 export function createDecipheriv(
   algorithm: CipherCCMTypes,
@@ -294,10 +294,35 @@ export function createCipheriv(
   return new Cipheriv(algorithm, key, iv, options);
 }
 
-export const cipherExports = {
-  createCipheriv,
-  createDecipheriv,
-  getCiphers,
-};
-
-export type { Cipher, Decipher };
+/**
+ * xsalsa20 stream encryption with @noble/ciphers compatible API
+ *
+ * @param key - 32 bytes
+ * @param nonce - 24 bytes
+ * @param data - data to encrypt
+ * @param output - unused
+ * @param counter - unused
+ * @returns encrypted data
+ */
+export function xsalsa20(
+  key: Uint8Array,
+  nonce: Uint8Array,
+  data: Uint8Array,
+  // @ts-expect-error haven't implemented this part of @noble/ciphers API
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  output?: Uint8Array | undefined,
+  // @ts-expect-error haven't implemented this part of @noble/ciphers API
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  counter?: number,
+): Uint8Array {
+  const factory =
+    NitroModules.createHybridObject<CipherFactory>('CipherFactory');
+  const native = factory.createCipher({
+    isCipher: true,
+    cipherType: 'xsalsa20',
+    cipherKey: binaryLikeToArrayBuffer(key),
+    iv: binaryLikeToArrayBuffer(nonce),
+  });
+  const result = native.update(binaryLikeToArrayBuffer(data));
+  return new Uint8Array(result);
+}
