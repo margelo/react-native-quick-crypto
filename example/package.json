@@ -15,7 +15,7 @@
     "format": "prettier --check \"**/*.{js,ts,tsx}\"",
     "format:fix": "prettier --write \"**/*.{js,ts,tsx}\"",
     "start": "react-native start",
-    "pods": "RCT_NEW_ARCH_ENABLED=1 bundle exec pod install --project-directory=ios",
+    "pods": "RCT_NEW_ARCH_ENABLED=1 pod-install",
     "build:android": "cd android && ./gradlew assembleDebug --no-daemon --console=plain -PreactNativeArchitectures=arm64-v8a",
     "build:ios": "cd ios && xcodebuild -workspace QuickCrytpExample.xcworkspace -scheme QuickCrytpExample -configuration Debug -sdk iphonesimulator CC=clang CPLUSPLUS=clang++ LD=clang LDPLUSPLUS=clang++ GCC_OPTIMIZATION_LEVEL=0 GCC_PRECOMPILE_PREFIX_HEADER=YES ASSETCATALOG_COMPILER_OPTIMIZATION=time DEBUG_INFORMATION_FORMAT=dwarf COMPILER_INDEX_STORE_ENABLE=NO"
   },
@@ -64,7 +64,8 @@
     "@types/react-test-renderer": "18.3.0",
     "babel-jest": "29.7.0",
     "babel-plugin-module-resolver": "5.0.2",
-    "jest": "29.7.0"
+    "jest": "29.7.0",
+    "pod-install": "^0.3.9"
   },
   "engines": {
     "node": ">=18"
