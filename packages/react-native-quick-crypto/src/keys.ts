@@ -605,6 +605,10 @@ export class CryptoKey {
     this.keyExtractable = keyExtractable;
   }
 
+  get [Symbol.toStringTag]() {
+    return 'CryptoKey';
+  }
+
   // eslint-disable-next-line @typescript-eslint/no-unused-vars, @typescript-eslint/no-explicit-any
   inspect(_depth: number, _options: any): any {
     throw new Error('CryptoKey.inspect is not implemented');
@@ -659,6 +663,10 @@ class KeyObject {
     this.type = type;
   }
 
+  get [Symbol.toStringTag]() {
+    return 'KeyObject';
+  }
+
   // get type(): string {
   //   return this.type;
   // }
@@ -688,6 +696,10 @@ class KeyObject {
 export class SecretKeyObject extends KeyObject {
   constructor(handle: KeyObjectHandle) {
     super('secret', handle);
+  }
+
+  get [Symbol.toStringTag]() {
+    return 'SecretKeyObject';
   }
 
   // get symmetricKeySize() {
@@ -725,6 +737,10 @@ class AsymmetricKeyObject extends KeyObject {
     super(type, handle);
   }
 
+  get [Symbol.toStringTag]() {
+    return 'AsymmetricKeyObject';
+  }
+
   private _asymmetricKeyType?: AsymmetricKeyType;
 
   get asymmetricKeyType(): AsymmetricKeyType {
@@ -757,6 +773,10 @@ export class PublicKeyObject extends AsymmetricKeyObject {
     super('public', handle);
   }
 
+  get [Symbol.toStringTag]() {
+    return 'PublicKeyObject';
+  }
+
   export(options: EncodingOptions) {
     if (options?.format === 'jwk') {
       throw new Error('PublicKey export for jwk is not implemented');
@@ -773,6 +793,10 @@ export class PublicKeyObject extends AsymmetricKeyObject {
 export class PrivateKeyObject extends AsymmetricKeyObject {
   constructor(handle: KeyObjectHandle) {
     super('private', handle);
+  }
+
+  get [Symbol.toStringTag]() {
+    return 'PrivateKeyObject';
   }
 
   export(options: EncodingOptions) {

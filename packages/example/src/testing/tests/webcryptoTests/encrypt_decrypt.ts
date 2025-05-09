@@ -63,7 +63,6 @@ describe('subtle - encrypt / decrypt', () => {
   {
     async function testRSAOAEP() {
       const buf = crypto.getRandomValues(new Uint8Array(50));
-      const ec = new TextEncoder();
       const { publicKey, privateKey } = (await subtle.generateKey(
         {
           name: 'RSA-OAEP',
@@ -78,7 +77,7 @@ describe('subtle - encrypt / decrypt', () => {
       const ciphertext = await subtle.encrypt(
         {
           name: 'RSA-OAEP',
-          label: ec.encode('a label'),
+          label: Buffer.from('a label', 'utf-8'),
         },
         publicKey as CryptoKey,
         buf,
@@ -87,7 +86,7 @@ describe('subtle - encrypt / decrypt', () => {
       const plaintext = await subtle.decrypt(
         {
           name: 'RSA-OAEP',
-          label: ec.encode('a label'),
+          label: Buffer.from('a label', 'utf-8'),
         },
         privateKey as CryptoKey,
         ciphertext,
