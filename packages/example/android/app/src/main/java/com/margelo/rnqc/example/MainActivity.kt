@@ -1,4 +1,4 @@
-package com.margelo.rnqc.0x.example.RNQCExample
+package com.margelo.rnqc.example.RNQCExample
 
 import com.facebook.react.ReactActivity
 import com.facebook.react.ReactActivityDelegate

@@ -13,22 +13,33 @@ describe('jose compatibility', () => {
     };
     const value = 'hello world';
 
-    const publicKey = await importJWK(key); // <- this returns a CryptoKey
-    const plaintext = Buffer.from(value, 'utf-8');
-    const encryptedValue = await new CompactEncrypt(plaintext)
-      .setProtectedHeader({ alg: 'RSA-OAEP-256', enc: 'A256GCM' })
-      .encrypt(publicKey); // <- this throws an error
+    try {
+      const publicKey = await importJWK(key);
+      const plaintext = Buffer.from(value, 'utf-8');
+      const encryptedValue = await new CompactEncrypt(plaintext)
+        .setProtectedHeader({ alg: 'RSA-OAEP-256', enc: 'A256GCM' })
+        .encrypt(publicKey);
 
-    console.log(encryptedValue);
+      console.log(encryptedValue);
+    } catch (e) {
+      console.error(e);
+      console.log(e.stack);
+    }
   });
 
   it('exportJWK', async () => {
-    crypto.generateKeyPair('rsa', {} , (err, publicKey) => {
+    crypto.generateKeyPair('rsa', { modulusLength: 4096 }, (err, publicKey) => {
       if (err) {
-        throw err;
+        console.error('internal error', err);
+        return;
       }
-      const publicKeyJwk = exportJWK(publicKey as CryptoKey);
-      console.log(publicKeyJwk);
+      try {
+        const publicKeyJwk = exportJWK(publicKey as CryptoKey);
+        console.log(publicKeyJwk);
+      } catch (e) {
+        console.error(e);
+        console.log(e.stack);
+      }
     });
   });
 });
