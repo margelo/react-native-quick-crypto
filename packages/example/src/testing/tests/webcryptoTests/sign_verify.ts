@@ -7,9 +7,9 @@ import { describe, it } from '../../MochaRNAdapter';
 import { expect } from 'chai';
 
 const { subtle } = crypto;
-const encoder = new TextEncoder();
 
 describe('subtle - sign / verify', () => {
+  // TODO: when re-enabling, change TextEncoder bits to Buffer.from(value, 'utf-8')
   // // Test Sign/Verify RSASSA-PKCS1-v1_5
   // {
   //   async function test(data) {
@@ -71,7 +71,7 @@ describe('subtle - sign / verify', () => {
       const signature = await subtle.sign(
         { name: 'ECDSA', hash: 'SHA-384' },
         privateKey as CryptoKey,
-        encoder.encode(data),
+        Buffer.from(data, 'utf-8'),
       );
 
       expect(
@@ -79,7 +79,7 @@ describe('subtle - sign / verify', () => {
           { name: 'ECDSA', hash: 'SHA-384' },
           publicKey as CryptoKey,
           signature,
-          encoder.encode(data),
+          Buffer.from(data, 'utf-8'),
         ),
       ).to.equal(true);
     }
@@ -99,14 +99,14 @@ describe('subtle - sign / verify', () => {
     const signature = await subtle.sign(
       { name: 'ECDSA', hash: { name: 'SHA-256' } },
       privateKey as CryptoKey,
-      encoder.encode('hello world'),
+      Buffer.from('hello world', 'utf-8'),
     );
     expect(
       await subtle.verify(
         { name: 'ECDSA', hash: { name: 'SHA-256' } },
         publicKey as CryptoKey,
         signature,
-        encoder.encode('hello world'),
+        Buffer.from('hello world', 'utf-8'),
       ),
     ).to.equal(true);
   });
