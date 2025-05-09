@@ -20,6 +20,7 @@ import '../testing/tests/webcryptoTests/generateKey';
 import '../testing/tests/webcryptoTests/encrypt_decrypt';
 import '../testing/tests/webcryptoTests/import_export';
 import '../testing/tests/webcryptoTests/sign_verify';
+import '../testing/tests/webcryptoTests/jose';
 import '../testing/tests/SmokeTests/bundlerTests';
 import '../testing/tests/issues/specific_issues';
 
