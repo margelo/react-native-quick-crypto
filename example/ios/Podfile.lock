@@ -55,6 +55,7 @@ PODS:
     - ReactCodegen
     - ReactCommon/turbomodule/bridging
     - ReactCommon/turbomodule/core
+    - Sodium
     - Yoga
   - RCT-Folly (2024.01.01.00):
     - boost
@@ -1712,6 +1713,7 @@ PODS:
     - ReactCommon/turbomodule/core
     - Yoga
   - SocketRocket (0.7.1)
+  - Sodium (0.9.1)
   - Yoga (0.0.0)
 
 DEPENDENCIES:
@@ -1791,6 +1793,7 @@ SPEC REPOS:
   trunk:
     - OpenSSL-Universal
     - SocketRocket
+    - Sodium
 
 EXTERNAL SOURCES:
   boost:
@@ -1942,7 +1945,7 @@ SPEC CHECKSUMS:
   hermes-engine: 46f1ffbf0297f4298862068dd4c274d4ac17a1fd
   NitroModules: 3a9c88afc1ca3dba01759ed410e8c2902a5d3dbb
   OpenSSL-Universal: b60a3702c9fea8b3145549d421fdb018e53ab7b4
-  QuickCrypto: e457fb08347cd9807514cefad95337a7664aeabe
+  QuickCrypto: 7a7fbe370b710f5c404c0cbbdcfbb383b82e8c81
   RCT-Folly: 84578c8756030547307e4572ab1947de1685c599
   RCTDeprecation: fde92935b3caa6cb65cbff9fbb7d3a9867ffb259
   RCTRequired: 75c6cee42d21c1530a6f204ba32ff57335d19007
@@ -2004,6 +2007,7 @@ SPEC CHECKSUMS:
   RNScreens: 74536418fef8086457d39df36a55b36efd5329c9
   RNVectorIcons: 80fff2a44ba40922e0e188291bec51492bd1b9a4
   SocketRocket: d4aabe649be1e368d1318fdf28a022d714d65748
+  Sodium: 23d11554ecd556196d313cf6130d406dfe7ac6da
   Yoga: db69236006b8b1c6d55ab453390c882306cbf219
 
 PODFILE CHECKSUM: bcfd7840a8f657993e5e9504fdac2d1397cbc14a

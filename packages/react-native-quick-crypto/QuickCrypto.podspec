@@ -44,5 +44,6 @@ Pod::Spec.new do |s|
   s.dependency 'React-jsi'
   s.dependency 'React-callinvoker'
   s.dependency "OpenSSL-Universal"
+  s.dependency "Sodium"
   install_modules_dependencies(s)
 end

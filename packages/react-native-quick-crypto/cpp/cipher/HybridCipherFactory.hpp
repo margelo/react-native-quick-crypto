@@ -68,7 +68,7 @@ class HybridCipherFactory : public HybridCipherFactorySpec {
 
     // Unsupported cipher type
     throw std::runtime_error("Unsupported or unknown cipher type: " + args.cipherType);
-  };
+  }
 };
 
 } // namespace margelo::nitro::crypto
