@@ -1,7 +1,4 @@
-import type {
-  CryptoKey,
-  CryptoKeyPair,
-} from 'react-native-quick-crypto';
+import type { CryptoKey, CryptoKeyPair } from 'react-native-quick-crypto';
 import crypto from 'react-native-quick-crypto';
 import { describe, it } from '../../MochaRNAdapter';
 import { expect } from 'chai';

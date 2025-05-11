@@ -932,4 +932,4 @@ export function generateKeyPairSync(
     publicKey,
     privateKey,
   };
-};
+}

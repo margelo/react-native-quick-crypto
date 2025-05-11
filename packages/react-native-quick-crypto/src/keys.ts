@@ -469,7 +469,12 @@ export function parsePublicKeyEncoding(
   format: KFormatType;
   type?: KeyEncoding;
 } {
-  return parseKeyEncoding(enc, keyType, keyType ? true : undefined, objName) as {
+  return parseKeyEncoding(
+    enc,
+    keyType,
+    keyType ? true : undefined,
+    objName,
+  ) as {
     format: KFormatType;
     type?: KeyEncoding;
   };

@@ -26,7 +26,7 @@ import { describe, it } from '../../MochaRNAdapter';
 import { Buffer } from '@craftzdog/react-native-buffer';
 import { assert } from 'chai';
 import type { Done } from 'mocha';
-const { ab2str, abvToArrayBuffer }  = crypto;
+const { ab2str, abvToArrayBuffer } = crypto;
 
 describe('random', () => {
   // TODO (Szymon)
@@ -608,13 +608,10 @@ describe('random', () => {
 
   [true, NaN, null, {}, [], 10].forEach((val) => {
     it(`expect type error: ${val}`, () => {
-      assert.throws(
-        () => {
-          // @ts-expect-error Intentionally passing invalid type for callback test
-          crypto.randomInt(0, 1, val);
-        },
-        /callback must be a function or undefined/,
-      );
+      assert.throws(() => {
+        // @ts-expect-error Intentionally passing invalid type for callback test
+        crypto.randomInt(0, 1, val);
+      }, /callback must be a function or undefined/);
     });
   });
 
