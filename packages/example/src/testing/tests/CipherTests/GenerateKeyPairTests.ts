@@ -2,7 +2,7 @@ import { assert, expect } from 'chai';
 import type { Buffer } from '@craftzdog/react-native-buffer';
 import { describe, it } from '../../MochaRNAdapter';
 import crypto from 'react-native-quick-crypto';
-import type { KeyPairKey } from '../../../../../react-native-quick-crypto/src/Cipher';
+import type { KeyObject } from 'react-native-quick-crypto';
 
 // Constructs a regular expression for a PEM-encoded key with the given label.
 function getRegExpForPEM(label: string, cipher?: string | null) {
@@ -16,7 +16,7 @@ function getRegExpForPEM(label: string, cipher?: string | null) {
   return new RegExp(`^${head}${rfc1421Header}\n${body}\n${end}\n$`);
 }
 
-function assertApproximateSize(kpk: KeyPairKey, expectedSize: number) {
+function assertApproximateSize(kpk: string | Buffer | KeyObject, expectedSize: number) {
   const key = kpk as unknown as Buffer;
   const u = typeof key === 'string' ? 'chars' : 'bytes';
   const min = Math.floor(0.9 * expectedSize);

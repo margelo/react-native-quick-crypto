@@ -18,10 +18,9 @@ import { createHmac } from './Hmac';
 import { createHash } from './Hash';
 import { constants } from './constants';
 import { subtle } from './subtle';
-import { getCiphers, getHashes } from './Utils';
 import webcrypto from './webcrypto';
-import { createPrivateKey, createPublicKey, createSecretKey } from './keys';
-
+import * as keys from './keys';
+import * as utils from './Utils';
 /**
  * Loosely matches Node.js {crypto} with some unimplemented functionality
  */
@@ -34,9 +33,6 @@ const QuickCrypto = {
   createCipheriv,
   createDecipher,
   createDecipheriv,
-  createPublicKey,
-  createPrivateKey,
-  createSecretKey,
   publicEncrypt,
   publicDecrypt,
   privateDecrypt,
@@ -48,12 +44,18 @@ const QuickCrypto = {
   createVerify,
   subtle,
   constants,
+  ...keys,
   ...pbkdf2,
   ...random,
-  getCiphers,
-  getHashes,
+  ...utils,
   webcrypto,
 };
+
+// type exports
+export type * from './keys';
+export type * from './random';
+export type * from './Cipher';
+export type * from './Utils';
 
 /**
  * Optional. Patch global.crypto with quickcrypto and global.Buffer with react-native-buffer.

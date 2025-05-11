@@ -1,4 +1,4 @@
-import type { BinaryLikeNode } from '../../../../../react-native-quick-crypto/src/Utils';
+import type { BinaryLikeNode } from 'react-native-quick-crypto';
 import { Buffer as CraftzdogBuffer } from '@craftzdog/react-native-buffer';
 import { Buffer as FerossBuffer } from 'buffer';
 import crypto from 'react-native-quick-crypto';

@@ -2,7 +2,6 @@ import { expect } from 'chai';
 // import type { Buffer } from '@craftzdog/react-native-buffer';
 import { describe, it } from '../../MochaRNAdapter';
 import crypto from 'react-native-quick-crypto';
-import { assertThrowsAsync } from '../util';
 import type {
   AESAlgorithm,
   AESLength,
@@ -11,10 +10,10 @@ import type {
   CryptoKeyPair,
   KeyUsage,
   NamedCurve,
-} from '../../../../../react-native-quick-crypto/src/keys';
-import { isCryptoKey } from '../../../../../react-native-quick-crypto/src/keys';
+} from 'react-native-quick-crypto/src/keys';
+import { assertThrowsAsync } from '../util';
 
-const { subtle } = crypto;
+const { subtle, isCryptoKey } = crypto;
 
 const allUsages: KeyUsage[] = [
   'encrypt',

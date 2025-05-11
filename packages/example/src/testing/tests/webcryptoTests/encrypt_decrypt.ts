@@ -13,13 +13,12 @@ import type {
   EncryptDecryptParams,
   KeyUsage,
   RsaOaepParams,
-} from '../../../../../react-native-quick-crypto/src/keys';
+} from 'react-native-quick-crypto';
 import rsa_oaep_fixtures from '../../fixtures/rsa';
 import aes_cbc_fixtures from '../../fixtures/aes_cbc';
 import aes_ctr_fixtures from '../../fixtures/aes_ctr';
 import aes_gcm_fixtures from '../../fixtures/aes_gcm';
 import { assertThrowsAsync } from '../util';
-import { ab2str } from '../../../../../react-native-quick-crypto/src/Utils';
 
 export type RsaEncryptDecryptTestVector = {
   name: string;
@@ -51,7 +50,7 @@ export type BadPadding = {
 };
 export type BadPaddingVectorValue = Record<string, BadPadding>;
 
-const { subtle } = crypto;
+const { subtle, ab2str } = crypto;
 
 // This is only a partial test. The WebCrypto Web Platform Tests
 // will provide much greater coverage.
