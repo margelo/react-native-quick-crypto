@@ -714,10 +714,6 @@ export class SecretKeyObject extends KeyObject {
     super('secret', handle);
   }
 
-  get [Symbol.toStringTag]() {
-    return 'SecretKeyObject';
-  }
-
   // get symmetricKeySize() {
   //   return this[kHandle].getSymmetricKeySize();
   // }
@@ -753,10 +749,6 @@ class AsymmetricKeyObject extends KeyObject {
     super(type, handle);
   }
 
-  get [Symbol.toStringTag]() {
-    return 'AsymmetricKeyObject';
-  }
-
   private _asymmetricKeyType?: AsymmetricKeyType;
 
   get asymmetricKeyType(): AsymmetricKeyType {
@@ -789,10 +781,6 @@ export class PublicKeyObject extends AsymmetricKeyObject {
     super('public', handle);
   }
 
-  get [Symbol.toStringTag]() {
-    return 'PublicKeyObject';
-  }
-
   export(options: EncodingOptions) {
     if (options?.format === 'jwk') {
       throw new Error('PublicKey export for jwk is not implemented');
@@ -809,10 +797,6 @@ export class PublicKeyObject extends AsymmetricKeyObject {
 export class PrivateKeyObject extends AsymmetricKeyObject {
   constructor(handle: KeyObjectHandle) {
     super('private', handle);
-  }
-
-  get [Symbol.toStringTag]() {
-    return 'PrivateKeyObject';
   }
 
   export(options: EncodingOptions) {
