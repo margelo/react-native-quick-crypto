@@ -1,6 +1,6 @@
 #pragma once
 
-#include "sodium_lib.h"
+#include "sodium.h"
 
 #include "HybridCipher.hpp"
 #include "Utils.hpp"
