@@ -2,8 +2,7 @@ import { assert, expect } from 'chai';
 import { Buffer } from '@craftzdog/react-native-buffer';
 import { describe, it } from '../../MochaRNAdapter';
 import crypto from 'react-native-quick-crypto';
-import type { KeyPairKey } from '../../../../../react-native-quick-crypto/src/Cipher';
-import type { EncodingOptions } from '../../../../../react-native-quick-crypto/src/keys';
+import type { EncodingOptions, KeyPairKey } from 'react-native-quick-crypto';
 // import { PrivateKey } from 'sscrypto/node';
 
 // Tests that a key pair can be used for encryption / decryption.

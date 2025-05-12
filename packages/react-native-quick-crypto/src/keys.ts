@@ -399,7 +399,7 @@ function prepareAsymmetricKey(
   format: KFormatType;
   data: ArrayBuffer;
   type?: KeyEncoding;
-  passphrase?: BinaryLike;
+  passphrase?: ArrayBuffer | string;
 } {
   // TODO(osp) check, KeyObject some node object
   // if (isKeyObject(key)) {
@@ -465,8 +465,19 @@ export function parsePublicKeyEncoding(
   enc: EncodingOptions,
   keyType: string | undefined,
   objName?: string,
-) {
-  return parseKeyEncoding(enc, keyType, keyType ? true : undefined, objName);
+): {
+  format: KFormatType;
+  type?: KeyEncoding;
+} {
+  return parseKeyEncoding(
+    enc,
+    keyType,
+    keyType ? true : undefined,
+    objName,
+  ) as {
+    format: KFormatType;
+    type?: KeyEncoding;
+  };
 }
 
 // Parses the private key encoding based on an object. keyType must be undefined
@@ -474,10 +485,20 @@ export function parsePublicKeyEncoding(
 // used to parse an output encoding.
 export function parsePrivateKeyEncoding(
   enc: EncodingOptions,
-  keyType: string | undefined,
+  keyType?: string,
   objName?: string,
-) {
-  return parseKeyEncoding(enc, keyType, false, objName);
+): {
+  format: KFormatType;
+  type?: KeyEncoding;
+  cipher?: string;
+  passphrase?: ArrayBuffer | string | undefined;
+} {
+  return parseKeyEncoding(enc, keyType, false, objName) as {
+    format: KFormatType;
+    type?: KeyEncoding;
+    cipher?: string;
+    passphrase?: ArrayBuffer | string | undefined;
+  };
 }
 
 // function getKeyObjectHandle(key: any, ctx: KeyInputContext) {
@@ -605,6 +626,10 @@ export class CryptoKey {
     this.keyExtractable = keyExtractable;
   }
 
+  get [Symbol.toStringTag]() {
+    return 'CryptoKey';
+  }
+
   // eslint-disable-next-line @typescript-eslint/no-unused-vars, @typescript-eslint/no-explicit-any
   inspect(_depth: number, _options: any): any {
     throw new Error('CryptoKey.inspect is not implemented');
@@ -644,7 +669,7 @@ export class CryptoKey {
   }
 }
 
-class KeyObject {
+export class KeyObject {
   handle: KeyObjectHandle;
   type: 'public' | 'secret' | 'private' | 'unknown' = 'unknown';
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
@@ -657,6 +682,10 @@ class KeyObject {
       throw new Error(`invalid KeyObject type: ${type}`);
     this.handle = handle;
     this.type = type;
+  }
+
+  get [Symbol.toStringTag]() {
+    return 'KeyObject';
   }
 
   // get type(): string {

@@ -3,7 +3,7 @@
 import { expect } from 'chai';
 import crypto from 'react-native-quick-crypto';
 import { describe, it } from '../../MochaRNAdapter';
-import type { AESLength } from '../../../../../react-native-quick-crypto/src/keys';
+import type { AESLength } from 'react-native-quick-crypto';
 
 const { generateKey, generateKeySync } = crypto;
 

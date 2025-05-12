@@ -7,10 +7,6 @@ import {
 } from 'react-native-quick-base64';
 import crypto from 'react-native-quick-crypto';
 import { describe, it } from '../../MochaRNAdapter';
-import {
-  ab2str,
-  binaryLikeToArrayBuffer,
-} from '../../../../../react-native-quick-crypto/src/Utils';
 import { assertThrowsAsync } from '../util';
 import type {
   CryptoKey,
@@ -19,14 +15,20 @@ import type {
   JWK,
   KeyUsage,
   NamedCurve,
+  RandomTypedArrays,
   RSAKeyPairAlgorithm,
   SubtleAlgorithm,
-} from '../../../../../react-native-quick-crypto/src/keys';
-import type { RandomTypedArrays } from '../../../../../react-native-quick-crypto/src/random';
+} from 'react-native-quick-crypto';
 import pubTestKeyEc256 from '../../fixtures/keys/ec_p256_public';
 import privTestKeyEc256 from '../../fixtures/keys/ec_p256_private';
 
-const { subtle, createPublicKey, createPrivateKey } = crypto;
+const {
+  subtle,
+  createPublicKey,
+  createPrivateKey,
+  ab2str,
+  binaryLikeToArrayBuffer,
+} = crypto;
 
 // Tests that a key pair can be used for encryption / decryption.
 // function testEncryptDecrypt(publicKey: any, privateKey: any) {

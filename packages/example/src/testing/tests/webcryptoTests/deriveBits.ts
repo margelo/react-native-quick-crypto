@@ -1,10 +1,9 @@
 import { expect } from 'chai';
 import crypto from 'react-native-quick-crypto';
 import { describe, it } from '../../MochaRNAdapter';
-import { ab2str } from '../../../../../react-native-quick-crypto/src/Utils';
-import type { HashAlgorithm } from '../../../../../react-native-quick-crypto/src/keys';
+import type { HashAlgorithm } from 'react-native-quick-crypto';
 
-const { subtle } = crypto;
+const { subtle, ab2str } = crypto;
 
 type TestFixture = [string, string, number, HashAlgorithm, number, string];
 

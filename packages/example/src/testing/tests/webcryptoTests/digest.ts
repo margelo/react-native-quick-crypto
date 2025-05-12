@@ -1,15 +1,10 @@
 import { expect } from 'chai';
 import { Buffer } from '@craftzdog/react-native-buffer';
-import crypto from 'react-native-quick-crypto';
 import { describe, it } from '../../MochaRNAdapter';
-import type { HashAlgorithm } from '../../../../../react-native-quick-crypto/src/keys';
-import {
-  ab2str,
-  toArrayBuffer,
-} from '../../../../../react-native-quick-crypto/src/Utils';
-import { createHash } from '../../../../../react-native-quick-crypto/src/Hash';
+import crypto from 'react-native-quick-crypto';
+import type { HashAlgorithm } from 'react-native-quick-crypto';
 
-const { subtle } = crypto;
+const { subtle, ab2str, createHash, toArrayBuffer } = crypto;
 
 type Test = [HashAlgorithm, string, number];
 

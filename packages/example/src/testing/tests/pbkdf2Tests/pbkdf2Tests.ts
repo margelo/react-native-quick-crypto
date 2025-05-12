@@ -6,8 +6,7 @@ import { Buffer as SBuffer } from 'safe-buffer';
 
 import type { Done } from 'mocha';
 import { fixtures, type Fixture } from './fixtures';
-import type { HashAlgorithm } from '../../../../../react-native-quick-crypto/src/keys';
-import type { BinaryLike } from '../../../../../react-native-quick-crypto/src/Utils';
+import type { BinaryLike, HashAlgorithm } from 'react-native-quick-crypto';
 
 type TestFixture = [string, string, number, number, string];
 

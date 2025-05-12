@@ -1,4 +1,4 @@
-import type { TagLength } from '../../../../react-native-quick-crypto/src/keys';
+import type { TagLength } from 'react-native-quick-crypto';
 import { decodeHex } from '../tests/util';
 import type {
   AesEncryptDecryptTestVector,
