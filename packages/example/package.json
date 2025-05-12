@@ -31,6 +31,7 @@
     "mocha": "^10.2.0",
     "react": "19.0.0",
     "react-native": "0.79.2",
+    "react-native-fast-encoder": "^0.2.0",
     "react-native-quick-base64": "^2.1.2",
     "react-native-quick-crypto": "workspace:*",
     "react-native-safe-area-context": "5.4.0",

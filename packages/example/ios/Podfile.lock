@@ -1334,6 +1334,30 @@ PODS:
     - React-jsiexecutor
     - React-RCTFBReactNativeSpec
     - ReactCommon/turbomodule/core
+  - react-native-fast-encoder (0.2.0):
+    - DoubleConversion
+    - glog
+    - hermes-engine
+    - RCT-Folly (= 2024.11.18.00)
+    - RCTRequired
+    - RCTTypeSafety
+    - React-Core
+    - React-debug
+    - React-Fabric
+    - React-featureflags
+    - React-graphics
+    - React-hermes
+    - React-ImageManager
+    - React-jsi
+    - React-NativeModulesApple
+    - React-RCTFabric
+    - React-renderercss
+    - React-rendererdebug
+    - React-utils
+    - ReactCodegen
+    - ReactCommon/turbomodule/bridging
+    - ReactCommon/turbomodule/core
+    - Yoga
   - react-native-quick-base64 (2.1.2):
     - DoubleConversion
     - glog
@@ -1879,6 +1903,7 @@ DEPENDENCIES:
   - React-logger (from `../../../node_modules/react-native/ReactCommon/logger`)
   - React-Mapbuffer (from `../../../node_modules/react-native/ReactCommon`)
   - React-microtasksnativemodule (from `../../../node_modules/react-native/ReactCommon/react/nativemodule/microtasks`)
+  - react-native-fast-encoder (from `../../../node_modules/react-native-fast-encoder`)
   - react-native-quick-base64 (from `../../../node_modules/react-native-quick-base64`)
   - react-native-quick-crypto (from `../../../node_modules/react-native-quick-crypto`)
   - react-native-safe-area-context (from `../../../node_modules/react-native-safe-area-context`)
@@ -2001,6 +2026,8 @@ EXTERNAL SOURCES:
     :path: "../../../node_modules/react-native/ReactCommon"
   React-microtasksnativemodule:
     :path: "../../../node_modules/react-native/ReactCommon/react/nativemodule/microtasks"
+  react-native-fast-encoder:
+    :path: "../../../node_modules/react-native-fast-encoder"
   react-native-quick-base64:
     :path: "../../../node_modules/react-native-quick-base64"
   react-native-quick-crypto:
@@ -2117,6 +2144,7 @@ SPEC CHECKSUMS:
   React-logger: 8edfcedc100544791cd82692ca5a574240a16219
   React-Mapbuffer: c3f4b608e4a59dd2f6a416ef4d47a14400194468
   React-microtasksnativemodule: 054f34e9b82f02bd40f09cebd4083828b5b2beb6
+  react-native-fast-encoder: ad5d0df49342af25a82faf01a92fb2d7b82ea9c0
   react-native-quick-base64: 651d972291fd5d9902869636a1b3c46820324490
   react-native-quick-crypto: c168bd6ca1835f7ff17434f329d073290be091a8
   react-native-safe-area-context: 562163222d999b79a51577eda2ea8ad2c32b4d06

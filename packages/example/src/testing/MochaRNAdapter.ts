@@ -1,6 +1,12 @@
 import 'mocha';
 import type * as MochaTypes from 'mocha';
 
+// polyfill encoders for all tests (required for jose)
+import { polyfillGlobal } from 'react-native/Libraries/Utilities/PolyfillFunctions';
+import RNFE from 'react-native-fast-encoder';
+polyfillGlobal('TextEncoder', () => RNFE);
+polyfillGlobal('TextDecoder', () => RNFE);
+
 export const rootSuite = new Mocha.Suite('') as MochaTypes.Suite;
 rootSuite.timeout(10 * 1000);
 
