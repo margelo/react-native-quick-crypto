@@ -24,6 +24,11 @@ export class CryptoKey {
     this.keyUsages = keyUsages;
     this.keyExtractable = keyExtractable;
   }
+
+  get [Symbol.toStringTag]() {
+    return 'CryptoKey';
+  }
+
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
   inspect(_depth: number, _options: unknown): unknown {
     throw new Error('CryptoKey.inspect is not implemented');
@@ -76,6 +81,10 @@ export class KeyObject {
       throw new Error(`invalid KeyObject type: ${type}`);
     this.handle = handle;
     this.type = type;
+  }
+
+  get [Symbol.toStringTag]() {
+    return 'KeyObject';
   }
 
   // get type(): string {
