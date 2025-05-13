@@ -1,6 +1,9 @@
-#include "XSalsa20Cipher.hpp"
 #include <cstring>   // For std::memcpy
 #include <stdexcept> // For std::runtime_error
+
+#include "ArrayBuffer.hpp"
+#include "XSalsa20Cipher.hpp"
+#include "Utils.hpp"
 
 namespace margelo::nitro::crypto {
 

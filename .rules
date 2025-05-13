@@ -22,7 +22,7 @@ Every time you choose to apply a rule(s), explicitly state the rule(s) in the ou
 
 ## Rules
 
-- For C++ includes, do not try to add absolute or relative paths. They have to be resolved by the build system.
+- For C++ includes, do not try to add absolute paths. They have to be resolved by the build system.
 - Use smart pointers in C++.
 - Use modern C++ features.
 - Attempt to reduce the amount of code rather than add more.

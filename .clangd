@@ -1,0 +1,44 @@
+CompileFlags:
+  Add: [
+    # C++ Standard
+    -std=c++20,
+    
+    # Project include paths
+    -Ipackages/react-native-quick-crypto/cpp/**,
+    
+    # Dependencies
+    -Ipackages/react-native-quick-crypto/deps/**,
+    
+    # Libsodium includes
+    -Ipackages/react-native-quick-crypto/ios/libsodium-stable/src/libsodium/include,
+    
+    # Nitro Modules includes
+    -Ipackages/react-native-quick-crypto/nitrogen/generated/shared/c++,
+    -Inode_modules/react-native-nitro-modules/cpp/**,
+    
+    # OpenSSL includes
+    # -Iexample/ios/Pods/OpenSSL-Universal/OpenSSL.xcframework/**/**,
+    -I/opt/homebrew/Cellar/openssl@3/3.5.0/include,
+  ]
+  
+#   # Compiler flags
+#   Compiler: clang++
+  
+# # Diagnostics settings
+# Diagnostics:
+#   UnusedIncludes: Strict
+  
+# # Clang-Tidy settings
+# If:
+#   PathMatch: .*\.cpp
+# ClangTidy:
+#   Add: [
+#     modernize-*,
+#     performance-*,
+#     bugprone-*,
+#     -modernize-use-trailing-return-type,
+#   ]
+  
+# # Index settings
+# Index:
+#   Background: Build
