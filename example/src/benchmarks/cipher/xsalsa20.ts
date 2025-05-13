@@ -22,10 +22,10 @@ const xsalsa20_encrypt_decrypt: BenchFn = () => {
     if (encrypted.length !== data.length) {
       throw new Error('Encryption failed: output size mismatch');
     }
-    
+
     // Decrypt by applying XSalsa20 again
     const decrypted = rnqc.xsalsa20(key, nonce, encrypted);
-    
+
     // Verify decryption worked correctly
     for (let i = 0; i < data.length; i++) {
       if (data[i] !== decrypted[i]) {
@@ -40,10 +40,10 @@ const xsalsa20_encrypt_decrypt: BenchFn = () => {
     if (encrypted.length !== data.length) {
       throw new Error('Encryption failed: output size mismatch');
     }
-    
+
     // Decrypt
     const decrypted = nobleXSalsa20(key, nonce, encrypted);
-    
+
     // Verify
     for (let i = 0; i < data.length; i++) {
       if (data[i] !== decrypted[i]) {
@@ -71,17 +71,17 @@ const xsalsa20_encrypt_decrypt_large: BenchFn = () => {
     if (encrypted.length !== largeData.length) {
       throw new Error('Encryption failed: output size mismatch');
     }
-    
+
     // Decrypt
     const decrypted = rnqc.xsalsa20(key, nonce, encrypted);
-    
+
     // Verify (checking first and last 100 bytes for performance)
     for (let i = 0; i < 100; i++) {
       if (largeData[i] !== decrypted[i]) {
         throw new Error(`Decryption verification failed at start index ${i}`);
       }
     }
-    
+
     for (let i = largeData.length - 100; i < largeData.length; i++) {
       if (largeData[i] !== decrypted[i]) {
         throw new Error(`Decryption verification failed at end index ${i}`);
@@ -95,17 +95,17 @@ const xsalsa20_encrypt_decrypt_large: BenchFn = () => {
     if (encrypted.length !== largeData.length) {
       throw new Error('Encryption failed: output size mismatch');
     }
-    
+
     // Decrypt
     const decrypted = nobleXSalsa20(key, nonce, encrypted);
-    
+
     // Verify (checking first and last 100 bytes for performance)
     for (let i = 0; i < 100; i++) {
       if (largeData[i] !== decrypted[i]) {
         throw new Error(`Decryption verification failed at start index ${i}`);
       }
     }
-    
+
     for (let i = largeData.length - 100; i < largeData.length; i++) {
       if (largeData[i] !== decrypted[i]) {
         throw new Error(`Decryption verification failed at end index ${i}`);
