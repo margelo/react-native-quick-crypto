@@ -62,6 +62,8 @@ Pod::Spec.new do |s|
   s.pod_target_xcconfig = {
     # C++ compiler flags, mainly for folly.
     "GCC_PREPROCESSOR_DEFINITIONS" => "$(inherited) FOLLY_NO_CONFIG FOLLY_CFG_NO_COROUTINES",
+    # Set C++ standard to C++20
+    "CLANG_CXX_LANGUAGE_STANDARD" => "c++20",
     # Header search paths for vendored libsodium
     "HEADER_SEARCH_PATHS" => [
       "\"$(PODS_TARGET_SRCROOT)/ios/libsodium-stable/src/libsodium/include\"",

@@ -1,7 +1,6 @@
 #include "XSalsa20Cipher.hpp"
 #include <cstring>   // For std::memcpy
 #include <stdexcept> // For std::runtime_error
-#include <string>    // For std::to_string
 
 namespace margelo::nitro::crypto {
 
@@ -33,11 +32,12 @@ void XSalsa20Cipher::init(const std::shared_ptr<ArrayBuffer> cipher_key, const s
  */
 std::shared_ptr<ArrayBuffer> XSalsa20Cipher::update(const std::shared_ptr<ArrayBuffer>& data) {
   auto native_data = ToNativeArrayBuffer(data);
-  int result = crypto_stream(native_data->data(), native_data->size(), nonce, key);
+  auto output = new uint8_t[native_data->size()];
+  int result = crypto_stream_xor(output, native_data->data(), native_data->size(), nonce, key);
   if (result != 0) {
     throw std::runtime_error("XSalsa20Cipher: Failed to update");
   }
-  return std::make_shared<NativeArrayBuffer>(native_data->data(), native_data->size(), nullptr);
+  return std::make_shared<NativeArrayBuffer>(output, native_data->size(), [=]() { delete[] output; });
 }
 
 /**

@@ -14,7 +14,8 @@ import { test } from '../util';
 const SUITE = 'cipher';
 
 // --- Constants and Test Data ---
-const key = Buffer.from('a8a7d6a5d4a3d2a1a09f9e9d9c8b8a89', 'hex');
+const key16 = Buffer.from('a8a7d6a5d4a3d2a1a09f9e9d9c8b8a89', 'hex');
+const key32 = Buffer.from('a8a7d6a5d4a3d2a1a09f9e9d9c8b8a89a8a7d6a5d4a3d2a1a09f9e9d9c8b8a89', 'hex');
 const iv16 = randomFillSync(new Uint8Array(16));
 const iv12 = randomFillSync(new Uint8Array(12)); // Common IV size for GCM/CCM/OCB
 const iv = Buffer.from(iv16);
@@ -116,28 +117,28 @@ function roundTrip(
 // --- Tests ---
 test(SUITE, 'valid algorithm', () => {
   expect(() => {
-    createCipheriv('aes-128-cbc', Buffer.alloc(16), Buffer.alloc(16), {}); // Use alloc
+    createCipheriv('aes-128-cbc', Buffer.alloc(16), Buffer.alloc(16), {});
   }).to.not.throw();
 });
 
 test(SUITE, 'invalid algorithm', () => {
   expect(() => {
-    createCipheriv('aes-128-boorad', Buffer.alloc(16), Buffer.alloc(16), {}); // Use alloc
-  }).to.throw('Invalid cipher type: aes-128-boorad'); // Match exact error string
+    createCipheriv('aes-128-boorad', Buffer.alloc(16), Buffer.alloc(16), {});
+  }).to.throw('Unsupported or unknown cipher type: aes-128-boorad');
 });
 
 test(SUITE, 'strings', () => {
   // roundtrip expects Buffers, convert strings first
   roundTrip(
     'aes-128-cbc',
-    key.toString('hex'),
+    key16.toString('hex'),
     iv.toString('hex'),
     plaintextBuffer,
   );
 });
 
 test(SUITE, 'buffers', () => {
-  roundTrip('aes-128-cbc', key, iv, plaintextBuffer);
+  roundTrip('aes-128-cbc', key16, iv, plaintextBuffer);
 });
 
 // loop through each cipher and test roundtrip
@@ -202,8 +203,13 @@ allCiphers.forEach(cipherName => {
 
 // libsodium cipher tests
 test(SUITE, 'xsalsa20', () => {
-  const nonce = Buffer.from('0123456789abcdef', 'hex');
-  const ciphertext = xsalsa20(key, nonce, plaintextBuffer);
+  const key = new Uint8Array(key32);
+  let nonce = randomFillSync(new Uint8Array(24));
+  const data = new Uint8Array(plaintextBuffer);
+  // encrypt
+  const ciphertext = xsalsa20(key, nonce, data);
+  // decrypt - must use the same nonce as encryption
   const decrypted = xsalsa20(key, nonce, ciphertext);
-  expect(decrypted).eql(plaintextBuffer);
+  // test decrypted == data
+  expect(decrypted).eql(data);
 });
