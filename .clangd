@@ -17,6 +17,5 @@ CompileFlags:
     -Inode_modules/react-native-nitro-modules/cpp/**,
     
     # OpenSSL includes
-    # -Iexample/ios/Pods/OpenSSL-Universal/OpenSSL.xcframework/**/**,
     -I/opt/homebrew/Cellar/openssl@3/3.*/include,
   ]
