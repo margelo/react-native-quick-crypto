@@ -115,7 +115,6 @@ std::shared_ptr<ArrayBuffer> HybridCipher::final() {
   auto out_buf = std::make_unique<uint8_t[]>(block_size);
   int out_len = 0;
 
-  int mode = EVP_CIPHER_CTX_mode(ctx);
   int ret = EVP_CipherFinal_ex(ctx, out_buf.get(), &out_len);
   if (!ret) {
     unsigned long err = ERR_get_error();

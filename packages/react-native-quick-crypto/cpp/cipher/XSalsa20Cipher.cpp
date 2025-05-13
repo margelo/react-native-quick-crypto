@@ -1,7 +1,7 @@
 #include <cstring>   // For std::memcpy
 #include <stdexcept> // For std::runtime_error
 
-#include "ArrayBuffer.hpp"
+#include "NitroModules/ArrayBuffer.hpp"
 #include "Utils.hpp"
 #include "XSalsa20Cipher.hpp"
 
