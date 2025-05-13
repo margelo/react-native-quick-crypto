@@ -2,8 +2,8 @@
 
 #include "sodium.h"
 
-#include "NitroModules/ArrayBuffer.hpp"
 #include "HybridCipher.hpp"
+#include "NitroModules/ArrayBuffer.hpp"
 
 namespace margelo::nitro::crypto {
 
