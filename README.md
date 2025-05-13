@@ -1,5 +1,9 @@
-<a href="https://margelo.io">
-  <img src="./docs/img/banner.svg" width="100%" />
+<a href="https://margelo.com">
+  <picture>
+    <source media="(prefers-color-scheme: dark)" srcset="./docs/img/banner-dark.png" />
+    <source media="(prefers-color-scheme: light)" srcset="./docs/img/banner-light.png" />
+    <img alt="react-native-quick-crypto" src="./docs/img/banner-light.png" />
+  </picture>
 </a>
 
 # ⚡️ react-native-quick-crypto
