@@ -5,12 +5,12 @@ import type { BenchFn } from '../../types/benchmarks';
 
 const TIME_MS = 1000;
 
-// Create test data using randomBytes
-const key = rnqc.randomBytes(32); // 32 bytes key for XSalsa20
-const nonce = rnqc.randomBytes(24); // 24 bytes nonce for XSalsa20
-const data = rnqc.randomBytes(1024); // 1KB of data to encrypt
-
 const xsalsa20_encrypt_decrypt: BenchFn = () => {
+  // Create test data using randomBytes
+  const key = rnqc.randomBytes(32); // 32 bytes key for XSalsa20
+  const nonce = rnqc.randomBytes(24); // 24 bytes nonce for XSalsa20
+  const data = rnqc.randomBytes(1024); // 1KB of data to encrypt
+
   const bench = new Bench({
     name: 'XSalsa20 encrypt/decrypt (1KB)',
     time: TIME_MS,
@@ -57,8 +57,11 @@ const xsalsa20_encrypt_decrypt: BenchFn = () => {
 };
 
 const xsalsa20_encrypt_decrypt_large: BenchFn = () => {
+  // Create test data using randomBytes
+  const key = rnqc.randomBytes(32); // 32 bytes key for XSalsa20
+  const nonce = rnqc.randomBytes(24); // 24 bytes nonce for XSalsa20
   // Create larger test data (64KB) using randomBytes
-  const largeData = rnqc.randomBytes(64 * 1024);
+  const data = rnqc.randomBytes(64 * 1024);
 
   const bench = new Bench({
     name: 'XSalsa20 encrypt/decrypt (64KB)',
@@ -67,8 +70,8 @@ const xsalsa20_encrypt_decrypt_large: BenchFn = () => {
 
   bench.add('rnqc', () => {
     // Encrypt
-    const encrypted = rnqc.xsalsa20(key, nonce, largeData);
-    if (encrypted.length !== largeData.length) {
+    const encrypted = rnqc.xsalsa20(key, nonce, data);
+    if (encrypted.length !== data.length) {
       throw new Error('Encryption failed: output size mismatch');
     }
 
@@ -77,13 +80,13 @@ const xsalsa20_encrypt_decrypt_large: BenchFn = () => {
 
     // Verify (checking first and last 100 bytes for performance)
     for (let i = 0; i < 100; i++) {
-      if (largeData[i] !== decrypted[i]) {
+      if (data[i] !== decrypted[i]) {
         throw new Error(`Decryption verification failed at start index ${i}`);
       }
     }
 
-    for (let i = largeData.length - 100; i < largeData.length; i++) {
-      if (largeData[i] !== decrypted[i]) {
+    for (let i = data.length - 100; i < data.length; i++) {
+      if (data[i] !== decrypted[i]) {
         throw new Error(`Decryption verification failed at end index ${i}`);
       }
     }
@@ -91,8 +94,8 @@ const xsalsa20_encrypt_decrypt_large: BenchFn = () => {
 
   bench.add('@noble/ciphers/salsa', () => {
     // Encrypt
-    const encrypted = nobleXSalsa20(key, nonce, largeData);
-    if (encrypted.length !== largeData.length) {
+    const encrypted = nobleXSalsa20(key, nonce, data);
+    if (encrypted.length !== data.length) {
       throw new Error('Encryption failed: output size mismatch');
     }
 
@@ -101,13 +104,13 @@ const xsalsa20_encrypt_decrypt_large: BenchFn = () => {
 
     // Verify (checking first and last 100 bytes for performance)
     for (let i = 0; i < 100; i++) {
-      if (largeData[i] !== decrypted[i]) {
+      if (data[i] !== decrypted[i]) {
         throw new Error(`Decryption verification failed at start index ${i}`);
       }
     }
 
-    for (let i = largeData.length - 100; i < largeData.length; i++) {
-      if (largeData[i] !== decrypted[i]) {
+    for (let i = data.length - 100; i < data.length; i++) {
+      if (data[i] !== decrypted[i]) {
         throw new Error(`Decryption verification failed at end index ${i}`);
       }
     }
