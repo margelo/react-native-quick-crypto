@@ -18,27 +18,5 @@ CompileFlags:
     
     # OpenSSL includes
     # -Iexample/ios/Pods/OpenSSL-Universal/OpenSSL.xcframework/**/**,
-    -I/opt/homebrew/Cellar/openssl@3/3.5.0/include,
+    -I/opt/homebrew/Cellar/openssl@3/3.*/include,
   ]
-  
-#   # Compiler flags
-#   Compiler: clang++
-  
-# # Diagnostics settings
-# Diagnostics:
-#   UnusedIncludes: Strict
-  
-# # Clang-Tidy settings
-# If:
-#   PathMatch: .*\.cpp
-# ClangTidy:
-#   Add: [
-#     modernize-*,
-#     performance-*,
-#     bugprone-*,
-#     -modernize-use-trailing-return-type,
-#   ]
-  
-# # Index settings
-# Index:
-#   Background: Build
