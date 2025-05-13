@@ -22,6 +22,9 @@ Pod::Spec.new do |s|
   # cocoapod for Sodium has not been updated for a while, so we need to build it ourselves
   # https://github.com/jedisct1/swift-sodium/issues/264#issuecomment-2864963850
   s.prepare_command = <<-CMD
+    # Create ios directory if it doesn't exist
+    mkdir -p ios
+
     # Download libsodium
     curl -L -s -o ios/libsodium.tar.gz https://download.libsodium.org/libsodium/releases/libsodium-1.0.20-stable.tar.gz
 
@@ -37,7 +40,7 @@ Pod::Spec.new do |s|
     make -j$(sysctl -n hw.ncpu)
 
     # Cleanup
-    cd ../.. && \
+    cd ../../
     rm -f ios/libsodium.tar.gz
   CMD
 
