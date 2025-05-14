@@ -139,6 +139,9 @@ dependencies {
 
   // Add a dependency on OpenSSL
   implementation 'io.github.ronickg:openssl:3.3.2'
+
+  // Add a dependency on libsodium
+  implementation 'io.github.ronickg:sodium:1.0.20'
 }
 
 if (isNewArchitectureEnabled()) {

@@ -12,6 +12,7 @@ add_library(
   ../cpp/cipher/CCMCipher.cpp
   ../cpp/cipher/HybridCipher.cpp
   ../cpp/cipher/OCBCipher.cpp
+  ../cpp/cipher/XSalsa20Cipher.cpp
   ../cpp/ed25519/HybridEdKeyPair.cpp
   ../cpp/hash/HybridHash.cpp
   ../cpp/hmac/HybridHmac.cpp
@@ -40,24 +41,26 @@ include_directories(
 find_library(LOG_LIB log)
 
 find_package(openssl REQUIRED CONFIG)
+find_package(sodium REQUIRED CONFIG)
 
 # Link all libraries together
 target_link_libraries(
   ${PACKAGE_NAME}
-  ${LOG_LIB}                             # <-- Logcat logger
-  android                                # <-- Android core
-  openssl::crypto                        # <-- OpenSSL (Crypto)
-  )
+  ${LOG_LIB}                               # <-- Logcat logger
+  android                                  # <-- Android core
+  openssl::crypto                          # <-- OpenSSL   (Crypto)
+  sodium::sodium                           # <-- libsodium (Crypto)
+)
 
 if(ReactAndroid_VERSION_MINOR GREATER_EQUAL 76)
   target_link_libraries(
     ${PACKAGE_NAME}
-    ReactAndroid::reactnative             # <-- RN: Native Modules umbrella prefab
+    ReactAndroid::reactnative              # <-- RN: Native Modules umbrella prefab
   )
 else()
   target_link_libraries(
     ${PACKAGE_NAME}
-    ReactAndroid::turbomodulejsijni
-    ReactAndroid::react_nativemodule_core  # <-- RN: React Native native module core
+    ReactAndroid::react_nativemodule_core  # <-- RN: TurboModules Core
+    ReactAndroid::turbomodulejsijni        # <-- RN: TurboModules utils (e.g. CallInvokerHolder)
   )
 endif()
