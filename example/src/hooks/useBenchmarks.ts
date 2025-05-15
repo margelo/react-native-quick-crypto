@@ -3,6 +3,7 @@ import { BenchmarkSuite } from '../benchmarks/benchmarks';
 import ed from '../benchmarks/ed/ed25519';
 import pbkdf2 from '../benchmarks/pbkdf2/pbkdf2';
 import random from '../benchmarks/random/randomBytes';
+import xsalsa20 from '../benchmarks/cipher/xsalsa20';
 
 export const useBenchmarks = (): [
   BenchmarkSuite[],
@@ -26,6 +27,7 @@ export const useBenchmarks = (): [
           'polyfilled with RNQC, so a somewhat senseless benchmark',
       }),
     );
+    newSuites.push(new BenchmarkSuite('cipher', xsalsa20));
     setSuites(newSuites);
   }, []);
 

@@ -3,7 +3,7 @@ import { Buffer } from '@craftzdog/react-native-buffer';
 
 // API imports
 import * as keys from './keys';
-import { cipherExports as cipher } from './cipher';
+import * as cipher from './cipher';
 import * as ed from './ed';
 import { hashExports as hash } from './hash';
 import { hmacExports as hmac } from './hmac';

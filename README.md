@@ -1,5 +1,9 @@
-<a href="https://margelo.io">
-  <img src="./docs/img/banner.svg" width="100%" />
+<a href="https://margelo.com">
+  <picture>
+    <source media="(prefers-color-scheme: dark)" srcset="./docs/img/banner-dark.png" />
+    <source media="(prefers-color-scheme: light)" srcset="./docs/img/banner-light.png" />
+    <img alt="react-native-quick-crypto" src="./docs/img/banner-light.png" />
+  </picture>
 </a>
 
 # ⚡️ react-native-quick-crypto
@@ -27,7 +31,7 @@ QuickCrypto can be used as a drop-in replacement for your Web3/Crypto apps to sp
 | Version | RN Architecture | Modules |
 | ------- | ------ | ------- |
 | `1.x`     | new [->](https://github.com/reactwg/react-native-new-architecture/blob/main/docs/enable-apps.md)  | Nitro Modules [->](https://github.com/mrousavy/nitro) |
-| `0.x`     | old  | Bridge & JSI |
+| `0.x`     | old, new 🤞  | Bridge & JSI |
 
 ## Benchmarks
 
