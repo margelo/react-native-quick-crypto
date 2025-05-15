@@ -41,7 +41,6 @@ include_directories(
 find_library(LOG_LIB log)
 
 find_package(openssl REQUIRED CONFIG)
-find_package(sodium REQUIRED CONFIG)
 
 # Link all libraries together
 target_link_libraries(
@@ -49,8 +48,16 @@ target_link_libraries(
   ${LOG_LIB}                               # <-- Logcat logger
   android                                  # <-- Android core
   openssl::crypto                          # <-- OpenSSL   (Crypto)
-  sodium::sodium                           # <-- libsodium (Crypto)
 )
+
+if(SODIUM_ENABLED)
+  add_definitions(-DBLSALLOC_SODIUM)
+  find_package(sodium REQUIRED CONFIG)
+  target_link_libraries(
+    ${PACKAGE_NAME}
+    sodium::sodium
+  )
+endif()
 
 if(ReactAndroid_VERSION_MINOR GREATER_EQUAL 76)
   target_link_libraries(

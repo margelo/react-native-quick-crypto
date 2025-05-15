@@ -34,6 +34,9 @@ void XSalsa20Cipher::init(const std::shared_ptr<ArrayBuffer> cipher_key, const s
  * xsalsa20 call to sodium implementation
  */
 std::shared_ptr<ArrayBuffer> XSalsa20Cipher::update(const std::shared_ptr<ArrayBuffer>& data) {
+#ifndef BLSALLOC_SODIUM
+  throw std::runtime_error("XSalsa20Cipher: libsodium must be enabled to use this cipher (BLSALLOC_SODIUM is not defined).");
+#else
   auto native_data = ToNativeArrayBuffer(data);
   auto output = new uint8_t[native_data->size()];
   int result = crypto_stream_xor(output, native_data->data(), native_data->size(), nonce, key);
@@ -41,13 +44,18 @@ std::shared_ptr<ArrayBuffer> XSalsa20Cipher::update(const std::shared_ptr<ArrayB
     throw std::runtime_error("XSalsa20Cipher: Failed to update");
   }
   return std::make_shared<NativeArrayBuffer>(output, native_data->size(), [=]() { delete[] output; });
+#endif
 }
 
 /**
  * xsalsa20 does not have a final step, returns empty buffer
  */
 std::shared_ptr<ArrayBuffer> XSalsa20Cipher::final() {
+#ifndef BLSALLOC_SODIUM
+  throw std::runtime_error("XSalsa20Cipher: libsodium must be enabled to use this cipher (BLSALLOC_SODIUM is not defined).");
+#else
   return std::make_shared<NativeArrayBuffer>(nullptr, 0, nullptr);
+#endif
 }
 
 } // namespace margelo::nitro::crypto
