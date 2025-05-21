@@ -17,7 +17,11 @@
 #include <assert.h>
 #include <string.h>
 #if defined(__GNUC__)
-#include <endian.h>
+  #if TARGET_OS_MACCATALYST
+    #include <machine/endian.h>  // Mac Catalyst
+  #else  
+    #include <endian.h>          // iOS
+  #endif
 #endif
 
 #include <openssl/sha.h>
