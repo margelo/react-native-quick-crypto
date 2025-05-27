@@ -96,6 +96,7 @@ class CipherCommon extends Stream.Transform {
     });
   }
 
+  update(data: Buffer): Buffer;
   update(
     data: BinaryLike,
     inputEncoding?: Encoding,
