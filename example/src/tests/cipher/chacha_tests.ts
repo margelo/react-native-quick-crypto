@@ -148,25 +148,22 @@ const testVectors = {
   } as ChaCha20Poly1305TestVector,
 };
 
+// Helper function to create ChaCha20 IV from nonce and counter
+function createChaCha20IV(originalNonce: Buffer, counter = 0): Buffer {
+  const iv = Buffer.alloc(16); // 128 bits
+  iv.writeUInt32LE(counter, 0);
+  iv.writeUInt32LE(0, 4); // High 32 bits of counter
+  originalNonce.copy(iv, 8, 4, 12);
+  return iv;
+}
+
 function testChaCha20Vector(vector: ChaCha20TestVector, description: string) {
   test(SUITE, `chacha20 ${description}`, () => {
     const key = fromHex(vector.key);
     const originalNonce = fromHex(vector.nonce);
     const plaintext = fromHex(vector.plaintext || '00');
     const expected = fromHex(vector.expected);
-
-    // For OpenSSL ChaCha20, we need to construct a 128-bit IV:
-    // [64-bit counter (little-endian)] + [64-bit nonce]
-    const counter = vector.counter || 0;
-    const iv = Buffer.alloc(16); // 128 bits
-
-    // Write counter as little-endian 64-bit integer in first 8 bytes
-    iv.writeUInt32LE(counter, 0);
-    iv.writeUInt32LE(0, 4); // High 32 bits of counter
-
-    // Copy the last 8 bytes of the original nonce to complete the IV
-    // RFC 7539 nonce is 12 bytes, we need the last 8 bytes
-    originalNonce.copy(iv, 8, 4, 12);
+    const iv = createChaCha20IV(originalNonce, vector.counter);
 
     roundTrip('chacha20', key, iv, plaintext);
 
@@ -220,111 +217,99 @@ testChaCha20Poly1305Vector(
   'rfc7539 test vector 2',
 );
 
-// // Additional ChaCha20-Poly1305 test vectors with different scenarios
-// test(SUITE, 'chacha20-poly1305 empty plaintext', () => {
-//   const key = Buffer.from(
-//     '0000000000000000000000000000000000000000000000000000000000000000',
-//     'hex',
-//   );
-//   const nonce = Buffer.from('000000000000000000000000', 'hex');
-//   const plaintext = Buffer.alloc(0);
-//   const aad = Buffer.from('00000000000000000000000000000000', 'hex');
+// Helper function for common test setup
+function createTestSetup(
+  keyHex = '0000000000000000000000000000000000000000000000000000000000000000',
+  nonceHex = '000000000000000000000000',
+) {
+  return {
+    key: Buffer.from(keyHex, 'hex'),
+    nonce: Buffer.from(nonceHex, 'hex'),
+  };
+}
 
-//   roundTripAuth('chacha20-poly1305', key, nonce, plaintext, aad);
-// });
+// Additional ChaCha20-Poly1305 test vectors with different scenarios
+test(SUITE, 'chacha20-poly1305 empty plaintext', () => {
+  const { key, nonce } = createTestSetup();
+  const plaintext = Buffer.alloc(0);
+  const aad = Buffer.from('00000000000000000000000000000000', 'hex');
 
-// test(SUITE, 'chacha20-poly1305 no aad', () => {
-//   const key = Buffer.from(
-//     '0000000000000000000000000000000000000000000000000000000000000000',
-//     'hex',
-//   );
-//   const nonce = Buffer.from('000000000000000000000000', 'hex');
-//   const plaintext = Buffer.from('00000000000000000000000000000000', 'hex');
+  roundTripAuth('chacha20-poly1305', key, nonce, plaintext, aad);
+});
 
-//   roundTripAuth('chacha20-poly1305', key, nonce, plaintext);
-// });
+test(SUITE, 'chacha20-poly1305 no aad', () => {
+  const { key, nonce } = createTestSetup();
+  const plaintext = Buffer.from('00000000000000000000000000000000', 'hex');
 
-// test(SUITE, 'chacha20-poly1305 large plaintext', () => {
-//   const key = Buffer.from(
-//     '0000000000000000000000000000000000000000000000000000000000000000',
-//     'hex',
-//   );
-//   const nonce = Buffer.from('000000000000000000000000', 'hex');
-//   const plaintext = Buffer.alloc(1024, 0x42); // 1KB of 0x42
-//   const aad = Buffer.from('additional authenticated data', 'utf8');
+  roundTripAuth('chacha20-poly1305', key, nonce, plaintext);
+});
 
-//   roundTripAuth('chacha20-poly1305', key, nonce, plaintext, aad);
-// });
+test(SUITE, 'chacha20-poly1305 large plaintext', () => {
+  const { key, nonce } = createTestSetup();
+  const plaintext = Buffer.alloc(1024, 0x42); // 1KB of 0x42
+  const aad = Buffer.from('additional authenticated data', 'utf8');
 
-// // Test different tag lengths for ChaCha20-Poly1305
-// test(SUITE, 'chacha20-poly1305 custom tag length', () => {
-//   const key = Buffer.from(
-//     '0000000000000000000000000000000000000000000000000000000000000000',
-//     'hex',
-//   );
-//   const nonce = Buffer.from('000000000000000000000000', 'hex');
-//   const plaintext = Buffer.from('Hello, ChaCha20-Poly1305!', 'utf8');
-//   const aad = Buffer.from('test aad', 'utf8');
+  roundTripAuth('chacha20-poly1305', key, nonce, plaintext, aad);
+});
 
-//   // Test with 12-byte tag
-//   roundTripAuth('chacha20-poly1305', key, nonce, plaintext, aad, 12);
+// Test different tag lengths for ChaCha20-Poly1305
+test(SUITE, 'chacha20-poly1305 custom tag length', () => {
+  const { key, nonce } = createTestSetup();
+  const plaintext = Buffer.from('Hello, ChaCha20-Poly1305!', 'utf8');
+  const aad = Buffer.from('test aad', 'utf8');
 
-//   // Test with 8-byte tag
-//   roundTripAuth('chacha20-poly1305', key, nonce, plaintext, aad, 8);
-// });
+  // Test with 12-byte tag
+  roundTripAuth('chacha20-poly1305', key, nonce, plaintext, aad, 12);
 
-// // ChaCha20 edge cases
-// test(SUITE, 'chacha20 empty plaintext', () => {
-//   const key = Buffer.from(
-//     '0000000000000000000000000000000000000000000000000000000000000000',
-//     'hex',
-//   );
-//   const nonce = Buffer.from('000000000000000000000000', 'hex');
-//   const plaintext = Buffer.alloc(0);
+  // Test with 8-byte tag
+  roundTripAuth('chacha20-poly1305', key, nonce, plaintext, aad, 8);
+});
 
-//   roundTrip('chacha20', key, nonce, plaintext);
-// });
+// ChaCha20 edge cases
+test(SUITE, 'chacha20 empty plaintext', () => {
+  const { key, nonce } = createTestSetup();
+  const plaintext = Buffer.alloc(0);
+  const iv = createChaCha20IV(nonce);
 
-// test(SUITE, 'chacha20 single byte', () => {
-//   const key = Buffer.from(
-//     '0000000000000000000000000000000000000000000000000000000000000000',
-//     'hex',
-//   );
-//   const nonce = Buffer.from('000000000000000000000000', 'hex');
-//   const plaintext = Buffer.from([0x42]);
+  roundTrip('chacha20', key, iv, plaintext);
+});
 
-//   roundTrip('chacha20', key, nonce, plaintext);
-// });
+test(SUITE, 'chacha20 single byte', () => {
+  const { key, nonce } = createTestSetup();
+  const plaintext = Buffer.from([0x42]);
+  const iv = createChaCha20IV(nonce);
 
-// test(SUITE, 'chacha20 large plaintext', () => {
-//   const key = Buffer.from(
-//     '0000000000000000000000000000000000000000000000000000000000000000',
-//     'hex',
-//   );
-//   const nonce = Buffer.from('000000000000000000000000', 'hex');
-//   const plaintext = Buffer.alloc(4096, 0x55); // 4KB of 0x55
+  roundTrip('chacha20', key, iv, plaintext);
+});
 
-//   roundTrip('chacha20', key, nonce, plaintext);
-// });
+test(SUITE, 'chacha20 large plaintext', () => {
+  const { key, nonce } = createTestSetup();
+  const plaintext = Buffer.alloc(4096, 0x55); // 4KB of 0x55
+  const iv = createChaCha20IV(nonce);
 
-// // Test with different nonce formats (96-bit vs 64-bit + counter)
-// test(SUITE, 'chacha20 different nonce sizes', () => {
-//   const key = Buffer.from(
-//     '0000000000000000000000000000000000000000000000000000000000000000',
-//     'hex',
-//   );
-//   const plaintext = Buffer.from('test message', 'utf8');
+  roundTrip('chacha20', key, iv, plaintext);
+});
 
-//   // 96-bit nonce (IETF ChaCha20)
-//   const nonce96 = Buffer.from('000000000000000000000000', 'hex');
-//   roundTrip('chacha20', key, nonce96, plaintext);
+// Test with different nonce formats (96-bit vs 64-bit + counter)
+test(SUITE, 'chacha20 different nonce sizes', () => {
+  const { key } = createTestSetup();
+  const plaintext = Buffer.from('test message', 'utf8');
 
-//   // 64-bit nonce (original ChaCha20) - if supported
-//   try {
-//     const nonce64 = Buffer.from('0000000000000000', 'hex');
-//     roundTrip('chacha20', key, nonce64, plaintext);
-//   } catch {
-//     // Some implementations only support 96-bit nonces
-//     console.log('64-bit nonce not supported, skipping');
-//   }
-// });
+  // 96-bit nonce (IETF ChaCha20)
+  const nonce96 = Buffer.from('000000000000000000000000', 'hex');
+  const iv96 = createChaCha20IV(nonce96);
+  roundTrip('chacha20', key, iv96, plaintext);
+
+  // 64-bit nonce (original ChaCha20) - if supported
+  try {
+    const nonce64 = Buffer.from('0000000000000000', 'hex');
+    const iv64 = Buffer.alloc(16);
+    iv64.writeUInt32LE(0, 0);
+    iv64.writeUInt32LE(0, 4);
+    nonce64.copy(iv64, 8, 0, 8);
+    roundTrip('chacha20', key, iv64, plaintext);
+  } catch {
+    // Some implementations only support 96-bit nonces
+    console.log('64-bit nonce not supported, skipping');
+  }
+});
