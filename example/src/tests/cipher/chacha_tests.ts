@@ -191,7 +191,7 @@ function testChaCha20Poly1305Vector(
     const plaintext = fromHex(vector.plaintext);
     const aad = fromHex(vector.aad);
     const expectedCiphertext = fromHex(vector.expected);
-    // const expectedTag = fromHex(vector.tag);
+    const expectedTag = fromHex(vector.tag);
 
     // First test round trip
     roundTripAuth('chacha20-poly1305', key, nonce, plaintext, aad);
@@ -199,16 +199,14 @@ function testChaCha20Poly1305Vector(
     // Then test against expected values
     const cipher = createCipheriv('chacha20-poly1305', key, nonce);
     cipher.setAAD(aad);
-    const encrypted = Buffer.concat([cipher.update(plaintext), cipher.final()]);
+    const actualCipherText = Buffer.concat([
+      cipher.update(plaintext),
+      cipher.final(),
+    ]);
 
-    // // For ChaCha20-Poly1305, the tag is appended to the ciphertext
-    // const actualTag = encrypted.subarray(encrypted.length - 16);
-    // const actualCiphertext = encrypted.subarray(0, encrypted.length - 16);
+    expect(actualCipherText).to.deep.equal(expectedCiphertext);
 
-    // const actualTag = cipher.getAuthTag();
-
-    expect(encrypted).to.deep.equal(expectedCiphertext);
-    // expect(actualTag).to.deep.equal(expectedTag);
+    // TODO: add a test for the tag
   });
 }
 
