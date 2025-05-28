@@ -206,7 +206,8 @@ function testChaCha20Poly1305Vector(
 
     expect(actualCipherText).to.deep.equal(expectedCiphertext);
 
-    // TODO: add a test for the tag
+    const actualTag = cipher.getAuthTag();
+    expect(actualTag).to.deep.equal(expectedTag);
   });
 }
 

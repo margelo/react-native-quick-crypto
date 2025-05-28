@@ -5,6 +5,8 @@
 #include <string>
 
 #include "CCMCipher.hpp"
+#include "ChaCha20Cipher.hpp"
+#include "ChaCha20Poly1305Cipher.hpp"
 #include "HybridCipherFactorySpec.hpp"
 #include "OCBCipher.hpp"
 #include "Utils.hpp"
@@ -22,7 +24,6 @@ class HybridCipherFactory : public HybridCipherFactorySpec {
  public:
   // Factory method exposed to JS
   inline std::shared_ptr<HybridCipherSpec> createCipher(const CipherArgs& args) {
-
     // Create the appropriate cipher instance based on mode
     std::shared_ptr<HybridCipher> cipherInstance;
 
@@ -47,7 +48,24 @@ class HybridCipherFactory : public HybridCipherFactorySpec {
           cipherInstance->init(args.cipherKey, args.iv);
           return cipherInstance;
         }
+        case EVP_CIPH_STREAM_CIPHER: {
+          // Check for ChaCha20 variants specifically
+          std::string cipherName = toLower(args.cipherType);
+          if (cipherName == "chacha20") {
+            cipherInstance = std::make_shared<ChaCha20Cipher>();
+            cipherInstance->setArgs(args);
+            cipherInstance->init(args.cipherKey, args.iv);
+            return cipherInstance;
+          }
+          if (cipherName == "chacha20-poly1305") {
+            cipherInstance = std::make_shared<ChaCha20Poly1305Cipher>();
+            cipherInstance->setArgs(args);
+            cipherInstance->init(args.cipherKey, args.iv);
+            return cipherInstance;
+          }
+        }
         default: {
+          // Default case for other ciphers
           cipherInstance = std::make_shared<HybridCipher>();
           cipherInstance->setArgs(args);
           cipherInstance->init(args.cipherKey, args.iv);
