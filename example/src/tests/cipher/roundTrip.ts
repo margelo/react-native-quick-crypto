@@ -17,8 +17,6 @@ export function roundTripAuth(
   aad?: Buffer,
   tagLength?: number, // Usually 16 for these modes
 ) {
-  let tag: Buffer | null = null;
-  const isChaChaPoly = cipherName.toLowerCase() === 'chacha20-poly1305'; // Exact match
   const isCCM = cipherName.includes('CCM');
 
   // Encrypt
@@ -32,22 +30,8 @@ export function roundTripAuth(
   }
   const encryptedPart1: Buffer = cipher.update(plaintext) as Buffer;
   const encryptedPart2: Buffer = cipher.final() as Buffer;
-  let encrypted = Buffer.concat([encryptedPart1, encryptedPart2]);
-
-  if (!isChaChaPoly) {
-    // ChaChaPoly implicitly includes tag in final output
-    tag = cipher.getAuthTag();
-  } else {
-    // For ChaChaPoly, extract tag from the end of ciphertext
-    const expectedTagLength = tagLength ?? 16;
-    tag = encrypted.subarray(encrypted.length - expectedTagLength);
-    encrypted = encrypted.subarray(0, encrypted.length - expectedTagLength);
-  }
-
-  // Keep original encrypted buffer for ChaChaPoly decryption
-  const originalEncryptedForChaCha = isChaChaPoly
-    ? Buffer.concat([encryptedPart1, encryptedPart2])
-    : null;
+  const encrypted = Buffer.concat([encryptedPart1, encryptedPart2]);
+  const tag = cipher.getAuthTag();
 
   // Decrypt
   const decipher: Decipher | null = createDecipheriv(cipherName, key, iv, {
@@ -58,17 +42,9 @@ export function roundTripAuth(
     const options = isCCM ? { plaintextLength: plaintext.length } : undefined;
     decipher.setAAD(aad, options); // Pass plaintextLength for CCM
   }
-  // Do not set AuthTag explicitly for ChaChaPoly
-  if (!isChaChaPoly) {
-    decipher.setAuthTag(tag);
-  }
-
-  // For ChaChaPoly, pass the original buffer with tag appended
-  const bufferToDecrypt = isChaChaPoly
-    ? originalEncryptedForChaCha!
-    : encrypted;
-  const decryptedPart1: Buffer = decipher.update(bufferToDecrypt) as Buffer;
-  const decryptedPart2: Buffer = decipher.final() as Buffer; // Final verifies tag for ChaChaPoly
+  decipher.setAuthTag(tag);
+  const decryptedPart1: Buffer = decipher.update(encrypted) as Buffer;
+  const decryptedPart2: Buffer = decipher.final() as Buffer;
   const decrypted = Buffer.concat([decryptedPart1, decryptedPart2]);
 
   // Verify
