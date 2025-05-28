@@ -13,6 +13,8 @@ add_library(
   ../cpp/cipher/HybridCipher.cpp
   ../cpp/cipher/OCBCipher.cpp
   ../cpp/cipher/XSalsa20Cipher.cpp
+  ../cpp/cipher/ChaCha20Cipher.cpp
+  ../cpp/cipher/ChaCha20Poly1305Cipher.cpp
   ../cpp/ed25519/HybridEdKeyPair.cpp
   ../cpp/hash/HybridHash.cpp
   ../cpp/hmac/HybridHmac.cpp
