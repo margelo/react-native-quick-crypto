@@ -6,60 +6,32 @@
 
 namespace margelo::nitro::crypto {
 
-void ChaCha20Cipher::init(const std::shared_ptr<ArrayBuffer> cipher_key, const std::shared_ptr<ArrayBuffer> iv) {
-  // Clean up any existing context
-  if (ctx) {
-    EVP_CIPHER_CTX_free(ctx);
-    ctx = nullptr;
-  }
+using namespace margelo::nitro;
 
-  // Get ChaCha20 cipher implementation
-  const EVP_CIPHER* cipher = EVP_chacha20();
-  if (!cipher) {
-    throw std::runtime_error("Failed to get ChaCha20 cipher implementation");
-  }
+// Implement virtual methods from HybridCipher
+const EVP_CIPHER* ChaCha20Cipher::getCipherImpl() {
+  return EVP_chacha20();
+}
 
-  // Create a new context
-  ctx = EVP_CIPHER_CTX_new();
-  if (!ctx) {
-    throw std::runtime_error("Failed to create cipher context");
-  }
-
-  // Initialize the encryption/decryption operation
-  if (EVP_CipherInit_ex(ctx, cipher, nullptr, nullptr, nullptr, is_cipher) != 1) {
-    unsigned long err = ERR_get_error();
-    char err_buf[256];
-    ERR_error_string_n(err, err_buf, sizeof(err_buf));
-    EVP_CIPHER_CTX_free(ctx);
-    ctx = nullptr;
-    throw std::runtime_error("ChaCha20Cipher: Failed initial CipherInit setup: " + std::string(err_buf));
-  }
-
-  // Set key and IV
-  auto native_key = ToNativeArrayBuffer(cipher_key);
-  auto native_iv = ToNativeArrayBuffer(iv);
-
-  // Validate key size
-  if (native_key->size() != kKeySize) {
+void ChaCha20Cipher::validateKeySize(size_t key_size) const {
+  if (key_size != kKeySize) {
     throw std::runtime_error("ChaCha20 key must be 32 bytes");
   }
+}
 
-  // Validate IV size
-  if (native_iv->size() != kIVSize) {
+void ChaCha20Cipher::validateIVSize(size_t iv_size) const {
+  if (iv_size != kIVSize) {
     throw std::runtime_error("ChaCha20 IV must be 16 bytes");
   }
+}
 
-  const unsigned char* key_ptr = reinterpret_cast<const unsigned char*>(native_key->data());
-  const unsigned char* iv_ptr = reinterpret_cast<const unsigned char*>(native_iv->data());
+std::string ChaCha20Cipher::getCipherName() const {
+  return "ChaCha20";
+}
 
-  if (EVP_CipherInit_ex(ctx, nullptr, nullptr, key_ptr, iv_ptr, is_cipher) != 1) {
-    unsigned long err = ERR_get_error();
-    char err_buf[256];
-    ERR_error_string_n(err, err_buf, sizeof(err_buf));
-    EVP_CIPHER_CTX_free(ctx);
-    ctx = nullptr;
-    throw std::runtime_error("ChaCha20Cipher: Failed to set key/IV: " + std::string(err_buf));
-  }
+// Use the base class implementation which now uses our virtual methods
+void ChaCha20Cipher::init(const std::shared_ptr<ArrayBuffer> cipher_key, const std::shared_ptr<ArrayBuffer> iv) {
+  HybridCipher::init(cipher_key, iv);
 }
 
 std::shared_ptr<ArrayBuffer> ChaCha20Cipher::update(const std::shared_ptr<ArrayBuffer>& data) {

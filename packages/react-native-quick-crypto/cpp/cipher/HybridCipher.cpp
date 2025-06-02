@@ -48,33 +48,36 @@ void HybridCipher::init(const std::shared_ptr<ArrayBuffer> cipher_key, const std
     ctx = nullptr;
   }
 
-  // 1. Get cipher implementation by name
-  const EVP_CIPHER* cipher = EVP_get_cipherbyname(cipher_type.c_str());
+  // Get cipher implementation from derived class
+  const EVP_CIPHER* cipher = getCipherImpl();
   if (!cipher) {
-    throw std::runtime_error("Unknown cipher " + cipher_type);
+    throw std::runtime_error("Failed to get " + getCipherName() + " cipher implementation");
   }
 
-  // 2. Create a new context
+  // Create a new context
   ctx = EVP_CIPHER_CTX_new();
   if (!ctx) {
     throw std::runtime_error("Failed to create cipher context");
   }
 
-  // Initialise the encryption/decryption operation with the cipher type.
-  // Key and IV will be set later by the derived class if needed.
+  // Initialize the encryption/decryption operation with the cipher type.
   if (EVP_CipherInit_ex(ctx, cipher, nullptr, nullptr, nullptr, is_cipher) != 1) {
     unsigned long err = ERR_get_error();
     char err_buf[256];
     ERR_error_string_n(err, err_buf, sizeof(err_buf));
     EVP_CIPHER_CTX_free(ctx);
     ctx = nullptr;
-    throw std::runtime_error("HybridCipher: Failed initial CipherInit setup: " + std::string(err_buf));
+    throw std::runtime_error(getCipherName() + ": Failed initial CipherInit setup: " + std::string(err_buf));
   }
 
-  // For base hybrid cipher, set key and IV immediately.
-  // Derived classes like CCM might override init and handle this differently.
+  // Set key and IV
   auto native_key = ToNativeArrayBuffer(cipher_key);
   auto native_iv = ToNativeArrayBuffer(iv);
+
+  // Validate key and IV sizes using derived class methods
+  validateKeySize(native_key->size());
+  validateIVSize(native_iv->size());
+
   const unsigned char* key_ptr = reinterpret_cast<const unsigned char*>(native_key->data());
   const unsigned char* iv_ptr = reinterpret_cast<const unsigned char*>(native_iv->data());
 
@@ -84,7 +87,7 @@ void HybridCipher::init(const std::shared_ptr<ArrayBuffer> cipher_key, const std
     ERR_error_string_n(err, err_buf, sizeof(err_buf));
     EVP_CIPHER_CTX_free(ctx);
     ctx = nullptr;
-    throw std::runtime_error("HybridCipher: Failed to set key/IV: " + std::string(err_buf));
+    throw std::runtime_error(getCipherName() + ": Failed to set key/IV: " + std::string(err_buf));
   }
 }
 

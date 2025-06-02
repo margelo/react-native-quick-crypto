@@ -46,6 +46,12 @@ class HybridCipher : public HybridCipherSpec {
   enum UpdateResult { kSuccess, kErrorMessageSize, kErrorState };
   enum AuthTagState { kAuthTagUnknown, kAuthTagKnown, kAuthTagPassedToOpenSSL };
 
+  // Virtual methods for cipher-specific implementations
+  virtual const EVP_CIPHER* getCipherImpl() = 0;
+  virtual void validateKeySize(size_t key_size) const = 0;
+  virtual void validateIVSize(size_t iv_size) const = 0;
+  virtual std::string getCipherName() const = 0;
+
  protected:
   // Properties
   bool is_cipher = true;
