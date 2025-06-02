@@ -23,7 +23,7 @@
       "name": "react-native-quick-crypto-example",
       "version": "1.0.0-beta.16",
       "dependencies": {
-        "@craftzdog/react-native-buffer": "6.0.5",
+        "@craftzdog/react-native-buffer": "6.1.0",
         "@noble/ciphers": "^1.3.0",
         "@noble/curves": "^1.7.0",
         "@noble/hashes": "^1.5.0",
@@ -39,7 +39,7 @@
         "react-native": "0.76.9",
         "react-native-bouncy-checkbox": "4.1.2",
         "react-native-nitro-modules": "0.25.2",
-        "react-native-quick-base64": "2.1.2",
+        "react-native-quick-base64": "2.2.0",
         "react-native-quick-crypto": "1.0.0-beta.16",
         "react-native-safe-area-context": "5.1.0",
         "react-native-screens": "3.35.0",
@@ -76,9 +76,9 @@
       "name": "react-native-quick-crypto",
       "version": "1.0.0-beta.16",
       "dependencies": {
-        "@craftzdog/react-native-buffer": "6.0.5",
+        "@craftzdog/react-native-buffer": "6.1.0",
         "events": "3.3.0",
-        "react-native-quick-base64": "2.1.2",
+        "react-native-quick-base64": "2.2.0",
         "readable-stream": "4.5.2",
         "util": "0.12.5",
       },
@@ -372,7 +372,7 @@
 
     "@conventional-changelog/git-client": ["@conventional-changelog/git-client@1.0.1", "", { "dependencies": { "@types/semver": "^7.5.5", "semver": "^7.5.2" }, "peerDependencies": { "conventional-commits-filter": "^5.0.0", "conventional-commits-parser": "^6.0.0" }, "optionalPeers": ["conventional-commits-filter", "conventional-commits-parser"] }, "sha512-PJEqBwAleffCMETaVm/fUgHldzBE35JFk3/9LL6NUA5EXa3qednu+UT6M7E5iBu3zIQZCULYIiZ90fBYHt6xUw=="],
 
-    "@craftzdog/react-native-buffer": ["@craftzdog/react-native-buffer@6.0.5", "", { "dependencies": { "ieee754": "^1.2.1", "react-native-quick-base64": "^2.0.5" } }, "sha512-Av+YqfwA9e7jhgI9GFE/gTpwl/H+dRRLmZyJPOpKTy107j9Oj7oXlm3/YiMNz+C/CEGqcKAOqnXDLs4OL6AAFw=="],
+    "@craftzdog/react-native-buffer": ["@craftzdog/react-native-buffer@6.1.0", "", { "dependencies": { "ieee754": "^1.2.1", "react-native-quick-base64": "^2.0.5" } }, "sha512-lJXdjZ7fTllLbzDrwg/FrJLjQ5sBcAgwcqgAB6OPpXTHdCenEhHZblQpfmBLLe7/S7m0yKXL3kN3jpwOEkpjGg=="],
 
     "@eslint-community/eslint-utils": ["@eslint-community/eslint-utils@4.4.0", "", { "dependencies": { "eslint-visitor-keys": "^3.3.0" }, "peerDependencies": { "eslint": "^6.0.0 || ^7.0.0 || >=8.0.0" } }, "sha512-1/sA4dwrzBAyeUoQ6oxahHKmrZvsnLCg4RfxW3ZFGGmQkSNQPFNLV9CUEFQP1x9EYXHTo5p6xdhZM1Ne9p/AfA=="],
 
@@ -1890,7 +1890,7 @@
 
     "react-native-nitro-modules": ["react-native-nitro-modules@0.25.2", "", { "peerDependencies": { "react": "*", "react-native": "*" } }, "sha512-rL+X0LzB8BXvpdrUE/+oZ5v4qS/1nZIq0M8Uctbvqq2q53sVCHX4995ffT8+lGIJe/f0QcBvvrEeXtBPl86iwQ=="],
 
-    "react-native-quick-base64": ["react-native-quick-base64@2.1.2", "", { "dependencies": { "base64-js": "^1.5.1" }, "peerDependencies": { "react": "*", "react-native": "*" } }, "sha512-xghaXpWdB0ji8OwYyo0fWezRroNxiNFCNFpGUIyE7+qc4gA/IGWnysIG5L0MbdoORv8FkTKUvfd6yCUN5R2VFA=="],
+    "react-native-quick-base64": ["react-native-quick-base64@2.2.0", "", { "peerDependencies": { "react": "*", "react-native": "*" } }, "sha512-r7/BRsRl8QKEhS0JsHW6QX9+8LrC6NNWlwNnBnZ69h2kbcfABYsUILT71obrs9fqElEIMzuYSI5aHID955akyQ=="],
 
     "react-native-quick-crypto": ["react-native-quick-crypto@workspace:packages/react-native-quick-crypto"],
 
