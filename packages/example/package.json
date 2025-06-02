@@ -23,7 +23,7 @@
   "dependencies": {
     "@craftzdog/react-native-buffer": "^6.0.5",
     "@react-native-community/checkbox": "^0.5.17",
-    "@react-navigation/native": "6.1.18",
+    "@react-navigation/native": "7.1.10",
     "@react-navigation/native-stack": "6.11.0",
     "buffer": "^6.0.3",
     "chai": "^5.0.0",
