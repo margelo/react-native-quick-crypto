@@ -16,6 +16,7 @@
 
 #include <assert.h>
 #include <string.h>
+#include <TargetConditionals.h>  // <-- Required for TARGET_OS_* macros
 #if defined(__GNUC__)
   #if TARGET_OS_MACCATALYST
     #include <machine/endian.h>  // Mac Catalyst
