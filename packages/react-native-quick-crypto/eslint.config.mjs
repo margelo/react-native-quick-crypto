@@ -51,6 +51,11 @@ export default [
   },
   // Ignore patterns
   {
-    ignores: ['.prettierrc.js', '*.config.js', '**/lib/**', '**/test/**'],
+    ignores: [
+      '.prettierrc.js', 
+      '*.config.*js', 
+      '*.plugin.js', 
+      '**/lib/**', 
+      '**/test/**'],
   },
 ];
