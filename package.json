@@ -15,23 +15,25 @@
     "format": "bun --filter='*' format",
     "format:fix": "bun --filter='*' format:fix",
     "prepare": "bun --filter=\"react-native-quick-crypto\" prepare",
-    "release": "./scripts/release.sh"
+    "release": "./scripts/release.sh",
+    "yalc": "cd packages/react-native-quick-crypto && bun yalc push --replace --sig"
   },
   "devDependencies": {
+    "@eslint/compat": "1.2.8",
+    "@eslint/js": "9.24.0",
     "@release-it/bumper": "7.0.2",
     "@release-it/conventional-changelog": "10.0.0",
-    "release-it": "18.1.2",
-    "eslint": "9.24.0",
-    "@typescript-eslint/parser": "8.30.1",
     "@typescript-eslint/eslint-plugin": "8.30.1",
+    "@typescript-eslint/parser": "8.30.1",
+    "eslint": "9.24.0",
+    "eslint-config-prettier": "10.1.2",
+    "eslint-plugin-prettier": "5.2.6",
     "eslint-plugin-react-native": "5.0.0",
     "prettier": "3.5.3",
-    "@eslint/js": "9.24.0",
-    "@eslint/compat": "1.2.8",
+    "release-it": "18.1.2",
     "typescript": "5.8.3",
     "typescript-eslint": "8.30.1",
-    "eslint-plugin-prettier": "5.2.6",
-    "eslint-config-prettier": "10.1.2"
+    "yalc": "^1.0.0-pre.53"
   },
   "packageManager": "bun@1.2.0",
   "release-it": {
