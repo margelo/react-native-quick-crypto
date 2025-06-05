@@ -229,10 +229,9 @@ std::shared_ptr<ArrayBuffer> HybridCipher::getAuthTag() {
       throw std::runtime_error("Failed to get GCM/OCB auth tag: " + std::string(err_buf));
     }
 
-    size_t actual_tag_len = static_cast<size_t>(ret);
     uint8_t* raw_ptr = tag_buf.get();
     auto final_tag_buffer =
-        std::make_shared<margelo::nitro::NativeArrayBuffer>(tag_buf.release(), actual_tag_len, [raw_ptr]() { delete[] raw_ptr; });
+        std::make_shared<margelo::nitro::NativeArrayBuffer>(tag_buf.release(), auth_tag_len, [raw_ptr]() { delete[] raw_ptr; });
     return final_tag_buffer;
 
   } else if (mode == EVP_CIPH_CCM_MODE) {
