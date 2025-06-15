@@ -37,7 +37,7 @@
     "react-native-bouncy-checkbox": "4.1.2",
     "react-native-nitro-modules": "0.25.2",
     "react-native-quick-base64": "2.2.0",
-    "react-native-quick-crypto": "1.0.0-beta.18",
+    "react-native-quick-crypto": "workspace:*",
     "react-native-safe-area-context": "5.1.0",
     "react-native-screens": "3.35.0",
     "react-native-vector-icons": "^10.1.0",
