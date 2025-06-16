@@ -20,7 +20,7 @@ Pod::Spec.new do |s|
   s.source = { :git => "https://github.com/margelo/react-native-quick-crypto.git", :tag => "#{s.version}" }
 
   sodium_enabled = ENV['SODIUM_ENABLED'] == '1'
-  Pod::UI.puts("[QuickCrypto] Has libsodium #{sodium_enabled ? "enabled" : "disabled"}!")
+  Pod::UI.puts("[QuickCrypto]  🧂 has libsodium #{sodium_enabled ? "enabled" : "disabled"}!")
 
   if sodium_enabled
     # cocoapod for Sodium has not been updated for a while, so we need to build it ourselves
