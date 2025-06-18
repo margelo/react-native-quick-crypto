@@ -1,11 +1,12 @@
 import {
+  AsymmetricKeyObject,
   CryptoKey,
   KeyObject,
   SecretKeyObject,
   PublicKeyObject,
   PrivateKeyObject,
 } from './classes';
-// import { generateKeyPair } from './generateKeyPair';
+import { generateKeyPair, generateKeyPairSync } from './generateKeyPair';
 // import { sign, verify } from './signVerify';
 import {
   isCryptoKey,
@@ -20,7 +21,9 @@ export {
   // createPublicKey,
   // createPrivateKey,
   CryptoKey,
-  // generateKeyPair,
+  generateKeyPair,
+  generateKeyPairSync,
+  AsymmetricKeyObject,
   KeyObject,
   // InternalCryptoKey,
   // sign,

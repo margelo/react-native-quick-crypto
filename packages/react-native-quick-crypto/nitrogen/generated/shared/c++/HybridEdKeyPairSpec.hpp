@@ -16,10 +16,10 @@
 // Forward declaration of `ArrayBuffer` to properly resolve imports.
 namespace NitroModules { class ArrayBuffer; }
 
+#include <NitroModules/ArrayBuffer.hpp>
 #include <NitroModules/Promise.hpp>
 #include <optional>
 #include <string>
-#include <NitroModules/ArrayBuffer.hpp>
 
 namespace margelo::nitro::crypto {
 
@@ -52,6 +52,7 @@ namespace margelo::nitro::crypto {
 
     public:
       // Methods
+      virtual std::shared_ptr<ArrayBuffer> diffieHellman(const std::shared_ptr<ArrayBuffer>& privateKey, const std::shared_ptr<ArrayBuffer>& publicKey) = 0;
       virtual std::shared_ptr<Promise<void>> generateKeyPair(double publicFormat, double publicType, double privateFormat, double privateType, const std::optional<std::string>& cipher, const std::optional<std::shared_ptr<ArrayBuffer>>& passphrase) = 0;
       virtual void generateKeyPairSync(double publicFormat, double publicType, double privateFormat, double privateType, const std::optional<std::string>& cipher, const std::optional<std::shared_ptr<ArrayBuffer>>& passphrase) = 0;
       virtual std::shared_ptr<ArrayBuffer> getPublicKey() = 0;

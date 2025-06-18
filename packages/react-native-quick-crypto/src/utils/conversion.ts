@@ -142,3 +142,5 @@ export function ab2str(buf: ArrayBuffer, encoding: string = 'hex') {
 }
 
 export const kEmptyObject = Object.freeze(Object.create(null));
+
+export * from './noble';

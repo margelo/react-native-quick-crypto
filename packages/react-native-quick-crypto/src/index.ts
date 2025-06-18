@@ -47,6 +47,7 @@ global.process.nextTick = setImmediate;
 export default QuickCrypto;
 export * from './cipher';
 export * from './ed';
+export * from './keys';
 export * from './hash';
 export * from './hmac';
 export * from './pbkdf2';

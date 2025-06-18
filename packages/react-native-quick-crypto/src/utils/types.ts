@@ -1,6 +1,7 @@
+import { Buffer } from 'buffer';
 import type { Buffer as CraftzdogBuffer } from '@craftzdog/react-native-buffer';
+import type { CipherKey, KeyObject } from 'crypto'; // @types/node
 import type { Buffer as SafeBuffer } from 'safe-buffer';
-import type { CipherKey } from 'crypto'; // @types/node
 import type { KeyObjectHandle } from '../specs/keyObjectHandle.nitro';
 
 export type ABV = TypedArray | DataView | ArrayBufferLike | CraftzdogBuffer;
@@ -27,6 +28,7 @@ export type BufferLike =
 
 export type BinaryLike =
   | string
+  | Buffer
   | ArrayBuffer
   | ArrayBufferLike
   | CraftzdogBuffer
@@ -236,7 +238,7 @@ export type GenerateKeyPairOptions = {
 
 // Note: removed CryptoKey class from this type (from 0.x) because Nitro doesn't
 //       handle custom JS objects.  We might need to make it a JS object.
-export type KeyPairKey = ArrayBuffer | KeyObjectHandle | undefined;
+export type KeyPairKey = ArrayBuffer | KeyObject | KeyObjectHandle | undefined;
 
 export type GenerateKeyPairReturn = [
   error?: Error,
@@ -311,3 +313,16 @@ export type CipherDESType =
 export type CipherECBType = 'aes-128-ecb' | 'aes-192-ecb' | 'aes-256-ecb';
 export type CipherGCMType = 'aes-128-gcm' | 'aes-192-gcm' | 'aes-256-gcm';
 export type CipherOFBType = 'aes-128-ofb' | 'aes-192-ofb' | 'aes-256-ofb';
+
+export type DiffieHellmanOptions = {
+  privateKey: KeyObject;
+  publicKey: KeyObject;
+};
+
+export type DiffieHellmanCallback = (
+  err: Error | null,
+  secret?: Buffer,
+) => Buffer | void;
+
+// from @paulmillr/noble-curves
+export type Hex = string | Uint8Array;
