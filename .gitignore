@@ -3,3 +3,4 @@ node_modules/
 tsconfig.tsbuildinfo
 package-lock.json
 .vscode/settings.json
+.vscode/mcp.json
