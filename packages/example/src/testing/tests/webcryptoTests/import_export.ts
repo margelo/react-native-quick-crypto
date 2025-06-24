@@ -132,7 +132,6 @@ describe('subtle - importKey / exportKey', () => {
     );
   });
 
-
   it(' importKey - raw - pbkdf2 - empty byte source #735', async () => {
     const key = await crypto.subtle.importKey(
       'raw',
@@ -142,7 +141,8 @@ describe('subtle - importKey / exportKey', () => {
         hash: 'SHA-256',
       },
       false,
-      ['deriveBits', 'deriveKey']);
+      ['deriveBits', 'deriveKey'],
+    );
     expect(key).to.not.equal(null);
   });
 
