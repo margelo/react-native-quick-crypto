@@ -1,8 +1,8 @@
-import { Buffer } from 'buffer';
 import type { Buffer as CraftzdogBuffer } from '@craftzdog/react-native-buffer';
+import { Buffer } from 'buffer';
 import type { CipherKey, KeyObject } from 'crypto'; // @types/node
 import type { Buffer as SafeBuffer } from 'safe-buffer';
-import type { KeyObjectHandle } from '../specs/keyObjectHandle.nitro';
+import type { KeyObjectHandle as KeyObjectHandleType } from '../specs/keyObjectHandle.nitro';
 
 export type ABV = TypedArray | DataView | ArrayBufferLike | CraftzdogBuffer;
 
@@ -313,6 +313,8 @@ export type CipherDESType =
 export type CipherECBType = 'aes-128-ecb' | 'aes-192-ecb' | 'aes-256-ecb';
 export type CipherGCMType = 'aes-128-gcm' | 'aes-192-gcm' | 'aes-256-gcm';
 export type CipherOFBType = 'aes-128-ofb' | 'aes-192-ofb' | 'aes-256-ofb';
+
+export type KeyObjectHandle = KeyObjectHandleType;
 
 export type DiffieHellmanOptions = {
   privateKey: KeyObject;

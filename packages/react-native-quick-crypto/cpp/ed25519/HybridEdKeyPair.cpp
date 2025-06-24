@@ -1,9 +1,65 @@
 #include <memory>
 #include <string>
+#include <openssl/evp.h>
+#include <NitroModules/ArrayBuffer.hpp>
 
 #include "HybridEdKeyPair.hpp"
 
 namespace margelo::nitro::crypto {
+
+std::shared_ptr<ArrayBuffer> HybridEdKeyPair::diffieHellman(const std::shared_ptr<ArrayBuffer>& privateKey,
+                                                            const std::shared_ptr<ArrayBuffer>& publicKey) {
+  using EVP_PKEY_ptr = std::unique_ptr<EVP_PKEY, decltype(&EVP_PKEY_free)>;
+  using EVP_PKEY_CTX_ptr = std::unique_ptr<EVP_PKEY_CTX, decltype(&EVP_PKEY_CTX_free)>;
+
+  // 1. Create EVP_PKEY for private key (our key)
+  EVP_PKEY_ptr pkey_priv(EVP_PKEY_new_raw_private_key(EVP_PKEY_X25519, NULL, privateKey->data(), privateKey->size()),
+                         EVP_PKEY_free);
+  if (!pkey_priv) {
+    throw std::runtime_error("Failed to create private key: " + getOpenSSLError());
+  }
+
+  // 2. Create EVP_PKEY for public key (peer's key)
+  EVP_PKEY_ptr pkey_pub(EVP_PKEY_new_raw_public_key(EVP_PKEY_X25519, NULL, publicKey->data(), publicKey->size()),
+                        EVP_PKEY_free);
+  if (!pkey_pub) {
+    throw std::runtime_error("Failed to create public key: " + getOpenSSLError());
+  }
+
+  // 3. Create the context for the key exchange
+  EVP_PKEY_CTX_ptr ctx(EVP_PKEY_CTX_new_from_pkey(NULL, pkey_priv.get(), NULL), EVP_PKEY_CTX_free);
+  if (!ctx) {
+    throw std::runtime_error("Failed to create key exchange context: " + getOpenSSLError());
+  }
+
+  // 4. Initialize the context
+  if (EVP_PKEY_derive_init(ctx.get()) <= 0) {
+    throw std::runtime_error("Failed to initialize key exchange: " + getOpenSSLError());
+  }
+
+  // 5. Provide the peer's public key
+  if (EVP_PKEY_derive_set_peer(ctx.get(), pkey_pub.get()) <= 0) {
+    throw std::runtime_error("Failed to set peer key: " + getOpenSSLError());
+  }
+
+  // 6. Determine the size of the shared secret
+  size_t shared_secret_len;
+  if (EVP_PKEY_derive(ctx.get(), NULL, &shared_secret_len) <= 0) {
+    throw std::runtime_error("Failed to determine shared secret length: " + getOpenSSLError());
+  }
+
+  // 7. Allocate memory for the shared secret
+  auto shared_secret = new uint8_t[shared_secret_len];
+
+  // 8. Derive the shared secret
+  if (EVP_PKEY_derive(ctx.get(), shared_secret, &shared_secret_len) <= 0) {
+    delete[] shared_secret;
+    throw std::runtime_error("Failed to derive shared secret: " + getOpenSSLError());
+  }
+
+  // 9. Return a newly-created ArrayBuffer from the raw buffer w/ cleanup
+  return std::make_shared<NativeArrayBuffer>(shared_secret, shared_secret_len, [=]() { delete[] shared_secret; });
+}
 
 std::shared_ptr<Promise<void>> HybridEdKeyPair::generateKeyPair(double publicFormat, double publicType, double privateFormat,
                                                                 double privateType, const std::optional<std::string>& cipher,

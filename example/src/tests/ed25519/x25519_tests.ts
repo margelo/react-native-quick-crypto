@@ -2,9 +2,9 @@ import { expect } from 'chai';
 import crypto, { KeyObject } from 'react-native-quick-crypto';
 import { test } from '../util';
 
-const SUITE = 'x25519';
+const SUITE = 'cfrg';
 
-test(SUITE, 'diffieHellman', () => {
+test(SUITE, 'x25519 - shared secret', () => {
   // Alice
   const A = crypto.generateKeyPairSync('x25519', {});
   if (!A.privateKey || !(A.privateKey instanceof ArrayBuffer))

@@ -18,6 +18,7 @@ add_library(
   ../cpp/ed25519/HybridEdKeyPair.cpp
   ../cpp/hash/HybridHash.cpp
   ../cpp/hmac/HybridHmac.cpp
+  ../cpp/keys/HybridKeyObjectHandle.cpp
   ../cpp/pbkdf2/HybridPbkdf2.cpp
   ../cpp/random/HybridRandom.cpp
   ../deps/fastpbkdf2/fastpbkdf2.c
@@ -33,6 +34,7 @@ include_directories(
   "../cpp/ed25519"
   "../cpp/hash"
   "../cpp/hmac"
+  "../cpp/keys"
   "../cpp/pbkdf2"
   "../cpp/random"
   "../cpp/utils"

@@ -4,10 +4,22 @@
 #include <cctype>
 #include <limits>
 #include <string>
+#include <openssl/err.h>
 
 #include <NitroModules/ArrayBuffer.hpp>
 
 namespace margelo::nitro::crypto {
+
+// Function to get the last OpenSSL error message
+inline std::string getOpenSSLError() {
+    unsigned long errCode = ERR_get_error();
+    if (errCode == 0) {
+        return "";
+    }
+    char errStr[256];
+    ERR_error_string_n(errCode, errStr, sizeof(errStr));
+    return std::string(errStr);
+}
 
 // copy a JSArrayBuffer that we do not own into a NativeArrayBuffer that we do own
 inline std::shared_ptr<margelo::nitro::NativeArrayBuffer> ToNativeArrayBuffer(const std::shared_ptr<margelo::nitro::ArrayBuffer>& buffer) {

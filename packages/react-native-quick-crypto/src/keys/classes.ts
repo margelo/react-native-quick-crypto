@@ -1,13 +1,13 @@
 import { Buffer } from 'buffer';
 import { NitroModules } from 'react-native-nitro-modules';
-import type { KeyObjectHandle } from '../specs/keyObjectHandle.nitro';
-import { KeyType } from '../utils';
 import type {
   AsymmetricKeyType,
   EncodingOptions,
+  KeyObjectHandle,
   KeyUsage,
   SubtleAlgorithm,
 } from '../utils';
+import { KeyType } from '../utils';
 import { parsePrivateKeyEncoding, parsePublicKeyEncoding } from './utils';
 
 export class CryptoKey {
