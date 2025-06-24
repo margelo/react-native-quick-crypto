@@ -16,9 +16,9 @@ class HybridEdKeyPair : public HybridEdKeyPairSpec {
 
  public:
   // Methods
-  std::shared_ptr<ArrayBuffer> diffieHellman(const std::shared_ptr<ArrayBuffer>& privateKey, 
+  std::shared_ptr<ArrayBuffer> diffieHellman(const std::shared_ptr<ArrayBuffer>& privateKey,
                                              const std::shared_ptr<ArrayBuffer>& publicKey) override;
-                                             
+
   std::shared_ptr<Promise<void>> generateKeyPair(double publicFormat, double publicType, double privateFormat, double privateType,
                                                  const std::optional<std::string>& cipher,
                                                  const std::optional<std::shared_ptr<ArrayBuffer>>& passphrase) override;

@@ -1,7 +1,7 @@
-#include <memory>
-#include <string>
-#include <openssl/evp.h>
 #include <NitroModules/ArrayBuffer.hpp>
+#include <memory>
+#include <openssl/evp.h>
+#include <string>
 
 #include "HybridEdKeyPair.hpp"
 
@@ -13,15 +13,13 @@ std::shared_ptr<ArrayBuffer> HybridEdKeyPair::diffieHellman(const std::shared_pt
   using EVP_PKEY_CTX_ptr = std::unique_ptr<EVP_PKEY_CTX, decltype(&EVP_PKEY_CTX_free)>;
 
   // 1. Create EVP_PKEY for private key (our key)
-  EVP_PKEY_ptr pkey_priv(EVP_PKEY_new_raw_private_key(EVP_PKEY_X25519, NULL, privateKey->data(), privateKey->size()),
-                         EVP_PKEY_free);
+  EVP_PKEY_ptr pkey_priv(EVP_PKEY_new_raw_private_key(EVP_PKEY_X25519, NULL, privateKey->data(), privateKey->size()), EVP_PKEY_free);
   if (!pkey_priv) {
     throw std::runtime_error("Failed to create private key: " + getOpenSSLError());
   }
 
   // 2. Create EVP_PKEY for public key (peer's key)
-  EVP_PKEY_ptr pkey_pub(EVP_PKEY_new_raw_public_key(EVP_PKEY_X25519, NULL, publicKey->data(), publicKey->size()),
-                        EVP_PKEY_free);
+  EVP_PKEY_ptr pkey_pub(EVP_PKEY_new_raw_public_key(EVP_PKEY_X25519, NULL, publicKey->data(), publicKey->size()), EVP_PKEY_free);
   if (!pkey_pub) {
     throw std::runtime_error("Failed to create public key: " + getOpenSSLError());
   }
