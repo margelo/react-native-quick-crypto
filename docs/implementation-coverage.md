@@ -122,7 +122,7 @@ This document attempts to describe the implementation status of Crypto APIs/Inte
   * ❌ `crypto.getDiffieHellman(groupName)`
   * ❌ `crypto.getFips()`
   * ✅ `crypto.getHashes()`
-  * ❌ `crypto.getRandomValues(typedArray)`
+  * ✅ `crypto.getRandomValues(typedArray)`
   * ❌ `crypto.hkdf(digest, ikm, salt, info, keylen, callback)`
   * ❌ `crypto.hkdfSync(digest, ikm, salt, info, keylen)`
   * ✅ `crypto.pbkdf2(password, salt, iterations, keylen, digest, callback)`
