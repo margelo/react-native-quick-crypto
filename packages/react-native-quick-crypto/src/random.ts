@@ -269,6 +269,13 @@ export type RandomTypedArrays =
   | Uint8Array
   | Uint16Array
   | Uint32Array;
+
+/**
+ * Fills the provided typed array with cryptographically strong random values.
+ *
+ * @param data The data to fill with random values
+ * @returns The filled data
+ */
 export function getRandomValues(data: RandomTypedArrays) {
   if (data.byteLength > 65536) {
     throw new Error('The requested length exceeds 65,536 bytes');

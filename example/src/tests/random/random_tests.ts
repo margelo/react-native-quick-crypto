@@ -593,3 +593,8 @@ test(SUITE, 'randomFill int32, 1', () => {
     // done();
   });
 });
+
+test(SUITE, 'crypto.getRandomValues', () => {
+  const r = crypto.getRandomValues(new Uint8Array(10));
+  expect(r.length).to.equal(10);
+});
