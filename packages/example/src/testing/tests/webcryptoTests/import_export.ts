@@ -1,17 +1,11 @@
-import { assert, expect } from 'chai';
 import { Buffer } from '@craftzdog/react-native-buffer';
+import { assert, expect } from 'chai';
 import {
   fromByteArray,
   toByteArray,
   trimBase64Padding,
 } from 'react-native-quick-base64';
 import crypto from 'react-native-quick-crypto';
-import { describe, it } from '../../MochaRNAdapter';
-import {
-  ab2str,
-  binaryLikeToArrayBuffer,
-} from '../../../../../react-native-quick-crypto/src/Utils';
-import { assertThrowsAsync } from '../util';
 import type {
   CryptoKey,
   CryptoKeyPair,
@@ -23,8 +17,14 @@ import type {
   SubtleAlgorithm,
 } from '../../../../../react-native-quick-crypto/src/keys';
 import type { RandomTypedArrays } from '../../../../../react-native-quick-crypto/src/random';
-import pubTestKeyEc256 from '../../fixtures/keys/ec_p256_public';
+import {
+  ab2str,
+  binaryLikeToArrayBuffer,
+} from '../../../../../react-native-quick-crypto/src/Utils';
 import privTestKeyEc256 from '../../fixtures/keys/ec_p256_private';
+import pubTestKeyEc256 from '../../fixtures/keys/ec_p256_public';
+import { describe, it } from '../../MochaRNAdapter';
+import { assertThrowsAsync } from '../util';
 
 const { subtle, createPublicKey, createPrivateKey } = crypto;
 
@@ -130,6 +130,20 @@ describe('subtle - importKey / exportKey', () => {
       false,
       ['deriveBits'],
     );
+  });
+
+  it(' importKey - raw - pbkdf2 - empty byte source #735', async () => {
+    const key = await crypto.subtle.importKey(
+      'raw',
+      new Uint8Array(),
+      {
+        name: 'PBKDF2',
+        hash: 'SHA-256',
+      },
+      false,
+      ['deriveBits', 'deriveKey'],
+    );
+    expect(key).to.not.equal(null);
   });
 
   // Import/Export AES Secret Key

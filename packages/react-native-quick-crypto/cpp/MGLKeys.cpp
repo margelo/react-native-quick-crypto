@@ -806,7 +806,6 @@ KeyObjectData::KeyObjectData(KeyType type,
 
 std::shared_ptr<KeyObjectData> KeyObjectData::CreateSecret(ByteSource key)
 {
-  CHECK(key);
   return std::shared_ptr<KeyObjectData>(new KeyObjectData(std::move(key)));
 }
 
