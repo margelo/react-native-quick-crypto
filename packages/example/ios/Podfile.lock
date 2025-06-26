@@ -323,7 +323,7 @@ PODS:
   - react-native-quick-base64 (2.1.2):
     - RCT-Folly (= 2021.07.22.00)
     - React-Core
-  - react-native-quick-crypto (0.7.14):
+  - react-native-quick-crypto (0.7.15):
     - OpenSSL-Universal
     - RCT-Folly (= 2021.07.22.00)
     - React
@@ -628,7 +628,7 @@ SPEC CHECKSUMS:
   React-logger: 8edc785c47c8686c7962199a307015e2ce9a0e4f
   react-native-fast-encoder: 6f59e9b08e2bc5a8bf1f36e1630cdcfd66dd18af
   react-native-quick-base64: 61228d753294ae643294a75fece8e0e80b7558a6
-  react-native-quick-crypto: b75024153e084710bd3b28738eb33c2483637043
+  react-native-quick-crypto: 13063c6a70542546b239c323bc2810c8f18b6127
   react-native-safe-area-context: 141eca0fd4e4191288dfc8b96a7c7e1c2983447a
   React-NativeModulesApple: b6868ee904013a7923128892ee4a032498a1024a
   React-perflogger: 31ea61077185eb1428baf60c0db6e2886f141a5a
@@ -652,6 +652,6 @@ SPEC CHECKSUMS:
   SocketRocket: f32cd54efbe0f095c4d7594881e52619cfe80b17
   Yoga: 4c3aa327e4a6a23eeacd71f61c81df1bcdf677d5
 
-PODFILE CHECKSUM: 47469ccd5c1c311cbf9db829bd8c082c7fc29cca
+PODFILE CHECKSUM: 30bd43484b3dbde5a95cbc2b8bc0e28edb1e7bb6
 
 COCOAPODS: 1.15.2
