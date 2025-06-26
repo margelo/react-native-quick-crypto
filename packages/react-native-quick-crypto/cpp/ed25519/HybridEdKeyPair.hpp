@@ -8,7 +8,7 @@
 
 namespace margelo::nitro::crypto {
 
-using namespace facebook;
+// using namespace facebook;
 
 class HybridEdKeyPair : public HybridEdKeyPairSpec {
  public:
