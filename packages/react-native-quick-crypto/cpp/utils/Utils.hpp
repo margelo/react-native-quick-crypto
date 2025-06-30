@@ -7,6 +7,7 @@
 #include <string>
 
 #include <NitroModules/ArrayBuffer.hpp>
+#include "Macros.hpp"
 
 namespace margelo::nitro::crypto {
 
@@ -27,6 +28,13 @@ inline std::shared_ptr<margelo::nitro::NativeArrayBuffer> ToNativeArrayBuffer(co
   uint8_t* data = new uint8_t[bufferSize];
   memcpy(data, buffer.get()->data(), bufferSize);
   return std::make_shared<margelo::nitro::NativeArrayBuffer>(data, bufferSize, [=]() { delete[] data; });
+}
+
+inline std::shared_ptr<margelo::nitro::NativeArrayBuffer> ToNativeArrayBuffer(std::string str) {
+  size_t size = str.size();
+  uint8_t* data = new uint8_t[size];
+  memcpy(data, str.data(), size);
+  return std::make_shared<margelo::nitro::NativeArrayBuffer>(data, size, [=]() { delete[] data; });
 }
 
 inline bool CheckIsUint32(double value) {

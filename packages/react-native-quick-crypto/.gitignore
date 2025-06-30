@@ -2,3 +2,6 @@
 README.md
 
 ios/**
+
+.cache/**
+build-clangd/**

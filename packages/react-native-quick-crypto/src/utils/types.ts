@@ -117,26 +117,23 @@ export type KeyUsage =
   | 'wrapKey'
   | 'unwrapKey';
 
-// On node this value is defined on the native side, for now I'm just creating it here in JS
-// TODO(osp) move this into native side to make sure they always match
 export enum KFormatType {
-  kKeyFormatDER,
-  kKeyFormatPEM,
-  kKeyFormatJWK,
+  DER,
+  PEM,
+  JWK,
 }
 
-// Same as KFormatType, this enum needs to be defined on the native side
 export enum KeyType {
-  Secret,
-  Public,
-  Private,
+  SECRET,
+  PUBLIC,
+  PRIVATE,
 }
 
 export enum KeyEncoding {
-  kKeyEncodingPKCS1,
-  kKeyEncodingPKCS8,
-  kKeyEncodingSPKI,
-  kKeyEncodingSEC1,
+  PKCS1,
+  PKCS8,
+  SPKI,
+  SEC1,
 }
 
 export type KeyPairGenConfig = {

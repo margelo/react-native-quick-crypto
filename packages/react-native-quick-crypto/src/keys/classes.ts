@@ -90,13 +90,13 @@ export class KeyObject {
       let keyType: KeyType;
       switch (type) {
         case 'public':
-          keyType = KeyType.Public;
+          keyType = KeyType.PUBLIC;
           break;
         case 'private':
-          keyType = KeyType.Private;
+          keyType = KeyType.PRIVATE;
           break;
         case 'secret':
-          keyType = KeyType.Secret;
+          keyType = KeyType.SECRET;
           break;
         default:
           // Should not happen

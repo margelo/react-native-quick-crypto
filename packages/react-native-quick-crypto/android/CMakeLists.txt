@@ -39,6 +39,7 @@ include_directories(
   "../cpp/random"
   "../cpp/utils"
   "../deps/fastpbkdf2"
+  "../deps/ncrypto"
 )
 
 # Third party libraries (Prefabs)
