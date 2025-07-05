@@ -102,6 +102,6 @@ Pod::Spec.new do |s|
 
   s.dependency "React-jsi"
   s.dependency "React-callinvoker"
-  s.dependency "OpenSSL-Universal"
+  s.dependency "OpenSSL-Universal", "3.3.3001"
   install_modules_dependencies(s)
 end
