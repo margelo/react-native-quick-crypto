@@ -10,10 +10,18 @@ class HashUtils {
   public static getSupportedHashAlgorithms(): string[] {
     return this.native.getSupportedHashAlgorithms();
   }
+  public static keccak256(data: BinaryLike): Buffer {
+    const nativeDigest = this.native.keccak256(binaryLikeToArrayBuffer(data, 'utf8'));
+    return Buffer.from(nativeDigest);
+  }
 }
 
 export function getHashes() {
   return HashUtils.getSupportedHashAlgorithms();
+}
+
+export function keccak256(data: BinaryLike): Buffer {
+  return HashUtils.keccak256(data);
 }
 
 interface HashOptions extends TransformOptions {
@@ -157,6 +165,25 @@ class Hash extends Stream.Transform {
     return hash;
   }
 
+  /**
+   * Returns the OpenSSL version string
+   * @since v1.0.0
+   */
+  getOpenSSLVersion(): string {
+    return this.native.getOpenSSLVersion();
+  }
+
+  /**
+   * Computes KECCAK-256 hash of the provided data using OpenSSL's provider-aware API
+   * @since v1.0.0
+   * @param data The data to hash
+   * @returns Buffer containing the KECCAK-256 hash
+   */
+  keccak256(data: BinaryLike): Buffer {
+    const nativeDigest = this.native.keccak256(binaryLikeToArrayBuffer(data, 'utf8'));
+    return Buffer.from(nativeDigest);
+  }
+
   // stream interface
   _transform(
     chunk: BinaryLike,
@@ -205,4 +232,5 @@ export function createHash(algorithm: string, options?: HashOptions): Hash {
 export const hashExports = {
   createHash,
   getHashes,
+  keccak256,
 };

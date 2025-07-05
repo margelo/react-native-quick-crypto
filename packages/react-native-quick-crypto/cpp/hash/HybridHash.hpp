@@ -25,6 +25,8 @@ class HybridHash : public HybridHashSpec {
   std::shared_ptr<ArrayBuffer> digest(const std::optional<std::string>& encoding = std::nullopt) override;
   std::shared_ptr<margelo::nitro::crypto::HybridHashSpec> copy(const std::optional<double> outputLength) override;
   std::vector<std::string> getSupportedHashAlgorithms() override;
+  std::string getOpenSSLVersion() override;
+  std::shared_ptr<ArrayBuffer> keccak256(const std::shared_ptr<ArrayBuffer>& data) override;
 
  private:
   // Methods

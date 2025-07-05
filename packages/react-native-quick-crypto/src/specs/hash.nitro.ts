@@ -6,4 +6,6 @@ export interface Hash extends HybridObject<{ ios: 'c++'; android: 'c++' }> {
   digest(encoding?: string): ArrayBuffer;
   copy(outputLength?: number): Hash;
   getSupportedHashAlgorithms(): string[];
+  getOpenSSLVersion(): string;
+  keccak256(data: ArrayBuffer): ArrayBuffer;
 }
