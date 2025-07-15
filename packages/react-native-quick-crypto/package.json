@@ -74,7 +74,7 @@
   },
   "devDependencies": {
     "@eslint/compat": "^1.1.1",
-    "@eslint/js": "9.17.0",
+    "@eslint/js": "9.31.0",
     "@react-native/babel-preset": "0.76.5",
     "@react-native/eslint-config": "0.76.5",
     "@react-native/eslint-plugin": "0.76.5",
