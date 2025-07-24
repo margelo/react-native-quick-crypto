@@ -12,7 +12,7 @@ bun i
 
 > While it's possible to use [`npm`](https://github.com/npm/cli), [`yarn`](https://classic.yarnpkg.com/), or [`pnpm`](https://pnpm.io), the tooling is built around [`bun`](https://bun.sh), so you'll have an easier time if you use `bun` for development.
 
-If you are using a VSCode-flavored IDE and the `clangd` extension, you can use the `scripts/dev_env.sh` script to set up the environment for C++ development. This will create a `compile_commands.json` file in the root directory of the project, which will allow the IDE to provide proper includes, better code completion and navigation.  After that, add the following to your `.vscode/settings.json` file:
+If you are using a VSCode-flavored IDE and the `clangd` extension, you can use the `scripts/setup_clang_env.sh` script to set up the environment for C++ development. This will create a `compile_commands.json` file in the root directory of the project, which will allow the IDE to provide proper includes, better code completion and navigation.  After that, add the following to your `.vscode/settings.json` file:
 
 ```json
 {
