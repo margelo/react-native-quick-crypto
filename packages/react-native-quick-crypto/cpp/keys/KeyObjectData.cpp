@@ -1,6 +1,38 @@
 #include "KeyObjectData.hpp"
+#include "Utils.hpp"
+#include <optional>
 
 namespace margelo {
+
+using namespace margelo::nitro::crypto;
+
+ncrypto::EVPKeyPointer::PrivateKeyEncodingConfig GetPrivateKeyEncodingConfig(
+  KFormatType format,
+  KeyEncoding type) {
+auto pk_format = static_cast<ncrypto::EVPKeyPointer::PKFormatType>(format);
+auto pk_type = static_cast<ncrypto::EVPKeyPointer::PKEncodingType>(type);
+
+auto config = ncrypto::EVPKeyPointer::PrivateKeyEncodingConfig(false, pk_format, pk_type);
+return config;
+}
+
+KeyObjectData TryParsePrivateKey(std::shared_ptr<ArrayBuffer> key, std::optional<KFormatType> format,
+  std::optional<KeyEncoding> type,
+  const std::optional<std::shared_ptr<ArrayBuffer>>& passphrase) {
+  auto config = GetPrivateKeyEncodingConfig(format.value(), type.value());
+  auto buffer = ncrypto::Buffer<const unsigned char>{key->data(), key->size()};
+  auto res = ncrypto::EVPKeyPointer::TryParsePrivateKey(config, buffer);
+  if (res) {
+    return KeyObjectData::CreateAsymmetric(KeyType::PRIVATE,
+            std::move(res.value));
+  }
+
+  if (res.error.value() == ncrypto::EVPKeyPointer::PKParseError::NEED_PASSPHRASE) {
+    throw std::runtime_error("Passphrase required for encrypted key");
+  } else {
+    throw std::runtime_error("Failed to read private key");
+  }
+}
 
 KeyObjectData::KeyObjectData(std::nullptr_t)
     : key_type_(KeyType::SECRET) {}
@@ -55,41 +87,38 @@ KeyObjectData KeyObjectData::GetPublicOrPrivateKey(std::shared_ptr<ArrayBuffer> 
   if (format.has_value() && format.value() == KFormatType::PEM) {
     // For PEM, we can easily determine whether it is a public or private key
     // by looking for the respective PEM tags.
-    auto res = EVPKeyPointer::TryParsePublicKeyPEM(key);
+    auto config = GetPrivateKeyEncodingConfig(format.value(), type.value());
+    auto buffer = ncrypto::Buffer<const unsigned char>{key->data(), key->size()};
+    auto res = ncrypto::EVPKeyPointer::TryParsePublicKeyPEM(buffer);
     if (res) {
       return CreateAsymmetric(KeyType::PUBLIC, std::move(res.value));
     }
 
-    if (res.error.value() == EVPKeyPointer::PKParseError::NOT_RECOGNIZED) {
-      return TryParsePrivateKey(key, format, type, passphrase);
+    if (res.error.has_value() && res.error.value() == ncrypto::EVPKeyPointer::PKParseError::NOT_RECOGNIZED) {
+      if (passphrase.has_value()) {
+        auto& passphrase_ptr = passphrase.value();
+        config.passphrase = std::make_optional(ncrypto::DataPointer(passphrase_ptr->data(), passphrase_ptr->size()));
+      }
+
+      auto private_res = ncrypto::EVPKeyPointer::TryParsePrivateKey(config, buffer);
+      if (private_res) {
+        return CreateAsymmetric(KeyType::PRIVATE, std::move(private_res.value));
+      }
+      // TODO: Handle private key parsing errors
     }
     throw std::runtime_error("Failed to read asymmetric key");
   }
+
+  throw std::runtime_error("Unsupported key format for GetPublicOrPrivateKey. Only PEM is supported.");
 }
 
 KeyObjectData KeyObjectData::GetPrivateKey(std::shared_ptr<ArrayBuffer> key, std::optional<KFormatType> format,
                                            std::optional<KeyEncoding> type,
                                            const std::optional<std::shared_ptr<ArrayBuffer>>& passphrase,
                                            bool isPublic) {
-  throw std::runtime_error("Not yet implemented");
-}
-
-KeyObjectData TryParsePrivateKey(std::shared_ptr<ArrayBuffer> key, std::optional<KFormatType> format,
-                                 std::optional<KeyEncoding> type,
-                                 const std::optional<std::shared_ptr<ArrayBuffer>>& passphrase) {
-  auto res = EVPKeyPointer::TryParsePrivateKey(config, buffer);
-  if (res) {
-    return KeyObjectData::CreateAsymmetric(KeyType::kKeyTypePrivate,
-                                           std::move(res.value));
-  }
-
-  if (res.error.value() == EVPKeyPointer::PKParseError::NEED_PASSPHRASE) {
-    THROW_ERR_MISSING_PASSPHRASE(env, "Passphrase required for encrypted key");
-  } else {
-    ThrowCryptoError(
-        env, res.openssl_error.value_or(0), "Failed to read private key");
-  }
-  return {};
+  // TODO: Node's KeyObjectData::GetPrivateKeyFromJs checks for key "IsString" or "IsAnyBufferSource"
+  //       We have converted key to an ArrayBuffer - not sure if that's correct
+  return TryParsePrivateKey(key, format, type, passphrase);
 }
 
 } // namespace margelo
