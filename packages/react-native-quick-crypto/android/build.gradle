@@ -53,7 +53,9 @@ android {
     externalNativeBuild {
       cmake {
         cppFlags "-frtti -fexceptions -Wall -fstack-protector-all"
-        arguments "-DANDROID_STL=c++_shared", "-DSODIUM_ENABLED=${sodiumEnabled}"
+        arguments "-DANDROID_STL=c++_shared", 
+                  "-DSODIUM_ENABLED=${sodiumEnabled}",
+                  "-DANDROID_SUPPORT_FLEXIBLE_PAGE_SIZES=ON"
         abiFilters (*reactNativeArchitectures())
 
         buildTypes {
