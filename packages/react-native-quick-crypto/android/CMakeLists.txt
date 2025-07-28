@@ -1,5 +1,5 @@
+cmake_minimum_required(VERSION 3.10.0)
 project(QuickCrypto)
-cmake_minimum_required(VERSION 3.9.0)
 
 set(PACKAGE_NAME QuickCrypto)
 set(CMAKE_VERBOSE_MAKEFILE ON)
@@ -40,6 +40,8 @@ include_directories(
   "../cpp/utils"
   "../deps/fastpbkdf2"
   "../deps/ncrypto"
+  "../build/includes" # flattened Nitro Modules headers
+  "../../../node_modules/react-native/ReactCommon/jsi"
 )
 
 # Third party libraries (Prefabs)
