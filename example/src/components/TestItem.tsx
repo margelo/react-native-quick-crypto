@@ -1,7 +1,7 @@
 import React from 'react';
 import { View, Text, StyleSheet, TouchableOpacity } from 'react-native';
 import BouncyCheckbox from 'react-native-bouncy-checkbox';
-import type { TestResult } from '../types/results';
+import type { TestResult } from '../types/Results';
 import { useNavigation } from '@react-navigation/native';
 import { colors } from '../styles/colors';
 
