@@ -176,7 +176,7 @@ dependencies {
   implementation "com.facebook.react:react-android:+"
 
   // Add a dependency on OpenSSL
-  implementation 'io.github.ronickg:openssl:3.3.2'
+  implementation 'io.github.ronickg:openssl:3.3.2-1'
 }
 
 // Resolves "LOCAL_SRC_FILES points to a missing file, Check that libfb.so exists or that its path is correct".
