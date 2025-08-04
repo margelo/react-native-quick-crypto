@@ -55,7 +55,8 @@ export default [
       '.prettierrc.js', 
       '*.config.*js', 
       '*.plugin.js', 
-      '**/lib/**', 
+      '**/lib/**',
+      '**/build/**',
       '**/test/**'],
   },
 ];

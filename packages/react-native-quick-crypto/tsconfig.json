@@ -25,4 +25,5 @@
     "verbatimModuleSyntax": true,
   },
   "include": ["src/**/*.ts"],
+  "exclude": ["build/**"]
 }
