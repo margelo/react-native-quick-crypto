@@ -8,6 +8,9 @@ SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 # Set BUILD_DIR to the packages/react-native-quick-crypto/build directory
 BUILD_DIR="$SCRIPT_DIR/../packages/react-native-quick-crypto/build"
 
+# Create build directory if it doesn't exist
+mkdir -p "$BUILD_DIR"
+
 # Convert to absolute path
 BUILD_DIR="$(cd "$BUILD_DIR" && pwd)"
 
@@ -40,7 +43,7 @@ include_directories(
   "cpp/random"
   "cpp/utils"
   "deps/fastpbkdf2"
-  "deps/ncrypto"
+  "deps/ncrypto/include"
   "build/includes"
   "nitrogen/generated/shared/c++"
   "../../node_modules/react-native/ReactCommon/jsi"
@@ -62,6 +65,7 @@ add_library(QuickCrypto STATIC
   cpp/pbkdf2/HybridPbkdf2.cpp
   cpp/random/HybridRandom.cpp
   deps/fastpbkdf2/fastpbkdf2.c
+  deps/ncrypto/src/ncrypto.cpp
 )
 EOF
 
