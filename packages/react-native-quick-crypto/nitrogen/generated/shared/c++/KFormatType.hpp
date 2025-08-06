@@ -25,9 +25,9 @@ namespace margelo::nitro::crypto {
    * An enum which can be represented as a JavaScript enum (KFormatType).
    */
   enum class KFormatType {
-    KKEYFORMATDER      SWIFT_NAME(kkeyformatder) = 0,
-    KKEYFORMATPEM      SWIFT_NAME(kkeyformatpem) = 1,
-    KKEYFORMATJWK      SWIFT_NAME(kkeyformatjwk) = 2,
+    DER      SWIFT_NAME(der) = 0,
+    PEM      SWIFT_NAME(pem) = 1,
+    JWK      SWIFT_NAME(jwk) = 2,
   } CLOSED_ENUM;
 
 } // namespace margelo::nitro::crypto

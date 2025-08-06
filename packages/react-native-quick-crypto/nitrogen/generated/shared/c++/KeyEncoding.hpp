@@ -25,10 +25,10 @@ namespace margelo::nitro::crypto {
    * An enum which can be represented as a JavaScript enum (KeyEncoding).
    */
   enum class KeyEncoding {
-    KKEYENCODINGPKCS1      SWIFT_NAME(kkeyencodingpkcs1) = 0,
-    KKEYENCODINGPKCS8      SWIFT_NAME(kkeyencodingpkcs8) = 1,
-    KKEYENCODINGSPKI      SWIFT_NAME(kkeyencodingspki) = 2,
-    KKEYENCODINGSEC1      SWIFT_NAME(kkeyencodingsec1) = 3,
+    PKCS1      SWIFT_NAME(pkcs1) = 0,
+    PKCS8      SWIFT_NAME(pkcs8) = 1,
+    SPKI      SWIFT_NAME(spki) = 2,
+    SEC1      SWIFT_NAME(sec1) = 3,
   } CLOSED_ENUM;
 
 } // namespace margelo::nitro::crypto

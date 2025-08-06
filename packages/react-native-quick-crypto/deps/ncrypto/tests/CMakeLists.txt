@@ -1,0 +1,7 @@
+include(GoogleTest)
+add_executable(basic basic.cpp)
+target_link_libraries(basic PRIVATE ncrypto GTest::gtest_main)
+gtest_discover_tests(basic)
+if(MSVC OR MINGW)
+  target_compile_definitions(basic PRIVATE _CRT_SECURE_NO_WARNINGS)
+endif()

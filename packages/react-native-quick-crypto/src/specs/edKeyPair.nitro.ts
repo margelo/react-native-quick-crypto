@@ -2,6 +2,8 @@ import type { HybridObject } from 'react-native-nitro-modules';
 
 export interface EdKeyPair
   extends HybridObject<{ ios: 'c++'; android: 'c++' }> {
+  diffieHellman(privateKey: ArrayBuffer, publicKey: ArrayBuffer): ArrayBuffer;
+
   generateKeyPair(
     publicFormat: number,
     publicType: number,

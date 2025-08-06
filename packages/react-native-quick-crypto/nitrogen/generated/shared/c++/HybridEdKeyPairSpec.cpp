@@ -14,6 +14,7 @@ namespace margelo::nitro::crypto {
     HybridObject::loadHybridMethods();
     // load custom methods/properties
     registerHybrids(this, [](Prototype& prototype) {
+      prototype.registerHybridMethod("diffieHellman", &HybridEdKeyPairSpec::diffieHellman);
       prototype.registerHybridMethod("generateKeyPair", &HybridEdKeyPairSpec::generateKeyPair);
       prototype.registerHybridMethod("generateKeyPairSync", &HybridEdKeyPairSpec::generateKeyPairSync);
       prototype.registerHybridMethod("getPublicKey", &HybridEdKeyPairSpec::getPublicKey);

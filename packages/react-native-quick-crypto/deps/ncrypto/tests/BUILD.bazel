@@ -1,0 +1,9 @@
+cc_test(
+    name = "basic",
+    srcs = ["basic.cpp"],
+    deps = [
+        "//:ncrypto",
+        "@googletest//:gtest",
+        "@googletest//:gtest_main",
+    ],
+)

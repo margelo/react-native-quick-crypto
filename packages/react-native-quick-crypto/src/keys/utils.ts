@@ -65,9 +65,8 @@ export function parseKeyEncoding(
             `Invalid argument ${option('cipher', objName)}: ${cipher}`,
           );
         if (
-          format === KFormatType.kKeyFormatDER &&
-          (type === KeyEncoding.kKeyEncodingPKCS1 ||
-            type === KeyEncoding.kKeyEncodingSEC1)
+          format === KFormatType.DER &&
+          (type === KeyEncoding.PKCS1 || type === KeyEncoding.SEC1)
         ) {
           throw new Error(
             `Incompatible key options ${encodingNames[type]} does not support encryption`,
@@ -97,10 +96,10 @@ export function parseKeyEncoding(
 }
 
 const encodingNames = {
-  [KeyEncoding.kKeyEncodingPKCS1]: 'pkcs1',
-  [KeyEncoding.kKeyEncodingPKCS8]: 'pkcs8',
-  [KeyEncoding.kKeyEncodingSPKI]: 'spki',
-  [KeyEncoding.kKeyEncodingSEC1]: 'sec1',
+  [KeyEncoding.PKCS1]: 'pkcs1',
+  [KeyEncoding.PKCS8]: 'pkcs8',
+  [KeyEncoding.SPKI]: 'spki',
+  [KeyEncoding.SEC1]: 'sec1',
 };
 
 function option(name: string, objName?: string) {
@@ -116,9 +115,9 @@ function parseKeyFormat(
 ) {
   if (formatStr === undefined && defaultFormat !== undefined)
     return defaultFormat;
-  else if (formatStr === 'pem') return KFormatType.kKeyFormatPEM;
-  else if (formatStr === 'der') return KFormatType.kKeyFormatDER;
-  else if (formatStr === 'jwk') return KFormatType.kKeyFormatJWK;
+  else if (formatStr === 'pem') return KFormatType.PEM;
+  else if (formatStr === 'der') return KFormatType.DER;
+  else if (formatStr === 'jwk') return KFormatType.JWK;
   throw new Error(`Invalid key format str: ${optionName}`);
 }
 
@@ -137,18 +136,18 @@ function parseKeyType(
         `Crypto incompatible key options: ${typeStr} can only be used for RSA keys`,
       );
     }
-    return KeyEncoding.kKeyEncodingPKCS1;
+    return KeyEncoding.PKCS1;
   } else if (typeStr === 'spki' && isPublic !== false) {
-    return KeyEncoding.kKeyEncodingSPKI;
+    return KeyEncoding.SPKI;
   } else if (typeStr === 'pkcs8' && isPublic !== true) {
-    return KeyEncoding.kKeyEncodingPKCS8;
+    return KeyEncoding.PKCS8;
   } else if (typeStr === 'sec1' && isPublic !== true) {
     if (keyType !== undefined && keyType !== 'ec') {
       throw new Error(
         `Incompatible key options ${typeStr} can only be used for EC keys`,
       );
     }
-    return KeyEncoding.kKeyEncodingSEC1;
+    return KeyEncoding.SEC1;
   }
 
   throw new Error(`Invalid option ${optionName} - ${typeStr}`);
@@ -165,13 +164,12 @@ function parseKeyFormatAndType(
   const isInput = keyType === undefined;
   const format = parseKeyFormat(
     formatStr,
-    isInput ? KFormatType.kKeyFormatPEM : undefined,
+    isInput ? KFormatType.PEM : undefined,
     option('format', objName),
   );
 
   const isRequired =
-    (!isInput || format === KFormatType.kKeyFormatDER) &&
-    format !== KFormatType.kKeyFormatJWK;
+    (!isInput || format === KFormatType.DER) && format !== KFormatType.JWK;
 
   const type = parseKeyType(
     typeStr,
