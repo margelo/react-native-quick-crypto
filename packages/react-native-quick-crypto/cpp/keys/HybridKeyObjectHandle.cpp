@@ -1,8 +1,8 @@
 #include <stdexcept>
 
+#include "CFRGKeyPairType.hpp"
 #include "HybridKeyObjectHandle.hpp"
 #include "Utils.hpp"
-#include "CFRGKeyPairType.hpp"
 #include <openssl/evp.h>
 
 namespace margelo::nitro::crypto {
@@ -11,25 +11,24 @@ std::shared_ptr<ArrayBuffer> HybridKeyObjectHandle::exportKey(std::optional<KFor
                                                               const std::optional<std::string>& cipher,
                                                               const std::optional<std::shared_ptr<ArrayBuffer>>& passphrase) {
   auto keyType = data_.GetKeyType();
-  
+
   // Handle secret keys
   if (keyType == KeyType::SECRET) {
     return data_.GetSymmetricKey();
   }
-  
+
   // Handle asymmetric keys (public/private)
   if (keyType == KeyType::PUBLIC || keyType == KeyType::PRIVATE) {
     const auto& pkey = data_.GetAsymmetricKey();
     if (!pkey) {
       throw std::runtime_error("Invalid asymmetric key");
     }
-    
+
     int keyId = EVP_PKEY_id(pkey.get());
-    
+
     // For curve keys (X25519, X448, Ed25519, Ed448), use raw format if no format specified
-    bool isCurveKey = (keyId == EVP_PKEY_X25519 || keyId == EVP_PKEY_X448 || 
-                       keyId == EVP_PKEY_ED25519 || keyId == EVP_PKEY_ED448);
-    
+    bool isCurveKey = (keyId == EVP_PKEY_X25519 || keyId == EVP_PKEY_X448 || keyId == EVP_PKEY_ED25519 || keyId == EVP_PKEY_ED448);
+
     // If no format specified and it's a curve key, export as raw
     if (!format.has_value() && !type.has_value() && isCurveKey) {
       if (keyType == KeyType::PUBLIC) {
@@ -46,34 +45,28 @@ std::shared_ptr<ArrayBuffer> HybridKeyObjectHandle::exportKey(std::optional<KFor
         return ToNativeArrayBuffer(std::string(reinterpret_cast<const char*>(rawData.get()), rawData.size()));
       }
     }
-    
+
     // Set default format and type if not provided
     auto exportFormat = format.value_or(KFormatType::DER);
     auto exportType = type.value_or(keyType == KeyType::PUBLIC ? KeyEncoding::SPKI : KeyEncoding::PKCS8);
-    
+
     // Create encoding config
     if (keyType == KeyType::PUBLIC) {
-      ncrypto::EVPKeyPointer::PublicKeyEncodingConfig config(
-        false,
-        static_cast<ncrypto::EVPKeyPointer::PKFormatType>(exportFormat),
-        static_cast<ncrypto::EVPKeyPointer::PKEncodingType>(exportType)
-      );
-      
+      ncrypto::EVPKeyPointer::PublicKeyEncodingConfig config(false, static_cast<ncrypto::EVPKeyPointer::PKFormatType>(exportFormat),
+                                                             static_cast<ncrypto::EVPKeyPointer::PKEncodingType>(exportType));
+
       auto result = pkey.writePublicKey(config);
       if (!result) {
         throw std::runtime_error("Failed to export public key");
       }
-      
+
       auto bio = std::move(result.value);
       BUF_MEM* bptr = bio;
       return ToNativeArrayBuffer(std::string(bptr->data, bptr->length));
     } else {
-      ncrypto::EVPKeyPointer::PrivateKeyEncodingConfig config(
-        false,
-        static_cast<ncrypto::EVPKeyPointer::PKFormatType>(exportFormat),
-        static_cast<ncrypto::EVPKeyPointer::PKEncodingType>(exportType)
-      );
-      
+      ncrypto::EVPKeyPointer::PrivateKeyEncodingConfig config(false, static_cast<ncrypto::EVPKeyPointer::PKFormatType>(exportFormat),
+                                                              static_cast<ncrypto::EVPKeyPointer::PKEncodingType>(exportType));
+
       // Handle cipher and passphrase for encrypted private keys
       if (cipher.has_value()) {
         const EVP_CIPHER* evp_cipher = EVP_get_cipherbyname(cipher.value().c_str());
@@ -82,23 +75,23 @@ std::shared_ptr<ArrayBuffer> HybridKeyObjectHandle::exportKey(std::optional<KFor
         }
         config.cipher = evp_cipher;
       }
-      
+
       if (passphrase.has_value()) {
         auto& passphrase_ptr = passphrase.value();
         config.passphrase = std::make_optional(ncrypto::DataPointer(passphrase_ptr->data(), passphrase_ptr->size()));
       }
-      
+
       auto result = pkey.writePrivateKey(config);
       if (!result) {
         throw std::runtime_error("Failed to export private key");
       }
-      
+
       auto bio = std::move(result.value);
       BUF_MEM* bptr = bio;
       return ToNativeArrayBuffer(std::string(bptr->data, bptr->length));
     }
   }
-  
+
   throw std::runtime_error("Unsupported key type for export");
 }
 
@@ -111,9 +104,9 @@ CFRGKeyPairType HybridKeyObjectHandle::getAsymmetricKeyType() {
   if (!pkey) {
     throw std::runtime_error("Key is not an asymmetric key");
   }
-  
+
   int keyType = EVP_PKEY_id(pkey.get());
-  
+
   switch (keyType) {
     case EVP_PKEY_X25519:
       return CFRGKeyPairType::X25519;
@@ -151,7 +144,8 @@ bool HybridKeyObjectHandle::init(KeyType keyType, const std::variant<std::string
     }
     case KeyType::PUBLIC: {
       auto data = KeyObjectData::GetPublicOrPrivateKey(ab, format, type, passphrase);
-      if (!data) return false;
+      if (!data)
+        return false;
       this->data_ = data.addRefWithType(KeyType::PUBLIC);
       break;
     }
@@ -182,7 +176,7 @@ bool HybridKeyObjectHandle::initRawKey(KeyType keyType, std::shared_ptr<ArrayBuf
   // Based on key size: x25519=32 bytes, x448=56 bytes, ed25519=32 bytes, ed448=57 bytes
   int curveId = -1;
   size_t keySize = keyData->size();
-  
+
   if (keySize == 32) {
     // Could be x25519 or ed25519 - for now assume x25519 based on test context
     curveId = EVP_PKEY_X25519;
@@ -194,10 +188,7 @@ bool HybridKeyObjectHandle::initRawKey(KeyType keyType, std::shared_ptr<ArrayBuf
     throw std::runtime_error("Invalid key size: expected 32, 56, or 57 bytes for curve keys");
   }
 
-  ncrypto::Buffer<const unsigned char> buffer{
-    .data = reinterpret_cast<const unsigned char*>(keyData->data()),
-    .len = keyData->size()
-  };
+  ncrypto::Buffer<const unsigned char> buffer{.data = reinterpret_cast<const unsigned char*>(keyData->data()), .len = keyData->size()};
 
   ncrypto::EVPKeyPointer pkey;
   if (keyType == KeyType::PRIVATE) {

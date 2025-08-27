@@ -37,7 +37,7 @@ class HybridKeyObjectHandle : public HybridKeyObjectHandleSpec {
 
  private:
   KeyObjectData data_;
-  
+
   bool initRawKey(KeyType keyType, std::shared_ptr<ArrayBuffer> keyData);
 };
 

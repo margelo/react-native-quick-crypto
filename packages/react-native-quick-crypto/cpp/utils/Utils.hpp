@@ -6,8 +6,8 @@
 #include <openssl/err.h>
 #include <string>
 
-#include <NitroModules/ArrayBuffer.hpp>
 #include "Macros.hpp"
+#include <NitroModules/ArrayBuffer.hpp>
 
 namespace margelo::nitro::crypto {
 

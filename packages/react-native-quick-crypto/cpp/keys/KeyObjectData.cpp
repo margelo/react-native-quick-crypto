@@ -6,25 +6,21 @@ namespace margelo {
 
 using namespace margelo::nitro::crypto;
 
-ncrypto::EVPKeyPointer::PrivateKeyEncodingConfig GetPrivateKeyEncodingConfig(
-  KFormatType format,
-  KeyEncoding type) {
-auto pk_format = static_cast<ncrypto::EVPKeyPointer::PKFormatType>(format);
-auto pk_type = static_cast<ncrypto::EVPKeyPointer::PKEncodingType>(type);
+ncrypto::EVPKeyPointer::PrivateKeyEncodingConfig GetPrivateKeyEncodingConfig(KFormatType format, KeyEncoding type) {
+  auto pk_format = static_cast<ncrypto::EVPKeyPointer::PKFormatType>(format);
+  auto pk_type = static_cast<ncrypto::EVPKeyPointer::PKEncodingType>(type);
 
-auto config = ncrypto::EVPKeyPointer::PrivateKeyEncodingConfig(false, pk_format, pk_type);
-return config;
+  auto config = ncrypto::EVPKeyPointer::PrivateKeyEncodingConfig(false, pk_format, pk_type);
+  return config;
 }
 
-KeyObjectData TryParsePrivateKey(std::shared_ptr<ArrayBuffer> key, std::optional<KFormatType> format,
-  std::optional<KeyEncoding> type,
-  const std::optional<std::shared_ptr<ArrayBuffer>>& passphrase) {
+KeyObjectData TryParsePrivateKey(std::shared_ptr<ArrayBuffer> key, std::optional<KFormatType> format, std::optional<KeyEncoding> type,
+                                 const std::optional<std::shared_ptr<ArrayBuffer>>& passphrase) {
   auto config = GetPrivateKeyEncodingConfig(format.value(), type.value());
   auto buffer = ncrypto::Buffer<const unsigned char>{key->data(), key->size()};
   auto res = ncrypto::EVPKeyPointer::TryParsePrivateKey(config, buffer);
   if (res) {
-    return KeyObjectData::CreateAsymmetric(KeyType::PRIVATE,
-            std::move(res.value));
+    return KeyObjectData::CreateAsymmetric(KeyType::PRIVATE, std::move(res.value));
   }
 
   if (res.error.value() == ncrypto::EVPKeyPointer::PKParseError::NEED_PASSPHRASE) {
@@ -34,12 +30,10 @@ KeyObjectData TryParsePrivateKey(std::shared_ptr<ArrayBuffer> key, std::optional
   }
 }
 
-KeyObjectData::KeyObjectData(std::nullptr_t)
-    : key_type_(KeyType::SECRET) {}
+KeyObjectData::KeyObjectData(std::nullptr_t) : key_type_(KeyType::SECRET) {}
 
 KeyObjectData::KeyObjectData(std::shared_ptr<ArrayBuffer> symmetric_key)
-    : key_type_(KeyType::SECRET),
-      data_(std::make_shared<Data>(std::move(symmetric_key))) {}
+    : key_type_(KeyType::SECRET), data_(std::make_shared<Data>(std::move(symmetric_key))) {}
 
 KeyObjectData::KeyObjectData(KeyType type, ncrypto::EVPKeyPointer&& pkey)
     : key_type_(type), data_(std::make_shared<Data>(std::move(pkey))) {}
@@ -48,8 +42,7 @@ KeyObjectData KeyObjectData::CreateSecret(std::shared_ptr<ArrayBuffer> key) {
   return KeyObjectData(std::move(key));
 }
 
-KeyObjectData KeyObjectData::CreateAsymmetric(KeyType key_type,
-                                              ncrypto::EVPKeyPointer&& pkey) {
+KeyObjectData KeyObjectData::CreateAsymmetric(KeyType key_type, ncrypto::EVPKeyPointer&& pkey) {
   CHECK(pkey);
   return KeyObjectData(key_type, std::move(pkey));
 }
@@ -127,8 +120,7 @@ KeyObjectData KeyObjectData::GetPublicOrPrivateKey(std::shared_ptr<ArrayBuffer> 
 }
 
 KeyObjectData KeyObjectData::GetPrivateKey(std::shared_ptr<ArrayBuffer> key, std::optional<KFormatType> format,
-                                           std::optional<KeyEncoding> type,
-                                           const std::optional<std::shared_ptr<ArrayBuffer>>& passphrase,
+                                           std::optional<KeyEncoding> type, const std::optional<std::shared_ptr<ArrayBuffer>>& passphrase,
                                            bool isPublic) {
   // TODO: Node's KeyObjectData::GetPrivateKeyFromJs checks for key "IsString" or "IsAnyBufferSource"
   //       We have converted key to an ArrayBuffer - not sure if that's correct
