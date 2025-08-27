@@ -1,5 +1,6 @@
 import { NitroModules } from 'react-native-nitro-modules';
-import { AsymmetricKeyObject, PrivateKeyObject, PublicKeyObject } from './keys';
+import { Buffer } from '@craftzdog/react-native-buffer';
+import { AsymmetricKeyObject, PrivateKeyObject } from './keys';
 import type { EdKeyPair } from './specs/edKeyPair.nitro';
 import type {
   BinaryLike,
@@ -163,11 +164,11 @@ export function diffieHellman(
   options: DiffieHellmanOptions,
   callback?: DiffieHellmanCallback,
 ): Buffer | void {
-  checkDiffieHellmanOptions(options);
+  // checkDiffieHellmanOptions(options); // TODO: remove?  This is checked in ed.diffieHellman()
   const privateKey = options.privateKey as PrivateKeyObject;
   const type = privateKey.asymmetricKeyType as CFRGKeyPairType;
   const ed = new Ed(type, {});
-  ed.diffieHellman(options, callback);
+  return ed.diffieHellman(options, callback);
 }
 
 // Node API
@@ -213,12 +214,16 @@ export function ed_generateKeyPair(
 function checkDiffieHellmanOptions(options: DiffieHellmanOptions): void {
   const { privateKey, publicKey } = options;
 
-  // instance checks
-  if (!(privateKey instanceof PrivateKeyObject)) {
-    throw new Error('privateKey must be a PrivateKeyObject');
+  // Check if keys are KeyObject instances
+  if (
+    !privateKey ||
+    typeof privateKey !== 'object' ||
+    !('type' in privateKey)
+  ) {
+    throw new Error('privateKey must be a KeyObject');
   }
-  if (!(publicKey instanceof PublicKeyObject)) {
-    throw new Error('publicKey must be a PublicKeyObject');
+  if (!publicKey || typeof publicKey !== 'object' || !('type' in publicKey)) {
+    throw new Error('publicKey must be a KeyObject');
   }
 
   // type checks
@@ -229,22 +234,27 @@ function checkDiffieHellmanOptions(options: DiffieHellmanOptions): void {
     throw new Error('publicKey must be a public KeyObject');
   }
 
+  // For asymmetric keys, check if they have the asymmetricKeyType property
+  const privateKeyAsym = privateKey as AsymmetricKeyObject;
+  const publicKeyAsym = publicKey as AsymmetricKeyObject;
+
   // key types must match
   if (
-    privateKey.asymmetricKeyType &&
-    publicKey.asymmetricKeyType &&
-    privateKey.asymmetricKeyType !== publicKey.asymmetricKeyType
+    privateKeyAsym.asymmetricKeyType &&
+    publicKeyAsym.asymmetricKeyType &&
+    privateKeyAsym.asymmetricKeyType !== publicKeyAsym.asymmetricKeyType
   ) {
     throw new Error('Keys must be asymmetric and their types must match');
   }
 
-  switch (privateKey.asymmetricKeyType) {
+  switch (privateKeyAsym.asymmetricKeyType) {
     // case 'dh': // TODO: uncomment when implemented
-    // case 'ec': // TODO: uncomment when implemented
     case 'x25519':
     case 'x448':
       break;
     default:
-      throw new Error(`Unknown curve type: ${privateKey.asymmetricKeyType}`);
+      throw new Error(
+        `Unknown curve type: ${privateKeyAsym.asymmetricKeyType}`,
+      );
   }
 }

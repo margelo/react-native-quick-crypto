@@ -115,6 +115,48 @@ export class KeyObject {
   //   return key[kKeyObject];
   // }
 
+  static createKeyObject(type: string, key: ArrayBuffer): KeyObject {
+    if (type !== 'secret' && type !== 'public' && type !== 'private')
+      throw new Error(`invalid KeyObject type: ${type}`);
+
+    const handle = NitroModules.createHybridObject(
+      'KeyObjectHandle',
+    ) as KeyObjectHandle;
+    let keyType: KeyType;
+    switch (type) {
+      case 'public':
+        keyType = KeyType.PUBLIC;
+        break;
+      case 'private':
+        keyType = KeyType.PRIVATE;
+        break;
+      case 'secret':
+        keyType = KeyType.SECRET;
+        break;
+      default:
+        throw new Error('invalid key type');
+    }
+    handle.init(keyType, key);
+
+    // For asymmetric keys, return the appropriate subclass
+    if (type === 'public' || type === 'private') {
+      try {
+        handle.getAsymmetricKeyType();
+        // If we get here, it's an asymmetric key - return the appropriate subclass
+        if (type === 'public') {
+          return new PublicKeyObject(handle);
+        } else {
+          return new PrivateKeyObject(handle);
+        }
+      } catch {
+        // Not an asymmetric key, fall through to regular KeyObject
+      }
+    }
+
+    // Return regular KeyObject for symmetric keys or if asymmetric detection failed
+    return new KeyObject(type, handle);
+  }
+
   equals(otherKeyObject: unknown): boolean {
     if (!(otherKeyObject instanceof KeyObject)) {
       throw new TypeError(

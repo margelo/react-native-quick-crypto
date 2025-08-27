@@ -1,6 +1,6 @@
 import type { Buffer as CraftzdogBuffer } from '@craftzdog/react-native-buffer';
-import { Buffer } from 'buffer';
-import type { CipherKey, KeyObject } from 'crypto'; // @types/node
+import type { Buffer } from 'buffer';
+import type { CipherKey, KeyObject } from 'node:crypto'; // @types/node
 import type { Buffer as SafeBuffer } from 'safe-buffer';
 import type { KeyObjectHandle as KeyObjectHandleType } from '../specs/keyObjectHandle.nitro';
 
@@ -320,8 +320,8 @@ export type DiffieHellmanOptions = {
 
 export type DiffieHellmanCallback = (
   err: Error | null,
-  secret?: Buffer,
-) => Buffer | void;
+  secret?: CraftzdogBuffer,
+) => CraftzdogBuffer | void;
 
 // from @paulmillr/noble-curves
 export type Hex = string | Uint8Array;
