@@ -75,6 +75,6 @@ jobs:
           -scheme QuickCryptoExample \
           -sdk iphonesimulator \
           -configuration Debug \
-          -destination 'generic/platform=iOS Simulator' \
+          -destination 'platform=iOS Simulator,name=iPhone SE (3rd generation),OS=18.4' \
           build \
           CODE_SIGNING_ALLOWED=NO | xcpretty"
