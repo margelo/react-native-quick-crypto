@@ -66,15 +66,21 @@ jobs:
       - name: List available simulators
         run: xcrun simctl list devices available
 
+      - name: List available SDKs
+        run: xcodebuild -showsdks
+
       - name: Build App
         working-directory: example/ios
-        run: "set -o pipefail && xcodebuild \
-          CC=clang CPLUSPLUS=clang++ LD=clang LDPLUSPLUS=clang++ \
-          -derivedDataPath build -UseModernBuildSystem=YES \
-          -workspace QuickCryptoExample.xcworkspace \
-          -scheme QuickCryptoExample \
-          -sdk iphonesimulator \
-          -configuration Debug \
-          -destination 'platform=iOS Simulator,name=iPhone SE (3rd generation),OS=18.4' \
-          build \
-          CODE_SIGNING_ALLOWED=NO | xcpretty"
+        run: |
+          set -o pipefail 
+          sudo xcode-select --switch /Applications/Xcode_16.4.app
+          xcodebuild \
+            CC=clang CPLUSPLUS=clang++ LD=clang LDPLUSPLUS=clang++ \
+            -derivedDataPath build -UseModernBuildSystem=YES \
+            -workspace QuickCryptoExample.xcworkspace \
+            -scheme QuickCryptoExample \
+            -sdk iphonesimulator \
+            -configuration Debug \
+            -destination 'generic/platform=iOS Simulator' \
+            build \
+            CODE_SIGNING_ALLOWED=NO | xcpretty
