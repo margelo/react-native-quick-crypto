@@ -38,7 +38,7 @@ target 'QuickCryptoExample' do
     # https://github.com/mrousavy/nitro/issues/422#issuecomment-2545988256
     installer.pods_project.targets.each do |target|
       target.build_configurations.each do |config|
-        config.build_settings['IPHONEOS_DEPLOYMENT_TARGET'] = '16.0'
+        config.build_settings['IPHONEOS_DEPLOYMENT_TARGET'] = '18.0'
         config.build_settings['CLANG_CXX_LANGUAGE_STANDARD'] = 'c++20'
         
         # Force C++20 for all targets, especially problematic ones
