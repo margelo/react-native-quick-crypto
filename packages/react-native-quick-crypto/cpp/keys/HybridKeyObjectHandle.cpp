@@ -191,7 +191,7 @@ bool HybridKeyObjectHandle::initRawKey(KeyType keyType, std::shared_ptr<ArrayBuf
   } else if (keySize == 57) {
     curveId = EVP_PKEY_ED448;
   } else {
-    return false; // Unsupported key size
+    throw std::runtime_error("Invalid key size: expected 32, 56, or 57 bytes for curve keys");
   }
 
   ncrypto::Buffer<const unsigned char> buffer{
@@ -205,11 +205,11 @@ bool HybridKeyObjectHandle::initRawKey(KeyType keyType, std::shared_ptr<ArrayBuf
   } else if (keyType == KeyType::PUBLIC) {
     pkey = ncrypto::EVPKeyPointer::NewRawPublic(curveId, buffer);
   } else {
-    return false; // Raw keys are only for asymmetric keys
+    throw std::runtime_error("Raw keys are only supported for asymmetric key types");
   }
 
   if (!pkey) {
-    return false;
+    throw std::runtime_error("Failed to create key from raw data");
   }
 
   this->data_ = KeyObjectData::CreateAsymmetric(keyType, std::move(pkey));

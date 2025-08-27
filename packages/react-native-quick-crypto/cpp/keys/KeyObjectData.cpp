@@ -55,25 +55,39 @@ KeyObjectData KeyObjectData::CreateAsymmetric(KeyType key_type,
 }
 
 KeyType KeyObjectData::GetKeyType() const {
-  CHECK(data_);
+  if (!data_) {
+    throw std::runtime_error("Invalid key object: no key data available");
+  }
   return key_type_;
 }
 
 const ncrypto::EVPKeyPointer& KeyObjectData::GetAsymmetricKey() const {
-  CHECK_NE(key_type_, KeyType::SECRET);
-  CHECK(data_);
+  if (key_type_ == KeyType::SECRET) {
+    throw std::runtime_error("Cannot get asymmetric key from secret key object");
+  }
+  if (!data_) {
+    throw std::runtime_error("Invalid key object: no key data available");
+  }
   return data_->asymmetric_key;
 }
 
 std::shared_ptr<ArrayBuffer> KeyObjectData::GetSymmetricKey() const {
-  CHECK_EQ(key_type_, KeyType::SECRET);
-  CHECK(data_);
+  if (key_type_ != KeyType::SECRET) {
+    throw std::runtime_error("Cannot get symmetric key from asymmetric key object");
+  }
+  if (!data_) {
+    throw std::runtime_error("Invalid key object: no key data available");
+  }
   return data_->symmetric_key;
 }
 
 size_t KeyObjectData::GetSymmetricKeySize() const {
-  CHECK_EQ(key_type_, KeyType::SECRET);
-  CHECK(data_);
+  if (key_type_ != KeyType::SECRET) {
+    throw std::runtime_error("Cannot get symmetric key size from asymmetric key object");
+  }
+  if (!data_) {
+    throw std::runtime_error("Invalid key object: no key data available");
+  }
   return data_->symmetric_key->size();
 }
 
