@@ -72,6 +72,6 @@ jobs:
           -scheme QuickCryptoExample \
           -sdk iphonesimulator \
           -configuration Debug \
-          -destination 'platform=iOS Simulator' \
+          -destination 'platform=iOS Simulator,name=iPhone 15,OS=17.5' \
           build \
           CODE_SIGNING_ALLOWED=NO | xcpretty"
