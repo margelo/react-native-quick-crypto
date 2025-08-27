@@ -63,6 +63,9 @@ jobs:
       - name: Install xcpretty
         run: gem install xcpretty
 
+      - name: List available simulators
+        run: xcrun simctl list devices available
+
       - name: Build App
         working-directory: example/ios
         run: "set -o pipefail && xcodebuild \
@@ -72,6 +75,6 @@ jobs:
           -scheme QuickCryptoExample \
           -sdk iphonesimulator \
           -configuration Debug \
-          -destination 'platform=iOS Simulator,name=iPhone 15,OS=17.5' \
+          -destination 'generic/platform=iOS Simulator' \
           build \
           CODE_SIGNING_ALLOWED=NO | xcpretty"
