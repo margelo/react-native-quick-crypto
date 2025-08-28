@@ -8,8 +8,6 @@
 
 namespace margelo::nitro::crypto {
 
-// using namespace facebook;
-
 class HybridEdKeyPair : public HybridEdKeyPairSpec {
  public:
   HybridEdKeyPair() : HybridObject(TAG) {}
