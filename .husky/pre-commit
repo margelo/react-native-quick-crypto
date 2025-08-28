@@ -1,0 +1,5 @@
+# Run linting and formatting on staged files
+bun lint-staged
+
+# Run prepare script
+bun --filter="react-native-quick-crypto" prepare

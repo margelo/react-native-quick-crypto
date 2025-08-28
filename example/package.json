@@ -8,6 +8,7 @@
     "ios": "react-native run-ios",
     "bundle-install": "bundle install",
     "clean": "del-cli android/build android/app/build ios/build lib",
+    "clean:deep": "bun run clean && del-cli node_modules",
     "tsc": "tsc --noEmit",
     "typescript": "tsc --noEmit",
     "lint": "eslint \"src/**/*.{js,ts,tsx}\"",

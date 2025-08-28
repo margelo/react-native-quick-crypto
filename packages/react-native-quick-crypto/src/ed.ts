@@ -46,7 +46,8 @@ export class Ed {
 
     // key types must be of certain type
     switch (
-      (options.privateKey as AsymmetricKeyObject).asymmetricKeyType as string
+      (options.privateKey as unknown as AsymmetricKeyObject)
+        .asymmetricKeyType as string
     ) {
       case 'dh':
       case 'ed':
@@ -165,7 +166,7 @@ export function diffieHellman(
   callback?: DiffieHellmanCallback,
 ): Buffer | void {
   // checkDiffieHellmanOptions(options); // TODO: remove?  This is checked in ed.diffieHellman()
-  const privateKey = options.privateKey as PrivateKeyObject;
+  const privateKey = options.privateKey as unknown as PrivateKeyObject;
   const type = privateKey.asymmetricKeyType as CFRGKeyPairType;
   const ed = new Ed(type, {});
   return ed.diffieHellman(options, callback);
@@ -235,8 +236,8 @@ function checkDiffieHellmanOptions(options: DiffieHellmanOptions): void {
   }
 
   // For asymmetric keys, check if they have the asymmetricKeyType property
-  const privateKeyAsym = privateKey as AsymmetricKeyObject;
-  const publicKeyAsym = publicKey as AsymmetricKeyObject;
+  const privateKeyAsym = privateKey as unknown as AsymmetricKeyObject;
+  const publicKeyAsym = publicKey as unknown as AsymmetricKeyObject;
 
   // key types must match
   if (

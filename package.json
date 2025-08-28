@@ -4,6 +4,7 @@
   "scripts": {
     "clang-format": "./scripts/clang-format.sh",
     "clean": "bun --filter='*' clean",
+    "clean:deep": "bun --filter='*' clean:deep && del-cli node_modules",
     "specs": "bun --filter='react-native-quick-crypto' specs",
     "bundle-install": "bun --filter='react-native-quick-crypto-example' bundle-install",
     "pods": "bun --filter='react-native-quick-crypto-example' pods",
@@ -14,12 +15,19 @@
     "lint:fix": "bun --filter='*' lint:fix",
     "format": "bun --filter='*' format",
     "format:fix": "bun --filter='*' format:fix",
-    "prepare": "bun --filter=\"react-native-quick-crypto\" prepare",
+    "prepare": "husky && bun --filter='react-native-quick-crypto' prepare",
+    "lint-staged": "lint-staged --no-stash",
     "release": "./scripts/release.sh",
     "yalc": "cd packages/react-native-quick-crypto && bun yalc push --replace --sig"
   },
+  "lint-staged": {
+    "example/**/*.{js,jsx,ts,tsx}": ["bun lint", "bun format"],
+    "packages/react-native-quick-crypto/**/*.{js,jsx,ts,tsx}": ["bun lint", "bun format"]
+  },
   "devDependencies": {
     "@eslint/compat": "1.2.8",
+    "husky": "^9.1.7",
+    "lint-staged": "^16.1.2",
     "@eslint/js": "9.24.0",
     "@release-it/bumper": "7.0.2",
     "@release-it/conventional-changelog": "10.0.0",
