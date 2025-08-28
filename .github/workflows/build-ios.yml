@@ -74,6 +74,9 @@ jobs:
 
       - name: Build App
         working-directory: example/ios
+        env:
+          RCT_NEW_ARCH_ENABLED: 1
+          SODIUM_ENABLED: 1
         run: |
           set -o pipefail 
           sudo xcode-select --switch /Applications/Xcode_16.4.app
@@ -84,6 +87,6 @@ jobs:
             -scheme QuickCryptoExample \
             -sdk iphonesimulator \
             -configuration Debug \
-            -destination 'generic/platform=iOS Simulator' \
+            -destination 'platform=iOS Simulator,name=iPhone 16 Pro,OS=18.6' \
             build \
             CODE_SIGNING_ALLOWED=NO | xcpretty
