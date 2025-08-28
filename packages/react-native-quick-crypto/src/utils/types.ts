@@ -1,8 +1,9 @@
 import type { Buffer as CraftzdogBuffer } from '@craftzdog/react-native-buffer';
 import type { Buffer } from 'buffer';
-import type { CipherKey, KeyObject } from 'node:crypto'; // @types/node
+import type { CipherKey } from 'node:crypto'; // @types/node
 import type { Buffer as SafeBuffer } from 'safe-buffer';
 import type { KeyObjectHandle as KeyObjectHandleType } from '../specs/keyObjectHandle.nitro';
+import type { KeyObject } from '../keys';
 
 export type ABV = TypedArray | DataView | ArrayBufferLike | CraftzdogBuffer;
 
@@ -36,7 +37,7 @@ export type BinaryLike =
   | TypedArray
   | DataView;
 
-export type BinaryLikeNode = CipherKey | BinaryLike;
+export type BinaryLikeNode = CipherKey | BinaryLike | KeyObject;
 
 export type DigestAlgorithm = 'SHA-1' | 'SHA-256' | 'SHA-384' | 'SHA-512';
 

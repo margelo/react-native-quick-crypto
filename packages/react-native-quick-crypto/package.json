@@ -9,6 +9,7 @@
   "source": "src/index",
   "scripts": {
     "clean": "del-cli android/build lib",
+    "clean:deep": "bun run clean && del-cli node_modules",
     "tsc": "tsc --noEmit",
     "typescript": "tsc --noEmit",
     "lint": "eslint \"**/*.{js,ts,tsx}\"",
