@@ -1752,7 +1752,7 @@ DEPENDENCIES:
   - fmt (from `../../node_modules/react-native/third-party-podspecs/fmt.podspec`)
   - glog (from `../../node_modules/react-native/third-party-podspecs/glog.podspec`)
   - hermes-engine (from `../../node_modules/react-native/sdks/hermes-engine/hermes-engine.podspec`)
-  - NitroModules (from `../node_modules/react-native-nitro-modules`)
+  - NitroModules (from `../../node_modules/react-native-nitro-modules`)
   - QuickCrypto (from `../../node_modules/react-native-quick-crypto`)
   - RCT-Folly (from `../../node_modules/react-native/third-party-podspecs/RCT-Folly.podspec`)
   - RCT-Folly/Fabric (from `../../node_modules/react-native/third-party-podspecs/RCT-Folly.podspec`)
@@ -1840,7 +1840,7 @@ EXTERNAL SOURCES:
     :podspec: "../../node_modules/react-native/sdks/hermes-engine/hermes-engine.podspec"
     :tag: hermes-2024-11-12-RNv0.76.2-5b4aa20c719830dcf5684832b89a6edb95ac3d64
   NitroModules:
-    :path: "../node_modules/react-native-nitro-modules"
+    :path: "../../node_modules/react-native-nitro-modules"
   QuickCrypto:
     :path: "../../node_modules/react-native-quick-crypto"
   RCT-Folly:
@@ -1976,7 +1976,7 @@ SPEC CHECKSUMS:
   hermes-engine: 9e868dc7be781364296d6ee2f56d0c1a9ef0bb11
   NitroModules: a93d85b07601390249d7816b59d95afc6317f09d
   OpenSSL-Universal: 6082b0bf950e5636fe0d78def171184e2b3899c2
-  QuickCrypto: 108a3cec847d30cd9a465dc52a9c77bd0e01f98d
+  QuickCrypto: 3ae297b5c14685bb03a8b2c6a1daef8093feba76
   RCT-Folly: ea9d9256ba7f9322ef911169a9f696e5857b9e17
   RCTDeprecation: ebe712bb05077934b16c6bf25228bdec34b64f83
   RCTRequired: ca91e5dd26b64f577b528044c962baf171c6b716
