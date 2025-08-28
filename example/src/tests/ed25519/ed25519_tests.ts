@@ -1,10 +1,10 @@
 /* eslint-disable @typescript-eslint/no-unused-expressions */
-import { Ed, randomBytes, ab2str } from 'react-native-quick-crypto';
 import { Buffer } from '@craftzdog/react-native-buffer';
 import { expect } from 'chai';
+import { ab2str, Ed, randomBytes } from 'react-native-quick-crypto';
 import { test } from '../util';
 
-const SUITE = 'ed25519';
+const SUITE = 'cfrg';
 
 const encoder = new TextEncoder();
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -46,7 +46,7 @@ types.map((type) => {
 
 const data1 = Buffer.from('hello world');
 
-test(SUITE, 'sign/verify - round trip happy', async () => {
+test(SUITE, 'ed25519 - sign/verify - round trip happy', async () => {
   const ed = new Ed('ed25519', {});
   await ed.generateKeyPair();
   const signature = await ed.sign(data1.buffer);
@@ -54,7 +54,7 @@ test(SUITE, 'sign/verify - round trip happy', async () => {
   expect(verified).to.be.true;
 });
 
-test(SUITE, 'sign/verify - round trip sad', async () => {
+test(SUITE, 'ed25519 - sign/verify - round trip sad', async () => {
   const data2 = Buffer.from('goodbye cruel world');
   const ed = new Ed('ed25519', {});
   await ed.generateKeyPair();
@@ -63,42 +63,54 @@ test(SUITE, 'sign/verify - round trip sad', async () => {
   expect(verified).to.be.false;
 });
 
-test(SUITE, 'sign/verify - bad signature does not verify', async () => {
-  const ed = new Ed('ed25519', {});
-  await ed.generateKeyPair();
-  const signature = await ed.sign(data1.buffer);
-  const signature2 = randomBytes(64).buffer;
-  expect(ab2str(signature2)).not.to.equal(ab2str(signature));
-  const verified = await ed.verify(signature2, data1.buffer);
-  expect(verified).to.be.false;
-});
+test(
+  SUITE,
+  'ed25519 - sign/verify - bad signature does not verify',
+  async () => {
+    const ed = new Ed('ed25519', {});
+    await ed.generateKeyPair();
+    const signature = await ed.sign(data1.buffer);
+    const signature2 = randomBytes(64).buffer;
+    expect(ab2str(signature2)).not.to.equal(ab2str(signature));
+    const verified = await ed.verify(signature2, data1.buffer);
+    expect(verified).to.be.false;
+  },
+);
 
-test(SUITE, 'sign/verify - switched args does not verify', async () => {
-  const ed = new Ed('ed25519', {});
-  await ed.generateKeyPair();
-  const signature = await ed.sign(data1.buffer);
-  // verify(message, signature) is switched
-  const verified = await ed.verify(data1.buffer, signature);
-  expect(verified).to.be.false;
-});
+test(
+  SUITE,
+  'ed25519 - sign/verify - switched args does not verify',
+  async () => {
+    const ed = new Ed('ed25519', {});
+    await ed.generateKeyPair();
+    const signature = await ed.sign(data1.buffer);
+    // verify(message, signature) is switched
+    const verified = await ed.verify(data1.buffer, signature);
+    expect(verified).to.be.false;
+  },
+);
 
-test(SUITE, 'sign/verify - non-internally generated private key', async () => {
-  const pub = Buffer.from(
-    'e106bf015ad54a64022295c7af2c35f9511eb37264a7722a9642eaac6c59a494',
-    'hex',
-  );
-  const priv = Buffer.from(
-    '5f27e170afc5091c4933d980c5fe86af997b91375115c6ee2c0fe4ea12400ed0',
-    'hex',
-  );
+test(
+  SUITE,
+  'ed25519 - sign/verify - non-internally generated private key',
+  async () => {
+    const pub = Buffer.from(
+      'e106bf015ad54a64022295c7af2c35f9511eb37264a7722a9642eaac6c59a494',
+      'hex',
+    );
+    const priv = Buffer.from(
+      '5f27e170afc5091c4933d980c5fe86af997b91375115c6ee2c0fe4ea12400ed0',
+      'hex',
+    );
 
-  const ed2 = new Ed('ed25519', {});
-  const signature = await ed2.sign(data1.buffer, priv);
-  const verified = await ed2.verify(signature, data1.buffer, pub);
-  expect(verified).to.be.true;
-});
+    const ed2 = new Ed('ed25519', {});
+    const signature = await ed2.sign(data1.buffer, priv);
+    const verified = await ed2.verify(signature, data1.buffer, pub);
+    expect(verified).to.be.true;
+  },
+);
 
-test(SUITE, 'sign/verify - bad signature', async () => {
+test(SUITE, 'ed25519 - sign/verify - bad signature', async () => {
   let ed1: Ed | null = new Ed('ed25519', {});
   await ed1.generateKeyPair();
   const pub = ed1.getPublicKey();
@@ -115,7 +127,7 @@ test(SUITE, 'sign/verify - bad signature', async () => {
 
 test(
   SUITE,
-  'sign/verify - bad verify with private key, not public',
+  'ed25519 - sign/verify - bad verify with private key, not public',
   async () => {
     let ed1: Ed | null = new Ed('ed25519', {});
     await ed1.generateKeyPair();
@@ -129,7 +141,7 @@ test(
   },
 );
 
-test(SUITE, 'sign/verify - Uint8Arrays', () => {
+test(SUITE, 'ed25519 - sign/verify - Uint8Arrays', () => {
   const data = { b: 'world', a: 'hello' };
 
   const ed1 = new Ed('ed25519', {});

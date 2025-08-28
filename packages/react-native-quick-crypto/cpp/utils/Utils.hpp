@@ -3,11 +3,24 @@
 #include <algorithm>
 #include <cctype>
 #include <limits>
+#include <openssl/err.h>
 #include <string>
 
+#include "Macros.hpp"
 #include <NitroModules/ArrayBuffer.hpp>
 
 namespace margelo::nitro::crypto {
+
+// Function to get the last OpenSSL error message
+inline std::string getOpenSSLError() {
+  unsigned long errCode = ERR_get_error();
+  if (errCode == 0) {
+    return "";
+  }
+  char errStr[256];
+  ERR_error_string_n(errCode, errStr, sizeof(errStr));
+  return std::string(errStr);
+}
 
 // copy a JSArrayBuffer that we do not own into a NativeArrayBuffer that we do own
 inline std::shared_ptr<margelo::nitro::NativeArrayBuffer> ToNativeArrayBuffer(const std::shared_ptr<margelo::nitro::ArrayBuffer>& buffer) {
@@ -15,6 +28,13 @@ inline std::shared_ptr<margelo::nitro::NativeArrayBuffer> ToNativeArrayBuffer(co
   uint8_t* data = new uint8_t[bufferSize];
   memcpy(data, buffer.get()->data(), bufferSize);
   return std::make_shared<margelo::nitro::NativeArrayBuffer>(data, bufferSize, [=]() { delete[] data; });
+}
+
+inline std::shared_ptr<margelo::nitro::NativeArrayBuffer> ToNativeArrayBuffer(std::string str) {
+  size_t size = str.size();
+  uint8_t* data = new uint8_t[size];
+  memcpy(data, str.data(), size);
+  return std::make_shared<margelo::nitro::NativeArrayBuffer>(data, size, [=]() { delete[] data; });
 }
 
 inline bool CheckIsUint32(double value) {

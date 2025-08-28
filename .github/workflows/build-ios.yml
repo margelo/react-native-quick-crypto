@@ -58,20 +58,35 @@ jobs:
             ${{ runner.os }}-pods-
 
       - name: Install Pods
+        env:
+          RCT_NEW_ARCH_ENABLED: 1
+          SODIUM_ENABLED: 1
         run: bun pods
 
       - name: Install xcpretty
         run: gem install xcpretty
 
+      - name: List available simulators
+        run: xcrun simctl list devices available
+
+      - name: List available SDKs
+        run: xcodebuild -showsdks
+
       - name: Build App
         working-directory: example/ios
-        run: "set -o pipefail && xcodebuild \
-          CC=clang CPLUSPLUS=clang++ LD=clang LDPLUSPLUS=clang++ \
-          -derivedDataPath build -UseModernBuildSystem=YES \
-          -workspace QuickCryptoExample.xcworkspace \
-          -scheme QuickCryptoExample \
-          -sdk iphonesimulator \
-          -configuration Debug \
-          -destination 'platform=iOS Simulator,name=iPhone 16 Pro' \
-          build \
-          CODE_SIGNING_ALLOWED=NO | xcpretty"
+        env:
+          RCT_NEW_ARCH_ENABLED: 1
+          SODIUM_ENABLED: 1
+        run: |
+          set -o pipefail 
+          sudo xcode-select --switch /Applications/Xcode_16.4.app
+          xcodebuild \
+            CC=clang CPLUSPLUS=clang++ LD=clang LDPLUSPLUS=clang++ \
+            -derivedDataPath build -UseModernBuildSystem=YES \
+            -workspace QuickCryptoExample.xcworkspace \
+            -scheme QuickCryptoExample \
+            -sdk iphonesimulator \
+            -configuration Debug \
+            -destination 'platform=iOS Simulator,name=iPhone 16 Pro,OS=18.6' \
+            build \
+            CODE_SIGNING_ALLOWED=NO | xcpretty

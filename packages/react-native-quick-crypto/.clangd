@@ -1,0 +1,50 @@
+CompileFlags:
+  Add: 
+    - -std=c++20
+    - -Wall
+    - -Wextra
+    # Project includes
+    - -I${COMPILE_COMMANDS_DIR}/cpp
+    - -I${COMPILE_COMMANDS_DIR}/cpp/cipher
+    - -I${COMPILE_COMMANDS_DIR}/cpp/ed25519
+    - -I${COMPILE_COMMANDS_DIR}/cpp/hash
+    - -I${COMPILE_COMMANDS_DIR}/cpp/hmac
+    - -I${COMPILE_COMMANDS_DIR}/cpp/keys
+    - -I${COMPILE_COMMANDS_DIR}/cpp/pbkdf2
+    - -I${COMPILE_COMMANDS_DIR}/cpp/random
+    - -I${COMPILE_COMMANDS_DIR}/cpp/utils
+    - -I${COMPILE_COMMANDS_DIR}/deps/fastpbkdf2
+    - -I${COMPILE_COMMANDS_DIR}/deps/ncrypto/include
+    # Nitrogen generated includes
+    - -I${COMPILE_COMMANDS_DIR}/nitrogen/generated/shared/c++
+    - -I${COMPILE_COMMANDS_DIR}/nitrogen/generated/android/c++
+    - -I${COMPILE_COMMANDS_DIR}/nitrogen/generated/android
+    # React Native includes
+    - -I${COMPILE_COMMANDS_DIR}/node_modules/react-native/ReactAndroid/src/main/jni/first-party/fbjni/headers
+    - -I${COMPILE_COMMANDS_DIR}/node_modules/react-native/ReactCommon
+    - -I${COMPILE_COMMANDS_DIR}/node_modules/react-native/ReactCommon/jsi
+    - -I${COMPILE_COMMANDS_DIR}/node_modules/react-native/ReactCommon/callinvoker
+    - -I${COMPILE_COMMANDS_DIR}/node_modules/react-native/ReactCommon/react/nativemodule/core
+    - -I${COMPILE_COMMANDS_DIR}/node_modules/react-native/ReactAndroid/src/main/jni/react/turbomodule
+    # Nitro modules
+    - -I${COMPILE_COMMANDS_DIR}/node_modules/react-native-nitro-modules/cpp
+    # OpenSSL
+    - -I/opt/homebrew/include
+  Remove: [-W*, -std=*]
+
+Diagnostics:
+  UnusedIncludes: Strict
+  Suppress: 
+    - unused-includes
+    - unknown-warning-option
+
+Index:
+  Background: Build
+
+InlayHints:
+  Enabled: Yes
+  ParameterNames: Yes
+  DeducedTypes: Yes
+
+Hover:
+  ShowAKA: Yes

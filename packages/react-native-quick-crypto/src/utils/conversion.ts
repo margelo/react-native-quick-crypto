@@ -1,6 +1,7 @@
 import { Buffer as CraftzdogBuffer } from '@craftzdog/react-native-buffer';
 import { Buffer as SafeBuffer } from 'safe-buffer';
 import type { ABV, BinaryLikeNode, BufferLike } from './types';
+import { KeyObject } from '../keys/classes';
 
 /**
  * Converts supplied argument to an ArrayBuffer.  Note this does not copy the
@@ -132,7 +133,10 @@ export function binaryLikeToArrayBuffer(
   //   }
   // }
 
-  // TODO: handle if input is KeyObject?
+  // KeyObject
+  if (input instanceof KeyObject) {
+    return input.handle.exportKey();
+  }
 
   throw new Error('input could not be converted to ArrayBuffer');
 }
@@ -142,3 +146,5 @@ export function ab2str(buf: ArrayBuffer, encoding: string = 'hex') {
 }
 
 export const kEmptyObject = Object.freeze(Object.create(null));
+
+export * from './noble';

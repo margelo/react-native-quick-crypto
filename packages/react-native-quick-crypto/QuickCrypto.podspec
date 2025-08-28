@@ -26,22 +26,52 @@ Pod::Spec.new do |s|
     # cocoapod for Sodium has not been updated for a while, so we need to build it ourselves
     # https://github.com/jedisct1/swift-sodium/issues/264#issuecomment-2864963850
     s.prepare_command = <<-CMD
+      set -e  # Exit on any error
+      set -x  # Print commands as they execute
+
       # Create ios directory if it doesn't exist
       mkdir -p ios
 
-      # Download libsodium
-      curl -L -s -o ios/libsodium.tar.gz https://download.libsodium.org/libsodium/releases/libsodium-1.0.20-stable.tar.gz
+      # Download libsodium with verbose output
+      echo "Downloading libsodium..."
+      curl -L -v -o ios/libsodium.tar.gz https://download.libsodium.org/libsodium/releases/libsodium-1.0.20-stable.tar.gz
+      
+      # Verify download
+      if [ ! -f ios/libsodium.tar.gz ]; then
+        echo "ERROR: Failed to download libsodium.tar.gz"
+        exit 1
+      fi
+      
+      echo "Download size: $(wc -c < ios/libsodium.tar.gz) bytes"
 
       # Clean previous extraction
       rm -rf ios/libsodium-stable
 
       # Extract the full tarball
+      echo "Extracting libsodium..."
       tar -xzf ios/libsodium.tar.gz -C ios
+      
+      # Verify extraction
+      if [ ! -d ios/libsodium-stable ]; then
+        echo "ERROR: Failed to extract libsodium"
+        exit 1
+      fi
 
       # Run configure and make to generate all headers including private ones
-      cd ios/libsodium-stable && \
-      ./configure --disable-shared --enable-static && \
+      echo "Configuring libsodium..."
+      cd ios/libsodium-stable
+      ./configure --disable-shared --enable-static
+      
+      echo "Building libsodium..."
       make -j$(sysctl -n hw.ncpu)
+      
+      # Verify build success
+      if [ ! -f src/libsodium/.libs/libsodium.a ]; then
+        echo "ERROR: libsodium build failed - static library not found"
+        exit 1
+      fi
+      
+      echo "libsodium build completed successfully"
 
       # Cleanup
       cd ../../

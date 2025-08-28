@@ -6,6 +6,7 @@ import '../tests/cipher/cipher_tests';
 import '../tests/cipher/chacha_tests';
 import '../tests/cipher/xsalsa20_tests';
 import '../tests/ed25519/ed25519_tests';
+import '../tests/ed25519/x25519_tests';
 import '../tests/hash/hash_tests';
 import '../tests/hmac/hmac_tests';
 import '../tests/pbkdf2/pbkdf2_tests';

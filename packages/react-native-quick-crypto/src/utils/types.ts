@@ -1,7 +1,8 @@
 import type { Buffer as CraftzdogBuffer } from '@craftzdog/react-native-buffer';
+import type { Buffer } from 'buffer';
+import type { CipherKey, KeyObject } from 'node:crypto'; // @types/node
 import type { Buffer as SafeBuffer } from 'safe-buffer';
-import type { CipherKey } from 'crypto'; // @types/node
-import type { KeyObjectHandle } from '../specs/keyObjectHandle.nitro';
+import type { KeyObjectHandle as KeyObjectHandleType } from '../specs/keyObjectHandle.nitro';
 
 export type ABV = TypedArray | DataView | ArrayBufferLike | CraftzdogBuffer;
 
@@ -27,6 +28,7 @@ export type BufferLike =
 
 export type BinaryLike =
   | string
+  | Buffer
   | ArrayBuffer
   | ArrayBufferLike
   | CraftzdogBuffer
@@ -115,26 +117,23 @@ export type KeyUsage =
   | 'wrapKey'
   | 'unwrapKey';
 
-// On node this value is defined on the native side, for now I'm just creating it here in JS
-// TODO(osp) move this into native side to make sure they always match
 export enum KFormatType {
-  kKeyFormatDER,
-  kKeyFormatPEM,
-  kKeyFormatJWK,
+  DER,
+  PEM,
+  JWK,
 }
 
-// Same as KFormatType, this enum needs to be defined on the native side
 export enum KeyType {
-  Secret,
-  Public,
-  Private,
+  SECRET,
+  PUBLIC,
+  PRIVATE,
 }
 
 export enum KeyEncoding {
-  kKeyEncodingPKCS1,
-  kKeyEncodingPKCS8,
-  kKeyEncodingSPKI,
-  kKeyEncodingSEC1,
+  PKCS1,
+  PKCS8,
+  SPKI,
+  SEC1,
 }
 
 export type KeyPairGenConfig = {
@@ -236,7 +235,7 @@ export type GenerateKeyPairOptions = {
 
 // Note: removed CryptoKey class from this type (from 0.x) because Nitro doesn't
 //       handle custom JS objects.  We might need to make it a JS object.
-export type KeyPairKey = ArrayBuffer | KeyObjectHandle | undefined;
+export type KeyPairKey = ArrayBuffer | KeyObject | KeyObjectHandle | undefined;
 
 export type GenerateKeyPairReturn = [
   error?: Error,
@@ -311,3 +310,18 @@ export type CipherDESType =
 export type CipherECBType = 'aes-128-ecb' | 'aes-192-ecb' | 'aes-256-ecb';
 export type CipherGCMType = 'aes-128-gcm' | 'aes-192-gcm' | 'aes-256-gcm';
 export type CipherOFBType = 'aes-128-ofb' | 'aes-192-ofb' | 'aes-256-ofb';
+
+export type KeyObjectHandle = KeyObjectHandleType;
+
+export type DiffieHellmanOptions = {
+  privateKey: KeyObject;
+  publicKey: KeyObject;
+};
+
+export type DiffieHellmanCallback = (
+  err: Error | null,
+  secret?: CraftzdogBuffer,
+) => CraftzdogBuffer | void;
+
+// from @paulmillr/noble-curves
+export type Hex = string | Uint8Array;

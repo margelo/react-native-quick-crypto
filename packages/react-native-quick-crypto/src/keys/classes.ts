@@ -1,10 +1,13 @@
-import type { KeyObjectHandle } from '../specs/keyObjectHandle.nitro';
+import { Buffer } from 'buffer';
+import { NitroModules } from 'react-native-nitro-modules';
 import type {
   AsymmetricKeyType,
   EncodingOptions,
+  KeyObjectHandle,
   KeyUsage,
   SubtleAlgorithm,
 } from '../utils';
+import { KeyType } from '../utils';
 import { parsePrivateKeyEncoding, parsePublicKeyEncoding } from './utils';
 
 export class CryptoKey {
@@ -65,22 +68,46 @@ export class CryptoKey {
 
 export class KeyObject {
   handle: KeyObjectHandle;
-  type: 'public' | 'secret' | 'private' | 'unknown' = 'unknown';
+  type: 'public' | 'secret' | 'private';
+  export(options: { format: 'pem' } & EncodingOptions): string | Buffer;
+  export(options?: { format: 'der' } & EncodingOptions): Buffer;
+  export(options?: { format: 'jwk' } & EncodingOptions): never;
+  export(options?: EncodingOptions): string | Buffer;
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  export(_options?: EncodingOptions): ArrayBuffer {
-    return new ArrayBuffer(0);
+  export(_options?: EncodingOptions): string | Buffer {
+    // This is a placeholder and should be overridden by subclasses.
+    throw new Error('export() must be implemented by subclasses');
   }
 
-  constructor(type: string, handle: KeyObjectHandle) {
+  constructor(type: string, handle: KeyObjectHandle);
+  constructor(type: string, key: ArrayBuffer);
+  constructor(type: string, handleOrKey: KeyObjectHandle | ArrayBuffer) {
     if (type !== 'secret' && type !== 'public' && type !== 'private')
       throw new Error(`invalid KeyObject type: ${type}`);
-    this.handle = handle;
-    this.type = type;
-  }
 
-  // get type(): string {
-  //   return this.type;
-  // }
+    if (handleOrKey instanceof ArrayBuffer) {
+      this.handle = NitroModules.createHybridObject('KeyObjectHandle');
+      let keyType: KeyType;
+      switch (type) {
+        case 'public':
+          keyType = KeyType.PUBLIC;
+          break;
+        case 'private':
+          keyType = KeyType.PRIVATE;
+          break;
+        case 'secret':
+          keyType = KeyType.SECRET;
+          break;
+        default:
+          // Should not happen
+          throw new Error('invalid key type');
+      }
+      this.handle.init(keyType, handleOrKey);
+    } else {
+      this.handle = handleOrKey;
+    }
+    this.type = type as 'public' | 'secret' | 'private';
+  }
 
   // static from(key) {
   //   if (!isCryptoKey(key))
@@ -88,20 +115,60 @@ export class KeyObject {
   //   return key[kKeyObject];
   // }
 
-  // equals(otherKeyObject) {
-  //   if (!isKeyObject(otherKeyObject)) {
-  //     throw new ERR_INVALID_ARG_TYPE(
-  //       'otherKeyObject',
-  //       'KeyObject',
-  //       otherKeyObject
-  //     );
-  //   }
+  static createKeyObject(type: string, key: ArrayBuffer): KeyObject {
+    if (type !== 'secret' && type !== 'public' && type !== 'private')
+      throw new Error(`invalid KeyObject type: ${type}`);
 
-  //   return (
-  //     otherKeyObject.type === this.type &&
-  //     this[kHandle].equals(otherKeyObject[kHandle])
-  //   );
-  // }
+    const handle = NitroModules.createHybridObject(
+      'KeyObjectHandle',
+    ) as KeyObjectHandle;
+    let keyType: KeyType;
+    switch (type) {
+      case 'public':
+        keyType = KeyType.PUBLIC;
+        break;
+      case 'private':
+        keyType = KeyType.PRIVATE;
+        break;
+      case 'secret':
+        keyType = KeyType.SECRET;
+        break;
+      default:
+        throw new Error('invalid key type');
+    }
+    handle.init(keyType, key);
+
+    // For asymmetric keys, return the appropriate subclass
+    if (type === 'public' || type === 'private') {
+      try {
+        handle.getAsymmetricKeyType();
+        // If we get here, it's an asymmetric key - return the appropriate subclass
+        if (type === 'public') {
+          return new PublicKeyObject(handle);
+        } else {
+          return new PrivateKeyObject(handle);
+        }
+      } catch {
+        // Not an asymmetric key, fall through to regular KeyObject
+      }
+    }
+
+    // Return regular KeyObject for symmetric keys or if asymmetric detection failed
+    return new KeyObject(type, handle);
+  }
+
+  equals(otherKeyObject: unknown): boolean {
+    if (!(otherKeyObject instanceof KeyObject)) {
+      throw new TypeError(
+        `Invalid argument type for "otherKeyObject", expected "KeyObject" but got ${typeof otherKeyObject}`,
+      );
+    }
+
+    return (
+      this.type === otherKeyObject.type &&
+      this.handle.equals(otherKeyObject.handle)
+    );
+  }
 }
 
 export class SecretKeyObject extends KeyObject {
@@ -113,14 +180,18 @@ export class SecretKeyObject extends KeyObject {
   //   return this[kHandle].getSymmetricKeySize();
   // }
 
-  export(options?: EncodingOptions) {
-    if (options !== undefined) {
-      if (options.format === 'jwk') {
-        throw new Error('SecretKey export for jwk is not implemented');
-        // return this.handle.exportJwk({}, false);
-      }
+  export(options: { format: 'pem' } & EncodingOptions): never;
+  export(options: { format: 'der' } & EncodingOptions): Buffer;
+  export(options: { format: 'jwk' } & EncodingOptions): never;
+  export(options?: EncodingOptions): Buffer;
+  export(options?: EncodingOptions): Buffer {
+    if (options?.format === 'pem' || options?.format === 'jwk') {
+      throw new Error(
+        `SecretKey export for ${options.format} is not supported`,
+      );
     }
-    return this.handle.exportKey();
+    const key = this.handle.exportKey();
+    return Buffer.from(key);
   }
 }
 
@@ -176,16 +247,23 @@ export class PublicKeyObject extends AsymmetricKeyObject {
     super('public', handle);
   }
 
-  export(options: EncodingOptions) {
+  export(options: { format: 'pem' } & EncodingOptions): string;
+  export(options: { format: 'der' } & EncodingOptions): Buffer;
+  export(options: { format: 'jwk' } & EncodingOptions): never;
+  export(options: EncodingOptions): string | Buffer {
     if (options?.format === 'jwk') {
       throw new Error('PublicKey export for jwk is not implemented');
-      // return this.handle.exportJwk({}, false);
     }
     const { format, type } = parsePublicKeyEncoding(
       options,
       this.asymmetricKeyType,
     );
-    return this.handle.exportKey(format, type);
+    const key = this.handle.exportKey(format, type);
+    const buffer = Buffer.from(key);
+    if (options?.format === 'pem') {
+      return buffer.toString('utf-8');
+    }
+    return buffer;
   }
 }
 
@@ -194,18 +272,25 @@ export class PrivateKeyObject extends AsymmetricKeyObject {
     super('private', handle);
   }
 
-  export(options: EncodingOptions) {
+  export(options: { format: 'pem' } & EncodingOptions): string;
+  export(options: { format: 'der' } & EncodingOptions): Buffer;
+  export(options: { format: 'jwk' } & EncodingOptions): never;
+  export(options: EncodingOptions): string | Buffer {
     if (options?.format === 'jwk') {
       if (options.passphrase !== undefined) {
         throw new Error('jwk does not support encryption');
       }
       throw new Error('PrivateKey export for jwk is not implemented');
-      // return this.handle.exportJwk({}, false);
     }
     const { format, type, cipher, passphrase } = parsePrivateKeyEncoding(
       options,
       this.asymmetricKeyType,
     );
-    return this.handle.exportKey(format, type, cipher, passphrase);
+    const key = this.handle.exportKey(format, type, cipher, passphrase);
+    const buffer = Buffer.from(key);
+    if (options?.format === 'pem') {
+      return buffer.toString('utf-8');
+    }
+    return buffer;
   }
 }

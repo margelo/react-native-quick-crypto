@@ -1,5 +1,5 @@
+cmake_minimum_required(VERSION 3.10.0)
 project(QuickCrypto)
-cmake_minimum_required(VERSION 3.9.0)
 
 set(PACKAGE_NAME QuickCrypto)
 set(CMAKE_VERBOSE_MAKEFILE ON)
@@ -18,9 +18,12 @@ add_library(
   ../cpp/ed25519/HybridEdKeyPair.cpp
   ../cpp/hash/HybridHash.cpp
   ../cpp/hmac/HybridHmac.cpp
+  ../cpp/keys/HybridKeyObjectHandle.cpp
+  ../cpp/keys/KeyObjectData.cpp
   ../cpp/pbkdf2/HybridPbkdf2.cpp
   ../cpp/random/HybridRandom.cpp
   ../deps/fastpbkdf2/fastpbkdf2.c
+  ../deps/ncrypto/src/ncrypto.cpp
 )
 
 # add Nitrogen specs
@@ -33,10 +36,14 @@ include_directories(
   "../cpp/ed25519"
   "../cpp/hash"
   "../cpp/hmac"
+  "../cpp/keys"
   "../cpp/pbkdf2"
   "../cpp/random"
   "../cpp/utils"
   "../deps/fastpbkdf2"
+  "../deps/ncrypto/include"
+  "../build/includes" # flattened Nitro Modules headers
+  "../../../node_modules/react-native/ReactCommon/jsi"
 )
 
 # Third party libraries (Prefabs)
@@ -50,6 +57,7 @@ target_link_libraries(
   ${LOG_LIB}                               # <-- Logcat logger
   android                                  # <-- Android core
   openssl::crypto                          # <-- OpenSSL   (Crypto)
+  openssl::ssl                             # <-- OpenSSL   (SSL)
 )
 
 if(SODIUM_ENABLED)

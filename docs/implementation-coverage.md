@@ -108,7 +108,7 @@ This document attempts to describe the implementation status of Crypto APIs/Inte
   * ❌ `crypto.createSecretKey(key[, encoding])`
   * ❌ `crypto.createSign(algorithm[, options])`
   * ❌ `crypto.createVerify(algorithm[, options])`
-  * ❌ `crypto.diffieHellman(options)`
+  * 🚧 `crypto.diffieHellman(options[, callback])`
   * ❌ `crypto.hash(algorithm, data[, outputEncoding])`
   * ❌ `crypto.generateKey(type, options, callback)`
   * 🚧 `crypto.generateKeyPair(type, options, callback)`
@@ -148,6 +148,14 @@ This document attempts to describe the implementation status of Crypto APIs/Inte
   * ❌ `crypto.webcrypto` (see below)
 
 🚧 Details below still a work in progress 🚧
+
+## `crypto.diffieHellman`
+| type       | Status |
+| ---------  | :----: |
+| `dh`       | ❌ |
+| `ec`       | ❌ |
+| `x448`     | ✅ |
+| `x25519`   | ✅ |
 
 ## `crypto.generateKey`
 | type       | Status |
