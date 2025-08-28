@@ -45,18 +45,14 @@ export class Ed {
     checkDiffieHellmanOptions(options);
 
     // key types must be of certain type
-    switch (
-      (options.privateKey as unknown as AsymmetricKeyObject)
-        .asymmetricKeyType as string
-    ) {
-      case 'dh':
-      case 'ed':
-        throw new Error(`'${this.type}' is not implemented`);
+    const keyType = (options.privateKey as AsymmetricKeyObject)
+      .asymmetricKeyType;
+    switch (keyType) {
       case 'x25519':
       case 'x448':
         break;
       default:
-        throw new Error(`Unknown curve type: ${this.type}`);
+        throw new Error(`Unsupported or unimplemented curve type: ${keyType}`);
     }
 
     // extract the private and public keys as ArrayBuffers
@@ -165,8 +161,7 @@ export function diffieHellman(
   options: DiffieHellmanOptions,
   callback?: DiffieHellmanCallback,
 ): Buffer | void {
-  // checkDiffieHellmanOptions(options); // TODO: remove?  This is checked in ed.diffieHellman()
-  const privateKey = options.privateKey as unknown as PrivateKeyObject;
+  const privateKey = options.privateKey as PrivateKeyObject;
   const type = privateKey.asymmetricKeyType as CFRGKeyPairType;
   const ed = new Ed(type, {});
   return ed.diffieHellman(options, callback);
@@ -201,8 +196,8 @@ export function ed_generateKeyPair(
   let err: Error | undefined;
   try {
     ed.generateKeyPairSync();
-  } catch (e: unknown) {
-    err = e as Error;
+  } catch (e) {
+    err = e instanceof Error ? e : new Error(String(e));
   }
 
   if (callback) {
@@ -236,8 +231,8 @@ function checkDiffieHellmanOptions(options: DiffieHellmanOptions): void {
   }
 
   // For asymmetric keys, check if they have the asymmetricKeyType property
-  const privateKeyAsym = privateKey as unknown as AsymmetricKeyObject;
-  const publicKeyAsym = publicKey as unknown as AsymmetricKeyObject;
+  const privateKeyAsym = privateKey as AsymmetricKeyObject;
+  const publicKeyAsym = publicKey as AsymmetricKeyObject;
 
   // key types must match
   if (
