@@ -8,7 +8,6 @@ import {
   createHash,
   getHashes,
   type Encoding,
-  keccak256,
 } from 'react-native-quick-crypto';
 import { expect } from 'chai';
 import { test } from '../util';
@@ -45,21 +44,23 @@ test(SUITE, 'check openssl version', () => {
   }).to.not.throw();
 });
 
-test(SUITE, 'keccak256 function using provider-aware API', () => {
+test(SUITE, 'KECCAK-256 using createHash with provider-aware API', () => {
   // Test with a simple string
-  const result1 = keccak256('test');
+  const result1 = createHash('KECCAK-256').update('test').digest();
   expect(result1.toString('hex')).to.equal(
     '9c22ff5f21f0b81b113e63f7db6da94fedef11b2119b4088b89664fb9a3cb658',
   );
 
   // Test with empty string
-  const result2 = keccak256('');
+  const result2 = createHash('KECCAK-256').update('').digest();
   expect(result2.toString('hex')).to.equal(
     'c5d2460186f7233c927e7db2dcc703c0e500b653ca82273b7bfad8045d85a470',
   );
 
   // Test with Buffer
-  const result3 = keccak256(Buffer.from('hello world'));
+  const result3 = createHash('KECCAK-256')
+    .update(Buffer.from('hello world'))
+    .digest();
   expect(result3.toString('hex')).to.equal(
     '47173285a8d7341e5e972fc677286384f802f8ef42a5ec5f03bbfa254cb01fad',
   );

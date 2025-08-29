@@ -14,8 +14,8 @@ using namespace facebook;
 class HybridHash : public HybridHashSpec {
  public:
   HybridHash() : HybridObject(TAG) {}
-  HybridHash(EVP_MD_CTX* ctx, const EVP_MD* md, const std::string& algorithm, const std::optional<double> outputLength)
-      : HybridObject(TAG), ctx(ctx), md(md), algorithm(algorithm), outputLength(outputLength) {}
+  HybridHash(EVP_MD_CTX* ctx, EVP_MD* md, const std::string& algorithm, const std::optional<double> outputLength, bool md_fetched = false)
+      : HybridObject(TAG), ctx(ctx), md(md), md_fetched(md_fetched), algorithm(algorithm), outputLength(outputLength) {}
   ~HybridHash();
 
  public:
@@ -26,7 +26,6 @@ class HybridHash : public HybridHashSpec {
   std::shared_ptr<margelo::nitro::crypto::HybridHashSpec> copy(const std::optional<double> outputLength) override;
   std::vector<std::string> getSupportedHashAlgorithms() override;
   std::string getOpenSSLVersion() override;
-  std::shared_ptr<ArrayBuffer> keccak256(const std::shared_ptr<ArrayBuffer>& data) override;
 
  private:
   // Methods
@@ -35,7 +34,8 @@ class HybridHash : public HybridHashSpec {
  private:
   // Properties
   EVP_MD_CTX* ctx = nullptr;
-  const EVP_MD* md = nullptr;
+  EVP_MD* md = nullptr;
+  bool md_fetched = false;
   std::string algorithm = "";
   std::optional<double> outputLength = std::nullopt;
 };
