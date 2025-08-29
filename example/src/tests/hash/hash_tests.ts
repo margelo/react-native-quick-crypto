@@ -8,6 +8,7 @@ import {
   createHash,
   getHashes,
   type Encoding,
+  keccak256,
 } from 'react-native-quick-crypto';
 import { expect } from 'chai';
 import { test } from '../util';
@@ -31,6 +32,46 @@ test(SUITE, 'createHash with null algorithm', () => {
     // @ts-expect-error bad algorithm
     createHash(null);
   }).to.throw(/Algorithm must be a non-empty string/);
+});
+
+test(SUITE, 'check openssl version', () => {
+  expect(() => {
+    // Create a hash to trigger OpenSSL initialization
+    const hash = createHash('sha256');
+
+    // Get OpenSSL version directly from the hash object
+    const version = hash.getOpenSSLVersion();
+    console.log('OpenSSL Version:', version);
+  }).to.not.throw();
+});
+
+test(SUITE, 'keccak256 function using provider-aware API', () => {
+  // Test with a simple string
+  const result1 = keccak256('test');
+  expect(result1.toString('hex')).to.equal(
+    '9c22ff5f21f0b81b113e63f7db6da94fedef11b2119b4088b89664fb9a3cb658',
+  );
+
+  // Test with empty string
+  const result2 = keccak256('');
+  expect(result2.toString('hex')).to.equal(
+    'c5d2460186f7233c927e7db2dcc703c0e500b653ca82273b7bfad8045d85a470',
+  );
+
+  // Test with Buffer
+  const result3 = keccak256(Buffer.from('hello world'));
+  expect(result3.toString('hex')).to.equal(
+    '47173285a8d7341e5e972fc677286384f802f8ef42a5ec5f03bbfa254cb01fad',
+  );
+
+  // Verify the result is 32 bytes (256 bits)
+  expect(result1.length).to.equal(32);
+  expect(result2.length).to.equal(32);
+  expect(result3.length).to.equal(32);
+
+  // Test that it's different from SHA3-256 (they should be different)
+  const sha3Hash = createHash('SHA3-256').update('test').digest();
+  expect(result1.toString('hex')).to.not.equal(sha3Hash.toString('hex'));
 });
 
 // test hashing

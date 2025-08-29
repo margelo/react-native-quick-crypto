@@ -37,7 +37,7 @@ PODS:
     - glog
     - hermes-engine
     - NitroModules
-    - OpenSSL-Universal
+    - OpenSSL-Universal (= 3.3.3001)
     - RCT-Folly (= 2024.10.14.00)
     - RCTRequired
     - RCTTypeSafety
@@ -1976,7 +1976,7 @@ SPEC CHECKSUMS:
   hermes-engine: 9e868dc7be781364296d6ee2f56d0c1a9ef0bb11
   NitroModules: a93d85b07601390249d7816b59d95afc6317f09d
   OpenSSL-Universal: 6082b0bf950e5636fe0d78def171184e2b3899c2
-  QuickCrypto: 3ae297b5c14685bb03a8b2c6a1daef8093feba76
+  QuickCrypto: 77dcfb0671e4997d53b89a7d36b42b11d0f8c2c8
   RCT-Folly: ea9d9256ba7f9322ef911169a9f696e5857b9e17
   RCTDeprecation: ebe712bb05077934b16c6bf25228bdec34b64f83
   RCTRequired: ca91e5dd26b64f577b528044c962baf171c6b716
