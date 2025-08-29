@@ -76,7 +76,8 @@ export const BenchmarkItem: React.FC<BenchmarkItemProps> = ({
             results: suite.results,
             name: suite.name,
           });
-        }}>
+        }}
+      >
         <Text style={styles.label} numberOfLines={1}>
           {suite.name}
         </Text>
