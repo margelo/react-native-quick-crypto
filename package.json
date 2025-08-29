@@ -29,7 +29,7 @@
     "husky": "^9.1.7",
     "lint-staged": "^16.1.2",
     "@eslint/js": "9.24.0",
-    "@release-it/bumper": "7.0.2",
+    "@release-it/bumper": "7.0.5",
     "@release-it/conventional-changelog": "10.0.1",
     "@typescript-eslint/eslint-plugin": "8.30.1",
     "@typescript-eslint/parser": "8.30.1",
