@@ -11,7 +11,9 @@ class HashUtils {
     return this.native.getSupportedHashAlgorithms();
   }
   public static keccak256(data: BinaryLike): Buffer {
-    const nativeDigest = this.native.keccak256(binaryLikeToArrayBuffer(data, 'utf8'));
+    const nativeDigest = this.native.keccak256(
+      binaryLikeToArrayBuffer(data, 'utf8'),
+    );
     return Buffer.from(nativeDigest);
   }
 }
@@ -180,7 +182,9 @@ class Hash extends Stream.Transform {
    * @returns Buffer containing the KECCAK-256 hash
    */
   keccak256(data: BinaryLike): Buffer {
-    const nativeDigest = this.native.keccak256(binaryLikeToArrayBuffer(data, 'utf8'));
+    const nativeDigest = this.native.keccak256(
+      binaryLikeToArrayBuffer(data, 'utf8'),
+    );
     return Buffer.from(nativeDigest);
   }
 
