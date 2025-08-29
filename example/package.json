@@ -36,7 +36,7 @@
     "react": "19.1.0",
     "react-native": "0.81.1",
     "react-native-bouncy-checkbox": "4.1.2",
-    "react-native-nitro-modules": "0.26.4",
+    "react-native-nitro-modules": "0.29.1",
     "react-native-quick-base64": "2.2.1",
     "react-native-quick-crypto": "workspace:*",
     "react-native-safe-area-context": "^5.2.2",

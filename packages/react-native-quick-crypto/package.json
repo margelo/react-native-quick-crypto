@@ -89,7 +89,7 @@
     "jest": "29.7.0",
     "nitro-codegen": "0.26.4",
     "react-native-builder-bob": "0.39.1",
-    "react-native-nitro-modules": "0.26.4"
+    "react-native-nitro-modules": "0.29.1"
   },
   "peerDependencies": {
     "react": "*",
