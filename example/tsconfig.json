@@ -1,6 +1,6 @@
 {
   "extends": [
-    "@tsconfig/react-native/tsconfig.json",
+    "@react-native/typescript-config",
     "../config/tsconfig.json"
   ],
   "include": [
@@ -11,10 +11,5 @@
     "./**/*.tsx",
     "../packages/react-native-quick-crypto/src/**/*.ts"
   ],
-  "compilerOptions": {
-    "jsx": "react",
-    "paths": {
-      "react-native-quick-crypto": ["../packages/react-native-quick-crypto/src"],
-    },
-  },
+  "exclude": ["**/node_modules", "**/Pods"],
 }

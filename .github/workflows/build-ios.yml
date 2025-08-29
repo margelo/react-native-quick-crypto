@@ -61,7 +61,9 @@ jobs:
         env:
           RCT_NEW_ARCH_ENABLED: 1
           SODIUM_ENABLED: 1
-        run: bun pods
+        run: |
+          sudo xcode-select --switch /Applications/Xcode_16.4.app
+          bun pods
 
       - name: Install xcpretty
         run: gem install xcpretty

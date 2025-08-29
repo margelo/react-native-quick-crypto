@@ -47,7 +47,8 @@ export const TestDetailsScreen = ({ route }) => {
       </View>
       <ScrollView
         style={styles.scroll}
-        contentContainerStyle={styles.scrollContent}>
+        contentContainerStyle={styles.scrollContent}
+      >
         {results.map((it, index: number) => {
           let InnerElement = <View key={index} />;
           if (showPassed && it.type === 'correct') {
