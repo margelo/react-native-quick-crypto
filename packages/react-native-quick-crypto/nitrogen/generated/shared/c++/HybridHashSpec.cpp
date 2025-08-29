@@ -20,7 +20,6 @@ namespace margelo::nitro::crypto {
       prototype.registerHybridMethod("copy", &HybridHashSpec::copy);
       prototype.registerHybridMethod("getSupportedHashAlgorithms", &HybridHashSpec::getSupportedHashAlgorithms);
       prototype.registerHybridMethod("getOpenSSLVersion", &HybridHashSpec::getOpenSSLVersion);
-      prototype.registerHybridMethod("keccak256", &HybridHashSpec::keccak256);
     });
   }
 

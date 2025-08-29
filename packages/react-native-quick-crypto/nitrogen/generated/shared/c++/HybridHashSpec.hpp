@@ -62,7 +62,6 @@ namespace margelo::nitro::crypto {
       virtual std::shared_ptr<margelo::nitro::crypto::HybridHashSpec> copy(std::optional<double> outputLength) = 0;
       virtual std::vector<std::string> getSupportedHashAlgorithms() = 0;
       virtual std::string getOpenSSLVersion() = 0;
-      virtual std::shared_ptr<ArrayBuffer> keccak256(const std::shared_ptr<ArrayBuffer>& data) = 0;
 
     protected:
       // Hybrid Setup

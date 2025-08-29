@@ -16,6 +16,10 @@ HybridHash::~HybridHash() {
     EVP_MD_CTX_free(ctx);
     ctx = nullptr;
   }
+  if (md && md_fetched) {
+    EVP_MD_free(md);
+    md = nullptr;
+  }
 }
 
 void HybridHash::createHash(const std::string& hashAlgorithmArg, const std::optional<double> outputLengthArg) {
@@ -28,18 +32,24 @@ void HybridHash::createHash(const std::string& hashAlgorithmArg, const std::opti
     throw std::runtime_error("Failed to create hash context: " + std::to_string(ERR_get_error()));
   }
 
-  // Get the message digest by name
-  md = EVP_get_digestbyname(algorithm.c_str());
+  // Fetch the message digest using modern provider-based API
+  md = EVP_MD_fetch(nullptr, algorithm.c_str(), nullptr);
   if (!md) {
     EVP_MD_CTX_free(ctx);
     ctx = nullptr;
     throw std::runtime_error("Unknown hash algorithm: " + algorithm);
   }
+  md_fetched = true;
 
   // Initialize the digest
   if (EVP_DigestInit_ex(ctx, md, nullptr) != 1) {
     EVP_MD_CTX_free(ctx);
     ctx = nullptr;
+    if (md_fetched) {
+      EVP_MD_free(md);
+      md = nullptr;
+      md_fetched = false;
+    }
     throw std::runtime_error("Failed to initialize hash digest: " + std::to_string(ERR_get_error()));
   }
 }
@@ -107,7 +117,7 @@ std::shared_ptr<margelo::nitro::crypto::HybridHashSpec> HybridHash::copy(const s
     throw std::runtime_error("Failed to copy hash context: " + std::to_string(ERR_get_error()));
   }
 
-  return std::make_shared<HybridHash>(newCtx, md, algorithm, outputLengthArg);
+  return std::make_shared<HybridHash>(newCtx, md, algorithm, outputLengthArg, false);
 }
 
 std::vector<std::string> HybridHash::getSupportedHashAlgorithms() {
@@ -144,6 +154,11 @@ void HybridHash::setParams() {
     if (EVP_MD_CTX_set_params(ctx, params) != 1) {
       EVP_MD_CTX_free(ctx);
       ctx = nullptr;
+      if (md && md_fetched) {
+        EVP_MD_free(md);
+        md = nullptr;
+        md_fetched = false;
+      }
       throw std::runtime_error("Failed to set XOF length (outputLength) parameter: " + std::to_string(ERR_get_error()));
     }
   }
@@ -151,42 +166,6 @@ void HybridHash::setParams() {
 
 std::string HybridHash::getOpenSSLVersion() {
   return OpenSSL_version(OPENSSL_VERSION);
-}
-
-std::shared_ptr<ArrayBuffer> HybridHash::keccak256(const std::shared_ptr<ArrayBuffer>& data) {
-  // 1. Obtain the Keccak-256 message-digest implementation from any loaded provider.
-  const EVP_MD* md = EVP_MD_fetch(nullptr, "KECCAK-256", nullptr);
-  if (!md) {
-    throw std::runtime_error("KECCAK-256 digest not available in the current OpenSSL build (provider not loaded?)");
-  }
-
-  // 2. Create and initialise a digest context.
-  EVP_MD_CTX* ctx = EVP_MD_CTX_new();
-  if (!ctx) {
-    throw std::runtime_error("Failed to allocate EVP_MD_CTX");
-  }
-  auto ctx_guard = std::unique_ptr<EVP_MD_CTX, decltype(&EVP_MD_CTX_free)>(ctx, &EVP_MD_CTX_free);
-
-  if (EVP_DigestInit_ex(ctx, md, nullptr) != 1) {
-    throw std::runtime_error("Failed to initialise KECCAK-256 digest");
-  }
-
-  // 3. Feed the data.
-  if (EVP_DigestUpdate(ctx, data->data(), data->size()) != 1) {
-    throw std::runtime_error("Failed to update KECCAK-256 digest");
-  }
-
-  // 4. Finalise and collect the output.
-  unsigned char hash[EVP_MAX_MD_SIZE];
-  unsigned int out_len = 0;
-  if (EVP_DigestFinal_ex(ctx, hash, &out_len) != 1) {
-    throw std::runtime_error("Failed to finalise KECCAK-256 digest");
-  }
-
-  // 5. Move the result into a managed ArrayBuffer.
-  unsigned char* out_buf = new unsigned char[out_len];
-  std::memcpy(out_buf, hash, out_len);
-  return std::make_shared<NativeArrayBuffer>(out_buf, out_len, [out_buf]() { delete[] out_buf; });
 }
 
 } // namespace margelo::nitro::crypto
