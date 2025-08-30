@@ -39,28 +39,26 @@ namespace margelo::nitro::crypto {
 
 namespace margelo::nitro {
 
-  using namespace margelo::nitro::crypto;
-
   // C++ JWKkty <> JS JWKkty (union)
   template <>
-  struct JSIConverter<JWKkty> final {
-    static inline JWKkty fromJSI(jsi::Runtime& runtime, const jsi::Value& arg) {
+  struct JSIConverter<margelo::nitro::crypto::JWKkty> final {
+    static inline margelo::nitro::crypto::JWKkty fromJSI(jsi::Runtime& runtime, const jsi::Value& arg) {
       std::string unionValue = JSIConverter<std::string>::fromJSI(runtime, arg);
       switch (hashString(unionValue.c_str(), unionValue.size())) {
-        case hashString("AES"): return JWKkty::AES;
-        case hashString("RSA"): return JWKkty::RSA;
-        case hashString("EC"): return JWKkty::EC;
-        case hashString("oct"): return JWKkty::OCT;
+        case hashString("AES"): return margelo::nitro::crypto::JWKkty::AES;
+        case hashString("RSA"): return margelo::nitro::crypto::JWKkty::RSA;
+        case hashString("EC"): return margelo::nitro::crypto::JWKkty::EC;
+        case hashString("oct"): return margelo::nitro::crypto::JWKkty::OCT;
         default: [[unlikely]]
           throw std::invalid_argument("Cannot convert \"" + unionValue + "\" to enum JWKkty - invalid value!");
       }
     }
-    static inline jsi::Value toJSI(jsi::Runtime& runtime, JWKkty arg) {
+    static inline jsi::Value toJSI(jsi::Runtime& runtime, margelo::nitro::crypto::JWKkty arg) {
       switch (arg) {
-        case JWKkty::AES: return JSIConverter<std::string>::toJSI(runtime, "AES");
-        case JWKkty::RSA: return JSIConverter<std::string>::toJSI(runtime, "RSA");
-        case JWKkty::EC: return JSIConverter<std::string>::toJSI(runtime, "EC");
-        case JWKkty::OCT: return JSIConverter<std::string>::toJSI(runtime, "oct");
+        case margelo::nitro::crypto::JWKkty::AES: return JSIConverter<std::string>::toJSI(runtime, "AES");
+        case margelo::nitro::crypto::JWKkty::RSA: return JSIConverter<std::string>::toJSI(runtime, "RSA");
+        case margelo::nitro::crypto::JWKkty::EC: return JSIConverter<std::string>::toJSI(runtime, "EC");
+        case margelo::nitro::crypto::JWKkty::OCT: return JSIConverter<std::string>::toJSI(runtime, "oct");
         default: [[unlikely]]
           throw std::invalid_argument("Cannot convert JWKkty to JS - invalid value: "
                                     + std::to_string(static_cast<int>(arg)) + "!");

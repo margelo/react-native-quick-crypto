@@ -59,7 +59,7 @@ namespace margelo::nitro::crypto {
       virtual void createHash(const std::string& algorithm, std::optional<double> outputLength) = 0;
       virtual void update(const std::shared_ptr<ArrayBuffer>& data) = 0;
       virtual std::shared_ptr<ArrayBuffer> digest(const std::optional<std::string>& encoding) = 0;
-      virtual std::shared_ptr<margelo::nitro::crypto::HybridHashSpec> copy(std::optional<double> outputLength) = 0;
+      virtual std::shared_ptr<HybridHashSpec> copy(std::optional<double> outputLength) = 0;
       virtual std::vector<std::string> getSupportedHashAlgorithms() = 0;
       virtual std::string getOpenSSLVersion() = 0;
 

@@ -43,36 +43,34 @@ namespace margelo::nitro::crypto {
 
 namespace margelo::nitro {
 
-  using namespace margelo::nitro::crypto;
-
   // C++ KeyUsage <> JS KeyUsage (union)
   template <>
-  struct JSIConverter<KeyUsage> final {
-    static inline KeyUsage fromJSI(jsi::Runtime& runtime, const jsi::Value& arg) {
+  struct JSIConverter<margelo::nitro::crypto::KeyUsage> final {
+    static inline margelo::nitro::crypto::KeyUsage fromJSI(jsi::Runtime& runtime, const jsi::Value& arg) {
       std::string unionValue = JSIConverter<std::string>::fromJSI(runtime, arg);
       switch (hashString(unionValue.c_str(), unionValue.size())) {
-        case hashString("encrypt"): return KeyUsage::ENCRYPT;
-        case hashString("decrypt"): return KeyUsage::DECRYPT;
-        case hashString("sign"): return KeyUsage::SIGN;
-        case hashString("verify"): return KeyUsage::VERIFY;
-        case hashString("deriveKey"): return KeyUsage::DERIVEKEY;
-        case hashString("deriveBits"): return KeyUsage::DERIVEBITS;
-        case hashString("wrapKey"): return KeyUsage::WRAPKEY;
-        case hashString("unwrapKey"): return KeyUsage::UNWRAPKEY;
+        case hashString("encrypt"): return margelo::nitro::crypto::KeyUsage::ENCRYPT;
+        case hashString("decrypt"): return margelo::nitro::crypto::KeyUsage::DECRYPT;
+        case hashString("sign"): return margelo::nitro::crypto::KeyUsage::SIGN;
+        case hashString("verify"): return margelo::nitro::crypto::KeyUsage::VERIFY;
+        case hashString("deriveKey"): return margelo::nitro::crypto::KeyUsage::DERIVEKEY;
+        case hashString("deriveBits"): return margelo::nitro::crypto::KeyUsage::DERIVEBITS;
+        case hashString("wrapKey"): return margelo::nitro::crypto::KeyUsage::WRAPKEY;
+        case hashString("unwrapKey"): return margelo::nitro::crypto::KeyUsage::UNWRAPKEY;
         default: [[unlikely]]
           throw std::invalid_argument("Cannot convert \"" + unionValue + "\" to enum KeyUsage - invalid value!");
       }
     }
-    static inline jsi::Value toJSI(jsi::Runtime& runtime, KeyUsage arg) {
+    static inline jsi::Value toJSI(jsi::Runtime& runtime, margelo::nitro::crypto::KeyUsage arg) {
       switch (arg) {
-        case KeyUsage::ENCRYPT: return JSIConverter<std::string>::toJSI(runtime, "encrypt");
-        case KeyUsage::DECRYPT: return JSIConverter<std::string>::toJSI(runtime, "decrypt");
-        case KeyUsage::SIGN: return JSIConverter<std::string>::toJSI(runtime, "sign");
-        case KeyUsage::VERIFY: return JSIConverter<std::string>::toJSI(runtime, "verify");
-        case KeyUsage::DERIVEKEY: return JSIConverter<std::string>::toJSI(runtime, "deriveKey");
-        case KeyUsage::DERIVEBITS: return JSIConverter<std::string>::toJSI(runtime, "deriveBits");
-        case KeyUsage::WRAPKEY: return JSIConverter<std::string>::toJSI(runtime, "wrapKey");
-        case KeyUsage::UNWRAPKEY: return JSIConverter<std::string>::toJSI(runtime, "unwrapKey");
+        case margelo::nitro::crypto::KeyUsage::ENCRYPT: return JSIConverter<std::string>::toJSI(runtime, "encrypt");
+        case margelo::nitro::crypto::KeyUsage::DECRYPT: return JSIConverter<std::string>::toJSI(runtime, "decrypt");
+        case margelo::nitro::crypto::KeyUsage::SIGN: return JSIConverter<std::string>::toJSI(runtime, "sign");
+        case margelo::nitro::crypto::KeyUsage::VERIFY: return JSIConverter<std::string>::toJSI(runtime, "verify");
+        case margelo::nitro::crypto::KeyUsage::DERIVEKEY: return JSIConverter<std::string>::toJSI(runtime, "deriveKey");
+        case margelo::nitro::crypto::KeyUsage::DERIVEBITS: return JSIConverter<std::string>::toJSI(runtime, "deriveBits");
+        case margelo::nitro::crypto::KeyUsage::WRAPKEY: return JSIConverter<std::string>::toJSI(runtime, "wrapKey");
+        case margelo::nitro::crypto::KeyUsage::UNWRAPKEY: return JSIConverter<std::string>::toJSI(runtime, "unwrapKey");
         default: [[unlikely]]
           throw std::invalid_argument("Cannot convert KeyUsage to JS - invalid value: "
                                     + std::to_string(static_cast<int>(arg)) + "!");

@@ -37,24 +37,22 @@ namespace margelo::nitro::crypto {
 
 namespace margelo::nitro {
 
-  using namespace margelo::nitro::crypto;
-
   // C++ JWKuse <> JS JWKuse (union)
   template <>
-  struct JSIConverter<JWKuse> final {
-    static inline JWKuse fromJSI(jsi::Runtime& runtime, const jsi::Value& arg) {
+  struct JSIConverter<margelo::nitro::crypto::JWKuse> final {
+    static inline margelo::nitro::crypto::JWKuse fromJSI(jsi::Runtime& runtime, const jsi::Value& arg) {
       std::string unionValue = JSIConverter<std::string>::fromJSI(runtime, arg);
       switch (hashString(unionValue.c_str(), unionValue.size())) {
-        case hashString("sig"): return JWKuse::SIG;
-        case hashString("enc"): return JWKuse::ENC;
+        case hashString("sig"): return margelo::nitro::crypto::JWKuse::SIG;
+        case hashString("enc"): return margelo::nitro::crypto::JWKuse::ENC;
         default: [[unlikely]]
           throw std::invalid_argument("Cannot convert \"" + unionValue + "\" to enum JWKuse - invalid value!");
       }
     }
-    static inline jsi::Value toJSI(jsi::Runtime& runtime, JWKuse arg) {
+    static inline jsi::Value toJSI(jsi::Runtime& runtime, margelo::nitro::crypto::JWKuse arg) {
       switch (arg) {
-        case JWKuse::SIG: return JSIConverter<std::string>::toJSI(runtime, "sig");
-        case JWKuse::ENC: return JSIConverter<std::string>::toJSI(runtime, "enc");
+        case margelo::nitro::crypto::JWKuse::SIG: return JSIConverter<std::string>::toJSI(runtime, "sig");
+        case margelo::nitro::crypto::JWKuse::ENC: return JSIConverter<std::string>::toJSI(runtime, "enc");
         default: [[unlikely]]
           throw std::invalid_argument("Cannot convert JWKuse to JS - invalid value: "
                                     + std::to_string(static_cast<int>(arg)) + "!");

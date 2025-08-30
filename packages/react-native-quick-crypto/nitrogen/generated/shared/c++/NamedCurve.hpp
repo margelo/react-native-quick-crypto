@@ -38,26 +38,24 @@ namespace margelo::nitro::crypto {
 
 namespace margelo::nitro {
 
-  using namespace margelo::nitro::crypto;
-
   // C++ NamedCurve <> JS NamedCurve (union)
   template <>
-  struct JSIConverter<NamedCurve> final {
-    static inline NamedCurve fromJSI(jsi::Runtime& runtime, const jsi::Value& arg) {
+  struct JSIConverter<margelo::nitro::crypto::NamedCurve> final {
+    static inline margelo::nitro::crypto::NamedCurve fromJSI(jsi::Runtime& runtime, const jsi::Value& arg) {
       std::string unionValue = JSIConverter<std::string>::fromJSI(runtime, arg);
       switch (hashString(unionValue.c_str(), unionValue.size())) {
-        case hashString("P-256"): return NamedCurve::P_256;
-        case hashString("P-384"): return NamedCurve::P_384;
-        case hashString("P-521"): return NamedCurve::P_521;
+        case hashString("P-256"): return margelo::nitro::crypto::NamedCurve::P_256;
+        case hashString("P-384"): return margelo::nitro::crypto::NamedCurve::P_384;
+        case hashString("P-521"): return margelo::nitro::crypto::NamedCurve::P_521;
         default: [[unlikely]]
           throw std::invalid_argument("Cannot convert \"" + unionValue + "\" to enum NamedCurve - invalid value!");
       }
     }
-    static inline jsi::Value toJSI(jsi::Runtime& runtime, NamedCurve arg) {
+    static inline jsi::Value toJSI(jsi::Runtime& runtime, margelo::nitro::crypto::NamedCurve arg) {
       switch (arg) {
-        case NamedCurve::P_256: return JSIConverter<std::string>::toJSI(runtime, "P-256");
-        case NamedCurve::P_384: return JSIConverter<std::string>::toJSI(runtime, "P-384");
-        case NamedCurve::P_521: return JSIConverter<std::string>::toJSI(runtime, "P-521");
+        case margelo::nitro::crypto::NamedCurve::P_256: return JSIConverter<std::string>::toJSI(runtime, "P-256");
+        case margelo::nitro::crypto::NamedCurve::P_384: return JSIConverter<std::string>::toJSI(runtime, "P-384");
+        case margelo::nitro::crypto::NamedCurve::P_521: return JSIConverter<std::string>::toJSI(runtime, "P-521");
         default: [[unlikely]]
           throw std::invalid_argument("Cannot convert NamedCurve to JS - invalid value: "
                                     + std::to_string(static_cast<int>(arg)) + "!");

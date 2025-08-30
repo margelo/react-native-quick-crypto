@@ -25,11 +25,11 @@ namespace margelo::nitro::crypto { enum class JWKuse; }
 // Forward declaration of `KeyUsage` to properly resolve imports.
 namespace margelo::nitro::crypto { enum class KeyUsage; }
 
-#include <optional>
 #include "JWKkty.hpp"
+#include <optional>
 #include "JWKuse.hpp"
-#include <vector>
 #include "KeyUsage.hpp"
+#include <vector>
 #include <string>
 
 namespace margelo::nitro::crypto {
@@ -71,17 +71,15 @@ namespace margelo::nitro::crypto {
 
 namespace margelo::nitro {
 
-  using namespace margelo::nitro::crypto;
-
   // C++ JWK <> JS JWK (object)
   template <>
-  struct JSIConverter<JWK> final {
-    static inline JWK fromJSI(jsi::Runtime& runtime, const jsi::Value& arg) {
+  struct JSIConverter<margelo::nitro::crypto::JWK> final {
+    static inline margelo::nitro::crypto::JWK fromJSI(jsi::Runtime& runtime, const jsi::Value& arg) {
       jsi::Object obj = arg.asObject(runtime);
-      return JWK(
-        JSIConverter<std::optional<JWKkty>>::fromJSI(runtime, obj.getProperty(runtime, "kty")),
-        JSIConverter<std::optional<JWKuse>>::fromJSI(runtime, obj.getProperty(runtime, "use")),
-        JSIConverter<std::optional<std::vector<KeyUsage>>>::fromJSI(runtime, obj.getProperty(runtime, "key_ops")),
+      return margelo::nitro::crypto::JWK(
+        JSIConverter<std::optional<margelo::nitro::crypto::JWKkty>>::fromJSI(runtime, obj.getProperty(runtime, "kty")),
+        JSIConverter<std::optional<margelo::nitro::crypto::JWKuse>>::fromJSI(runtime, obj.getProperty(runtime, "use")),
+        JSIConverter<std::optional<std::vector<margelo::nitro::crypto::KeyUsage>>>::fromJSI(runtime, obj.getProperty(runtime, "key_ops")),
         JSIConverter<std::optional<std::string>>::fromJSI(runtime, obj.getProperty(runtime, "alg")),
         JSIConverter<std::optional<std::string>>::fromJSI(runtime, obj.getProperty(runtime, "crv")),
         JSIConverter<std::optional<std::string>>::fromJSI(runtime, obj.getProperty(runtime, "kid")),
@@ -103,11 +101,11 @@ namespace margelo::nitro {
         JSIConverter<std::optional<bool>>::fromJSI(runtime, obj.getProperty(runtime, "ext"))
       );
     }
-    static inline jsi::Value toJSI(jsi::Runtime& runtime, const JWK& arg) {
+    static inline jsi::Value toJSI(jsi::Runtime& runtime, const margelo::nitro::crypto::JWK& arg) {
       jsi::Object obj(runtime);
-      obj.setProperty(runtime, "kty", JSIConverter<std::optional<JWKkty>>::toJSI(runtime, arg.kty));
-      obj.setProperty(runtime, "use", JSIConverter<std::optional<JWKuse>>::toJSI(runtime, arg.use));
-      obj.setProperty(runtime, "key_ops", JSIConverter<std::optional<std::vector<KeyUsage>>>::toJSI(runtime, arg.key_ops));
+      obj.setProperty(runtime, "kty", JSIConverter<std::optional<margelo::nitro::crypto::JWKkty>>::toJSI(runtime, arg.kty));
+      obj.setProperty(runtime, "use", JSIConverter<std::optional<margelo::nitro::crypto::JWKuse>>::toJSI(runtime, arg.use));
+      obj.setProperty(runtime, "key_ops", JSIConverter<std::optional<std::vector<margelo::nitro::crypto::KeyUsage>>>::toJSI(runtime, arg.key_ops));
       obj.setProperty(runtime, "alg", JSIConverter<std::optional<std::string>>::toJSI(runtime, arg.alg));
       obj.setProperty(runtime, "crv", JSIConverter<std::optional<std::string>>::toJSI(runtime, arg.crv));
       obj.setProperty(runtime, "kid", JSIConverter<std::optional<std::string>>::toJSI(runtime, arg.kid));
@@ -134,9 +132,9 @@ namespace margelo::nitro {
         return false;
       }
       jsi::Object obj = value.getObject(runtime);
-      if (!JSIConverter<std::optional<JWKkty>>::canConvert(runtime, obj.getProperty(runtime, "kty"))) return false;
-      if (!JSIConverter<std::optional<JWKuse>>::canConvert(runtime, obj.getProperty(runtime, "use"))) return false;
-      if (!JSIConverter<std::optional<std::vector<KeyUsage>>>::canConvert(runtime, obj.getProperty(runtime, "key_ops"))) return false;
+      if (!JSIConverter<std::optional<margelo::nitro::crypto::JWKkty>>::canConvert(runtime, obj.getProperty(runtime, "kty"))) return false;
+      if (!JSIConverter<std::optional<margelo::nitro::crypto::JWKuse>>::canConvert(runtime, obj.getProperty(runtime, "use"))) return false;
+      if (!JSIConverter<std::optional<std::vector<margelo::nitro::crypto::KeyUsage>>>::canConvert(runtime, obj.getProperty(runtime, "key_ops"))) return false;
       if (!JSIConverter<std::optional<std::string>>::canConvert(runtime, obj.getProperty(runtime, "alg"))) return false;
       if (!JSIConverter<std::optional<std::string>>::canConvert(runtime, obj.getProperty(runtime, "crv"))) return false;
       if (!JSIConverter<std::optional<std::string>>::canConvert(runtime, obj.getProperty(runtime, "kid"))) return false;

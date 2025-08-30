@@ -2,9 +2,7 @@
 #include "Utils.hpp"
 #include <optional>
 
-namespace margelo {
-
-using namespace margelo::nitro::crypto;
+namespace margelo::nitro::crypto {
 
 ncrypto::EVPKeyPointer::PrivateKeyEncodingConfig GetPrivateKeyEncodingConfig(KFormatType format, KeyEncoding type) {
   auto pk_format = static_cast<ncrypto::EVPKeyPointer::PKFormatType>(format);
@@ -127,4 +125,4 @@ KeyObjectData KeyObjectData::GetPrivateKey(std::shared_ptr<ArrayBuffer> key, std
   return TryParsePrivateKey(key, format, type, passphrase);
 }
 
-} // namespace margelo
+} // namespace margelo::nitro::crypto

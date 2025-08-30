@@ -31,8 +31,8 @@ namespace margelo::nitro::crypto { enum class NamedCurve; }
 namespace margelo::nitro::crypto { struct KeyDetail; }
 
 #include <NitroModules/ArrayBuffer.hpp>
-#include <optional>
 #include "KFormatType.hpp"
+#include <optional>
 #include "KeyEncoding.hpp"
 #include <string>
 #include "JWK.hpp"
