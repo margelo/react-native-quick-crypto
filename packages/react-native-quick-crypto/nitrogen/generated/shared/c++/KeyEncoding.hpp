@@ -7,7 +7,6 @@
 
 #pragma once
 
-#include <cmath>
 #if __has_include(<NitroModules/JSIConverter.hpp>)
 #include <NitroModules/JSIConverter.hpp>
 #else
@@ -35,16 +34,14 @@ namespace margelo::nitro::crypto {
 
 namespace margelo::nitro {
 
-  using namespace margelo::nitro::crypto;
-
   // C++ KeyEncoding <> JS KeyEncoding (enum)
   template <>
-  struct JSIConverter<KeyEncoding> final {
-    static inline KeyEncoding fromJSI(jsi::Runtime& runtime, const jsi::Value& arg) {
+  struct JSIConverter<margelo::nitro::crypto::KeyEncoding> final {
+    static inline margelo::nitro::crypto::KeyEncoding fromJSI(jsi::Runtime& runtime, const jsi::Value& arg) {
       int enumValue = JSIConverter<int>::fromJSI(runtime, arg);
-      return static_cast<KeyEncoding>(enumValue);
+      return static_cast<margelo::nitro::crypto::KeyEncoding>(enumValue);
     }
-    static inline jsi::Value toJSI(jsi::Runtime& runtime, KeyEncoding arg) {
+    static inline jsi::Value toJSI(jsi::Runtime& runtime, margelo::nitro::crypto::KeyEncoding arg) {
       int enumValue = static_cast<int>(arg);
       return JSIConverter<int>::toJSI(runtime, enumValue);
     }
@@ -52,10 +49,11 @@ namespace margelo::nitro {
       if (!value.isNumber()) {
         return false;
       }
-      double integer;
-      double fraction = modf(value.getNumber(), &integer);
-      if (fraction != 0.0) {
-        // It is some kind of floating point number - our enums are ints.
+      double number = value.getNumber();
+      int integer = static_cast<int>(number);
+      if (number != integer) {
+        // The integer is not the same value as the double - we truncated floating points.
+        // Enums are all integers, so the input floating point number is obviously invalid.
         return false;
       }
       // Check if we are within the bounds of the enum.

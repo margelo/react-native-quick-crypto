@@ -18,8 +18,8 @@ namespace NitroModules { class ArrayBuffer; }
 
 #include <NitroModules/ArrayBuffer.hpp>
 #include <NitroModules/Promise.hpp>
-#include <optional>
 #include <string>
+#include <optional>
 
 namespace margelo::nitro::crypto {
 

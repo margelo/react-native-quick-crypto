@@ -21,8 +21,8 @@ namespace margelo::nitro::crypto { struct CipherArgs; }
 #include <NitroModules/ArrayBuffer.hpp>
 #include "CipherArgs.hpp"
 #include <optional>
-#include <vector>
 #include <string>
+#include <vector>
 
 namespace margelo::nitro::crypto {
 

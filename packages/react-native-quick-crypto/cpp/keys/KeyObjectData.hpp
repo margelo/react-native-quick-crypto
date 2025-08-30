@@ -1,14 +1,14 @@
 #include <memory>
 
+#include <NitroModules/ArrayBuffer.hpp>
+
 #include "KFormatType.hpp"
 #include "KeyEncoding.hpp"
 #include "KeyType.hpp"
 #include "Utils.hpp"
 #include "ncrypto.h"
 
-namespace margelo {
-
-using namespace margelo::nitro;
+namespace margelo::nitro::crypto {
 
 class KeyObjectData final {
  public:
@@ -68,4 +68,4 @@ class KeyObjectData final {
   KeyObjectData(KeyType type, std::shared_ptr<Data> data) : key_type_(type), data_(data) {}
 };
 
-} // namespace margelo
+} // namespace margelo::nitro::crypto

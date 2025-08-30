@@ -53,7 +53,7 @@ namespace margelo::nitro::crypto {
 
     public:
       // Methods
-      virtual std::shared_ptr<margelo::nitro::crypto::HybridCipherSpec> createCipher(const CipherArgs& args) = 0;
+      virtual std::shared_ptr<HybridCipherSpec> createCipher(const CipherArgs& args) = 0;
 
     protected:
       // Hybrid Setup

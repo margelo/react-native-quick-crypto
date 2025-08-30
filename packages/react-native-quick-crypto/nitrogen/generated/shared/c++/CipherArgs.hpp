@@ -47,14 +47,12 @@ namespace margelo::nitro::crypto {
 
 namespace margelo::nitro {
 
-  using namespace margelo::nitro::crypto;
-
   // C++ CipherArgs <> JS CipherArgs (object)
   template <>
-  struct JSIConverter<CipherArgs> final {
-    static inline CipherArgs fromJSI(jsi::Runtime& runtime, const jsi::Value& arg) {
+  struct JSIConverter<margelo::nitro::crypto::CipherArgs> final {
+    static inline margelo::nitro::crypto::CipherArgs fromJSI(jsi::Runtime& runtime, const jsi::Value& arg) {
       jsi::Object obj = arg.asObject(runtime);
-      return CipherArgs(
+      return margelo::nitro::crypto::CipherArgs(
         JSIConverter<bool>::fromJSI(runtime, obj.getProperty(runtime, "isCipher")),
         JSIConverter<std::string>::fromJSI(runtime, obj.getProperty(runtime, "cipherType")),
         JSIConverter<std::shared_ptr<ArrayBuffer>>::fromJSI(runtime, obj.getProperty(runtime, "cipherKey")),
@@ -62,7 +60,7 @@ namespace margelo::nitro {
         JSIConverter<std::optional<double>>::fromJSI(runtime, obj.getProperty(runtime, "authTagLen"))
       );
     }
-    static inline jsi::Value toJSI(jsi::Runtime& runtime, const CipherArgs& arg) {
+    static inline jsi::Value toJSI(jsi::Runtime& runtime, const margelo::nitro::crypto::CipherArgs& arg) {
       jsi::Object obj(runtime);
       obj.setProperty(runtime, "isCipher", JSIConverter<bool>::toJSI(runtime, arg.isCipher));
       obj.setProperty(runtime, "cipherType", JSIConverter<std::string>::toJSI(runtime, arg.cipherType));

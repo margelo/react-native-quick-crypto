@@ -47,14 +47,12 @@ namespace margelo::nitro::crypto {
 
 namespace margelo::nitro {
 
-  using namespace margelo::nitro::crypto;
-
   // C++ KeyDetail <> JS KeyDetail (object)
   template <>
-  struct JSIConverter<KeyDetail> final {
-    static inline KeyDetail fromJSI(jsi::Runtime& runtime, const jsi::Value& arg) {
+  struct JSIConverter<margelo::nitro::crypto::KeyDetail> final {
+    static inline margelo::nitro::crypto::KeyDetail fromJSI(jsi::Runtime& runtime, const jsi::Value& arg) {
       jsi::Object obj = arg.asObject(runtime);
-      return KeyDetail(
+      return margelo::nitro::crypto::KeyDetail(
         JSIConverter<std::optional<double>>::fromJSI(runtime, obj.getProperty(runtime, "length")),
         JSIConverter<std::optional<double>>::fromJSI(runtime, obj.getProperty(runtime, "publicExponent")),
         JSIConverter<std::optional<double>>::fromJSI(runtime, obj.getProperty(runtime, "modulusLength")),
@@ -64,7 +62,7 @@ namespace margelo::nitro {
         JSIConverter<std::optional<std::string>>::fromJSI(runtime, obj.getProperty(runtime, "namedCurve"))
       );
     }
-    static inline jsi::Value toJSI(jsi::Runtime& runtime, const KeyDetail& arg) {
+    static inline jsi::Value toJSI(jsi::Runtime& runtime, const margelo::nitro::crypto::KeyDetail& arg) {
       jsi::Object obj(runtime);
       obj.setProperty(runtime, "length", JSIConverter<std::optional<double>>::toJSI(runtime, arg.length));
       obj.setProperty(runtime, "publicExponent", JSIConverter<std::optional<double>>::toJSI(runtime, arg.publicExponent));

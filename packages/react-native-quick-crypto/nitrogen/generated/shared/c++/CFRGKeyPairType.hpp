@@ -39,28 +39,26 @@ namespace margelo::nitro::crypto {
 
 namespace margelo::nitro {
 
-  using namespace margelo::nitro::crypto;
-
   // C++ CFRGKeyPairType <> JS CFRGKeyPairType (union)
   template <>
-  struct JSIConverter<CFRGKeyPairType> final {
-    static inline CFRGKeyPairType fromJSI(jsi::Runtime& runtime, const jsi::Value& arg) {
+  struct JSIConverter<margelo::nitro::crypto::CFRGKeyPairType> final {
+    static inline margelo::nitro::crypto::CFRGKeyPairType fromJSI(jsi::Runtime& runtime, const jsi::Value& arg) {
       std::string unionValue = JSIConverter<std::string>::fromJSI(runtime, arg);
       switch (hashString(unionValue.c_str(), unionValue.size())) {
-        case hashString("ed25519"): return CFRGKeyPairType::ED25519;
-        case hashString("ed448"): return CFRGKeyPairType::ED448;
-        case hashString("x25519"): return CFRGKeyPairType::X25519;
-        case hashString("x448"): return CFRGKeyPairType::X448;
+        case hashString("ed25519"): return margelo::nitro::crypto::CFRGKeyPairType::ED25519;
+        case hashString("ed448"): return margelo::nitro::crypto::CFRGKeyPairType::ED448;
+        case hashString("x25519"): return margelo::nitro::crypto::CFRGKeyPairType::X25519;
+        case hashString("x448"): return margelo::nitro::crypto::CFRGKeyPairType::X448;
         default: [[unlikely]]
           throw std::invalid_argument("Cannot convert \"" + unionValue + "\" to enum CFRGKeyPairType - invalid value!");
       }
     }
-    static inline jsi::Value toJSI(jsi::Runtime& runtime, CFRGKeyPairType arg) {
+    static inline jsi::Value toJSI(jsi::Runtime& runtime, margelo::nitro::crypto::CFRGKeyPairType arg) {
       switch (arg) {
-        case CFRGKeyPairType::ED25519: return JSIConverter<std::string>::toJSI(runtime, "ed25519");
-        case CFRGKeyPairType::ED448: return JSIConverter<std::string>::toJSI(runtime, "ed448");
-        case CFRGKeyPairType::X25519: return JSIConverter<std::string>::toJSI(runtime, "x25519");
-        case CFRGKeyPairType::X448: return JSIConverter<std::string>::toJSI(runtime, "x448");
+        case margelo::nitro::crypto::CFRGKeyPairType::ED25519: return JSIConverter<std::string>::toJSI(runtime, "ed25519");
+        case margelo::nitro::crypto::CFRGKeyPairType::ED448: return JSIConverter<std::string>::toJSI(runtime, "ed448");
+        case margelo::nitro::crypto::CFRGKeyPairType::X25519: return JSIConverter<std::string>::toJSI(runtime, "x25519");
+        case margelo::nitro::crypto::CFRGKeyPairType::X448: return JSIConverter<std::string>::toJSI(runtime, "x448");
         default: [[unlikely]]
           throw std::invalid_argument("Cannot convert CFRGKeyPairType to JS - invalid value: "
                                     + std::to_string(static_cast<int>(arg)) + "!");

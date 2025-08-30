@@ -16,8 +16,8 @@
 // Forward declaration of `ArrayBuffer` to properly resolve imports.
 namespace NitroModules { class ArrayBuffer; }
 
-#include <NitroModules/Promise.hpp>
 #include <NitroModules/ArrayBuffer.hpp>
+#include <NitroModules/Promise.hpp>
 
 namespace margelo::nitro::crypto {
 
