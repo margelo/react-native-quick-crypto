@@ -16,7 +16,7 @@
     "format": "prettier --check \"**/*.{js,ts,tsx}\"",
     "format:fix": "prettier --write \"**/*.{js,ts,tsx}\"",
     "start": "react-native start",
-    "pods": "bundle exec pod install --project-directory=ios",
+    "pods": "RCT_USE_RN_DEP=1 RCT_USE_PREBUILT_RNCORE=1 bundle exec pod install --project-directory=ios",
     "build:android": "cd android && ./gradlew assembleDebug --no-daemon --console=plain -PreactNativeArchitectures=arm64-v8a",
     "build:ios": "cd ios && xcodebuild -workspace QuickCryptoExample.xcworkspace -scheme QuickCryptoExample -configuration Debug -sdk iphonesimulator CC=clang CPLUSPLUS=clang++ LD=clang LDPLUSPLUS=clang++ GCC_OPTIMIZATION_LEVEL=0 GCC_PRECOMPILE_PREFIX_HEADER=YES ASSETCATALOG_COMPILER_OPTIMIZATION=time DEBUG_INFORMATION_FORMAT=dwarf COMPILER_INDEX_STORE_ENABLE=NO"
   },
