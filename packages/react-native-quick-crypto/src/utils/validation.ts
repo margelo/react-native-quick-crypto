@@ -1,3 +1,10 @@
+import { Buffer as SBuffer } from 'safe-buffer';
+import type { BinaryLike, BufferLike } from './types';
+import { lazyDOMException } from './errors';
+
+// The maximum buffer size that we'll support in the WebCrypto impl
+const kMaxBufferLength = 2 ** 31 - 1;
+
 export function validateFunction(f: unknown): boolean {
   return f !== null && typeof f === 'function';
 }
@@ -29,7 +36,23 @@ export function validateObject<T>(
     (typeof value !== 'object' &&
       (!allowFunction || typeof value !== 'function'))
   ) {
-    throw new Error(`${name} is not a valid object $${value}`);
+    throw new Error(`${name} is not a valid object ${value}`);
   }
   return true;
 }
+
+export const validateMaxBufferLength = (
+  data: BinaryLike | BufferLike,
+  name: string,
+): void => {
+  const length =
+    typeof data === 'string' || data instanceof SBuffer
+      ? data.length
+      : data.byteLength;
+  if (length > kMaxBufferLength) {
+    throw lazyDOMException(
+      `${name} must be less than ${kMaxBufferLength + 1} bits`,
+      'OperationError',
+    );
+  }
+};

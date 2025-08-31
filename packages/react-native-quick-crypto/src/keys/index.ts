@@ -14,10 +14,17 @@ import {
   parsePrivateKeyEncoding,
   parsePublicKeyEncoding,
 } from './utils';
+import type { BinaryLike } from '../utils';
+import { binaryLikeToArrayBuffer as toAB } from '../utils';
+
+function createSecretKey(key: BinaryLike): SecretKeyObject {
+  const keyBuffer = toAB(key);
+  return KeyObject.createKeyObject('secret', keyBuffer) as SecretKeyObject;
+}
 
 export {
   // Node Public API
-  // createSecretKey,
+  createSecretKey,
   // createPublicKey,
   // createPrivateKey,
   CryptoKey,

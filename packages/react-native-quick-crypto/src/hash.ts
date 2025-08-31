@@ -2,8 +2,20 @@ import { Stream } from 'readable-stream';
 import { NitroModules } from 'react-native-nitro-modules';
 import type { TransformOptions } from 'readable-stream';
 import type { Hash as NativeHash } from './specs/hash.nitro';
-import type { BinaryLike, Encoding } from './utils';
-import { ab2str, binaryLikeToArrayBuffer } from './utils';
+import type {
+  BinaryLike,
+  Encoding,
+  BufferLike,
+  SubtleAlgorithm,
+} from './utils';
+import {
+  ab2str,
+  binaryLikeToArrayBuffer,
+  bufferLikeToArrayBuffer,
+} from './utils';
+import { validateMaxBufferLength } from './utils/validation';
+import { lazyDOMException } from './utils/errors';
+import { normalizeHashName } from './utils/hashnames';
 
 class HashUtils {
   private static native = NitroModules.createHybridObject<NativeHash>('Hash');
@@ -210,7 +222,53 @@ export function createHash(algorithm: string, options?: HashOptions): Hash {
   });
 }
 
+// Implementation for WebCrypto subtle.digest()
+
+/**
+ * Asynchronous digest function for WebCrypto SubtleCrypto API
+ * @param algorithm The hash algorithm to use
+ * @param data The data to hash
+ * @returns Promise resolving to the hash digest as ArrayBuffer
+ */
+export const asyncDigest = async (
+  algorithm: SubtleAlgorithm,
+  data: BufferLike,
+): Promise<ArrayBuffer> => {
+  validateMaxBufferLength(data, 'data');
+
+  switch (algorithm.name) {
+    case 'SHA-1':
+    // Fall through
+    case 'SHA-256':
+    // Fall through
+    case 'SHA-384':
+    // Fall through
+    case 'SHA-512':
+      return internalDigest(algorithm, data);
+  }
+
+  throw lazyDOMException(
+    `Unrecognized algorithm name: ${algorithm.name}`,
+    'NotSupportedError',
+  );
+};
+
+const internalDigest = (
+  algorithm: SubtleAlgorithm,
+  data: BufferLike,
+): ArrayBuffer => {
+  const normalizedHashName = normalizeHashName(algorithm.name);
+  const hash = createHash(normalizedHashName);
+  hash.update(bufferLikeToArrayBuffer(data));
+  const result = hash.digest();
+  const arrayBuffer = new ArrayBuffer(result.length);
+  const view = new Uint8Array(arrayBuffer);
+  view.set(result);
+  return arrayBuffer;
+};
+
 export const hashExports = {
   createHash,
   getHashes,
+  asyncDigest,
 };

@@ -26,7 +26,7 @@ Every time you choose to apply a rule(s), explicitly state the rule(s) in the ou
 - Use modern C++ features.
 - Attempt to reduce the amount of code rather than add more.
 - Prefer iteration and modularization over code duplication.
-- Do not add comments unless explicitly told to do so.
+- Do not add comments unless explicitly told to do so, or the code is sufficiently complex to warrant comments.
 
 ## TypeScript Best Practices
 
@@ -34,6 +34,7 @@ Every time you choose to apply a rule(s), explicitly state the rule(s) in the ou
 - Use lowercase with dashes for directories (e.g., `components/auth-wizard`).
 - Favor named exports for components.
 - Avoid `any` and enums; use explicit types and maps instead.
+- Do not cast to `unknown` and then another type.
 - Use functional components with TypeScript interfaces.
 - Enable strict mode in TypeScript for better type safety.
 - Suggest the optimal implementation considering:

@@ -4,12 +4,20 @@ import {
   KeyEncoding,
   KFormatType,
 } from '../utils';
-import type { EncodingOptions } from '../utils';
+import type { CryptoKeyPair, EncodingOptions } from '../utils';
+import type { CryptoKey } from './classes';
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 export const isCryptoKey = (obj: any): boolean => {
   return obj !== null && obj?.keyObject !== undefined;
 };
+
+export function getCryptoKeyPair(
+  key: CryptoKey | CryptoKeyPair,
+): CryptoKeyPair {
+  if ('publicKey' in key && 'privateKey' in key) return key;
+  throw new Error('Invalid CryptoKeyPair');
+}
 
 /**
  * Parses the public key encoding based on an object. keyType must be undefined
