@@ -20,6 +20,7 @@ import { normalizeHashName, HashContext } from './utils/hashnames';
 import { validateMaxBufferLength } from './utils/validation';
 import { asyncDigest } from './hash';
 import { createSecretKey } from './keys';
+import { pbkdf2DeriveBits } from './pbkdf2';
 
 // Placeholder imports - these modules need to be implemented or adapted
 // import { ecImportKey, ecExportKey, ecGenerateKey, ecdsaSignVerify } from './ec';
@@ -101,14 +102,6 @@ function aesCipher(
   _algorithm: EncryptDecryptParams,
 ): Promise<ArrayBuffer> {
   throw new Error('aesCipher not implemented');
-}
-
-function pbkdf2DeriveBits(
-  _algorithm: SubtleAlgorithm,
-  _baseKey: CryptoKey,
-  _length: number,
-): Promise<ArrayBuffer> {
-  throw new Error('pbkdf2DeriveBits not implemented');
 }
 
 async function rsaKeyGenerate(

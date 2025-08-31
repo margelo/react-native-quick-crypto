@@ -153,6 +153,11 @@ export class KeyObject {
       }
     }
 
+    // For secret keys, return SecretKeyObject
+    if (type === 'secret') {
+      return new SecretKeyObject(handle);
+    }
+
     // Return regular KeyObject for symmetric keys or if asymmetric detection failed
     return new KeyObject(type, handle);
   }
