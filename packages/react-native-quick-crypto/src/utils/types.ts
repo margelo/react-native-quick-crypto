@@ -3,7 +3,7 @@ import type { Buffer } from 'buffer';
 import type { CipherKey } from 'node:crypto'; // @types/node
 import type { Buffer as SafeBuffer } from 'safe-buffer';
 import type { KeyObjectHandle as KeyObjectHandleType } from '../specs/keyObjectHandle.nitro';
-import type { KeyObject } from '../keys';
+import type { KeyObject, CryptoKey } from '../keys';
 
 export type ABV = TypedArray | DataView | ArrayBufferLike | CraftzdogBuffer;
 
@@ -79,6 +79,49 @@ export type EncryptDecryptAlgorithm =
   | 'AES-CTR'
   | 'AES-CBC'
   | 'AES-GCM';
+
+export type RsaOaepParams = {
+  name: 'RSA-OAEP';
+  label?: BufferLike;
+};
+
+export type AesCbcParams = {
+  name: 'AES-CBC';
+  iv: BufferLike;
+};
+
+export type AesCtrParams = {
+  name: 'AES-CTR';
+  counter: TypedArray;
+  length: number;
+};
+
+export type AesGcmParams = {
+  name: 'AES-GCM';
+  iv: BufferLike;
+  tagLength?: TagLength;
+  additionalData?: BufferLike;
+};
+
+export type AesKwParams = {
+  name: 'AES-KW';
+  wrappingKey?: BufferLike;
+};
+
+export type AesKeyGenParams = {
+  length: AESLength;
+  name?: AESAlgorithm;
+};
+
+export type TagLength = 32 | 64 | 96 | 104 | 112 | 120 | 128;
+
+export type AESLength = 128 | 192 | 256;
+
+export type EncryptDecryptParams =
+  | AesCbcParams
+  | AesCtrParams
+  | AesGcmParams
+  | RsaOaepParams;
 
 export type AnyAlgorithm =
   | DigestAlgorithm
@@ -234,9 +277,12 @@ export type GenerateKeyPairOptions = {
   mgf1Hash?: string;
 };
 
-// Note: removed CryptoKey class from this type (from 0.x) because Nitro doesn't
-//       handle custom JS objects.  We might need to make it a JS object.
-export type KeyPairKey = ArrayBuffer | KeyObject | KeyObjectHandle | undefined;
+export type KeyPairKey =
+  | ArrayBuffer
+  | KeyObject
+  | KeyObjectHandle
+  | CryptoKey
+  | undefined;
 
 export type GenerateKeyPairReturn = [
   error?: Error,
@@ -326,3 +372,15 @@ export type DiffieHellmanCallback = (
 
 // from @paulmillr/noble-curves
 export type Hex = string | Uint8Array;
+
+export type ImportFormat = 'raw' | 'pkcs8' | 'spki' | 'jwk';
+
+export type Operation =
+  | 'encrypt'
+  | 'decrypt'
+  | 'sign'
+  | 'verify'
+  | 'generateKey'
+  | 'importKey'
+  | 'exportKey'
+  | 'deriveBits';

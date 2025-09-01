@@ -132,8 +132,8 @@ bool HybridKeyObjectHandle::init(KeyType keyType, const std::variant<std::string
     ab = std::get<std::shared_ptr<ArrayBuffer>>(key);
   }
 
-  // Handle raw key material (when format and type are not provided)
-  if (!format.has_value() && !type.has_value()) {
+  // Handle raw asymmetric key material (curves only)
+  if (!format.has_value() && !type.has_value() && (keyType == KeyType::PUBLIC || keyType == KeyType::PRIVATE)) {
     return initRawKey(keyType, ab);
   }
 
@@ -172,7 +172,7 @@ KeyDetail HybridKeyObjectHandle::keyDetail() {
 }
 
 bool HybridKeyObjectHandle::initRawKey(KeyType keyType, std::shared_ptr<ArrayBuffer> keyData) {
-  // For x25519/x448/ed25519/ed448 raw keys, we need to determine the curve type
+  // For asymmetric keys (x25519/x448/ed25519/ed448), we need to determine the curve type
   // Based on key size: x25519=32 bytes, x448=56 bytes, ed25519=32 bytes, ed448=57 bytes
   int curveId = -1;
   size_t keySize = keyData->size();

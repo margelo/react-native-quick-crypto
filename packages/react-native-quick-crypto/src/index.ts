@@ -12,6 +12,7 @@ import * as random from './random';
 
 // utils import
 import * as utils from './utils';
+import * as subtle from './subtle';
 
 /**
  * Loosely matches Node.js {crypto} with some unimplemented functionality.
@@ -26,6 +27,7 @@ const QuickCrypto = {
   ...pbkdf2,
   ...random,
   ...utils,
+  ...subtle,
 };
 
 /**
@@ -53,6 +55,8 @@ export * from './hmac';
 export * from './pbkdf2';
 export * from './random';
 export * from './utils';
+export * from './subtle';
+export { subtle, isCryptoKeyPair } from './subtle';
 
 // Additional exports for CommonJS compatibility
 module.exports = QuickCrypto;
