@@ -59,7 +59,7 @@ const vectors: Vectors = {
   //   result: 'CryptoKey',
   //   usages: ['wrapKey', 'unwrapKey'],
   // },
-  // 'HMAC': {
+  // HMAC: {
   //   algorithm: { length: 256, hash: 'SHA-256' },
   //   result: 'CryptoKey',
   //   usages: ['sign', 'verify'],
@@ -101,19 +101,19 @@ const vectors: Vectors = {
     result: 'CryptoKeyPair',
     usages: ['deriveKey', 'deriveBits'],
   },
-  // 'Ed25519': {
+  // Ed25519: {
   //   result: 'CryptoKeyPair',
   //   usages: ['sign', 'verify'],
   // },
-  // 'Ed448': {
+  // Ed448: {
   //   result: 'CryptoKeyPair',
   //   usages: ['sign', 'verify'],
   // },
-  // 'X25519': {
+  // X25519: {
   //   result: 'CryptoKeyPair',
   //   usages: ['deriveKey', 'deriveBits'],
   // },
-  // 'X448': {
+  // X448: {
   //   result: 'CryptoKeyPair',
   //   usages: ['deriveKey', 'deriveBits'],
   // },

@@ -162,17 +162,12 @@ export class KeyObject {
     return new KeyObject(type, handle);
   }
 
-  equals(otherKeyObject: unknown): boolean {
-    if (!(otherKeyObject instanceof KeyObject)) {
-      throw new TypeError(
-        `Invalid argument type for "otherKeyObject", expected "KeyObject" but got ${typeof otherKeyObject}`,
-      );
-    }
+  getAsymmetricKeyType(): undefined {
+    return undefined;
+  }
 
-    return (
-      this.type === otherKeyObject.type &&
-      this.handle.equals(otherKeyObject.handle)
-    );
+  getAsymmetricKeyDetails(): undefined {
+    return undefined;
   }
 }
 
@@ -182,7 +177,7 @@ export class SecretKeyObject extends KeyObject {
   }
 
   // get symmetricKeySize() {
-  //   return this[kHandle].getSymmetricKeySize();
+  //   return this.handle.getSymmetricKeySize();
   // }
 
   export(options: { format: 'pem' } & EncodingOptions): never;
