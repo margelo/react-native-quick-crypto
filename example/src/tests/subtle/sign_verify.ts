@@ -5,6 +5,8 @@ import { expect } from 'chai';
 
 const encoder = new TextEncoder();
 
+const SUITE = 'subtle.sign/verify';
+
 // // Test Sign/Verify RSASSA-PKCS1-v1_5
 // {
 //   async function test(data) {
@@ -53,7 +55,7 @@ const encoder = new TextEncoder();
 //   test('hello world').then(common.mustCall());
 // }
 
-test('subtle.sign_verify', 'ECDSA P-384', async () => {
+test(SUITE, 'ECDSA P-384', async () => {
   const pair = await subtle.generateKey(
     { name: 'ECDSA', namedCurve: 'P-384' },
     true,
@@ -78,7 +80,7 @@ test('subtle.sign_verify', 'ECDSA P-384', async () => {
   ).to.equal(true);
 });
 
-test('subtle.sign_verify', 'ECDSA with HashAlgorithmIdentifier', async () => {
+test(SUITE, 'ECDSA with HashAlgorithmIdentifier', async () => {
   const pair = await subtle.generateKey(
     { name: 'ECDSA', namedCurve: 'P-256' },
     true,

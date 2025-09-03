@@ -10,6 +10,7 @@
   "autolinking": {
     "Cipher": { "cpp": "HybridCipher" },
     "CipherFactory": { "cpp": "HybridCipherFactory" },
+    "EcKeyPair": { "cpp": "HybridEcKeyPair" },
     "EdKeyPair": { "cpp": "HybridEdKeyPair" },
     "Hash": { "cpp": "HybridHash" },
     "Hmac": { "cpp": "HybridHmac" },

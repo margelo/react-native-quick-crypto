@@ -158,9 +158,14 @@ export type KeyUsage =
   | 'verify'
   | 'deriveKey'
   | 'deriveBits'
+  | 'encapsulateBits'
+  | 'decapsulateBits'
+  | 'encapsulateKey'
+  | 'decapsulateKey'
   | 'wrapKey'
   | 'unwrapKey';
 
+// TODO: These enums need to be defined on the native side
 export enum KFormatType {
   DER,
   PEM,
@@ -179,6 +184,22 @@ export enum KeyEncoding {
   SPKI,
   SEC1,
 }
+
+export enum KeyFormat {
+  RAW,
+  PKCS8,
+  SPKI,
+  JWK,
+}
+
+export type KeyData = BufferLike | BinaryLike | JWK;
+
+export const kNamedCurveAliases = {
+  'P-256': 'prime256v1',
+  'P-384': 'secp384r1',
+  'P-521': 'secp521r1',
+} as const;
+// end TODO
 
 export type KeyPairGenConfig = {
   publicFormat?: KFormatType;

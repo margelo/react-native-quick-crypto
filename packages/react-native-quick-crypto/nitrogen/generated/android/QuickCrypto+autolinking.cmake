@@ -29,6 +29,7 @@ target_sources(
   # Shared Nitrogen C++ sources
   ../nitrogen/generated/shared/c++/HybridCipherSpec.cpp
   ../nitrogen/generated/shared/c++/HybridCipherFactorySpec.cpp
+  ../nitrogen/generated/shared/c++/HybridEcKeyPairSpec.cpp
   ../nitrogen/generated/shared/c++/HybridEdKeyPairSpec.cpp
   ../nitrogen/generated/shared/c++/HybridHashSpec.cpp
   ../nitrogen/generated/shared/c++/HybridHmacSpec.cpp

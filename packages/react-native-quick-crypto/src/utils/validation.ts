@@ -1,5 +1,5 @@
 import { Buffer as SBuffer } from 'safe-buffer';
-import type { BinaryLike, BufferLike } from './types';
+import type { BinaryLike, BufferLike, KeyUsage } from './types';
 import { lazyDOMException } from './errors';
 
 // The maximum buffer size that we'll support in the WebCrypto impl
@@ -56,3 +56,75 @@ export const validateMaxBufferLength = (
     );
   }
 };
+
+export const getUsagesUnion = (usageSet: KeyUsage[], ...usages: KeyUsage[]) => {
+  const newset: KeyUsage[] = [];
+  for (let n = 0; n < usages.length; n++) {
+    if (!usages[n] || usages[n] === undefined) continue;
+    if (usageSet.includes(usages[n] as KeyUsage))
+      newset.push(usages[n] as KeyUsage);
+  }
+  return newset;
+};
+
+const kKeyOps: {
+  [key in KeyUsage]: number;
+} = {
+  sign: 1,
+  verify: 2,
+  encrypt: 3,
+  decrypt: 4,
+  wrapKey: 5,
+  unwrapKey: 6,
+  deriveKey: 7,
+  deriveBits: 8,
+  encapsulateBits: 9,
+  decapsulateBits: 10,
+  encapsulateKey: 11,
+  decapsulateKey: 12,
+};
+
+export const validateKeyOps = (
+  keyOps: KeyUsage[] | undefined,
+  usagesSet: KeyUsage[],
+) => {
+  if (keyOps === undefined) return;
+  if (!Array.isArray(keyOps)) {
+    throw lazyDOMException('keyData.key_ops', 'InvalidArgument');
+  }
+  let flags = 0;
+  for (let n = 0; n < keyOps.length; n++) {
+    const op: KeyUsage = keyOps[n] as KeyUsage;
+    const op_flag = kKeyOps[op];
+    // Skipping unknown key ops
+    if (op_flag === undefined) continue;
+    // Have we seen it already? if so, error
+    if (flags & (1 << op_flag))
+      throw lazyDOMException('Duplicate key operation', 'DataError');
+    flags |= 1 << op_flag;
+
+    // TODO(@jasnell): RFC7517 section 4.3 strong recommends validating
+    // key usage combinations. Specifically, it says that unrelated key
+    // ops SHOULD NOT be used together. We're not yet validating that here.
+  }
+
+  if (usagesSet !== undefined) {
+    for (const use of usagesSet) {
+      if (!keyOps.includes(use)) {
+        throw lazyDOMException(
+          'Key operations and usage mismatch',
+          'DataError',
+        );
+      }
+    }
+  }
+};
+
+export function hasAnyNotIn(set: string[], checks: string[]) {
+  for (const s of set) {
+    if (!checks.includes(s)) {
+      return true;
+    }
+  }
+  return false;
+}

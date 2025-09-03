@@ -12,7 +12,7 @@ import type {
   EncryptDecryptParams,
   Operation,
 } from './utils';
-import { CryptoKey, KeyObject } from './keys';
+import { CryptoKey } from './keys';
 import type { CryptoKeyPair } from './utils/types';
 import { bufferLikeToArrayBuffer } from './utils/conversion';
 import { lazyDOMException } from './utils/errors';
@@ -21,6 +21,7 @@ import { validateMaxBufferLength } from './utils/validation';
 import { asyncDigest } from './hash';
 import { createSecretKey } from './keys';
 import { pbkdf2DeriveBits } from './pbkdf2';
+import { ec_generateKeyPair } from './ec';
 
 // Placeholder imports - these modules need to be implemented or adapted
 // import { ecImportKey, ecExportKey, ecGenerateKey, ecdsaSignVerify } from './ec';
@@ -110,32 +111,6 @@ async function rsaKeyGenerate(
   _keyUsages: KeyUsage[],
 ): Promise<CryptoKeyPair> {
   throw new Error('rsaKeyGenerate not implemented');
-}
-
-async function ecGenerateKey(
-  algorithm: SubtleAlgorithm,
-  extractable: boolean,
-  keyUsages: KeyUsage[],
-): Promise<CryptoKeyPair> {
-  // Temporary implementation - create mock CryptoKey objects
-  const mockKeyObject = {} as KeyObject;
-  const publicKey = new CryptoKey(
-    mockKeyObject,
-    algorithm,
-    keyUsages,
-    extractable,
-  );
-  const privateKey = new CryptoKey(
-    mockKeyObject,
-    algorithm,
-    keyUsages,
-    extractable,
-  );
-
-  return {
-    publicKey,
-    privateKey,
-  };
 }
 
 async function aesGenerateKey(
@@ -531,8 +506,8 @@ export class Subtle {
       case 'ECDSA':
       // Fall through
       case 'ECDH':
-        result = await ecGenerateKey(algorithm, extractable, keyUsages);
-        checkCryptoKeyPairUsages(result);
+        result = await ec_generateKeyPair(algorithm, extractable, keyUsages);
+        checkCryptoKeyPairUsages(result as CryptoKeyPair);
         break;
       case 'AES-CTR':
       // Fall through

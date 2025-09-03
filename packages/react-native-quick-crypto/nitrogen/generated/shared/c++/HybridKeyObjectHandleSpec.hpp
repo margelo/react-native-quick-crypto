@@ -77,7 +77,6 @@ namespace margelo::nitro::crypto {
       virtual JWK exportJwk(const JWK& key, bool handleRsaPss) = 0;
       virtual CFRGKeyPairType getAsymmetricKeyType() = 0;
       virtual bool init(KeyType keyType, const std::variant<std::string, std::shared_ptr<ArrayBuffer>>& key, std::optional<KFormatType> format, std::optional<KeyEncoding> type, const std::optional<std::shared_ptr<ArrayBuffer>>& passphrase) = 0;
-      virtual bool initECRaw(const std::string& curveName, const std::shared_ptr<ArrayBuffer>& keyData) = 0;
       virtual std::optional<KeyType> initJwk(const JWK& keyData, std::optional<NamedCurve> namedCurve) = 0;
       virtual KeyDetail keyDetail() = 0;
 
