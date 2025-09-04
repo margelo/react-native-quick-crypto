@@ -19,6 +19,7 @@
 #include "HybridKeyObjectHandle.hpp"
 #include "HybridPbkdf2.hpp"
 #include "HybridRandom.hpp"
+#include "HybridRsaKeyPair.hpp"
 
 @interface QuickCryptoAutolinking : NSObject
 @end
@@ -108,6 +109,15 @@
                     "The HybridObject \"HybridRandom\" is not default-constructible! "
                     "Create a public constructor that takes zero arguments to be able to autolink this HybridObject.");
       return std::make_shared<HybridRandom>();
+    }
+  );
+  HybridObjectRegistry::registerHybridObjectConstructor(
+    "RsaKeyPair",
+    []() -> std::shared_ptr<HybridObject> {
+      static_assert(std::is_default_constructible_v<HybridRsaKeyPair>,
+                    "The HybridObject \"HybridRsaKeyPair\" is not default-constructible! "
+                    "Create a public constructor that takes zero arguments to be able to autolink this HybridObject.");
+      return std::make_shared<HybridRsaKeyPair>();
     }
   );
 }

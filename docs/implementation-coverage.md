@@ -352,9 +352,9 @@ This document attempts to describe the implementation status of Crypto APIs/Inte
 | `ML-KEM-512`        | ❌ |
 | `ML-KEM-768`        | ❌ |
 | `ML-KEM-1024`       | ❌ |
-| `RSA-OAEP`          | ❌ |
-| `RSA-PSS`           | ❌ |
-| `RSASSA-PKCS1-v1_5` | ❌ |
+| `RSA-OAEP`          | ✅ |
+| `RSA-PSS`           | ✅ |
+| `RSASSA-PKCS1-v1_5` | ✅ |
 | `X25519`            | ❌ |
 | `X448`              | ❌ |
 

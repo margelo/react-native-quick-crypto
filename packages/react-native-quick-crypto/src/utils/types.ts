@@ -45,6 +45,20 @@ export type HashAlgorithm = DigestAlgorithm | 'SHA-224' | 'RIPEMD-160';
 
 export type RSAKeyPairAlgorithm = 'RSASSA-PKCS1-v1_5' | 'RSA-PSS' | 'RSA-OAEP';
 
+export interface RsaHashedKeyGenParams {
+  name: RSAKeyPairAlgorithm;
+  modulusLength: number;
+  publicExponent: Uint8Array;
+  hash: string | { name: string };
+}
+
+export interface RsaKeyAlgorithm {
+  name: RSAKeyPairAlgorithm;
+  modulusLength: number;
+  publicExponent: Uint8Array;
+  hash: { name: string };
+}
+
 export type ECKeyPairAlgorithm = 'ECDSA' | 'ECDH';
 
 export type CFRGKeyPairAlgorithm = 'Ed25519' | 'Ed448' | 'X25519' | 'X448';
@@ -142,7 +156,7 @@ export type SubtleAlgorithm = {
   name: AnyAlgorithm;
   salt?: string;
   iterations?: number;
-  hash?: HashAlgorithm;
+  hash?: HashAlgorithm | { name: string };
   namedCurve?: NamedCurve;
   length?: number;
   modulusLength?: number;
