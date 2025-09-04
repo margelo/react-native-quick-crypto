@@ -11,7 +11,7 @@
 
 namespace margelo::nitro::crypto {
 
-// Function to get the last OpenSSL error message
+// Function to get the last OpenSSL error message and clear the error stack
 inline std::string getOpenSSLError() {
   unsigned long errCode = ERR_get_error();
   if (errCode == 0) {
@@ -19,7 +19,14 @@ inline std::string getOpenSSLError() {
   }
   char errStr[256];
   ERR_error_string_n(errCode, errStr, sizeof(errStr));
+  // Clear any remaining errors from the error stack to prevent pollution
+  ERR_clear_error();
   return std::string(errStr);
+}
+
+// Function to clear OpenSSL error stack without getting error message
+inline void clearOpenSSLErrors() {
+  ERR_clear_error();
 }
 
 // copy a JSArrayBuffer that we do not own into a NativeArrayBuffer that we do own
