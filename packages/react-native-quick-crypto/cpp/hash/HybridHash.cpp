@@ -25,7 +25,7 @@ HybridHash::~HybridHash() {
 void HybridHash::createHash(const std::string& hashAlgorithmArg, const std::optional<double> outputLengthArg) {
   // Clear any previous OpenSSL errors to prevent pollution
   clearOpenSSLErrors();
-  
+
   // Clean up existing resources before creating new ones
   if (ctx) {
     EVP_MD_CTX_free(ctx);

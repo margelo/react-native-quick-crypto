@@ -78,7 +78,7 @@ void HybridEdKeyPair::generateKeyPairSync(double publicFormat, double publicType
                                           const std::optional<std::shared_ptr<ArrayBuffer>>& passphrase) {
   // Clear any previous OpenSSL errors to prevent pollution
   clearOpenSSLErrors();
-  
+
   if (this->curve.empty()) {
     throw std::runtime_error("EC curve not set. Call setCurve() first.");
   }
@@ -88,7 +88,7 @@ void HybridEdKeyPair::generateKeyPairSync(double publicFormat, double publicType
     EVP_PKEY_free(this->pkey);
     this->pkey = nullptr;
   }
-  
+
   EVP_PKEY_CTX* pctx;
 
   // key context
@@ -202,7 +202,7 @@ bool HybridEdKeyPair::verifySync(const std::shared_ptr<ArrayBuffer>& signature, 
                                  const std::optional<std::shared_ptr<ArrayBuffer>>& key) {
   // Clear any previous OpenSSL errors to prevent pollution
   clearOpenSSLErrors();
-  
+
   // get key to use for verifying
   EVP_PKEY* pkey = this->importPublicKey(key);
 
