@@ -342,8 +342,8 @@ This document attempts to describe the implementation status of Crypto APIs/Inte
 ### `CryptoKeyPair` algorithms
 | Algorithm           | Status |
 | ---------           | :----: |
-| `ECDH`              | ❌ |
-| `ECDSA`             | ❌ |
+| `ECDH`              | ✅ |
+| `ECDSA`             | ✅ |
 | `Ed25519`           | ❌ |
 | `Ed448`             | ❌ |
 | `ML-DSA-44`         | ❌ |
