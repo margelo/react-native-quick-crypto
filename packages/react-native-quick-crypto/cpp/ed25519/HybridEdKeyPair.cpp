@@ -76,6 +76,19 @@ std::shared_ptr<Promise<void>> HybridEdKeyPair::generateKeyPair(double publicFor
 void HybridEdKeyPair::generateKeyPairSync(double publicFormat, double publicType, double privateFormat, double privateType,
                                           const std::optional<std::string>& cipher,
                                           const std::optional<std::shared_ptr<ArrayBuffer>>& passphrase) {
+  // Clear any previous OpenSSL errors to prevent pollution
+  clearOpenSSLErrors();
+
+  if (this->curve.empty()) {
+    throw std::runtime_error("EC curve not set. Call setCurve() first.");
+  }
+
+  // Clean up existing key if any
+  if (this->pkey != nullptr) {
+    EVP_PKEY_free(this->pkey);
+    this->pkey = nullptr;
+  }
+
   EVP_PKEY_CTX* pctx;
 
   // key context
@@ -116,6 +129,8 @@ std::shared_ptr<Promise<std::shared_ptr<ArrayBuffer>>> HybridEdKeyPair::sign(con
 
 std::shared_ptr<ArrayBuffer> HybridEdKeyPair::signSync(const std::shared_ptr<ArrayBuffer>& message,
                                                        const std::optional<std::shared_ptr<ArrayBuffer>>& key) {
+  // Clear any previous OpenSSL errors to prevent pollution
+  clearOpenSSLErrors();
 
   size_t sig_len = 0;
   uint8_t* sig = NULL;
@@ -128,18 +143,18 @@ std::shared_ptr<ArrayBuffer> HybridEdKeyPair::signSync(const std::shared_ptr<Arr
   // key context
   md_ctx = EVP_MD_CTX_new();
   if (md_ctx == nullptr) {
-    EVP_MD_CTX_free(md_ctx);
     throw std::runtime_error("Error creating signing context");
   }
 
   pkey_ctx = EVP_PKEY_CTX_new_from_name(nullptr, this->curve.c_str(), nullptr);
   if (pkey_ctx == nullptr) {
-    EVP_PKEY_CTX_free(pkey_ctx);
+    EVP_MD_CTX_free(md_ctx);
     throw std::runtime_error("Error creating signing context: " + this->curve);
   }
 
   if (EVP_DigestSignInit(md_ctx, &pkey_ctx, NULL, NULL, pkey) <= 0) {
     EVP_MD_CTX_free(md_ctx);
+    EVP_PKEY_CTX_free(pkey_ctx);
     char* err = ERR_error_string(ERR_get_error(), NULL);
     throw std::runtime_error("Failed to initialize signing: " + std::string(err));
   }
@@ -154,6 +169,7 @@ std::shared_ptr<ArrayBuffer> HybridEdKeyPair::signSync(const std::shared_ptr<Arr
   // Actually calculate the signature
   if (EVP_DigestSign(md_ctx, sig, &sig_len, message.get()->data(), message.get()->size()) <= 0) {
     EVP_MD_CTX_free(md_ctx);
+    delete[] sig;
     throw std::runtime_error("Failed to calculate signature");
   }
 
@@ -162,6 +178,7 @@ std::shared_ptr<ArrayBuffer> HybridEdKeyPair::signSync(const std::shared_ptr<Arr
 
   // Clean up
   EVP_MD_CTX_free(md_ctx);
+  // Note: pkey_ctx is freed automatically by EVP_MD_CTX_free when using EVP_DigestSignInit
 
   return signature;
 }
@@ -183,6 +200,9 @@ std::shared_ptr<Promise<bool>> HybridEdKeyPair::verify(const std::shared_ptr<Arr
 
 bool HybridEdKeyPair::verifySync(const std::shared_ptr<ArrayBuffer>& signature, const std::shared_ptr<ArrayBuffer>& message,
                                  const std::optional<std::shared_ptr<ArrayBuffer>>& key) {
+  // Clear any previous OpenSSL errors to prevent pollution
+  clearOpenSSLErrors();
+
   // get key to use for verifying
   EVP_PKEY* pkey = this->importPublicKey(key);
 
@@ -192,18 +212,18 @@ bool HybridEdKeyPair::verifySync(const std::shared_ptr<ArrayBuffer>& signature, 
   // key context
   md_ctx = EVP_MD_CTX_new();
   if (md_ctx == nullptr) {
-    EVP_MD_CTX_free(md_ctx);
     throw std::runtime_error("Error creating verify context");
   }
 
   pkey_ctx = EVP_PKEY_CTX_new_from_name(nullptr, this->curve.c_str(), nullptr);
   if (pkey_ctx == nullptr) {
-    EVP_PKEY_CTX_free(pkey_ctx);
+    EVP_MD_CTX_free(md_ctx);
     throw std::runtime_error("Error creating verify context: " + this->curve);
   }
 
   if (EVP_DigestVerifyInit(md_ctx, &pkey_ctx, NULL, NULL, pkey) <= 0) {
     EVP_MD_CTX_free(md_ctx);
+    EVP_PKEY_CTX_free(pkey_ctx);
     char* err = ERR_error_string(ERR_get_error(), NULL);
     throw std::runtime_error("Failed to initialize verify: " + std::string(err));
   }

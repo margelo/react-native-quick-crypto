@@ -29,8 +29,6 @@ class HybridKeyObjectHandle : public HybridKeyObjectHandleSpec {
   bool init(KeyType keyType, const std::variant<std::string, std::shared_ptr<ArrayBuffer>>& key, std::optional<KFormatType> format,
             std::optional<KeyEncoding> type, const std::optional<std::shared_ptr<ArrayBuffer>>& passphrase) override;
 
-  bool initECRaw(const std::string& curveName, const std::shared_ptr<ArrayBuffer>& keyData) override;
-
   std::optional<KeyType> initJwk(const JWK& keyData, std::optional<NamedCurve> namedCurve) override;
 
   KeyDetail keyDetail() override;

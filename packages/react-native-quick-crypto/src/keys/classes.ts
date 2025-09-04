@@ -3,11 +3,12 @@ import { NitroModules } from 'react-native-nitro-modules';
 import type {
   AsymmetricKeyType,
   EncodingOptions,
+  KeyDetail,
   KeyObjectHandle,
   KeyUsage,
   SubtleAlgorithm,
 } from '../utils';
-import { KeyType } from '../utils';
+import { KeyType, KFormatType, KeyEncoding } from '../utils';
 import { parsePrivateKeyEncoding, parsePublicKeyEncoding } from './utils';
 
 export class CryptoKey {
@@ -136,7 +137,20 @@ export class KeyObject {
       default:
         throw new Error('invalid key type');
     }
-    handle.init(keyType, key);
+
+    // Detect DER format by checking if the key starts with DER ASN.1 structure
+    const keyData = new Uint8Array(key);
+    const isDER = keyData.length > 10 && keyData[0] === 0x30; // ASN.1 SEQUENCE tag
+
+    if (isDER && (keyType === KeyType.PUBLIC || keyType === KeyType.PRIVATE)) {
+      // For DER-encoded keys, specify format and type
+      const format = KFormatType.DER;
+      const encoding =
+        keyType === KeyType.PUBLIC ? KeyEncoding.SPKI : KeyEncoding.PKCS8;
+      handle.init(keyType, key, format, encoding);
+    } else {
+      handle.init(keyType, key);
+    }
 
     // For asymmetric keys, return the appropriate subclass
     if (type === 'public' || type === 'private') {
@@ -224,22 +238,18 @@ export class AsymmetricKeyObject extends KeyObject {
     return this._asymmetricKeyType;
   }
 
-  // get asymmetricKeyDetails() {
-  //   switch (this._asymmetricKeyType) {
-  //     case 'rsa':
-  //     case 'rsa-pss':
-  //     case 'dsa':
-  //     case 'ec':
-  //       return (
-  //         this[kAsymmetricKeyDetails] ||
-  //         (this[kAsymmetricKeyDetails] = normalizeKeyDetails(
-  //           this[kHandle].keyDetail({})
-  //         ))
-  //       );
-  //     default:
-  //       return {};
-  //   }
-  // }
+  private _asymmetricKeyDetails?: KeyDetail;
+
+  get asymmetricKeyDetails() {
+    if (!this._asymmetricKeyDetails) {
+      this._asymmetricKeyDetails = this.handle.keyDetail();
+    }
+    return this._asymmetricKeyDetails;
+  }
+
+  get namedCurve(): string | undefined {
+    return this.asymmetricKeyDetails?.namedCurve;
+  }
 }
 
 export class PublicKeyObject extends AsymmetricKeyObject {

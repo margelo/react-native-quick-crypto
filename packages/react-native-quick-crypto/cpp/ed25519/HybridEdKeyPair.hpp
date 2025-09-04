@@ -11,6 +11,12 @@ namespace margelo::nitro::crypto {
 class HybridEdKeyPair : public HybridEdKeyPairSpec {
  public:
   HybridEdKeyPair() : HybridObject(TAG) {}
+  ~HybridEdKeyPair() {
+    if (pkey != nullptr) {
+      EVP_PKEY_free(pkey);
+      pkey = nullptr;
+    }
+  }
 
  public:
   // Methods

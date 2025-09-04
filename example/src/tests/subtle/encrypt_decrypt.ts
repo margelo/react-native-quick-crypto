@@ -30,10 +30,6 @@ import aes_gcm_fixtures from '../../fixtures/aes_gcm';
 import { assertThrowsAsync } from '../util';
 import { ab2str } from 'react-native-quick-crypto';
 
-import RNFE from 'react-native-fast-encoder';
-// @ts-expect-error polyfill types are wonky
-globalThis.TextEncoder = () => RNFE;
-
 export type RsaEncryptDecryptTestVector = {
   name: string;
   publicKey: Buffer | null;

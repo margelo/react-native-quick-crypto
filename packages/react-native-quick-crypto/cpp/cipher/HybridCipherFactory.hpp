@@ -40,12 +40,14 @@ class HybridCipherFactory : public HybridCipherFactorySpec {
           // Pass tag length (default 16 if not present)
           size_t tag_len = args.authTagLen.has_value() ? static_cast<size_t>(args.authTagLen.value()) : 16;
           std::static_pointer_cast<OCBCipher>(cipherInstance)->init(args.cipherKey, args.iv, tag_len);
+          EVP_CIPHER_free(cipher);
           return cipherInstance;
         }
         case EVP_CIPH_CCM_MODE: {
           cipherInstance = std::make_shared<CCMCipher>();
           cipherInstance->setArgs(args);
           cipherInstance->init(args.cipherKey, args.iv);
+          EVP_CIPHER_free(cipher);
           return cipherInstance;
         }
         case EVP_CIPH_STREAM_CIPHER: {
@@ -55,12 +57,14 @@ class HybridCipherFactory : public HybridCipherFactorySpec {
             cipherInstance = std::make_shared<ChaCha20Cipher>();
             cipherInstance->setArgs(args);
             cipherInstance->init(args.cipherKey, args.iv);
+            EVP_CIPHER_free(cipher);
             return cipherInstance;
           }
           if (cipherName == "chacha20-poly1305") {
             cipherInstance = std::make_shared<ChaCha20Poly1305Cipher>();
             cipherInstance->setArgs(args);
             cipherInstance->init(args.cipherKey, args.iv);
+            EVP_CIPHER_free(cipher);
             return cipherInstance;
           }
         }
@@ -69,6 +73,7 @@ class HybridCipherFactory : public HybridCipherFactorySpec {
           cipherInstance = std::make_shared<HybridCipher>();
           cipherInstance->setArgs(args);
           cipherInstance->init(args.cipherKey, args.iv);
+          EVP_CIPHER_free(cipher);
           return cipherInstance;
         }
       }

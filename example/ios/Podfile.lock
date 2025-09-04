@@ -1331,29 +1331,7 @@ PODS:
     - React-RCTFBReactNativeSpec
     - ReactCommon/turbomodule/core
     - ReactNativeDependencies
-  - react-native-fast-encoder (0.2.0):
-    - hermes-engine
-    - RCTRequired
-    - RCTTypeSafety
-    - React-Core
-    - React-Core-prebuilt
-    - React-debug
-    - React-Fabric
-    - React-featureflags
-    - React-graphics
-    - React-ImageManager
-    - React-jsi
-    - React-NativeModulesApple
-    - React-RCTFabric
-    - React-renderercss
-    - React-rendererdebug
-    - React-utils
-    - ReactCodegen
-    - ReactCommon/turbomodule/bridging
-    - ReactCommon/turbomodule/core
-    - ReactNativeDependencies
-    - Yoga
-  - react-native-quick-base64 (2.2.1):
+  - react-native-quick-base64 (2.2.2):
     - React-Core
   - react-native-safe-area-context (5.6.1):
     - hermes-engine
@@ -1884,8 +1862,7 @@ DEPENDENCIES:
   - React-logger (from `../../node_modules/react-native/ReactCommon/logger`)
   - React-Mapbuffer (from `../../node_modules/react-native/ReactCommon`)
   - React-microtasksnativemodule (from `../../node_modules/react-native/ReactCommon/react/nativemodule/microtasks`)
-  - react-native-fast-encoder (from `../../node_modules/react-native-fast-encoder`)
-  - react-native-quick-base64 (from `../node_modules/react-native-quick-base64`)
+  - react-native-quick-base64 (from `../../node_modules/react-native-quick-base64`)
   - react-native-safe-area-context (from `../../node_modules/react-native-safe-area-context`)
   - React-NativeModulesApple (from `../../node_modules/react-native/ReactCommon/react/nativemodule/core/platform/ios`)
   - React-oscompat (from `../../node_modules/react-native/ReactCommon/oscompat`)
@@ -2002,10 +1979,8 @@ EXTERNAL SOURCES:
     :path: "../../node_modules/react-native/ReactCommon"
   React-microtasksnativemodule:
     :path: "../../node_modules/react-native/ReactCommon/react/nativemodule/microtasks"
-  react-native-fast-encoder:
-    :path: "../../node_modules/react-native-fast-encoder"
   react-native-quick-base64:
-    :path: "../node_modules/react-native-quick-base64"
+    :path: "../../node_modules/react-native-quick-base64"
   react-native-safe-area-context:
     :path: "../../node_modules/react-native-safe-area-context"
   React-NativeModulesApple:
@@ -2116,8 +2091,7 @@ SPEC CHECKSUMS:
   React-logger: a1c9c8dfc56711d06a21109b55908e177113e554
   React-Mapbuffer: bc36232966c55d5b1cbef3b84cb97c4317fa4403
   React-microtasksnativemodule: cbabfedcf6c2984e59d07f9ab553f3d277599b1b
-  react-native-fast-encoder: f65266038936a5ade3a54d34755fce3c7bd92483
-  react-native-quick-base64: 7b7f689c9b7b4d40916bf5d27e211db1040abac5
+  react-native-quick-base64: 6568199bb2ac8e72ecdfdc73a230fbc5c1d3aac4
   react-native-safe-area-context: 42a1b4f8774b577d03b53de7326e3d5757fe9513
   React-NativeModulesApple: 055e2d1417c663e7a26fc0847609f503e626e9e1
   React-oscompat: 8f2893713639e12c7558750a9f7de3f08ac255b0

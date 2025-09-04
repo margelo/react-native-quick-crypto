@@ -35,8 +35,12 @@ namespace margelo::nitro::crypto {
     VERIFY      SWIFT_NAME(verify) = 3,
     DERIVEKEY      SWIFT_NAME(derivekey) = 4,
     DERIVEBITS      SWIFT_NAME(derivebits) = 5,
-    WRAPKEY      SWIFT_NAME(wrapkey) = 6,
-    UNWRAPKEY      SWIFT_NAME(unwrapkey) = 7,
+    ENCAPSULATEBITS      SWIFT_NAME(encapsulatebits) = 6,
+    DECAPSULATEBITS      SWIFT_NAME(decapsulatebits) = 7,
+    ENCAPSULATEKEY      SWIFT_NAME(encapsulatekey) = 8,
+    DECAPSULATEKEY      SWIFT_NAME(decapsulatekey) = 9,
+    WRAPKEY      SWIFT_NAME(wrapkey) = 10,
+    UNWRAPKEY      SWIFT_NAME(unwrapkey) = 11,
   } CLOSED_ENUM;
 
 } // namespace margelo::nitro::crypto
@@ -55,6 +59,10 @@ namespace margelo::nitro {
         case hashString("verify"): return margelo::nitro::crypto::KeyUsage::VERIFY;
         case hashString("deriveKey"): return margelo::nitro::crypto::KeyUsage::DERIVEKEY;
         case hashString("deriveBits"): return margelo::nitro::crypto::KeyUsage::DERIVEBITS;
+        case hashString("encapsulateBits"): return margelo::nitro::crypto::KeyUsage::ENCAPSULATEBITS;
+        case hashString("decapsulateBits"): return margelo::nitro::crypto::KeyUsage::DECAPSULATEBITS;
+        case hashString("encapsulateKey"): return margelo::nitro::crypto::KeyUsage::ENCAPSULATEKEY;
+        case hashString("decapsulateKey"): return margelo::nitro::crypto::KeyUsage::DECAPSULATEKEY;
         case hashString("wrapKey"): return margelo::nitro::crypto::KeyUsage::WRAPKEY;
         case hashString("unwrapKey"): return margelo::nitro::crypto::KeyUsage::UNWRAPKEY;
         default: [[unlikely]]
@@ -69,6 +77,10 @@ namespace margelo::nitro {
         case margelo::nitro::crypto::KeyUsage::VERIFY: return JSIConverter<std::string>::toJSI(runtime, "verify");
         case margelo::nitro::crypto::KeyUsage::DERIVEKEY: return JSIConverter<std::string>::toJSI(runtime, "deriveKey");
         case margelo::nitro::crypto::KeyUsage::DERIVEBITS: return JSIConverter<std::string>::toJSI(runtime, "deriveBits");
+        case margelo::nitro::crypto::KeyUsage::ENCAPSULATEBITS: return JSIConverter<std::string>::toJSI(runtime, "encapsulateBits");
+        case margelo::nitro::crypto::KeyUsage::DECAPSULATEBITS: return JSIConverter<std::string>::toJSI(runtime, "decapsulateBits");
+        case margelo::nitro::crypto::KeyUsage::ENCAPSULATEKEY: return JSIConverter<std::string>::toJSI(runtime, "encapsulateKey");
+        case margelo::nitro::crypto::KeyUsage::DECAPSULATEKEY: return JSIConverter<std::string>::toJSI(runtime, "decapsulateKey");
         case margelo::nitro::crypto::KeyUsage::WRAPKEY: return JSIConverter<std::string>::toJSI(runtime, "wrapKey");
         case margelo::nitro::crypto::KeyUsage::UNWRAPKEY: return JSIConverter<std::string>::toJSI(runtime, "unwrapKey");
         default: [[unlikely]]
@@ -88,6 +100,10 @@ namespace margelo::nitro {
         case hashString("verify"):
         case hashString("deriveKey"):
         case hashString("deriveBits"):
+        case hashString("encapsulateBits"):
+        case hashString("decapsulateBits"):
+        case hashString("encapsulateKey"):
+        case hashString("decapsulateKey"):
         case hashString("wrapKey"):
         case hashString("unwrapKey"):
           return true;

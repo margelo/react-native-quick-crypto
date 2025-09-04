@@ -15,6 +15,7 @@ add_library(
   ../cpp/cipher/XSalsa20Cipher.cpp
   ../cpp/cipher/ChaCha20Cipher.cpp
   ../cpp/cipher/ChaCha20Poly1305Cipher.cpp
+  ../cpp/ec/HybridEcKeyPair.cpp
   ../cpp/ed25519/HybridEdKeyPair.cpp
   ../cpp/hash/HybridHash.cpp
   ../cpp/hmac/HybridHmac.cpp
@@ -33,6 +34,7 @@ include(${CMAKE_SOURCE_DIR}/../nitrogen/generated/android/QuickCrypto+autolinkin
 include_directories(
   "src/main/cpp"
   "../cpp/cipher"
+  "../cpp/ec"
   "../cpp/ed25519"
   "../cpp/hash"
   "../cpp/hmac"
@@ -42,8 +44,6 @@ include_directories(
   "../cpp/utils"
   "../deps/fastpbkdf2"
   "../deps/ncrypto/include"
-  "../build/includes" # flattened Nitro Modules headers
-  "../../../node_modules/react-native/ReactCommon/jsi"
 )
 
 # Third party libraries (Prefabs)

@@ -3,7 +3,9 @@
 #include "CFRGKeyPairType.hpp"
 #include "HybridKeyObjectHandle.hpp"
 #include "Utils.hpp"
+#include <openssl/ec.h>
 #include <openssl/evp.h>
+#include <openssl/obj_mac.h>
 
 namespace margelo::nitro::crypto {
 
@@ -132,9 +134,16 @@ bool HybridKeyObjectHandle::init(KeyType keyType, const std::variant<std::string
     ab = std::get<std::shared_ptr<ArrayBuffer>>(key);
   }
 
-  // Handle raw asymmetric key material (curves only)
+  // Handle raw asymmetric key material - only for special curves with known raw sizes
   if (!format.has_value() && !type.has_value() && (keyType == KeyType::PUBLIC || keyType == KeyType::PRIVATE)) {
-    return initRawKey(keyType, ab);
+    size_t keySize = ab->size();
+    // Only route to initRawKey for exact special curve sizes:
+    // X25519/Ed25519: 32 bytes, X448: 56 bytes, Ed448: 57 bytes
+    // DER-encoded keys will be much larger and should use standard parsing
+    if ((keySize == 32) || (keySize == 56) || (keySize == 57)) {
+      return initRawKey(keyType, ab);
+    }
+    // For larger sizes (DER-encoded keys), fall through to standard parsing
   }
 
   switch (keyType) {
@@ -159,16 +168,37 @@ bool HybridKeyObjectHandle::init(KeyType keyType, const std::variant<std::string
   return true;
 }
 
-bool HybridKeyObjectHandle::initECRaw(const std::string& curveName, const std::shared_ptr<ArrayBuffer>& keyData) {
-  throw std::runtime_error("Not yet implemented");
-}
-
 std::optional<KeyType> HybridKeyObjectHandle::initJwk(const JWK& keyData, std::optional<NamedCurve> namedCurve) {
   throw std::runtime_error("Not yet implemented");
 }
 
 KeyDetail HybridKeyObjectHandle::keyDetail() {
-  throw std::runtime_error("Not yet implemented");
+  const auto& pkey_ptr = data_.GetAsymmetricKey();
+  if (!pkey_ptr) {
+    return KeyDetail{};
+  }
+
+  EVP_PKEY* pkey = pkey_ptr.get();
+
+  if (EVP_PKEY_base_id(pkey) == EVP_PKEY_EC) {
+    // Extract EC curve name
+    EC_KEY* ec_key = EVP_PKEY_get1_EC_KEY(pkey);
+    if (ec_key) {
+      const EC_GROUP* group = EC_KEY_get0_group(ec_key);
+      if (group) {
+        int nid = EC_GROUP_get_curve_name(group);
+        const char* curve_name = OBJ_nid2sn(nid);
+        if (curve_name) {
+          std::string namedCurve(curve_name);
+          EC_KEY_free(ec_key);
+          return KeyDetail(std::nullopt, std::nullopt, std::nullopt, std::nullopt, std::nullopt, std::nullopt, namedCurve);
+        }
+      }
+      EC_KEY_free(ec_key);
+    }
+  }
+
+  return KeyDetail{};
 }
 
 bool HybridKeyObjectHandle::initRawKey(KeyType keyType, std::shared_ptr<ArrayBuffer> keyData) {

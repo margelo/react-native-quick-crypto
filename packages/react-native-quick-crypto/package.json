@@ -75,7 +75,7 @@
     "@craftzdog/react-native-buffer": "6.1.0",
     "events": "3.3.0",
     "expo-build-properties": "0.14.6",
-    "react-native-quick-base64": "2.2.0",
+    "react-native-quick-base64": "2.2.2",
     "readable-stream": "4.5.2",
     "util": "0.12.5"
   },

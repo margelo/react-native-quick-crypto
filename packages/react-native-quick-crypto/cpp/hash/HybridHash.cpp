@@ -2,12 +2,12 @@
 #include <memory>
 #include <openssl/err.h>
 #include <openssl/evp.h>
-#include <openssl/opensslv.h>
 #include <optional>
 #include <string>
 #include <vector>
 
 #include "HybridHash.hpp"
+#include "Utils.hpp"
 
 namespace margelo::nitro::crypto {
 
@@ -23,6 +23,20 @@ HybridHash::~HybridHash() {
 }
 
 void HybridHash::createHash(const std::string& hashAlgorithmArg, const std::optional<double> outputLengthArg) {
+  // Clear any previous OpenSSL errors to prevent pollution
+  clearOpenSSLErrors();
+
+  // Clean up existing resources before creating new ones
+  if (ctx) {
+    EVP_MD_CTX_free(ctx);
+    ctx = nullptr;
+  }
+  if (md && md_fetched) {
+    EVP_MD_free(md);
+    md = nullptr;
+    md_fetched = false;
+  }
+
   algorithm = hashAlgorithmArg;
   outputLength = outputLengthArg;
 
