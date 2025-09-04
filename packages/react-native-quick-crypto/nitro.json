@@ -16,7 +16,8 @@
     "Hmac": { "cpp": "HybridHmac" },
     "KeyObjectHandle": { "cpp": "HybridKeyObjectHandle" },
     "Pbkdf2": { "cpp": "HybridPbkdf2" },
-    "Random": { "cpp": "HybridRandom" }
+    "Random": { "cpp": "HybridRandom" },
+    "RsaKeyPair": { "cpp": "HybridRsaKeyPair" }
   },
   "ignorePaths": ["node_modules", "lib"]
 }

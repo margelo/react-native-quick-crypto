@@ -22,6 +22,7 @@ import { asyncDigest } from './hash';
 import { createSecretKey } from './keys';
 import { pbkdf2DeriveBits } from './pbkdf2';
 import { ec_generateKeyPair } from './ec';
+import { rsa_generateKeyPair } from './rsa';
 
 // Placeholder imports - these modules need to be implemented or adapted
 // import { ecImportKey, ecExportKey, ecGenerateKey, ecdsaSignVerify } from './ec';
@@ -103,14 +104,6 @@ function aesCipher(
   _algorithm: EncryptDecryptParams,
 ): Promise<ArrayBuffer> {
   throw new Error('aesCipher not implemented');
-}
-
-async function rsaKeyGenerate(
-  _algorithm: SubtleAlgorithm,
-  _extractable: boolean,
-  _keyUsages: KeyUsage[],
-): Promise<CryptoKeyPair> {
-  throw new Error('rsaKeyGenerate not implemented');
 }
 
 async function aesGenerateKey(
@@ -501,7 +494,7 @@ export class Subtle {
       case 'RSA-PSS':
       // Fall through
       case 'RSA-OAEP':
-        result = await rsaKeyGenerate(algorithm, extractable, keyUsages);
+        result = await rsa_generateKeyPair(algorithm, extractable, keyUsages);
         break;
       case 'ECDSA':
       // Fall through

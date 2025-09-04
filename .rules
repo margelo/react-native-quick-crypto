@@ -8,6 +8,7 @@ Every time you choose to apply a rule(s), explicitly state the rule(s) in the ou
 - It uses Nitro Modules to bridge JS & C++.
 - Use the documentation of Nitro Modules if you have access locally to its `llms.txt` file.
 - Part of the API strives to be a polyfill of the Node.js `{crypto}` module.
+- When in doubt, favor in order: WebCrypto API, NodeJS implementation, 0.x implementation
 - The goal is to migrate 0.x of this library that uses OpenSSL 1.1.1 to now use OpenSSL 3.3 and modern C++ with Nitro Modules.
 
 ## Tech Stack

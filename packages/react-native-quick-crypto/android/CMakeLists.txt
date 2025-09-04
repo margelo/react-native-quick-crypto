@@ -23,6 +23,7 @@ add_library(
   ../cpp/keys/KeyObjectData.cpp
   ../cpp/pbkdf2/HybridPbkdf2.cpp
   ../cpp/random/HybridRandom.cpp
+  ../cpp/rsa/HybridRsaKeyPair.cpp
   ../deps/fastpbkdf2/fastpbkdf2.c
   ../deps/ncrypto/src/ncrypto.cpp
 )
@@ -41,6 +42,7 @@ include_directories(
   "../cpp/keys"
   "../cpp/pbkdf2"
   "../cpp/random"
+  "../cpp/rsa"
   "../cpp/utils"
   "../deps/fastpbkdf2"
   "../deps/ncrypto/include"

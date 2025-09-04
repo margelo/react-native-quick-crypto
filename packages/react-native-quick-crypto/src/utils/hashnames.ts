@@ -79,11 +79,13 @@ const kHashNames: HashNames = {
 }
 
 export function normalizeHashName(
-  algo: string | HashAlgorithm | undefined,
+  algo: string | HashAlgorithm | { name: string } | undefined,
   context: HashContext = HashContext.Node,
 ): HashAlgorithm {
   if (typeof algo !== 'undefined') {
-    const normAlgo = algo.toString().toLowerCase();
+    const hashName =
+      typeof algo === 'string' ? algo : algo.name || algo.toString();
+    const normAlgo = hashName.toLowerCase();
     try {
       const alias = kHashNames[normAlgo]![context] as HashAlgorithm;
       if (alias) return alias;

@@ -1,8 +1,9 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import { expect } from 'chai';
 import {
   subtle,
-  type AESAlgorithm,
-  type AESLength,
+  // type AESAlgorithm,
+  // type AESLength,
   type AnyAlgorithm,
   type NamedCurve,
 } from 'react-native-quick-crypto';
@@ -64,33 +65,33 @@ const vectors: Vectors = {
   //   result: 'CryptoKey',
   //   usages: ['sign', 'verify'],
   // },
-  // 'RSASSA-PKCS1-v1_5': {
-  //   algorithm: {
-  //     modulusLength: 1024,
-  //     publicExponent: new Uint8Array([1, 0, 1]),
-  //     hash: 'SHA-256',
-  //   },
-  //   result: 'CryptoKeyPair',
-  //   usages: ['sign', 'verify'],
-  // },
-  // 'RSA-PSS': {
-  //   algorithm: {
-  //     modulusLength: 1024,
-  //     publicExponent: new Uint8Array([1, 0, 1]),
-  //     hash: 'SHA-256',
-  //   },
-  //   result: 'CryptoKeyPair',
-  //   usages: ['sign', 'verify'],
-  // },
-  // 'RSA-OAEP': {
-  //   algorithm: {
-  //     modulusLength: 1024,
-  //     publicExponent: new Uint8Array([1, 0, 1]),
-  //     hash: 'SHA-256',
-  //   },
-  //   result: 'CryptoKeyPair',
-  //   usages: ['encrypt', 'decrypt', 'wrapKey', 'unwrapKey'],
-  // },
+  'RSASSA-PKCS1-v1_5': {
+    algorithm: {
+      modulusLength: 1024,
+      publicExponent: new Uint8Array([1, 0, 1]),
+      hash: 'SHA-256',
+    },
+    result: 'CryptoKeyPair',
+    usages: ['sign', 'verify'],
+  },
+  'RSA-PSS': {
+    algorithm: {
+      modulusLength: 1024,
+      publicExponent: new Uint8Array([1, 0, 1]),
+      hash: 'SHA-256',
+    },
+    result: 'CryptoKeyPair',
+    usages: ['sign', 'verify'],
+  },
+  'RSA-OAEP': {
+    algorithm: {
+      modulusLength: 1024,
+      publicExponent: new Uint8Array([1, 0, 1]),
+      hash: 'SHA-256',
+    },
+    result: 'CryptoKeyPair',
+    usages: ['encrypt', 'decrypt', 'wrapKey', 'unwrapKey'],
+  },
   ECDSA: {
     algorithm: { namedCurve: 'P-521' },
     result: 'CryptoKeyPair',
@@ -120,7 +121,6 @@ const vectors: Vectors = {
 };
 
 // Test invalid algorithms
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
 async function testInvalidAlgorithm(algorithm: any) {
   // one test is slightly different than the others
   const errorText =
@@ -231,206 +231,6 @@ async function testBadUsage(name: string) {
 const badUsageTests = Object.keys(vectors);
 badUsageTests.map(testBadUsage);
 
-/*
-  // Test RSA key generation
-  {
-    async function test(
-      name,
-      modulusLength,
-      publicExponent,
-      hash,
-      privateUsages,
-      publicUsages = privateUsages
-    ) {
-      let usages = privateUsages;
-      if (publicUsages !== privateUsages) usages = usages.concat(publicUsages);
-      const { publicKey, privateKey } = await subtle.generateKey(
-        {
-          name,
-          modulusLength,
-          publicExponent,
-          hash,
-        },
-        true,
-        usages
-      );
-
-      assert(publicKey);
-      assert(privateKey);
-      assert(isCryptoKey(publicKey));
-      assert(isCryptoKey(privateKey));
-
-      assert(publicKey instanceof CryptoKey);
-      assert(privateKey instanceof CryptoKey);
-
-      assert.strictEqual(publicKey.type, 'public');
-      assert.strictEqual(privateKey.type, 'private');
-      assert.strictEqual(publicKey.toString(), '[object CryptoKey]');
-      assert.strictEqual(privateKey.toString(), '[object CryptoKey]');
-      assert.strictEqual(publicKey.extractable, true);
-      assert.strictEqual(privateKey.extractable, true);
-      assert.deepStrictEqual(publicKey.usages, publicUsages);
-      assert.deepStrictEqual(privateKey.usages, privateUsages);
-      assert.strictEqual(publicKey.algorithm.name, name);
-      assert.strictEqual(publicKey.algorithm.modulusLength, modulusLength);
-      assert.deepStrictEqual(publicKey.algorithm.publicExponent, publicExponent);
-      assert.strictEqual(
-        KeyObject.from(publicKey).asymmetricKeyDetails.publicExponent,
-        bigIntArrayToUnsignedBigInt(publicExponent)
-      );
-      assert.strictEqual(publicKey.algorithm.hash.name, hash);
-      assert.strictEqual(privateKey.algorithm.name, name);
-      assert.strictEqual(privateKey.algorithm.modulusLength, modulusLength);
-      assert.deepStrictEqual(privateKey.algorithm.publicExponent, publicExponent);
-      assert.strictEqual(
-        KeyObject.from(privateKey).asymmetricKeyDetails.publicExponent,
-        bigIntArrayToUnsignedBigInt(publicExponent)
-      );
-      assert.strictEqual(privateKey.algorithm.hash.name, hash);
-
-      // Missing parameters
-      await assert.rejects(
-        subtle.generateKey({ name, publicExponent, hash }, true, usages),
-        {
-          code: 'ERR_MISSING_OPTION',
-        }
-      );
-
-      await assert.rejects(
-        subtle.generateKey({ name, modulusLength, hash }, true, usages),
-        {
-          code: 'ERR_MISSING_OPTION',
-        }
-      );
-
-      await assert.rejects(
-        subtle.generateKey({ name, modulusLength }, true, usages),
-        {
-          code: 'ERR_MISSING_OPTION',
-        }
-      );
-
-      await Promise.all(
-        [{}].map((modulusLength) => {
-          return assert.rejects(
-            subtle.generateKey(
-              {
-                name,
-                modulusLength,
-                publicExponent,
-                hash,
-              },
-              true,
-              usages
-            ),
-            {
-              code: 'ERR_INVALID_ARG_TYPE',
-            }
-          );
-        })
-      );
-
-      await Promise.all(
-        ['', true, {}, 1, [], new Uint32Array(2)].map((publicExponent) => {
-          return assert.rejects(
-            subtle.generateKey(
-              { name, modulusLength, publicExponent, hash },
-              true,
-              usages
-            ),
-            { code: 'ERR_INVALID_ARG_TYPE' }
-          );
-        })
-      );
-
-      await Promise.all(
-        [true, 1].map((hash) => {
-          return assert.rejects(
-            subtle.generateKey(
-              {
-                name,
-                modulusLength,
-                publicExponent,
-                hash,
-              },
-              true,
-              usages
-            ),
-            {
-              message: /Unrecognized algorithm name/,
-              name: 'NotSupportedError',
-            }
-          );
-        })
-      );
-
-      await Promise.all(
-        ['', {}, 1, false].map((usages) => {
-          return assert.rejects(
-            subtle.generateKey(
-              {
-                name,
-                modulusLength,
-                publicExponent,
-                hash,
-              },
-              true,
-              usages
-            ),
-            {
-              code: 'ERR_INVALID_ARG_TYPE',
-            }
-          );
-        })
-      );
-
-      await Promise.all(
-        [[1], [1, 0, 0]].map((publicExponent) => {
-          return assert.rejects(
-            subtle.generateKey(
-              {
-                name,
-                modulusLength,
-                publicExponent: new Uint8Array(publicExponent),
-                hash,
-              },
-              true,
-              usages
-            ),
-            {
-              name: 'OperationError',
-            }
-          );
-        })
-      );
-    }
-
-    const kTests = [
-      [
-        'RSASSA-PKCS1-v1_5',
-        1024,
-        Buffer.from([1, 0, 1]),
-        'SHA-256',
-        ['sign'],
-        ['verify'],
-      ],
-      ['RSA-PSS', 2048, Buffer.from([1, 0, 1]), 'SHA-512', ['sign'], ['verify']],
-      [
-        'RSA-OAEP',
-        1024,
-        Buffer.from([3]),
-        'SHA-384',
-        ['decrypt', 'unwrapKey'],
-        ['encrypt', 'wrapKey'],
-      ],
-    ];
-
-    const tests = kTests.map((args) => test(...args));
-
-    Promise.all(tests).then(common.mustCall());
-  }
-  */
-
 // Test EC Key Generation
 async function testECKeyGen(
   name: AnyAlgorithm,
@@ -505,11 +305,120 @@ testECKeyGen('ECDSA', 'P-521', ['sign'], ['verify']);
 testECKeyGen('ECDH', 'P-384', ['deriveKey', 'deriveBits'], []);
 testECKeyGen('ECDH', 'P-521', ['deriveKey', 'deriveBits'], []);
 
+// Test RSA Key Generation
+async function testRSAKeyGen(
+  name: 'RSASSA-PKCS1-v1_5' | 'RSA-PSS' | 'RSA-OAEP',
+  modulusLength: number,
+  publicExponent: Uint8Array,
+  hash: string,
+  privateUsages: KeyUsage[],
+  publicUsages: KeyUsage[] = privateUsages,
+) {
+  test(
+    SUITE,
+    `RSA keygen: ${name} ${modulusLength} ${hash} ${privateUsages} ${publicUsages}`,
+    async () => {
+      let usages = privateUsages;
+      if (publicUsages !== privateUsages) {
+        usages = usages.concat(publicUsages);
+      }
+
+      const keyPair = await subtle.generateKey(
+        {
+          name,
+          modulusLength,
+          publicExponent,
+          hash,
+        } as any,
+        true,
+        usages,
+      );
+
+      const { publicKey, privateKey } = keyPair as TestCryptoKeyPair;
+      expect(publicKey !== undefined);
+      expect(privateKey !== undefined);
+      expect(publicKey instanceof Object);
+      expect(privateKey instanceof Object);
+
+      expect(publicKey.type).to.equal('public');
+      expect(privateKey.type).to.equal('private');
+      expect(publicKey.extractable).to.equal(true);
+      expect(privateKey.extractable).to.equal(true);
+      expect(publicKey.usages).to.deep.equal(publicUsages);
+      expect(privateKey.usages).to.deep.equal(privateUsages);
+      expect(publicKey.algorithm.name).to.equal(name);
+      expect(privateKey.algorithm.name).to.equal(name);
+      expect((publicKey.algorithm as any).modulusLength).to.equal(
+        modulusLength,
+      );
+      expect((privateKey.algorithm as any).modulusLength).to.equal(
+        modulusLength,
+      );
+      expect((publicKey.algorithm as any).publicExponent).to.deep.equal(
+        publicExponent,
+      );
+      expect((privateKey.algorithm as any).publicExponent).to.deep.equal(
+        publicExponent,
+      );
+      expect((publicKey.algorithm as any).hash.name).to.equal(hash);
+      expect((privateKey.algorithm as any).hash.name).to.equal(hash);
+
+      // Test invalid usage
+      await assertThrowsAsync(
+        async () =>
+          subtle.generateKey(
+            { name, modulusLength, publicExponent, hash } as any,
+            true,
+            name === 'RSA-OAEP' ? ['sign'] : ['encrypt'],
+          ),
+        `Unsupported key usage for a ${name} key`,
+      );
+
+      // Test invalid modulus length
+      await assertThrowsAsync(
+        async () =>
+          subtle.generateKey(
+            { name, modulusLength: 0, publicExponent, hash } as any,
+            true,
+            usages,
+          ),
+        'Invalid key length',
+      );
+    },
+  );
+}
+
+testRSAKeyGen(
+  'RSASSA-PKCS1-v1_5',
+  1024,
+  new Uint8Array([1, 0, 1]),
+  'SHA-256',
+  ['sign'],
+  ['verify'],
+);
+testRSAKeyGen(
+  'RSA-PSS',
+  2048,
+  new Uint8Array([1, 0, 1]),
+  'SHA-512',
+  ['sign'],
+  ['verify'],
+);
+testRSAKeyGen(
+  'RSA-OAEP',
+  1024,
+  new Uint8Array([3]),
+  'SHA-384',
+  ['decrypt', 'unwrapKey'],
+  ['encrypt', 'wrapKey'],
+);
+
+/*
 // Test AES Key Generation
 type AESArgs = [AESAlgorithm, AESLength, KeyUsage[]];
 async function testAesKeyGen(args: AESArgs) {
   const [name, length, usages] = args;
-  it(`AES keygen: ${name} ${length} ${usages}`, async () => {
+  test(SUITE, `AES keygen: ${name} ${length} ${usages}`, async () => {
     const key = await subtle.generateKey({ name, length }, true, usages);
     const k = key as CryptoKey;
     expect(k !== undefined);
@@ -549,6 +458,7 @@ const aesTests: AESArgs[] = [
 ];
 
 aesTests.map(args => testAesKeyGen(args));
+*/
 
 /*
   // Test HMAC Key Generation
