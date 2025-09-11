@@ -21,11 +21,8 @@ import { validateMaxBufferLength } from './utils/validation';
 import { asyncDigest } from './hash';
 import { createSecretKey } from './keys';
 import { pbkdf2DeriveBits } from './pbkdf2';
-import { ec_generateKeyPair } from './ec';
+import { ecImportKey, ecdsaSignVerify, ec_generateKeyPair } from './ec';
 import { rsa_generateKeyPair } from './rsa';
-
-// Placeholder imports - these modules need to be implemented or adapted
-// import { ecImportKey, ecExportKey, ecGenerateKey, ecdsaSignVerify } from './ec';
 // import { pbkdf2DeriveBits } from './pbkdf2';
 // import { aesCipher, aesGenerateKey, aesImportKey, getAlgorithmName } from './aes';
 // import { rsaCipher, rsaExportKey, rsaImportKey, rsaKeyGenerate } from './rsa';
@@ -79,15 +76,6 @@ function rsaExportKey(
   throw new Error('rsaExportKey not implemented');
 }
 
-function ecdsaSignVerify(
-  _key: CryptoKey,
-  _data: BufferLike,
-  _algorithm: SubtleAlgorithm,
-  _signature?: BufferLike,
-): ArrayBuffer | boolean {
-  throw new Error('ecdsaSignVerify not implemented');
-}
-
 function rsaCipher(
   _mode: CipherOrWrapMode,
   _key: CryptoKey,
@@ -122,16 +110,6 @@ function rsaImportKey(
   _keyUsages: KeyUsage[],
 ): CryptoKey {
   throw new Error('rsaImportKey not implemented');
-}
-
-function ecImportKey(
-  _format: ImportFormat,
-  _data: BufferLike | BinaryLike | JWK,
-  _algorithm: SubtleAlgorithm,
-  _extractable: boolean,
-  _keyUsages: KeyUsage[],
-): CryptoKey {
-  throw new Error('ecImportKey not implemented');
 }
 
 async function hmacImportKey(
@@ -499,7 +477,12 @@ export class Subtle {
       case 'ECDSA':
       // Fall through
       case 'ECDH':
-        result = await ec_generateKeyPair(algorithm, extractable, keyUsages);
+        result = await ec_generateKeyPair(
+          algorithm.name,
+          algorithm.namedCurve!,
+          extractable,
+          keyUsages,
+        );
         checkCryptoKeyPairUsages(result as CryptoKeyPair);
         break;
       case 'AES-CTR':

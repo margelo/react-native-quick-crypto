@@ -116,7 +116,12 @@ export class KeyObject {
   //   return key[kKeyObject];
   // }
 
-  static createKeyObject(type: string, key: ArrayBuffer): KeyObject {
+  static createKeyObject(
+    type: string,
+    key: ArrayBuffer,
+    format?: 'der' | 'pem',
+    encoding?: 'pkcs8' | 'spki' | 'sec1',
+  ): KeyObject {
     if (type !== 'secret' && type !== 'public' && type !== 'private')
       throw new Error(`invalid KeyObject type: ${type}`);
 
@@ -138,16 +143,22 @@ export class KeyObject {
         throw new Error('invalid key type');
     }
 
-    // Detect DER format by checking if the key starts with DER ASN.1 structure
-    const keyData = new Uint8Array(key);
-    const isDER = keyData.length > 10 && keyData[0] === 0x30; // ASN.1 SEQUENCE tag
-
-    if (isDER && (keyType === KeyType.PUBLIC || keyType === KeyType.PRIVATE)) {
-      // For DER-encoded keys, specify format and type
-      const format = KFormatType.DER;
-      const encoding =
-        keyType === KeyType.PUBLIC ? KeyEncoding.SPKI : KeyEncoding.PKCS8;
-      handle.init(keyType, key, format, encoding);
+    // If format and encoding are explicitly provided, use them
+    if (
+      format &&
+      encoding &&
+      (keyType === KeyType.PUBLIC || keyType === KeyType.PRIVATE)
+    ) {
+      const kFormat = format === 'der' ? KFormatType.DER : KFormatType.PEM;
+      const kEncoding =
+        encoding === 'spki'
+          ? KeyEncoding.SPKI
+          : encoding === 'pkcs8'
+            ? KeyEncoding.PKCS8
+            : encoding === 'sec1'
+              ? KeyEncoding.SEC1
+              : KeyEncoding.SEC1;
+      handle.init(keyType, key, kFormat, kEncoding);
     } else {
       handle.init(keyType, key);
     }

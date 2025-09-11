@@ -25,7 +25,7 @@ add_library(
   ../cpp/random/HybridRandom.cpp
   ../cpp/rsa/HybridRsaKeyPair.cpp
   ../deps/fastpbkdf2/fastpbkdf2.c
-  ../deps/ncrypto/src/ncrypto.cpp
+  ../deps/ncrypto/ncrypto.cc
 )
 
 # add Nitrogen specs
@@ -45,7 +45,7 @@ include_directories(
   "../cpp/rsa"
   "../cpp/utils"
   "../deps/fastpbkdf2"
-  "../deps/ncrypto/include"
+  "../deps/ncrypto"
 )
 
 # Third party libraries (Prefabs)

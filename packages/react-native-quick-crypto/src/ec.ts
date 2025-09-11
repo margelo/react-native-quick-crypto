@@ -1,36 +1,31 @@
 import { NitroModules } from 'react-native-nitro-modules';
-import {
-  PublicKeyObject,
-  PrivateKeyObject,
-  CryptoKey,
-  KeyObject,
-} from './keys/classes';
 import type { EcKeyPair } from './specs/ecKeyPair.nitro';
 import {
-  // KeyType,
-  // KeyFormat,
-  // ab2str,
-  // bufferLikeToArrayBuffer,
-  // binaryLikeToArrayBuffer,
+  CryptoKey,
+  KeyObject,
+  PublicKeyObject,
+  PrivateKeyObject,
+} from './keys';
+import type {
+  CryptoKeyPair,
+  KeyPairOptions,
+  KeyUsage,
+  SubtleAlgorithm,
+  BufferLike,
+  BinaryLike,
+  JWK,
+  ImportFormat,
+} from './utils/types';
+import {
+  bufferLikeToArrayBuffer,
   getUsagesUnion,
   hasAnyNotIn,
   kNamedCurveAliases,
   lazyDOMException,
-  // normalizeHashName,
-  // validateKeyOps,
-} from './utils';
-import type {
-  // AnyAlgorithm,
-  // BufferLike,
-  // BinaryLike,
-  CryptoKeyPair,
-  // ImportFormat,
-  KeyUsage,
-  // NamedCurve,
-  // JWK,
-  SubtleAlgorithm,
-  // AsymmetricKeyType,
-  // KeyObjectHandle,
+  normalizeHashName,
+  HashContext,
+  KeyEncoding,
+  KFormatType,
 } from './utils';
 
 export class Ec {
@@ -87,7 +82,7 @@ export class Ec {
 
 // function createECPublicKeyRaw(
 //   namedCurve: NamedCurve | undefined,
-//   keyData: ArrayBuffer,
+//   keyDataBuffer: ArrayBuffer,
 // ): PublicKeyObject {
 //   if (!namedCurve) {
 //     throw new Error('Invalid namedCurve');
@@ -96,8 +91,8 @@ export class Ec {
 //     'KeyObjectHandle',
 //   ) as KeyObjectHandle;
 
-//   if (!handle.initECRaw(kNamedCurveAliases[namedCurve], keyData)) {
-//     console.log('keyData', ab2str(keyData));
+//   if (!handle.initECRaw(kNamedCurveAliases[namedCurve], keyDataBuffer)) {
+//     console.log('keyData', ab2str(keyDataBuffer));
 //     throw new Error('Invalid keyData 1');
 //   }
 
@@ -109,49 +104,84 @@ export class Ec {
 //   return ec.native.exportKey(format, key.keyObject.handle);
 // }
 
-// // Node API
-// export function ecImportKey(
-//   format: ImportFormat,
-//   keyData: BufferLike | BinaryLike | JWK,
-//   algorithm: SubtleAlgorithm,
-//   extractable: boolean,
-//   keyUsages: KeyUsage[],
-// ): CryptoKey {
-//   const { name, namedCurve } = algorithm;
+// Node API
+export function ecImportKey(
+  format: ImportFormat,
+  keyData: BufferLike | BinaryLike | JWK,
+  algorithm: SubtleAlgorithm,
+  extractable: boolean,
+  keyUsages: KeyUsage[],
+): CryptoKey {
+  const { name, namedCurve } = algorithm;
 
-//   // if (!ArrayPrototypeIncludes(ObjectKeys(kNamedCurveAliases), namedCurve)) {
-//   //   throw lazyDOMException('Unrecognized namedCurve', 'NotSupportedError');
-//   // }
+  if (
+    !namedCurve ||
+    !kNamedCurveAliases[namedCurve as keyof typeof kNamedCurveAliases]
+  ) {
+    throw lazyDOMException('Unrecognized namedCurve', 'NotSupportedError');
+  }
 
-//   let keyObject;
-//   // const usagesSet = new SafeSet(keyUsages);
-//   switch (format) {
-//     // case 'spki': {
-//     //   // verifyAcceptableEcKeyUse(name, true, usagesSet);
-//     //   try {
-//     //     keyObject = createPublicKey({
-//     //       key: keyData,
-//     //       format: 'der',
-//     //       type: 'spki',
-//     //     });
-//     //   } catch (err) {
-//     //     throw new Error(`Invalid keyData 2: ${err}`);
-//     //   }
-//     //   break;
-//     // }
-//     // case 'pkcs8': {
-//     //   // verifyAcceptableEcKeyUse(name, false, usagesSet);
-//     //   try {
-//     //     keyObject = createPrivateKey({
-//     //       key: keyData,
-//     //       format: 'der',
-//     //       type: 'pkcs8',
-//     //     });
-//     //   } catch (err) {
-//     //     throw new Error(`Invalid keyData 3 ${err}`);
-//     //   }
-//     //   break;
-//     // }
+  if (format !== 'spki' && format !== 'pkcs8' && format !== 'raw') {
+    throw lazyDOMException(
+      `Unsupported format: ${format}`,
+      'NotSupportedError',
+    );
+  }
+
+  // Handle JWK format separately
+  if (typeof keyData === 'object' && 'kty' in keyData) {
+    throw lazyDOMException('JWK format not yet supported', 'NotSupportedError');
+  }
+
+  // Convert keyData to ArrayBuffer
+  const keyBuffer = bufferLikeToArrayBuffer(keyData as BufferLike);
+
+  // Create EC instance with the curve
+  const ec = new Ec(namedCurve);
+
+  // Import the key using Nitro module
+  ec.native.importKey(
+    format === 'raw' ? 'der' : format, // Convert raw to der for now
+    keyBuffer,
+    name,
+    extractable,
+    keyUsages,
+  );
+
+  // Create a KeyObject wrapper for the imported key
+  // Use the EC instance's key data to create a proper KeyObject
+  const privateKeyData = ec.native.getPrivateKey();
+  const keyObject = new KeyObject('private', privateKeyData);
+
+  // Create and return CryptoKey
+  return new CryptoKey(keyObject, algorithm, keyUsages, extractable);
+  //     //   // verifyAcceptableEcKeyUse(name, true, usagesSet);
+  //     //   try {
+  //     //     keyObject = createPublicKey({
+  //     //       key: keyData,
+  //     //       format: 'der',
+  //     //       type: 'spki',
+  //     //     });
+  //     //   } catch (err) {
+  //     //     throw new Error(`Invalid keyData 2: ${err}`);
+  //     //   }
+  //     //   break;
+  //     // }
+  //     // case 'pkcs8': {
+  //     //   // verifyAcceptableEcKeyUse(name, false, usagesSet);
+  //     //   try {
+  //     //     keyObject = createPrivateKey({
+  //     //       key: keyData,
+  //     //       format: 'der',
+  //     //       type: 'pkcs8',
+  //     //     });
+  //     //   } catch (err) {
+  //     //     throw new Error(`Invalid keyData 3 ${err}`);
+  //     //   }
+  //     //   break;
+  //     // }
+}
+
 //     case 'jwk': {
 //       const data = keyData as JWK;
 
@@ -250,48 +280,75 @@ export class Ec {
 //   return new CryptoKey(keyObject, { name, namedCurve }, keyUsages, extractable);
 // }
 
-// // Node API
-// export const ecdsaSignVerify = (
-//   key: CryptoKey,
-//   data: BufferLike,
-//   { hash }: SubtleAlgorithm,
-//   signature?: BufferLike,
-// ) => {
-//   const mode: SignMode =
-//     signature === undefined
-//       ? SignMode.kSignJobModeSign
-//       : SignMode.kSignJobModeVerify;
-//   const type = mode === SignMode.kSignJobModeSign ? 'private' : 'public';
+// Node API
+export const ecdsaSignVerify = (
+  key: CryptoKey,
+  data: BufferLike,
+  { hash }: SubtleAlgorithm,
+  signature?: BufferLike,
+): ArrayBuffer | boolean => {
+  const isSign = signature === undefined;
+  const expectedKeyType = isSign ? 'private' : 'public';
 
-//   if (key.type !== type)
-//     throw lazyDOMException(`Key must be a ${type} key`, 'InvalidAccessError');
+  if (key.type !== expectedKeyType) {
+    throw lazyDOMException(
+      `Key must be a ${expectedKeyType} key`,
+      'InvalidAccessError',
+    );
+  }
 
-//   const hashname = normalizeHashName(hash);
+  const hashName = typeof hash === 'string' ? hash : hash?.name;
 
-//   return NativeQuickCrypto.webcrypto.signVerify(
-//     mode,
-//     key.keyObject.handle,
-//     // three undefined args because C++ uses `GetPublicOrPrivateKeyFromJs` & friends
-//     undefined,
-//     undefined,
-//     undefined,
-//     bufferLikeToArrayBuffer(data),
-//     hashname,
-//     undefined, // salt length, not used with ECDSA
-//     undefined, // pss padding, not used with ECDSA
-//     DSASigEnc.kSigEncP1363,
-//     bufferLikeToArrayBuffer(signature || new ArrayBuffer(0)),
-//   );
-// };
+  if (!hashName) {
+    throw lazyDOMException(
+      'Hash algorithm is required for ECDSA',
+      'InvalidAccessError',
+    );
+  }
+
+  // Normalize hash algorithm name to WebCrypto format for C++ layer
+  const normalizedHashName = normalizeHashName(hashName, HashContext.WebCrypto);
+
+  // Create EC instance with the curve from the key
+  const namedCurve = key.algorithm.namedCurve!;
+  const ec = new Ec(namedCurve);
+
+  // Extract and import the actual key data from the CryptoKey
+  // Export in DER format with appropriate encoding
+  const encoding =
+    key.type === 'private' ? KeyEncoding.PKCS8 : KeyEncoding.SPKI;
+  const keyData = key.keyObject.handle.exportKey(KFormatType.DER, encoding);
+  const keyBuffer = bufferLikeToArrayBuffer(keyData);
+  ec.native.importKey(
+    'der',
+    keyBuffer,
+    key.algorithm.name!,
+    key.extractable,
+    key.usages,
+  );
+
+  const dataBuffer = bufferLikeToArrayBuffer(data);
+
+  if (isSign) {
+    // Sign operation
+    return ec.native.sign(dataBuffer, normalizedHashName);
+  } else {
+    // Verify operation
+    const signatureBuffer = bufferLikeToArrayBuffer(signature!);
+    return ec.native.verify(dataBuffer, signatureBuffer, normalizedHashName);
+  }
+};
 
 // Node API
-export const ec_generateKeyPair = async (
-  algorithm: SubtleAlgorithm,
+
+export async function ec_generateKeyPair(
+  name: string,
+  namedCurve: string,
   extractable: boolean,
   keyUsages: KeyUsage[],
-): Promise<CryptoKeyPair> => {
-  const { name, namedCurve } = algorithm;
-
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  _options?: KeyPairOptions, // TODO: Implement format options support
+): Promise<CryptoKeyPair> {
   // validation checks
   if (!Object.keys(kNamedCurveAliases).includes(namedCurve || '')) {
     throw lazyDOMException(
@@ -338,25 +395,38 @@ export const ec_generateKeyPair = async (
 
   const keyAlgorithm = { name, namedCurve: namedCurve! };
 
-  // Create KeyObject instances using the standard createKeyObject method
+  // Export keys directly from the EC key pair using the internal EVP_PKEY
+  // These methods export in DER format (SPKI for public, PKCS8 for private)
   const publicKeyData = ec.native.getPublicKey();
+  const privateKeyData = ec.native.getPrivateKey();
+
   const pub = KeyObject.createKeyObject(
     'public',
     publicKeyData,
+    'der',
+    'spki',
   ) as PublicKeyObject;
-  const publicKey = new CryptoKey(pub, keyAlgorithm, publicUsages, true);
+  const publicKey = new CryptoKey(
+    pub,
+    keyAlgorithm as SubtleAlgorithm,
+    publicUsages,
+    true,
+  );
 
-  const privateKeyData = ec.native.getPrivateKey();
+  // All keys are now exported in PKCS8 format for consistency
+  const privateEncoding = 'pkcs8';
   const priv = KeyObject.createKeyObject(
     'private',
     privateKeyData,
+    'der',
+    privateEncoding as 'pkcs8' | 'spki' | 'sec1',
   ) as PrivateKeyObject;
   const privateKey = new CryptoKey(
     priv,
-    keyAlgorithm,
+    keyAlgorithm as SubtleAlgorithm,
     privateUsages,
     extractable,
   );
 
   return { publicKey, privateKey };
-};
+}

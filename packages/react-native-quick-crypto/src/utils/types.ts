@@ -419,3 +419,17 @@ export type Operation =
   | 'importKey'
   | 'exportKey'
   | 'deriveBits';
+
+export interface KeyPairOptions {
+  namedCurve: string;
+  publicKeyEncoding?: {
+    type: 'spki';
+    format: 'pem' | 'der';
+  };
+  privateKeyEncoding?: {
+    type: 'pkcs8';
+    format: 'pem' | 'der';
+    cipher?: string;
+    passphrase?: string;
+  };
+}
