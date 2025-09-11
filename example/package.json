@@ -26,7 +26,7 @@
     "@noble/curves": "^1.7.0",
     "@noble/hashes": "^1.5.0",
     "@react-navigation/bottom-tabs": "^6.6.1",
-    "@react-navigation/native": "^6.1.18",
+    "@react-navigation/native": "^7.1.17",
     "@react-navigation/native-stack": "^6.11.0",
     "buffer": "6.0.3",
     "chai": "<5.0.0",
