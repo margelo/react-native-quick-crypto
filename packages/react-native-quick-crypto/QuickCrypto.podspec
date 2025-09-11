@@ -93,7 +93,7 @@ Pod::Spec.new do |s|
     # implementation (C++)
     "cpp/**/*.{hpp,cpp}",
     # dependencies (C++)
-    "deps/**/*.{hpp,cpp}",
+    "deps/**/*.{h,cc,c}",
     # dependencies (C)
     "deps/**/*.{h,c}",
   ]

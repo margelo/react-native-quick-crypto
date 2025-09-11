@@ -43,7 +43,7 @@ include_directories(
   "cpp/random"
   "cpp/utils"
   "deps/fastpbkdf2"
-  "deps/ncrypto/include"
+  "deps/ncrypto"
   "build/includes"
   "nitrogen/generated/shared/c++"
   "../../node_modules/react-native/ReactCommon/jsi"
@@ -65,7 +65,7 @@ add_library(QuickCrypto STATIC
   cpp/pbkdf2/HybridPbkdf2.cpp
   cpp/random/HybridRandom.cpp
   deps/fastpbkdf2/fastpbkdf2.c
-  deps/ncrypto/src/ncrypto.cpp
+  deps/ncrypto/ncrypto.cc
 )
 EOF
 
