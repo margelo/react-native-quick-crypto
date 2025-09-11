@@ -400,7 +400,7 @@ This document attempts to describe the implementation status of Crypto APIs/Inte
 ## `subtle.sign`
 | Algorithm           | Status |
 | ---------           | :----: |
-| `ECDSA`             | ❌ |
+| `ECDSA`             | ✅ |
 | `Ed25519`           | ❌ |
 | `Ed448`             | ❌ |
 | `HMAC`              | ❌ |
@@ -452,7 +452,7 @@ This document attempts to describe the implementation status of Crypto APIs/Inte
 ## `subtle.verify`
 | Algorithm           | Status |
 | ---------           | :----: |
-| `ECDSA`             | ❌ |
+| `ECDSA`             | ✅ |
 | `Ed25519`           | ❌ |
 | `Ed448`             | ❌ |
 | `HMAC`              | ❌ |

@@ -29,7 +29,11 @@ class HybridEcKeyPair : public HybridEcKeyPairSpec {
   std::shared_ptr<ArrayBuffer> exportKey(const KeyObject& key, const std::string& format) override;
   std::shared_ptr<ArrayBuffer> getPublicKey() override;
   std::shared_ptr<ArrayBuffer> getPrivateKey() override;
+
   void setCurve(const std::string& curve) override;
+  std::shared_ptr<ArrayBuffer> sign(const std::shared_ptr<ArrayBuffer>& data, const std::string& hashAlgorithm) override;
+  bool verify(const std::shared_ptr<ArrayBuffer>& data, const std::shared_ptr<ArrayBuffer>& signature,
+              const std::string& hashAlgorithm) override;
 
  protected:
   void checkKeyPair();

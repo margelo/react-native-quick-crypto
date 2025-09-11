@@ -62,6 +62,8 @@ namespace margelo::nitro::crypto {
       virtual std::shared_ptr<ArrayBuffer> getPublicKey() = 0;
       virtual std::shared_ptr<ArrayBuffer> getPrivateKey() = 0;
       virtual void setCurve(const std::string& curve) = 0;
+      virtual std::shared_ptr<ArrayBuffer> sign(const std::shared_ptr<ArrayBuffer>& data, const std::string& hashAlgorithm) = 0;
+      virtual bool verify(const std::shared_ptr<ArrayBuffer>& data, const std::shared_ptr<ArrayBuffer>& signature, const std::string& hashAlgorithm) = 0;
 
     protected:
       // Hybrid Setup

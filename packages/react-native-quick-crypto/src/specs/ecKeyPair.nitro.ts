@@ -27,4 +27,12 @@ export interface EcKeyPair
   getPrivateKey(): ArrayBuffer;
 
   setCurve(curve: string): void;
+
+  // ECDSA sign/verify operations
+  sign(data: ArrayBuffer, hashAlgorithm: string): ArrayBuffer;
+  verify(
+    data: ArrayBuffer,
+    signature: ArrayBuffer,
+    hashAlgorithm: string,
+  ): boolean;
 }

@@ -21,6 +21,8 @@ namespace margelo::nitro::crypto {
       prototype.registerHybridMethod("getPublicKey", &HybridEcKeyPairSpec::getPublicKey);
       prototype.registerHybridMethod("getPrivateKey", &HybridEcKeyPairSpec::getPrivateKey);
       prototype.registerHybridMethod("setCurve", &HybridEcKeyPairSpec::setCurve);
+      prototype.registerHybridMethod("sign", &HybridEcKeyPairSpec::sign);
+      prototype.registerHybridMethod("verify", &HybridEcKeyPairSpec::verify);
     });
   }
 

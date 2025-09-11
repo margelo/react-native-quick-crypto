@@ -126,6 +126,9 @@ CFRGKeyPairType HybridKeyObjectHandle::getAsymmetricKeyType() {
 bool HybridKeyObjectHandle::init(KeyType keyType, const std::variant<std::string, std::shared_ptr<ArrayBuffer>>& key,
                                  std::optional<KFormatType> format, std::optional<KeyEncoding> type,
                                  const std::optional<std::shared_ptr<ArrayBuffer>>& passphrase) {
+  // Reset any existing data to prevent state leakage
+  data_ = KeyObjectData();
+
   // get ArrayBuffer from key
   std::shared_ptr<ArrayBuffer> ab;
   if (std::holds_alternative<std::string>(key)) {
