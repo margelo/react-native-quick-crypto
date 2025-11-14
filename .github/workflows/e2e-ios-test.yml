@@ -47,13 +47,6 @@ jobs:
           mkdir -p /tmp/e2e-output
           mkdir -p $HOME/.maestro/tests/
 
-      - name: Setup Rust
-        uses: dtolnay/rust-toolchain@stable
-
-      - name: Install iOS Rust Targets
-        run: |
-          rustup target add aarch64-apple-ios x86_64-apple-ios aarch64-apple-ios-sim
-
       - name: Install Dependencies
         run: bun install
 

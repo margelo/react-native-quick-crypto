@@ -71,13 +71,6 @@ jobs:
       - name: Setup Android SDK
         uses: android-actions/setup-android@v3
 
-      - name: Setup Rust
-        uses: dtolnay/rust-toolchain@stable
-
-      - name: Install Android Rust Target (x86_64 only)
-        run: |
-          rustup target add x86_64-linux-android
-
       - name: Install Dependencies
         run: bun install
 
