@@ -37,11 +37,16 @@ export MAESTRO_CLI_NO_ANALYTICS=1
 export MAESTRO_CLI_ANALYSIS_NOTIFICATION_DISABLED=true
 
 echo "Running End-to-End tests on Android..."
+
+# Run maestro and capture exit code (don't exit immediately on failure)
+set +e
 maestro test \
   test/e2e/test-suites-flow.yml \
   --config .maestro/config.yml \
   --env PLATFORM=android \
   --test-output-dir $HOME/output
+MAESTRO_EXIT_CODE=$?
+set -e
 
 echo "Listing Output Directory"
 ls -l $HOME/output/**
@@ -55,3 +60,6 @@ if [ -n "$LATEST_SCREENSHOT" ]; then
 else
   echo "No screenshot found to copy"
 fi
+
+# Exit with the original Maestro exit code
+exit $MAESTRO_EXIT_CODE
