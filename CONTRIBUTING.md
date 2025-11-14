@@ -27,10 +27,22 @@ If you are using a VSCode-flavored IDE and the `clangd` extension, you can use t
 
 While developing, you can run the [example app](/example/) to test your changes. Any changes you make in your library's JavaScript code will be reflected in the example app without a rebuild. If you change any native code, then you'll need to rebuild the example app.
 
-To start the packager:
+To develop in iOS, build the CocoaPods dependencies:
 
 ```sh
-bun example
+pod install
+```
+
+To start the Metro bundler/packager:
+
+```sh
+bun start
+```
+
+
+To start the app:
+```sh
+bun ios # or android
 ```
 
 Make sure your code passes TypeScript and ESLint. Run the following to verify:
