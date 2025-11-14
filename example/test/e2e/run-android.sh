@@ -28,7 +28,7 @@ curl -f http://localhost:8081/status || echo "Metro not responding"
 
 # Check if app is installed
 echo "Checking if app is installed..."
-adb shell pm list packages | grep com.quickcryptoexample || echo "App not found"
+adb shell pm list packages | grep com.margelo.quickcrypto.example || echo "App not found"
 
 # run the e2e tests
 export PATH="$PATH":"$HOME/.maestro/bin"

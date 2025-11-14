@@ -1,4 +1,4 @@
-package com.quickcryptoexample
+package com.margelo.quickcrypto.example
 
 import android.app.Application
 import com.facebook.react.PackageList

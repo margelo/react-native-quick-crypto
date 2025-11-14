@@ -1,4 +1,4 @@
-appId: org.reactjs.native.example.QuickCryptoExample
+appId: com.margelo.quickcrypto.example
 jsEngine: graaljs
 ---
 # Launch the app
