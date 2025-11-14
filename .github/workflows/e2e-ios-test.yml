@@ -55,9 +55,9 @@ jobs:
         working-directory: ./example
         run: bun pods
 
-      - name: Install Maestro CLI v2.0.9
+      - name: Install Maestro CLI
         run: |
-          export MAESTRO_VERSION=2.0.9
+          export MAESTRO_VERSION=2.0.10
           curl -Ls "https://get.maestro.mobile.dev" | bash
           echo "$HOME/.maestro/bin" >> $GITHUB_PATH
 
