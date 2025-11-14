@@ -1,36 +1,46 @@
-name: "Post Maestro Screenshot"
-description: "Posts the final Maestro test screenshot using external image hosting"
+name: 'Post Maestro Screenshot'
+description: 'Posts the final Maestro test screenshot using external image hosting'
 inputs:
   platform:
-    description: "Platform (ios or android)"
+    description: 'Platform (ios or android)'
     required: true
   github-token:
-    description: "GitHub token for posting comments"
+    description: 'GitHub token for posting comments'
     required: true
     default: ${{ github.token }}
   test-outcome:
-    description: "Test outcome (success or failure)"
+    description: 'Test outcome (success or failure)'
     required: false
-    default: "unknown"
+    default: 'unknown'
   imgbb-api-key:
-    description: "ImgBB API key for image hosting"
+    description: 'ImgBB API key for image hosting'
     required: true
 
 runs:
-  using: "composite"
+  using: 'composite'
   steps:
     - name: Check if screenshot exists
       id: check-screenshot
       shell: bash
       run: |
-        SS_FILE="/tmp/e2e-output/${{ inputs.platform }}-tests-completed.png"
-        if [ -f "$SS_FILE" ]; then
-          echo "exists=true" >> $GITHUB_OUTPUT
-          echo "file_path=$SS_FILE" >> $GITHUB_OUTPUT
-          echo "Screenshot found at $SS_FILE"
+        # Find the most recent Maestro output directory
+        LATEST_DIR=$(find /tmp/e2e-output -maxdepth 1 -type d -name "20*" 2>/dev/null | sort -r | head -1)
+
+        if [ -n "$LATEST_DIR" ]; then
+          # Look for the completed screenshot (Maestro names it with emoji and timestamp)
+          SS_FILE=$(find "$LATEST_DIR" -name "*tests-completed*.png" 2>/dev/null | head -1)
+
+          if [ -n "$SS_FILE" ] && [ -f "$SS_FILE" ]; then
+            echo "exists=true" >> $GITHUB_OUTPUT
+            echo "file_path=$SS_FILE" >> $GITHUB_OUTPUT
+            echo "Screenshot found at $SS_FILE"
+          else
+            echo "exists=false" >> $GITHUB_OUTPUT
+            echo "Screenshot not found in $LATEST_DIR"
+          fi
         else
           echo "exists=false" >> $GITHUB_OUTPUT
-          echo "Screenshot not found at $SS_FILE"
+          echo "No Maestro output directory found in /tmp/e2e-output"
         fi
 
     - name: Upload screenshot to ImgBB
@@ -49,7 +59,7 @@ runs:
       if: github.event_name == 'pull_request'
       with:
         issue-number: ${{ github.event.pull_request.number }}
-        comment-author: "github-actions[bot]"
+        comment-author: 'github-actions[bot]'
         body-includes: End-to-End Test Results - ${{ inputs.platform == 'ios' && 'iOS' || 'Android' }}
 
     - name: Create or update PR comment (with screenshot)
