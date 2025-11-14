@@ -47,6 +47,10 @@ jsEngine: graaljs
       id: 'completion-stats'
     timeout: 60000
 
+# Wait a moment for UI to settle before taking final screenshot
+- waitForAnimationToEnd:
+    timeout: 2000
+
 # Take final screenshot (this is the one we want to keep)
 - takeScreenshot: ${PLATFORM}-test-result
 
@@ -63,3 +67,8 @@ jsEngine: graaljs
           condition: ${maestro.copiedText === ''}
           label: 'No failures in suite ${output.suiteIndex}'
       - evalScript: ${output.suiteIndex = output.suiteIndex + 1}
+
+# Additional verification: ensure we can still interact with the UI
+- assertVisible: 'Run'
+- assertVisible: 'Check All'
+- assertVisible: 'Clear All'
