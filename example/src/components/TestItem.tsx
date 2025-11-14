@@ -6,6 +6,7 @@ import { useNavigation } from '@react-navigation/native';
 import { colors } from '../styles/colors';
 
 type TestItemProps = {
+  suiteIndex: number;
   description: string;
   value: boolean;
   count: number;
@@ -14,6 +15,7 @@ type TestItemProps = {
 };
 
 export const TestItem: React.FC<TestItemProps> = ({
+  suiteIndex,
   description,
   value,
   count,
@@ -35,7 +37,10 @@ export const TestItem: React.FC<TestItemProps> = ({
   });
 
   return (
-    <View style={styles.container}>
+    <View
+      style={styles.container}
+      testID={`test-suite-${description.replace(/\s+/g, '-').toLowerCase()}`}
+    >
       <BouncyCheckbox
         isChecked={value}
         onPress={() => {
@@ -55,16 +60,32 @@ export const TestItem: React.FC<TestItemProps> = ({
           });
         }}
       >
-        <Text style={styles.label} numberOfLines={1}>
+        <Text
+          style={styles.label}
+          numberOfLines={1}
+          testID={`test-suite-${suiteIndex}-name`}
+        >
           {description}
         </Text>
-        <Text style={[styles.pass, styles.count]} numberOfLines={1}>
+        <Text
+          style={[styles.pass, styles.count]}
+          numberOfLines={1}
+          testID={`test-suite-${suiteIndex}-pass-count`}
+        >
           {pass || ''}
         </Text>
-        <Text style={[styles.fail, styles.count]} numberOfLines={1}>
+        <Text
+          style={[styles.fail, styles.count]}
+          numberOfLines={1}
+          testID={`test-suite-${suiteIndex}-fail-count`}
+        >
           {fail || ''}
         </Text>
-        <Text style={styles.count} numberOfLines={1}>
+        <Text
+          style={styles.count}
+          numberOfLines={1}
+          testID={`test-suite-${suiteIndex}-total-count`}
+        >
           {count}
         </Text>
       </TouchableOpacity>

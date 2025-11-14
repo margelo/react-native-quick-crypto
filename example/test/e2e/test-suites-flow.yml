@@ -1,0 +1,70 @@
+appId: org.reactjs.native.example.QuickCryptoExample
+jsEngine: graaljs
+---
+# Launch the app
+- launchApp
+
+# Wait for app to load completely
+- waitForAnimationToEnd:
+    timeout: 10000
+
+# Wait for the test suites screen to be visible (app starts on Tests tab)
+- assertVisible: 'Run'
+- assertVisible: 'Check All'
+- assertVisible: 'Clear All'
+
+# Clear any previous test results
+- tapOn: 'Clear All'
+
+# Wait for clear to complete
+- waitForAnimationToEnd:
+    timeout: 2000
+
+# Select all tests by tapping "Check All"
+- tapOn: 'Check All'
+
+# Wait for selection to complete
+- waitForAnimationToEnd:
+    timeout: 2000
+
+# Take screenshot after selecting all
+- takeScreenshot: ${PLATFORM}-tests-selected
+
+# Run all tests by tapping "Run"
+- tapOn: 'Run'
+
+# Wait for tests to start
+- waitForAnimationToEnd:
+    timeout: 5000
+
+# Take screenshot of tests running
+- takeScreenshot: ${PLATFORM}-tests-running
+
+# Wait for all tests to complete by waiting for completion stats to appear
+# The completion-stats element shows "✅ X | ❌ Y | ⏱️ Zms" when all tests finish
+- extendedWaitUntil:
+    visible:
+      id: 'completion-stats'
+    timeout: 60000
+
+# Take final screenshot
+- takeScreenshot: ${PLATFORM}-tests-completed
+
+# Verify no test suites have failures
+- evalScript: ${output.suiteIndex = 0}
+- repeat:
+    while:
+      visible:
+        id: 'test-suite-${output.suiteIndex}-name'
+    commands:
+      - copyTextFrom:
+          id: 'test-suite-${output.suiteIndex}-fail-count'
+      - assertTrue:
+          condition: ${maestro.copiedText === ''}
+          label: 'No failures in suite ${output.suiteIndex}'
+      - evalScript: ${output.suiteIndex = output.suiteIndex + 1}
+
+# Additional verification: ensure we can still interact with the UI
+- assertVisible: 'Run'
+- assertVisible: 'Check All'
+- assertVisible: 'Clear All'

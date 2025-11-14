@@ -1,0 +1,148 @@
+name: End-to-End Tests for Android
+
+concurrency:
+  group: '${{ github.workflow }}-${{ github.ref }}'
+  cancel-in-progress: true
+
+on:
+  pull_request:
+    types: [opened, synchronize, reopened]
+    paths:
+      - '.github/workflows/e2e-android-test.yml'
+      - 'example/**'
+      - 'cpp/**'
+      - 'nitrogen/**'
+      - 'src/**'
+  push:
+    branches: [main, feat/tests-in-ci]
+    paths:
+      - 'example/**'
+      - 'cpp/**'
+      - 'nitrogen/**'
+      - 'src/**'
+
+jobs:
+  e2e-tests-android:
+    runs-on: ubuntu-latest
+    env:
+      EMULATOR_API_LEVEL: 34
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v5
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v5
+        with:
+          node-version: '20'
+
+      - name: Install Bun
+        uses: oven-sh/setup-bun@v1
+        with:
+          bun-version: latest
+
+      - name: Create Directories
+        run: |
+          mkdir -p /tmp/e2e-output
+          mkdir -p $HOME/.maestro/tests/
+
+      - name: Setup JDK
+        uses: actions/setup-java@v4
+        with:
+          distribution: 'corretto'
+          java-version: '17'
+          cache: gradle
+
+      - name: Cache Android SDK
+        uses: actions/cache@v4
+        with:
+          path: |
+            "${{ env.ANDROID_SDK_ROOT }}"
+            ~/.android
+          key: "${{ runner.os }}-android-sdk-${{ hashFiles('.github/workflows/e2e-android-test.yml') }}"
+          restore-keys: |
+            "${{ runner.os }}-android-sdk-"
+
+      - name: Install System Dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y libssl-dev pkg-config
+
+      - name: Setup Android SDK
+        uses: android-actions/setup-android@v3
+
+      - name: Setup Rust
+        uses: dtolnay/rust-toolchain@stable
+
+      - name: Install Android Rust Target (x86_64 only)
+        run: |
+          rustup target add x86_64-linux-android
+
+      - name: Install Dependencies
+        run: bun install
+
+      - name: Install Maestro CLI v2
+        run: |
+          curl -fsSL "https://get.maestro.mobile.dev" | bash
+          echo "$HOME/.maestro/bin" >> $GITHUB_PATH
+
+      - name: Enable KVM
+        if: env.SKIP_KVM != 'true'
+        run: |
+          echo 'KERNEL=="kvm", GROUP="kvm", MODE="0666", OPTIONS+="static_node=kvm"' | sudo tee /etc/udev/rules.d/99-kvm4all.rules
+          sudo udevadm control --reload-rules
+          sudo udevadm trigger --name-match=kvm
+
+      - name: AVD cache
+        uses: actions/cache@v4
+        id: avd-cache
+        with:
+          path: |
+            ~/.android/avd/*
+            ~/.android/adb*
+          key: avd-${{ env.EMULATOR_API_LEVEL }}
+
+      - name: Create AVD and Generate Snapshot for Caching
+        if: steps.avd-cache.outputs.cache-hit != 'true'
+        uses: reactivecircus/android-emulator-runner@v2
+        with:
+          api-level: ${{ env.EMULATOR_API_LEVEL }}
+          arch: x86_64
+          force-avd-creation: false
+          emulator-options: -no-window -gpu swiftshader_indirect -noaudio -no-boot-anim -camera-back none -no-metrics
+          disable-animations: false
+          script: echo "Generated AVD snapshot for caching."
+
+      - name: Make scripts executable
+        run: chmod +x test/e2e/*.sh
+        working-directory: ./example/
+
+      - name: Run E2E Tests
+        uses: reactivecircus/android-emulator-runner@v2
+        id: test_android
+        continue-on-error: true
+        with:
+          api-level: ${{ env.EMULATOR_API_LEVEL }}
+          arch: x86_64
+          force-avd-creation: false
+          emulator-options: -no-snapshot-save -no-window -gpu swiftshader_indirect -noaudio -no-boot-anim -camera-back none -no-metrics
+          disable-animations: true
+          working-directory: ./example/
+          script: ./test/e2e/run-android.sh
+
+      - name: Upload Test Output
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: e2e-android-test-output
+          path: |
+            /tmp/e2e-output/**/*.log
+            /tmp/e2e-output/**/*.png
+          retention-days: 5
+
+      - name: Exit with Test Result
+        if: always()
+        run: |
+          if [ "${{ steps.test_android.outcome }}" != "success" ]; then
+            exit 1
+          fi

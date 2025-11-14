@@ -1,0 +1,136 @@
+name: "Post Maestro Screenshot"
+description: "Posts the final Maestro test screenshot using external image hosting"
+inputs:
+  platform:
+    description: "Platform (ios or android)"
+    required: true
+  github-token:
+    description: "GitHub token for posting comments"
+    required: true
+    default: ${{ github.token }}
+  test-outcome:
+    description: "Test outcome (success or failure)"
+    required: false
+    default: "unknown"
+  imgbb-api-key:
+    description: "ImgBB API key for image hosting"
+    required: true
+
+runs:
+  using: "composite"
+  steps:
+    - name: Check if screenshot exists
+      id: check-screenshot
+      shell: bash
+      run: |
+        SS_FILE="/tmp/e2e-output/${{ inputs.platform }}-tests-completed.png"
+        if [ -f "$SS_FILE" ]; then
+          echo "exists=true" >> $GITHUB_OUTPUT
+          echo "file_path=$SS_FILE" >> $GITHUB_OUTPUT
+          echo "Screenshot found at $SS_FILE"
+        else
+          echo "exists=false" >> $GITHUB_OUTPUT
+          echo "Screenshot not found at $SS_FILE"
+        fi
+
+    - name: Upload screenshot to ImgBB
+      if: steps.check-screenshot.outputs.exists == 'true' && github.event_name == 'pull_request'
+      id: upload-screenshot
+      uses: McCzarny/upload-image@v2.0.0
+      with:
+        path: ${{ steps.check-screenshot.outputs.file_path }}
+        upload-method: imgbb
+        api-key: ${{ inputs.imgbb-api-key }}
+        expiration: 2592000 # 30 days
+
+    - name: Find Comment
+      uses: peter-evans/find-comment@v3
+      id: find-comment
+      if: github.event_name == 'pull_request'
+      with:
+        issue-number: ${{ github.event.pull_request.number }}
+        comment-author: "github-actions[bot]"
+        body-includes: End-to-End Test Results - ${{ inputs.platform == 'ios' && 'iOS' || 'Android' }}
+
+    - name: Create or update PR comment (with screenshot)
+      if: github.event_name == 'pull_request' && steps.check-screenshot.outputs.exists == 'true' && steps.upload-screenshot.outputs.url
+      uses: peter-evans/create-or-update-comment@v4
+      with:
+        token: ${{ inputs.github-token }}
+        issue-number: ${{ github.event.pull_request.number }}
+        comment-id: ${{ steps.find-comment.outputs.comment-id }}
+        body: |
+          ## 🤖 End-to-End Test Results - ${{ inputs.platform == 'ios' && 'iOS' || 'Android' }}
+
+          **Status**: ${{ inputs.test-outcome == 'success' && '✅ Passed' || '❌ Failed' }}
+          **Platform**: ${{ inputs.platform == 'ios' && 'iOS' || 'Android' }}
+          **Run**: [${{ github.run_id }}](https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }})
+
+          ### 📸 Final Test Screenshot
+
+          <img width="600" alt="Maestro Test Results - ${{ inputs.platform }}" src="${{ steps.upload-screenshot.outputs.url }}" />
+
+          *Screenshot automatically captured from End-to-End tests and will expire in 30 days*
+
+          ---
+          *This comment is automatically updated on each test run.*
+        edit-mode: replace
+
+    - name: Create or update PR comment (no screenshot)
+      if: github.event_name == 'pull_request' && steps.check-screenshot.outputs.exists != 'true'
+      uses: peter-evans/create-or-update-comment@v4
+      with:
+        token: ${{ inputs.github-token }}
+        issue-number: ${{ github.event.pull_request.number }}
+        comment-id: ${{ steps.find-comment.outputs.comment-id }}
+        body: |
+          ## 🤖 End-to-End Test Results - ${{ inputs.platform == 'ios' && 'iOS' || 'Android' }}
+
+          **Status**: ${{ inputs.test-outcome == 'success' && '✅ Passed' || '❌ Failed' }}
+          **Platform**: ${{ inputs.platform == 'ios' && 'iOS' || 'Android' }}
+          **Run**: [${{ github.run_id }}](https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }})
+
+          ### 📸 Final Test Screenshot
+
+          ⚠️ No final screenshot available
+
+          ---
+          *This comment is automatically updated on each test run.*
+        edit-mode: replace
+
+    - name: Create or update PR comment (upload failed)
+      if: github.event_name == 'pull_request' && steps.check-screenshot.outputs.exists == 'true' && !steps.upload-screenshot.outputs.url
+      uses: peter-evans/create-or-update-comment@v4
+      with:
+        token: ${{ inputs.github-token }}
+        issue-number: ${{ github.event.pull_request.number }}
+        comment-id: ${{ steps.find-comment.outputs.comment-id }}
+        body: |
+          ## 🤖 End-to-End Test Results - ${{ inputs.platform == 'ios' && 'iOS' || 'Android' }}
+
+          **Status**: ${{ inputs.test-outcome == 'success' && '✅ Passed' || '❌ Failed' }}
+          **Platform**: ${{ inputs.platform == 'ios' && 'iOS' || 'Android' }}
+          **Run**: [${{ github.run_id }}](https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }})
+
+          ### 📸 Final Test Screenshot
+
+          ⚠️ Screenshot was captured but failed to upload. Check workflow logs for details.
+
+          ---
+          *This comment is automatically updated on each test run.*
+        edit-mode: replace
+
+    - name: Log screenshot status
+      shell: bash
+      run: |
+        if [ "${{ steps.check-screenshot.outputs.exists }}" = "true" ]; then
+          if [ -n "${{ steps.upload-screenshot.outputs.url }}" ]; then
+            echo "✅ Screenshot uploaded and embedded in PR comment for ${{ inputs.platform }}"
+            echo "🔗 Image URL: ${{ steps.upload-screenshot.outputs.url }}"
+            echo "🗑️ Delete URL: ${{ steps.upload-screenshot.outputs.delete-url }}"
+          else
+            echo "❌ Screenshot upload failed for ${{ inputs.platform }}"
+          fi
+        else
+          echo "⚠️ No screenshot found for ${{ inputs.platform }}"
+        fi

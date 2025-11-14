@@ -1,0 +1,95 @@
+name: End-to-End Tests for iOS
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.event_name == 'push' && github.sha || github.ref }}
+  cancel-in-progress: true
+
+on:
+  pull_request:
+    types: [opened, synchronize, reopened]
+    paths:
+      - '.github/workflows/e2e-ios-test.yml'
+      - 'example/**'
+      - 'cpp/**'
+      - 'nitrogen/**'
+      - 'src/**'
+  push:
+    branches: [main, feat/tests-in-ci]
+    paths:
+      - 'example/**'
+      - 'cpp/**'
+      - 'nitrogen/**'
+      - 'src/**'
+
+jobs:
+  e2e-tests-ios:
+    runs-on: macos-15
+    env:
+      RCT_USE_RN_DEP: 1
+      RCT_USE_PREBUILT_RNCORE: 1
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Select Xcode 16.4
+        run: |
+          sudo xcode-select -s "/Applications/Xcode_16.4.app/Contents/Developer"
+          xcodebuild -version
+
+      - name: Install Bun
+        uses: oven-sh/setup-bun@v1
+        with:
+          bun-version: latest
+
+      - name: Create Directories
+        run: |
+          mkdir -p /tmp/e2e-output
+          mkdir -p $HOME/.maestro/tests/
+
+      - name: Setup Rust
+        uses: dtolnay/rust-toolchain@stable
+
+      - name: Install iOS Rust Targets
+        run: |
+          rustup target add aarch64-apple-ios x86_64-apple-ios aarch64-apple-ios-sim
+
+      - name: Install Dependencies
+        run: bun install
+
+      - name: Install CocoaPods
+        working-directory: ./example
+        run: bun pods
+
+      - name: Install Maestro CLI v2
+        run: |
+          curl -fsSL "https://get.maestro.mobile.dev" | bash
+          echo "$HOME/.maestro/bin" >> $GITHUB_PATH
+
+      - name: Make scripts executable
+        run: chmod +x test/e2e/*.sh
+        working-directory: ./example/
+
+      - name: Run E2E Tests
+        id: test_ios
+        run: ./test/e2e/run-ios.sh
+        working-directory: ./example/
+        env:
+          IOS_SIMULATOR_DEVICE: 'iPhone 16 Pro'
+
+      - name: Upload Test Output
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: e2e-ios-test-output
+          path: |
+            /tmp/e2e-output/**/*.log
+            /tmp/e2e-output/**/*.png
+          retention-days: 5
+
+      - name: Exit with Test Result
+        if: always()
+        run: |
+          if [ "${{ steps.test_ios.outcome }}" != "success" ]; then
+            exit 1
+          fi
