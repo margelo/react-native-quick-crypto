@@ -27,8 +27,8 @@ jsEngine: graaljs
 - waitForAnimationToEnd:
     timeout: 2000
 
-# Take screenshot after selecting all
-- takeScreenshot: ${PLATFORM}-tests-selected
+# Take screenshot after selecting all (will be overwritten)
+- takeScreenshot: ${PLATFORM}-test-result
 
 # Run all tests by tapping "Run"
 - tapOn: 'Run'
@@ -37,8 +37,8 @@ jsEngine: graaljs
 - waitForAnimationToEnd:
     timeout: 5000
 
-# Take screenshot of tests running
-- takeScreenshot: ${PLATFORM}-tests-running
+# Take screenshot of tests running (will be overwritten)
+- takeScreenshot: ${PLATFORM}-test-result
 
 # Wait for all tests to complete by waiting for completion stats to appear
 # The completion-stats element shows "✅ X | ❌ Y | ⏱️ Zms" when all tests finish
@@ -47,8 +47,8 @@ jsEngine: graaljs
       id: 'completion-stats'
     timeout: 60000
 
-# Take final screenshot
-- takeScreenshot: ${PLATFORM}-tests-completed
+# Take final screenshot (this is the one we want to keep)
+- takeScreenshot: ${PLATFORM}-test-result
 
 # Verify no test suites have failures
 - evalScript: ${output.suiteIndex = 0}

@@ -23,16 +23,49 @@ runs:
       id: check-screenshot
       shell: bash
       run: |
-        SS_FILE="$HOME/output/screenshots/${{ inputs.platform }}-tests-completed.png"
+        # First try the expected location with new naming
+        SS_FILE="$HOME/output/screenshots/${{ inputs.platform }}-test-result.png"
+
         if [ -f "$SS_FILE" ]; then
           echo "exists=true" >> $GITHUB_OUTPUT
           echo "file_path=$SS_FILE" >> $GITHUB_OUTPUT
           echo "Screenshot found at $SS_FILE"
         else
-          echo "exists=false" >> $GITHUB_OUTPUT
-          echo "Screenshot not found at $SS_FILE"
-          echo "Listing output directory contents:"
-          ls -lR $HOME/output/ || echo "Output directory does not exist"
+          # If not found, look in the timestamped directories
+          echo "Screenshot not found at expected location: $SS_FILE"
+          echo "Searching for screenshots in timestamped directories..."
+
+          # Find the most recent timestamped directory
+          LATEST_DIR=$(find $HOME/output -maxdepth 1 -type d -name "20*" 2>/dev/null | sort -r | head -1)
+
+          if [ -n "$LATEST_DIR" ]; then
+            echo "Found timestamped directory: $LATEST_DIR"
+
+            # Look for screenshot matching our naming pattern (Maestro may add emojis/timestamps to the filename)
+            # We use the name we specified: ${PLATFORM}-test-result
+            SCREENSHOT=$(find "$LATEST_DIR" -name "*${{ inputs.platform }}-test-result*.png" 2>/dev/null | head -1)
+
+            if [ -z "$SCREENSHOT" ]; then
+              # Fallback: look for any screenshot file
+              echo "No platform-specific screenshot found, looking for any screenshot..."
+              SCREENSHOT=$(find "$LATEST_DIR" -name "screenshot-*.png" 2>/dev/null | head -1)
+            fi
+
+            if [ -n "$SCREENSHOT" ] && [ -f "$SCREENSHOT" ]; then
+              echo "exists=true" >> $GITHUB_OUTPUT
+              echo "file_path=$SCREENSHOT" >> $GITHUB_OUTPUT
+              echo "Screenshot found at $SCREENSHOT"
+            else
+              echo "exists=false" >> $GITHUB_OUTPUT
+              echo "No screenshots found in $LATEST_DIR"
+              ls -la "$LATEST_DIR" || true
+            fi
+          else
+            echo "exists=false" >> $GITHUB_OUTPUT
+            echo "No timestamped directories found"
+            echo "Listing output directory contents:"
+            ls -lR $HOME/output/ || echo "Output directory does not exist"
+          fi
         fi
 
     - name: Upload screenshot to ImgBB
