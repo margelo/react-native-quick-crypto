@@ -75,9 +75,9 @@ jobs:
       - name: Install Dependencies
         run: bun install
 
-      - name: Install Maestro CLI v2.0.8
+      - name: Install Maestro CLI v2.0.7
         run: |
-          export MAESTRO_VERSION=2.0.8
+          export MAESTRO_VERSION=2.0.7
           curl -Ls "https://get.maestro.mobile.dev" | bash
           echo "$HOME/.maestro/bin" >> $GITHUB_PATH
 
