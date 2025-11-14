@@ -70,6 +70,15 @@ jobs:
         env:
           IOS_SIMULATOR_DEVICE: 'iPhone 16 Pro'
 
+      - name: Post Maestro Screenshot to PR
+        if: always()
+        uses: ./.github/actions/post-maestro-screenshot
+        with:
+          platform: ios
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          test-outcome: ${{ steps.test_ios.outcome }}
+          imgbb-api-key: ${{ secrets.IMGBB_API_KEY }}
+
       - name: Upload Test Output
         if: always()
         uses: actions/upload-artifact@v4
