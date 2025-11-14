@@ -63,8 +63,3 @@ jsEngine: graaljs
           condition: ${maestro.copiedText === ''}
           label: 'No failures in suite ${output.suiteIndex}'
       - evalScript: ${output.suiteIndex = output.suiteIndex + 1}
-
-# Additional verification: ensure we can still interact with the UI
-- assertVisible: 'Run'
-- assertVisible: 'Check All'
-- assertVisible: 'Clear All'

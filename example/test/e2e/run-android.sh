@@ -45,3 +45,13 @@ maestro test \
 
 echo "Listing Output Directory"
 ls -l $HOME/output/**
+
+# Create screenshots directory and copy the latest screenshot
+mkdir -p $HOME/output/screenshots
+LATEST_SCREENSHOT=$(find $HOME/output -name "screenshot-*.png" -type f 2>/dev/null | sort -r | head -1)
+if [ -n "$LATEST_SCREENSHOT" ]; then
+  echo "Copying screenshot from $LATEST_SCREENSHOT to screenshots/android-test-result.png"
+  cp "$LATEST_SCREENSHOT" $HOME/output/screenshots/android-test-result.png
+else
+  echo "No screenshot found to copy"
+fi
