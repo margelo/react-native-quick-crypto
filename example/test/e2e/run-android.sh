@@ -4,9 +4,9 @@ set -e
 
 # Start Metro
 echo "Starting Metro Bundler..."
-mkdir -p /tmp/e2e-output
-touch /tmp/e2e-output/metro.log
-bun start > /tmp/e2e-output/metro.log 2>&1 &
+mkdir -p $HOME/output
+touch $HOME/output/metro.log
+bun start > $HOME/output/metro.log 2>&1 &
 
 # Wait for Metro to start
 echo "Waiting for Metro to start..."
@@ -15,8 +15,8 @@ sleep 15
 # Install the app to emulator
 echo "Building and installing app to Android Emulator..."
 echo "Build logs will be written to 'android-build.log' in uploaded artifacts"
-touch /tmp/e2e-output/android-build.log
-bun android --active-arch-only > /tmp/e2e-output/android-build.log 2>&1
+touch $HOME/output/android-build.log
+bun android --active-arch-only > $HOME/output/android-build.log 2>&1
 
 # Wait for build to complete and app to be installed
 echo "Waiting for app to be installed..."
@@ -41,7 +41,7 @@ maestro test \
   test/e2e/test-suites-flow.yml \
   --config .maestro/config.yml \
   --env PLATFORM=android \
-  --test-output-dir /tmp/e2e-output
+  --test-output-dir $HOME/output
 
 echo "Listing Output Directory"
-ls -l /tmp/e2e-output/**
+ls -l $HOME/output/**

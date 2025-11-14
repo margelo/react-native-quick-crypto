@@ -27,6 +27,7 @@ jobs:
     env:
       RCT_USE_RN_DEP: 1
       RCT_USE_PREBUILT_RNCORE: 1
+      OUTPUT_DIR: ~/output
 
     steps:
       - name: Checkout
@@ -44,7 +45,7 @@ jobs:
 
       - name: Create Directories
         run: |
-          mkdir -p /tmp/e2e-output
+          mkdir -p $HOME/output
           mkdir -p $HOME/.maestro/tests/
 
       - name: Install Dependencies
@@ -85,8 +86,8 @@ jobs:
         with:
           name: e2e-ios-test-output
           path: |
-            /tmp/e2e-output/**/*.log
-            /tmp/e2e-output/**/*.png
+            ${{ env.OUTPUT_DIR }}/*.log
+            ${{ env.OUTPUT_DIR }}/screenshots/*.png
           retention-days: 5
 
       - name: Exit with Test Result

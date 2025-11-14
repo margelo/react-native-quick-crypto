@@ -15,7 +15,7 @@ screenshots:
   # Take screenshots on test failure
   onFailure: true
   # Screenshot directory
-  directory: /tmp/e2e-output/
+  directory: $HOME/output/
 
 # Retry settings
 retry:
@@ -31,4 +31,4 @@ device:
   # Screen density
   density: 420
 
-testOutputDir: /tmp/e2e-output/
+testOutputDir: $HOME/output/

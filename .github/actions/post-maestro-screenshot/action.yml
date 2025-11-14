@@ -23,24 +23,16 @@ runs:
       id: check-screenshot
       shell: bash
       run: |
-        # Find the most recent Maestro output directory
-        LATEST_DIR=$(find /tmp/e2e-output -maxdepth 1 -type d -name "20*" 2>/dev/null | sort -r | head -1)
-
-        if [ -n "$LATEST_DIR" ]; then
-          # Look for the completed screenshot (Maestro names it with emoji and timestamp)
-          SS_FILE=$(find "$LATEST_DIR" -name "*tests-completed*.png" 2>/dev/null | head -1)
-
-          if [ -n "$SS_FILE" ] && [ -f "$SS_FILE" ]; then
-            echo "exists=true" >> $GITHUB_OUTPUT
-            echo "file_path=$SS_FILE" >> $GITHUB_OUTPUT
-            echo "Screenshot found at $SS_FILE"
-          else
-            echo "exists=false" >> $GITHUB_OUTPUT
-            echo "Screenshot not found in $LATEST_DIR"
-          fi
+        SS_FILE="$HOME/output/screenshots/${{ inputs.platform }}-tests-completed.png"
+        if [ -f "$SS_FILE" ]; then
+          echo "exists=true" >> $GITHUB_OUTPUT
+          echo "file_path=$SS_FILE" >> $GITHUB_OUTPUT
+          echo "Screenshot found at $SS_FILE"
         else
           echo "exists=false" >> $GITHUB_OUTPUT
-          echo "No Maestro output directory found in /tmp/e2e-output"
+          echo "Screenshot not found at $SS_FILE"
+          echo "Listing output directory contents:"
+          ls -lR $HOME/output/ || echo "Output directory does not exist"
         fi
 
     - name: Upload screenshot to ImgBB

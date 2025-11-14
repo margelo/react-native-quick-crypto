@@ -4,9 +4,9 @@ set -e
 
 # Start Metro
 echo "Starting Metro Bundler..."
-mkdir -p /tmp/e2e-output
-touch /tmp/e2e-output/metro.log
-bun start > /tmp/e2e-output/metro.log 2>&1 &
+mkdir -p $HOME/output
+touch $HOME/output/metro.log
+bun start > $HOME/output/metro.log 2>&1 &
 
 echo "Building and installing app to iOS Simulator..."
 echo "Build logs will be written to 'ios-build.log' in uploaded artifacts"
@@ -14,8 +14,8 @@ echo "Build logs will be written to 'ios-build.log' in uploaded artifacts"
 # ios build
 export RCT_USE_RN_DEP=1
 export RCT_USE_PREBUILT_RNCORE=1
-touch /tmp/e2e-output/ios-build.log
-bun ios > /tmp/e2e-output/ios-build.log 2>&1
+touch $HOME/output/ios-build.log
+bun ios > $HOME/output/ios-build.log 2>&1
 
 # Wait for build to complete and app to be installed
 echo "Waiting for app to be installed..."
@@ -32,7 +32,7 @@ maestro test \
   test/e2e/test-suites-flow.yml \
   --config .maestro/config.yml \
   --env PLATFORM=ios \
-  --test-output-dir /tmp/e2e-output
+  --test-output-dir $HOME/output
 
 echo "Listing Output Directory"
-ls -l /tmp/e2e-output/**
+ls -l $HOME/output/**
