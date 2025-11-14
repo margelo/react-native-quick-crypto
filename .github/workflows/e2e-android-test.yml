@@ -14,7 +14,7 @@ on:
       - 'nitrogen/**'
       - 'src/**'
   push:
-    branches: [main, feat/tests-in-ci]
+    branches: [main]
     paths:
       - 'example/**'
       - 'cpp/**'
