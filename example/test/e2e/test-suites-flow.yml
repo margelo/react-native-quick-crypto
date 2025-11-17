@@ -4,12 +4,12 @@ jsEngine: graaljs
 # Launch the app
 - launchApp
 
-# Wait for app to load completely
-- waitForAnimationToEnd:
-    timeout: 10000
+# Wait for app to load completely and UI to be ready
+- extendedWaitUntil:
+    visible: 'Run'
+    timeout: 30000
 
-# Wait for the test suites screen to be visible (app starts on Tests tab)
-- assertVisible: 'Run'
+# Verify other key UI elements are present
 - assertVisible: 'Check All'
 - assertVisible: 'Clear All'
 
