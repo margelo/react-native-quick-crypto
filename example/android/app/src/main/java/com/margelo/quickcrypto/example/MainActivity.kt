@@ -1,4 +1,4 @@
-package com.quickcryptoexample
+package com.margelo.quickcrypto.example
 
 import com.facebook.react.ReactActivity
 import com.facebook.react.ReactActivityDelegate

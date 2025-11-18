@@ -12,6 +12,7 @@ export type TestResult = {
   errorMsg?: string;
   indentation: number;
   suiteName: string;
+  duration?: number;
 };
 
 export type Stats = {

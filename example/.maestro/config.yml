@@ -1,0 +1,34 @@
+# Maestro configuration for React Native Quick Crypto E2E tests
+# This file configures Maestro v2 settings for optimal test execution
+
+# Global timeout settings
+timeouts:
+  # Default timeout for element visibility checks
+  elementTimeout: 10000
+  # Timeout for animations to complete
+  animationTimeout: 3000
+  # Timeout for app launch
+  launchTimeout: 15000
+
+# Screenshot settings
+screenshots:
+  # Take screenshots on test failure
+  onFailure: true
+  # Screenshot directory
+  directory: $HOME/output/
+
+# Retry settings
+retry:
+  # Number of retries for failed assertions
+  maxRetries: 3
+  # Delay between retries (ms)
+  retryDelay: 1000
+
+# Device settings
+device:
+  # Disable animations for faster test execution
+  disableAnimations: true
+  # Screen density
+  density: 420
+
+testOutputDir: $HOME/output/

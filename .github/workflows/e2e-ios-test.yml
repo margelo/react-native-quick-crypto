@@ -1,0 +1,99 @@
+name: End-to-End Tests for iOS
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.event_name == 'push' && github.sha || github.ref }}
+  cancel-in-progress: true
+
+on:
+  pull_request:
+    types: [opened, synchronize, reopened]
+    paths:
+      - '.github/workflows/e2e-ios-test.yml'
+      - 'example/**'
+      - 'cpp/**'
+      - 'nitrogen/**'
+      - 'src/**'
+  push:
+    branches: [main]
+    paths:
+      - 'example/**'
+      - 'cpp/**'
+      - 'nitrogen/**'
+      - 'src/**'
+
+jobs:
+  e2e-tests-ios:
+    runs-on: macos-15
+    env:
+      RCT_USE_RN_DEP: 1
+      RCT_USE_PREBUILT_RNCORE: 1
+      OUTPUT_DIR: ~/output
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Select Xcode 16.4
+        run: |
+          sudo xcode-select -s "/Applications/Xcode_16.4.app/Contents/Developer"
+          xcodebuild -version
+
+      - name: Install Bun
+        uses: oven-sh/setup-bun@v1
+        with:
+          bun-version: latest
+
+      - name: Create Directories
+        run: |
+          mkdir -p $HOME/output
+          mkdir -p $HOME/.maestro/tests/
+
+      - name: Install Dependencies
+        run: bun install
+
+      - name: Install CocoaPods
+        working-directory: ./example
+        run: bun pods
+
+      - name: Install Maestro CLI
+        run: |
+          export MAESTRO_VERSION=2.0.10
+          curl -Ls "https://get.maestro.mobile.dev" | bash
+          echo "$HOME/.maestro/bin" >> $GITHUB_PATH
+
+      - name: Make scripts executable
+        run: chmod +x test/e2e/*.sh
+        working-directory: ./example/
+
+      - name: Run E2E Tests
+        id: test_ios
+        run: ./test/e2e/run-ios.sh
+        working-directory: ./example/
+        env:
+          IOS_SIMULATOR_DEVICE: 'iPhone 16 Pro'
+
+      - name: Post Maestro Screenshot to PR
+        if: always()
+        uses: ./.github/actions/post-maestro-screenshot
+        with:
+          platform: ios
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          test-outcome: ${{ steps.test_ios.outcome }}
+          imgbb-api-key: ${{ secrets.IMGBB_API_KEY }}
+
+      - name: Upload Test Output
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: e2e-ios-test-output
+          path: |
+            ${{ env.OUTPUT_DIR }}/*.log
+            ${{ env.OUTPUT_DIR }}/screenshots/*.png
+          retention-days: 5
+
+      - name: Exit with Test Result
+        if: always()
+        run: |
+          if [ "${{ steps.test_ios.outcome }}" != "success" ]; then
+            exit 1
+          fi
