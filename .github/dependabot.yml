@@ -1,23 +1,28 @@
 version: 2
 
 updates:
-  - package-ecosystem: "bun"
-    target-branch: "main"
-    directory: "/"
+  - package-ecosystem: 'bundler'
+    directory: '/example'
     schedule:
-      interval: "weekly"
+      interval: 'weekly'
+
+  - package-ecosystem: 'bun'
+    target-branch: 'main'
+    directory: '/'
+    schedule:
+      interval: 'weekly'
     ignore:
-      - dependency-name: "react"
-      - dependency-name: "react-native"
-      - dependency-name: "@react-native/eslint-plugin"
-      - dependency-name: "@react-native/metro-config"
-      - dependency-name: "@react-native/eslint-config"
-      - dependency-name: "@react-native/gradle-plugin"
-      - dependency-name: "@react-native-community/cli"
-      - dependency-name: "@react-native-community/cli-platform-android"
-      - dependency-name: "@react-native-community/cli-platform-ios"
-      - dependency-name: "@types/react"
-      - dependency-name: "chai"
-        versions: [ "<5.0.0" ]
-      - dependency-name: "@types/chai"
-        versions: [ "<5.0.0" ]
+      - dependency-name: 'react'
+      - dependency-name: 'react-native'
+      - dependency-name: '@react-native/eslint-plugin'
+      - dependency-name: '@react-native/metro-config'
+      - dependency-name: '@react-native/eslint-config'
+      - dependency-name: '@react-native/gradle-plugin'
+      - dependency-name: '@react-native-community/cli'
+      - dependency-name: '@react-native-community/cli-platform-android'
+      - dependency-name: '@react-native-community/cli-platform-ios'
+      - dependency-name: '@types/react'
+      - dependency-name: 'chai'
+        versions: ['<5.0.0']
+      - dependency-name: '@types/chai'
+        versions: ['<5.0.0']
