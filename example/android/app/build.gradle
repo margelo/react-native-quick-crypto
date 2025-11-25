@@ -84,6 +84,16 @@ android {
         targetSdkVersion rootProject.ext.targetSdkVersion
         versionCode 1
         versionName "1.0"
+        externalNativeBuild {
+            cmake {
+                arguments "-DANDROID_SUPPORT_FLEXIBLE_PAGE_SIZES=ON"
+            }
+        }
+    }
+    packaging {
+        jniLibs {
+            pickFirsts += ["**/libNitroModules.so", "**/libc++_shared.so", "**/libfbjni.so"]
+        }
     }
     signingConfigs {
         debug {

@@ -5,7 +5,7 @@ set(PACKAGE_NAME QuickCrypto)
 set(CMAKE_VERBOSE_MAKEFILE ON)
 set(CMAKE_CXX_STANDARD 20)
 
-# BLAKE3 sources - NEON only for ARM architectures
+# BLAKE3 sources - architecture-specific SIMD support
 set(BLAKE3_SOURCES
   ../deps/blake3/blake3.c
   ../deps/blake3/blake3_dispatch.c
@@ -13,7 +13,12 @@ set(BLAKE3_SOURCES
 )
 
 if(CMAKE_ANDROID_ARCH_ABI STREQUAL "arm64-v8a")
+  # ARM64 uses NEON intrinsics (auto-detected via IS_AARCH64 in blake3_impl.h)
   list(APPEND BLAKE3_SOURCES ../deps/blake3/blake3_neon.c)
+elseif(CMAKE_ANDROID_ARCH_ABI STREQUAL "x86" OR CMAKE_ANDROID_ARCH_ABI STREQUAL "x86_64")
+  # Disable x86 SIMD - would require assembly files we don't compile
+  # Falls back to portable C implementation
+  add_definitions(-DBLAKE3_NO_SSE2 -DBLAKE3_NO_SSE41 -DBLAKE3_NO_AVX2 -DBLAKE3_NO_AVX512)
 endif()
 
 # Define C++ library and add all sources
