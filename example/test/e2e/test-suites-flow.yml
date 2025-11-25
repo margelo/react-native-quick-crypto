@@ -54,9 +54,13 @@ jsEngine: graaljs
 # Take final screenshot (this is the one we want to keep)
 - takeScreenshot: ${PLATFORM}-test-result
 
+# Copy total fail count for later assertion
+- copyTextFrom:
+    id: 'total-fail-count'
+
 # Check each suite for failures and gather details if any found
 - evalScript: ${output.suiteIndex = 0}
-- evalScript: ${output.hasFailures = false}
+- evalScript: ${output.totalFailures = maestro.copiedText}
 - repeat:
     while:
       visible:
@@ -71,17 +75,12 @@ jsEngine: graaljs
           env:
             SUITE_INDEX: ${output.suiteIndex}
             SUITE_NAME: suite-${output.suiteIndex}
-      - evalScript:
-          script: |
-            if (maestro.copiedText !== '') {
-              output.hasFailures = true;
-            }
       - evalScript: ${output.suiteIndex = output.suiteIndex + 1}
 
-# Assert no failures after gathering all screenshots
+# Assert no failures - check that total fail count is "0"
 - assertTrue:
-    condition: ${output.hasFailures === false}
-    label: 'All test suites passed'
+    condition: ${output.totalFailures === '0'}
+    label: 'All test suites passed (0 failures)'
 
 # Additional verification: ensure we can still interact with the UI
 - assertVisible: 'Run'
