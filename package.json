@@ -45,7 +45,7 @@
     "eslint-plugin-prettier": "5.5.4",
     "eslint-plugin-react-native": "5.0.0",
     "prettier": "3.5.3",
-    "release-it": "18.1.2",
+    "release-it": "19.0.5",
     "typescript": "5.8.3",
     "typescript-eslint": "8.30.1",
     "yalc": "^1.0.0-pre.53"

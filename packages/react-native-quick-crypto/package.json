@@ -77,6 +77,7 @@
     "expo-build-properties": "0.14.6",
     "react-native-quick-base64": "2.2.2",
     "readable-stream": "4.5.2",
+    "safe-buffer": "^5.2.1",
     "util": "0.12.5"
   },
   "devDependencies": {
