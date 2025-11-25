@@ -66,7 +66,7 @@ jsEngine: graaljs
           id: 'test-suite-${output.suiteIndex}-fail-count'
       - runFlow:
           when:
-            condition: ${maestro.copiedText !== ''}
+            true: ${maestro.copiedText !== ''}
           file: gather-failed-tests.yml
           env:
             SUITE_INDEX: ${output.suiteIndex}
