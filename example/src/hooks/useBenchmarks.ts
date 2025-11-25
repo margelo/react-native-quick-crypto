@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react';
 import { BenchmarkSuite } from '../benchmarks/benchmarks';
+import blake3 from '../benchmarks/blake3/blake3';
 import ed from '../benchmarks/ed/ed25519';
 import pbkdf2 from '../benchmarks/pbkdf2/pbkdf2';
 import random from '../benchmarks/random/randomBytes';
@@ -19,6 +20,7 @@ export const useBenchmarks = (): [
   // initial load of benchmark suites
   useEffect(() => {
     const newSuites: BenchmarkSuite[] = [];
+    newSuites.push(new BenchmarkSuite('blake3', blake3));
     newSuites.push(new BenchmarkSuite('ed', ed));
     newSuites.push(new BenchmarkSuite('pbkdf2', pbkdf2));
     newSuites.push(
