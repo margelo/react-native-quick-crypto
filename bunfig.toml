@@ -1,0 +1,2 @@
+[install]
+publicHoistPattern = ["@react-native*", "react-native", "react"]
