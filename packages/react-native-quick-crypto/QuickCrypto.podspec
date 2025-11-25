@@ -35,13 +35,13 @@ Pod::Spec.new do |s|
       # Download libsodium with verbose output
       echo "Downloading libsodium..."
       curl -L -v -o ios/libsodium.tar.gz https://download.libsodium.org/libsodium/releases/libsodium-1.0.20-stable.tar.gz
-      
+
       # Verify download
       if [ ! -f ios/libsodium.tar.gz ]; then
         echo "ERROR: Failed to download libsodium.tar.gz"
         exit 1
       fi
-      
+
       echo "Download size: $(wc -c < ios/libsodium.tar.gz) bytes"
 
       # Clean previous extraction
@@ -50,7 +50,7 @@ Pod::Spec.new do |s|
       # Extract the full tarball
       echo "Extracting libsodium..."
       tar -xzf ios/libsodium.tar.gz -C ios
-      
+
       # Verify extraction
       if [ ! -d ios/libsodium-stable ]; then
         echo "ERROR: Failed to extract libsodium"
@@ -61,16 +61,16 @@ Pod::Spec.new do |s|
       echo "Configuring libsodium..."
       cd ios/libsodium-stable
       ./configure --disable-shared --enable-static
-      
+
       echo "Building libsodium..."
       make -j$(sysctl -n hw.ncpu)
-      
+
       # Verify build success
       if [ ! -f src/libsodium/.libs/libsodium.a ]; then
         echo "ERROR: libsodium build failed - static library not found"
         exit 1
       fi
-      
+
       echo "libsodium build completed successfully"
 
       # Cleanup
@@ -93,9 +93,35 @@ Pod::Spec.new do |s|
     # implementation (C++)
     "cpp/**/*.{hpp,cpp}",
     # dependencies (C++)
-    "deps/**/*.{h,cc,c}",
-    # dependencies (C)
+    "deps/**/*.{h,cc}",
+    # dependencies (C) - exclude BLAKE3 x86 SIMD files (only use portable + NEON for ARM)
     "deps/**/*.{h,c}",
+  ]
+
+  # Exclude BLAKE3 x86-specific SIMD implementations (SSE2, SSE4.1, AVX2, AVX-512)
+  # These use Intel intrinsics that don't compile on ARM
+  # Also exclude example files, TBB files, and test files
+  s.exclude_files = [
+    "deps/blake3/blake3_sse2.c",
+    "deps/blake3/blake3_sse41.c",
+    "deps/blake3/blake3_avx2.c",
+    "deps/blake3/blake3_avx512.c",
+    "deps/blake3/blake3_sse2_x86-64_unix.S",
+    "deps/blake3/blake3_sse41_x86-64_unix.S",
+    "deps/blake3/blake3_avx2_x86-64_unix.S",
+    "deps/blake3/blake3_avx512_x86-64_unix.S",
+    "deps/blake3/blake3_sse2_x86-64_windows_gnu.S",
+    "deps/blake3/blake3_sse41_x86-64_windows_gnu.S",
+    "deps/blake3/blake3_avx2_x86-64_windows_gnu.S",
+    "deps/blake3/blake3_avx512_x86-64_windows_gnu.S",
+    "deps/blake3/blake3_sse2_x86-64_windows_msvc.asm",
+    "deps/blake3/blake3_sse41_x86-64_windows_msvc.asm",
+    "deps/blake3/blake3_avx2_x86-64_windows_msvc.asm",
+    "deps/blake3/blake3_avx512_x86-64_windows_msvc.asm",
+    "deps/blake3/main.c",
+    "deps/blake3/example.c",
+    "deps/blake3/example_tbb.c",
+    "deps/blake3/blake3_tbb.cpp",
   ]
 
   if sodium_enabled

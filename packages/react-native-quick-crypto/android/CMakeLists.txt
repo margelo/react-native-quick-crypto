@@ -9,6 +9,7 @@ set(CMAKE_CXX_STANDARD 20)
 add_library(
   ${PACKAGE_NAME} SHARED
   src/main/cpp/cpp-adapter.cpp
+  ../cpp/blake3/HybridBlake3.cpp
   ../cpp/cipher/CCMCipher.cpp
   ../cpp/cipher/HybridCipher.cpp
   ../cpp/cipher/OCBCipher.cpp
@@ -24,6 +25,10 @@ add_library(
   ../cpp/pbkdf2/HybridPbkdf2.cpp
   ../cpp/random/HybridRandom.cpp
   ../cpp/rsa/HybridRsaKeyPair.cpp
+  ../deps/blake3/blake3.c
+  ../deps/blake3/blake3_dispatch.c
+  ../deps/blake3/blake3_portable.c
+  ../deps/blake3/blake3_neon.c
   ../deps/fastpbkdf2/fastpbkdf2.c
   ../deps/ncrypto/ncrypto.cc
 )
@@ -34,6 +39,7 @@ include(${CMAKE_SOURCE_DIR}/../nitrogen/generated/android/QuickCrypto+autolinkin
 # local includes
 include_directories(
   "src/main/cpp"
+  "../cpp/blake3"
   "../cpp/cipher"
   "../cpp/ec"
   "../cpp/ed25519"
@@ -44,6 +50,7 @@ include_directories(
   "../cpp/random"
   "../cpp/rsa"
   "../cpp/utils"
+  "../deps/blake3"
   "../deps/fastpbkdf2"
   "../deps/ncrypto"
 )

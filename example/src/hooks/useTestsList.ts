@@ -2,6 +2,7 @@ import { useState, useCallback } from 'react';
 import type { TestSuites } from '../types/tests';
 import { TestsContext } from '../tests/util';
 
+import '../tests/blake3/blake3_tests';
 import '../tests/cipher/cipher_tests';
 import '../tests/cipher/chacha_tests';
 import '../tests/cipher/xsalsa20_tests';

@@ -8,6 +8,7 @@
     "androidCxxLibName": "QuickCrypto"
   },
   "autolinking": {
+    "Blake3": { "cpp": "HybridBlake3" },
     "Cipher": { "cpp": "HybridCipher" },
     "CipherFactory": { "cpp": "HybridCipherFactory" },
     "EcKeyPair": { "cpp": "HybridEcKeyPair" },
