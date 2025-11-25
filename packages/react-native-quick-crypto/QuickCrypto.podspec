@@ -100,28 +100,35 @@ Pod::Spec.new do |s|
 
   # Exclude BLAKE3 x86-specific SIMD implementations (SSE2, SSE4.1, AVX2, AVX-512)
   # These use Intel intrinsics that don't compile on ARM
-  # Also exclude example files, TBB files, and test files
+  # Also exclude example files, TBB files, test files, and non-C directories
   s.exclude_files = [
-    "deps/blake3/blake3_sse2.c",
-    "deps/blake3/blake3_sse41.c",
-    "deps/blake3/blake3_avx2.c",
-    "deps/blake3/blake3_avx512.c",
-    "deps/blake3/blake3_sse2_x86-64_unix.S",
-    "deps/blake3/blake3_sse41_x86-64_unix.S",
-    "deps/blake3/blake3_avx2_x86-64_unix.S",
-    "deps/blake3/blake3_avx512_x86-64_unix.S",
-    "deps/blake3/blake3_sse2_x86-64_windows_gnu.S",
-    "deps/blake3/blake3_sse41_x86-64_windows_gnu.S",
-    "deps/blake3/blake3_avx2_x86-64_windows_gnu.S",
-    "deps/blake3/blake3_avx512_x86-64_windows_gnu.S",
-    "deps/blake3/blake3_sse2_x86-64_windows_msvc.asm",
-    "deps/blake3/blake3_sse41_x86-64_windows_msvc.asm",
-    "deps/blake3/blake3_avx2_x86-64_windows_msvc.asm",
-    "deps/blake3/blake3_avx512_x86-64_windows_msvc.asm",
-    "deps/blake3/main.c",
-    "deps/blake3/example.c",
-    "deps/blake3/example_tbb.c",
-    "deps/blake3/blake3_tbb.cpp",
+    "deps/blake3/c/blake3_sse2.c",
+    "deps/blake3/c/blake3_sse41.c",
+    "deps/blake3/c/blake3_avx2.c",
+    "deps/blake3/c/blake3_avx512.c",
+    "deps/blake3/c/blake3_sse2_x86-64_unix.S",
+    "deps/blake3/c/blake3_sse41_x86-64_unix.S",
+    "deps/blake3/c/blake3_avx2_x86-64_unix.S",
+    "deps/blake3/c/blake3_avx512_x86-64_unix.S",
+    "deps/blake3/c/blake3_sse2_x86-64_windows_gnu.S",
+    "deps/blake3/c/blake3_sse41_x86-64_windows_gnu.S",
+    "deps/blake3/c/blake3_avx2_x86-64_windows_gnu.S",
+    "deps/blake3/c/blake3_avx512_x86-64_windows_gnu.S",
+    "deps/blake3/c/blake3_sse2_x86-64_windows_msvc.asm",
+    "deps/blake3/c/blake3_sse41_x86-64_windows_msvc.asm",
+    "deps/blake3/c/blake3_avx2_x86-64_windows_msvc.asm",
+    "deps/blake3/c/blake3_avx512_x86-64_windows_msvc.asm",
+    "deps/blake3/c/main.c",
+    "deps/blake3/c/example.c",
+    "deps/blake3/c/example_tbb.c",
+    "deps/blake3/c/blake3_tbb.cpp",
+    # Exclude non-C parts of BLAKE3 repo (Rust, benchmarks, tools, etc.)
+    "deps/blake3/src/**/*",
+    "deps/blake3/b3sum/**/*",
+    "deps/blake3/benches/**/*",
+    "deps/blake3/reference_impl/**/*",
+    "deps/blake3/tools/**/*",
+    "deps/blake3/test_vectors/**/*",
   ]
 
   if sodium_enabled

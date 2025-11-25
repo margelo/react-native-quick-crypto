@@ -7,14 +7,14 @@ set(CMAKE_CXX_STANDARD 20)
 
 # BLAKE3 sources - architecture-specific SIMD support
 set(BLAKE3_SOURCES
-  ../deps/blake3/blake3.c
-  ../deps/blake3/blake3_dispatch.c
-  ../deps/blake3/blake3_portable.c
+  ../deps/blake3/c/blake3.c
+  ../deps/blake3/c/blake3_dispatch.c
+  ../deps/blake3/c/blake3_portable.c
 )
 
 if(CMAKE_ANDROID_ARCH_ABI STREQUAL "arm64-v8a")
   # ARM64 uses NEON intrinsics (auto-detected via IS_AARCH64 in blake3_impl.h)
-  list(APPEND BLAKE3_SOURCES ../deps/blake3/blake3_neon.c)
+  list(APPEND BLAKE3_SOURCES ../deps/blake3/c/blake3_neon.c)
 elseif(CMAKE_ANDROID_ARCH_ABI STREQUAL "x86" OR CMAKE_ANDROID_ARCH_ABI STREQUAL "x86_64")
   # Disable x86 SIMD - would require assembly files we don't compile
   # Falls back to portable C implementation
@@ -63,7 +63,7 @@ include_directories(
   "../cpp/random"
   "../cpp/rsa"
   "../cpp/utils"
-  "../deps/blake3"
+  "../deps/blake3/c"
   "../deps/fastpbkdf2"
   "../deps/ncrypto"
 )

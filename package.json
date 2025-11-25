@@ -9,6 +9,7 @@
     "bundle-install": "bun --filter='react-native-quick-crypto-example' bundle-install",
     "pods": "bun --filter='react-native-quick-crypto-example' pods",
     "start": "bun --cwd example start",
+    "postinstall": "git submodule update --init --recursive 2>/dev/null || true",
     "bootstrap": "bun install && bun pods",
     "tsc": "bun --filter='*' typescript",
     "lint": "bun --filter='*' lint",
@@ -21,8 +22,14 @@
     "yalc": "cd packages/react-native-quick-crypto && bun yalc push --replace --sig"
   },
   "lint-staged": {
-    "example/**/*.{js,jsx,ts,tsx}": ["bun lint", "bun format"],
-    "packages/react-native-quick-crypto/**/*.{js,jsx,ts,tsx}": ["bun lint", "bun format"]
+    "example/**/*.{js,jsx,ts,tsx}": [
+      "bun lint",
+      "bun format"
+    ],
+    "packages/react-native-quick-crypto/**/*.{js,jsx,ts,tsx}": [
+      "bun lint",
+      "bun format"
+    ]
   },
   "devDependencies": {
     "@eslint/compat": "1.2.8",
