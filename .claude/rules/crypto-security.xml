@@ -1,0 +1,199 @@
+<rules category="crypto-security">
+  <metadata>
+    <trigger>always_on</trigger>
+  </metadata>
+
+  <rule severity="CRITICAL" enforcement="BLOCKING">
+    <name>Cryptographic Correctness</name>
+    <description>All cryptographic implementations must be correct and secure</description>
+    <requirements>
+      <requirement>Match specifications exactly (WebCrypto, Node.js, RFCs)</requirement>
+      <requirement>Validate against authoritative test vectors</requirement>
+      <requirement>Handle edge cases and boundary conditions</requirement>
+      <requirement>Constant-time operations where required</requirement>
+    </requirements>
+    <mustAcknowledge>true</mustAcknowledge>
+    <rationale>
+      Cryptography is unforgiving. A single mistake can compromise entire system security.
+    </rationale>
+  </rule>
+
+  <rule severity="CRITICAL" enforcement="BLOCKING">
+    <name>No Timing Attacks</name>
+    <description>Use constant-time operations for security-critical comparisons</description>
+    <requirements>
+      <requirement>Use CRYPTO_memcmp() for tag/MAC verification</requirement>
+      <requirement>No early returns in secret-dependent branches</requirement>
+      <requirement>Constant-time comparisons for authentication</requirement>
+    </requirements>
+    <example>
+      <bad>return memcmp(tag1, tag2, len) == 0; // Timing leak</bad>
+      <good>return CRYPTO_memcmp(tag1, tag2, len) == 0; // Constant-time</good>
+    </example>
+    <mustAcknowledge>true</mustAcknowledge>
+  </rule>
+
+  <rule severity="CRITICAL" enforcement="BLOCKING">
+    <name>Secure Random Number Generation</name>
+    <description>Always use cryptographically secure randomness</description>
+    <requirements>
+      <requirement>Use OpenSSL RAND_bytes() for all crypto operations</requirement>
+      <requirement>Never use rand(), srand(), or time-based seeds</requirement>
+      <requirement>Check RAND_bytes() return value</requirement>
+      <requirement>Sufficient entropy before generation</requirement>
+    </requirements>
+    <mustAcknowledge>true</mustAcknowledge>
+    <example>
+      <bad>
+        uint8_t iv[12];
+        for (int i = 0; i &lt; 12; i++) iv[i] = rand(); // INSECURE
+      </bad>
+      <good>
+        uint8_t iv[12];
+        if (RAND_bytes(iv, sizeof(iv)) != 1) {
+          throw std::runtime_error("Random generation failed");
+        }
+      </good>
+    </example>
+  </rule>
+
+  <rule severity="CRITICAL" enforcement="BLOCKING">
+    <name>Authenticated Encryption</name>
+    <description>Use AEAD modes for encryption, verify authentication before decryption</description>
+    <requirements>
+      <requirement>Prefer AEAD modes (AES-GCM, ChaCha20-Poly1305)</requirement>
+      <requirement>Always verify authentication tag before decryption</requirement>
+      <requirement>Never expose plaintext on auth failure</requirement>
+      <requirement>Use constant-time tag comparison</requirement>
+    </requirements>
+    <mustAcknowledge>true</mustAcknowledge>
+    <antipatterns>
+      <pattern>AES-CBC without HMAC</pattern>
+      <pattern>Decrypting before verifying tag</pattern>
+      <pattern>Exposing partial plaintext on auth failure</pattern>
+    </antipatterns>
+  </rule>
+
+  <rule severity="HIGH" enforcement="STRICT">
+    <name>IV/Nonce Management</name>
+    <description>Proper handling of initialization vectors and nonces</description>
+    <requirements>
+      <requirement>Generate random IV/nonce for each encryption</requirement>
+      <requirement>Never reuse IV with same key (especially GCM)</requirement>
+      <requirement>Correct length for algorithm (12 bytes for GCM)</requirement>
+      <requirement>Unpredictable (use RAND_bytes)</requirement>
+    </requirements>
+    <critical>
+      IV/nonce reuse with AES-GCM catastrophically breaks security
+    </critical>
+  </rule>
+
+  <rule severity="HIGH" enforcement="STRICT">
+    <name>Key Size Requirements</name>
+    <description>Enforce minimum secure key sizes</description>
+    <minimums>
+      <algorithm name="AES">128 bits (prefer 256)</algorithm>
+      <algorithm name="RSA">2048 bits (prefer 3072 or 4096)</algorithm>
+      <algorithm name="ECC">256 bits (P-256, P-384, P-521)</algorithm>
+      <algorithm name="HMAC">Match hash output size</algorithm>
+    </minimums>
+    <instructions>
+      Reject operations with insufficient key sizes. Throw clear errors.
+    </instructions>
+  </rule>
+
+  <rule severity="HIGH" enforcement="STRICT">
+    <name>Secure Key Derivation</name>
+    <description>Proper parameters for key derivation functions</description>
+    <requirements>
+      <requirement>PBKDF2: Minimum 600,000 iterations (OWASP 2023)</requirement>
+      <requirement>Salt: Random, unique, ≥16 bytes</requirement>
+      <requirement>Output length: Appropriate for use case</requirement>
+      <requirement>Strong PRF: SHA-256 or better</requirement>
+    </requirements>
+    <antipatterns>
+      <pattern>Low iteration counts (&lt;100,000)</pattern>
+      <pattern>Fixed or predictable salts</pattern>
+      <pattern>Short salts (&lt;16 bytes)</pattern>
+    </antipatterns>
+  </rule>
+
+  <rule severity="HIGH" enforcement="STRICT">
+    <name>No Key Material in Errors</name>
+    <description>Never expose cryptographic key material in logs or errors</description>
+    <requirements>
+      <requirement>No keys in error messages</requirement>
+      <requirement>No keys in log statements</requirement>
+      <requirement>No keys in exception details</requirement>
+      <requirement>Sanitize debugging output</requirement>
+    </requirements>
+    <rationale>
+      Leaking key material defeats all cryptographic protections.
+    </rationale>
+  </rule>
+
+  <rule severity="HIGH" enforcement="STRICT">
+    <name>Algorithm Selection</name>
+    <description>Use modern, secure algorithms only</description>
+    <approved>
+      <algorithm>AES-GCM (256-bit)</algorithm>
+      <algorithm>ChaCha20-Poly1305</algorithm>
+      <algorithm>SHA-256, SHA-384, SHA-512</algorithm>
+      <algorithm>HMAC-SHA256 or better</algorithm>
+      <algorithm>RSA with OAEP or PSS</algorithm>
+      <algorithm>ECDSA with P-256/P-384/P-521</algorithm>
+      <algorithm>ECDH with safe curves</algorithm>
+      <algorithm>PBKDF2, Argon2, scrypt</algorithm>
+    </approved>
+    <forbidden>
+      <algorithm reason="Broken">MD5</algorithm>
+      <algorithm reason="Weak">SHA-1 (for signatures)</algorithm>
+      <algorithm reason="Insecure">DES, 3DES</algorithm>
+      <algorithm reason="Broken">RC4</algorithm>
+      <algorithm reason="Unauthenticated">AES-ECB</algorithm>
+      <algorithm reason="Complex">AES-CBC without HMAC</algorithm>
+    </forbidden>
+  </rule>
+
+  <rule severity="MEDIUM" enforcement="GUIDANCE">
+    <name>Test Vector Validation</name>
+    <description>Validate implementations against authoritative test vectors</description>
+    <sources>
+      <source>NIST test vectors (SP 800 series)</source>
+      <source>RFC test vectors</source>
+      <source>Node.js test suite</source>
+      <source>WebCrypto test suite</source>
+    </sources>
+    <instructions>
+      Always include test vector validation for cryptographic implementations.
+    </instructions>
+  </rule>
+
+  <rule severity="MEDIUM" enforcement="GUIDANCE">
+    <name>Side-Channel Resistance</name>
+    <description>Consider side-channel attacks in implementation</description>
+    <considerations>
+      <consideration>Timing attacks (use constant-time ops)</consideration>
+      <consideration>Cache timing (algorithm-dependent)</consideration>
+      <consideration>Power analysis (hardware-dependent)</consideration>
+    </considerations>
+    <instructions>
+      At minimum, ensure timing-safe comparisons for secrets and authentication.
+    </instructions>
+  </rule>
+
+  <rule severity="HIGH" enforcement="STRICT">
+    <name>Error Handling Without Info Leak</name>
+    <description>Errors must not leak cryptographic information</description>
+    <requirements>
+      <requirement>Generic errors for authentication failures</requirement>
+      <requirement>No timing differences between error types</requirement>
+      <requirement>No padding oracle vulnerabilities</requirement>
+      <requirement>Same error for "wrong key" and "corrupted data"</requirement>
+    </requirements>
+    <example>
+      <bad>throw Error("Authentication tag mismatch at byte 7");</bad>
+      <good>throw Error("Decryption failed");</good>
+    </example>
+  </rule>
+</rules>

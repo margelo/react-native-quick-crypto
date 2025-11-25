@@ -1,0 +1,188 @@
+<rules category="cpp">
+  <metadata>
+    <trigger>glob</trigger>
+    <globs>*.cpp,*.hpp,*.h,*.cc</globs>
+  </metadata>
+
+  <rule severity="CRITICAL" enforcement="BLOCKING">
+    <name>Modern C++ Required</name>
+    <description>Use C++20 or higher with modern features</description>
+    <requirements>
+      <requirement>C++20 minimum (no C++17 or lower)</requirement>
+      <requirement>Smart pointers for all ownership</requirement>
+      <requirement>RAII for all resources</requirement>
+      <requirement>No raw pointers for ownership</requirement>
+      <requirement>Modern standard library features</requirement>
+    </requirements>
+    <mustAcknowledge>true</mustAcknowledge>
+    <rationale>
+      Modern C++ provides memory safety, clearer ownership semantics, and better performance.
+    </rationale>
+  </rule>
+
+  <rule severity="CRITICAL" enforcement="BLOCKING">
+    <name>Smart Pointers Only</name>
+    <description>Use smart pointers for all heap allocations</description>
+    <patterns>
+      <pattern>std::unique_ptr for exclusive ownership</pattern>
+      <pattern>std::shared_ptr for shared ownership</pattern>
+      <pattern>Custom deleters for C API resources (e.g., OpenSSL)</pattern>
+      <pattern>Raw pointers only for non-owning references</pattern>
+    </patterns>
+    <example>
+      <bad>
+        EVP_CIPHER_CTX* ctx = EVP_CIPHER_CTX_new();
+        // ... forget to free, or exception before free
+      </bad>
+      <good>
+        auto ctx = std::unique_ptr&lt;EVP_CIPHER_CTX, decltype(&amp;EVP_CIPHER_CTX_free)&gt;(
+          EVP_CIPHER_CTX_new(),
+          EVP_CIPHER_CTX_free
+        );
+      </good>
+    </example>
+    <mustAcknowledge>true</mustAcknowledge>
+  </rule>
+
+  <rule severity="CRITICAL" enforcement="BLOCKING">
+    <name>OpenSSL 3.3+ APIs Only</name>
+    <description>Use OpenSSL 3.3+ or higher EVP APIs, no deprecated functions</description>
+    <requirements>
+      <requirement>EVP high-level APIs only</requirement>
+      <requirement>No low-level deprecated APIs (AES_*, SHA256_*, etc.)</requirement>
+      <requirement>Provider-based architecture where applicable</requirement>
+      <requirement>Proper error handling with ERR_get_error()</requirement>
+    </requirements>
+    <migrations>
+      <migration>
+        <from>AES_set_encrypt_key()</from>
+        <to>EVP_EncryptInit_ex2() with EVP_aes_*()</to>
+      </migration>
+      <migration>
+        <from>SHA256()</from>
+        <to>EVP_Digest() with EVP_sha256()</to>
+      </migration>
+      <migration>
+        <from>Direct struct access</from>
+        <to>EVP getters/setters</to>
+      </migration>
+    </migrations>
+    <mustAcknowledge>true</mustAcknowledge>
+    <rationale>
+      OpenSSL 1.1.1 is deprecated. OpenSSL 3.x provides better security, performance, and future support.
+    </rationale>
+  </rule>
+
+  <rule severity="HIGH" enforcement="STRICT">
+    <name>RAII for All Resources</name>
+    <description>Use RAII pattern for all resource management</description>
+    <principles>
+      <principle>Acquire resources in constructors</principle>
+      <principle>Release resources in destructors</principle>
+      <principle>No manual cleanup code</principle>
+      <principle>Exception-safe by design</principle>
+    </principles>
+    <instructions>
+      Wrap all C API resources (OpenSSL contexts, etc.) in smart pointers with custom deleters.
+    </instructions>
+  </rule>
+
+  <rule severity="HIGH" enforcement="STRICT">
+    <name>Error Handling</name>
+    <description>Proper error handling for all OpenSSL operations</description>
+    <requirements>
+      <requirement>Always check OpenSSL return values</requirement>
+      <requirement>Use ERR_get_error() for detailed errors</requirement>
+      <requirement>Clear error queue after handling</requirement>
+      <requirement>Throw appropriate exceptions with context</requirement>
+      <requirement>Provide meaningful error messages</requirement>
+    </requirements>
+    <example>
+      <good>
+        if (EVP_EncryptInit_ex2(ctx, cipher, key, iv, nullptr) != 1) {
+          unsigned long err = ERR_get_error();
+          char err_buf[256];
+          ERR_error_string_n(err, err_buf, sizeof(err_buf));
+          throw std::runtime_error("Encryption init failed: " + std::string(err_buf));
+        }
+      </good>
+    </example>
+  </rule>
+
+  <rule severity="HIGH" enforcement="STRICT">
+    <name>Memory Safety</name>
+    <description>Prevent memory leaks and undefined behavior</description>
+    <requirements>
+      <requirement>No memory leaks</requirement>
+      <requirement>No use-after-free</requirement>
+      <requirement>No double-free</requirement>
+      <requirement>No buffer overruns</requirement>
+      <requirement>Proper cleanup in all paths (including exceptions)</requirement>
+    </requirements>
+    <tools>
+      <tool>valgrind for leak detection (if applicable)</tool>
+      <tool>AddressSanitizer for memory errors</tool>
+    </tools>
+  </rule>
+
+  <rule severity="HIGH" enforcement="STRICT">
+    <name>Code Quality</name>
+    <description>C++ code quality standards</description>
+    <standards>
+      <standard>Minimal code, maximum modularity</standard>
+      <standard>No comments unless algorithm is complex</standard>
+      <standard>Self-documenting function names</standard>
+      <standard>Prefer iteration over duplication</standard>
+      <standard>Use const correctness</standard>
+      <standard>Use constexpr where applicable</standard>
+    </standards>
+  </rule>
+
+  <rule severity="MEDIUM" enforcement="GUIDANCE">
+    <name>Reference Sources</name>
+    <description>Use these sources for C++ crypto implementations</description>
+    <sources>
+      <source priority="1">
+        <name>Node.js ncrypto</name>
+        <path>$REPOS/node/deps/ncrypto</path>
+        <description>Node.js externalized crypto code - primary reference</description>
+        <note>May need updating to OpenSSL 3.3+ patterns</note>
+      </source>
+      <source priority="2">
+        <name>OpenSSL 3.3+ Documentation</name>
+        <description>Official OpenSSL API documentation and migration guides</description>
+      </source>
+      <source priority="3">
+        <name>RNQC 0.x</name>
+        <path>$REPOS/rnqc/0.x</path>
+        <description>Legacy implementation - migration reference only</description>
+        <warning>Uses OpenSSL 1.1.1 - don't copy patterns directly</warning>
+      </source>
+    </sources>
+  </rule>
+
+  <rule severity="HIGH" enforcement="STRICT">
+    <name>Nitro Modules Integration</name>
+    <description>Proper integration with React Native via Nitro Modules</description>
+    <requirements>
+      <requirement>Proper type conversions between JS and C++</requirement>
+      <requirement>Correct function signatures for Nitro</requirement>
+      <requirement>Error handling suitable for React Native</requirement>
+      <requirement>Performance optimized for mobile</requirement>
+    </requirements>
+    <instructions>
+      Refer to Nitro Modules llms.txt documentation if available locally.
+    </instructions>
+  </rule>
+
+  <rule severity="MEDIUM" enforcement="GUIDANCE">
+    <name>Build Configuration</name>
+    <description>C++ build settings</description>
+    <settings>
+      <setting>C++20 minimum standard</setting>
+      <setting>Enable all warnings (-Wall -Wextra)</setting>
+      <setting>Treat warnings as errors</setting>
+      <setting>Link against OpenSSL 3.3+</setting>
+    </settings>
+  </rule>
+</rules>
