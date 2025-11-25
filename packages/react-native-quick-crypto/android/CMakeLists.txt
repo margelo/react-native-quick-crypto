@@ -5,6 +5,17 @@ set(PACKAGE_NAME QuickCrypto)
 set(CMAKE_VERBOSE_MAKEFILE ON)
 set(CMAKE_CXX_STANDARD 20)
 
+# BLAKE3 sources - NEON only for ARM architectures
+set(BLAKE3_SOURCES
+  ../deps/blake3/blake3.c
+  ../deps/blake3/blake3_dispatch.c
+  ../deps/blake3/blake3_portable.c
+)
+
+if(CMAKE_ANDROID_ARCH_ABI STREQUAL "arm64-v8a")
+  list(APPEND BLAKE3_SOURCES ../deps/blake3/blake3_neon.c)
+endif()
+
 # Define C++ library and add all sources
 add_library(
   ${PACKAGE_NAME} SHARED
@@ -25,10 +36,7 @@ add_library(
   ../cpp/pbkdf2/HybridPbkdf2.cpp
   ../cpp/random/HybridRandom.cpp
   ../cpp/rsa/HybridRsaKeyPair.cpp
-  ../deps/blake3/blake3.c
-  ../deps/blake3/blake3_dispatch.c
-  ../deps/blake3/blake3_portable.c
-  ../deps/blake3/blake3_neon.c
+  ${BLAKE3_SOURCES}
   ../deps/fastpbkdf2/fastpbkdf2.c
   ../deps/ncrypto/ncrypto.cc
 )
