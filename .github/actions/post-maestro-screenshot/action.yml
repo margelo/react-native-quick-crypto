@@ -103,7 +103,7 @@ runs:
 
           ### 📸 Final Test Screenshot
 
-          ![Maestro Test Results - ${{ inputs.platform }}](${{ steps.upload-screenshot.outputs.url }})
+          <img src="${{ steps.upload-screenshot.outputs.url }}" alt="Maestro Test Results - ${{ inputs.platform }}" width="400" />
 
           *Screenshot automatically captured from End-to-End tests and will expire in 30 days*
 

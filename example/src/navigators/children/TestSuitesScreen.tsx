@@ -45,7 +45,10 @@ export const TestSuitesScreen = () => {
               0,
             )}
           </Text>
-          <Text style={[styles.fail, styles.statNumber]}>
+          <Text
+            style={[styles.fail, styles.statNumber]}
+            testID="total-fail-count"
+          >
             {Object.values(results).reduce(
               (sum, suite) =>
                 sum + suite.results.filter(r => r.type === 'incorrect').length,

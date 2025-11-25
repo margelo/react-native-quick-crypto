@@ -3,6 +3,7 @@ import { Buffer } from '@craftzdog/react-native-buffer';
 
 // API imports
 import * as keys from './keys';
+import * as blake3 from './blake3';
 import * as cipher from './cipher';
 import * as ed from './ed';
 import { hashExports as hash } from './hash';
@@ -20,6 +21,7 @@ import * as subtle from './subtle';
  */
 const QuickCrypto = {
   ...keys,
+  ...blake3,
   ...cipher,
   ...ed,
   ...hash,
@@ -47,6 +49,7 @@ global.process.nextTick = setImmediate;
 
 // exports
 export default QuickCrypto;
+export * from './blake3';
 export * from './cipher';
 export * from './ed';
 export * from './keys';

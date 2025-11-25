@@ -5,10 +5,27 @@ set(PACKAGE_NAME QuickCrypto)
 set(CMAKE_VERBOSE_MAKEFILE ON)
 set(CMAKE_CXX_STANDARD 20)
 
+# BLAKE3 sources - architecture-specific SIMD support
+set(BLAKE3_SOURCES
+  ../deps/blake3/c/blake3.c
+  ../deps/blake3/c/blake3_dispatch.c
+  ../deps/blake3/c/blake3_portable.c
+)
+
+if(CMAKE_ANDROID_ARCH_ABI STREQUAL "arm64-v8a")
+  # ARM64 uses NEON intrinsics (auto-detected via IS_AARCH64 in blake3_impl.h)
+  list(APPEND BLAKE3_SOURCES ../deps/blake3/c/blake3_neon.c)
+elseif(CMAKE_ANDROID_ARCH_ABI STREQUAL "x86" OR CMAKE_ANDROID_ARCH_ABI STREQUAL "x86_64")
+  # Disable x86 SIMD - would require assembly files we don't compile
+  # Falls back to portable C implementation
+  add_definitions(-DBLAKE3_NO_SSE2 -DBLAKE3_NO_SSE41 -DBLAKE3_NO_AVX2 -DBLAKE3_NO_AVX512)
+endif()
+
 # Define C++ library and add all sources
 add_library(
   ${PACKAGE_NAME} SHARED
   src/main/cpp/cpp-adapter.cpp
+  ../cpp/blake3/HybridBlake3.cpp
   ../cpp/cipher/CCMCipher.cpp
   ../cpp/cipher/HybridCipher.cpp
   ../cpp/cipher/OCBCipher.cpp
@@ -24,6 +41,7 @@ add_library(
   ../cpp/pbkdf2/HybridPbkdf2.cpp
   ../cpp/random/HybridRandom.cpp
   ../cpp/rsa/HybridRsaKeyPair.cpp
+  ${BLAKE3_SOURCES}
   ../deps/fastpbkdf2/fastpbkdf2.c
   ../deps/ncrypto/ncrypto.cc
 )
@@ -34,6 +52,7 @@ include(${CMAKE_SOURCE_DIR}/../nitrogen/generated/android/QuickCrypto+autolinkin
 # local includes
 include_directories(
   "src/main/cpp"
+  "../cpp/blake3"
   "../cpp/cipher"
   "../cpp/ec"
   "../cpp/ed25519"
@@ -44,6 +63,7 @@ include_directories(
   "../cpp/random"
   "../cpp/rsa"
   "../cpp/utils"
+  "../deps/blake3/c"
   "../deps/fastpbkdf2"
   "../deps/ncrypto"
 )

@@ -50,8 +50,21 @@ test(SUITE, 'buffers', () => {
   roundTrip('aes-128-cbc', key16, iv, plaintextBuffer);
 });
 
+// AES-CBC-HMAC ciphers are TLS-only and require special ctrl functions.
+// They also depend on specific hardware (AES-NI) and may not be available
+// on all platforms (e.g., CI emulators). Skip them in tests.
+// See: https://www.openssl.org/docs/man3.0/man3/EVP_aes_128_cbc_hmac_sha1.html
+const TLS_ONLY_CIPHERS = [
+  'AES-128-CBC-HMAC-SHA1',
+  'AES-128-CBC-HMAC-SHA256',
+  'AES-256-CBC-HMAC-SHA1',
+  'AES-256-CBC-HMAC-SHA256',
+];
+
 // loop through each cipher and test roundtrip
-const allCiphers = getCiphers();
+const allCiphers = getCiphers().filter(
+  c => !TLS_ONLY_CIPHERS.includes(c.toUpperCase()),
+);
 allCiphers.forEach(cipherName => {
   test(SUITE, cipherName, () => {
     try {

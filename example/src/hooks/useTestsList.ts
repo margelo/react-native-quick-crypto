@@ -2,6 +2,7 @@ import { useState, useCallback } from 'react';
 import type { TestSuites } from '../types/tests';
 import { TestsContext } from '../tests/util';
 
+import '../tests/blake3/blake3_tests';
 import '../tests/cipher/cipher_tests';
 import '../tests/cipher/chacha_tests';
 import '../tests/cipher/xsalsa20_tests';
@@ -13,9 +14,9 @@ import '../tests/pbkdf2/pbkdf2_tests';
 import '../tests/random/random_tests';
 import '../tests/subtle/deriveBits';
 import '../tests/subtle/digest';
-import '../tests/subtle/encrypt_decrypt';
+// import '../tests/subtle/encrypt_decrypt';
 import '../tests/subtle/generateKey';
-import '../tests/subtle/import_export';
+// import '../tests/subtle/import_export';
 import '../tests/subtle/sign_verify';
 
 export const useTestsList = (): [

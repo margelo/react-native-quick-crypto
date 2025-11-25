@@ -1,0 +1,33 @@
+appId: com.margelo.quickcrypto.example
+---
+# Sub-flow to gather details about failed tests in a suite
+# Called with env vars: SUITE_INDEX, SUITE_NAME
+
+# Tap on the suite row to navigate to details (tap on the name area)
+- tapOn:
+    id: 'test-suite-${SUITE_INDEX}-name'
+
+# Wait for details screen to load
+- extendedWaitUntil:
+    visible:
+      id: 'show-passed-checkbox'
+    timeout: 5000
+
+# Uncheck "Show Passed" to only show failures
+- tapOn:
+    id: 'show-passed-checkbox'
+
+# Wait for filter to apply
+- waitForAnimationToEnd:
+    timeout: 1000
+
+# Take screenshot of failed tests
+- takeScreenshot: ${PLATFORM}-failed-${SUITE_NAME}
+
+# Go back to main test list
+- back
+
+# Wait for main screen
+- extendedWaitUntil:
+    visible: 'Run'
+    timeout: 5000

@@ -31,6 +31,7 @@ export const TestDetailsScreen = ({ route }) => {
             disableText={true}
             fillColor="red"
             style={styles.checkbox}
+            testID="show-failed-checkbox"
           />
           <Text style={styles.showMenuLabel}>Show Failed</Text>
         </View>
@@ -41,6 +42,7 @@ export const TestDetailsScreen = ({ route }) => {
             disableText={true}
             fillColor={colors.green}
             style={styles.checkbox}
+            testID="show-passed-checkbox"
           />
           <Text style={styles.showMenuLabel}>Show Passed</Text>
         </View>
