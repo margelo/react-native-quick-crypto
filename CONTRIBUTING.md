@@ -93,11 +93,18 @@ Our CI verify that the linter and tests pass when creating a PR.
 
 We use [release-it](https://github.com/release-it/release-it) to make it easier to publish new versions. It handles common tasks like bumping version based on semver, creating tags and releases etc.
 
-To publish new versions, run the following:
+Releases are published via GitHub Actions using npm's OIDC trusted publishing (no tokens required). To publish a new version:
 
-```sh
-bun release
-```
+1. Go to **Actions** → **Release** → **Run workflow**
+2. Select the `main` branch
+3. Enter the version (e.g., `1.0.0-beta.21`) or increment type (`patch`, `minor`, `major`, `prerelease`)
+4. Optionally check "Dry run" to test without publishing
+5. Click **Run workflow**
+
+The workflow will:
+- Bump the version in package.json
+- Build and publish to npm with provenance attestation
+- Create a git tag and GitHub release
 
 ### Scripts
 
