@@ -39,7 +39,7 @@
     "@release-it/bumper": "7.0.5",
     "@release-it/conventional-changelog": "10.0.1",
     "@typescript-eslint/eslint-plugin": "8.43.0",
-    "@typescript-eslint/parser": "8.30.1",
+    "@typescript-eslint/parser": "8.43.0",
     "eslint": "9.24.0",
     "eslint-config-prettier": "10.1.2",
     "eslint-plugin-prettier": "5.5.4",
@@ -47,7 +47,7 @@
     "prettier": "3.5.3",
     "release-it": "19.0.5",
     "typescript": "5.8.3",
-    "typescript-eslint": "8.30.1",
+    "typescript-eslint": "8.43.0",
     "yalc": "^1.0.0-pre.53"
   },
   "packageManager": "bun@1.2.0",

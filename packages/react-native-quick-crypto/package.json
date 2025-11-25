@@ -105,7 +105,8 @@
   },
   "release-it": {
     "npm": {
-      "publish": true
+      "publish": true,
+      "skipChecks": true
     },
     "git": false,
     "github": {
