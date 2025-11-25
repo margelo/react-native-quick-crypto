@@ -1,0 +1,108 @@
+<rules category="typescript">
+  <metadata>
+    <trigger>glob</trigger>
+    <globs>*.ts,*.tsx</globs>
+  </metadata>
+
+  <rule severity="CRITICAL" enforcement="BLOCKING">
+    <name>No Any Types</name>
+    <description>No `any` types. Use proper TypeScript types or create new interfaces/types as needed.</description>
+    <rationale>Type safety is critical for catching bugs at compile time. any types bypass all type checking.</rationale>
+    <mustAcknowledge>true</mustAcknowledge>
+    <instructions>
+      When encountering data without types, create proper interfaces or types. If the shape is truly unknown, use type guards and validation instead of `any`.
+    </instructions>
+  </rule>
+
+  <rule severity="CRITICAL" enforcement="BLOCKING">
+    <name>No Unknown Casts</name>
+    <description>Avoid casting to `unknown` then to another type. Use explicit types with proper type guards.</description>
+    <rationale>Casting to unknown defeats the purpose of type safety - it's just deferred any.</rationale>
+    <mustAcknowledge>true</mustAcknowledge>
+    <instructions>
+      Instead of (data as unknown) as SomeType, create type guard functions that validate the shape of the data and return properly typed values.
+    </instructions>
+    <example>
+      <bad>const key = (data as unknown) as CryptoKey;</bad>
+      <good>
+        function isCryptoKey(obj: unknown): obj is CryptoKey {
+          return typeof obj === 'object' && obj !== null && 'type' in obj;
+        }
+        if (isCryptoKey(data)) { /* use data as CryptoKey */ }
+      </good>
+    </example>
+  </rule>
+
+  <rule severity="HIGH" enforcement="STRICT">
+    <name>TypeScript Best Practices</name>
+    <description>Follow TypeScript best practices for clean, maintainable code</description>
+    <practices>
+      <practice>Use TypeScript for all code</practice>
+      <practice>Prefer interfaces over types for object shapes</practice>
+      <practice>Use lowercase-dash directories (e.g., auth-wizard)</practice>
+      <practice>Favor named exports (no default exports)</practice>
+      <practice>Avoid enums - use explicit types and maps instead</practice>
+      <practice>Use functional components with TypeScript interfaces</practice>
+      <practice>Enable strict mode in TypeScript for better type safety</practice>
+      <practice>Explicit return types on all functions</practice>
+    </practices>
+    <rationale>
+      Consistent patterns improve code readability and reduce bugs.
+    </rationale>
+  </rule>
+
+  <rule severity="HIGH" enforcement="STRICT">
+    <name>Implementation Quality</name>
+    <description>Consider multiple dimensions when implementing</description>
+    <considerations>
+      <consideration>Performance impact</consideration>
+      <consideration>Maintenance overhead</consideration>
+      <consideration>Testing strategy</consideration>
+    </considerations>
+    <instructions>
+      Suggest the optimal implementation considering all three dimensions. Don't just make it work - make it work well.
+    </instructions>
+  </rule>
+
+  <rule severity="HIGH" enforcement="STRICT">
+    <name>React Best Practices</name>
+    <description>React-specific patterns for React Native Quick Crypto (if applicable)</description>
+    <practices>
+      <practice>Minimize use of useEffect - last resort only</practice>
+      <practice>Use named functions for useEffect with meaningful names</practice>
+      <practice>Avoid unnecessary comments on effect behavior</practice>
+    </practices>
+  </rule>
+
+  <rule severity="MEDIUM" enforcement="GUIDANCE">
+    <name>Syntax &amp; Formatting</name>
+    <description>Code style conventions</description>
+    <conventions>
+      <convention>Use `function` keyword for pure functions</convention>
+      <convention>Avoid unnecessary curly braces in conditionals</convention>
+      <convention>Use concise syntax for simple statements</convention>
+      <convention>Use declarative JSX (if applicable)</convention>
+      <convention>Use Prettier for consistent code formatting</convention>
+    </conventions>
+  </rule>
+
+  <rule severity="HIGH" enforcement="STRICT">
+    <name>Code Quality Standards</name>
+    <description>Quality gates that must be met</description>
+    <standards>
+      <standard>Code must be minimal and modular</standard>
+      <standard>No unnecessary comments</standard>
+      <standard>Self-documenting code preferred</standard>
+      <standard>Comments only for complex algorithms</standard>
+    </standards>
+  </rule>
+
+  <rule severity="HIGH" enforcement="STRICT">
+    <name>Package Manager</name>
+    <description>Use Bun for all TypeScript package management</description>
+    <tool>Bun 1.2 or higher</tool>
+    <instructions>
+      Never use npm, yarn, or pnpm. Always use bun for install, add, remove, etc.
+    </instructions>
+  </rule>
+</rules>

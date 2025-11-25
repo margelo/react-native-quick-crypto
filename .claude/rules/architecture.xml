@@ -1,0 +1,122 @@
+<rules category="architecture">
+  <metadata>
+    <trigger>always_on</trigger>
+  </metadata>
+
+  <rule severity="CRITICAL" enforcement="BLOCKING">
+    <name>Project Context</name>
+    <description>React Native Quick Crypto - Native cryptographic operations for React Native</description>
+    <context>
+      <item>This is a React Native project that offers cryptographic operations in native code</item>
+      <item>Uses Nitro Modules to bridge JavaScript and C++</item>
+      <item>Part of the API strives to be a polyfill of the Node.js crypto module</item>
+      <item>Goal: Migrate from OpenSSL 1.1.1 to OpenSSL 3.3+ with modern C++ and Nitro Modules</item>
+    </context>
+    <mustAcknowledge>true</mustAcknowledge>
+  </rule>
+
+  <rule severity="CRITICAL" enforcement="BLOCKING">
+    <name>API Priority Order</name>
+    <description>When implementing features, favor in this order</description>
+    <priority>
+      <rank>1</rank>
+      <source>WebCrypto API</source>
+      <rationale>Modern standard, best for subtle.* methods</rationale>
+    </priority>
+    <priority>
+      <rank>2</rank>
+      <source>Node.js Implementation</source>
+      <rationale>Use $REPOS/node/deps/ncrypto as reference for crypto.* polyfills</rationale>
+    </priority>
+    <priority>
+      <rank>3</rank>
+      <source>RNQC 0.x Implementation</source>
+      <rationale>Legacy reference at $REPOS/rnqc/0.x (uses OpenSSL 1.1.1, deprecated)</rationale>
+    </priority>
+    <mustAcknowledge>true</mustAcknowledge>
+    <instructions>
+      Always check Node.js deps/ncrypto before implementing new features. It may need upgrading to OpenSSL 3.3+ patterns.
+    </instructions>
+  </rule>
+
+  <rule severity="HIGH" enforcement="STRICT">
+    <name>Tech Stack</name>
+    <description>Required technologies and versions</description>
+    <stack>
+      <tool>React Native - Mobile framework</tool>
+      <tool>TypeScript - Type system</tool>
+      <tool>Nitro Modules - Native bridging</tool>
+      <tool>C++20 or higher - Modern C++</tool>
+      <tool>OpenSSL 3.3+ - Cryptographic library</tool>
+      <tool>Bun 1.2+ - TypeScript package manager</tool>
+    </stack>
+    <instructions>
+      Use modern features from each technology. No legacy patterns.
+    </instructions>
+  </rule>
+
+  <rule severity="HIGH" enforcement="STRICT">
+    <name>Code Philosophy</name>
+    <description>Core principles for all code</description>
+    <principles>
+      <principle>Minimize code rather than add more</principle>
+      <principle>Prefer iteration and modularization over duplication</principle>
+      <principle>No comments unless code is sufficiently complex</principle>
+      <principle>Code should be self-documenting</principle>
+    </principles>
+    <rationale>
+      Clean, minimal code is easier to maintain, audit, and secure.
+    </rationale>
+  </rule>
+
+  <rule severity="HIGH" enforcement="STRICT">
+    <name>Testing Context</name>
+    <description>Tests run in React Native app environment</description>
+    <context>
+      Tests must be run in the example React Native application, not a standard Node.js test runner.
+    </context>
+    <instructions>
+      Don't ask to run tests directly. Test strategies should acknowledge the RN environment.
+    </instructions>
+  </rule>
+
+  <rule severity="MEDIUM" enforcement="GUIDANCE">
+    <name>Local Codebase References</name>
+    <description>Use these local repositories instead of web searches</description>
+    <references>
+      <reference>
+        <path>$REPOS/node</path>
+        <description>Node.js source code</description>
+        <focus>deps/ncrypto - Externalized crypto code, use as reference for implementations</focus>
+      </reference>
+      <reference>
+        <path>$REPOS/rnqc/0.x</path>
+        <description>RNQC 0.x legacy branch</description>
+        <focus>Uses OpenSSL 1.1.1 - migration reference only, don't copy patterns</focus>
+      </reference>
+    </references>
+    <instructions>
+      Update this library's copy of ncrypto patterns occasionally when implementing new features.
+    </instructions>
+  </rule>
+
+  <rule severity="MEDIUM" enforcement="GUIDANCE">
+    <name>Nitro Modules Documentation</name>
+    <description>Use local Nitro Modules documentation when available</description>
+    <instructions>
+      If Nitro Modules llms.txt file is accessible locally, use it for bridging guidance.
+    </instructions>
+  </rule>
+
+  <rule severity="HIGH" enforcement="STRICT">
+    <name>Explicit Rule Application</name>
+    <description>State which rules are being applied</description>
+    <instructions>
+      Every time you choose to apply a rule, explicitly state the rule in the output.
+      You can abbreviate the rule description to a single word or phrase.
+    </instructions>
+    <rationale>
+      Transparency in decision-making helps with code review and understanding.
+    </rationale>
+  </rule>
+</rules>
