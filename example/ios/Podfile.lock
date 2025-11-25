@@ -2462,7 +2462,7 @@ PODS:
     - ReactCommon/turbomodule/core
     - SocketRocket
     - Yoga
-  - RNVectorIcons (10.1.0):
+  - RNVectorIcons (10.3.0):
     - boost
     - DoubleConversion
     - fast_float
@@ -2813,7 +2813,7 @@ SPEC CHECKSUMS:
   ReactCodegen: c881aa301b4194d7d08b2a1afcb0b9e108917629
   ReactCommon: ce5d4226dfaf9d5dacbef57b4528819e39d3a120
   RNScreens: d821082c6dd1cb397cc0c98b026eeafaa68be479
-  RNVectorIcons: c6c73d2c1b89a20536c869c73f6532a9183e7887
+  RNVectorIcons: 791f13226ec4a3fd13062eda9e892159f0981fae
   SocketRocket: d4aabe649be1e368d1318fdf28a022d714d65748
   Yoga: 11c9686a21e2cd82a094a723649d9f4507200fb0
 
