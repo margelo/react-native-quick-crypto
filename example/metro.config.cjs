@@ -1,11 +1,8 @@
 const { getDefaultConfig, mergeConfig } = require('@react-native/metro-config');
 const path = require('path');
-const exclusionList = require('metro-config/private/defaults/exclusionList');
-const escape = require('escape-string-regexp');
-const pack = require('../package.json');
 
 const root = path.resolve(__dirname, '..');
-const peerModules = Object.keys({ ...pack.peerDependencies });
+const packagesDir = path.join(root, 'packages');
 
 /**
  * Metro configuration
@@ -16,20 +13,13 @@ const peerModules = Object.keys({ ...pack.peerDependencies });
 const config = {
   watchFolders: [root],
 
-  // We need to make sure that only one version is loaded for peerDependencies
-  // So we blacklist them at the root, and alias them to the versions in example's node_modules
   resolver: {
-    blacklistRE: exclusionList(
-      peerModules.map(
-        m => new RegExp(`^${escape(path.join(root, 'node_modules', m))}\\/.*$`),
-      ),
-    ),
-
+    nodeModulesPaths: [
+      path.join(__dirname, 'node_modules'),
+      path.join(root, 'node_modules'),
+      packagesDir,
+    ],
     extraNodeModules: {
-      ...peerModules.reduce((acc, name) => {
-        acc[name] = path.join(__dirname, 'node_modules', name);
-        return acc;
-      }, {}),
       stream: require.resolve('readable-stream'),
     },
   },

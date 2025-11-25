@@ -1,0 +1,74 @@
+name: Release
+
+on:
+  workflow_dispatch:
+    inputs:
+      version:
+        description: 'Version to release (e.g., 1.0.0-beta.21) or increment (patch, minor, major, prepatch, preminor, premajor, prerelease)'
+        required: true
+        default: 'prerelease'
+      dry-run:
+        description: 'Dry run (no actual publish)'
+        type: boolean
+        default: false
+
+jobs:
+  release:
+    runs-on: macos-latest
+    permissions:
+      contents: write
+      id-token: write
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          token: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Setup Bun
+        uses: oven-sh/setup-bun@v2
+
+      - name: Setup Node.js (for npm publish with OIDC)
+        uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          registry-url: 'https://registry.npmjs.org'
+
+      - name: Setup Ruby (for CocoaPods)
+        uses: ruby/setup-ruby@v1
+        with:
+          ruby-version: 3.3
+          bundler-cache: true
+          working-directory: example
+
+      - name: Install dependencies
+        run: bun install
+
+      - name: Configure Git
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+
+      - name: Copy README to package
+        run: cp README.md packages/react-native-quick-crypto/README.md
+
+      - name: Release package to npm
+        working-directory: packages/react-native-quick-crypto
+        run: |
+          if [ "${{ inputs.dry-run }}" = "true" ]; then
+            bun release ${{ inputs.version }} --dry-run --ci
+          else
+            bun release ${{ inputs.version }} --ci
+          fi
+        env:
+          NPM_CONFIG_PROVENANCE: true
+
+      - name: Create Git tag and GitHub release
+        run: |
+          if [ "${{ inputs.dry-run }}" = "true" ]; then
+            bun run release-it ${{ inputs.version }} --dry-run --ci
+          else
+            bun run release-it ${{ inputs.version }} --ci
+          fi
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
