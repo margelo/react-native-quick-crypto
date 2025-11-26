@@ -105,4 +105,53 @@
       Never use npm, yarn, or pnpm. Always use bun for install, add, remove, etc.
     </instructions>
   </rule>
+
+  <rule severity="CRITICAL" enforcement="BLOCKING">
+    <name>Chai Assertions and ESLint Compliance</name>
+    <description>Write Chai test assertions that pass ESLint @typescript-eslint/no-unused-expressions rule</description>
+    <rationale>
+      The @typescript-eslint/no-unused-expressions rule treats standalone expect() statements as errors.
+      You MUST use assertion patterns that don't trigger this linting error.
+    </rationale>
+    <mustAcknowledge>true</mustAcknowledge>
+    <instructions>
+      WINNING PATTERNS (these work):
+      1. Use .to.equal(), .to.match(), or other comparison assertions
+      2. Use assert.isFalse(), assert.isTrue() instead of expect().to.be.false
+
+      FAILING PATTERNS (DO NOT USE):
+      - expect(value?.endsWith('.')).to.be.false  ❌ Triggers linting error
+      - expect(value).to.not.be.undefined  ❌ Triggers linting error
+      - expect(value).to.exist  ❌ Triggers linting error
+
+      CORRECT PATTERNS:
+      - expect(value).to.equal('expected')  ✅ Works
+      - expect(value).to.match(/^[A-Za-z0-9_-]+$/)  ✅ Works
+      - assert.isFalse(value?.endsWith('.'))  ✅ Works
+      - expect(value.type).to.equal('public')  ✅ Works
+    </instructions>
+    <example>
+      <bad>
+        // DON'T: This triggers @typescript-eslint/no-unused-expressions
+        expect(exportedPub.n?.endsWith('.')).to.be.false;
+      </bad>
+      <good>
+        // DO: Use regex match instead
+        expect(exportedPub.n).to.match(/^[A-Za-z0-9_-]+$/);
+
+        // OR: Use assert.isFalse
+        assert.isFalse(exportedPub.n?.endsWith('.'));
+
+        // OR: Test for expected value instead
+        expect(exportedPub.n?.endsWith('.')).to.equal(false);
+      </good>
+    </example>
+    <commonMistake>
+      You will try to fix linting errors by adding message parameters like:
+      expect(value?.endsWith('.'), 'should not end with period').to.be.false
+
+      THIS STILL FAILS! The message parameter doesn't fix the linting error.
+      Use the CORRECT PATTERNS above instead.
+    </commonMistake>
+  </rule>
 </rules>

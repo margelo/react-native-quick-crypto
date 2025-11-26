@@ -30,15 +30,8 @@ static std::string bn_to_base64url(const BIGNUM* bn, size_t expected_size = 0) {
   size_t offset = buffer_size - num_bytes;
   BN_bn2bin(bn, buffer.data() + offset);
 
-  std::string encoded = base64_encode<std::string>(buffer.data(), buffer.size(), true);
-
-  // Some JWK implementations use '.' instead of '=' for padding
-  // Add trailing period if length % 4 == 3 (would need one '=' in standard base64)
-  if (encoded.length() % 4 == 3) {
-    encoded += '.';
-  }
-
-  return encoded;
+  // Return clean base64url - RFC 7517 compliant (no padding characters)
+  return base64_encode<std::string>(buffer.data(), buffer.size(), true);
 }
 
 // Helper to add padding to base64url strings
@@ -187,15 +180,8 @@ JWK HybridKeyObjectHandle::exportJwk(const JWK& key, bool handleRsaPss) {
   if (keyType == KeyType::SECRET) {
     auto symKey = data_.GetSymmetricKey();
     result.kty = JWKkty::OCT;
-    std::string encoded = base64url_encode(reinterpret_cast<const unsigned char*>(symKey->data()), symKey->size());
-
-    // Some JWK implementations use '.' instead of '=' for padding
-    // Add trailing period if length % 4 == 3 (would need one '=' in standard base64)
-    if (encoded.length() % 4 == 3) {
-      encoded += '.';
-    }
-
-    result.k = encoded;
+    // RFC 7517 compliant base64url encoding (no padding characters)
+    result.k = base64url_encode(reinterpret_cast<const unsigned char*>(symKey->data()), symKey->size());
     return result;
   }
 
