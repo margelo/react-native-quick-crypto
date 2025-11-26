@@ -18,6 +18,7 @@ namespace margelo::nitro::crypto {
       prototype.registerHybridMethod("exportJwk", &HybridKeyObjectHandleSpec::exportJwk);
       prototype.registerHybridMethod("getAsymmetricKeyType", &HybridKeyObjectHandleSpec::getAsymmetricKeyType);
       prototype.registerHybridMethod("init", &HybridKeyObjectHandleSpec::init);
+      prototype.registerHybridMethod("initECRaw", &HybridKeyObjectHandleSpec::initECRaw);
       prototype.registerHybridMethod("initJwk", &HybridKeyObjectHandleSpec::initJwk);
       prototype.registerHybridMethod("keyDetail", &HybridKeyObjectHandleSpec::keyDetail);
     });

@@ -236,7 +236,7 @@ Before marking task complete:
 
 ## Tools Available
 
-- Use `bun` as package manager (1.2+)
+- Use `bun` as package manager (1.3+)
 - TypeScript strict mode enabled
 - Prettier for formatting
 - Access to Nitro Modules documentation via `llms.txt` if available

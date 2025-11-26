@@ -138,7 +138,9 @@ export function binaryLikeToArrayBuffer(
     return input.handle.exportKey();
   }
 
-  throw new Error('input could not be converted to ArrayBuffer');
+  throw new Error(
+    'Invalid argument type for "key". Need ArrayBuffer, TypedArray, KeyObject, CryptoKey, string',
+  );
 }
 
 export function ab2str(buf: ArrayBuffer, encoding: string = 'hex') {

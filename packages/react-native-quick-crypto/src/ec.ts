@@ -1,5 +1,6 @@
 import { NitroModules } from 'react-native-nitro-modules';
 import type { EcKeyPair } from './specs/ecKeyPair.nitro';
+import type { KeyObjectHandle } from './specs/keyObjectHandle.nitro';
 import {
   CryptoKey,
   KeyObject,
@@ -15,6 +16,7 @@ import type {
   BinaryLike,
   JWK,
   ImportFormat,
+  NamedCurve,
 } from './utils/types';
 import {
   bufferLikeToArrayBuffer,
@@ -121,6 +123,83 @@ export function ecImportKey(
     throw lazyDOMException('Unrecognized namedCurve', 'NotSupportedError');
   }
 
+  // Handle JWK format
+  if (format === 'jwk') {
+    const jwk = keyData as JWK;
+
+    // Validate JWK
+    if (jwk.kty !== 'EC') {
+      throw lazyDOMException('Invalid JWK "kty" Parameter', 'DataError');
+    }
+
+    if (jwk.crv !== namedCurve) {
+      throw lazyDOMException(
+        'JWK "crv" does not match the requested algorithm',
+        'DataError',
+      );
+    }
+
+    // Check use parameter if present
+    if (jwk.use !== undefined) {
+      const expectedUse = name === 'ECDH' ? 'enc' : 'sig';
+      if (jwk.use !== expectedUse) {
+        throw lazyDOMException('Invalid JWK "use" Parameter', 'DataError');
+      }
+    }
+
+    // Check alg parameter if present
+    if (jwk.alg !== undefined) {
+      let expectedAlg: string | undefined;
+
+      if (name === 'ECDSA') {
+        // Map namedCurve to expected ECDSA algorithm
+        expectedAlg =
+          namedCurve === 'P-256'
+            ? 'ES256'
+            : namedCurve === 'P-384'
+              ? 'ES384'
+              : namedCurve === 'P-521'
+                ? 'ES512'
+                : undefined;
+      } else if (name === 'ECDH') {
+        // ECDH uses ECDH-ES algorithm
+        expectedAlg = 'ECDH-ES';
+      }
+
+      if (expectedAlg && jwk.alg !== expectedAlg) {
+        throw lazyDOMException(
+          'JWK "alg" does not match the requested algorithm',
+          'DataError',
+        );
+      }
+    }
+
+    // Import using C++ layer
+    const handle =
+      NitroModules.createHybridObject<KeyObjectHandle>('KeyObjectHandle');
+    const keyType = handle.initJwk(jwk, namedCurve as NamedCurve);
+
+    if (keyType === undefined) {
+      throw lazyDOMException('Invalid JWK', 'DataError');
+    }
+
+    // Create the appropriate KeyObject based on type
+    let keyObject: KeyObject;
+    if (keyType === 1) {
+      keyObject = new PublicKeyObject(handle);
+    } else if (keyType === 2) {
+      keyObject = new PrivateKeyObject(handle);
+    } else {
+      throw lazyDOMException(
+        'Unexpected key type from JWK import',
+        'DataError',
+      );
+    }
+
+    return new CryptoKey(keyObject, algorithm, keyUsages, extractable);
+  }
+
+  // Handle binary formats (spki, pkcs8, raw)
   if (format !== 'spki' && format !== 'pkcs8' && format !== 'raw') {
     throw lazyDOMException(
       `Unsupported format: ${format}`,
@@ -128,32 +207,55 @@ export function ecImportKey(
     );
   }
 
-  // Handle JWK format separately
-  if (typeof keyData === 'object' && 'kty' in keyData) {
-    throw lazyDOMException('JWK format not yet supported', 'NotSupportedError');
+  // Determine expected key type based on format
+  const expectedKeyType =
+    format === 'spki' || format === 'raw' ? 'public' : 'private';
+
+  // Validate usages for the key type
+  const isPublicKey = expectedKeyType === 'public';
+  let validUsages: KeyUsage[];
+
+  if (name === 'ECDSA') {
+    validUsages = isPublicKey ? ['verify'] : ['sign'];
+  } else if (name === 'ECDH') {
+    validUsages = isPublicKey ? [] : ['deriveKey', 'deriveBits'];
+  } else {
+    throw lazyDOMException('Unsupported algorithm', 'NotSupportedError');
+  }
+
+  if (hasAnyNotIn(keyUsages, validUsages)) {
+    throw lazyDOMException(
+      `Unsupported key usage for a ${name} key`,
+      'SyntaxError',
+    );
   }
 
   // Convert keyData to ArrayBuffer
   const keyBuffer = bufferLikeToArrayBuffer(keyData as BufferLike);
 
-  // Create EC instance with the curve
-  const ec = new Ec(namedCurve);
+  // Create KeyObject directly using the appropriate format
+  let keyObject: KeyObject;
 
-  // Import the key using Nitro module
-  ec.native.importKey(
-    format === 'raw' ? 'der' : format, // Convert raw to der for now
-    keyBuffer,
-    name,
-    extractable,
-    keyUsages,
-  );
+  if (format === 'raw') {
+    // Raw format is only for public keys - use specialized EC raw import
+    const handle =
+      NitroModules.createHybridObject<KeyObjectHandle>('KeyObjectHandle');
+    const curveAlias =
+      kNamedCurveAliases[namedCurve as keyof typeof kNamedCurveAliases];
+    if (!handle.initECRaw(curveAlias, keyBuffer)) {
+      throw lazyDOMException('Failed to import EC raw key', 'DataError');
+    }
+    keyObject = new PublicKeyObject(handle);
+  } else {
+    // Use standard DER import for spki/pkcs8
+    keyObject = KeyObject.createKeyObject(
+      expectedKeyType,
+      keyBuffer,
+      'der',
+      format as 'spki' | 'pkcs8',
+    );
+  }
 
-  // Create a KeyObject wrapper for the imported key
-  // Use the EC instance's key data to create a proper KeyObject
-  const privateKeyData = ec.native.getPrivateKey();
-  const keyObject = new KeyObject('private', privateKeyData);
-
-  // Create and return CryptoKey
   return new CryptoKey(keyObject, algorithm, keyUsages, extractable);
   //     //   // verifyAcceptableEcKeyUse(name, true, usagesSet);
   //     //   try {

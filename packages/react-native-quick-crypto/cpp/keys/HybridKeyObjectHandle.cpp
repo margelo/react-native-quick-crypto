@@ -1,13 +1,93 @@
 #include <stdexcept>
 
-#include "CFRGKeyPairType.hpp"
 #include "HybridKeyObjectHandle.hpp"
 #include "Utils.hpp"
+#include "../utils/base64.h"
 #include <openssl/ec.h>
 #include <openssl/evp.h>
 #include <openssl/obj_mac.h>
+#include <openssl/rsa.h>
+#include <openssl/bn.h>
 
 namespace margelo::nitro::crypto {
+
+// Helper functions for base64url encoding/decoding with BIGNUMs
+static std::string bn_to_base64url(const BIGNUM* bn, size_t expected_size = 0) {
+  if (!bn) return "";
+  
+  int num_bytes = BN_num_bytes(bn);
+  if (num_bytes == 0) return "";
+  
+  // If expected_size is provided and larger than num_bytes, pad with leading zeros
+  size_t buffer_size = (expected_size > 0 && expected_size > static_cast<size_t>(num_bytes)) 
+                        ? expected_size 
+                        : static_cast<size_t>(num_bytes);
+  
+  std::vector<unsigned char> buffer(buffer_size, 0);
+  
+  // BN_bn2bin writes to the end of the buffer if it's larger than needed
+  size_t offset = buffer_size - num_bytes;
+  BN_bn2bin(bn, buffer.data() + offset);
+  
+  std::string encoded = base64_encode<std::string>(buffer.data(), buffer.size(), true);
+  
+  // Some JWK implementations use '.' instead of '=' for padding
+  // Add trailing period if length % 4 == 3 (would need one '=' in standard base64)
+  if (encoded.length() % 4 == 3) {
+    encoded += '.';
+  }
+  
+  return encoded;
+}
+
+// Helper to add padding to base64url strings
+static std::string add_base64_padding(const std::string& b64) {
+  std::string padded = b64;
+  // Base64 strings should be a multiple of 4 characters
+  // Add '=' padding to make it so
+  while (padded.length() % 4 != 0) {
+    padded += '=';
+  }
+  return padded;
+}
+
+static BIGNUM* base64url_to_bn(const std::string& b64) {
+  if (b64.empty()) return nullptr;
+  
+  try {
+    // Strip trailing periods (some JWK implementations use '.' as padding)
+    std::string cleaned = b64;
+    while (!cleaned.empty() && cleaned.back() == '.') {
+      cleaned.pop_back();
+    }
+    
+    // Add padding if needed for base64url
+    std::string padded = add_base64_padding(cleaned);
+    std::string decoded = base64_decode<std::string>(padded, false);
+    if (decoded.empty()) return nullptr;
+    
+    return BN_bin2bn(reinterpret_cast<const unsigned char*>(decoded.data()), 
+                     static_cast<int>(decoded.size()), nullptr);
+  } catch (const std::exception& e) {
+    throw std::runtime_error(std::string("Input is not valid base64-encoded data."));
+  }
+}
+
+static std::string base64url_encode(const unsigned char* data, size_t len) {
+  return base64_encode<std::string>(data, len, true);
+}
+
+static std::string base64url_decode(const std::string& input) {
+  // Strip trailing periods (some JWK implementations use '.' as padding)
+  std::string cleaned = input;
+  while (!cleaned.empty() && cleaned.back() == '.') {
+    cleaned.pop_back();
+  }
+  
+  // Add padding if needed for base64url
+  std::string padded = add_base64_padding(cleaned);
+  return base64_decode<std::string>(padded, false);
+}
 
 std::shared_ptr<ArrayBuffer> HybridKeyObjectHandle::exportKey(std::optional<KFormatType> format, std::optional<KeyEncoding> type,
                                                               const std::optional<std::string>& cipher,
@@ -98,10 +178,119 @@ std::shared_ptr<ArrayBuffer> HybridKeyObjectHandle::exportKey(std::optional<KFor
 }
 
 JWK HybridKeyObjectHandle::exportJwk(const JWK& key, bool handleRsaPss) {
-  throw std::runtime_error("Not yet implemented");
+  JWK result = key;
+  auto keyType = data_.GetKeyType();
+
+  // Handle secret keys (AES, HMAC)
+  if (keyType == KeyType::SECRET) {
+    auto symKey = data_.GetSymmetricKey();
+    result.kty = JWKkty::OCT;
+    std::string encoded = base64url_encode(reinterpret_cast<const unsigned char*>(symKey->data()), symKey->size());
+    
+    // Some JWK implementations use '.' instead of '=' for padding
+    // Add trailing period if length % 4 == 3 (would need one '=' in standard base64)
+    if (encoded.length() % 4 == 3) {
+      encoded += '.';
+    }
+    
+    result.k = encoded;
+    return result;
+  }
+
+  // Handle asymmetric keys (RSA, EC)
+  const auto& pkey = data_.GetAsymmetricKey();
+  if (!pkey) {
+    throw std::runtime_error("Invalid key for JWK export");
+  }
+
+  int keyId = EVP_PKEY_id(pkey.get());
+
+  // Export RSA keys
+  if (keyId == EVP_PKEY_RSA || keyId == EVP_PKEY_RSA_PSS) {
+    const RSA* rsa = EVP_PKEY_get0_RSA(pkey.get());
+    if (!rsa) throw std::runtime_error("Failed to get RSA key");
+
+    result.kty = JWKkty::RSA;
+
+    const BIGNUM *n_bn, *e_bn, *d_bn, *p_bn, *q_bn, *dmp1_bn, *dmq1_bn, *iqmp_bn;
+    RSA_get0_key(rsa, &n_bn, &e_bn, &d_bn);
+    RSA_get0_factors(rsa, &p_bn, &q_bn);
+    RSA_get0_crt_params(rsa, &dmp1_bn, &dmq1_bn, &iqmp_bn);
+
+    // Public components (always present)
+    if (n_bn) result.n = bn_to_base64url(n_bn);
+    if (e_bn) result.e = bn_to_base64url(e_bn);
+
+    // Private components (only for private keys)
+    if (keyType == KeyType::PRIVATE) {
+      if (d_bn) result.d = bn_to_base64url(d_bn);
+      if (p_bn) result.p = bn_to_base64url(p_bn);
+      if (q_bn) result.q = bn_to_base64url(q_bn);
+      if (dmp1_bn) result.dp = bn_to_base64url(dmp1_bn);
+      if (dmq1_bn) result.dq = bn_to_base64url(dmq1_bn);
+      if (iqmp_bn) result.qi = bn_to_base64url(iqmp_bn);
+    }
+
+    return result;
+  }
+
+  // Export EC keys
+  if (keyId == EVP_PKEY_EC) {
+    const EC_KEY* ec = EVP_PKEY_get0_EC_KEY(pkey.get());
+    if (!ec) throw std::runtime_error("Failed to get EC key");
+
+    const EC_GROUP* group = EC_KEY_get0_group(ec);
+    if (!group) throw std::runtime_error("Failed to get EC group");
+
+    int nid = EC_GROUP_get_curve_name(group);
+    const char* curve_name = OBJ_nid2sn(nid);
+    if (!curve_name) throw std::runtime_error("Unknown curve");
+
+    // Get the field size in bytes for proper padding
+    size_t field_size = (EC_GROUP_get_degree(group) + 7) / 8;
+
+    result.kty = JWKkty::EC;
+    
+    // Map OpenSSL curve names to JWK curve names
+    if (strcmp(curve_name, "prime256v1") == 0) {
+      result.crv = "P-256";
+    } else if (strcmp(curve_name, "secp384r1") == 0) {
+      result.crv = "P-384";
+    } else if (strcmp(curve_name, "secp521r1") == 0) {
+      result.crv = "P-521";
+    } else {
+      result.crv = curve_name;
+    }
+
+    const EC_POINT* pub_key = EC_KEY_get0_public_key(ec);
+    if (pub_key) {
+      BIGNUM* x_bn = BN_new();
+      BIGNUM* y_bn = BN_new();
+      
+      if (EC_POINT_get_affine_coordinates(group, pub_key, x_bn, y_bn, nullptr) == 1) {
+        result.x = bn_to_base64url(x_bn, field_size);
+        result.y = bn_to_base64url(y_bn, field_size);
+      }
+      
+      BN_free(x_bn);
+      BN_free(y_bn);
+    }
+
+    // Export private key if this is a private key
+    if (keyType == KeyType::PRIVATE) {
+      const BIGNUM* priv_key = EC_KEY_get0_private_key(ec);
+      if (priv_key) {
+        result.d = bn_to_base64url(priv_key, field_size);
+      }
+    }
+
+    return result;
+  }
+
+  throw std::runtime_error("Unsupported key type for JWK export");
 }
 
-CFRGKeyPairType HybridKeyObjectHandle::getAsymmetricKeyType() {
+AsymmetricKeyType HybridKeyObjectHandle::getAsymmetricKeyType() {
   const auto& pkey = data_.GetAsymmetricKey();
   if (!pkey) {
     throw std::runtime_error("Key is not an asymmetric key");
@@ -110,14 +299,24 @@ CFRGKeyPairType HybridKeyObjectHandle::getAsymmetricKeyType() {
   int keyType = EVP_PKEY_id(pkey.get());
 
   switch (keyType) {
+    case EVP_PKEY_RSA:
+      return AsymmetricKeyType::RSA;
+    case EVP_PKEY_RSA_PSS:
+      return AsymmetricKeyType::RSA_PSS;
+    case EVP_PKEY_DSA:
+      return AsymmetricKeyType::DSA;
+    case EVP_PKEY_EC:
+      return AsymmetricKeyType::EC;
+    case EVP_PKEY_DH:
+      return AsymmetricKeyType::DH;
     case EVP_PKEY_X25519:
-      return CFRGKeyPairType::X25519;
+      return AsymmetricKeyType::X25519;
     case EVP_PKEY_X448:
-      return CFRGKeyPairType::X448;
+      return AsymmetricKeyType::X448;
     case EVP_PKEY_ED25519:
-      return CFRGKeyPairType::ED25519;
+      return AsymmetricKeyType::ED25519;
     case EVP_PKEY_ED448:
-      return CFRGKeyPairType::ED448;
+      return AsymmetricKeyType::ED448;
     default:
       throw std::runtime_error("Unsupported asymmetric key type");
   }
@@ -172,7 +371,212 @@ bool HybridKeyObjectHandle::init(KeyType keyType, const std::variant<std::string
 }
 
 std::optional<KeyType> HybridKeyObjectHandle::initJwk(const JWK& keyData, std::optional<NamedCurve> namedCurve) {
-  throw std::runtime_error("Not yet implemented");
+  // Reset any existing data
+  data_ = KeyObjectData();
+
+  if (!keyData.kty.has_value()) {
+    throw std::runtime_error("JWK missing required 'kty' field");
+  }
+
+  JWKkty kty = keyData.kty.value();
+
+  // Handle symmetric keys (AES, HMAC)
+  if (kty == JWKkty::OCT) {
+    if (!keyData.k.has_value()) {
+      throw std::runtime_error("JWK oct key missing 'k' field");
+    }
+
+    std::string decoded = base64url_decode(keyData.k.value());
+    auto keyBuffer = ToNativeArrayBuffer(decoded);
+    data_ = KeyObjectData::CreateSecret(keyBuffer);
+    return KeyType::SECRET;
+  }
+
+  // Handle RSA keys
+  if (kty == JWKkty::RSA) {
+    bool isPrivate = keyData.d.has_value();
+
+    if (!keyData.n.has_value() || !keyData.e.has_value()) {
+      throw std::runtime_error("JWK RSA key missing required 'n' or 'e' fields");
+    }
+
+    RSA* rsa = RSA_new();
+    if (!rsa) throw std::runtime_error("Failed to create RSA key");
+
+    // Set public components
+    BIGNUM* n = base64url_to_bn(keyData.n.value());
+    BIGNUM* e = base64url_to_bn(keyData.e.value());
+    
+    if (!n || !e) {
+      RSA_free(rsa);
+      throw std::runtime_error("Failed to decode RSA public components");
+    }
+
+    if (isPrivate) {
+      // Private key
+      if (!keyData.d.has_value()) {
+        BN_free(n);
+        BN_free(e);
+        RSA_free(rsa);
+        throw std::runtime_error("JWK RSA private key missing 'd' field");
+      }
+
+      BIGNUM* d = base64url_to_bn(keyData.d.value());
+      if (!d) {
+        BN_free(n);
+        BN_free(e);
+        RSA_free(rsa);
+        throw std::runtime_error("Failed to decode RSA 'd' component");
+      }
+
+      // Set key components (RSA_set0_key takes ownership)
+      if (RSA_set0_key(rsa, n, e, d) != 1) {
+        BN_free(n);
+        BN_free(e);
+        BN_free(d);
+        RSA_free(rsa);
+        throw std::runtime_error("Failed to set RSA key components");
+      }
+
+      // Set optional CRT parameters if present
+      if (keyData.p.has_value() && keyData.q.has_value()) {
+        BIGNUM* p = base64url_to_bn(keyData.p.value());
+        BIGNUM* q = base64url_to_bn(keyData.q.value());
+        if (p && q) {
+          RSA_set0_factors(rsa, p, q);
+        }
+      }
+
+      if (keyData.dp.has_value() && keyData.dq.has_value() && keyData.qi.has_value()) {
+        BIGNUM* dmp1 = base64url_to_bn(keyData.dp.value());
+        BIGNUM* dmq1 = base64url_to_bn(keyData.dq.value());
+        BIGNUM* iqmp = base64url_to_bn(keyData.qi.value());
+        if (dmp1 && dmq1 && iqmp) {
+          RSA_set0_crt_params(rsa, dmp1, dmq1, iqmp);
+        }
+      }
+
+      // Create EVP_PKEY from RSA
+      EVP_PKEY* pkey = EVP_PKEY_new();
+      if (!pkey || EVP_PKEY_assign_RSA(pkey, rsa) != 1) {
+        RSA_free(rsa);
+        if (pkey) EVP_PKEY_free(pkey);
+        throw std::runtime_error("Failed to create EVP_PKEY from RSA");
+      }
+
+      data_ = KeyObjectData::CreateAsymmetric(KeyType::PRIVATE, ncrypto::EVPKeyPointer(pkey));
+      return KeyType::PRIVATE;
+
+    } else {
+      // Public key
+      if (RSA_set0_key(rsa, n, e, nullptr) != 1) {
+        BN_free(n);
+        BN_free(e);
+        RSA_free(rsa);
+        throw std::runtime_error("Failed to set RSA public key components");
+      }
+
+      EVP_PKEY* pkey = EVP_PKEY_new();
+      if (!pkey || EVP_PKEY_assign_RSA(pkey, rsa) != 1) {
+        RSA_free(rsa);
+        if (pkey) EVP_PKEY_free(pkey);
+        throw std::runtime_error("Failed to create EVP_PKEY from RSA");
+      }
+
+      data_ = KeyObjectData::CreateAsymmetric(KeyType::PUBLIC, ncrypto::EVPKeyPointer(pkey));
+      return KeyType::PUBLIC;
+    }
+  }
+
+  // Handle EC keys
+  if (kty == JWKkty::EC) {
+    bool isPrivate = keyData.d.has_value();
+
+    if (!keyData.crv.has_value() || !keyData.x.has_value() || !keyData.y.has_value()) {
+      throw std::runtime_error("JWK EC key missing required fields (crv, x, y)");
+    }
+
+    std::string crv = keyData.crv.value();
+    
+    // Map JWK curve names to OpenSSL NIDs
+    int nid;
+    if (crv == "P-256") {
+      nid = NID_X9_62_prime256v1;
+    } else if (crv == "P-384") {
+      nid = NID_secp384r1;
+    } else if (crv == "P-521") {
+      nid = NID_secp521r1;
+    } else {
+      throw std::runtime_error("Unsupported EC curve: " + crv);
+    }
+
+    // Create EC_KEY
+    EC_KEY* ec = EC_KEY_new_by_curve_name(nid);
+    if (!ec) throw std::runtime_error("Failed to create EC key");
+
+    const EC_GROUP* group = EC_KEY_get0_group(ec);
+    
+    // Decode public key coordinates
+    BIGNUM* x_bn = base64url_to_bn(keyData.x.value());
+    BIGNUM* y_bn = base64url_to_bn(keyData.y.value());
+
+    if (!x_bn || !y_bn) {
+      EC_KEY_free(ec);
+      throw std::runtime_error("Failed to decode EC public key coordinates");
+    }
+
+    // Set public key
+    EC_POINT* pub_key = EC_POINT_new(group);
+    if (!pub_key || EC_POINT_set_affine_coordinates(group, pub_key, x_bn, y_bn, nullptr) != 1) {
+      BN_free(x_bn);
+      BN_free(y_bn);
+      if (pub_key) EC_POINT_free(pub_key);
+      EC_KEY_free(ec);
+      throw std::runtime_error("Failed to set EC public key");
+    }
+
+    BN_free(x_bn);
+    BN_free(y_bn);
+
+    if (EC_KEY_set_public_key(ec, pub_key) != 1) {
+      EC_POINT_free(pub_key);
+      EC_KEY_free(ec);
+      throw std::runtime_error("Failed to set EC public key on EC_KEY");
+    }
+
+    EC_POINT_free(pub_key);
+
+    // Set private key if present
+    if (isPrivate) {
+      BIGNUM* d_bn = base64url_to_bn(keyData.d.value());
+      if (!d_bn) {
+        EC_KEY_free(ec);
+        throw std::runtime_error("Failed to decode EC private key");
+      }
+
+      if (EC_KEY_set_private_key(ec, d_bn) != 1) {
+        BN_free(d_bn);
+        EC_KEY_free(ec);
+        throw std::runtime_error("Failed to set EC private key");
+      }
+
+      BN_free(d_bn);
+    }
+
+    // Create EVP_PKEY from EC_KEY
+    EVP_PKEY* pkey = EVP_PKEY_new();
+    if (!pkey || EVP_PKEY_assign_EC_KEY(pkey, ec) != 1) {
+      EC_KEY_free(ec);
+      if (pkey) EVP_PKEY_free(pkey);
+      throw std::runtime_error("Failed to create EVP_PKEY from EC_KEY");
+    }
+
+    KeyType type = isPrivate ? KeyType::PRIVATE : KeyType::PUBLIC;
+    data_ = KeyObjectData::CreateAsymmetric(type, ncrypto::EVPKeyPointer(pkey));
+    return type;
+  }
+
+  throw std::runtime_error("Unsupported JWK key type");
 }
 
 KeyDetail HybridKeyObjectHandle::keyDetail() {
@@ -182,8 +586,28 @@ KeyDetail HybridKeyObjectHandle::keyDetail() {
   }
 
   EVP_PKEY* pkey = pkey_ptr.get();
+  int keyType = EVP_PKEY_base_id(pkey);
 
-  if (EVP_PKEY_base_id(pkey) == EVP_PKEY_EC) {
+  if (keyType == EVP_PKEY_RSA) {
+    // Extract RSA key details
+    int modulusLength = EVP_PKEY_bits(pkey);
+    
+    // Extract public exponent (typically 65537 = 0x10001)
+    const RSA* rsa = EVP_PKEY_get0_RSA(pkey);
+    if (rsa) {
+      const BIGNUM* e_bn = nullptr;
+      RSA_get0_key(rsa, nullptr, &e_bn, nullptr);
+      if (e_bn) {
+        unsigned long exponent_val = BN_get_word(e_bn);
+        return KeyDetail(std::nullopt, static_cast<double>(exponent_val), static_cast<double>(modulusLength), std::nullopt, std::nullopt, std::nullopt, std::nullopt);
+      }
+    }
+    
+    // Fallback if we couldn't extract the exponent
+    return KeyDetail(std::nullopt, std::nullopt, static_cast<double>(modulusLength), std::nullopt, std::nullopt, std::nullopt, std::nullopt);
+  }
+
+  if (keyType == EVP_PKEY_EC) {
     // Extract EC curve name
     EC_KEY* ec_key = EVP_PKEY_get1_EC_KEY(pkey);
     if (ec_key) {
@@ -237,6 +661,76 @@ bool HybridKeyObjectHandle::initRawKey(KeyType keyType, std::shared_ptr<ArrayBuf
   }
 
   this->data_ = KeyObjectData::CreateAsymmetric(keyType, std::move(pkey));
+  return true;
+}
+
+bool HybridKeyObjectHandle::initECRaw(const std::string& namedCurve, const std::shared_ptr<ArrayBuffer>& keyData) {
+  // Reset any existing data
+  data_ = KeyObjectData();
+
+  // Map curve name to NID (same logic as HybridEcKeyPair::GetCurveFromName)
+  int nid = 0;
+  if (namedCurve == "prime256v1" || namedCurve == "P-256") {
+    nid = NID_X9_62_prime256v1;
+  } else if (namedCurve == "secp384r1" || namedCurve == "P-384") {
+    nid = NID_secp384r1;
+  } else if (namedCurve == "secp521r1" || namedCurve == "P-521") {
+    nid = NID_secp521r1;
+  } else if (namedCurve == "secp256k1") {
+    nid = NID_secp256k1;
+  } else {
+    // Try standard OpenSSL name resolution
+    nid = OBJ_txt2nid(namedCurve.c_str());
+  }
+
+  if (nid == 0) {
+    throw std::runtime_error("Unknown curve: " + namedCurve);
+  }
+
+  // Create EC_GROUP for the curve
+  ncrypto::ECGroupPointer group = ncrypto::ECGroupPointer::NewByCurveName(nid);
+  if (!group) {
+    throw std::runtime_error("Failed to create EC_GROUP for curve");
+  }
+
+  // Create EC_POINT from raw bytes
+  ncrypto::ECPointPointer point = ncrypto::ECPointPointer::New(group.get());
+  if (!point) {
+    throw std::runtime_error("Failed to create EC_POINT");
+  }
+
+  // Convert raw bytes to EC_POINT
+  ncrypto::Buffer<const unsigned char> buffer{
+    .data = reinterpret_cast<const unsigned char*>(keyData->data()),
+    .len = keyData->size()
+  };
+
+  if (!point.setFromBuffer(buffer, group.get())) {
+    throw std::runtime_error("Failed to read DER asymmetric key");
+  }
+
+  // Create EC_KEY and set the public key
+  ncrypto::ECKeyPointer ec = ncrypto::ECKeyPointer::New(group.get());
+  if (!ec) {
+    throw std::runtime_error("Failed to create EC_KEY");
+  }
+
+  if (!ec.setPublicKey(point)) {
+    throw std::runtime_error("Failed to set public key on EC_KEY");
+  }
+
+  // Create EVP_PKEY from EC_KEY
+  ncrypto::EVPKeyPointer pkey = ncrypto::EVPKeyPointer::New();
+  if (!pkey) {
+    throw std::runtime_error("Failed to create EVP_PKEY");
+  }
+
+  if (!pkey.set(ec)) {
+    throw std::runtime_error("Failed to assign EC_KEY to EVP_PKEY");
+  }
+
+  // Store as public key
+  this->data_ = KeyObjectData::CreateAsymmetric(KeyType::PUBLIC, std::move(pkey));
   return true;
 }
 

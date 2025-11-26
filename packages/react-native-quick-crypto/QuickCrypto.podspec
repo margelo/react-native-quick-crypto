@@ -145,6 +145,14 @@ Pod::Spec.new do |s|
     "CLANG_ALLOW_NON_MODULAR_INCLUDES_IN_FRAMEWORK_MODULES" => "YES"
   }
 
+  # Add cpp subdirectories to header search paths
+  cpp_headers = [
+    "\"$(PODS_TARGET_SRCROOT)/cpp/utils\"",
+    "\"$(PODS_TARGET_SRCROOT)/deps/ncrypto\"",
+    "\"$(PODS_TARGET_SRCROOT)/deps/blake3/c\"",
+    "\"$(PODS_TARGET_SRCROOT)/deps/fastpbkdf2\""
+  ]
+
   if sodium_enabled
     sodium_headers = [
       "\"$(PODS_TARGET_SRCROOT)/ios/libsodium-stable/src/libsodium/include\"",
@@ -153,8 +161,10 @@ Pod::Spec.new do |s|
       "\"$(PODS_ROOT)/../../packages/react-native-quick-crypto/ios/libsodium-stable/src/libsodium/include\"",
       "\"$(PODS_ROOT)/../../packages/react-native-quick-crypto/ios/libsodium-stable/src/libsodium/include/sodium\""
     ]
-    xcconfig["HEADER_SEARCH_PATHS"] = sodium_headers.join(' ')
+    xcconfig["HEADER_SEARCH_PATHS"] = (cpp_headers + sodium_headers).join(' ')
     xcconfig["GCC_PREPROCESSOR_DEFINITIONS"] = "$(inherited) BLSALLOC_SODIUM=1"
+  else
+    xcconfig["HEADER_SEARCH_PATHS"] = cpp_headers.join(' ')
   end
 
   s.pod_target_xcconfig = xcconfig

@@ -16,7 +16,7 @@ import '../tests/subtle/deriveBits';
 import '../tests/subtle/digest';
 // import '../tests/subtle/encrypt_decrypt';
 import '../tests/subtle/generateKey';
-// import '../tests/subtle/import_export';
+import '../tests/subtle/import_export';
 import '../tests/subtle/sign_verify';
 
 export const useTestsList = (): [

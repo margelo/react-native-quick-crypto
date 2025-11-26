@@ -312,26 +312,26 @@ This document attempts to describe the implementation status of Crypto APIs/Inte
 ## `subtle.exportKey`
 | Key Type            | `spki` | `pkcs8` | `jwk` | `raw` | `raw-secret` | `raw-public` | `raw-seed` |
 | ------------------- | :----: | :-----: | :---: | :---: | :---: | :---: | :---: |
-| `AES-CBC`           |   |   | ❌ | ❌ | ❌ |   |   |
-| `AES-CTR`           |   |   | ❌ | ❌ | ❌ |   |   |
-| `AES-GCM`           |   |   | ❌ | ❌ | ❌ |   |   |
-| `AES-KW`            |   |   | ❌ | ❌ | ❌ |   |   |
+| `AES-CBC`           |   |   | ✅ | ✅ | ✅ |   |   |
+| `AES-CTR`           |   |   | ✅ | ✅ | ✅ |   |   |
+| `AES-GCM`           |   |   | ✅ | ✅ | ✅ |   |   |
+| `AES-KW`            |   |   | ✅ | ✅ | ✅ |   |   |
 | `AES-OCB`           |   |   | ❌ |   | ❌ |   |   |
 | `ChaCha20-Poly1305` |   |   | ❌ |   | ❌ |   |   |
-| `ECDH`              | ❌ | ❌ | ❌ | ❌ |   | ❌ |   |
-| `ECDSA`             | ❌ | ❌ | ❌ | ❌ |   | ❌ |   |
+| `ECDH`              | ✅ | ✅ | ✅ | ✅ |   | ✅ |   |
+| `ECDSA`             | ✅ | ✅ | ✅ | ✅ |   | ✅ |   |
 | `Ed25519`           | ❌ | ❌ | ❌ | ❌ |   | ❌ |   |
 | `Ed448`             | ❌ | ❌ | ❌ | ❌ |   | ❌ |   |
-| `HMAC`              |   |   | ❌ | ❌ | ❌ |   |   |
+| `HMAC`              |   |   | ✅ | ✅ | ✅ |   |   |
 | `ML-DSA-44`         | ❌ | ❌ | ❌ |   |   | ❌ | ❌ |
 | `ML-DSA-65`         | ❌ | ❌ | ❌ |   |   | ❌ | ❌ |
 | `ML-DSA-87`         | ❌ | ❌ | ❌ |   |   | ❌ | ❌ |
 | `ML-KEM-512`        | ❌ | ❌ |   |   |   | ❌ | ❌ |
 | `ML-KEM-768`        | ❌ | ❌ |   |   |   | ❌ | ❌ |
 | `ML-KEM-1024`       | ❌ | ❌ |   |   |   | ❌ | ❌ |
-| `RSA-OAEP`          | ❌ | ❌ | ❌ |   |   |   |   |
-| `RSA-PSS`           | ❌ | ❌ | ❌ |   |   |   |   |
-| `RSASSA-PKCS1-v1_5` | ❌ | ❌ | ❌ |   |   |   |   |
+| `RSA-OAEP`          | ✅ | ✅ | ✅ |   |   |   |   |
+| `RSA-PSS`           | ✅ | ✅ | ✅ |   |   |   |   |
+| `RSASSA-PKCS1-v1_5` | ✅ | ✅ | ✅ |   |   |   |   |
 
 * ` ` - not implemented in Node
 * ❌ - implemented in Node, not RNQC
@@ -372,28 +372,28 @@ This document attempts to describe the implementation status of Crypto APIs/Inte
 ## `subtle.importKey`
 | Key Type            | `spki` | `pkcs8` | `jwk` | `raw` | `raw-secret` | `raw-public` | `raw-seed` |
 | ------------------- | :---: | :---: | :---: | :---: | :---: | :---: | :---: |
-| `AES-CBC`           |   |   | ❌ | ❌ | ❌ |   |   |
-| `AES-CTR`           |   |   | ❌ | ❌ | ❌ |   |   |
-| `AES-GCM`           |   |   | ❌ | ❌ | ❌ |   |   |
-| `AES-KW`            |   |   | ❌ | ❌ | ❌ |   |   |
+| `AES-CBC`           |   |   | ✅ | ✅ | ✅ |   |   |
+| `AES-CTR`           |   |   | ✅ | ✅ | ✅ |   |   |
+| `AES-GCM`           |   |   | ✅ | ✅ | ✅ |   |   |
+| `AES-KW`            |   |   | ✅ | ✅ | ✅ |   |   |
 | `AES-OCB`           |   |   | ❌ |  | ❌ |   |   |
 | `ChaCha20-Poly1305`  |   |   | ❌ |   | ❌ |   |   |
-| `ECDH`              | ❌ | ❌ | ❌ | ❌ |   | ❌ |   |
-| `ECDSA`             | ❌ | ❌ | ❌ | ❌ |   | ❌ |   |
+| `ECDH`              | ✅ | ✅ | ✅ | ✅ |   | ✅ |   |
+| `ECDSA`             | ✅ | ✅ | ✅ | ✅ |   | ✅ |   |
 | `Ed25519`           | ❌ | ❌ | ❌ | ❌ |   | ❌ |   |
 | `Ed448`             | ❌ | ❌ | ❌ | ❌ |   | ❌ |   |
 | `HDKF`              |   |   |   | ❌ | ❌ |   |   |
-| `HMAC`              |   |   | ❌ | ❌ | ❌ |   |   |
+| `HMAC`              |   |   | ✅ | ✅ | ✅ |   |   |
 | `ML-DSA-44`         | ❌ | ❌ | ❌ |   |   | ❌ | ❌ |
 | `ML-DSA-65`         | ❌ | ❌ | ❌ |   |   | ❌ | ❌ |
 | `ML-DSA-87`         | ❌ | ❌ | ❌ |   |   | ❌ | ❌ |
 | `ML-KEM-512`        | ❌ | ❌ |   |   |   | ❌ | ❌ |
 | `ML-KEM-768`        | ❌ | ❌ |   |   |   | ❌ | ❌ |
 | `ML-KEM-1024`       | ❌ | ❌ |   |   |   | ❌ | ❌ |
-| `PBKDF2`            |   |   |   | ❌ | ❌ |   |   |
-| `RSA-OAEP`          | ❌ | ❌ | ❌ |   |   |   |   |
-| `RSA-PSS`           | ❌ | ❌ | ❌ |   |   |   |   |
-| `RSASSA-PKCS1-v1_5` | ❌ | ❌ | ❌ |   |   |   |   |
+| `PBKDF2`            |   |   |   | ✅ | ✅ |   |   |
+| `RSA-OAEP`          | ✅ | ❌ | ✅ |   |   |   |   |
+| `RSA-PSS`           | ✅ | ❌ | ✅ |   |   |   |   |
+| `RSASSA-PKCS1-v1_5` | ✅ | ❌ | ✅ |   |   |   |   |
 | `X25519`            | ❌ | ❌ | ❌ | ❌ |   | ❌ |   |
 | `X448`              | ❌ | ❌ | ❌ | ❌ |   | ❌ |   |
 
