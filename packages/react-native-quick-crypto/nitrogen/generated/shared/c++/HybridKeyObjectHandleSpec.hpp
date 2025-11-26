@@ -21,8 +21,8 @@ namespace margelo::nitro::crypto { enum class KFormatType; }
 namespace margelo::nitro::crypto { enum class KeyEncoding; }
 // Forward declaration of `JWK` to properly resolve imports.
 namespace margelo::nitro::crypto { struct JWK; }
-// Forward declaration of `CFRGKeyPairType` to properly resolve imports.
-namespace margelo::nitro::crypto { enum class CFRGKeyPairType; }
+// Forward declaration of `AsymmetricKeyType` to properly resolve imports.
+namespace margelo::nitro::crypto { enum class AsymmetricKeyType; }
 // Forward declaration of `KeyType` to properly resolve imports.
 namespace margelo::nitro::crypto { enum class KeyType; }
 // Forward declaration of `NamedCurve` to properly resolve imports.
@@ -36,7 +36,7 @@ namespace margelo::nitro::crypto { struct KeyDetail; }
 #include "KeyEncoding.hpp"
 #include <string>
 #include "JWK.hpp"
-#include "CFRGKeyPairType.hpp"
+#include "AsymmetricKeyType.hpp"
 #include "KeyType.hpp"
 #include <variant>
 #include "NamedCurve.hpp"
@@ -75,8 +75,9 @@ namespace margelo::nitro::crypto {
       // Methods
       virtual std::shared_ptr<ArrayBuffer> exportKey(std::optional<KFormatType> format, std::optional<KeyEncoding> type, const std::optional<std::string>& cipher, const std::optional<std::shared_ptr<ArrayBuffer>>& passphrase) = 0;
       virtual JWK exportJwk(const JWK& key, bool handleRsaPss) = 0;
-      virtual CFRGKeyPairType getAsymmetricKeyType() = 0;
+      virtual AsymmetricKeyType getAsymmetricKeyType() = 0;
       virtual bool init(KeyType keyType, const std::variant<std::string, std::shared_ptr<ArrayBuffer>>& key, std::optional<KFormatType> format, std::optional<KeyEncoding> type, const std::optional<std::shared_ptr<ArrayBuffer>>& passphrase) = 0;
+      virtual bool initECRaw(const std::string& namedCurve, const std::shared_ptr<ArrayBuffer>& keyData) = 0;
       virtual std::optional<KeyType> initJwk(const JWK& keyData, std::optional<NamedCurve> namedCurve) = 0;
       virtual KeyDetail keyDetail() = 0;
 

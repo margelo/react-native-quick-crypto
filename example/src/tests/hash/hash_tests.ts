@@ -217,7 +217,7 @@ test(SUITE, 'update - calling update without argument', () => {
   expect(() => {
     // @ts-expect-error calling update without argument
     hash.update();
-  }).to.throw(/input could not be converted/);
+  }).to.throw(/Invalid argument type/);
 });
 test(SUITE, 'digest - calling update after digest', () => {
   const hash = createHash('sha256');

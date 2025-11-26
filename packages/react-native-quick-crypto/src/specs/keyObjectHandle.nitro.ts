@@ -26,6 +26,7 @@ export interface KeyObjectHandle
     type?: KeyEncoding,
     passphrase?: ArrayBuffer,
   ): boolean;
+  initECRaw(namedCurve: string, keyData: ArrayBuffer): boolean;
   initJwk(keyData: JWK, namedCurve?: NamedCurve): KeyType | undefined;
   keyDetail(): KeyDetail;
 }

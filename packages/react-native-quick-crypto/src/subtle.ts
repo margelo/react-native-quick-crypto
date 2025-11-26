@@ -12,7 +12,13 @@ import type {
   EncryptDecryptParams,
   Operation,
 } from './utils';
-import { CryptoKey } from './keys';
+import {
+  CryptoKey,
+  KeyObject,
+  PublicKeyObject,
+  PrivateKeyObject,
+  SecretKeyObject,
+} from './keys';
 import type { CryptoKeyPair } from './utils/types';
 import { bufferLikeToArrayBuffer } from './utils/conversion';
 import { lazyDOMException } from './utils/errors';
@@ -20,6 +26,8 @@ import { normalizeHashName, HashContext } from './utils/hashnames';
 import { validateMaxBufferLength } from './utils/validation';
 import { asyncDigest } from './hash';
 import { createSecretKey } from './keys';
+import { NitroModules } from 'react-native-nitro-modules';
+import type { KeyObjectHandle } from './specs/keyObjectHandle.nitro';
 import { pbkdf2DeriveBits } from './pbkdf2';
 import { ecImportKey, ecdsaSignVerify, ec_generateKeyPair } from './ec';
 import { rsa_generateKeyPair } from './rsa';
@@ -62,18 +70,39 @@ function getAlgorithmName(name: string, length: number): string {
 }
 
 // Placeholder implementations for missing functions
-function ecExportKey(
-  _key: CryptoKey,
-  _format: KWebCryptoKeyFormat,
-): ArrayBuffer {
-  throw new Error('ecExportKey not implemented');
+function ecExportKey(key: CryptoKey, format: KWebCryptoKeyFormat): ArrayBuffer {
+  const keyObject = key.keyObject;
+
+  if (format === KWebCryptoKeyFormat.kWebCryptoKeyFormatSPKI) {
+    // Export public key in SPKI format
+    const exported = keyObject.export({ format: 'der', type: 'spki' });
+    return bufferLikeToArrayBuffer(exported);
+  } else if (format === KWebCryptoKeyFormat.kWebCryptoKeyFormatPKCS8) {
+    // Export private key in PKCS8 format
+    const exported = keyObject.export({ format: 'der', type: 'pkcs8' });
+    return bufferLikeToArrayBuffer(exported);
+  } else {
+    throw new Error(`Unsupported EC export format: ${format}`);
+  }
 }
 
 function rsaExportKey(
-  _key: CryptoKey,
-  _format: KWebCryptoKeyFormat,
+  key: CryptoKey,
+  format: KWebCryptoKeyFormat,
 ): ArrayBuffer {
-  throw new Error('rsaExportKey not implemented');
+  const keyObject = key.keyObject;
+
+  if (format === KWebCryptoKeyFormat.kWebCryptoKeyFormatSPKI) {
+    // Export public key in SPKI format
+    const exported = keyObject.export({ format: 'der', type: 'spki' });
+    return bufferLikeToArrayBuffer(exported);
+  } else if (format === KWebCryptoKeyFormat.kWebCryptoKeyFormatPKCS8) {
+    // Export private key in PKCS8 format
+    const exported = keyObject.export({ format: 'der', type: 'pkcs8' });
+    return bufferLikeToArrayBuffer(exported);
+  } else {
+    throw new Error(`Unsupported RSA export format: ${format}`);
+  }
 }
 
 function rsaCipher(
@@ -103,33 +132,231 @@ async function aesGenerateKey(
 }
 
 function rsaImportKey(
-  _format: ImportFormat,
-  _data: BufferLike | JWK,
-  _algorithm: SubtleAlgorithm,
-  _extractable: boolean,
-  _keyUsages: KeyUsage[],
+  format: ImportFormat,
+  data: BufferLike | JWK,
+  algorithm: SubtleAlgorithm,
+  extractable: boolean,
+  keyUsages: KeyUsage[],
 ): CryptoKey {
-  throw new Error('rsaImportKey not implemented');
+  const { name } = algorithm;
+
+  // Validate usages
+  let checkSet: KeyUsage[];
+  switch (name) {
+    case 'RSASSA-PKCS1-v1_5':
+    case 'RSA-PSS':
+      checkSet = ['sign', 'verify'];
+      break;
+    case 'RSA-OAEP':
+      checkSet = ['encrypt', 'decrypt', 'wrapKey', 'unwrapKey'];
+      break;
+    default:
+      throw new Error(`Unsupported RSA algorithm: ${name}`);
+  }
+
+  if (hasAnyNotIn(keyUsages, checkSet)) {
+    throw new Error(`Unsupported key usage for ${name}`);
+  }
+
+  let keyObject: KeyObject;
+
+  if (format === 'jwk') {
+    const jwk = data as JWK;
+
+    // Validate JWK
+    if (jwk.kty !== 'RSA') {
+      throw new Error('Invalid JWK format for RSA key');
+    }
+
+    const handle =
+      NitroModules.createHybridObject<KeyObjectHandle>('KeyObjectHandle');
+    const keyType = handle.initJwk(jwk, undefined);
+
+    if (keyType === undefined) {
+      throw new Error('Failed to import RSA JWK');
+    }
+
+    // Create the appropriate KeyObject based on type
+    if (keyType === 1) {
+      keyObject = new PublicKeyObject(handle);
+    } else if (keyType === 2) {
+      keyObject = new PrivateKeyObject(handle);
+    } else {
+      throw new Error('Unexpected key type from RSA JWK import');
+    }
+  } else if (format === 'spki') {
+    const keyData = bufferLikeToArrayBuffer(data as BufferLike);
+    keyObject = KeyObject.createKeyObject('public', keyData, 'der', 'spki');
+  } else if (format === 'pkcs8') {
+    const keyData = bufferLikeToArrayBuffer(data as BufferLike);
+    keyObject = KeyObject.createKeyObject('private', keyData, 'der', 'pkcs8');
+  } else {
+    throw new Error(`Unsupported format for RSA import: ${format}`);
+  }
+
+  // Get the modulus length from the key and add it to the algorithm
+  const keyDetails = (keyObject as PublicKeyObject | PrivateKeyObject)
+    .asymmetricKeyDetails;
+
+  // Convert publicExponent number to big-endian byte array
+  let publicExponentBytes: Uint8Array | undefined;
+  if (keyDetails?.publicExponent) {
+    const exp = keyDetails.publicExponent;
+    // Convert number to big-endian bytes
+    const bytes: number[] = [];
+    let value = exp;
+    while (value > 0) {
+      bytes.unshift(value & 0xff);
+      value = Math.floor(value / 256);
+    }
+    publicExponentBytes = new Uint8Array(bytes.length > 0 ? bytes : [0]);
+  }
+
+  const algorithmWithDetails = {
+    ...algorithm,
+    modulusLength: keyDetails?.modulusLength,
+    publicExponent: publicExponentBytes,
+  };
+
+  return new CryptoKey(keyObject, algorithmWithDetails, keyUsages, extractable);
 }
 
 async function hmacImportKey(
-  _algorithm: SubtleAlgorithm,
-  _format: ImportFormat,
-  _data: BufferLike | JWK,
-  _extractable: boolean,
-  _keyUsages: KeyUsage[],
+  algorithm: SubtleAlgorithm,
+  format: ImportFormat,
+  data: BufferLike | JWK,
+  extractable: boolean,
+  keyUsages: KeyUsage[],
 ): Promise<CryptoKey> {
-  throw new Error('hmacImportKey not implemented');
+  // Validate usages
+  if (hasAnyNotIn(keyUsages, ['sign', 'verify'])) {
+    throw new Error('Unsupported key usage for an HMAC key');
+  }
+
+  let keyObject: KeyObject;
+
+  if (format === 'jwk') {
+    const jwk = data as JWK;
+
+    // Validate JWK
+    if (!jwk || typeof jwk !== 'object') {
+      throw new Error('Invalid keyData');
+    }
+
+    if (jwk.kty !== 'oct') {
+      throw new Error('Invalid JWK format for HMAC key');
+    }
+
+    // Validate key length if specified
+    if (algorithm.length !== undefined) {
+      if (!jwk.k) {
+        throw new Error('JWK missing key data');
+      }
+      // Decode to check length
+      const decoded = SBuffer.from(jwk.k, 'base64');
+      const keyBitLength = decoded.length * 8;
+      if (algorithm.length === 0) {
+        throw new Error('Zero-length key is not supported');
+      }
+      if (algorithm.length !== keyBitLength) {
+        throw new Error('Invalid key length');
+      }
+    }
+
+    const handle =
+      NitroModules.createHybridObject<KeyObjectHandle>('KeyObjectHandle');
+    const keyType = handle.initJwk(jwk, undefined);
+
+    if (keyType === undefined || keyType !== 0) {
+      throw new Error('Failed to import HMAC JWK');
+    }
+
+    keyObject = new SecretKeyObject(handle);
+  } else if (format === 'raw') {
+    keyObject = createSecretKey(data as BinaryLike);
+  } else {
+    throw new Error(`Unable to import HMAC key with format ${format}`);
+  }
+
+  return new CryptoKey(
+    keyObject,
+    { ...algorithm, name: 'HMAC' },
+    keyUsages,
+    extractable,
+  );
 }
 
 async function aesImportKey(
-  _algorithm: SubtleAlgorithm,
-  _format: ImportFormat,
-  _data: BufferLike | JWK,
-  _extractable: boolean,
-  _keyUsages: KeyUsage[],
+  algorithm: SubtleAlgorithm,
+  format: ImportFormat,
+  data: BufferLike | JWK,
+  extractable: boolean,
+  keyUsages: KeyUsage[],
 ): Promise<CryptoKey> {
-  throw new Error('aesImportKey not implemented');
+  const { name, length } = algorithm;
+
+  // Validate usages
+  const validUsages: KeyUsage[] = [
+    'encrypt',
+    'decrypt',
+    'wrapKey',
+    'unwrapKey',
+  ];
+  if (hasAnyNotIn(keyUsages, validUsages)) {
+    throw new Error(`Unsupported key usage for ${name}`);
+  }
+
+  let keyObject: KeyObject;
+  let actualLength: number;
+
+  if (format === 'jwk') {
+    const jwk = data as JWK;
+
+    // Validate JWK
+    if (jwk.kty !== 'oct') {
+      throw new Error('Invalid JWK format for AES key');
+    }
+
+    const handle =
+      NitroModules.createHybridObject<KeyObjectHandle>('KeyObjectHandle');
+    const keyType = handle.initJwk(jwk, undefined);
+
+    if (keyType === undefined || keyType !== 0) {
+      throw new Error('Failed to import AES JWK');
+    }
+
+    keyObject = new SecretKeyObject(handle);
+
+    // Get actual key length from imported key
+    const exported = keyObject.export();
+    actualLength = exported.byteLength * 8;
+  } else if (format === 'raw') {
+    const keyData = bufferLikeToArrayBuffer(data as BufferLike);
+    actualLength = keyData.byteLength * 8;
+
+    // Validate key length
+    if (![128, 192, 256].includes(actualLength)) {
+      throw new Error('Invalid AES key length');
+    }
+
+    keyObject = createSecretKey(keyData);
+  } else {
+    throw new Error(`Unsupported format for AES import: ${format}`);
+  }
+
+  // Validate length if specified
+  if (length !== undefined && length !== actualLength) {
+    throw new Error(
+      `Key length mismatch: expected ${length}, got ${actualLength}`,
+    );
+  }
+
+  return new CryptoKey(
+    keyObject,
+    { name, length: actualLength },
+    keyUsages,
+    extractable,
+  );
 }
 
 const exportKeySpki = async (
@@ -203,8 +430,14 @@ const exportKeyRaw = (key: CryptoKey): ArrayBuffer | unknown => {
     // Fall through
     case 'AES-KW':
     // Fall through
-    case 'HMAC':
-      return key.keyObject.export();
+    case 'HMAC': {
+      const exported = key.keyObject.export();
+      // Convert Buffer to ArrayBuffer
+      return exported.buffer.slice(
+        exported.byteOffset,
+        exported.byteOffset + exported.byteLength,
+      );
+    }
   }
 
   throw lazyDOMException(

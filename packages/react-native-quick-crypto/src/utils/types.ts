@@ -225,12 +225,12 @@ export type KeyPairGenConfig = {
 };
 
 export type AsymmetricKeyType =
-  // 'rsa' |
-  // 'rsa-pss' |
-  // 'dsa' |
-  // 'ec' |
-  // 'dh' |
-  CFRGKeyPairType;
+  | 'rsa'
+  | 'rsa-pss'
+  | 'dsa'
+  | 'ec'
+  | 'dh'
+  | CFRGKeyPairType;
 
 type JWKkty = 'AES' | 'RSA' | 'EC' | 'oct';
 type JWKuse = 'sig' | 'enc';
