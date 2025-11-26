@@ -461,9 +461,9 @@ test(SUITE, 'EC import raw / export spki (osp)', async () => {
       jwk: {
         kty: 'EC',
         crv: 'P-256',
-        x: '1ugyipX-Ka_Nwwl3uSUe-7IZAigH9rFLs0aVtrS9uT4.',
-        y: '5mhFSKStE8SdAEM8RTFegnTzVA9Y9dee96GxhPTCHRc.',
-        d: 'K8LtomXkaGbvqPj5namTF1tshcJG4V3OrtfjBw8T-_g.',
+        x: '1ugyipX-Ka_Nwwl3uSUe-7IZAigH9rFLs0aVtrS9uT4',
+        y: '5mhFSKStE8SdAEM8RTFegnTzVA9Y9dee96GxhPTCHRc',
+        d: 'K8LtomXkaGbvqPj5namTF1tshcJG4V3OrtfjBw8T-_g',
       },
     },
   };
