@@ -108,12 +108,11 @@ test(SUITE, 'RSA-OAEP', async () => {
 // from https://github.com/nodejs/node/blob/main/test/parallel/test-webcrypto-encrypt-decrypt-rsa.js
 async function importRSAVectorKey(
   publicKeyBuffer: ArrayBuffer,
-  _privateKeyBuffer: ArrayBuffer | null,
+  privateKeyBuffer: ArrayBuffer | null,
   name: AnyAlgorithm,
   hash: DigestAlgorithm,
   publicUsages: KeyUsage[],
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  _privateUsages: KeyUsage[],
+  privateUsages: KeyUsage[],
 ): Promise<TestCryptoKeyPair> {
   const publicKey = await subtle.importKey(
     'spki',
@@ -122,15 +121,19 @@ async function importRSAVectorKey(
     false,
     publicUsages,
   );
-  // const privateKey = await subtle.importKey(
-  //   'pkcs8',
-  //   privateKeyBuffer,
-  //   { name, hash },
-  //   false,
-  //   privateUsages
-  // ),
 
-  return { publicKey, privateKey: publicKey }; // Using publicKey as placeholder since privateKey import is commented out
+  let privateKey: CryptoKey | undefined;
+  if (privateKeyBuffer !== null) {
+    privateKey = await subtle.importKey(
+      'pkcs8',
+      privateKeyBuffer,
+      { name, hash },
+      false,
+      privateUsages,
+    );
+  }
+
+  return { publicKey, privateKey: privateKey || publicKey };
 }
 
 async function testRSADecryption({
@@ -216,7 +219,7 @@ async function testRSAEncryption(
 
   // TODO: remove condition when importKey() rsa pkcs8 is implemented
   if (privateKey !== undefined) {
-    const encodedPlaintext = Buffer.from(plaintext).toString('hex');
+    const encodedPlaintext = Buffer.from(plaintextCopy).toString('hex');
 
     expect(result.byteLength * 8).to.equal(
       (privateKey as CryptoKey).algorithm.modulusLength,
@@ -253,7 +256,7 @@ async function testRSAEncryptionLongPlaintext({
   return assertThrowsAsync(
     async () =>
       await subtle.encrypt(algorithm, publicKey as CryptoKey, newplaintext),
-    'error in DoCipher, status: 2',
+    'data too large for key size',
   );
 }
 
@@ -275,7 +278,7 @@ async function testRSAEncryptionWrongKey({
   return assertThrowsAsync(
     async () =>
       await subtle.encrypt(algorithm, privateKey as CryptoKey, plaintext),
-    "Cannot read property 'algorithm' of undefined",
+    'The requested operation is not valid for the provided key',
   );
 }
 
@@ -715,7 +718,7 @@ async function testAESDecrypt({
       async () => {
         await assertThrowsAsync(
           async () => await testAESDecrypt(vector),
-          'error in DoCipher, status: 2',
+          'bad decrypt',
         );
       },
     );
@@ -783,7 +786,7 @@ async function testAESDecrypt({
       async () => {
         await assertThrowsAsync(
           async () => await testAESDecrypt(vector),
-          'error in DoCipher, status: 2',
+          'bad decrypt',
         );
       },
     );
@@ -861,7 +864,7 @@ async function testAESDecrypt({
       async () => {
         await assertThrowsAsync(
           async () => await testAESDecrypt(vector),
-          'error in DoCipher, status: 2',
+          'bad decrypt',
         );
       },
     );

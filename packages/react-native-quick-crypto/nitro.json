@@ -18,6 +18,7 @@
     "KeyObjectHandle": { "cpp": "HybridKeyObjectHandle" },
     "Pbkdf2": { "cpp": "HybridPbkdf2" },
     "Random": { "cpp": "HybridRandom" },
+    "RsaCipher": { "cpp": "HybridRsaCipher" },
     "RsaKeyPair": { "cpp": "HybridRsaKeyPair" }
   },
   "ignorePaths": ["node_modules", "lib"]

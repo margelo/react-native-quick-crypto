@@ -37,6 +37,7 @@ target_sources(
   ../nitrogen/generated/shared/c++/HybridKeyObjectHandleSpec.cpp
   ../nitrogen/generated/shared/c++/HybridPbkdf2Spec.cpp
   ../nitrogen/generated/shared/c++/HybridRandomSpec.cpp
+  ../nitrogen/generated/shared/c++/HybridRsaCipherSpec.cpp
   ../nitrogen/generated/shared/c++/HybridRsaKeyPairSpec.cpp
   # Android-specific Nitrogen C++ sources
   
