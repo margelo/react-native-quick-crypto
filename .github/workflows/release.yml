@@ -44,6 +44,9 @@ jobs:
       - name: Install dependencies
         run: bun install
 
+      - name: Install clang-format
+        run: brew install clang-format
+
       - name: Configure Git
         run: |
           git config user.name "github-actions[bot]"
