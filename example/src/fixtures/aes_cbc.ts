@@ -3,7 +3,7 @@ import type {
   AesEncryptDecryptTestVector,
   BadPaddingVectorValue,
   VectorValue,
-} from '../tests/webcryptoTests/encrypt_decrypt';
+} from '../tests/subtle/encrypt_decrypt';
 
 const kPlaintext = decodeHex(
   '546869732073706563696669636174696f6e206465736372696265' +
@@ -128,16 +128,16 @@ kKeyLengths.forEach(keyLength => {
 // Scenarios that should fail decryption because of bad padding
 const decryptionFailing: AesEncryptDecryptTestVector[] = [];
 kKeyLengths.forEach(function (keyLength) {
-  ['zeroPadChar', 'bigPadChar', 'inconsistentPadChars'].forEach(
+  (['zeroPadChar', 'bigPadChar', 'inconsistentPadChars'] as const).forEach(
     paddingProblem => {
-      // @ts-expect-error bad padding
-      const badCiphertext = new Uint8Array(kCipherText[keyLength].byteLength);
-      badCiphertext.set(
-        // @ts-expect-error bad padding
-        kCipherText[keyLength].slice(0, kCipherText[keyLength].byteLength - 16),
-      );
-      // @ts-expect-error bad padding
-      badCiphertext.set(kBadPadding[keyLength][paddingProblem]);
+      const cipherText = kCipherText[keyLength];
+      if (!cipherText) return;
+      const badPadding = kBadPadding[keyLength];
+      if (!badPadding) return;
+
+      const badCiphertext = new Uint8Array(cipherText.byteLength);
+      badCiphertext.set(cipherText.slice(0, cipherText.byteLength - 16));
+      badCiphertext.set(badPadding[paddingProblem]);
 
       decryptionFailing.push({
         keyBuffer: kKeyBytes[keyLength],

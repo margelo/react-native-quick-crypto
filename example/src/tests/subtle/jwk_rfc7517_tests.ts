@@ -18,11 +18,17 @@ test(SUITE, 'JWK export - RFC 7517 - RSA-OAEP', async () => {
     ['encrypt', 'decrypt'],
   )) as CryptoKeyPair;
 
-  const exportedPub = (await subtle.exportKey('jwk', publicKey)) as JWK;
+  const exportedPub = (await subtle.exportKey(
+    'jwk',
+    publicKey as CryptoKey,
+  )) as JWK;
   expect(exportedPub.n).to.match(/^[A-Za-z0-9_-]+$/);
   expect(exportedPub.e).to.match(/^[A-Za-z0-9_-]+$/);
 
-  const exportedPriv = (await subtle.exportKey('jwk', privateKey)) as JWK;
+  const exportedPriv = (await subtle.exportKey(
+    'jwk',
+    privateKey as CryptoKey,
+  )) as JWK;
   expect(exportedPriv.n).to.match(/^[A-Za-z0-9_-]+$/);
   expect(exportedPriv.e).to.match(/^[A-Za-z0-9_-]+$/);
   expect(exportedPriv.d).to.match(/^[A-Za-z0-9_-]+$/);
@@ -50,11 +56,17 @@ test(SUITE, 'JWK export - RFC 7517 - ECDSA P-256', async () => {
     ['sign', 'verify'],
   )) as CryptoKeyPair;
 
-  const exportedPub = (await subtle.exportKey('jwk', publicKey)) as JWK;
+  const exportedPub = (await subtle.exportKey(
+    'jwk',
+    publicKey as CryptoKey,
+  )) as JWK;
   expect(exportedPub.x).to.match(/^[A-Za-z0-9_-]+$/);
   expect(exportedPub.y).to.match(/^[A-Za-z0-9_-]+$/);
 
-  const exportedPriv = (await subtle.exportKey('jwk', privateKey)) as JWK;
+  const exportedPriv = (await subtle.exportKey(
+    'jwk',
+    privateKey as CryptoKey,
+  )) as JWK;
   expect(exportedPriv.x).to.match(/^[A-Za-z0-9_-]+$/);
   expect(exportedPriv.y).to.match(/^[A-Za-z0-9_-]+$/);
   expect(exportedPriv.d).to.match(/^[A-Za-z0-9_-]+$/);
@@ -76,7 +88,10 @@ test(SUITE, 'JWK export - RFC 7517 - ECDSA P-384', async () => {
     ['sign', 'verify'],
   )) as CryptoKeyPair;
 
-  const exported = (await subtle.exportKey('jwk', privateKey)) as JWK;
+  const exported = (await subtle.exportKey(
+    'jwk',
+    privateKey as CryptoKey,
+  )) as JWK;
   expect(exported.x).to.match(/^[A-Za-z0-9_-]+$/);
   expect(exported.y).to.match(/^[A-Za-z0-9_-]+$/);
   expect(exported.d).to.match(/^[A-Za-z0-9_-]+$/);
@@ -89,7 +104,10 @@ test(SUITE, 'JWK export - RFC 7517 - ECDSA P-521', async () => {
     ['sign', 'verify'],
   )) as CryptoKeyPair;
 
-  const exported = (await subtle.exportKey('jwk', privateKey)) as JWK;
+  const exported = (await subtle.exportKey(
+    'jwk',
+    privateKey as CryptoKey,
+  )) as JWK;
   expect(exported.x).to.match(/^[A-Za-z0-9_-]+$/);
   expect(exported.y).to.match(/^[A-Za-z0-9_-]+$/);
   expect(exported.d).to.match(/^[A-Za-z0-9_-]+$/);
@@ -102,7 +120,10 @@ test(SUITE, 'JWK export - RFC 7517 - ECDH P-256', async () => {
     ['deriveKey'],
   )) as CryptoKeyPair;
 
-  const exported = (await subtle.exportKey('jwk', privateKey)) as JWK;
+  const exported = (await subtle.exportKey(
+    'jwk',
+    privateKey as CryptoKey,
+  )) as JWK;
   expect(exported.x).to.match(/^[A-Za-z0-9_-]+$/);
   expect(exported.y).to.match(/^[A-Za-z0-9_-]+$/);
   expect(exported.d).to.match(/^[A-Za-z0-9_-]+$/);

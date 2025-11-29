@@ -33,30 +33,30 @@ import { ab2str } from 'react-native-quick-crypto';
 export type RsaEncryptDecryptTestVector = {
   name: string;
   publicKey: Buffer | null;
-  publicKeyBuffer: ArrayBuffer;
+  publicKeyBuffer: Uint8Array;
   publicKeyFormat: string;
   privateKey: Buffer | null;
-  privateKeyBuffer: ArrayBuffer | null;
+  privateKeyBuffer: Uint8Array | null;
   privateKeyFormat: string | null;
   algorithm: RsaOaepParams;
   hash: DigestAlgorithm;
-  plaintext: ArrayBuffer;
-  ciphertext: ArrayBuffer;
+  plaintext: Uint8Array;
+  ciphertext: Uint8Array;
 };
 
 export type AesEncryptDecryptTestVector = {
-  keyBuffer?: ArrayBuffer;
+  keyBuffer?: Uint8Array;
   algorithm?: EncryptDecryptParams;
-  plaintext?: ArrayBuffer;
-  result?: ArrayBuffer;
+  plaintext?: Uint8Array;
+  result?: Uint8Array;
   keyLength?: string;
 };
 
-export type VectorValue = Record<string, ArrayBuffer>;
+export type VectorValue = Record<string, Uint8Array>;
 export type BadPadding = {
-  zeroPadChar: ArrayBuffer;
-  bigPadChar: ArrayBuffer;
-  inconsistentPadChars: ArrayBuffer;
+  zeroPadChar: Uint8Array;
+  bigPadChar: Uint8Array;
+  inconsistentPadChars: Uint8Array;
 };
 export type BadPaddingVectorValue = Record<string, BadPadding>;
 
@@ -107,8 +107,8 @@ test(SUITE, 'RSA-OAEP', async () => {
 
 // from https://github.com/nodejs/node/blob/main/test/parallel/test-webcrypto-encrypt-decrypt-rsa.js
 async function importRSAVectorKey(
-  publicKeyBuffer: ArrayBuffer,
-  privateKeyBuffer: ArrayBuffer | null,
+  publicKeyBuffer: Uint8Array,
+  privateKeyBuffer: Uint8Array | null,
   name: AnyAlgorithm,
   hash: DigestAlgorithm,
   publicUsages: KeyUsage[],
@@ -202,14 +202,14 @@ async function testRSAEncryption(
   );
 
   const plaintextCopy = Buffer.from(plaintext); // make a copy
-  if (modify) {
-    plaintext = bufferLikeToArrayBuffer(plaintextCopy);
-  }
+  const plaintextToEncrypt = modify
+    ? bufferLikeToArrayBuffer(plaintextCopy)
+    : plaintext;
 
   const result = await subtle.encrypt(
     algorithm,
     publicKey as CryptoKey,
-    plaintext,
+    plaintextToEncrypt,
   );
   if (modify) {
     const plaintextView = new Uint8Array(plaintext);
@@ -554,7 +554,10 @@ async function testAESEncrypt({
   const output = await subtle.encrypt(algorithm, key, plaintext);
   plaintextBuffer[0] = 255 - plaintextBuffer[0]!;
 
-  expect(ab2str(output)).to.equal(ab2str(result), 'output != result');
+  expect(ab2str(output)).to.equal(
+    ab2str(result.buffer as ArrayBuffer),
+    'output != result',
+  );
 
   const checkAB = await subtle.decrypt(algorithm, key, output);
   // Converting the returned ArrayBuffer into a Buffer right away,

@@ -1,9 +1,9 @@
-import type { TagLength } from '../../../../react-native-quick-crypto/src/keys';
+import type { TagLength } from 'react-native-quick-crypto';
 import { decodeHex } from '../tests/util';
 import type {
   AesEncryptDecryptTestVector,
   VectorValue,
-} from '../tests/webcryptoTests/encrypt_decrypt';
+} from '../tests/subtle/encrypt_decrypt';
 
 const kPlaintext = decodeHex(
   '546869732073706563696669636174696f6e206465736372696265' +
@@ -137,8 +137,7 @@ kKeyLengths.forEach(keyLength => {
         name: 'AES-GCM',
         iv,
         additionalData,
-        // @ts-expect-error bad tag length
-        tagLength: badTagLength,
+        tagLength: badTagLength as TagLength,
       },
       plaintext: kPlaintext,
       result: kCiphertext[keyLength],
