@@ -27,7 +27,9 @@ add_library(
   src/main/cpp/cpp-adapter.cpp
   ../cpp/blake3/HybridBlake3.cpp
   ../cpp/cipher/CCMCipher.cpp
+  ../cpp/cipher/GCMCipher.cpp
   ../cpp/cipher/HybridCipher.cpp
+  ../cpp/cipher/HybridRsaCipher.cpp
   ../cpp/cipher/OCBCipher.cpp
   ../cpp/cipher/XSalsa20Cipher.cpp
   ../cpp/cipher/ChaCha20Cipher.cpp
