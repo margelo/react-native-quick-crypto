@@ -1,6 +1,5 @@
 import { Bench } from 'tinybench';
 import rnqc from 'react-native-quick-crypto';
-import { xsalsa20 as nobleXSalsa20 } from '@noble/ciphers/salsa';
 import type { BenchFn } from '../../types/benchmarks';
 
 const TIME_MS = 1000;
@@ -34,24 +33,6 @@ const xsalsa20_encrypt_decrypt: BenchFn = () => {
     }
   });
 
-  bench.add('@noble/ciphers/salsa', () => {
-    // Encrypt
-    const encrypted = nobleXSalsa20(key, nonce, data);
-    if (encrypted.length !== data.length) {
-      throw new Error('Encryption failed: output size mismatch');
-    }
-
-    // Decrypt
-    const decrypted = nobleXSalsa20(key, nonce, encrypted);
-
-    // Verify
-    for (let i = 0; i < data.length; i++) {
-      if (data[i] !== decrypted[i]) {
-        throw new Error(`Decryption verification failed at index ${i}`);
-      }
-    }
-  });
-
   bench.warmupTime = 100;
   return bench;
 };
@@ -77,30 +58,6 @@ const xsalsa20_encrypt_decrypt_large: BenchFn = () => {
 
     // Decrypt
     const decrypted = rnqc.xsalsa20(key, nonce, encrypted);
-
-    // Verify (checking first and last 100 bytes for performance)
-    for (let i = 0; i < 100; i++) {
-      if (data[i] !== decrypted[i]) {
-        throw new Error(`Decryption verification failed at start index ${i}`);
-      }
-    }
-
-    for (let i = data.length - 100; i < data.length; i++) {
-      if (data[i] !== decrypted[i]) {
-        throw new Error(`Decryption verification failed at end index ${i}`);
-      }
-    }
-  });
-
-  bench.add('@noble/ciphers/salsa', () => {
-    // Encrypt
-    const encrypted = nobleXSalsa20(key, nonce, data);
-    if (encrypted.length !== data.length) {
-      throw new Error('Encryption failed: output size mismatch');
-    }
-
-    // Decrypt
-    const decrypted = nobleXSalsa20(key, nonce, encrypted);
 
     // Verify (checking first and last 100 bytes for performance)
     for (let i = 0; i < 100; i++) {

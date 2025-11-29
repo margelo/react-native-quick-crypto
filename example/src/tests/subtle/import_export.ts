@@ -1797,8 +1797,8 @@ test(SUITE, 'AES import/export raw-secret format', async () => {
   );
 
   const exported = await subtle.exportKey('raw', key);
-  expect(Buffer.from(exported).toString('hex')).to.equal(
-    Buffer.from(keyData).toString('hex'),
+  expect(Buffer.from(exported as ArrayBuffer).toString('hex')).to.equal(
+    Buffer.from(keyData as Uint8Array).toString('hex'),
   );
 });
 
@@ -1813,8 +1813,8 @@ test(SUITE, 'HMAC import/export raw-secret format', async () => {
   );
 
   const exported = await subtle.exportKey('raw', key);
-  expect(Buffer.from(exported).toString('hex')).to.equal(
-    Buffer.from(keyData).toString('hex'),
+  expect(Buffer.from(exported as ArrayBuffer).toString('hex')).to.equal(
+    Buffer.from(keyData as Uint8Array).toString('hex'),
   );
 });
 
