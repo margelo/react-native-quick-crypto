@@ -6,7 +6,7 @@
 namespace margelo::nitro::crypto {
 
 class HybridRsaCipher : public HybridRsaCipherSpec {
-public:
+ public:
   HybridRsaCipher() : HybridObject(TAG) {}
 
   std::shared_ptr<ArrayBuffer> encrypt(const std::shared_ptr<HybridKeyObjectHandleSpec>& keyHandle,

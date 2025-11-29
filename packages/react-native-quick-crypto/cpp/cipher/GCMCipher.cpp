@@ -38,7 +38,7 @@ void GCMCipher::init(const std::shared_ptr<ArrayBuffer> cipher_key, const std::s
   // 4. Set IV length for non-standard IV sizes (GCM default is 96 bits/12 bytes)
   auto native_iv = ToNativeArrayBuffer(iv);
   size_t iv_len = native_iv->size();
-  
+
   if (iv_len != 12) { // Only set if not the default length
     if (EVP_CIPHER_CTX_ctrl(ctx, EVP_CTRL_GCM_SET_IVLEN, static_cast<int>(iv_len), nullptr) != 1) {
       unsigned long err = ERR_get_error();

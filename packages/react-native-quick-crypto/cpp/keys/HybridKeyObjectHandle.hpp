@@ -35,8 +35,12 @@ class HybridKeyObjectHandle : public HybridKeyObjectHandleSpec {
 
   KeyDetail keyDetail() override;
 
-  KeyObjectData& getKeyObjectData() { return data_; }
-  const KeyObjectData& getKeyObjectData() const { return data_; }
+  KeyObjectData& getKeyObjectData() {
+    return data_;
+  }
+  const KeyObjectData& getKeyObjectData() const {
+    return data_;
+  }
 
  private:
   KeyObjectData data_;

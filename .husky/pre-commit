@@ -1,5 +1,8 @@
 # Run linting and formatting on staged files
 bun lint-staged
 
+# Check C++ formatting
+find packages/react-native-quick-crypto/cpp -name "*.cpp" -o -name "*.hpp" | xargs clang-format --dry-run --Werror --style=file
+
 # Run prepare script
 bun --filter="react-native-quick-crypto" prepare

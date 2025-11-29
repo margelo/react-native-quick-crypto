@@ -1,11 +1,11 @@
 #include "HybridRsaCipher.hpp"
-#include "Utils.hpp"
 #include "../keys/HybridKeyObjectHandle.hpp"
+#include "Utils.hpp"
 
+#include <cstring>
+#include <openssl/err.h>
 #include <openssl/evp.h>
 #include <openssl/rsa.h>
-#include <openssl/err.h>
-#include <cstring>
 
 namespace margelo::nitro::crypto {
 
@@ -26,13 +26,12 @@ const EVP_MD* getDigestByName(const std::string& hashAlgorithm) {
 }
 
 std::shared_ptr<ArrayBuffer> HybridRsaCipher::encrypt(const std::shared_ptr<HybridKeyObjectHandleSpec>& keyHandle,
-                                                       const std::shared_ptr<ArrayBuffer>& data,
-                                                       const std::string& hashAlgorithm,
-                                                       const std::optional<std::shared_ptr<ArrayBuffer>>& label) {
+                                                      const std::shared_ptr<ArrayBuffer>& data, const std::string& hashAlgorithm,
+                                                      const std::optional<std::shared_ptr<ArrayBuffer>>& label) {
   // Get the EVP_PKEY from the key handle
   auto keyHandleImpl = std::static_pointer_cast<HybridKeyObjectHandle>(keyHandle);
   EVP_PKEY* pkey = keyHandleImpl->getKeyObjectData().GetAsymmetricKey().get();
-  
+
   if (!pkey) {
     throw std::runtime_error("Invalid key for RSA encryption");
   }
@@ -81,7 +80,7 @@ std::shared_ptr<ArrayBuffer> HybridRsaCipher::encrypt(const std::shared_ptr<Hybr
       throw std::runtime_error("Failed to allocate memory for label");
     }
     std::memcpy(label_copy, native_label->data(), native_label->size());
-    
+
     if (EVP_PKEY_CTX_set0_rsa_oaep_label(ctx, label_copy, native_label->size()) <= 0) {
       OPENSSL_free(label_copy);
       EVP_PKEY_CTX_free(ctx);
@@ -124,13 +123,12 @@ std::shared_ptr<ArrayBuffer> HybridRsaCipher::encrypt(const std::shared_ptr<Hybr
 }
 
 std::shared_ptr<ArrayBuffer> HybridRsaCipher::decrypt(const std::shared_ptr<HybridKeyObjectHandleSpec>& keyHandle,
-                                                       const std::shared_ptr<ArrayBuffer>& data,
-                                                       const std::string& hashAlgorithm,
-                                                       const std::optional<std::shared_ptr<ArrayBuffer>>& label) {
+                                                      const std::shared_ptr<ArrayBuffer>& data, const std::string& hashAlgorithm,
+                                                      const std::optional<std::shared_ptr<ArrayBuffer>>& label) {
   // Get the EVP_PKEY from the key handle
   auto keyHandleImpl = std::static_pointer_cast<HybridKeyObjectHandle>(keyHandle);
   EVP_PKEY* pkey = keyHandleImpl->getKeyObjectData().GetAsymmetricKey().get();
-  
+
   if (!pkey) {
     throw std::runtime_error("Invalid key for RSA decryption");
   }
@@ -179,7 +177,7 @@ std::shared_ptr<ArrayBuffer> HybridRsaCipher::decrypt(const std::shared_ptr<Hybr
       throw std::runtime_error("Failed to allocate memory for label");
     }
     std::memcpy(label_copy, native_label->data(), native_label->size());
-    
+
     if (EVP_PKEY_CTX_set0_rsa_oaep_label(ctx, label_copy, native_label->size()) <= 0) {
       OPENSSL_free(label_copy);
       EVP_PKEY_CTX_free(ctx);
