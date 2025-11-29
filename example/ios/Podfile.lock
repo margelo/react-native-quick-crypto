@@ -38,7 +38,7 @@ PODS:
     - SocketRocket
     - Yoga
   - OpenSSL-Universal (3.3.3001)
-  - QuickCrypto (1.0.0-beta.21):
+  - QuickCrypto (1.0.0-beta.23):
     - boost
     - DoubleConversion
     - fast_float
@@ -2746,7 +2746,7 @@ SPEC CHECKSUMS:
   hermes-engine: 4f8246b1f6d79f625e0d99472d1f3a71da4d28ca
   NitroModules: 1715fe0e22defd9e2cdd48fb5e0dbfd01af54bec
   OpenSSL-Universal: 6082b0bf950e5636fe0d78def171184e2b3899c2
-  QuickCrypto: 64c608e53920dc58536312851e75db4dae46a185
+  QuickCrypto: 64760e9492a52a975beb104447725644cc887905
   RCT-Folly: 846fda9475e61ec7bcbf8a3fe81edfcaeb090669
   RCTDeprecation: c4b9e2fd0ab200e3af72b013ed6113187c607077
   RCTRequired: e97dd5dafc1db8094e63bc5031e0371f092ae92a
