@@ -11,6 +11,10 @@ import type {
   AesKeyGenParams,
   EncryptDecryptParams,
   Operation,
+  AesCtrParams,
+  AesCbcParams,
+  AesGcmParams,
+  RsaOaepParams,
 } from './utils';
 import {
   CryptoKey,
@@ -28,9 +32,12 @@ import { asyncDigest } from './hash';
 import { createSecretKey } from './keys';
 import { NitroModules } from 'react-native-nitro-modules';
 import type { KeyObjectHandle } from './specs/keyObjectHandle.nitro';
+import type { RsaCipher } from './specs/rsaCipher.nitro';
+import type { CipherFactory } from './specs/cipher.nitro';
 import { pbkdf2DeriveBits } from './pbkdf2';
 import { ecImportKey, ecdsaSignVerify, ec_generateKeyPair } from './ec';
 import { rsa_generateKeyPair } from './rsa';
+import { getRandomValues } from './random';
 // import { pbkdf2DeriveBits } from './pbkdf2';
 // import { aesCipher, aesGenerateKey, aesImportKey, getAlgorithmName } from './aes';
 // import { rsaCipher, rsaExportKey, rsaImportKey, rsaKeyGenerate } from './rsa';
@@ -105,30 +112,295 @@ function rsaExportKey(
   }
 }
 
-function rsaCipher(
-  _mode: CipherOrWrapMode,
-  _key: CryptoKey,
-  _data: ArrayBuffer,
-  _algorithm: EncryptDecryptParams,
+async function rsaCipher(
+  mode: CipherOrWrapMode,
+  key: CryptoKey,
+  data: ArrayBuffer,
+  algorithm: EncryptDecryptParams,
 ): Promise<ArrayBuffer> {
-  throw new Error('rsaCipher not implemented');
+  const rsaParams = algorithm as RsaOaepParams;
+
+  // Validate key type matches operation
+  const expectedType =
+    mode === CipherOrWrapMode.kWebCryptoCipherEncrypt ? 'public' : 'private';
+  if (key.type !== expectedType) {
+    throw lazyDOMException(
+      'The requested operation is not valid for the provided key',
+      'InvalidAccessError',
+    );
+  }
+
+  // Get hash algorithm from key
+  const hashAlgorithm = normalizeHashName(key.algorithm.hash);
+
+  // Prepare label (optional)
+  const label = rsaParams.label
+    ? bufferLikeToArrayBuffer(rsaParams.label)
+    : undefined;
+
+  // Create RSA cipher instance
+  const rsaCipherModule =
+    NitroModules.createHybridObject<RsaCipher>('RsaCipher');
+
+  if (mode === CipherOrWrapMode.kWebCryptoCipherEncrypt) {
+    // Encrypt with public key
+    return rsaCipherModule.encrypt(
+      key.keyObject.handle,
+      data,
+      hashAlgorithm,
+      label,
+    );
+  } else {
+    // Decrypt with private key
+    return rsaCipherModule.decrypt(
+      key.keyObject.handle,
+      data,
+      hashAlgorithm,
+      label,
+    );
+  }
 }
 
-function aesCipher(
-  _mode: CipherOrWrapMode,
-  _key: CryptoKey,
-  _data: ArrayBuffer,
-  _algorithm: EncryptDecryptParams,
+async function aesCipher(
+  mode: CipherOrWrapMode,
+  key: CryptoKey,
+  data: ArrayBuffer,
+  algorithm: EncryptDecryptParams,
 ): Promise<ArrayBuffer> {
-  throw new Error('aesCipher not implemented');
+  const { name } = algorithm;
+
+  switch (name) {
+    case 'AES-CTR':
+      return aesCtrCipher(mode, key, data, algorithm as AesCtrParams);
+    case 'AES-CBC':
+      return aesCbcCipher(mode, key, data, algorithm as AesCbcParams);
+    case 'AES-GCM':
+      return aesGcmCipher(mode, key, data, algorithm as AesGcmParams);
+    default:
+      throw lazyDOMException(
+        `Unsupported AES algorithm: ${name}`,
+        'NotSupportedError',
+      );
+  }
+}
+
+async function aesCtrCipher(
+  mode: CipherOrWrapMode,
+  key: CryptoKey,
+  data: ArrayBuffer,
+  algorithm: AesCtrParams,
+): Promise<ArrayBuffer> {
+  // Validate counter and length
+  if (!algorithm.counter || algorithm.counter.byteLength !== 16) {
+    throw lazyDOMException(
+      'AES-CTR algorithm.counter must be 16 bytes',
+      'OperationError',
+    );
+  }
+
+  if (algorithm.length < 1 || algorithm.length > 128) {
+    throw lazyDOMException(
+      'AES-CTR algorithm.length must be between 1 and 128',
+      'OperationError',
+    );
+  }
+
+  // Get cipher type based on key length
+  const keyLength = (key.algorithm as { length: number }).length;
+  const cipherType = `aes-${keyLength}-ctr`;
+
+  // Create cipher
+  const factory =
+    NitroModules.createHybridObject<CipherFactory>('CipherFactory');
+  const cipher = factory.createCipher({
+    isCipher: mode === CipherOrWrapMode.kWebCryptoCipherEncrypt,
+    cipherType,
+    cipherKey: bufferLikeToArrayBuffer(key.keyObject.export()),
+    iv: bufferLikeToArrayBuffer(algorithm.counter),
+  });
+
+  // Process data
+  const updated = cipher.update(data);
+  const final = cipher.final();
+
+  // Concatenate results
+  const result = new Uint8Array(updated.byteLength + final.byteLength);
+  result.set(new Uint8Array(updated), 0);
+  result.set(new Uint8Array(final), updated.byteLength);
+
+  return result.buffer;
+}
+
+async function aesCbcCipher(
+  mode: CipherOrWrapMode,
+  key: CryptoKey,
+  data: ArrayBuffer,
+  algorithm: AesCbcParams,
+): Promise<ArrayBuffer> {
+  // Validate IV
+  const iv = bufferLikeToArrayBuffer(algorithm.iv);
+  if (iv.byteLength !== 16) {
+    throw lazyDOMException(
+      'algorithm.iv must contain exactly 16 bytes',
+      'OperationError',
+    );
+  }
+
+  // Get cipher type based on key length
+  const keyLength = (key.algorithm as { length: number }).length;
+  const cipherType = `aes-${keyLength}-cbc`;
+
+  // Create cipher
+  const factory =
+    NitroModules.createHybridObject<CipherFactory>('CipherFactory');
+  const cipher = factory.createCipher({
+    isCipher: mode === CipherOrWrapMode.kWebCryptoCipherEncrypt,
+    cipherType,
+    cipherKey: bufferLikeToArrayBuffer(key.keyObject.export()),
+    iv,
+  });
+
+  // Process data
+  const updated = cipher.update(data);
+  const final = cipher.final();
+
+  // Concatenate results
+  const result = new Uint8Array(updated.byteLength + final.byteLength);
+  result.set(new Uint8Array(updated), 0);
+  result.set(new Uint8Array(final), updated.byteLength);
+
+  return result.buffer;
+}
+
+async function aesGcmCipher(
+  mode: CipherOrWrapMode,
+  key: CryptoKey,
+  data: ArrayBuffer,
+  algorithm: AesGcmParams,
+): Promise<ArrayBuffer> {
+  const { tagLength = 128 } = algorithm;
+
+  // Validate tag length
+  const validTagLengths = [32, 64, 96, 104, 112, 120, 128];
+  if (!validTagLengths.includes(tagLength)) {
+    throw lazyDOMException(
+      `${tagLength} is not a valid AES-GCM tag length`,
+      'OperationError',
+    );
+  }
+
+  const tagByteLength = tagLength / 8;
+
+  // Get cipher type based on key length
+  const keyLength = (key.algorithm as { length: number }).length;
+  const cipherType = `aes-${keyLength}-gcm`;
+
+  // Create cipher
+  const factory =
+    NitroModules.createHybridObject<CipherFactory>('CipherFactory');
+  const cipher = factory.createCipher({
+    isCipher: mode === CipherOrWrapMode.kWebCryptoCipherEncrypt,
+    cipherType,
+    cipherKey: bufferLikeToArrayBuffer(key.keyObject.export()),
+    iv: bufferLikeToArrayBuffer(algorithm.iv),
+    authTagLen: tagByteLength,
+  });
+
+  let processData: ArrayBuffer;
+  let authTag: ArrayBuffer | undefined;
+
+  if (mode === CipherOrWrapMode.kWebCryptoCipherDecrypt) {
+    // For decryption, extract auth tag from end of data
+    const dataView = new Uint8Array(data);
+
+    if (dataView.byteLength < tagByteLength) {
+      throw lazyDOMException(
+        'The provided data is too small.',
+        'OperationError',
+      );
+    }
+
+    // Split data and tag
+    const ciphertextLength = dataView.byteLength - tagByteLength;
+    processData = dataView.slice(0, ciphertextLength).buffer;
+    authTag = dataView.slice(ciphertextLength).buffer;
+
+    // Set auth tag for verification
+    cipher.setAuthTag(authTag);
+  } else {
+    processData = data;
+  }
+
+  // Set additional authenticated data if provided
+  if (algorithm.additionalData) {
+    cipher.setAAD(bufferLikeToArrayBuffer(algorithm.additionalData));
+  }
+
+  // Process data
+  const updated = cipher.update(processData);
+  const final = cipher.final();
+
+  if (mode === CipherOrWrapMode.kWebCryptoCipherEncrypt) {
+    // For encryption, append auth tag to result
+    const tag = cipher.getAuthTag();
+    const result = new Uint8Array(
+      updated.byteLength + final.byteLength + tag.byteLength,
+    );
+    result.set(new Uint8Array(updated), 0);
+    result.set(new Uint8Array(final), updated.byteLength);
+    result.set(new Uint8Array(tag), updated.byteLength + final.byteLength);
+    return result.buffer;
+  } else {
+    // For decryption, just concatenate plaintext
+    const result = new Uint8Array(updated.byteLength + final.byteLength);
+    result.set(new Uint8Array(updated), 0);
+    result.set(new Uint8Array(final), updated.byteLength);
+    return result.buffer;
+  }
 }
 
 async function aesGenerateKey(
-  _algorithm: AesKeyGenParams,
-  _extractable: boolean,
-  _keyUsages: KeyUsage[],
+  algorithm: AesKeyGenParams,
+  extractable: boolean,
+  keyUsages: KeyUsage[],
 ): Promise<CryptoKey> {
-  throw new Error('aesGenerateKey not implemented');
+  const { length } = algorithm;
+  const name = algorithm.name;
+
+  if (!name) {
+    throw lazyDOMException('Algorithm name is required', 'OperationError');
+  }
+
+  // Validate key length
+  if (![128, 192, 256].includes(length)) {
+    throw lazyDOMException(
+      `Invalid AES key length: ${length}. Must be 128, 192, or 256.`,
+      'OperationError',
+    );
+  }
+
+  // Validate usages
+  const validUsages: KeyUsage[] = [
+    'encrypt',
+    'decrypt',
+    'wrapKey',
+    'unwrapKey',
+  ];
+  if (hasAnyNotIn(keyUsages, validUsages)) {
+    throw lazyDOMException(`Unsupported key usage for ${name}`, 'SyntaxError');
+  }
+
+  // Generate random key bytes
+  const keyBytes = new Uint8Array(length / 8);
+  getRandomValues(keyBytes);
+
+  // Create secret key
+  const keyObject = createSecretKey(keyBytes);
+
+  // Construct algorithm object with guaranteed name
+  const keyAlgorithm: SubtleAlgorithm = { name, length };
+
+  return new CryptoKey(keyObject, keyAlgorithm, keyUsages, extractable);
 }
 
 function rsaImportKey(

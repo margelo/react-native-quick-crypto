@@ -14,7 +14,7 @@ import '../tests/pbkdf2/pbkdf2_tests';
 import '../tests/random/random_tests';
 import '../tests/subtle/deriveBits';
 import '../tests/subtle/digest';
-// import '../tests/subtle/encrypt_decrypt';
+import '../tests/subtle/encrypt_decrypt';
 import '../tests/subtle/generateKey';
 import '../tests/subtle/import_export';
 import '../tests/subtle/jwk_rfc7517_tests';

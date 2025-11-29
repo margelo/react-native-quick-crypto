@@ -244,7 +244,7 @@ This document attempts to describe the implementation status of Crypto APIs/Inte
   * ❌ static `supports(operation, algorithm[, lengthOrAdditionalAlgorithm])`
   * ❌ `subtle.decapsulateBits(decapsulationAlgorithm, decapsulationKey, ciphertext)`
   * ❌ `subtle.decapsulateKey(decapsulationAlgorithm, decapsulationKey, ciphertext, sharedKeyAlgorithm, extractable, usages)`
-  * 🚧 `subtle.decrypt(algorithm, key, data)`
+  * ✅ `subtle.decrypt(algorithm, key, data)`
   * 🚧 `subtle.deriveBits(algorithm, baseKey, length)`
   * ❌ `subtle.deriveKey(algorithm, baseKey, derivedKeyAlgorithm, extractable, keyUsages)`
   * 🚧 `subtle.digest(algorithm, data)`
@@ -263,10 +263,10 @@ This document attempts to describe the implementation status of Crypto APIs/Inte
 ## `subtle.decrypt`
 | Algorithm  | Status |
 | ---------  | :----: |
-| `RSA-OAEP` | ❌ |
-| `AES-CTR`  | ❌ |
-| `AES-CBC`  | ❌ |
-| `AES-GCM`  | ❌ |
+| `RSA-OAEP` | ✅ |
+| `AES-CTR`  | ✅ |
+| `AES-CBC`  | ✅ |
+| `AES-GCM`  | ✅ |
 
 ## `subtle.deriveBits`
 | Algorithm  | Status |
@@ -302,12 +302,12 @@ This document attempts to describe the implementation status of Crypto APIs/Inte
 ## `subtle.encrypt`
 | Algorithm           | Status |
 | ------------------- | :----: |
-| `AES-CTR`           | ❌ |
-| `AES-CBC`           | ❌ |
-| `AES-GCM`           | ❌ |
+| `AES-CTR`           | ✅ |
+| `AES-CBC`           | ✅ |
+| `AES-GCM`           | ✅ |
 | `AES-OCB`           | ❌ |
 | `ChaCha20-Poly1305` | ❌ |
-| `RSA-OAEP`          | ❌ |
+| `RSA-OAEP`          | ✅ |
 
 ## `subtle.exportKey`
 | Key Type            | `spki` | `pkcs8` | `jwk` | `raw` | `raw-secret` | `raw-public` | `raw-seed` |
@@ -361,9 +361,9 @@ This document attempts to describe the implementation status of Crypto APIs/Inte
 ### `CryptoKey` algorithms
 | Algorithm           | Status |
 | ---------           | :----: |
-| `AES-CTR`           | ❌ |
-| `AES-CBC`           | ❌ |
-| `AES-GCM`           | ❌ |
+| `AES-CTR`           | ✅ |
+| `AES-CBC`           | ✅ |
+| `AES-GCM`           | ✅ |
 | `AES-KW`            | ❌ |
 | `AES-OCB`           | ❌ |
 | `ChaCha20-Poly1305` | ❌ |

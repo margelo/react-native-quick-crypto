@@ -7,6 +7,7 @@
 #include "CCMCipher.hpp"
 #include "ChaCha20Cipher.hpp"
 #include "ChaCha20Poly1305Cipher.hpp"
+#include "GCMCipher.hpp"
 #include "HybridCipherFactorySpec.hpp"
 #include "OCBCipher.hpp"
 #include "Utils.hpp"
@@ -45,6 +46,13 @@ class HybridCipherFactory : public HybridCipherFactorySpec {
         }
         case EVP_CIPH_CCM_MODE: {
           cipherInstance = std::make_shared<CCMCipher>();
+          cipherInstance->setArgs(args);
+          cipherInstance->init(args.cipherKey, args.iv);
+          EVP_CIPHER_free(cipher);
+          return cipherInstance;
+        }
+        case EVP_CIPH_GCM_MODE: {
+          cipherInstance = std::make_shared<GCMCipher>();
           cipherInstance->setArgs(args);
           cipherInstance->init(args.cipherKey, args.iv);
           EVP_CIPHER_free(cipher);
