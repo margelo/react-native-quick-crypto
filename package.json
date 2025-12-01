@@ -42,7 +42,7 @@
     "@typescript-eslint/eslint-plugin": "8.43.0",
     "@typescript-eslint/parser": "8.43.0",
     "eslint": "9.24.0",
-    "eslint-config-prettier": "10.1.2",
+    "eslint-config-prettier": "10.1.8",
     "eslint-plugin-prettier": "5.5.4",
     "eslint-plugin-react-native": "5.0.0",
     "nitro-codegen": "0.29.4",
@@ -101,5 +101,8 @@
   "workspaces": [
     "packages/react-native-quick-crypto",
     "example"
-  ]
+  ],
+  "dependencies": {
+    "caniuse-lite": "^1.0.30001757"
+  }
 }
