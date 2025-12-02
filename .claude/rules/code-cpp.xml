@@ -185,4 +185,14 @@
       <setting>Link against OpenSSL 3.3+</setting>
     </settings>
   </rule>
+
+  <rule severity="HIGH" enforcement="STRICT">
+    <name>Code Formatting</name>
+    <description>Run clang-format on all C++ files before committing</description>
+    <requirements>
+      <requirement>Run clang-format -i on all modified .cpp/.hpp/.h files</requirement>
+      <requirement>Pre-commit hook enforces clang-format compliance</requirement>
+    </requirements>
+    <command>clang-format -i path/to/file.cpp</command>
+  </rule>
 </rules>
