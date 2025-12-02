@@ -184,8 +184,8 @@ export async function rsa_generateKeyPairNode(
   options: GenerateKeyPairOptions | undefined,
   encoding: KeyPairGenConfig,
 ): Promise<{
-  publicKey: PublicKeyObject | Buffer | string;
-  privateKey: PrivateKeyObject | Buffer | string;
+  publicKey: PublicKeyObject | Buffer | string | ArrayBuffer;
+  privateKey: PrivateKeyObject | Buffer | string | ArrayBuffer;
 }> {
   if (!options) {
     throw new Error('Options are required for RSA key generation');
@@ -240,8 +240,8 @@ export async function rsa_generateKeyPairNode(
     passphrase,
   } = encoding;
 
-  let publicKey: PublicKeyObject | Buffer | string;
-  let privateKey: PrivateKeyObject | Buffer | string;
+  let publicKey: PublicKeyObject | Buffer | string | ArrayBuffer;
+  let privateKey: PrivateKeyObject | Buffer | string | ArrayBuffer;
 
   if (publicFormat === -1) {
     publicKey = pubCryptoKey.keyObject as PublicKeyObject;
@@ -254,12 +254,10 @@ export async function rsa_generateKeyPairNode(
       format,
       keyEncoding,
     );
-    // For PEM format, convert ArrayBuffer to string; for DER, keep as ArrayBuffer
     if (format === KFormatType.PEM) {
       publicKey = Buffer.from(new Uint8Array(exported)).toString('utf-8');
     } else {
-      // Return raw ArrayBuffer for DER format
-      publicKey = Buffer.from(new Uint8Array(exported));
+      publicKey = exported;
     }
   }
 
@@ -276,12 +274,10 @@ export async function rsa_generateKeyPairNode(
       cipher,
       passphrase,
     );
-    // For PEM format, convert ArrayBuffer to string; for DER, keep as ArrayBuffer
     if (format === KFormatType.PEM) {
       privateKey = Buffer.from(new Uint8Array(exported)).toString('utf-8');
     } else {
-      // Return raw ArrayBuffer for DER format
-      privateKey = Buffer.from(new Uint8Array(exported));
+      privateKey = exported;
     }
   }
 

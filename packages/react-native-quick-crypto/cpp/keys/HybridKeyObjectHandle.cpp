@@ -334,41 +334,18 @@ bool HybridKeyObjectHandle::init(KeyType keyType, const std::variant<std::string
   // Reset any existing data to prevent state leakage
   data_ = KeyObjectData();
 
-  // DEBUG: Use os_log for iOS visibility
-  os_log_t log = os_log_create("com.margelo.quickcrypto", "keys");
-  os_log_error(log, "RNQC init called");
-  os_log_error(log, "RNQC keyType=%d (0=SECRET, 1=PUBLIC, 2=PRIVATE)", static_cast<int>(keyType));
-  os_log_error(log, "RNQC format.has_value=%d", format.has_value());
-  if (format.has_value()) {
-    os_log_error(log, "RNQC format=%d (0=DER, 1=PEM, 2=JWK)", static_cast<int>(format.value()));
-  }
-  os_log_error(log, "RNQC type.has_value=%d", type.has_value());
-  if (type.has_value()) {
-    os_log_error(log, "RNQC type=%d", static_cast<int>(type.value()));
-  }
-
-  bool isString = std::holds_alternative<std::string>(key);
-  os_log_error(log, "RNQC key is string variant: %d", isString);
-
-  if (isString) {
-    const std::string& str = std::get<std::string>(key);
-    os_log_error(log, "RNQC string length: %zu", str.length());
-    os_log_error(log, "RNQC first 100 chars: %.100s", str.c_str());
-  } else {
-    const auto& abPtr = std::get<std::shared_ptr<ArrayBuffer>>(key);
-    os_log_error(log, "RNQC ArrayBuffer size: %zu", abPtr->size());
-  }
-
   // get ArrayBuffer from key - always copy to ensure we own the data
   std::shared_ptr<ArrayBuffer> ab;
   if (std::holds_alternative<std::string>(key)) {
     ab = ToNativeArrayBuffer(std::get<std::string>(key));
   } else {
-    ab = ToNativeArrayBuffer(std::get<std::shared_ptr<ArrayBuffer>>(key));
+    const auto& abPtr = std::get<std::shared_ptr<ArrayBuffer>>(key);
+    ab = ToNativeArrayBuffer(abPtr);
   }
 
   // Handle raw asymmetric key material - only for special curves with known raw sizes
-  if (!format.has_value() && !type.has_value() && (keyType == KeyType::PUBLIC || keyType == KeyType::PRIVATE)) {
+  std::optional<KFormatType> actualFormat = format;
+  if (!actualFormat.has_value() && !type.has_value() && (keyType == KeyType::PUBLIC || keyType == KeyType::PRIVATE)) {
     size_t keySize = ab->size();
     // Only route to initRawKey for exact special curve sizes:
     // X25519/Ed25519: 32 bytes, X448: 56 bytes, Ed448: 57 bytes
@@ -385,14 +362,14 @@ bool HybridKeyObjectHandle::init(KeyType keyType, const std::variant<std::string
       break;
     }
     case KeyType::PUBLIC: {
-      auto data = KeyObjectData::GetPublicOrPrivateKey(ab, format, type, passphrase);
+      auto data = KeyObjectData::GetPublicOrPrivateKey(ab, actualFormat, type, passphrase);
       if (!data)
         return false;
       this->data_ = data.addRefWithType(KeyType::PUBLIC);
       break;
     }
     case KeyType::PRIVATE: {
-      if (auto data = KeyObjectData::GetPrivateKey(ab, format, type, passphrase, false)) {
+      if (auto data = KeyObjectData::GetPrivateKey(ab, actualFormat, type, passphrase, false)) {
         this->data_ = std::move(data);
       }
       break;

@@ -63,7 +63,8 @@ function prepareKey(key: KeyInput, isPublic: boolean): PreparedKey {
     const isPem = typeof key === 'string' && key.includes('-----BEGIN');
     const format = isPem ? KFormatType.PEM : undefined;
     const type = isPublic ? 'public' : 'private';
-    const keyObject = KeyObject.createKeyObject(type, toAB(key), format);
+    const keyData = toAB(key);
+    const keyObject = KeyObject.createKeyObject(type, keyData, format);
     return { keyObject };
   }
 
@@ -117,9 +118,16 @@ function prepareKey(key: KeyInput, isPublic: boolean): PreparedKey {
     else if (type === 'spki') kType = KeyEncoding.SPKI;
 
     const keyType = isPublic ? 'public' : 'private';
+    // Always convert to ArrayBuffer to avoid Nitro bridge string truncation bug
+    const originalLength =
+      typeof data === 'string' ? data.length : data.byteLength;
+    const keyData = toAB(data);
+    console.log(
+      `[prepareKey KeyInputObject] ${keyType} key, original length: ${originalLength}, ArrayBuffer size: ${keyData.byteLength}`,
+    );
     const keyObject = KeyObject.createKeyObject(
       keyType,
-      toAB(data),
+      keyData,
       kFormat,
       kType,
     );
