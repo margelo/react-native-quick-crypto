@@ -22,6 +22,7 @@ import {
   KFormatType,
   KeyEncoding,
 } from '../utils';
+import { randomBytes } from '../random';
 
 interface KeyInputObject {
   key: BinaryLike | KeyObject | CryptoKey;
@@ -152,12 +153,78 @@ function createPrivateKey(key: KeyInput): PrivateKeyObject {
   ) as PrivateKeyObject;
 }
 
+export interface GenerateKeyOptions {
+  length: number;
+}
+
+function generateKeySync(
+  type: 'aes' | 'hmac',
+  options: GenerateKeyOptions,
+): SecretKeyObject {
+  if (typeof type !== 'string') {
+    throw new TypeError('The "type" argument must be a string');
+  }
+  if (typeof options !== 'object' || options === null) {
+    throw new TypeError('The "options" argument must be an object');
+  }
+
+  const { length } = options;
+
+  if (typeof length !== 'number' || !Number.isInteger(length)) {
+    throw new TypeError('The "options.length" property must be an integer');
+  }
+
+  switch (type) {
+    case 'hmac':
+      if (length < 8 || length > 2 ** 31 - 1) {
+        throw new RangeError(
+          'The "options.length" property must be >= 8 and <= 2147483647',
+        );
+      }
+      break;
+    case 'aes':
+      if (length !== 128 && length !== 192 && length !== 256) {
+        throw new RangeError(
+          'The "options.length" property must be 128, 192, or 256',
+        );
+      }
+      break;
+    default:
+      throw new TypeError(
+        `The "type" argument must be 'aes' or 'hmac'. Received '${type}'`,
+      );
+  }
+
+  const keyBytes = length / 8;
+  const keyMaterial = randomBytes(keyBytes);
+  return createSecretKey(keyMaterial);
+}
+
+function generateKey(
+  type: 'aes' | 'hmac',
+  options: GenerateKeyOptions,
+  callback: (err: Error | null, key?: SecretKeyObject) => void,
+): void {
+  if (typeof callback !== 'function') {
+    throw new TypeError('The "callback" argument must be a function');
+  }
+
+  try {
+    const key = generateKeySync(type, options);
+    process.nextTick(callback, null, key);
+  } catch (err) {
+    process.nextTick(callback, err as Error);
+  }
+}
+
 export {
   // Node Public API
   createSecretKey,
   createPublicKey,
   createPrivateKey,
   CryptoKey,
+  generateKey,
+  generateKeySync,
   generateKeyPair,
   generateKeyPairSync,
   AsymmetricKeyObject,

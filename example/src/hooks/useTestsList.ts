@@ -14,6 +14,7 @@ import '../tests/hmac/hmac_tests';
 import '../tests/keys/sign_verify_streaming';
 import '../tests/keys/public_cipher';
 import '../tests/keys/create_keys';
+import '../tests/keys/generate_key';
 import '../tests/keys/generate_keypair';
 import '../tests/pbkdf2/pbkdf2_tests';
 import '../tests/random/random_tests';
