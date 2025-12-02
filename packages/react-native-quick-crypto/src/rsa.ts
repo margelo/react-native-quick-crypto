@@ -10,12 +10,16 @@ import {
   hasAnyNotIn,
   lazyDOMException,
   normalizeHashName,
+  KFormatType,
+  KeyEncoding,
 } from './utils';
 import type {
   CryptoKeyPair,
   KeyUsage,
   RsaHashedKeyGenParams,
   SubtleAlgorithm,
+  GenerateKeyPairOptions,
+  KeyPairGenConfig,
 } from './utils';
 import type { RsaKeyPair } from './specs/rsaKeyPair.nitro';
 
@@ -171,6 +175,111 @@ export async function rsa_generateKeyPair(
     privateUsages,
     extractable,
   );
+
+  return { publicKey, privateKey };
+}
+
+export async function rsa_generateKeyPairNode(
+  type: 'rsa' | 'rsa-pss',
+  options: GenerateKeyPairOptions | undefined,
+  encoding: KeyPairGenConfig,
+): Promise<{
+  publicKey: PublicKeyObject | Buffer | string | ArrayBuffer;
+  privateKey: PrivateKeyObject | Buffer | string | ArrayBuffer;
+}> {
+  if (!options) {
+    throw new Error('Options are required for RSA key generation');
+  }
+
+  const {
+    modulusLength,
+    publicExponent,
+    hash = 'sha256',
+  } = options as {
+    modulusLength?: number;
+    publicExponent?: number;
+    hash?: string;
+  };
+
+  if (!modulusLength || modulusLength < 256) {
+    throw new Error('Invalid modulus length');
+  }
+
+  const pubExp = publicExponent || 65537;
+  const pubExpBytes = new Uint8Array([
+    (pubExp >> 16) & 0xff,
+    (pubExp >> 8) & 0xff,
+    pubExp & 0xff,
+  ]);
+
+  const algorithmName = type === 'rsa-pss' ? 'RSA-PSS' : 'RSASSA-PKCS1-v1_5';
+
+  const algorithm: RsaHashedKeyGenParams = {
+    name: algorithmName,
+    modulusLength,
+    publicExponent: pubExpBytes,
+    hash: typeof hash === 'string' ? hash : hash,
+  };
+
+  const keyPair = await rsa_generateKeyPair(
+    algorithm as SubtleAlgorithm,
+    true,
+    ['sign', 'verify'],
+  );
+
+  // rsa_generateKeyPair returns CryptoKey objects
+  const pubCryptoKey = keyPair.publicKey as CryptoKey;
+  const privCryptoKey = keyPair.privateKey as CryptoKey;
+
+  const {
+    publicFormat,
+    publicType,
+    privateFormat,
+    privateType,
+    cipher,
+    passphrase,
+  } = encoding;
+
+  let publicKey: PublicKeyObject | Buffer | string | ArrayBuffer;
+  let privateKey: PrivateKeyObject | Buffer | string | ArrayBuffer;
+
+  if (publicFormat === -1) {
+    publicKey = pubCryptoKey.keyObject as PublicKeyObject;
+  } else {
+    const format =
+      publicFormat === KFormatType.PEM ? KFormatType.PEM : KFormatType.DER;
+    const keyEncoding =
+      publicType === KeyEncoding.SPKI ? KeyEncoding.SPKI : KeyEncoding.PKCS1;
+    const exported = pubCryptoKey.keyObject.handle.exportKey(
+      format,
+      keyEncoding,
+    );
+    if (format === KFormatType.PEM) {
+      publicKey = Buffer.from(new Uint8Array(exported)).toString('utf-8');
+    } else {
+      publicKey = exported;
+    }
+  }
+
+  if (privateFormat === -1) {
+    privateKey = privCryptoKey.keyObject as PrivateKeyObject;
+  } else {
+    const format =
+      privateFormat === KFormatType.PEM ? KFormatType.PEM : KFormatType.DER;
+    const keyEncoding =
+      privateType === KeyEncoding.PKCS8 ? KeyEncoding.PKCS8 : KeyEncoding.PKCS1;
+    const exported = privCryptoKey.keyObject.handle.exportKey(
+      format,
+      keyEncoding,
+      cipher,
+      passphrase,
+    );
+    if (format === KFormatType.PEM) {
+      privateKey = Buffer.from(new Uint8Array(exported)).toString('utf-8');
+    } else {
+      privateKey = exported;
+    }
+  }
 
   return { publicKey, privateKey };
 }

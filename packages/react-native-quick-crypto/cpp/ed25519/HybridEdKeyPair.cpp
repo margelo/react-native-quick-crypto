@@ -1,6 +1,8 @@
 #include <NitroModules/ArrayBuffer.hpp>
 #include <memory>
+#include <openssl/bio.h>
 #include <openssl/evp.h>
+#include <openssl/pem.h>
 #include <string>
 
 #include "HybridEdKeyPair.hpp"
@@ -82,6 +84,12 @@ void HybridEdKeyPair::generateKeyPairSync(double publicFormat, double publicType
   if (this->curve.empty()) {
     throw std::runtime_error("EC curve not set. Call setCurve() first.");
   }
+
+  // Store encoding configuration for later use in getPublicKey/getPrivateKey
+  this->publicFormat_ = static_cast<int>(publicFormat);
+  this->publicType_ = static_cast<int>(publicType);
+  this->privateFormat_ = static_cast<int>(privateFormat);
+  this->privateType_ = static_cast<int>(privateType);
 
   // Clean up existing key if any
   if (this->pkey != nullptr) {
@@ -241,7 +249,43 @@ bool HybridEdKeyPair::verifySync(const std::shared_ptr<ArrayBuffer>& signature, 
 
 std::shared_ptr<ArrayBuffer> HybridEdKeyPair::getPublicKey() {
   this->checkKeyPair();
-  size_t len = 32;
+
+  // If format is DER (0) or PEM (1), export in SPKI format
+  if (publicFormat_ == 0 || publicFormat_ == 1) {
+    BIO* bio = BIO_new(BIO_s_mem());
+    if (!bio) {
+      throw std::runtime_error("Failed to create BIO for public key export");
+    }
+
+    int result;
+    if (publicFormat_ == 1) {
+      // PEM format
+      result = PEM_write_bio_PUBKEY(bio, this->pkey);
+    } else {
+      // DER format
+      result = i2d_PUBKEY_bio(bio, this->pkey);
+    }
+
+    if (result != 1) {
+      BIO_free(bio);
+      throw std::runtime_error("Failed to export public key");
+    }
+
+    BUF_MEM* bptr;
+    BIO_get_mem_ptr(bio, &bptr);
+
+    uint8_t* data = new uint8_t[bptr->length];
+    memcpy(data, bptr->data, bptr->length);
+    size_t len = bptr->length;
+
+    BIO_free(bio);
+
+    return std::make_shared<NativeArrayBuffer>(data, len, [=]() { delete[] data; });
+  }
+
+  // Default: raw format
+  size_t len = 0;
+  EVP_PKEY_get_raw_public_key(this->pkey, nullptr, &len);
   uint8_t* publ = new uint8_t[len];
   EVP_PKEY_get_raw_public_key(this->pkey, publ, &len);
 
@@ -250,7 +294,43 @@ std::shared_ptr<ArrayBuffer> HybridEdKeyPair::getPublicKey() {
 
 std::shared_ptr<ArrayBuffer> HybridEdKeyPair::getPrivateKey() {
   this->checkKeyPair();
-  size_t len = 32;
+
+  // If format is DER (0) or PEM (1), export in PKCS8 format
+  if (privateFormat_ == 0 || privateFormat_ == 1) {
+    BIO* bio = BIO_new(BIO_s_mem());
+    if (!bio) {
+      throw std::runtime_error("Failed to create BIO for private key export");
+    }
+
+    int result;
+    if (privateFormat_ == 1) {
+      // PEM format (PKCS8)
+      result = PEM_write_bio_PrivateKey(bio, this->pkey, nullptr, nullptr, 0, nullptr, nullptr);
+    } else {
+      // DER format (PKCS8)
+      result = i2d_PrivateKey_bio(bio, this->pkey);
+    }
+
+    if (result != 1) {
+      BIO_free(bio);
+      throw std::runtime_error("Failed to export private key");
+    }
+
+    BUF_MEM* bptr;
+    BIO_get_mem_ptr(bio, &bptr);
+
+    uint8_t* data = new uint8_t[bptr->length];
+    memcpy(data, bptr->data, bptr->length);
+    size_t len = bptr->length;
+
+    BIO_free(bio);
+
+    return std::make_shared<NativeArrayBuffer>(data, len, [=]() { delete[] data; });
+  }
+
+  // Default: raw format
+  size_t len = 0;
+  EVP_PKEY_get_raw_private_key(this->pkey, nullptr, &len);
   uint8_t* priv = new uint8_t[len];
   EVP_PKEY_get_raw_private_key(this->pkey, priv, &len);
 
@@ -270,8 +350,17 @@ void HybridEdKeyPair::setCurve(const std::string& curve) {
 EVP_PKEY* HybridEdKeyPair::importPublicKey(const std::optional<std::shared_ptr<ArrayBuffer>>& key) {
   EVP_PKEY* pkey = nullptr;
   if (key.has_value()) {
-    pkey = EVP_PKEY_new_raw_public_key(EVP_PKEY_ED25519, // TODO: use this->curve somehow
-                                       NULL, key.value()->data(), 32);
+    // Determine key type from curve name
+    int keyType = EVP_PKEY_ED25519;
+    if (this->curve == "ed448" || this->curve == "Ed448") {
+      keyType = EVP_PKEY_ED448;
+    } else if (this->curve == "x25519" || this->curve == "X25519") {
+      keyType = EVP_PKEY_X25519;
+    } else if (this->curve == "x448" || this->curve == "X448") {
+      keyType = EVP_PKEY_X448;
+    }
+
+    pkey = EVP_PKEY_new_raw_public_key(keyType, NULL, key.value()->data(), key.value()->size());
     if (pkey == nullptr) {
       throw std::runtime_error("Failed to read public key");
     }
@@ -285,8 +374,17 @@ EVP_PKEY* HybridEdKeyPair::importPublicKey(const std::optional<std::shared_ptr<A
 EVP_PKEY* HybridEdKeyPair::importPrivateKey(const std::optional<std::shared_ptr<ArrayBuffer>>& key) {
   EVP_PKEY* pkey = nullptr;
   if (key.has_value()) {
-    pkey = EVP_PKEY_new_raw_private_key(EVP_PKEY_ED25519, // TODO: use this->curve somehow
-                                        NULL, key.value()->data(), 32);
+    // Determine key type from curve name
+    int keyType = EVP_PKEY_ED25519;
+    if (this->curve == "ed448" || this->curve == "Ed448") {
+      keyType = EVP_PKEY_ED448;
+    } else if (this->curve == "x25519" || this->curve == "X25519") {
+      keyType = EVP_PKEY_X25519;
+    } else if (this->curve == "x448" || this->curve == "X448") {
+      keyType = EVP_PKEY_X448;
+    }
+
+    pkey = EVP_PKEY_new_raw_private_key(keyType, NULL, key.value()->data(), key.value()->size());
     if (pkey == nullptr) {
       throw std::runtime_error("Failed to read private key");
     }

@@ -1,19 +1,34 @@
 import { NitroModules } from 'react-native-nitro-modules';
 import { Buffer } from '@craftzdog/react-native-buffer';
 import type { AsymmetricKeyObject, PrivateKeyObject } from './keys';
+import {
+  CryptoKey,
+  KeyObject,
+  PublicKeyObject,
+  PrivateKeyObject as PrivateKeyObjectClass,
+} from './keys';
 import type { EdKeyPair } from './specs/edKeyPair.nitro';
 import type {
   BinaryLike,
   CFRGKeyPairType,
+  CryptoKeyPair,
   DiffieHellmanCallback,
   DiffieHellmanOptions,
   GenerateKeyPairCallback,
   GenerateKeyPairReturn,
   Hex,
   KeyPairGenConfig,
-  KeyPairType,
+  KeyUsage,
+  SubtleAlgorithm,
 } from './utils';
-import { binaryLikeToArrayBuffer as toAB } from './utils';
+import {
+  binaryLikeToArrayBuffer as toAB,
+  hasAnyNotIn,
+  lazyDOMException,
+  getUsagesUnion,
+  KFormatType,
+  KeyEncoding,
+} from './utils';
 
 export class Ed {
   type: CFRGKeyPairType;
@@ -80,23 +95,23 @@ export class Ed {
   }
 
   async generateKeyPair(): Promise<void> {
-    this.native.generateKeyPair(
-      this.config.publicFormat || (-1 as number),
-      this.config.publicType || (-1 as number),
-      this.config.privateFormat || (-1 as number),
-      this.config.privateType || (-1 as number),
-      this.config.cipher as string,
+    await this.native.generateKeyPair(
+      this.config.publicFormat ?? -1,
+      this.config.publicType ?? -1,
+      this.config.privateFormat ?? -1,
+      this.config.privateType ?? -1,
+      this.config.cipher,
       this.config.passphrase as ArrayBuffer,
     );
   }
 
   generateKeyPairSync(): void {
     this.native.generateKeyPairSync(
-      this.config.publicFormat || (-1 as number),
-      this.config.publicType || (-1 as number),
-      this.config.privateFormat || (-1 as number),
-      this.config.privateType || (-1 as number),
-      this.config.cipher as string,
+      this.config.publicFormat ?? -1,
+      this.config.publicType ?? -1,
+      this.config.privateFormat ?? -1,
+      this.config.privateType ?? -1,
+      this.config.cipher,
       this.config.passphrase as ArrayBuffer,
     );
   }
@@ -170,11 +185,38 @@ export function diffieHellman(
 // Node API
 export function ed_generateKeyPair(
   isAsync: boolean,
-  type: KeyPairType,
+  type: CFRGKeyPairType,
   encoding: KeyPairGenConfig,
   callback: GenerateKeyPairCallback | undefined,
 ): GenerateKeyPairReturn | void {
   const ed = new Ed(type, encoding);
+
+  // Helper to convert keys to proper output format
+  const formatKeys = (): {
+    publicKey: string | ArrayBuffer;
+    privateKey: string | ArrayBuffer;
+  } => {
+    const publicKeyRaw = ed.getPublicKey();
+    const privateKeyRaw = ed.getPrivateKey();
+
+    // Check if PEM format was requested (KFormatType.PEM = 1)
+    const isPemPublic = encoding.publicFormat === KFormatType.PEM;
+    const isPemPrivate = encoding.privateFormat === KFormatType.PEM;
+
+    // Convert ArrayBuffer to string for PEM format
+    const arrayBufferToString = (ab: ArrayBuffer): string => {
+      return Buffer.from(new Uint8Array(ab)).toString('utf-8');
+    };
+
+    const publicKey = isPemPublic
+      ? arrayBufferToString(publicKeyRaw)
+      : publicKeyRaw;
+    const privateKey = isPemPrivate
+      ? arrayBufferToString(privateKeyRaw)
+      : privateKeyRaw;
+
+    return { publicKey, privateKey };
+  };
 
   // Async path
   if (isAsync) {
@@ -184,7 +226,8 @@ export function ed_generateKeyPair(
     }
     ed.generateKeyPair()
       .then(() => {
-        callback(undefined, ed.getPublicKey(), ed.getPrivateKey());
+        const { publicKey, privateKey } = formatKeys();
+        callback(undefined, publicKey, privateKey);
       })
       .catch(err => {
         callback(err, undefined, undefined);
@@ -200,11 +243,15 @@ export function ed_generateKeyPair(
     err = e instanceof Error ? e : new Error(String(e));
   }
 
+  const { publicKey, privateKey } = err
+    ? { publicKey: undefined, privateKey: undefined }
+    : formatKeys();
+
   if (callback) {
-    callback(err, ed.getPublicKey(), ed.getPrivateKey());
+    callback(err, publicKey, privateKey);
     return;
   }
-  return [err, ed.getPublicKey(), ed.getPrivateKey()];
+  return [err, publicKey, privateKey];
 }
 
 function checkDiffieHellmanOptions(options: DiffieHellmanOptions): void {
@@ -253,4 +300,64 @@ function checkDiffieHellmanOptions(options: DiffieHellmanOptions): void {
         `Unknown curve type: ${privateKeyAsym.asymmetricKeyType}`,
       );
   }
+}
+
+export async function ed_generateKeyPairWebCrypto(
+  type: 'ed25519' | 'ed448',
+  extractable: boolean,
+  keyUsages: KeyUsage[],
+): Promise<CryptoKeyPair> {
+  if (hasAnyNotIn(keyUsages, ['sign', 'verify'])) {
+    throw lazyDOMException(`Unsupported key usage for ${type}`, 'SyntaxError');
+  }
+
+  const publicUsages = getUsagesUnion(keyUsages, 'verify');
+  const privateUsages = getUsagesUnion(keyUsages, 'sign');
+
+  if (privateUsages.length === 0) {
+    throw lazyDOMException('Usages cannot be empty', 'SyntaxError');
+  }
+
+  // Request DER-encoded SPKI for public key, PKCS8 for private key
+  const config = {
+    publicFormat: KFormatType.DER,
+    publicType: KeyEncoding.SPKI,
+    privateFormat: KFormatType.DER,
+    privateType: KeyEncoding.PKCS8,
+  };
+  const ed = new Ed(type, config);
+  await ed.generateKeyPair();
+
+  const algorithmName = type === 'ed25519' ? 'Ed25519' : 'Ed448';
+
+  const publicKeyData = ed.getPublicKey();
+  const privateKeyData = ed.getPrivateKey();
+
+  const pub = KeyObject.createKeyObject(
+    'public',
+    publicKeyData,
+    KFormatType.DER,
+    KeyEncoding.SPKI,
+  ) as PublicKeyObject;
+  const publicKey = new CryptoKey(
+    pub,
+    { name: algorithmName } as SubtleAlgorithm,
+    publicUsages,
+    true,
+  );
+
+  const priv = KeyObject.createKeyObject(
+    'private',
+    privateKeyData,
+    KFormatType.DER,
+    KeyEncoding.PKCS8,
+  ) as PrivateKeyObjectClass;
+  const privateKey = new CryptoKey(
+    priv,
+    { name: algorithmName } as SubtleAlgorithm,
+    privateUsages,
+    extractable,
+  );
+
+  return { publicKey, privateKey };
 }

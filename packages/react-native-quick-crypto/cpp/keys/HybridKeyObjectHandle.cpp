@@ -1,3 +1,4 @@
+#include <cstdio>
 #include <stdexcept>
 
 #include "../utils/base64.h"
@@ -127,8 +128,12 @@ std::shared_ptr<ArrayBuffer> HybridKeyObjectHandle::exportKey(std::optional<KFor
     auto exportFormat = format.value_or(KFormatType::DER);
     auto exportType = type.value_or(keyType == KeyType::PUBLIC ? KeyEncoding::SPKI : KeyEncoding::PKCS8);
 
+    // If SPKI is requested, export as public key (works for both public and private keys)
+    // This allows extracting the public key from a private key
+    bool exportAsPublic = (exportType == KeyEncoding::SPKI) || (keyType == KeyType::PUBLIC);
+
     // Create encoding config
-    if (keyType == KeyType::PUBLIC) {
+    if (exportAsPublic) {
       ncrypto::EVPKeyPointer::PublicKeyEncodingConfig config(false, static_cast<ncrypto::EVPKeyPointer::PKFormatType>(exportFormat),
                                                              static_cast<ncrypto::EVPKeyPointer::PKEncodingType>(exportType));
 
@@ -328,16 +333,18 @@ bool HybridKeyObjectHandle::init(KeyType keyType, const std::variant<std::string
   // Reset any existing data to prevent state leakage
   data_ = KeyObjectData();
 
-  // get ArrayBuffer from key
+  // get ArrayBuffer from key - always copy to ensure we own the data
   std::shared_ptr<ArrayBuffer> ab;
   if (std::holds_alternative<std::string>(key)) {
     ab = ToNativeArrayBuffer(std::get<std::string>(key));
   } else {
-    ab = std::get<std::shared_ptr<ArrayBuffer>>(key);
+    const auto& abPtr = std::get<std::shared_ptr<ArrayBuffer>>(key);
+    ab = ToNativeArrayBuffer(abPtr);
   }
 
   // Handle raw asymmetric key material - only for special curves with known raw sizes
-  if (!format.has_value() && !type.has_value() && (keyType == KeyType::PUBLIC || keyType == KeyType::PRIVATE)) {
+  std::optional<KFormatType> actualFormat = format;
+  if (!actualFormat.has_value() && !type.has_value() && (keyType == KeyType::PUBLIC || keyType == KeyType::PRIVATE)) {
     size_t keySize = ab->size();
     // Only route to initRawKey for exact special curve sizes:
     // X25519/Ed25519: 32 bytes, X448: 56 bytes, Ed448: 57 bytes
@@ -354,14 +361,14 @@ bool HybridKeyObjectHandle::init(KeyType keyType, const std::variant<std::string
       break;
     }
     case KeyType::PUBLIC: {
-      auto data = KeyObjectData::GetPublicOrPrivateKey(ab, format, type, passphrase);
+      auto data = KeyObjectData::GetPublicOrPrivateKey(ab, actualFormat, type, passphrase);
       if (!data)
         return false;
       this->data_ = data.addRefWithType(KeyType::PUBLIC);
       break;
     }
     case KeyType::PRIVATE: {
-      if (auto data = KeyObjectData::GetPrivateKey(ab, format, type, passphrase, false)) {
+      if (auto data = KeyObjectData::GetPrivateKey(ab, actualFormat, type, passphrase, false)) {
         this->data_ = std::move(data);
       }
       break;

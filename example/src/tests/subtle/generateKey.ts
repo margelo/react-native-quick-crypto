@@ -122,9 +122,9 @@ const vectors: Vectors = {
 
 // Test invalid algorithms
 async function testInvalidAlgorithm(algorithm: any) {
-  // one test is slightly different than the others
+  // Tests with invalid hash algorithms get a different error message
   const errorText =
-    algorithm.hash === 'SHA'
+    algorithm.hash === 'SHA' || algorithm.hash === 'MD5'
       ? 'Invalid Hash Algorithm'
       : 'Unrecognized algorithm name';
   const algo = JSON.stringify(algorithm);

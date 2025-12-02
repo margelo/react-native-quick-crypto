@@ -19,7 +19,9 @@
     "Pbkdf2": { "cpp": "HybridPbkdf2" },
     "Random": { "cpp": "HybridRandom" },
     "RsaCipher": { "cpp": "HybridRsaCipher" },
-    "RsaKeyPair": { "cpp": "HybridRsaKeyPair" }
+    "RsaKeyPair": { "cpp": "HybridRsaKeyPair" },
+    "SignHandle": { "cpp": "HybridSignHandle" },
+    "VerifyHandle": { "cpp": "HybridVerifyHandle" }
   },
   "ignorePaths": ["node_modules", "lib"]
 }
