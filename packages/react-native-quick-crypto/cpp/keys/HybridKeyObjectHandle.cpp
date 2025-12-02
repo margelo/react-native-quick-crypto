@@ -1,5 +1,4 @@
 #include <cstdio>
-#include <os/log.h>
 #include <stdexcept>
 
 #include "../utils/base64.h"
