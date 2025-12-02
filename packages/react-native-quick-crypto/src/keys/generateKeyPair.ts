@@ -1,6 +1,6 @@
 import { ed_generateKeyPair } from '../ed';
-import { rsa_generateKeyPairNode } from '../rsa';
-import { ec_generateKeyPairNode } from '../ec';
+import { rsa_generateKeyPairNode, rsa_generateKeyPairNodeSync } from '../rsa';
+import { ec_generateKeyPairNode, ec_generateKeyPairNodeSync } from '../ec';
 import {
   kEmptyObject,
   validateFunction,
@@ -149,33 +149,41 @@ function internalGenerateKeyPair(
     }
   }
 
-  const impl = async () => {
-    try {
-      let result;
-      if (type === 'rsa' || type === 'rsa-pss') {
-        result = await rsa_generateKeyPairNode(type, options, encoding);
-      } else if (type === 'ec') {
-        result = await ec_generateKeyPairNode(options, encoding);
-      } else {
-        throw new Error(`Unsupported key type: ${type}`);
-      }
-      return [
-        undefined,
-        result.publicKey,
-        result.privateKey,
-      ] as GenerateKeyPairReturn;
-    } catch (error) {
-      return [error as Error, undefined, undefined] as GenerateKeyPairReturn;
-    }
-  };
-
   if (isAsync) {
+    const impl = async (): Promise<GenerateKeyPairReturn> => {
+      try {
+        let result;
+        if (type === 'rsa' || type === 'rsa-pss') {
+          result = await rsa_generateKeyPairNode(type, options, encoding);
+        } else if (type === 'ec') {
+          result = await ec_generateKeyPairNode(options, encoding);
+        } else {
+          throw new Error(`Unsupported key type: ${type}`);
+        }
+        return [undefined, result.publicKey, result.privateKey];
+      } catch (error) {
+        return [error as Error, undefined, undefined];
+      }
+    };
+
     impl().then(result => {
       const [err, publicKey, privateKey] = result;
       callback!(err, publicKey, privateKey);
     });
     return;
-  } else {
-    throw new Error('Sync key generation for RSA/EC not yet implemented');
+  }
+
+  try {
+    let result;
+    if (type === 'rsa' || type === 'rsa-pss') {
+      result = rsa_generateKeyPairNodeSync(type, options, encoding);
+    } else if (type === 'ec') {
+      result = ec_generateKeyPairNodeSync(options, encoding);
+    } else {
+      throw new Error(`Unsupported key type: ${type}`);
+    }
+    return [undefined, result.publicKey, result.privateKey];
+  } catch (error) {
+    return [error as Error, undefined, undefined];
   }
 }

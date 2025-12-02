@@ -4,32 +4,62 @@ import type { KeyObjectHandle } from './keyObjectHandle.nitro';
 export interface RsaCipher
   extends HybridObject<{ ios: 'c++'; android: 'c++' }> {
   /**
-   * Encrypt data using RSA-OAEP
+   * Encrypt data using RSA with specified padding
    * @param keyHandle The public key handle
    * @param data The data to encrypt
-   * @param hashAlgorithm The hash algorithm (e.g., 'SHA-256')
+   * @param padding RSA padding mode (1=PKCS1, 4=OAEP)
+   * @param hashAlgorithm The hash algorithm for OAEP (e.g., 'SHA-256')
    * @param label Optional label for OAEP
    * @returns Encrypted data
    */
   encrypt(
     keyHandle: KeyObjectHandle,
     data: ArrayBuffer,
+    padding: number,
     hashAlgorithm: string,
     label?: ArrayBuffer,
   ): ArrayBuffer;
 
   /**
-   * Decrypt data using RSA-OAEP
+   * Decrypt data using RSA with specified padding
    * @param keyHandle The private key handle
    * @param data The data to decrypt
-   * @param hashAlgorithm The hash algorithm (e.g., 'SHA-256')
+   * @param padding RSA padding mode (1=PKCS1, 4=OAEP)
+   * @param hashAlgorithm The hash algorithm for OAEP (e.g., 'SHA-256')
    * @param label Optional label for OAEP
    * @returns Decrypted data
    */
   decrypt(
     keyHandle: KeyObjectHandle,
     data: ArrayBuffer,
+    padding: number,
     hashAlgorithm: string,
     label?: ArrayBuffer,
+  ): ArrayBuffer;
+
+  /**
+   * Encrypt data using private key (for signatures)
+   * @param keyHandle The private key handle
+   * @param data The data to encrypt
+   * @param padding RSA padding mode (1=PKCS1)
+   * @returns Encrypted data
+   */
+  privateEncrypt(
+    keyHandle: KeyObjectHandle,
+    data: ArrayBuffer,
+    padding: number,
+  ): ArrayBuffer;
+
+  /**
+   * Decrypt data using public key (for signature verification)
+   * @param keyHandle The public key handle
+   * @param data The data to decrypt
+   * @param padding RSA padding mode (1=PKCS1)
+   * @returns Decrypted data
+   */
+  privateDecrypt(
+    keyHandle: KeyObjectHandle,
+    data: ArrayBuffer,
+    padding: number,
   ): ArrayBuffer;
 }

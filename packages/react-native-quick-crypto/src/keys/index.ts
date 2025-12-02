@@ -8,7 +8,12 @@ import {
 } from './classes';
 import { generateKeyPair, generateKeyPairSync } from './generateKeyPair';
 import { createSign, createVerify, Sign, Verify } from './signVerify';
-import { publicEncrypt, publicDecrypt } from './publicCipher';
+import {
+  publicEncrypt,
+  publicDecrypt,
+  privateEncrypt,
+  privateDecrypt,
+} from './publicCipher';
 import {
   isCryptoKey,
   parseKeyEncoding,
@@ -235,6 +240,8 @@ export {
   Verify,
   publicEncrypt,
   publicDecrypt,
+  privateEncrypt,
+  privateDecrypt,
 
   // Node Internal API
   parsePublicKeyEncoding,

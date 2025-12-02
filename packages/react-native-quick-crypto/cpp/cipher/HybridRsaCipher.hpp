@@ -10,12 +10,18 @@ class HybridRsaCipher : public HybridRsaCipherSpec {
   HybridRsaCipher() : HybridObject(TAG) {}
 
   std::shared_ptr<ArrayBuffer> encrypt(const std::shared_ptr<HybridKeyObjectHandleSpec>& keyHandle,
-                                       const std::shared_ptr<ArrayBuffer>& data, const std::string& hashAlgorithm,
+                                       const std::shared_ptr<ArrayBuffer>& data, double padding, const std::string& hashAlgorithm,
                                        const std::optional<std::shared_ptr<ArrayBuffer>>& label) override;
 
   std::shared_ptr<ArrayBuffer> decrypt(const std::shared_ptr<HybridKeyObjectHandleSpec>& keyHandle,
-                                       const std::shared_ptr<ArrayBuffer>& data, const std::string& hashAlgorithm,
+                                       const std::shared_ptr<ArrayBuffer>& data, double padding, const std::string& hashAlgorithm,
                                        const std::optional<std::shared_ptr<ArrayBuffer>>& label) override;
+
+  std::shared_ptr<ArrayBuffer> privateEncrypt(const std::shared_ptr<HybridKeyObjectHandleSpec>& keyHandle,
+                                              const std::shared_ptr<ArrayBuffer>& data, double padding) override;
+
+  std::shared_ptr<ArrayBuffer> privateDecrypt(const std::shared_ptr<HybridKeyObjectHandleSpec>& keyHandle,
+                                              const std::shared_ptr<ArrayBuffer>& data, double padding) override;
 
   void loadHybridMethods() override;
 };

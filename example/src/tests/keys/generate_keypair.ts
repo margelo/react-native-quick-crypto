@@ -502,16 +502,137 @@ test(
   },
 );
 
-test(
-  SUITE,
-  'generateKeyPairSync RSA throws (not implemented sync for RSA)',
-  async () => {
-    await assertThrowsAsync(async () => {
-      generateKeyPairSync('rsa', {
-        modulusLength: 2048,
-        publicKeyEncoding: { type: 'spki', format: 'pem' },
-        privateKeyEncoding: { type: 'pkcs8', format: 'pem' },
-      });
-    }, '');
-  },
-);
+// --- generateKeyPairSync RSA Tests ---
+
+test(SUITE, 'generateKeyPairSync RSA 2048-bit with PEM encoding', () => {
+  const { privateKey, publicKey } = generateKeyPairSync('rsa', {
+    modulusLength: 2048,
+    publicKeyEncoding: { type: 'spki', format: 'pem' },
+    privateKeyEncoding: { type: 'pkcs8', format: 'pem' },
+  });
+
+  expect(typeof privateKey).to.equal('string');
+  expect(typeof publicKey).to.equal('string');
+  expect(privateKey).to.match(/^-----BEGIN PRIVATE KEY-----/);
+  expect(publicKey).to.match(/^-----BEGIN PUBLIC KEY-----/);
+});
+
+test(SUITE, 'generateKeyPairSync RSA with DER encoding', () => {
+  const { privateKey, publicKey } = generateKeyPairSync('rsa', {
+    modulusLength: 2048,
+    publicKeyEncoding: { type: 'spki', format: 'der' },
+    privateKeyEncoding: { type: 'pkcs8', format: 'der' },
+  });
+
+  expect(privateKey instanceof ArrayBuffer).to.equal(true);
+  expect(publicKey instanceof ArrayBuffer).to.equal(true);
+  expect((privateKey as ArrayBuffer).byteLength).to.be.greaterThan(0);
+  expect((publicKey as ArrayBuffer).byteLength).to.be.greaterThan(0);
+});
+
+test(SUITE, 'generateKeyPairSync RSA keys work for signing', () => {
+  const { privateKey, publicKey } = generateKeyPairSync('rsa', {
+    modulusLength: 2048,
+    publicKeyEncoding: { type: 'spki', format: 'pem' },
+    privateKeyEncoding: { type: 'pkcs8', format: 'pem' },
+  });
+
+  const testData = 'Test data for sync RSA signing';
+  const signature = createSign('SHA256')
+    .update(testData)
+    .sign(privateKey as string);
+  const isValid = createVerify('SHA256')
+    .update(testData)
+    .verify(publicKey as string, signature);
+
+  expect(isValid).to.equal(true);
+});
+
+test(SUITE, 'generateKeyPairSync RSA-PSS', () => {
+  const { privateKey, publicKey } = generateKeyPairSync('rsa-pss', {
+    modulusLength: 2048,
+    hashAlgorithm: 'SHA-256',
+    publicKeyEncoding: { type: 'spki', format: 'pem' },
+    privateKeyEncoding: { type: 'pkcs8', format: 'pem' },
+  });
+
+  expect(typeof privateKey).to.equal('string');
+  expect(typeof publicKey).to.equal('string');
+  expect(privateKey).to.match(/^-----BEGIN PRIVATE KEY-----/);
+  expect(publicKey).to.match(/^-----BEGIN PUBLIC KEY-----/);
+});
+
+// --- generateKeyPairSync EC Tests ---
+
+test(SUITE, 'generateKeyPairSync EC P-256', () => {
+  const { privateKey, publicKey } = generateKeyPairSync('ec', {
+    namedCurve: 'P-256',
+    publicKeyEncoding: { type: 'spki', format: 'pem' },
+    privateKeyEncoding: { type: 'pkcs8', format: 'pem' },
+  });
+
+  expect(typeof privateKey).to.equal('string');
+  expect(typeof publicKey).to.equal('string');
+  expect(privateKey).to.match(/^-----BEGIN PRIVATE KEY-----/);
+  expect(publicKey).to.match(/^-----BEGIN PUBLIC KEY-----/);
+
+  const key = createPrivateKey(privateKey as string);
+  expect(key.asymmetricKeyType).to.equal('ec');
+});
+
+test(SUITE, 'generateKeyPairSync EC P-384', () => {
+  const { privateKey, publicKey } = generateKeyPairSync('ec', {
+    namedCurve: 'P-384',
+    publicKeyEncoding: { type: 'spki', format: 'pem' },
+    privateKeyEncoding: { type: 'pkcs8', format: 'pem' },
+  });
+
+  expect(typeof privateKey).to.equal('string');
+  expect(typeof publicKey).to.equal('string');
+  expect(privateKey).to.match(/^-----BEGIN PRIVATE KEY-----/);
+  expect(publicKey).to.match(/^-----BEGIN PUBLIC KEY-----/);
+});
+
+test(SUITE, 'generateKeyPairSync EC P-521', () => {
+  const { privateKey, publicKey } = generateKeyPairSync('ec', {
+    namedCurve: 'P-521',
+    publicKeyEncoding: { type: 'spki', format: 'pem' },
+    privateKeyEncoding: { type: 'pkcs8', format: 'pem' },
+  });
+
+  expect(typeof privateKey).to.equal('string');
+  expect(typeof publicKey).to.equal('string');
+  expect(privateKey).to.match(/^-----BEGIN PRIVATE KEY-----/);
+  expect(publicKey).to.match(/^-----BEGIN PUBLIC KEY-----/);
+});
+
+test(SUITE, 'generateKeyPairSync EC keys work for signing', () => {
+  const { privateKey, publicKey } = generateKeyPairSync('ec', {
+    namedCurve: 'P-256',
+    publicKeyEncoding: { type: 'spki', format: 'pem' },
+    privateKeyEncoding: { type: 'pkcs8', format: 'pem' },
+  });
+
+  const testData = 'Test data for sync ECDSA signing';
+  const signature = createSign('SHA256')
+    .update(testData)
+    .sign(privateKey as string);
+  const isValid = createVerify('SHA256')
+    .update(testData)
+    .verify(publicKey as string, signature);
+
+  expect(isValid).to.equal(true);
+});
+
+test(SUITE, 'generateKeyPairSync EC with DER encoding', () => {
+  const { privateKey, publicKey } = generateKeyPairSync('ec', {
+    namedCurve: 'P-256',
+    publicKeyEncoding: { type: 'spki', format: 'der' },
+    privateKeyEncoding: { type: 'pkcs8', format: 'der' },
+  });
+
+  expect(privateKey instanceof ArrayBuffer).to.equal(true);
+  expect(publicKey instanceof ArrayBuffer).to.equal(true);
+  expect((privateKey as ArrayBuffer).byteLength).to.be.greaterThan(0);
+  expect((publicKey as ArrayBuffer).byteLength).to.be.greaterThan(0);
+});

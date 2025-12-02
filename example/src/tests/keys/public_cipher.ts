@@ -2,11 +2,14 @@ import { Buffer } from '@craftzdog/react-native-buffer';
 import {
   publicEncrypt,
   publicDecrypt,
+  privateEncrypt,
+  privateDecrypt,
   generateKeyPair,
   createPrivateKey,
   createPublicKey,
   subtle,
   isCryptoKeyPair,
+  constants,
 } from 'react-native-quick-crypto';
 import type { WebCryptoKeyPair } from 'react-native-quick-crypto';
 import { expect } from 'chai';
@@ -551,3 +554,391 @@ test(SUITE, 'publicEncrypt fails with oversized plaintext', async () => {
     publicEncrypt({ key: publicKey, oaepHash: 'SHA-256' }, oversizedPlaintext);
   }, '');
 });
+
+// --- PKCS1 v1.5 Padding Tests ---
+
+test(SUITE, 'publicEncrypt/publicDecrypt with PKCS1 padding', () => {
+  const publicKey = createPublicKey({
+    key: Buffer.from(spki),
+    format: 'der',
+    type: 'spki',
+  });
+
+  const privateKey = createPrivateKey({
+    key: Buffer.from(pkcs8),
+    format: 'der',
+    type: 'pkcs8',
+  });
+
+  const encrypted = publicEncrypt(
+    { key: publicKey, padding: constants.RSA_PKCS1_PADDING },
+    shortPlaintext,
+  );
+  const decrypted = publicDecrypt(
+    { key: privateKey, padding: constants.RSA_PKCS1_PADDING },
+    encrypted,
+  );
+
+  expect(decrypted.toString()).to.equal(shortPlaintext.toString());
+});
+
+test(SUITE, 'PKCS1 padding round-trip with longer message', () => {
+  const publicKey = createPublicKey({
+    key: Buffer.from(spki),
+    format: 'der',
+    type: 'spki',
+  });
+
+  const privateKey = createPrivateKey({
+    key: Buffer.from(pkcs8),
+    format: 'der',
+    type: 'pkcs8',
+  });
+
+  const encrypted = publicEncrypt(
+    { key: publicKey, padding: constants.RSA_PKCS1_PADDING },
+    testMessage,
+  );
+  const decrypted = publicDecrypt(
+    { key: privateKey, padding: constants.RSA_PKCS1_PADDING },
+    encrypted,
+  );
+
+  expect(Buffer.compare(decrypted, testMessage)).to.equal(0);
+});
+
+test(SUITE, 'PKCS1 padding max plaintext size', () => {
+  const publicKey = createPublicKey({
+    key: Buffer.from(spki),
+    format: 'der',
+    type: 'spki',
+  });
+
+  const privateKey = createPrivateKey({
+    key: Buffer.from(pkcs8),
+    format: 'der',
+    type: 'pkcs8',
+  });
+
+  // For RSA PKCS1 v1.5: max = keySize - 11 = 256 - 11 = 245 bytes
+  const maxPlaintext = Buffer.alloc(245, 'B');
+  const encrypted = publicEncrypt(
+    { key: publicKey, padding: constants.RSA_PKCS1_PADDING },
+    maxPlaintext,
+  );
+  const decrypted = publicDecrypt(
+    { key: privateKey, padding: constants.RSA_PKCS1_PADDING },
+    encrypted,
+  );
+
+  expect(Buffer.compare(decrypted, maxPlaintext)).to.equal(0);
+});
+
+test(SUITE, 'PKCS1 fails with oversized plaintext', async () => {
+  const publicKey = createPublicKey({
+    key: Buffer.from(spki),
+    format: 'der',
+    type: 'spki',
+  });
+
+  // For RSA PKCS1 v1.5: max = 245 bytes, try 246
+  const oversizedPlaintext = Buffer.alloc(246, 'C');
+
+  await assertThrowsAsync(async () => {
+    publicEncrypt(
+      { key: publicKey, padding: constants.RSA_PKCS1_PADDING },
+      oversizedPlaintext,
+    );
+  }, '');
+});
+
+test(SUITE, 'OAEP and PKCS1 produce different ciphertexts', () => {
+  const publicKey = createPublicKey({
+    key: Buffer.from(spki),
+    format: 'der',
+    type: 'spki',
+  });
+
+  const privateKey = createPrivateKey({
+    key: Buffer.from(pkcs8),
+    format: 'der',
+    type: 'pkcs8',
+  });
+
+  // Encrypt with OAEP
+  const encryptedOaep = publicEncrypt(
+    { key: publicKey, padding: constants.RSA_PKCS1_OAEP_PADDING },
+    shortPlaintext,
+  );
+
+  // Encrypt with PKCS1
+  const encryptedPkcs1 = publicEncrypt(
+    { key: publicKey, padding: constants.RSA_PKCS1_PADDING },
+    shortPlaintext,
+  );
+
+  // Both should decrypt correctly with matching padding
+  const decryptedOaep = publicDecrypt(
+    { key: privateKey, padding: constants.RSA_PKCS1_OAEP_PADDING },
+    encryptedOaep,
+  );
+  const decryptedPkcs1 = publicDecrypt(
+    { key: privateKey, padding: constants.RSA_PKCS1_PADDING },
+    encryptedPkcs1,
+  );
+
+  expect(decryptedOaep.toString()).to.equal(shortPlaintext.toString());
+  expect(decryptedPkcs1.toString()).to.equal(shortPlaintext.toString());
+
+  // Ciphertexts should be different (different padding schemes)
+  expect(Buffer.compare(encryptedOaep, encryptedPkcs1)).to.not.equal(0);
+});
+
+// --- privateEncrypt / privateDecrypt Tests ---
+
+const PRIVATE_CIPHER_SUITE = 'keys.privateEncrypt/privateDecrypt';
+
+test(PRIVATE_CIPHER_SUITE, 'privateEncrypt/privateDecrypt round-trip', () => {
+  const publicKey = createPublicKey({
+    key: Buffer.from(spki),
+    format: 'der',
+    type: 'spki',
+  });
+
+  const privateKey = createPrivateKey({
+    key: Buffer.from(pkcs8),
+    format: 'der',
+    type: 'pkcs8',
+  });
+
+  // Encrypt with private key
+  const encrypted = privateEncrypt(privateKey, shortPlaintext);
+  // Decrypt with public key
+  const decrypted = privateDecrypt(publicKey, encrypted);
+
+  expect(decrypted.toString()).to.equal(shortPlaintext.toString());
+});
+
+test(
+  PRIVATE_CIPHER_SUITE,
+  'privateEncrypt/privateDecrypt with explicit PKCS1 padding',
+  () => {
+    const publicKey = createPublicKey({
+      key: Buffer.from(spki),
+      format: 'der',
+      type: 'spki',
+    });
+
+    const privateKey = createPrivateKey({
+      key: Buffer.from(pkcs8),
+      format: 'der',
+      type: 'pkcs8',
+    });
+
+    const encrypted = privateEncrypt(
+      { key: privateKey, padding: constants.RSA_PKCS1_PADDING },
+      testMessage,
+    );
+    const decrypted = privateDecrypt(
+      { key: publicKey, padding: constants.RSA_PKCS1_PADDING },
+      encrypted,
+    );
+
+    expect(Buffer.compare(decrypted, testMessage)).to.equal(0);
+  },
+);
+
+test(PRIVATE_CIPHER_SUITE, 'privateEncrypt with PEM key', () => {
+  const publicKey = createPublicKey({
+    key: Buffer.from(spki),
+    format: 'der',
+    type: 'spki',
+  });
+
+  const privateKey = createPrivateKey({
+    key: Buffer.from(pkcs8),
+    format: 'der',
+    type: 'pkcs8',
+  });
+
+  // Export to PEM for test
+  const privatePem = privateKey.export({ type: 'pkcs8', format: 'pem' });
+  const publicPem = publicKey.export({ type: 'spki', format: 'pem' });
+
+  const encrypted = privateEncrypt(privatePem as string, shortPlaintext);
+  const decrypted = privateDecrypt(publicPem as string, encrypted);
+
+  expect(decrypted.toString()).to.equal(shortPlaintext.toString());
+});
+
+test(
+  PRIVATE_CIPHER_SUITE,
+  'privateEncrypt/privateDecrypt with generateKeyPair',
+  async () => {
+    const { privateKey, publicKey } = await new Promise<{
+      privateKey: string;
+      publicKey: string;
+    }>((resolve, reject) => {
+      generateKeyPair(
+        'rsa',
+        {
+          modulusLength: 2048,
+          publicKeyEncoding: { type: 'spki', format: 'pem' },
+          privateKeyEncoding: { type: 'pkcs8', format: 'pem' },
+        },
+        (err, pubKey, privKey) => {
+          if (err) reject(err);
+          else
+            resolve({
+              privateKey: privKey as string,
+              publicKey: pubKey as string,
+            });
+        },
+      );
+    });
+
+    const encrypted = privateEncrypt(privateKey, testMessage);
+    const decrypted = privateDecrypt(publicKey, encrypted);
+
+    expect(Buffer.compare(decrypted, testMessage)).to.equal(0);
+  },
+);
+
+test(PRIVATE_CIPHER_SUITE, 'privateEncrypt max plaintext size', () => {
+  const publicKey = createPublicKey({
+    key: Buffer.from(spki),
+    format: 'der',
+    type: 'spki',
+  });
+
+  const privateKey = createPrivateKey({
+    key: Buffer.from(pkcs8),
+    format: 'der',
+    type: 'pkcs8',
+  });
+
+  // For RSA PKCS1 v1.5 signing: max = keySize - 11 = 256 - 11 = 245 bytes
+  const maxPlaintext = Buffer.alloc(245, 'D');
+  const encrypted = privateEncrypt(privateKey, maxPlaintext);
+  const decrypted = privateDecrypt(publicKey, encrypted);
+
+  expect(Buffer.compare(decrypted, maxPlaintext)).to.equal(0);
+});
+
+test(
+  PRIVATE_CIPHER_SUITE,
+  'privateEncrypt fails with oversized data',
+  async () => {
+    const privateKey = createPrivateKey({
+      key: Buffer.from(pkcs8),
+      format: 'der',
+      type: 'pkcs8',
+    });
+
+    // For RSA PKCS1 v1.5: max = 245 bytes, try 246
+    const oversizedData = Buffer.alloc(246, 'E');
+
+    await assertThrowsAsync(async () => {
+      privateEncrypt(privateKey, oversizedData);
+    }, '');
+  },
+);
+
+test(PRIVATE_CIPHER_SUITE, 'privateEncrypt requires private key', async () => {
+  const publicKey = createPublicKey({
+    key: Buffer.from(spki),
+    format: 'der',
+    type: 'spki',
+  });
+
+  await assertThrowsAsync(async () => {
+    privateEncrypt(publicKey, shortPlaintext);
+  }, 'privateEncrypt requires a private key');
+});
+
+test(PRIVATE_CIPHER_SUITE, 'privateDecrypt requires public key', async () => {
+  const privateKey = createPrivateKey({
+    key: Buffer.from(pkcs8),
+    format: 'der',
+    type: 'pkcs8',
+  });
+
+  const encrypted = privateEncrypt(privateKey, shortPlaintext);
+
+  await assertThrowsAsync(async () => {
+    privateDecrypt(privateKey, encrypted);
+  }, 'privateDecrypt requires a public key');
+});
+
+test(PRIVATE_CIPHER_SUITE, 'privateEncrypt empty plaintext', () => {
+  const publicKey = createPublicKey({
+    key: Buffer.from(spki),
+    format: 'der',
+    type: 'spki',
+  });
+
+  const privateKey = createPrivateKey({
+    key: Buffer.from(pkcs8),
+    format: 'der',
+    type: 'pkcs8',
+  });
+
+  const emptyBuffer = Buffer.from('');
+  const encrypted = privateEncrypt(privateKey, emptyBuffer);
+  const decrypted = privateDecrypt(publicKey, encrypted);
+
+  expect(decrypted.length).to.equal(0);
+});
+
+test(PRIVATE_CIPHER_SUITE, 'privateEncrypt single byte', () => {
+  const publicKey = createPublicKey({
+    key: Buffer.from(spki),
+    format: 'der',
+    type: 'spki',
+  });
+
+  const privateKey = createPrivateKey({
+    key: Buffer.from(pkcs8),
+    format: 'der',
+    type: 'pkcs8',
+  });
+
+  const singleByte = Buffer.from([0x42]);
+  const encrypted = privateEncrypt(privateKey, singleByte);
+  const decrypted = privateDecrypt(publicKey, encrypted);
+
+  expect(decrypted.length).to.equal(1);
+  expect(decrypted[0]).to.equal(0x42);
+});
+
+test(
+  PRIVATE_CIPHER_SUITE,
+  'publicEncrypt/privateDecrypt are inverses (cross-compatibility)',
+  () => {
+    const publicKey = createPublicKey({
+      key: Buffer.from(spki),
+      format: 'der',
+      type: 'spki',
+    });
+
+    const privateKey = createPrivateKey({
+      key: Buffer.from(pkcs8),
+      format: 'der',
+      type: 'pkcs8',
+    });
+
+    // publicEncrypt with PKCS1 -> privateDecrypt with private key (standard decrypt)
+    const encrypted = publicEncrypt(
+      { key: publicKey, padding: constants.RSA_PKCS1_PADDING },
+      shortPlaintext,
+    );
+
+    // This should work with publicDecrypt using private key
+    const decrypted = publicDecrypt(
+      { key: privateKey, padding: constants.RSA_PKCS1_PADDING },
+      encrypted,
+    );
+
+    expect(decrypted.toString()).to.equal(shortPlaintext.toString());
+  },
+);
