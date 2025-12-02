@@ -1,3 +1,5 @@
+#include <cstdio>
+#include <os/log.h>
 #include <stdexcept>
 
 #include "../utils/base64.h"
@@ -127,8 +129,12 @@ std::shared_ptr<ArrayBuffer> HybridKeyObjectHandle::exportKey(std::optional<KFor
     auto exportFormat = format.value_or(KFormatType::DER);
     auto exportType = type.value_or(keyType == KeyType::PUBLIC ? KeyEncoding::SPKI : KeyEncoding::PKCS8);
 
+    // If SPKI is requested, export as public key (works for both public and private keys)
+    // This allows extracting the public key from a private key
+    bool exportAsPublic = (exportType == KeyEncoding::SPKI) || (keyType == KeyType::PUBLIC);
+
     // Create encoding config
-    if (keyType == KeyType::PUBLIC) {
+    if (exportAsPublic) {
       ncrypto::EVPKeyPointer::PublicKeyEncodingConfig config(false, static_cast<ncrypto::EVPKeyPointer::PKFormatType>(exportFormat),
                                                              static_cast<ncrypto::EVPKeyPointer::PKEncodingType>(exportType));
 
@@ -328,12 +334,37 @@ bool HybridKeyObjectHandle::init(KeyType keyType, const std::variant<std::string
   // Reset any existing data to prevent state leakage
   data_ = KeyObjectData();
 
-  // get ArrayBuffer from key
+  // DEBUG: Use os_log for iOS visibility
+  os_log_t log = os_log_create("com.margelo.quickcrypto", "keys");
+  os_log_error(log, "RNQC init called");
+  os_log_error(log, "RNQC keyType=%d (0=SECRET, 1=PUBLIC, 2=PRIVATE)", static_cast<int>(keyType));
+  os_log_error(log, "RNQC format.has_value=%d", format.has_value());
+  if (format.has_value()) {
+    os_log_error(log, "RNQC format=%d (0=DER, 1=PEM, 2=JWK)", static_cast<int>(format.value()));
+  }
+  os_log_error(log, "RNQC type.has_value=%d", type.has_value());
+  if (type.has_value()) {
+    os_log_error(log, "RNQC type=%d", static_cast<int>(type.value()));
+  }
+
+  bool isString = std::holds_alternative<std::string>(key);
+  os_log_error(log, "RNQC key is string variant: %d", isString);
+
+  if (isString) {
+    const std::string& str = std::get<std::string>(key);
+    os_log_error(log, "RNQC string length: %zu", str.length());
+    os_log_error(log, "RNQC first 100 chars: %.100s", str.c_str());
+  } else {
+    const auto& abPtr = std::get<std::shared_ptr<ArrayBuffer>>(key);
+    os_log_error(log, "RNQC ArrayBuffer size: %zu", abPtr->size());
+  }
+
+  // get ArrayBuffer from key - always copy to ensure we own the data
   std::shared_ptr<ArrayBuffer> ab;
   if (std::holds_alternative<std::string>(key)) {
     ab = ToNativeArrayBuffer(std::get<std::string>(key));
   } else {
-    ab = std::get<std::shared_ptr<ArrayBuffer>>(key);
+    ab = ToNativeArrayBuffer(std::get<std::shared_ptr<ArrayBuffer>>(key));
   }
 
   // Handle raw asymmetric key material - only for special curves with known raw sizes

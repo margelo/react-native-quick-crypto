@@ -60,12 +60,12 @@ This document attempts to describe the implementation status of Crypto APIs/Inte
   * ❌ `keyObject.symmetricKeySize`
   * ❌ `keyObject.toCryptoKey(algorithm, extractable, keyUsages)`
   * ✅ `keyObject.type`
-* ❌ Class: `Sign`
-  * ❌ `sign.sign(privateKey[, outputEncoding])`
-  * ❌ `sign.update(data[, inputEncoding])`
-* ❌ Class: `Verify`
-  * ❌ `verify.update(data[, inputEncoding])`
-  * ❌ `verify.verify(object, signature[, signatureEncoding])`
+* ✅ Class: `Sign`
+  * ✅ `sign.sign(privateKey[, outputEncoding])`
+  * ✅ `sign.update(data[, inputEncoding])`
+* ✅ Class: `Verify`
+  * ✅ `verify.update(data[, inputEncoding])`
+  * ✅ `verify.verify(object, signature[, signatureEncoding])`
 * ❌ Class: `X509Certificate`
   * ❌ `new X509Certificate(buffer)`
   * ❌ `x509.ca`
@@ -97,7 +97,7 @@ This document attempts to describe the implementation status of Crypto APIs/Inte
   * ❌ `crypto.argon2Sync(algorithm, parameters)`
   * ❌ `crypto.checkPrime(candidate[, options], callback)`
   * ❌ `crypto.checkPrimeSync(candidate[, options])`
-  * ❌ `crypto.constants`
+  * ✅ `crypto.constants`
   * ✅ `crypto.createCipheriv(algorithm, key, iv[, options])`
   * ✅ `crypto.createDecipheriv(algorithm, key, iv[, options])`
   * ❌ `crypto.createDiffieHellman(prime[, primeEncoding][, generator][, generatorEncoding])`
@@ -106,19 +106,19 @@ This document attempts to describe the implementation status of Crypto APIs/Inte
   * ❌ `crypto.createECDH(curveName)`
   * ✅ `crypto.createHash(algorithm[, options])`
   * ✅ `crypto.createHmac(algorithm, key[, options])`
-  * ❌ `crypto.createPrivateKey(key)`
-  * ❌ `crypto.createPublicKey(key)`
-  * ❌ `crypto.createSecretKey(key[, encoding])`
-  * ❌ `crypto.createSign(algorithm[, options])`
-  * ❌ `crypto.createVerify(algorithm[, options])`
+  * ✅ `crypto.createPrivateKey(key)`
+  * ✅ `crypto.createPublicKey(key)`
+  * ✅ `crypto.createSecretKey(key[, encoding])`
+  * ✅ `crypto.createSign(algorithm[, options])`
+  * ✅ `crypto.createVerify(algorithm[, options])`
   * ❌ `crypto.decapsulate(key, ciphertext[, callback])`
   * ❌ `crypto.diffieHellman(options[, callback])`
   * ❌ `crypto.encapsulate(key[, callback])`
   * ❌ `crypto.fips` deprecated
-  * ❌ `crypto.generateKey(type, options, callback)`
+  * ✅ `crypto.generateKey(type, options, callback)`
   * 🚧 `crypto.generateKeyPair(type, options, callback)`
   * 🚧 `crypto.generateKeyPairSync(type, options)`
-  * ❌ `crypto.generateKeySync(type, options)`
+  * 🚧 `crypto.generateKeySync(type, options)`
   * ❌ `crypto.generatePrime(size[, options[, callback]])`
   * ❌ `crypto.generatePrimeSync(size[, options])`
   * ❌ `crypto.getCipherInfo(nameOrNid[, options])`
@@ -135,8 +135,8 @@ This document attempts to describe the implementation status of Crypto APIs/Inte
   * ✅ `crypto.pbkdf2Sync(password, salt, iterations, keylen, digest)`
   * ❌ `crypto.privateDecrypt(privateKey, buffer)`
   * ❌ `crypto.privateEncrypt(privateKey, buffer)`
-  * ❌ `crypto.publicDecrypt(key, buffer)`
-  * ❌ `crypto.publicEncrypt(key, buffer)`
+  * ✅ `crypto.publicDecrypt(key, buffer)`
+  * ✅ `crypto.publicEncrypt(key, buffer)`
   * ✅ `crypto.randomBytes(size[, callback])`
   * ✅ `crypto.randomFill(buffer[, offset][, size], callback)`
   * ✅ `crypto.randomFillSync(buffer[, offset][, size])`
@@ -166,16 +166,16 @@ This document attempts to describe the implementation status of Crypto APIs/Inte
 ## `crypto.generateKey`
 | type       | Status |
 | ---------  | :----: |
-| `aes`      | ❌ |
-| `hmac`     | ❌ |
+| `aes`      | ✅ |
+| `hmac`     | ✅ |
 
 ## `crypto.generateKeyPair`
 | type      | Status |
 | --------- | :----: |
-| `rsa`     | ❌ |
-| `rsa-pss` | ❌ |
+| `rsa`     | ✅ |
+| `rsa-pss` | ✅ |
 | `dsa`     | ❌ |
-| `ec`      | ❌ |
+| `ec`      | ✅ |
 | `ed25519` | ✅ |
 | `ed448`   | ✅ |
 | `x25519`  | ✅ |
@@ -198,8 +198,8 @@ This document attempts to describe the implementation status of Crypto APIs/Inte
 ## `crypto.generateKeySync`
 | type       | Status |
 | ---------  | :----: |
-| `aes`      | ❌ |
-| `hmac`     | ❌ |
+| `aes`      | ✅ |
+| `hmac`     | ✅ |
 
 ## `crypto.sign`
 | Algorithm           | Status |
@@ -344,8 +344,8 @@ This document attempts to describe the implementation status of Crypto APIs/Inte
 | ---------           | :----: |
 | `ECDH`              | ✅ |
 | `ECDSA`             | ✅ |
-| `Ed25519`           | ❌ |
-| `Ed448`             | ❌ |
+| `Ed25519`           | ✅ |
+| `Ed448`             | ✅ |
 | `ML-DSA-44`         | ❌ |
 | `ML-DSA-65`         | ❌ |
 | `ML-DSA-87`         | ❌ |

@@ -1,6 +1,8 @@
 #include "KeyObjectData.hpp"
 #include "Utils.hpp"
+#include <cstdio>
 #include <optional>
+#include <os/log.h>
 
 namespace margelo::nitro::crypto {
 
@@ -21,18 +23,34 @@ ncrypto::EVPKeyPointer::PublicKeyEncodingConfig GetPublicKeyEncodingConfig(KForm
 }
 
 KeyObjectData TryParsePrivateKey(std::shared_ptr<ArrayBuffer> key, std::optional<KFormatType> format, std::optional<KeyEncoding> type,
-                                 const std::optional<std::shared_ptr<ArrayBuffer>>& /* passphrase */) {
-  auto config = GetPrivateKeyEncodingConfig(format.value(), type.value());
+                                 const std::optional<std::shared_ptr<ArrayBuffer>>& passphrase) {
+  // For PEM format, use PKCS8 as default encoding
+  KeyEncoding actualType = type.value_or(KeyEncoding::PKCS8);
+  auto config = GetPrivateKeyEncodingConfig(format.value(), actualType);
+
+  if (passphrase.has_value()) {
+    auto& passphrase_ptr = passphrase.value();
+    config.passphrase = std::make_optional(ncrypto::DataPointer(passphrase_ptr->data(), passphrase_ptr->size()));
+  }
+
   auto buffer = ncrypto::Buffer<const unsigned char>{key->data(), key->size()};
+
+  // Clear any existing OpenSSL errors before parsing
+  ERR_clear_error();
+
   auto res = ncrypto::EVPKeyPointer::TryParsePrivateKey(config, buffer);
   if (res) {
     return KeyObjectData::CreateAsymmetric(KeyType::PRIVATE, std::move(res.value));
   }
 
-  if (res.error.value() == ncrypto::EVPKeyPointer::PKParseError::NEED_PASSPHRASE) {
+  if (res.error.has_value() && res.error.value() == ncrypto::EVPKeyPointer::PKParseError::NEED_PASSPHRASE) {
     throw std::runtime_error("Passphrase required for encrypted key");
   } else {
-    throw std::runtime_error("Failed to read private key");
+    // Get OpenSSL error details
+    unsigned long err = ERR_get_error();
+    char err_buf[256];
+    ERR_error_string_n(err, err_buf, sizeof(err_buf));
+    throw std::runtime_error("Failed to read private key: " + std::string(err_buf));
   }
 }
 
@@ -93,6 +111,33 @@ size_t KeyObjectData::GetSymmetricKeySize() const {
 KeyObjectData KeyObjectData::GetPublicOrPrivateKey(std::shared_ptr<ArrayBuffer> key, std::optional<KFormatType> format,
                                                    std::optional<KeyEncoding> type,
                                                    const std::optional<std::shared_ptr<ArrayBuffer>>& passphrase) {
+  os_log_t log = os_log_create("com.margelo.quickcrypto", "keys");
+  os_log_error(log, "RNQC GetPublicOrPrivateKey called");
+  os_log_error(log, "RNQC key size: %zu", key->size());
+  os_log_error(log, "RNQC format.has_value: %d", format.has_value());
+  if (format.has_value()) {
+    os_log_error(log, "RNQC format value: %d (0=DER, 1=PEM, 2=JWK)", static_cast<int>(format.value()));
+  }
+  os_log_error(log, "RNQC type.has_value: %d", type.has_value());
+  if (type.has_value()) {
+    os_log_error(log, "RNQC type value: %d", static_cast<int>(type.value()));
+  }
+
+  // Print first 50 bytes as hex to see exact encoding
+  const unsigned char* data = key->data();
+  size_t len = std::min(key->size(), size_t(50));
+  std::string hexDump;
+  for (size_t i = 0; i < len; i++) {
+    char buf[4];
+    snprintf(buf, sizeof(buf), "%02x ", data[i]);
+    hexDump += buf;
+  }
+  os_log_error(log, "RNQC key hex first %zu bytes: %{public}s", len, hexDump.c_str());
+
+  // Also print as string (first 80 chars)
+  std::string preview(reinterpret_cast<const char*>(data), std::min(key->size(), size_t(80)));
+  os_log_error(log, "RNQC key string: %{public}s", preview.c_str());
+
   // Check if key size fits in int32_t without using double conversion
   if (key->size() > static_cast<size_t>(std::numeric_limits<int32_t>::max())) {
     std::string error_msg = "key is too big (int32): size=" + std::to_string(key->size()) +
@@ -106,27 +151,77 @@ KeyObjectData KeyObjectData::GetPublicOrPrivateKey(std::shared_ptr<ArrayBuffer> 
   if (actualFormat == KFormatType::PEM || actualFormat == KFormatType::DER) {
     auto buffer = ncrypto::Buffer<const unsigned char>{key->data(), key->size()};
 
+    os_log_error(log, "RNQC actualFormat=%d, creating buffer with len=%zu", static_cast<int>(actualFormat), buffer.len);
+
     if (actualFormat == KFormatType::PEM) {
-      // For PEM, we can easily determine whether it is a public or private key
-      // by looking for the respective PEM tags.
-      auto res = ncrypto::EVPKeyPointer::TryParsePublicKeyPEM(buffer);
-      if (res) {
-        return CreateAsymmetric(KeyType::PUBLIC, std::move(res.value));
+      os_log_error(log, "RNQC Parsing as PEM format");
+
+      // If user explicitly specified SPKI, only try parsing as public key
+      if (type.has_value() && type.value() == KeyEncoding::SPKI) {
+        os_log_error(log, "RNQC Trying TryParsePublicKeyPEM (SPKI specified)");
+        auto res = ncrypto::EVPKeyPointer::TryParsePublicKeyPEM(buffer);
+        if (res) {
+          os_log_error(log, "RNQC TryParsePublicKeyPEM succeeded!");
+          return CreateAsymmetric(KeyType::PUBLIC, std::move(res.value));
+        }
+        os_log_error(log, "RNQC TryParsePublicKeyPEM failed for SPKI");
+        throw std::runtime_error("Failed to read PEM public key: key is not in SPKI format");
       }
 
-      if (res.error.has_value() && res.error.value() == ncrypto::EVPKeyPointer::PKParseError::NOT_RECOGNIZED) {
+      // If user explicitly specified a private key encoding (PKCS8, SEC1, PKCS1), only try private
+      if (type.has_value() &&
+          (type.value() == KeyEncoding::PKCS8 || type.value() == KeyEncoding::SEC1 || type.value() == KeyEncoding::PKCS1)) {
+        os_log_error(log, "RNQC Trying TryParsePrivateKey (private encoding specified)");
         auto config = GetPrivateKeyEncodingConfig(actualFormat, type.value());
         if (passphrase.has_value()) {
           auto& passphrase_ptr = passphrase.value();
           config.passphrase = std::make_optional(ncrypto::DataPointer(passphrase_ptr->data(), passphrase_ptr->size()));
         }
-
+        ERR_clear_error();
         auto private_res = ncrypto::EVPKeyPointer::TryParsePrivateKey(config, buffer);
         if (private_res) {
+          os_log_error(log, "RNQC TryParsePrivateKey succeeded!");
           return CreateAsymmetric(KeyType::PRIVATE, std::move(private_res.value));
         }
+        unsigned long err = ERR_get_error();
+        char err_buf[256];
+        ERR_error_string_n(err, err_buf, sizeof(err_buf));
+        os_log_error(log, "RNQC TryParsePrivateKey failed: %{public}s", err_buf);
+        throw std::runtime_error("Failed to read PEM private key: " + std::string(err_buf));
       }
-      throw std::runtime_error("Failed to read PEM asymmetric key");
+
+      // No type specified - auto-detect by trying public first, then private
+      os_log_error(log, "RNQC Auto-detect: trying TryParsePublicKeyPEM first");
+      auto res = ncrypto::EVPKeyPointer::TryParsePublicKeyPEM(buffer);
+      if (res) {
+        os_log_error(log, "RNQC TryParsePublicKeyPEM succeeded (auto-detect)!");
+        return CreateAsymmetric(KeyType::PUBLIC, std::move(res.value));
+      }
+      os_log_error(log, "RNQC TryParsePublicKeyPEM failed, trying private key");
+
+      // Try parsing as private key - for PEM format, TryParsePrivateKey uses
+      // PEM_read_bio_PrivateKey which auto-detects any PEM private key format
+      // (PKCS8, SEC1, PKCS1, etc.), so we always try this regardless of error type
+      KeyEncoding actualType = KeyEncoding::PKCS8;
+      auto config = GetPrivateKeyEncodingConfig(actualFormat, actualType);
+      if (passphrase.has_value()) {
+        auto& passphrase_ptr = passphrase.value();
+        config.passphrase = std::make_optional(ncrypto::DataPointer(passphrase_ptr->data(), passphrase_ptr->size()));
+      }
+
+      // Clear any existing OpenSSL errors before parsing
+      ERR_clear_error();
+
+      auto private_res = ncrypto::EVPKeyPointer::TryParsePrivateKey(config, buffer);
+      if (private_res) {
+        return CreateAsymmetric(KeyType::PRIVATE, std::move(private_res.value));
+      }
+
+      // Get OpenSSL error details
+      unsigned long err = ERR_get_error();
+      char err_buf[256];
+      ERR_error_string_n(err, err_buf, sizeof(err_buf));
+      throw std::runtime_error("Failed to read PEM asymmetric key: " + std::string(err_buf));
     } else if (actualFormat == KFormatType::DER) {
       // For DER, try parsing as public key first
       if (type.has_value() && type.value() == KeyEncoding::SPKI) {

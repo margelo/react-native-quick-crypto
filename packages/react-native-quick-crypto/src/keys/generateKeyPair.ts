@@ -1,4 +1,6 @@
 import { ed_generateKeyPair } from '../ed';
+import { rsa_generateKeyPairNode } from '../rsa';
+import { ec_generateKeyPairNode } from '../ec';
 import {
   kEmptyObject,
   validateFunction,
@@ -132,14 +134,48 @@ function internalGenerateKeyPair(
     case 'x25519':
     case 'x448':
       return ed_generateKeyPair(isAsync, type, encoding, callback);
-    default:
-    // fall through
+    case 'rsa':
+    case 'rsa-pss':
+    case 'dsa':
+    case 'ec':
+      break;
+    default: {
+      const err = new Error(`
+        Invalid Argument options: '${type}' scheme not supported for
+        generateKeyPair(). Currently not all encryption methods are supported in
+        this library.  Check docs/implementation_coverage.md for status.
+      `);
+      return [err, undefined, undefined];
+    }
   }
 
-  const err = new Error(`
-    Invalid Argument options: '${type}' scheme not supported for
-    generateKeyPair(). Currently not all encryption methods are supported in
-    this library.  Check docs/implementation_coverage.md for status.
-  `);
-  return [err, undefined, undefined];
+  const impl = async () => {
+    try {
+      let result;
+      if (type === 'rsa' || type === 'rsa-pss') {
+        result = await rsa_generateKeyPairNode(type, options, encoding);
+      } else if (type === 'ec') {
+        result = await ec_generateKeyPairNode(options, encoding);
+      } else {
+        throw new Error(`Unsupported key type: ${type}`);
+      }
+      return [
+        undefined,
+        result.publicKey,
+        result.privateKey,
+      ] as GenerateKeyPairReturn;
+    } catch (error) {
+      return [error as Error, undefined, undefined] as GenerateKeyPairReturn;
+    }
+  };
+
+  if (isAsync) {
+    impl().then(result => {
+      const [err, publicKey, privateKey] = result;
+      callback!(err, publicKey, privateKey);
+    });
+    return;
+  } else {
+    throw new Error('Sync key generation for RSA/EC not yet implemented');
+  }
 }

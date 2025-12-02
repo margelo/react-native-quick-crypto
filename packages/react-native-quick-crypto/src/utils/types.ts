@@ -32,6 +32,7 @@ export type BinaryLike =
   | Buffer
   | ArrayBuffer
   | ArrayBufferLike
+  | ArrayBufferView
   | CraftzdogBuffer
   | SafeBuffer
   | TypedArray
@@ -63,6 +64,12 @@ export type ECKeyPairAlgorithm = 'ECDSA' | 'ECDH';
 
 export type CFRGKeyPairAlgorithm = 'Ed25519' | 'Ed448' | 'X25519' | 'X448';
 export type CFRGKeyPairType = 'ed25519' | 'ed448' | 'x25519' | 'x448';
+
+// Node.js style key pair types (lowercase)
+export type RSAKeyPairType = 'rsa' | 'rsa-pss';
+export type ECKeyPairType = 'ec';
+export type DSAKeyPairType = 'dsa';
+export type DHKeyPairType = 'dh';
 
 export type KeyPairAlgorithm =
   | RSAKeyPairAlgorithm
@@ -161,9 +168,15 @@ export type SubtleAlgorithm = {
   length?: number;
   modulusLength?: number;
   publicExponent?: number | Uint8Array;
+  saltLength?: number;
 };
 
-export type KeyPairType = CFRGKeyPairType;
+export type KeyPairType =
+  | CFRGKeyPairType
+  | RSAKeyPairType
+  | ECKeyPairType
+  | DSAKeyPairType
+  | DHKeyPairType;
 
 export type KeyUsage =
   | 'encrypt'
@@ -216,9 +229,9 @@ export const kNamedCurveAliases = {
 // end TODO
 
 export type KeyPairGenConfig = {
-  publicFormat?: KFormatType;
+  publicFormat?: KFormatType | -1;
   publicType?: KeyEncoding;
-  privateFormat?: KFormatType;
+  privateFormat?: KFormatType | -1;
   privateType?: KeyEncoding;
   cipher?: string;
   passphrase?: ArrayBuffer;
@@ -314,6 +327,7 @@ export type GenerateKeyPairOptions = {
 
 export type KeyPairKey =
   | ArrayBuffer
+  | string
   | KeyObject
   | KeyObjectHandle
   | CryptoKey
@@ -341,6 +355,11 @@ export type GenerateKeyPairPromiseReturn = [error?: Error, keypair?: KeyPair];
 export type CryptoKeyPair = {
   publicKey: KeyPairKey;
   privateKey: KeyPairKey;
+};
+
+export type WebCryptoKeyPair = {
+  publicKey: CryptoKey;
+  privateKey: CryptoKey;
 };
 
 export enum KeyVariant {

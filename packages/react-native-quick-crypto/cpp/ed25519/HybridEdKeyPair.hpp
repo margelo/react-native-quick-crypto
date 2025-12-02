@@ -56,6 +56,14 @@ class HybridEdKeyPair : public HybridEdKeyPairSpec {
   std::string curve;
   EVP_PKEY* pkey = nullptr;
 
+  // Encoding configuration for key export
+  // Format: -1 = default (raw), 0 = DER, 1 = PEM
+  // Type: 0 = PKCS1, 1 = PKCS8, 2 = SPKI, 3 = SEC1
+  int publicFormat_ = -1;
+  int publicType_ = -1;
+  int privateFormat_ = -1;
+  int privateType_ = -1;
+
   EVP_PKEY* importPublicKey(const std::optional<std::shared_ptr<ArrayBuffer>>& key);
   EVP_PKEY* importPrivateKey(const std::optional<std::shared_ptr<ArrayBuffer>>& key);
 };

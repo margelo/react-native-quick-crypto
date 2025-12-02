@@ -10,6 +10,7 @@ import { hashExports as hash } from './hash';
 import { hmacExports as hmac } from './hmac';
 import * as pbkdf2 from './pbkdf2';
 import * as random from './random';
+import { constants } from './constants';
 
 // utils import
 import * as utils from './utils';
@@ -30,6 +31,7 @@ const QuickCrypto = {
   ...random,
   ...utils,
   ...subtle,
+  constants,
 };
 
 /**
@@ -60,6 +62,7 @@ export * from './random';
 export * from './utils';
 export * from './subtle';
 export { subtle, isCryptoKeyPair } from './subtle';
+export { constants } from './constants';
 
 // Additional exports for CommonJS compatibility
 module.exports = QuickCrypto;

@@ -119,8 +119,8 @@ export class KeyObject {
   static createKeyObject(
     type: string,
     key: ArrayBuffer,
-    format?: 'der' | 'pem',
-    encoding?: 'pkcs8' | 'spki' | 'sec1',
+    format?: KFormatType,
+    encoding?: KeyEncoding,
   ): KeyObject {
     if (type !== 'secret' && type !== 'public' && type !== 'private')
       throw new Error(`invalid KeyObject type: ${type}`);
@@ -143,22 +143,9 @@ export class KeyObject {
         throw new Error('invalid key type');
     }
 
-    // If format and encoding are explicitly provided, use them
-    if (
-      format &&
-      encoding &&
-      (keyType === KeyType.PUBLIC || keyType === KeyType.PRIVATE)
-    ) {
-      const kFormat = format === 'der' ? KFormatType.DER : KFormatType.PEM;
-      const kEncoding =
-        encoding === 'spki'
-          ? KeyEncoding.SPKI
-          : encoding === 'pkcs8'
-            ? KeyEncoding.PKCS8
-            : encoding === 'sec1'
-              ? KeyEncoding.SEC1
-              : KeyEncoding.SEC1;
-      handle.init(keyType, key, kFormat, kEncoding);
+    // If format is provided, use it (encoding is optional)
+    if (format !== undefined) {
+      handle.init(keyType, key, format, encoding);
     } else {
       handle.init(keyType, key);
     }

@@ -16,6 +16,7 @@ import type {
   AesGcmParams,
   RsaOaepParams,
 } from './utils';
+import { KFormatType, KeyEncoding } from './utils';
 import {
   CryptoKey,
   KeyObject,
@@ -38,6 +39,9 @@ import { pbkdf2DeriveBits } from './pbkdf2';
 import { ecImportKey, ecdsaSignVerify, ec_generateKeyPair } from './ec';
 import { rsa_generateKeyPair } from './rsa';
 import { getRandomValues } from './random';
+import { createHmac } from './hmac';
+import { createSign, createVerify } from './keys/signVerify';
+import { ed_generateKeyPairWebCrypto, Ed } from './ed';
 // import { pbkdf2DeriveBits } from './pbkdf2';
 // import { aesCipher, aesGenerateKey, aesImportKey, getAlgorithmName } from './aes';
 // import { rsaCipher, rsaExportKey, rsaImportKey, rsaKeyGenerate } from './rsa';
@@ -403,6 +407,73 @@ async function aesGenerateKey(
   return new CryptoKey(keyObject, keyAlgorithm, keyUsages, extractable);
 }
 
+async function hmacGenerateKey(
+  algorithm: SubtleAlgorithm,
+  extractable: boolean,
+  keyUsages: KeyUsage[],
+): Promise<CryptoKey> {
+  // Validate usages
+  if (hasAnyNotIn(keyUsages, ['sign', 'verify'])) {
+    throw lazyDOMException('Unsupported key usage for HMAC key', 'SyntaxError');
+  }
+
+  // Get hash algorithm
+  const hash = algorithm.hash;
+  if (!hash) {
+    throw lazyDOMException(
+      'HMAC algorithm requires a hash parameter',
+      'TypeError',
+    );
+  }
+
+  const hashName = normalizeHashName(hash);
+
+  // Determine key length
+  let length = algorithm.length;
+  if (length === undefined) {
+    // Use hash output length as default key length
+    switch (hashName) {
+      case 'SHA-1':
+        length = 160;
+        break;
+      case 'SHA-256':
+        length = 256;
+        break;
+      case 'SHA-384':
+        length = 384;
+        break;
+      case 'SHA-512':
+        length = 512;
+        break;
+      default:
+        length = 256; // Default to 256 bits
+    }
+  }
+
+  if (length === 0) {
+    throw lazyDOMException(
+      'Zero-length key is not supported',
+      'OperationError',
+    );
+  }
+
+  // Generate random key bytes
+  const keyBytes = new Uint8Array(Math.ceil(length / 8));
+  getRandomValues(keyBytes);
+
+  // Create secret key
+  const keyObject = createSecretKey(keyBytes);
+
+  // Construct algorithm object
+  const keyAlgorithm: SubtleAlgorithm = {
+    name: 'HMAC',
+    hash: hashName,
+    length,
+  };
+
+  return new CryptoKey(keyObject, keyAlgorithm, keyUsages, extractable);
+}
+
 function rsaImportKey(
   format: ImportFormat,
   data: BufferLike | JWK,
@@ -458,10 +529,20 @@ function rsaImportKey(
     }
   } else if (format === 'spki') {
     const keyData = bufferLikeToArrayBuffer(data as BufferLike);
-    keyObject = KeyObject.createKeyObject('public', keyData, 'der', 'spki');
+    keyObject = KeyObject.createKeyObject(
+      'public',
+      keyData,
+      KFormatType.DER,
+      KeyEncoding.SPKI,
+    );
   } else if (format === 'pkcs8') {
     const keyData = bufferLikeToArrayBuffer(data as BufferLike);
-    keyObject = KeyObject.createKeyObject('private', keyData, 'der', 'pkcs8');
+    keyObject = KeyObject.createKeyObject(
+      'private',
+      keyData,
+      KFormatType.DER,
+      KeyEncoding.PKCS8,
+    );
   } else {
     throw new Error(`Unsupported format for RSA import: ${format}`);
   }
@@ -631,6 +712,62 @@ async function aesImportKey(
   );
 }
 
+function edImportKey(
+  format: ImportFormat,
+  data: BufferLike,
+  algorithm: SubtleAlgorithm,
+  extractable: boolean,
+  keyUsages: KeyUsage[],
+): CryptoKey {
+  const { name } = algorithm;
+
+  // Validate usages
+  if (hasAnyNotIn(keyUsages, ['sign', 'verify'])) {
+    throw lazyDOMException(
+      `Unsupported key usage for ${name} key`,
+      'SyntaxError',
+    );
+  }
+
+  let keyObject: KeyObject;
+
+  if (format === 'spki') {
+    // Import public key
+    const keyData = bufferLikeToArrayBuffer(data);
+    keyObject = KeyObject.createKeyObject(
+      'public',
+      keyData,
+      KFormatType.DER,
+      KeyEncoding.SPKI,
+    );
+  } else if (format === 'pkcs8') {
+    // Import private key
+    const keyData = bufferLikeToArrayBuffer(data);
+    keyObject = KeyObject.createKeyObject(
+      'private',
+      keyData,
+      KFormatType.DER,
+      KeyEncoding.PKCS8,
+    );
+  } else if (format === 'raw') {
+    // Raw format - public key only for Ed keys
+    const keyData = bufferLikeToArrayBuffer(data);
+    const handle =
+      NitroModules.createHybridObject<KeyObjectHandle>('KeyObjectHandle');
+    // For raw Ed keys, we need to create them differently
+    // Raw public keys are just the key bytes
+    handle.init(1, keyData); // 1 = public key type
+    keyObject = new PublicKeyObject(handle);
+  } else {
+    throw lazyDOMException(
+      `Unsupported format for ${name} import: ${format}`,
+      'NotSupportedError',
+    );
+  }
+
+  return new CryptoKey(keyObject, { name }, keyUsages, extractable);
+}
+
 const exportKeySpki = async (
   key: CryptoKey,
 ): Promise<ArrayBuffer | unknown> => {
@@ -649,6 +786,16 @@ const exportKeySpki = async (
     case 'ECDH':
       if (key.type === 'public') {
         return ecExportKey(key, KWebCryptoKeyFormat.kWebCryptoKeyFormatSPKI);
+      }
+      break;
+    case 'Ed25519':
+    // Fall through
+    case 'Ed448':
+      if (key.type === 'public') {
+        // Export Ed key in SPKI DER format
+        return bufferLikeToArrayBuffer(
+          key.keyObject.handle.exportKey(KFormatType.DER, KeyEncoding.SPKI),
+        );
       }
       break;
   }
@@ -676,6 +823,16 @@ const exportKeyPkcs8 = async (
     case 'ECDH':
       if (key.type === 'private') {
         return ecExportKey(key, KWebCryptoKeyFormat.kWebCryptoKeyFormatPKCS8);
+      }
+      break;
+    case 'Ed25519':
+    // Fall through
+    case 'Ed448':
+      if (key.type === 'private') {
+        // Export Ed key in PKCS8 DER format
+        return bufferLikeToArrayBuffer(
+          key.keyObject.handle.exportKey(KFormatType.DER, KeyEncoding.PKCS8),
+        );
       }
       break;
   }
@@ -828,6 +985,128 @@ export function isCryptoKeyPair(
   return 'publicKey' in result && 'privateKey' in result;
 }
 
+function hmacSignVerify(
+  key: CryptoKey,
+  data: BufferLike,
+  signature?: BufferLike,
+): ArrayBuffer | boolean {
+  // Get hash algorithm from key
+  const hashName = normalizeHashName(key.algorithm.hash);
+
+  // Export the secret key material
+  const keyData = key.keyObject.export();
+
+  // Create HMAC and compute digest
+  const hmac = createHmac(hashName, keyData);
+  hmac.update(bufferLikeToArrayBuffer(data));
+  const computed = hmac.digest();
+
+  if (signature === undefined) {
+    // Sign operation - return the HMAC as ArrayBuffer
+    return computed.buffer.slice(
+      computed.byteOffset,
+      computed.byteOffset + computed.byteLength,
+    );
+  }
+
+  // Verify operation - compare computed HMAC with provided signature
+  const sigBytes = new Uint8Array(bufferLikeToArrayBuffer(signature));
+  const computedBytes = new Uint8Array(
+    computed.buffer,
+    computed.byteOffset,
+    computed.byteLength,
+  );
+
+  if (computedBytes.length !== sigBytes.length) {
+    return false;
+  }
+
+  // Constant-time comparison to prevent timing attacks
+  let result = 0;
+  for (let i = 0; i < computedBytes.length; i++) {
+    result |= computedBytes[i]! ^ sigBytes[i]!;
+  }
+  return result === 0;
+}
+
+function rsaSignVerify(
+  key: CryptoKey,
+  data: BufferLike,
+  padding: 'pkcs1' | 'pss',
+  signature?: BufferLike,
+  saltLength?: number,
+): ArrayBuffer | boolean {
+  // Get hash algorithm from key
+  const hashName = normalizeHashName(key.algorithm.hash);
+
+  // Determine RSA padding constant
+  const RSA_PKCS1_PADDING = 1;
+  const RSA_PKCS1_PSS_PADDING = 6;
+  const paddingValue =
+    padding === 'pss' ? RSA_PKCS1_PSS_PADDING : RSA_PKCS1_PADDING;
+
+  if (signature === undefined) {
+    // Sign operation
+    const signer = createSign(hashName);
+    signer.update(data);
+    const sig = signer.sign({
+      key: key,
+      padding: paddingValue,
+      saltLength,
+    });
+    return sig.buffer.slice(sig.byteOffset, sig.byteOffset + sig.byteLength);
+  }
+
+  // Verify operation
+  const verifier = createVerify(hashName);
+  verifier.update(data);
+  return verifier.verify(
+    {
+      key: key,
+      padding: paddingValue,
+      saltLength,
+    },
+    signature,
+  );
+}
+
+function edSignVerify(
+  key: CryptoKey,
+  data: BufferLike,
+  signature?: BufferLike,
+): ArrayBuffer | boolean {
+  const isSign = signature === undefined;
+  const expectedKeyType = isSign ? 'private' : 'public';
+
+  if (key.type !== expectedKeyType) {
+    throw lazyDOMException(
+      `Key must be a ${expectedKeyType} key`,
+      'InvalidAccessError',
+    );
+  }
+
+  // Get curve type from algorithm name (Ed25519 or Ed448)
+  const algorithmName = key.algorithm.name;
+  const curveType = algorithmName.toLowerCase() as 'ed25519' | 'ed448';
+
+  // Create Ed instance with the curve
+  const ed = new Ed(curveType, {});
+
+  // Export raw key bytes (exportKey with no format returns raw for Ed keys)
+  const rawKey = key.keyObject.handle.exportKey();
+  const dataBuffer = bufferLikeToArrayBuffer(data);
+
+  if (isSign) {
+    // Sign operation - use raw private key
+    const sig = ed.signSync(dataBuffer, rawKey);
+    return sig;
+  } else {
+    // Verify operation - use raw public key
+    const signatureBuffer = bufferLikeToArrayBuffer(signature!);
+    return ed.verifySync(signatureBuffer, dataBuffer, rawKey);
+  }
+}
+
 const signVerify = (
   algorithm: SubtleAlgorithm,
   key: CryptoKey,
@@ -847,9 +1126,18 @@ const signVerify = (
   switch (algorithm.name) {
     case 'ECDSA':
       return ecdsaSignVerify(key, data, algorithm, signature);
+    case 'HMAC':
+      return hmacSignVerify(key, data, signature);
+    case 'RSASSA-PKCS1-v1_5':
+      return rsaSignVerify(key, data, 'pkcs1', signature);
+    case 'RSA-PSS':
+      return rsaSignVerify(key, data, 'pss', signature, algorithm.saltLength);
+    case 'Ed25519':
+    case 'Ed448':
+      return edSignVerify(key, data, signature);
   }
   throw lazyDOMException(
-    `Unrecognized algorithm name '${algorithm}' for '${usage}'`,
+    `Unrecognized algorithm name '${algorithm.name}' for '${usage}'`,
     'NotSupportedError',
   );
 };
@@ -1003,6 +1291,19 @@ export class Subtle {
           keyUsages,
         );
         break;
+      case 'HMAC':
+        result = await hmacGenerateKey(algorithm, extractable, keyUsages);
+        break;
+      case 'Ed25519':
+      // Fall through
+      case 'Ed448':
+        result = await ed_generateKeyPairWebCrypto(
+          algorithm.name.toLowerCase() as 'ed25519' | 'ed448',
+          extractable,
+          keyUsages,
+        );
+        checkCryptoKeyPairUsages(result as CryptoKeyPair);
+        break;
       default:
         throw new Error(
           `'subtle.generateKey()' is not implemented for ${algorithm.name}.
@@ -1076,6 +1377,17 @@ export class Subtle {
           normalizedAlgorithm,
           format,
           data as BufferLike | BinaryLike,
+          extractable,
+          keyUsages,
+        );
+        break;
+      case 'Ed25519':
+      // Fall through
+      case 'Ed448':
+        result = edImportKey(
+          format,
+          data as BufferLike,
+          normalizedAlgorithm,
           extractable,
           keyUsages,
         );
