@@ -133,8 +133,8 @@ This document attempts to describe the implementation status of Crypto APIs/Inte
   * ❌ `crypto.hkdfSync(digest, ikm, salt, info, keylen)`
   * ✅ `crypto.pbkdf2(password, salt, iterations, keylen, digest, callback)`
   * ✅ `crypto.pbkdf2Sync(password, salt, iterations, keylen, digest)`
-  * ❌ `crypto.privateDecrypt(privateKey, buffer)`
-  * ❌ `crypto.privateEncrypt(privateKey, buffer)`
+  * ✅ `crypto.privateDecrypt(privateKey, buffer)`
+  * ✅ `crypto.privateEncrypt(privateKey, buffer)`
   * ✅ `crypto.publicDecrypt(key, buffer)`
   * ✅ `crypto.publicEncrypt(key, buffer)`
   * ✅ `crypto.randomBytes(size[, callback])`
@@ -185,10 +185,10 @@ This document attempts to describe the implementation status of Crypto APIs/Inte
 ## `crypto.generateKeyPairSync`
 | type      | Status |
 | --------- | :----: |
-| `rsa`     | ❌ |
-| `rsa-pss` | ❌ |
+| `rsa`     | ✅ |
+| `rsa-pss` | ✅ |
 | `dsa`     | ❌ |
-| `ec`      | ❌ |
+| `ec`      | ✅ |
 | `ed25519` | ✅ |
 | `ed448`   | ✅ |
 | `x25519`  | ✅ |

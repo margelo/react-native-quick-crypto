@@ -10,7 +10,7 @@
 
 A fast implementation of Node's `crypto` module.
 
-> Note: This version `1.x` is undergoing a major refactor, porting to New Architecture, Bridgeless, and [`Nitro Modules`](https://github.com/mrousavy/react-native-nitro) and is incomplete compared to the `0.x` version.  Status, as always, will be represented in [implementation-coverage.md](../main/docs/implementation-coverage.md).
+> Note: This version `1.x` completed a major refactor, porting to OpenSSL 3.3+, New Architecture, Bridgeless, and [`Nitro Modules`](https://github.com/mrousavy/react-native-nitro).  It should be at or above feature-parity compared to the `0.x` version.  Status, as always, will be represented in [implementation-coverage.md](../main/docs/implementation-coverage.md).
 
 > Note: Minimum supported version of React Native is `0.75`.  If you need to use earlier versions, please use `0.x` versions of this library.
 
@@ -33,28 +33,13 @@ QuickCrypto can be used as a drop-in replacement for your Web3/Crypto apps to sp
 | `1.x`     | new [->](https://github.com/reactwg/react-native-new-architecture/blob/main/docs/enable-apps.md)  | Nitro Modules [->](https://github.com/mrousavy/nitro) |
 | `0.x`     | old, new 🤞  | Bridge & JSI |
 
+## Migration
+
+Our goal in refactoring to v1.0 was to maintain API compatibility.  If you are upgrading to v1.0 from v0.x, and find any discrepancies, please open an issue in this repo.
+
 ## Benchmarks
 
-For example, creating a Wallet using ethers.js uses complex algorithms to generate a private-key/mnemonic-phrase pair:
-
-```ts
-const start = performance.now();
-const wallet = ethers.Wallet.createRandom();
-const end = performance.now();
-console.log(`Creating a Wallet took ${end - start} ms.`);
-```
-
-**Without** react-native-quick-crypto 🐢:
-
-```
-Creating a Wallet took 16862 ms
-```
-
-**With** react-native-quick-crypto ⚡️:
-
-```
-Creating a Wallet took 289 ms
-```
+There is a benchmark suite in the Example app in this repo that has benchmarks of algorithms against their pure JS counterparts.  This is not meant to disparage the other libraries.  On the contrary, they perform amazingly well when used in a server-side Node environment.  This library exists because React Native does not have that environment nor the Node Crypto API implementation at hand.  So the benchmark suite is there to show you the speedup vs. the alternative of using a pure JS library on React Native.
 
 ---
 
@@ -154,8 +139,6 @@ const hashed = QuickCrypto.createHash('sha256')
 
 ## Limitations
 
-As the library uses JSI for synchronous native methods access, remote debugging (e.g. with Chrome) is no longer possible. Instead, you should use [Flipper](https://fbflipper.com).
-
 Not all cryptographic algorithms are supported yet. See the [implementation coverage](./docs/implementation-coverage.md) document for more details. If you need a specific algorithm, please open a `feature request` issue and we'll see what we can do.
 
 ## Community Discord
@@ -164,7 +147,7 @@ Not all cryptographic algorithms are supported yet. See the [implementation cove
 
 ## Adopting at scale
 
-react-native-quick-crypto was built at Margelo, an elite app development agency. For enterprise support or other business inquiries, contact us at <a href="mailto:hello@margelo.io?subject=Adopting react-native-quick-crypto at scale">hello@margelo.io</a>!
+`react-native-quick-crypto` was built at Margelo, an elite app development agency. For enterprise support or other business inquiries, contact us at <a href="mailto:hello@margelo.io?subject=Adopting react-native-quick-crypto at scale">hello@margelo.io</a>!
 
 ## Contributing
 

@@ -9,6 +9,7 @@ import {
 } from '../utils';
 import { isCryptoKey } from './utils';
 import { KeyObject, CryptoKey } from './classes';
+import { constants } from '../constants';
 
 interface PublicCipherOptions {
   key: BinaryLike | KeyObject | CryptoKey;
@@ -22,6 +23,17 @@ type PublicCipherInput =
   | KeyObject
   | CryptoKey
   | PublicCipherOptions;
+
+interface PrivateCipherOptions {
+  key: BinaryLike | KeyObject | CryptoKey;
+  padding?: number;
+}
+
+type PrivateCipherInput =
+  | BinaryLike
+  | KeyObject
+  | CryptoKey
+  | PrivateCipherOptions;
 
 function preparePublicCipherKey(
   key: PublicCipherInput,
@@ -78,16 +90,21 @@ export function publicEncrypt(
   key: PublicCipherInput,
   buffer: BinaryLike,
 ): Buffer {
-  const { keyHandle, oaepHash, oaepLabel } = preparePublicCipherKey(key, true);
+  const { keyHandle, padding, oaepHash, oaepLabel } = preparePublicCipherKey(
+    key,
+    true,
+  );
 
   const rsaCipher: RsaCipher = NitroModules.createHybridObject('RsaCipher');
   const data = toAB(buffer);
+  const paddingMode = padding ?? constants.RSA_PKCS1_OAEP_PADDING;
   const hashAlgorithm = oaepHash || 'SHA-256';
 
   try {
     const encrypted = rsaCipher.encrypt(
       keyHandle.handle,
       data,
+      paddingMode,
       hashAlgorithm,
       oaepLabel,
     );
@@ -101,21 +118,112 @@ export function publicDecrypt(
   key: PublicCipherInput,
   buffer: BinaryLike,
 ): Buffer {
-  const { keyHandle, oaepHash, oaepLabel } = preparePublicCipherKey(key, false);
+  const { keyHandle, padding, oaepHash, oaepLabel } = preparePublicCipherKey(
+    key,
+    false,
+  );
 
   const rsaCipher: RsaCipher = NitroModules.createHybridObject('RsaCipher');
   const data = toAB(buffer);
+  const paddingMode = padding ?? constants.RSA_PKCS1_OAEP_PADDING;
   const hashAlgorithm = oaepHash || 'SHA-256';
 
   try {
     const decrypted = rsaCipher.decrypt(
       keyHandle.handle,
       data,
+      paddingMode,
       hashAlgorithm,
       oaepLabel,
     );
     return Buffer.from(decrypted);
   } catch (error) {
     throw new Error(`publicDecrypt failed: ${(error as Error).message}`);
+  }
+}
+
+function preparePrivateCipherKey(
+  key: PrivateCipherInput,
+  isEncrypt: boolean,
+): {
+  keyHandle: KeyObject;
+  padding?: number;
+} {
+  let keyObj: KeyObject;
+  let padding: number | undefined;
+
+  if (key instanceof KeyObject) {
+    if (isEncrypt && key.type !== 'private') {
+      throw new Error('privateEncrypt requires a private key');
+    }
+    if (!isEncrypt && key.type !== 'public') {
+      throw new Error('privateDecrypt requires a public key');
+    }
+    keyObj = key;
+  } else if (isCryptoKey(key)) {
+    const cryptoKey = key as CryptoKey;
+    keyObj = cryptoKey.keyObject;
+  } else if (isStringOrBuffer(key)) {
+    const data = toAB(key);
+    const isPem = typeof key === 'string' && key.includes('-----BEGIN');
+    keyObj = KeyObject.createKeyObject(
+      isEncrypt ? 'private' : 'public',
+      data,
+      isPem ? KFormatType.PEM : KFormatType.DER,
+      isEncrypt ? KeyEncoding.PKCS8 : KeyEncoding.SPKI,
+    );
+  } else if (typeof key === 'object' && 'key' in key) {
+    const options = key as PrivateCipherOptions;
+    const result = preparePrivateCipherKey(options.key, isEncrypt);
+    keyObj = result.keyHandle;
+    padding = options.padding;
+  } else {
+    throw new Error('Invalid key input');
+  }
+
+  return { keyHandle: keyObj, padding };
+}
+
+export function privateEncrypt(
+  key: PrivateCipherInput,
+  buffer: BinaryLike,
+): Buffer {
+  const { keyHandle, padding } = preparePrivateCipherKey(key, true);
+
+  const rsaCipher: RsaCipher = NitroModules.createHybridObject('RsaCipher');
+  const data = toAB(buffer);
+  const paddingMode = padding ?? constants.RSA_PKCS1_PADDING;
+
+  try {
+    const encrypted = rsaCipher.privateEncrypt(
+      keyHandle.handle,
+      data,
+      paddingMode,
+    );
+    return Buffer.from(encrypted);
+  } catch (error) {
+    throw new Error(`privateEncrypt failed: ${(error as Error).message}`);
+  }
+}
+
+export function privateDecrypt(
+  key: PrivateCipherInput,
+  buffer: BinaryLike,
+): Buffer {
+  const { keyHandle, padding } = preparePrivateCipherKey(key, false);
+
+  const rsaCipher: RsaCipher = NitroModules.createHybridObject('RsaCipher');
+  const data = toAB(buffer);
+  const paddingMode = padding ?? constants.RSA_PKCS1_PADDING;
+
+  try {
+    const decrypted = rsaCipher.privateDecrypt(
+      keyHandle.handle,
+      data,
+      paddingMode,
+    );
+    return Buffer.from(decrypted);
+  } catch (error) {
+    throw new Error(`privateDecrypt failed: ${(error as Error).message}`);
   }
 }

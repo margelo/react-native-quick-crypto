@@ -535,13 +535,9 @@ export async function ec_generateKeyPair(
   return { publicKey, privateKey };
 }
 
-export async function ec_generateKeyPairNode(
+function ec_prepareKeyGenParams(
   options: GenerateKeyPairOptions | undefined,
-  encoding: KeyPairGenConfig,
-): Promise<{
-  publicKey: PublicKeyObject | Buffer | string | ArrayBuffer;
-  privateKey: PrivateKeyObject | Buffer | string | ArrayBuffer;
-}> {
+): Ec {
   if (!options) {
     throw new Error('Options are required for EC key generation');
   }
@@ -555,15 +551,16 @@ export async function ec_generateKeyPairNode(
     throw new Error(`Invalid or unsupported named curve: ${namedCurve}`);
   }
 
-  const keyPair = await ec_generateKeyPair('ECDSA', namedCurve, true, [
-    'sign',
-    'verify',
-  ]);
+  return new Ec(namedCurve);
+}
 
-  // ec_generateKeyPair returns CryptoKey objects
-  const pubCryptoKey = keyPair.publicKey as CryptoKey;
-  const privCryptoKey = keyPair.privateKey as CryptoKey;
-
+function ec_formatKeyPairOutput(
+  ec: Ec,
+  encoding: KeyPairGenConfig,
+): {
+  publicKey: PublicKeyObject | Buffer | string | ArrayBuffer;
+  privateKey: PrivateKeyObject | Buffer | string | ArrayBuffer;
+} {
   const {
     publicFormat,
     publicType,
@@ -573,20 +570,34 @@ export async function ec_generateKeyPairNode(
     passphrase,
   } = encoding;
 
+  const publicKeyData = ec.native.getPublicKey();
+  const privateKeyData = ec.native.getPrivateKey();
+
+  const pub = KeyObject.createKeyObject(
+    'public',
+    publicKeyData,
+    KFormatType.DER,
+    KeyEncoding.SPKI,
+  ) as PublicKeyObject;
+
+  const priv = KeyObject.createKeyObject(
+    'private',
+    privateKeyData,
+    KFormatType.DER,
+    KeyEncoding.PKCS8,
+  ) as PrivateKeyObject;
+
   let publicKey: PublicKeyObject | Buffer | string | ArrayBuffer;
   let privateKey: PrivateKeyObject | Buffer | string | ArrayBuffer;
 
   if (publicFormat === -1) {
-    publicKey = pubCryptoKey.keyObject as PublicKeyObject;
+    publicKey = pub;
   } else {
     const format =
       publicFormat === KFormatType.PEM ? KFormatType.PEM : KFormatType.DER;
     const keyEncoding =
       publicType === KeyEncoding.SPKI ? KeyEncoding.SPKI : KeyEncoding.SPKI;
-    const exported = pubCryptoKey.keyObject.handle.exportKey(
-      format,
-      keyEncoding,
-    );
+    const exported = pub.handle.exportKey(format, keyEncoding);
     if (format === KFormatType.PEM) {
       publicKey = Buffer.from(new Uint8Array(exported)).toString('utf-8');
     } else {
@@ -595,7 +606,7 @@ export async function ec_generateKeyPairNode(
   }
 
   if (privateFormat === -1) {
-    privateKey = privCryptoKey.keyObject as PrivateKeyObject;
+    privateKey = priv;
   } else {
     const format =
       privateFormat === KFormatType.PEM ? KFormatType.PEM : KFormatType.DER;
@@ -605,7 +616,7 @@ export async function ec_generateKeyPairNode(
         : privateType === KeyEncoding.SEC1
           ? KeyEncoding.SEC1
           : KeyEncoding.PKCS8;
-    const exported = privCryptoKey.keyObject.handle.exportKey(
+    const exported = priv.handle.exportKey(
       format,
       keyEncoding,
       cipher,
@@ -619,4 +630,28 @@ export async function ec_generateKeyPairNode(
   }
 
   return { publicKey, privateKey };
+}
+
+export async function ec_generateKeyPairNode(
+  options: GenerateKeyPairOptions | undefined,
+  encoding: KeyPairGenConfig,
+): Promise<{
+  publicKey: PublicKeyObject | Buffer | string | ArrayBuffer;
+  privateKey: PrivateKeyObject | Buffer | string | ArrayBuffer;
+}> {
+  const ec = ec_prepareKeyGenParams(options);
+  await ec.generateKeyPair();
+  return ec_formatKeyPairOutput(ec, encoding);
+}
+
+export function ec_generateKeyPairNodeSync(
+  options: GenerateKeyPairOptions | undefined,
+  encoding: KeyPairGenConfig,
+): {
+  publicKey: PublicKeyObject | Buffer | string | ArrayBuffer;
+  privateKey: PrivateKeyObject | Buffer | string | ArrayBuffer;
+} {
+  const ec = ec_prepareKeyGenParams(options);
+  ec.generateKeyPairSync();
+  return ec_formatKeyPairOutput(ec, encoding);
 }

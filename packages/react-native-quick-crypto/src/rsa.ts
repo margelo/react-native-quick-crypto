@@ -179,14 +179,10 @@ export async function rsa_generateKeyPair(
   return { publicKey, privateKey };
 }
 
-export async function rsa_generateKeyPairNode(
-  type: 'rsa' | 'rsa-pss',
+function rsa_prepareKeyGenParams(
+  _type: 'rsa' | 'rsa-pss',
   options: GenerateKeyPairOptions | undefined,
-  encoding: KeyPairGenConfig,
-): Promise<{
-  publicKey: PublicKeyObject | Buffer | string | ArrayBuffer;
-  privateKey: PrivateKeyObject | Buffer | string | ArrayBuffer;
-}> {
+): Rsa {
   if (!options) {
     throw new Error('Options are required for RSA key generation');
   }
@@ -212,25 +208,18 @@ export async function rsa_generateKeyPairNode(
     pubExp & 0xff,
   ]);
 
-  const algorithmName = type === 'rsa-pss' ? 'RSA-PSS' : 'RSASSA-PKCS1-v1_5';
+  const hashName = typeof hash === 'string' ? hash : hash;
 
-  const algorithm: RsaHashedKeyGenParams = {
-    name: algorithmName,
-    modulusLength,
-    publicExponent: pubExpBytes,
-    hash: typeof hash === 'string' ? hash : hash,
-  };
+  return new Rsa(modulusLength, pubExpBytes, hashName);
+}
 
-  const keyPair = await rsa_generateKeyPair(
-    algorithm as SubtleAlgorithm,
-    true,
-    ['sign', 'verify'],
-  );
-
-  // rsa_generateKeyPair returns CryptoKey objects
-  const pubCryptoKey = keyPair.publicKey as CryptoKey;
-  const privCryptoKey = keyPair.privateKey as CryptoKey;
-
+function rsa_formatKeyPairOutput(
+  rsa: Rsa,
+  encoding: KeyPairGenConfig,
+): {
+  publicKey: PublicKeyObject | Buffer | string | ArrayBuffer;
+  privateKey: PrivateKeyObject | Buffer | string | ArrayBuffer;
+} {
   const {
     publicFormat,
     publicType,
@@ -240,20 +229,30 @@ export async function rsa_generateKeyPairNode(
     passphrase,
   } = encoding;
 
+  const publicKeyData = rsa.native.getPublicKey();
+  const privateKeyData = rsa.native.getPrivateKey();
+
+  const pub = KeyObject.createKeyObject(
+    'public',
+    publicKeyData,
+  ) as PublicKeyObject;
+
+  const priv = KeyObject.createKeyObject(
+    'private',
+    privateKeyData,
+  ) as PrivateKeyObject;
+
   let publicKey: PublicKeyObject | Buffer | string | ArrayBuffer;
   let privateKey: PrivateKeyObject | Buffer | string | ArrayBuffer;
 
   if (publicFormat === -1) {
-    publicKey = pubCryptoKey.keyObject as PublicKeyObject;
+    publicKey = pub;
   } else {
     const format =
       publicFormat === KFormatType.PEM ? KFormatType.PEM : KFormatType.DER;
     const keyEncoding =
       publicType === KeyEncoding.SPKI ? KeyEncoding.SPKI : KeyEncoding.PKCS1;
-    const exported = pubCryptoKey.keyObject.handle.exportKey(
-      format,
-      keyEncoding,
-    );
+    const exported = pub.handle.exportKey(format, keyEncoding);
     if (format === KFormatType.PEM) {
       publicKey = Buffer.from(new Uint8Array(exported)).toString('utf-8');
     } else {
@@ -262,13 +261,13 @@ export async function rsa_generateKeyPairNode(
   }
 
   if (privateFormat === -1) {
-    privateKey = privCryptoKey.keyObject as PrivateKeyObject;
+    privateKey = priv;
   } else {
     const format =
       privateFormat === KFormatType.PEM ? KFormatType.PEM : KFormatType.DER;
     const keyEncoding =
       privateType === KeyEncoding.PKCS8 ? KeyEncoding.PKCS8 : KeyEncoding.PKCS1;
-    const exported = privCryptoKey.keyObject.handle.exportKey(
+    const exported = priv.handle.exportKey(
       format,
       keyEncoding,
       cipher,
@@ -282,4 +281,30 @@ export async function rsa_generateKeyPairNode(
   }
 
   return { publicKey, privateKey };
+}
+
+export async function rsa_generateKeyPairNode(
+  type: 'rsa' | 'rsa-pss',
+  options: GenerateKeyPairOptions | undefined,
+  encoding: KeyPairGenConfig,
+): Promise<{
+  publicKey: PublicKeyObject | Buffer | string | ArrayBuffer;
+  privateKey: PrivateKeyObject | Buffer | string | ArrayBuffer;
+}> {
+  const rsa = rsa_prepareKeyGenParams(type, options);
+  await rsa.generateKeyPair();
+  return rsa_formatKeyPairOutput(rsa, encoding);
+}
+
+export function rsa_generateKeyPairNodeSync(
+  type: 'rsa' | 'rsa-pss',
+  options: GenerateKeyPairOptions | undefined,
+  encoding: KeyPairGenConfig,
+): {
+  publicKey: PublicKeyObject | Buffer | string | ArrayBuffer;
+  privateKey: PrivateKeyObject | Buffer | string | ArrayBuffer;
+} {
+  const rsa = rsa_prepareKeyGenParams(type, options);
+  rsa.generateKeyPairSync();
+  return rsa_formatKeyPairOutput(rsa, encoding);
 }

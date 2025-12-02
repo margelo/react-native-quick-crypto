@@ -146,11 +146,15 @@ async function rsaCipher(
   const rsaCipherModule =
     NitroModules.createHybridObject<RsaCipher>('RsaCipher');
 
+  // RSA-OAEP padding constant = 4
+  const RSA_PKCS1_OAEP_PADDING = 4;
+
   if (mode === CipherOrWrapMode.kWebCryptoCipherEncrypt) {
     // Encrypt with public key
     return rsaCipherModule.encrypt(
       key.keyObject.handle,
       data,
+      RSA_PKCS1_OAEP_PADDING,
       hashAlgorithm,
       label,
     );
@@ -159,6 +163,7 @@ async function rsaCipher(
     return rsaCipherModule.decrypt(
       key.keyObject.handle,
       data,
+      RSA_PKCS1_OAEP_PADDING,
       hashAlgorithm,
       label,
     );

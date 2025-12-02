@@ -327,6 +327,7 @@ export type GenerateKeyPairOptions = {
 
 export type KeyPairKey =
   | ArrayBuffer
+  | Buffer
   | string
   | KeyObject
   | KeyObjectHandle

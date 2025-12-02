@@ -16,6 +16,8 @@ namespace margelo::nitro::crypto {
     registerHybrids(this, [](Prototype& prototype) {
       prototype.registerHybridMethod("encrypt", &HybridRsaCipherSpec::encrypt);
       prototype.registerHybridMethod("decrypt", &HybridRsaCipherSpec::decrypt);
+      prototype.registerHybridMethod("privateEncrypt", &HybridRsaCipherSpec::privateEncrypt);
+      prototype.registerHybridMethod("privateDecrypt", &HybridRsaCipherSpec::privateDecrypt);
     });
   }
 
