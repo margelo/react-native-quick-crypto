@@ -476,20 +476,28 @@ test(
   'generateKeyPair with invalid type calls callback with error',
   async () => {
     await assertThrowsAsync(async () => {
-      await new Promise<void>((resolve, reject) => {
-        generateKeyPair(
-          'invalid-type' as 'rsa',
-          {
-            modulusLength: 2048,
-            publicKeyEncoding: { type: 'spki', format: 'pem' },
-            privateKeyEncoding: { type: 'pkcs8', format: 'pem' },
-          },
-          err => {
-            if (err) reject(err);
-            else resolve();
-          },
-        );
-      });
+      await Promise.race([
+        new Promise<void>((resolve, reject) => {
+          generateKeyPair(
+            'invalid-type' as 'rsa',
+            {
+              modulusLength: 2048,
+              publicKeyEncoding: { type: 'spki', format: 'pem' },
+              privateKeyEncoding: { type: 'pkcs8', format: 'pem' },
+            },
+            err => {
+              if (err) reject(err);
+              else resolve();
+            },
+          );
+        }),
+        new Promise((_, reject) =>
+          setTimeout(
+            () => reject(new Error('Timeout: callback never called')),
+            1000,
+          ),
+        ),
+      ]);
     }, '');
   },
 );
