@@ -1490,7 +1490,7 @@ async function testImportSpki(
   });
   expect(key.algorithm.modulusLength).to.equal(parseInt(size, 10));
   expect(key.algorithm.publicExponent).to.deep.equal(new Uint8Array([1, 0, 1]));
-  expect(key.algorithm.hash).to.equal(hash);
+  expect((key.algorithm.hash as { name: string }).name).to.equal(hash);
 
   if (extractable) {
     const spki = await subtle.exportKey('spki', key);

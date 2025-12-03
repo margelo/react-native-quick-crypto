@@ -469,10 +469,11 @@ async function hmacGenerateKey(
   // Create secret key
   const keyObject = createSecretKey(keyBytes);
 
-  // Construct algorithm object
+  // Construct algorithm object with hash normalized to { name: string } format per WebCrypto spec
+  const webCryptoHashName = normalizeHashName(hash, HashContext.WebCrypto);
   const keyAlgorithm: SubtleAlgorithm = {
     name: 'HMAC',
-    hash: hashName,
+    hash: { name: webCryptoHashName },
     length,
   };
 
@@ -570,10 +571,15 @@ function rsaImportKey(
     publicExponentBytes = new Uint8Array(bytes.length > 0 ? bytes : [0]);
   }
 
+  // Normalize hash to { name: string } format per WebCrypto spec
+  const hashName = normalizeHashName(algorithm.hash, HashContext.WebCrypto);
+  const normalizedHash = { name: hashName };
+
   const algorithmWithDetails = {
     ...algorithm,
     modulusLength: keyDetails?.modulusLength,
     publicExponent: publicExponentBytes,
+    hash: normalizedHash,
   };
 
   return new CryptoKey(keyObject, algorithmWithDetails, keyUsages, extractable);
@@ -636,12 +642,15 @@ async function hmacImportKey(
     throw new Error(`Unable to import HMAC key with format ${format}`);
   }
 
-  return new CryptoKey(
-    keyObject,
-    { ...algorithm, name: 'HMAC' },
-    keyUsages,
-    extractable,
-  );
+  // Normalize hash to { name: string } format per WebCrypto spec
+  const hashName = normalizeHashName(algorithm.hash, HashContext.WebCrypto);
+  const normalizedAlgorithm: SubtleAlgorithm = {
+    ...algorithm,
+    name: 'HMAC',
+    hash: { name: hashName },
+  };
+
+  return new CryptoKey(keyObject, normalizedAlgorithm, keyUsages, extractable);
 }
 
 async function aesImportKey(
