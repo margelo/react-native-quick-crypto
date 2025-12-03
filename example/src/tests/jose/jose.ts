@@ -520,3 +520,47 @@ test(SUITE, 'JWE with A256GCM content encryption', async () => {
   expect(decrypted.creditCard).to.equal('4111-1111-1111-1111');
   expect(decrypted.expiry).to.equal('12/25');
 });
+
+// Regression test for issue #683: jose importJWK -> CompactEncrypt flow
+// The original error was: "Key for the RSA-OAEP-256 algorithm must be one of
+// type CryptoKey... Received an instance of CryptoKey"
+test(
+  SUITE,
+  'issue #683 - importJWK then CompactEncrypt (RSA-OAEP-256)',
+  async () => {
+    // Generate key pair and export to JWK (simulating fetching from a JWKS endpoint)
+    const keyPair = (await subtle.generateKey(
+      {
+        name: 'RSA-OAEP',
+        modulusLength: 2048,
+        publicExponent: new Uint8Array([1, 0, 1]),
+        hash: 'SHA-256',
+      },
+      true,
+      ['encrypt', 'decrypt', 'wrapKey', 'unwrapKey'],
+    )) as CryptoKeyPair;
+
+    // Export public key to JWK format
+    const publicJwk = await exportJWK(keyPair.publicKey as CryptoKey);
+
+    // Import using jose's importJWK (this is the key step from issue #683)
+    const importedPublicKey = await importJWK(publicJwk, 'RSA-OAEP-256');
+
+    // This was failing with: "Received an instance of CryptoKey"
+    const plaintext = new TextEncoder().encode('Issue #683 regression test');
+    const jwe = await new CompactEncrypt(plaintext)
+      .setProtectedHeader({ alg: 'RSA-OAEP-256', enc: 'A256GCM' })
+      .encrypt(importedPublicKey);
+
+    expect(jwe.split('.').length).to.equal(5);
+
+    // Verify we can decrypt with the original private key
+    const { plaintext: decrypted } = await compactDecrypt(
+      jwe,
+      keyPair.privateKey as CryptoKey,
+    );
+    expect(new TextDecoder().decode(decrypted)).to.equal(
+      'Issue #683 regression test',
+    );
+  },
+);
