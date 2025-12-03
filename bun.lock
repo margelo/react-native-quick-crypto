@@ -30,7 +30,7 @@
     },
     "example": {
       "name": "react-native-quick-crypto-example",
-      "version": "1.0.0-beta.23",
+      "version": "1.0.0",
       "dependencies": {
         "@craftzdog/react-native-buffer": "6.1.0",
         "@noble/ciphers": "^2.0.1",
@@ -47,9 +47,10 @@
         "react": "19.1.0",
         "react-native": "0.81.1",
         "react-native-bouncy-checkbox": "4.1.2",
+        "react-native-fast-encoder": "^0.3.1",
         "react-native-nitro-modules": "0.29.1",
         "react-native-quick-base64": "2.2.2",
-        "react-native-quick-crypto": "1.0.0-beta.23",
+        "react-native-quick-crypto": "workspace:*",
         "react-native-safe-area-context": "^5.2.2",
         "react-native-screens": "4.18.0",
         "react-native-vector-icons": "^10.3.0",
@@ -79,13 +80,14 @@
         "@types/react-test-renderer": "^19.1.0",
         "babel-jest": "29.7.0",
         "babel-plugin-module-resolver": "5.0.2",
+        "jose": "^6.1.3",
         "react-test-renderer": "19.1.0",
         "typescript": "^5.8.3",
       },
     },
     "packages/react-native-quick-crypto": {
       "name": "react-native-quick-crypto",
-      "version": "1.0.0-beta.23",
+      "version": "1.0.0",
       "dependencies": {
         "@craftzdog/react-native-buffer": "6.1.0",
         "events": "3.3.0",
@@ -1362,6 +1364,8 @@
 
     "flat-cache": ["flat-cache@4.0.1", "", { "dependencies": { "flatted": "^3.2.9", "keyv": "^4.5.4" } }, ""],
 
+    "flatbuffers": ["flatbuffers@2.0.6", "", {}, "sha512-QTTZTXTbVfuOVQu2X6eLOw4vefUxnFJZxAKeN3rEPhjEzBtIbehimJLfVGHPM8iX0Na+9i76SBEg0skf0c0sCA=="],
+
     "flatted": ["flatted@3.3.1", "", {}, ""],
 
     "flow-enums-runtime": ["flow-enums-runtime@0.0.6", "", {}, ""],
@@ -1679,6 +1683,8 @@
     "jiti": ["jiti@2.6.1", "", { "bin": { "jiti": "lib/jiti-cli.mjs" } }, "sha512-ekilCSN1jwRvIbgeg/57YFh8qQDNbwDb9xT/qu2DAHbFFZUicIl4ygVaAvzveMhMVr3LnpSKTNnwt8PoOfmKhQ=="],
 
     "joi": ["joi@17.13.3", "", { "dependencies": { "@hapi/hoek": "^9.3.0", "@hapi/topo": "^5.1.0", "@sideway/address": "^4.1.5", "@sideway/formula": "^3.0.1", "@sideway/pinpoint": "^2.0.0" } }, ""],
+
+    "jose": ["jose@6.1.3", "", {}, "sha512-0TpaTfihd4QMNwrz/ob2Bp7X04yuxJkjRGi4aKmOqwhov54i6u79oCv7T+C7lo70MKH6BesI3vscD1yb/yzKXQ=="],
 
     "js-tokens": ["js-tokens@4.0.0", "", {}, ""],
 
@@ -2101,6 +2107,8 @@
     "react-native-bouncy-checkbox": ["react-native-bouncy-checkbox@4.1.2", "", { "dependencies": { "@freakycoder/react-native-bounceable": "^1.0.3" } }, ""],
 
     "react-native-builder-bob": ["react-native-builder-bob@0.40.15", "", { "dependencies": { "@babel/core": "^7.25.2", "@babel/plugin-transform-flow-strip-types": "^7.26.5", "@babel/plugin-transform-strict-mode": "^7.24.7", "@babel/preset-env": "^7.25.2", "@babel/preset-react": "^7.24.7", "@babel/preset-typescript": "^7.24.7", "arktype": "^2.1.15", "babel-plugin-syntax-hermes-parser": "^0.28.0", "browserslist": "^4.20.4", "cross-spawn": "^7.0.3", "dedent": "^0.7.0", "del": "^6.1.1", "escape-string-regexp": "^4.0.0", "fs-extra": "^10.1.0", "glob": "^8.0.3", "is-git-dirty": "^2.0.1", "json5": "^2.2.1", "kleur": "^4.1.4", "prompts": "^2.4.2", "react-native-monorepo-config": "^0.1.8", "which": "^2.0.2", "yargs": "^17.5.1" }, "bin": { "bob": "bin/bob" } }, "sha512-p70LXlYOe53bZeEQchbK1hIhBGQsuB13bT81E7KkOe4dQABwMV6c585A4np0c3nwTTaqQMDYUat4x7J0oLnjxQ=="],
+
+    "react-native-fast-encoder": ["react-native-fast-encoder@0.3.1", "", { "dependencies": { "big-integer": "^1.6.51", "flatbuffers": "2.0.6" }, "peerDependencies": { "react": "*", "react-native": "*" } }, "sha512-D5ZEbffxayZImtUUErbNod+7IvJITkxTCPZAQTFg6lrSjl/443Mk5CvT9nKpJC1w4cg2llWk6QP8nczij5ClcQ=="],
 
     "react-native-monorepo-config": ["react-native-monorepo-config@0.1.10", "", { "dependencies": { "escape-string-regexp": "^5.0.0", "fast-glob": "^3.3.3" } }, "sha512-v0rlaLZiCUg95Mpw6xNRQce5k9yio0qscKjNQaPtFYMNL75YugS2UPUItIPLIRbZubK+s2/LRzBjX+mdyUgh4g=="],
 

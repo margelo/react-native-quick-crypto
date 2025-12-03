@@ -11,6 +11,7 @@ import '../tests/cfrg/x25519_tests';
 import '../tests/constants/constants_tests';
 import '../tests/hash/hash_tests';
 import '../tests/hmac/hmac_tests';
+import '../tests/jose/jose';
 import '../tests/keys/sign_verify_streaming';
 import '../tests/keys/public_cipher';
 import '../tests/keys/create_keys';

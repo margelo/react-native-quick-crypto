@@ -17,6 +17,10 @@ export class CryptoKey {
   keyUsages: KeyUsage[];
   keyExtractable: boolean;
 
+  get [Symbol.toStringTag](): string {
+    return 'CryptoKey';
+  }
+
   constructor(
     keyObject: KeyObject,
     keyAlgorithm: SubtleAlgorithm,
@@ -70,6 +74,11 @@ export class CryptoKey {
 export class KeyObject {
   handle: KeyObjectHandle;
   type: 'public' | 'secret' | 'private';
+
+  get [Symbol.toStringTag](): string {
+    return 'KeyObject';
+  }
+
   export(options: { format: 'pem' } & EncodingOptions): string | Buffer;
   export(options?: { format: 'der' } & EncodingOptions): Buffer;
   export(options?: { format: 'jwk' } & EncodingOptions): never;

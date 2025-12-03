@@ -186,3 +186,5 @@ tsconfig.tsbuildinfo
 
 # development stuffs
 *scratch*
+
+.claude/settings.local.json
