@@ -1211,13 +1211,13 @@ function mldsaSignVerify(
   const dataBuffer = bufferLikeToArrayBuffer(data);
 
   if (isSign) {
-    const signer = createSign('SHA-256');
+    const signer = createSign('');
     signer.update(dataBuffer);
     const sig = signer.sign({ key: key });
     return sig.buffer.slice(sig.byteOffset, sig.byteOffset + sig.byteLength);
   } else {
     const signatureBuffer = bufferLikeToArrayBuffer(signature!);
-    const verifier = createVerify('SHA-256');
+    const verifier = createVerify('');
     verifier.update(dataBuffer);
     return verifier.verify({ key: key }, signatureBuffer);
   }

@@ -180,8 +180,15 @@ std::shared_ptr<ArrayBuffer> HybridMlDsaKeyPair::signSync(const std::shared_ptr<
     throw std::runtime_error("Failed to create signing context");
   }
 
-  if (EVP_DigestSignInit(md_ctx, nullptr, nullptr, nullptr, pkey_) <= 0) {
+  EVP_PKEY_CTX* pkey_ctx = EVP_PKEY_CTX_new_from_name(nullptr, variant_.c_str(), nullptr);
+  if (pkey_ctx == nullptr) {
     EVP_MD_CTX_free(md_ctx);
+    throw std::runtime_error("Failed to create signing context for " + variant_);
+  }
+
+  if (EVP_DigestSignInit(md_ctx, &pkey_ctx, nullptr, nullptr, pkey_) <= 0) {
+    EVP_MD_CTX_free(md_ctx);
+    EVP_PKEY_CTX_free(pkey_ctx);
     throw std::runtime_error("Failed to initialize signing: " + getOpenSSLError());
   }
 
@@ -224,8 +231,15 @@ bool HybridMlDsaKeyPair::verifySync(const std::shared_ptr<ArrayBuffer>& signatur
     throw std::runtime_error("Failed to create verify context");
   }
 
-  if (EVP_DigestVerifyInit(md_ctx, nullptr, nullptr, nullptr, pkey_) <= 0) {
+  EVP_PKEY_CTX* pkey_ctx = EVP_PKEY_CTX_new_from_name(nullptr, variant_.c_str(), nullptr);
+  if (pkey_ctx == nullptr) {
     EVP_MD_CTX_free(md_ctx);
+    throw std::runtime_error("Failed to create verify context for " + variant_);
+  }
+
+  if (EVP_DigestVerifyInit(md_ctx, &pkey_ctx, nullptr, nullptr, pkey_) <= 0) {
+    EVP_MD_CTX_free(md_ctx);
+    EVP_PKEY_CTX_free(pkey_ctx);
     throw std::runtime_error("Failed to initialize verification: " + getOpenSSLError());
   }
 
