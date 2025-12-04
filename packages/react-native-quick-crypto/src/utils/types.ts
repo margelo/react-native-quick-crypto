@@ -107,6 +107,7 @@ export type EncryptDecryptAlgorithm =
   | 'AES-CTR'
   | 'AES-CBC'
   | 'AES-GCM'
+  | 'AES-KW'
   | 'ChaCha20-Poly1305';
 
 export type RsaOaepParams = {
@@ -157,6 +158,7 @@ export type EncryptDecryptParams =
   | AesCbcParams
   | AesCtrParams
   | AesGcmParams
+  | AesKwParams
   | RsaOaepParams
   | ChaCha20Poly1305Params;
 
@@ -455,7 +457,9 @@ export type Operation =
   | 'generateKey'
   | 'importKey'
   | 'exportKey'
-  | 'deriveBits';
+  | 'deriveBits'
+  | 'wrapKey'
+  | 'unwrapKey';
 
 export interface KeyPairOptions {
   namedCurve: string;

@@ -375,6 +375,42 @@ async function aesGcmCipher(
   }
 }
 
+async function aesKwCipher(
+  mode: CipherOrWrapMode,
+  key: CryptoKey,
+  data: ArrayBuffer,
+): Promise<ArrayBuffer> {
+  // Get cipher type based on key length
+  const keyLength = (key.algorithm as { length: number }).length;
+  const isWrap = mode === CipherOrWrapMode.kWebCryptoCipherEncrypt;
+  const cipherType = isWrap
+    ? `id-aes${keyLength}-wrap`
+    : `id-aes${keyLength}-wrap`;
+
+  // AES-KW uses the same cipher for both wrap and unwrap,
+  // but Node.js distinguishes with different cipher names
+  const factory =
+    NitroModules.createHybridObject<CipherFactory>('CipherFactory');
+
+  const cipher = factory.createCipher({
+    isCipher: isWrap,
+    cipherType,
+    cipherKey: bufferLikeToArrayBuffer(key.keyObject.export()),
+    iv: new ArrayBuffer(0), // AES-KW doesn't use IV
+  });
+
+  // Process data
+  const updated = cipher.update(data);
+  const final = cipher.final();
+
+  // Concatenate results
+  const result = new Uint8Array(updated.byteLength + final.byteLength);
+  result.set(new Uint8Array(updated), 0);
+  result.set(new Uint8Array(final), updated.byteLength);
+
+  return result.buffer;
+}
+
 async function chaCha20Poly1305Cipher(
   mode: CipherOrWrapMode,
   key: CryptoKey,
@@ -1417,6 +1453,8 @@ const cipherOrWrap = async (
     // Fall through
     case 'AES-GCM':
       return aesCipher(mode, key, data, algorithm);
+    case 'AES-KW':
+      return aesKwCipher(mode, key, data);
     case 'ChaCha20-Poly1305':
       return chaCha20Poly1305Cipher(
         mode,
@@ -1477,6 +1515,57 @@ export class Subtle {
     );
   }
 
+  async deriveKey(
+    algorithm: SubtleAlgorithm,
+    baseKey: CryptoKey,
+    derivedKeyAlgorithm: SubtleAlgorithm,
+    extractable: boolean,
+    keyUsages: KeyUsage[],
+  ): Promise<CryptoKey> {
+    // Validate baseKey usage
+    if (
+      !baseKey.usages.includes('deriveKey') &&
+      !baseKey.usages.includes('deriveBits')
+    ) {
+      throw lazyDOMException(
+        'baseKey does not have deriveKey or deriveBits usage',
+        'InvalidAccessError',
+      );
+    }
+
+    // Calculate required key length
+    const length = getKeyLength(derivedKeyAlgorithm);
+
+    // Step 1: Derive bits
+    let derivedBits: ArrayBuffer;
+    if (baseKey.algorithm.name !== algorithm.name)
+      throw new Error('Key algorithm mismatch');
+
+    switch (algorithm.name) {
+      case 'PBKDF2':
+        derivedBits = await pbkdf2DeriveBits(algorithm, baseKey, length);
+        break;
+      case 'X25519':
+      // Fall through
+      case 'X448':
+        derivedBits = await xDeriveBits(algorithm, baseKey, length);
+        break;
+      default:
+        throw new Error(
+          `'subtle.deriveKey()' for ${algorithm.name} is not implemented.`,
+        );
+    }
+
+    // Step 2: Import as key
+    return this.importKey(
+      'raw',
+      derivedBits,
+      derivedKeyAlgorithm,
+      extractable,
+      keyUsages,
+    );
+  }
+
   async encrypt(
     algorithm: EncryptDecryptParams,
     key: CryptoKey,
@@ -1508,6 +1597,89 @@ export class Subtle {
       case 'raw':
         return exportKeyRaw(key) as ArrayBuffer;
     }
+  }
+
+  async wrapKey(
+    format: ImportFormat,
+    key: CryptoKey,
+    wrappingKey: CryptoKey,
+    wrapAlgorithm: EncryptDecryptParams,
+  ): Promise<ArrayBuffer> {
+    // Validate wrappingKey usage
+    if (!wrappingKey.usages.includes('wrapKey')) {
+      throw lazyDOMException(
+        'wrappingKey does not have wrapKey usage',
+        'InvalidAccessError',
+      );
+    }
+
+    // Step 1: Export the key
+    const exported = await this.exportKey(format, key);
+
+    // Step 2: Convert to ArrayBuffer if JWK
+    let keyData: ArrayBuffer;
+    if (format === 'jwk') {
+      const jwkString = JSON.stringify(exported);
+      const buffer = SBuffer.from(jwkString, 'utf8');
+      keyData = bufferLikeToArrayBuffer(buffer);
+    } else {
+      keyData = exported as ArrayBuffer;
+    }
+
+    // Step 3: Encrypt the exported key
+    return cipherOrWrap(
+      CipherOrWrapMode.kWebCryptoCipherEncrypt,
+      wrapAlgorithm,
+      wrappingKey,
+      keyData,
+      'wrapKey',
+    );
+  }
+
+  async unwrapKey(
+    format: ImportFormat,
+    wrappedKey: BufferLike,
+    unwrappingKey: CryptoKey,
+    unwrapAlgorithm: EncryptDecryptParams,
+    unwrappedKeyAlgorithm: SubtleAlgorithm | AnyAlgorithm,
+    extractable: boolean,
+    keyUsages: KeyUsage[],
+  ): Promise<CryptoKey> {
+    // Validate unwrappingKey usage
+    if (!unwrappingKey.usages.includes('unwrapKey')) {
+      throw lazyDOMException(
+        'unwrappingKey does not have unwrapKey usage',
+        'InvalidAccessError',
+      );
+    }
+
+    // Step 1: Decrypt the wrapped key
+    const decrypted = await cipherOrWrap(
+      CipherOrWrapMode.kWebCryptoCipherDecrypt,
+      unwrapAlgorithm,
+      unwrappingKey,
+      bufferLikeToArrayBuffer(wrappedKey),
+      'unwrapKey',
+    );
+
+    // Step 2: Convert to appropriate format
+    let keyData: BufferLike | JWK;
+    if (format === 'jwk') {
+      const buffer = SBuffer.from(decrypted);
+      const jwkString = buffer.toString('utf8');
+      keyData = JSON.parse(jwkString) as JWK;
+    } else {
+      keyData = decrypted;
+    }
+
+    // Step 3: Import the key
+    return this.importKey(
+      format,
+      keyData,
+      unwrappedKeyAlgorithm,
+      extractable,
+      keyUsages,
+    );
   }
 
   async generateKey(
@@ -1748,3 +1920,27 @@ export class Subtle {
 }
 
 export const subtle = new Subtle();
+
+function getKeyLength(algorithm: SubtleAlgorithm): number {
+  const name = algorithm.name;
+
+  switch (name) {
+    case 'AES-CTR':
+    case 'AES-CBC':
+    case 'AES-GCM':
+    case 'AES-KW':
+    case 'ChaCha20-Poly1305':
+      return (algorithm as AesKeyGenParams).length || 256;
+
+    case 'HMAC': {
+      const hmacAlg = algorithm as { length?: number };
+      return hmacAlg.length || 256;
+    }
+
+    default:
+      throw lazyDOMException(
+        `Cannot determine key length for ${name}`,
+        'NotSupportedError',
+      );
+  }
+}
