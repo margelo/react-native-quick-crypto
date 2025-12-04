@@ -37,7 +37,6 @@ PODS:
     - ReactCommon/turbomodule/core
     - SocketRocket
     - Yoga
-  - OpenSSL-Universal (3.3.3001)
   - QuickCrypto (1.0.0):
     - boost
     - DoubleConversion
@@ -46,7 +45,6 @@ PODS:
     - glog
     - hermes-engine
     - NitroModules
-    - OpenSSL-Universal (= 3.3.3001)
     - RCT-Folly
     - RCT-Folly/Fabric
     - RCTRequired
@@ -2605,7 +2603,6 @@ DEPENDENCIES:
 
 SPEC REPOS:
   trunk:
-    - OpenSSL-Universal
     - SocketRocket
 
 EXTERNAL SOURCES:
@@ -2776,8 +2773,7 @@ SPEC CHECKSUMS:
   glog: 5683914934d5b6e4240e497e0f4a3b42d1854183
   hermes-engine: 4f8246b1f6d79f625e0d99472d1f3a71da4d28ca
   NitroModules: 1715fe0e22defd9e2cdd48fb5e0dbfd01af54bec
-  OpenSSL-Universal: 6082b0bf950e5636fe0d78def171184e2b3899c2
-  QuickCrypto: 4e82c6565ea7b5f9d4c3f0ad3f19b785a676b4cc
+  QuickCrypto: fad28b0727d1b6ffecab0fc8e407c14b135cdca0
   RCT-Folly: 846fda9475e61ec7bcbf8a3fe81edfcaeb090669
   RCTDeprecation: c4b9e2fd0ab200e3af72b013ed6113187c607077
   RCTRequired: e97dd5dafc1db8094e63bc5031e0371f092ae92a
@@ -2849,6 +2845,6 @@ SPEC CHECKSUMS:
   SocketRocket: d4aabe649be1e368d1318fdf28a022d714d65748
   Yoga: 11c9686a21e2cd82a094a723649d9f4507200fb0
 
-PODFILE CHECKSUM: 8bf59f4e86b38489f786b2878e119cdf1824ca75
+PODFILE CHECKSUM: bc958092bb9060694d04c6fcf716262b0549cded
 
 COCOAPODS: 1.15.2

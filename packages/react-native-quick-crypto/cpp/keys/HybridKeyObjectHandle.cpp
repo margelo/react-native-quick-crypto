@@ -322,6 +322,14 @@ AsymmetricKeyType HybridKeyObjectHandle::getAsymmetricKeyType() {
       return AsymmetricKeyType::ED25519;
     case EVP_PKEY_ED448:
       return AsymmetricKeyType::ED448;
+#if OPENSSL_VERSION_NUMBER >= 0x30500000L
+    case EVP_PKEY_ML_DSA_44:
+      return AsymmetricKeyType::ML_DSA_44;
+    case EVP_PKEY_ML_DSA_65:
+      return AsymmetricKeyType::ML_DSA_65;
+    case EVP_PKEY_ML_DSA_87:
+      return AsymmetricKeyType::ML_DSA_87;
+#endif
     default:
       throw std::runtime_error("Unsupported asymmetric key type");
   }

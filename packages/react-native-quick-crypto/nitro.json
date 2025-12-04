@@ -21,7 +21,8 @@
     "RsaCipher": { "cpp": "HybridRsaCipher" },
     "RsaKeyPair": { "cpp": "HybridRsaKeyPair" },
     "SignHandle": { "cpp": "HybridSignHandle" },
-    "VerifyHandle": { "cpp": "HybridVerifyHandle" }
+    "VerifyHandle": { "cpp": "HybridVerifyHandle" },
+    "MlDsaKeyPair": { "cpp": "HybridMlDsaKeyPair" }
   },
   "ignorePaths": ["node_modules", "lib"]
 }

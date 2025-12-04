@@ -92,10 +92,12 @@ Pod::Spec.new do |s|
     "ios/**/*.{h,m,mm}",
     # implementation (C++)
     "cpp/**/*.{hpp,cpp}",
-    # dependencies (C++)
-    "deps/**/*.{h,cc}",
+    # dependencies (C++) - ncrypto
+    "deps/ncrypto/include/*.{h}",
+    "deps/ncrypto/src/*.{cpp}",
     # dependencies (C) - exclude BLAKE3 x86 SIMD files (only use portable + NEON for ARM)
-    "deps/**/*.{h,c}",
+    "deps/blake3/c/*.{h,c}",
+    "deps/fastpbkdf2/*.{h,c}",
   ]
 
   # Exclude BLAKE3 x86-specific SIMD implementations (SSE2, SSE4.1, AVX2, AVX-512)
@@ -148,7 +150,7 @@ Pod::Spec.new do |s|
   # Add cpp subdirectories to header search paths
   cpp_headers = [
     "\"$(PODS_TARGET_SRCROOT)/cpp/utils\"",
-    "\"$(PODS_TARGET_SRCROOT)/deps/ncrypto\"",
+    "\"$(PODS_TARGET_SRCROOT)/deps/ncrypto/include\"",
     "\"$(PODS_TARGET_SRCROOT)/deps/blake3/c\"",
     "\"$(PODS_TARGET_SRCROOT)/deps/fastpbkdf2\""
   ]
@@ -175,6 +177,13 @@ Pod::Spec.new do |s|
 
   s.dependency "React-jsi"
   s.dependency "React-callinvoker"
-  s.dependency "OpenSSL-Universal", "3.3.3001"
+
+  # OpenSSL 3.6+ via SPM for ML-DSA (post-quantum cryptography) support
+  spm_dependency(s,
+    url: 'https://github.com/krzyzanowskim/OpenSSL.git',
+    requirement: {kind: 'upToNextMajorVersion', minimumVersion: '3.6.0'},
+    products: ['OpenSSL']
+  )
+
   install_modules_dependencies(s)
 end

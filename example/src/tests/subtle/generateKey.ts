@@ -413,6 +413,68 @@ testRSAKeyGen(
   ['encrypt', 'wrapKey'],
 );
 
+// --- ML-DSA Key Generation Tests ---
+
+type MlDsaVariant = 'ML-DSA-44' | 'ML-DSA-65' | 'ML-DSA-87';
+const MLDSA_VARIANTS: MlDsaVariant[] = ['ML-DSA-44', 'ML-DSA-65', 'ML-DSA-87'];
+
+interface TestCryptoKeyPairMlDsa {
+  publicKey: CryptoKey;
+  privateKey: CryptoKey;
+}
+
+for (const variant of MLDSA_VARIANTS) {
+  test(SUITE, `ML-DSA keygen: ${variant}`, async () => {
+    const keyPair = await subtle.generateKey({ name: variant }, true, [
+      'sign',
+      'verify',
+    ]);
+
+    const { publicKey, privateKey } = keyPair as TestCryptoKeyPairMlDsa;
+
+    expect(publicKey !== undefined);
+    expect(privateKey !== undefined);
+    expect(publicKey instanceof Object);
+    expect(privateKey instanceof Object);
+    expect(publicKey.type).to.equal('public');
+    expect(privateKey.type).to.equal('private');
+    expect(publicKey.extractable).to.equal(true);
+    expect(privateKey.extractable).to.equal(true);
+    expect(publicKey.usages).to.deep.equal(['verify']);
+    expect(privateKey.usages).to.deep.equal(['sign']);
+    expect(publicKey.algorithm.name).to.equal(variant);
+    expect(privateKey.algorithm.name).to.equal(variant);
+  });
+
+  test(SUITE, `ML-DSA keygen non-extractable: ${variant}`, async () => {
+    const keyPair = await subtle.generateKey({ name: variant }, false, [
+      'sign',
+      'verify',
+    ]);
+
+    const { publicKey, privateKey } = keyPair as TestCryptoKeyPairMlDsa;
+
+    // Public key is always extractable
+    expect(publicKey.extractable).to.equal(true);
+    // Private key respects extractable parameter
+    expect(privateKey.extractable).to.equal(false);
+  });
+}
+
+// Test bad usages for ML-DSA
+test(SUITE, 'ML-DSA bad usages', async () => {
+  await assertThrowsAsync(
+    async () => await subtle.generateKey({ name: 'ML-DSA-44' }, true, []),
+    'Usages cannot be empty',
+  );
+
+  await assertThrowsAsync(
+    async () =>
+      await subtle.generateKey({ name: 'ML-DSA-44' }, true, ['encrypt']),
+    'Unsupported key usage',
+  );
+});
+
 /*
 // Test AES Key Generation
 type AESArgs = [AESAlgorithm, AESLength, KeyUsage[]];

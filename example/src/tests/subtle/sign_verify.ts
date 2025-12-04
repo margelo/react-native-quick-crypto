@@ -687,6 +687,119 @@ test(SUITE, 'HMAC verify fails with tampered signature', async () => {
 
 // --- Key Import/Export and Sign/Verify ---
 
+// --- ML-DSA Tests ---
+
+type MlDsaVariant = 'ML-DSA-44' | 'ML-DSA-65' | 'ML-DSA-87';
+const MLDSA_VARIANTS: MlDsaVariant[] = ['ML-DSA-44', 'ML-DSA-65', 'ML-DSA-87'];
+const MLDSA_SIGNATURE_SIZES: Record<MlDsaVariant, number> = {
+  'ML-DSA-44': 2420,
+  'ML-DSA-65': 3309,
+  'ML-DSA-87': 4627,
+};
+
+for (const variant of MLDSA_VARIANTS) {
+  test(SUITE, `${variant} sign/verify`, async () => {
+    const keyPair = await generateKeyPairChecked({ name: variant }, true, [
+      'sign',
+      'verify',
+    ]);
+
+    const signature = await subtle.sign(
+      { name: variant },
+      keyPair.privateKey,
+      testData,
+    );
+
+    expect(signature.byteLength).to.equal(MLDSA_SIGNATURE_SIZES[variant]);
+
+    const isValid = await subtle.verify(
+      { name: variant },
+      keyPair.publicKey,
+      signature,
+      testData,
+    );
+
+    expect(isValid).to.equal(true);
+  });
+
+  test(SUITE, `${variant} sign/verify with empty data`, async () => {
+    const keyPair = await generateKeyPairChecked({ name: variant }, true, [
+      'sign',
+      'verify',
+    ]);
+
+    const signature = await subtle.sign(
+      { name: variant },
+      keyPair.privateKey,
+      emptyData,
+    );
+
+    expect(signature.byteLength).to.equal(MLDSA_SIGNATURE_SIZES[variant]);
+
+    const isValid = await subtle.verify(
+      { name: variant },
+      keyPair.publicKey,
+      signature,
+      emptyData,
+    );
+
+    expect(isValid).to.equal(true);
+  });
+
+  test(SUITE, `${variant} verify fails with tampered signature`, async () => {
+    const keyPair = await generateKeyPairChecked({ name: variant }, true, [
+      'sign',
+      'verify',
+    ]);
+
+    const signature = await subtle.sign(
+      { name: variant },
+      keyPair.privateKey,
+      testData,
+    );
+
+    const tamperedSig = new Uint8Array(signature);
+    tamperedSig[0] = (tamperedSig[0] ?? 0) ^ 0xff;
+
+    const isValid = await subtle.verify(
+      { name: variant },
+      keyPair.publicKey,
+      tamperedSig,
+      testData,
+    );
+
+    expect(isValid).to.equal(false);
+  });
+
+  test(SUITE, `${variant} verify fails with wrong public key`, async () => {
+    const keyPair1 = await generateKeyPairChecked({ name: variant }, true, [
+      'sign',
+      'verify',
+    ]);
+    const keyPair2 = await generateKeyPairChecked({ name: variant }, true, [
+      'sign',
+      'verify',
+    ]);
+
+    const signature = await subtle.sign(
+      { name: variant },
+      keyPair1.privateKey,
+      testData,
+    );
+
+    const isValid = await subtle.verify(
+      { name: variant },
+      keyPair2.publicKey,
+      signature,
+      testData,
+    );
+
+    expect(isValid).to.equal(false);
+  });
+}
+
+// --- Key Import/Export and Sign/Verify ---
+
 test(SUITE, 'Sign with imported Ed25519 key', async () => {
   const keyPair = await generateKeyPairChecked({ name: 'Ed25519' }, true, [
     'sign',

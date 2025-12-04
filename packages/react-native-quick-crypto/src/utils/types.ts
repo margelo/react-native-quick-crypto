@@ -65,6 +65,9 @@ export type ECKeyPairAlgorithm = 'ECDSA' | 'ECDH';
 export type CFRGKeyPairAlgorithm = 'Ed25519' | 'Ed448' | 'X25519' | 'X448';
 export type CFRGKeyPairType = 'ed25519' | 'ed448' | 'x25519' | 'x448';
 
+export type PQCKeyPairAlgorithm = 'ML-DSA-44' | 'ML-DSA-65' | 'ML-DSA-87';
+export type PQCKeyPairType = 'ml-dsa-44' | 'ml-dsa-65' | 'ml-dsa-87';
+
 // Node.js style key pair types (lowercase)
 export type RSAKeyPairType = 'rsa' | 'rsa-pss';
 export type ECKeyPairType = 'ec';
@@ -74,7 +77,8 @@ export type DHKeyPairType = 'dh';
 export type KeyPairAlgorithm =
   | RSAKeyPairAlgorithm
   | ECKeyPairAlgorithm
-  | CFRGKeyPairAlgorithm;
+  | CFRGKeyPairAlgorithm
+  | PQCKeyPairAlgorithm;
 
 export type AESAlgorithm = 'AES-CTR' | 'AES-CBC' | 'AES-GCM' | 'AES-KW';
 
@@ -86,7 +90,10 @@ export type SignVerifyAlgorithm =
   | 'ECDSA'
   | 'HMAC'
   | 'Ed25519'
-  | 'Ed448';
+  | 'Ed448'
+  | 'ML-DSA-44'
+  | 'ML-DSA-65'
+  | 'ML-DSA-87';
 
 export type DeriveBitsAlgorithm =
   | 'PBKDF2'
@@ -243,7 +250,8 @@ export type AsymmetricKeyType =
   | 'dsa'
   | 'ec'
   | 'dh'
-  | CFRGKeyPairType;
+  | CFRGKeyPairType
+  | PQCKeyPairType;
 
 type JWKkty = 'AES' | 'RSA' | 'EC' | 'oct';
 type JWKuse = 'sig' | 'enc';
