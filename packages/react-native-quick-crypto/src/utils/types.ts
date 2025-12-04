@@ -106,7 +106,8 @@ export type EncryptDecryptAlgorithm =
   | 'RSA-OAEP'
   | 'AES-CTR'
   | 'AES-CBC'
-  | 'AES-GCM';
+  | 'AES-GCM'
+  | 'ChaCha20-Poly1305';
 
 export type RsaOaepParams = {
   name: 'RSA-OAEP';
@@ -131,6 +132,13 @@ export type AesGcmParams = {
   additionalData?: BufferLike;
 };
 
+export type ChaCha20Poly1305Params = {
+  name: 'ChaCha20-Poly1305';
+  iv: BufferLike;
+  tagLength?: 128;
+  additionalData?: BufferLike;
+};
+
 export type AesKwParams = {
   name: 'AES-KW';
   wrappingKey?: BufferLike;
@@ -149,7 +157,8 @@ export type EncryptDecryptParams =
   | AesCbcParams
   | AesCtrParams
   | AesGcmParams
-  | RsaOaepParams;
+  | RsaOaepParams
+  | ChaCha20Poly1305Params;
 
 export type AnyAlgorithm =
   | DigestAlgorithm

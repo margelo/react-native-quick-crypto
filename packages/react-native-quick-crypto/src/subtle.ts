@@ -15,6 +15,7 @@ import type {
   AesCbcParams,
   AesGcmParams,
   RsaOaepParams,
+  ChaCha20Poly1305Params,
 } from './utils';
 import { KFormatType, KeyEncoding } from './utils';
 import {
@@ -349,6 +350,97 @@ async function aesGcmCipher(
   // Set additional authenticated data if provided
   if (algorithm.additionalData) {
     cipher.setAAD(bufferLikeToArrayBuffer(algorithm.additionalData));
+  }
+
+  // Process data
+  const updated = cipher.update(processData);
+  const final = cipher.final();
+
+  if (mode === CipherOrWrapMode.kWebCryptoCipherEncrypt) {
+    // For encryption, append auth tag to result
+    const tag = cipher.getAuthTag();
+    const result = new Uint8Array(
+      updated.byteLength + final.byteLength + tag.byteLength,
+    );
+    result.set(new Uint8Array(updated), 0);
+    result.set(new Uint8Array(final), updated.byteLength);
+    result.set(new Uint8Array(tag), updated.byteLength + final.byteLength);
+    return result.buffer;
+  } else {
+    // For decryption, just concatenate plaintext
+    const result = new Uint8Array(updated.byteLength + final.byteLength);
+    result.set(new Uint8Array(updated), 0);
+    result.set(new Uint8Array(final), updated.byteLength);
+    return result.buffer;
+  }
+}
+
+async function chaCha20Poly1305Cipher(
+  mode: CipherOrWrapMode,
+  key: CryptoKey,
+  data: ArrayBuffer,
+  algorithm: ChaCha20Poly1305Params,
+): Promise<ArrayBuffer> {
+  const { iv, additionalData, tagLength = 128 } = algorithm;
+
+  // Validate IV (must be 12 bytes for ChaCha20-Poly1305)
+  const ivBuffer = bufferLikeToArrayBuffer(iv);
+  if (!ivBuffer || ivBuffer.byteLength !== 12) {
+    throw lazyDOMException(
+      'ChaCha20-Poly1305 IV must be exactly 12 bytes',
+      'OperationError',
+    );
+  }
+
+  // Validate tag length (only 128-bit supported)
+  if (tagLength !== 128) {
+    throw lazyDOMException(
+      'ChaCha20-Poly1305 only supports 128-bit auth tags',
+      'NotSupportedError',
+    );
+  }
+
+  const tagByteLength = 16; // 128 bits = 16 bytes
+
+  // Create cipher using existing ChaCha20-Poly1305 implementation
+  const factory =
+    NitroModules.createHybridObject<CipherFactory>('CipherFactory');
+  const cipher = factory.createCipher({
+    isCipher: mode === CipherOrWrapMode.kWebCryptoCipherEncrypt,
+    cipherType: 'chacha20-poly1305',
+    cipherKey: bufferLikeToArrayBuffer(key.keyObject.export()),
+    iv: ivBuffer,
+    authTagLen: tagByteLength,
+  });
+
+  let processData: ArrayBuffer;
+  let authTag: ArrayBuffer | undefined;
+
+  if (mode === CipherOrWrapMode.kWebCryptoCipherDecrypt) {
+    // For decryption, extract auth tag from end of data
+    const dataView = new Uint8Array(data);
+
+    if (dataView.byteLength < tagByteLength) {
+      throw lazyDOMException(
+        'The provided data is too small.',
+        'OperationError',
+      );
+    }
+
+    // Split data and tag
+    const ciphertextLength = dataView.byteLength - tagByteLength;
+    processData = dataView.slice(0, ciphertextLength).buffer;
+    authTag = dataView.slice(ciphertextLength).buffer;
+
+    // Set auth tag for verification
+    cipher.setAuthTag(authTag);
+  } else {
+    processData = data;
+  }
+
+  // Set additional authenticated data if provided
+  if (additionalData) {
+    cipher.setAAD(bufferLikeToArrayBuffer(additionalData));
   }
 
   // Process data
@@ -976,6 +1068,8 @@ const exportKeyRaw = (key: CryptoKey): ArrayBuffer | unknown => {
     // Fall through
     case 'AES-KW':
     // Fall through
+    case 'ChaCha20-Poly1305':
+    // Fall through
     case 'HMAC': {
       const exported = key.keyObject.export();
       // Convert Buffer to ArrayBuffer
@@ -1025,6 +1119,8 @@ const exportKeyJWK = (key: CryptoKey): ArrayBuffer | unknown => {
     case 'AES-GCM':
     // Fall through
     case 'AES-KW':
+    // Fall through
+    case 'ChaCha20-Poly1305':
       if (key.algorithm.length === undefined) {
         throw lazyDOMException(
           `Algorithm ${key.algorithm.name} missing required length property`,
@@ -1321,6 +1417,13 @@ const cipherOrWrap = async (
     // Fall through
     case 'AES-GCM':
       return aesCipher(mode, key, data, algorithm);
+    case 'ChaCha20-Poly1305':
+      return chaCha20Poly1305Cipher(
+        mode,
+        key,
+        data,
+        algorithm as ChaCha20Poly1305Params,
+      );
   }
 };
 
@@ -1446,6 +1549,26 @@ export class Subtle {
           keyUsages,
         );
         break;
+      case 'ChaCha20-Poly1305': {
+        const length = (algorithm as AesKeyGenParams).length ?? 256;
+
+        if (length !== 256) {
+          throw lazyDOMException(
+            'ChaCha20-Poly1305 only supports 256-bit keys',
+            'NotSupportedError',
+          );
+        }
+
+        result = await aesGenerateKey(
+          {
+            name: 'ChaCha20-Poly1305',
+            length: 256,
+          } as unknown as AesKeyGenParams,
+          extractable,
+          keyUsages,
+        );
+        break;
+      }
       case 'HMAC':
         result = await hmacGenerateKey(algorithm, extractable, keyUsages);
         break;
@@ -1541,6 +1664,8 @@ export class Subtle {
       case 'AES-GCM':
       // Fall through
       case 'AES-KW':
+      // Fall through
+      case 'ChaCha20-Poly1305':
         result = await aesImportKey(
           normalizedAlgorithm,
           format,

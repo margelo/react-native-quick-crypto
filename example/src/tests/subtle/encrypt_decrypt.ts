@@ -529,6 +529,349 @@ test(
   },
 );
 
+// Test ChaCha20-Poly1305
+test(SUITE, 'ChaCha20-Poly1305', async () => {
+  const buf = getRandomValues(new Uint8Array(50));
+  const iv = getRandomValues(new Uint8Array(12)); // 96-bit nonce
+
+  const key = await subtle.generateKey(
+    {
+      name: 'ChaCha20-Poly1305',
+      length: 256,
+    } as any, // eslint-disable-line @typescript-eslint/no-explicit-any
+    true,
+    ['encrypt', 'decrypt'],
+  );
+
+  const ciphertext = await subtle.encrypt(
+    { name: 'ChaCha20-Poly1305', iv } as any, // eslint-disable-line @typescript-eslint/no-explicit-any
+    key as CryptoKey,
+    buf,
+  );
+
+  const plaintext = await subtle.decrypt(
+    { name: 'ChaCha20-Poly1305', iv } as any, // eslint-disable-line @typescript-eslint/no-explicit-any
+    key as CryptoKey,
+    ciphertext,
+  );
+
+  expect(Buffer.from(plaintext).toString('hex')).to.equal(
+    Buffer.from(buf as Uint8Array).toString('hex'),
+  );
+});
+
+// Test ChaCha20-Poly1305 with AAD
+test(SUITE, 'ChaCha20-Poly1305 with AAD', async () => {
+  const plaintext = getRandomValues(new Uint8Array(32));
+  const iv = getRandomValues(new Uint8Array(12));
+  const aad = getRandomValues(new Uint8Array(16));
+
+  const key = await subtle.generateKey(
+    { name: 'ChaCha20-Poly1305', length: 256 } as any, // eslint-disable-line @typescript-eslint/no-explicit-any
+    true,
+    ['encrypt', 'decrypt'],
+  );
+
+  const ciphertext = await subtle.encrypt(
+    { name: 'ChaCha20-Poly1305', iv, additionalData: aad } as any, // eslint-disable-line @typescript-eslint/no-explicit-any
+    key as CryptoKey,
+    plaintext,
+  );
+
+  const decrypted = await subtle.decrypt(
+    { name: 'ChaCha20-Poly1305', iv, additionalData: aad } as any, // eslint-disable-line @typescript-eslint/no-explicit-any
+    key as CryptoKey,
+    ciphertext,
+  );
+
+  expect(Buffer.from(decrypted).toString('hex')).to.equal(
+    Buffer.from(plaintext as Uint8Array).toString('hex'),
+  );
+});
+
+// RFC 8439 test vector for ChaCha20-Poly1305
+test(SUITE, 'ChaCha20-Poly1305 RF C 8439 vector', async () => {
+  const keyHex =
+    '808182838485868788898a8b8c8d8e8f909192939495969798999a9b9c9d9e9f';
+  const nonceHex = '070000004041424344454647';
+  const plaintextHex =
+    '4c616469657320616e642047656e746c656d656e206f662074686520636c617373206f66202739393a204966204920636f756c64206f6666657220796f75206f6e6c79206f6e652074697020666f7220746865206675747572652c2073756e73637265656e20776f756c642062652069742e';
+  const aadHex = '50515253c0c1c2c3c4c5c6c7';
+  const expectedCiphertextHex =
+    'd31a8d34648e60db7b86afbc53ef7ec2a4aded51296e08fea9e2b5a736ee62d63dbea45e8ca9671282fafb69da92728b1a71de0a9e060b2905d6a5b67ecd3b3692ddbd7f2d778b8c9803aee328091b58fab324e4fad675945585808b4831d7bc3ff4def08e4b7a9de576d26586cec64b6116';
+  const expectedTagHex = '1ae10b594f09e26a7e902ecbd0600691';
+
+  const key = await subtle.importKey(
+    'raw',
+    Buffer.from(keyHex, 'hex'),
+    { name: 'ChaCha20-Poly1305' } as any, // eslint-disable-line @typescript-eslint/no-explicit-any
+    true,
+    ['encrypt', 'decrypt'],
+  );
+
+  const ciphertext = await subtle.encrypt(
+    {
+      name: 'ChaCha20-Poly1305',
+      iv: Buffer.from(nonceHex, 'hex'),
+      additionalData: Buffer.from(aadHex, 'hex'),
+    } as any, // eslint-disable-line @typescript-eslint/no-explicit-any
+    key as CryptoKey,
+    Buffer.from(plaintextHex, 'hex'),
+  );
+
+  // Ciphertext includes tag at the end (last 16 bytes)
+  const ctWithTag = Buffer.from(ciphertext);
+  const ct = ctWithTag.subarray(0, -16);
+  const tag = ctWithTag.subarray(-16);
+
+  expect(ct.toString('hex')).to.equal(expectedCiphertextHex);
+  expect(tag.toString('hex')).to.equal(expectedTagHex);
+});
+
+// ChaCha20-Poly1305 comprehensive tests (similar to AES)
+test(SUITE, 'ChaCha20-Poly1305 wrong key usage encrypt', async () => {
+  const key = await subtle.generateKey(
+    { name: 'ChaCha20-Poly1305', length: 256 } as any, // eslint-disable-line @typescript-eslint/no-explicit-any
+    true,
+    ['decrypt'], // Only decrypt, not encrypt
+  );
+
+  await assertThrowsAsync(
+    async () =>
+      await subtle.encrypt(
+        {
+          name: 'ChaCha20-Poly1305',
+          iv: getRandomValues(new Uint8Array(12)),
+        } as any, // eslint-disable-line @typescript-eslint/no-explicit-any
+        key as CryptoKey,
+        getRandomValues(new Uint8Array(32)),
+      ),
+    'The requested operation is not valid for the provided key',
+  );
+});
+
+test(SUITE, 'ChaCha20-Poly1305 wrong key usage decrypt', async () => {
+  const key = await subtle.generateKey(
+    { name: 'ChaCha20-Poly1305', length: 256 } as any, // eslint-disable-line @typescript-eslint/no-explicit-any
+    true,
+    ['encrypt'], // Only encrypt, not decrypt
+  );
+
+  const iv = getRandomValues(new Uint8Array(12));
+  const plaintext = getRandomValues(new Uint8Array(32));
+
+  const ciphertext = await subtle.encrypt(
+    { name: 'ChaCha20-Poly1305', iv } as any, // eslint-disable-line @typescript-eslint/no-explicit-any
+    key as CryptoKey,
+    plaintext,
+  );
+
+  await assertThrowsAsync(
+    async () =>
+      await subtle.decrypt(
+        { name: 'ChaCha20-Poly1305', iv } as any, // eslint-disable-line @typescript-eslint/no-explicit-any
+        key as CryptoKey,
+        ciphertext,
+      ),
+    'The requested operation is not valid for the provided key',
+  );
+});
+
+test(SUITE, 'ChaCha20-Poly1305 invalid IV length', async () => {
+  const key = await subtle.generateKey(
+    { name: 'ChaCha20-Poly1305', length: 256 } as any, // eslint-disable-line @typescript-eslint/no-explicit-any
+    true,
+    ['encrypt', 'decrypt'],
+  );
+
+  // Test with wrong IV lengths
+  const invalidIVs = [
+    getRandomValues(new Uint8Array(8)), // Too short
+    getRandomValues(new Uint8Array(16)), // Too long
+    getRandomValues(new Uint8Array(24)), // Way too long
+  ];
+
+  for (const iv of invalidIVs) {
+    await assertThrowsAsync(
+      async () =>
+        await subtle.encrypt(
+          { name: 'ChaCha20-Poly1305', iv } as any, // eslint-disable-line @typescript-eslint/no-explicit-any
+          key as CryptoKey,
+          getRandomValues(new Uint8Array(32)),
+        ),
+      'ChaCha20-Poly1305 IV must be exactly 12 bytes',
+    );
+  }
+});
+
+test(SUITE, 'ChaCha20-Poly1305 empty plaintext', async () => {
+  const key = await subtle.generateKey(
+    { name: 'ChaCha20-Poly1305', length: 256 } as any, // eslint-disable-line @typescript-eslint/no-explicit-any
+    true,
+    ['encrypt', 'decrypt'],
+  );
+
+  const iv = getRandomValues(new Uint8Array(12));
+  const plaintext = new Uint8Array(0); // Empty
+
+  const ciphertext = await subtle.encrypt(
+    { name: 'ChaCha20-Poly1305', iv } as any, // eslint-disable-line @typescript-eslint/no-explicit-any
+    key as CryptoKey,
+    plaintext,
+  );
+
+  // Should still include auth tag (16 bytes)
+  expect(ciphertext.byteLength).to.equal(16);
+
+  const decrypted = await subtle.decrypt(
+    { name: 'ChaCha20-Poly1305', iv } as any, // eslint-disable-line @typescript-eslint/no-explicit-any
+    key as CryptoKey,
+    ciphertext,
+  );
+
+  expect(decrypted.byteLength).to.equal(0);
+});
+
+test(SUITE, 'ChaCha20-Poly1305 large plaintext', async () => {
+  const key = await subtle.generateKey(
+    { name: 'ChaCha20-Poly1305', length: 256 } as any, // eslint-disable-line @typescript-eslint/no-explicit-any
+    true,
+    ['encrypt', 'decrypt'],
+  );
+
+  const iv = getRandomValues(new Uint8Array(12));
+  const plaintext = getRandomValues(new Uint8Array(1024 * 64)); // 64KB
+
+  const ciphertext = await subtle.encrypt(
+    { name: 'ChaCha20-Poly1305', iv } as any, // eslint-disable-line @typescript-eslint/no-explicit-any
+    key as CryptoKey,
+    plaintext,
+  );
+
+  // Ciphertext = plaintext + 16-byte tag
+  expect(ciphertext.byteLength).to.equal(plaintext.byteLength + 16);
+
+  const decrypted = await subtle.decrypt(
+    { name: 'ChaCha20-Poly1305', iv } as any, // eslint-disable-line @typescript-eslint/no-explicit-any
+    key as CryptoKey,
+    ciphertext,
+  );
+
+  expect(Buffer.from(decrypted).toString('hex')).to.equal(
+    Buffer.from(plaintext as Uint8Array).toString('hex'),
+  );
+});
+
+test(SUITE, 'ChaCha20-Poly1305 key import/export raw', async () => {
+  const keyMaterial = getRandomValues(new Uint8Array(32)); // 256 bits
+
+  const key = await subtle.importKey(
+    'raw',
+    keyMaterial,
+    { name: 'ChaCha20-Poly1305' } as any, // eslint-disable-line @typescript-eslint/no-explicit-any
+    true,
+    ['encrypt', 'decrypt'],
+  );
+
+  const exported = await subtle.exportKey('raw', key as CryptoKey);
+
+  expect(Buffer.from(exported as ArrayBuffer).toString('hex')).to.equal(
+    Buffer.from(keyMaterial as Uint8Array).toString('hex'),
+  );
+});
+
+test(SUITE, 'ChaCha20-Poly1305 tampered ciphertext', async () => {
+  const key = await subtle.generateKey(
+    { name: 'ChaCha20-Poly1305', length: 256 } as any, // eslint-disable-line @typescript-eslint/no-explicit-any
+    true,
+    ['encrypt', 'decrypt'],
+  );
+
+  const iv = getRandomValues(new Uint8Array(12));
+  const plaintext = getRandomValues(new Uint8Array(32));
+
+  const ciphertext = await subtle.encrypt(
+    { name: 'ChaCha20-Poly1305', iv } as any, // eslint-disable-line @typescript-eslint/no-explicit-any
+    key as CryptoKey,
+    plaintext,
+  );
+
+  // Tamper with the ciphertext
+  const tamperedCiphertext = new Uint8Array(ciphertext);
+  tamperedCiphertext[0]! ^= 1; // Flip a bit
+
+  await assertThrowsAsync(
+    async () =>
+      await subtle.decrypt(
+        { name: 'ChaCha20-Poly1305', iv } as any, // eslint-disable-line @typescript-eslint/no-explicit-any
+        key as CryptoKey,
+        tamperedCiphertext,
+      ),
+    'Failed to finalize',
+  );
+});
+
+test(SUITE, 'ChaCha20-Poly1305 tampered tag', async () => {
+  const key = await subtle.generateKey(
+    { name: 'ChaCha20-Poly1305', length: 256 } as any, // eslint-disable-line @typescript-eslint/no-explicit-any
+    true,
+    ['encrypt', 'decrypt'],
+  );
+
+  const iv = getRandomValues(new Uint8Array(12));
+  const plaintext = getRandomValues(new Uint8Array(32));
+
+  const ciphertext = await subtle.encrypt(
+    { name: 'ChaCha20-Poly1305', iv } as any, // eslint-disable-line @typescript-eslint/no-explicit-any
+    key as CryptoKey,
+    plaintext,
+  );
+
+  // Tamper with the auth tag (last 16 bytes)
+  const tamperedCiphertext = new Uint8Array(ciphertext);
+  tamperedCiphertext[tamperedCiphertext.length - 1]! ^= 1; // Flip a bit in tag
+
+  await assertThrowsAsync(
+    async () =>
+      await subtle.decrypt(
+        { name: 'ChaCha20-Poly1305', iv } as any, // eslint-disable-line @typescript-eslint/no-explicit-any
+        key as CryptoKey,
+        tamperedCiphertext,
+      ),
+    'Failed to finalize',
+  );
+});
+
+test(SUITE, 'ChaCha20-Poly1305 wrong AAD', async () => {
+  const key = await subtle.generateKey(
+    { name: 'ChaCha20-Poly1305', length: 256 } as any, // eslint-disable-line @typescript-eslint/no-explicit-any
+    true,
+    ['encrypt', 'decrypt'],
+  );
+
+  const iv = getRandomValues(new Uint8Array(12));
+  const plaintext = getRandomValues(new Uint8Array(32));
+  const aad1 = getRandomValues(new Uint8Array(16));
+  const aad2 = getRandomValues(new Uint8Array(16));
+
+  const ciphertext = await subtle.encrypt(
+    { name: 'ChaCha20-Poly1305', iv, additionalData: aad1 } as any, // eslint-disable-line @typescript-eslint/no-explicit-any
+    key as CryptoKey,
+    plaintext,
+  );
+
+  // Try to decrypt with different AAD
+  await assertThrowsAsync(
+    async () =>
+      await subtle.decrypt(
+        { name: 'ChaCha20-Poly1305', iv, additionalData: aad2 } as any, // eslint-disable-line @typescript-eslint/no-explicit-any
+        key as CryptoKey,
+        ciphertext,
+      ),
+    'Failed to finalize',
+  );
+});
+
 // from https://github.com/nodejs/node/blob/main/test/parallel/test-webcrypto-encrypt-decrypt-aes.js
 async function testAESEncrypt({
   keyBuffer,
