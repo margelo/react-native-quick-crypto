@@ -26,6 +26,7 @@ import '../tests/subtle/generateKey';
 import '../tests/subtle/import_export';
 import '../tests/subtle/jwk_rfc7517_tests';
 import '../tests/subtle/sign_verify';
+import '../tests/subtle/x25519_x448';
 
 export const useTestsList = (): [
   TestSuites,

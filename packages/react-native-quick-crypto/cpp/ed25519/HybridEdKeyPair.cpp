@@ -14,14 +14,20 @@ std::shared_ptr<ArrayBuffer> HybridEdKeyPair::diffieHellman(const std::shared_pt
   using EVP_PKEY_ptr = std::unique_ptr<EVP_PKEY, decltype(&EVP_PKEY_free)>;
   using EVP_PKEY_CTX_ptr = std::unique_ptr<EVP_PKEY_CTX, decltype(&EVP_PKEY_CTX_free)>;
 
+  // Determine key type from curve name
+  int keyType = EVP_PKEY_X25519;
+  if (this->curve == "x448" || this->curve == "X448") {
+    keyType = EVP_PKEY_X448;
+  }
+
   // 1. Create EVP_PKEY for private key (our key)
-  EVP_PKEY_ptr pkey_priv(EVP_PKEY_new_raw_private_key(EVP_PKEY_X25519, NULL, privateKey->data(), privateKey->size()), EVP_PKEY_free);
+  EVP_PKEY_ptr pkey_priv(EVP_PKEY_new_raw_private_key(keyType, NULL, privateKey->data(), privateKey->size()), EVP_PKEY_free);
   if (!pkey_priv) {
     throw std::runtime_error("Failed to create private key: " + getOpenSSLError());
   }
 
   // 2. Create EVP_PKEY for public key (peer's key)
-  EVP_PKEY_ptr pkey_pub(EVP_PKEY_new_raw_public_key(EVP_PKEY_X25519, NULL, publicKey->data(), publicKey->size()), EVP_PKEY_free);
+  EVP_PKEY_ptr pkey_pub(EVP_PKEY_new_raw_public_key(keyType, NULL, publicKey->data(), publicKey->size()), EVP_PKEY_free);
   if (!pkey_pub) {
     throw std::runtime_error("Failed to create public key: " + getOpenSSLError());
   }

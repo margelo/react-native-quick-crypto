@@ -41,7 +41,12 @@ import { rsa_generateKeyPair } from './rsa';
 import { getRandomValues } from './random';
 import { createHmac } from './hmac';
 import { createSign, createVerify } from './keys/signVerify';
-import { ed_generateKeyPairWebCrypto, Ed } from './ed';
+import {
+  ed_generateKeyPairWebCrypto,
+  x_generateKeyPairWebCrypto,
+  xDeriveBits,
+  Ed,
+} from './ed';
 import { mldsa_generateKeyPairWebCrypto, type MlDsaVariant } from './mldsa';
 // import { pbkdf2DeriveBits } from './pbkdf2';
 // import { aesCipher, aesGenerateKey, aesImportKey, getAlgorithmName } from './aes';
@@ -737,7 +742,12 @@ function edImportKey(
   const { name } = algorithm;
 
   // Validate usages
-  if (hasAnyNotIn(keyUsages, ['sign', 'verify'])) {
+  const isX = name === 'X25519' || name === 'X448';
+  const allowedUsages: KeyUsage[] = isX
+    ? ['deriveKey', 'deriveBits']
+    : ['sign', 'verify'];
+
+  if (hasAnyNotIn(keyUsages, allowedUsages)) {
     throw lazyDOMException(
       `Unsupported key usage for ${name} key`,
       'SyntaxError',
@@ -853,8 +863,12 @@ const exportKeySpki = async (
     case 'Ed25519':
     // Fall through
     case 'Ed448':
+    // Fall through
+    case 'X25519':
+    // Fall through
+    case 'X448':
       if (key.type === 'public') {
-        // Export Ed key in SPKI DER format
+        // Export Ed/X key in SPKI DER format
         return bufferLikeToArrayBuffer(
           key.keyObject.handle.exportKey(KFormatType.DER, KeyEncoding.SPKI),
         );
@@ -902,8 +916,12 @@ const exportKeyPkcs8 = async (
     case 'Ed25519':
     // Fall through
     case 'Ed448':
+    // Fall through
+    case 'X25519':
+    // Fall through
+    case 'X448':
       if (key.type === 'private') {
-        // Export Ed key in PKCS8 DER format
+        // Export Ed/X key in PKCS8 DER format
         return bufferLikeToArrayBuffer(
           key.keyObject.handle.exportKey(KFormatType.DER, KeyEncoding.PKCS8),
         );
@@ -935,6 +953,19 @@ const exportKeyRaw = (key: CryptoKey): ArrayBuffer | unknown => {
     case 'ECDH':
       if (key.type === 'public') {
         return ecExportKey(key, KWebCryptoKeyFormat.kWebCryptoKeyFormatRaw);
+      }
+      break;
+    case 'Ed25519':
+    // Fall through
+    case 'Ed448':
+    // Fall through
+    case 'X25519':
+    // Fall through
+    case 'X448':
+      if (key.type === 'public') {
+        // Export raw public key
+        const exported = key.keyObject.handle.exportKey();
+        return bufferLikeToArrayBuffer(exported);
       }
       break;
     case 'AES-CTR':
@@ -1333,6 +1364,10 @@ export class Subtle {
     switch (algorithm.name) {
       case 'PBKDF2':
         return pbkdf2DeriveBits(algorithm, baseKey, length);
+      case 'X25519':
+      // Fall through
+      case 'X448':
+        return xDeriveBits(algorithm, baseKey, length);
     }
     throw new Error(
       `'subtle.deriveBits()' for ${algorithm.name} is not implemented.`,
@@ -1436,6 +1471,16 @@ export class Subtle {
         );
         checkCryptoKeyPairUsages(result as CryptoKeyPair);
         break;
+      case 'X25519':
+      // Fall through
+      case 'X448':
+        result = await x_generateKeyPairWebCrypto(
+          algorithm.name.toLowerCase() as 'x25519' | 'x448',
+          extractable,
+          keyUsages,
+        );
+        checkCryptoKeyPairUsages(result as CryptoKeyPair);
+        break;
       default:
         throw new Error(
           `'subtle.generateKey()' is not implemented for ${algorithm.name}.
@@ -1513,6 +1558,10 @@ export class Subtle {
           keyUsages,
         );
         break;
+      case 'X25519':
+      // Fall through
+      case 'X448':
+      // Fall through
       case 'Ed25519':
       // Fall through
       case 'Ed448':

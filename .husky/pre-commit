@@ -1,3 +1,6 @@
+# Add bun to PATH
+export PATH="$HOME/.bun/bin:$PATH"
+
 # Run linting and formatting on staged files
 bun lint-staged
 
