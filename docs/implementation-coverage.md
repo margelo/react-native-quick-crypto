@@ -272,8 +272,8 @@ This document attempts to describe the implementation status of Crypto APIs/Inte
 | Algorithm  | Status |
 | ---------  | :----: |
 | `ECDH`     | ❌ |
-| `X25519`   | ❌ |
-| `X448`     | ❌ |
+| `X25519`   | ✅ |
+| `X448`     | ✅ |
 | `HKDF`     | ❌ |
 | `PBKDF2`   | ✅ |
 
@@ -403,7 +403,7 @@ This document attempts to describe the implementation status of Crypto APIs/Inte
 | `ECDSA`             | ✅ |
 | `Ed25519`           | ❌ |
 | `Ed448`             | ❌ |
-| `HMAC`              | ❌ |
+| `HMAC`              | ✅ |
 | `ML-DSA-44`         | ❌ |
 | `ML-DSA-65`         | ❌ |
 | `ML-DSA-87`         | ❌ |
@@ -455,7 +455,7 @@ This document attempts to describe the implementation status of Crypto APIs/Inte
 | `ECDSA`             | ✅ |
 | `Ed25519`           | ❌ |
 | `Ed448`             | ❌ |
-| `HMAC`              | ❌ |
+| `HMAC`              | ✅ |
 | `ML-DSA-44`         | ❌ |
 | `ML-DSA-65`         | ❌ |
 | `ML-DSA-87`         | ❌ |
