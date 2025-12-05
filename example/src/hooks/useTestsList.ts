@@ -29,7 +29,6 @@ import '../tests/subtle/sign_verify';
 import '../tests/subtle/x25519_x448';
 import '../tests/subtle/wrap_unwrap';
 import '../tests/subtle/derive_key';
-import '../tests/subtle/hmac_sign_verify';
 
 export const useTestsList = (): [
   TestSuites,

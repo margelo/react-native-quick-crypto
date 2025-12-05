@@ -6,7 +6,7 @@ import {
 } from 'react-native-quick-crypto';
 import { test } from '../util';
 
-const SUITE = 'subtle x25519/x448';
+const SUITE = 'subtle.cfrg';
 
 test(
   SUITE,

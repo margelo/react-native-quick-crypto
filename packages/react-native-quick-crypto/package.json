@@ -1,6 +1,6 @@
 {
   "name": "react-native-quick-crypto",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "A fast implementation of Node's `crypto` module written in C/C++ JSI",
   "main": "lib/commonjs/index",
   "module": "lib/module/index",
@@ -74,7 +74,6 @@
   "dependencies": {
     "@craftzdog/react-native-buffer": "6.1.0",
     "events": "3.3.0",
-    "expo-build-properties": "0.14.6",
     "react-native-quick-base64": "2.2.2",
     "readable-stream": "4.5.2",
     "safe-buffer": "^5.2.1",
@@ -87,6 +86,7 @@
     "@types/readable-stream": "4.0.18",
     "del-cli": "7.0.0",
     "expo": "^54.0.25",
+    "expo-build-properties": "^1.0.0",
     "jest": "29.7.0",
     "nitro-codegen": "0.29.1",
     "react-native-builder-bob": "0.40.15",
@@ -96,10 +96,14 @@
     "react": "*",
     "react-native": "*",
     "react-native-nitro-modules": ">=0.29.1",
-    "expo": ">=48.0.0"
+    "expo": ">=48.0.0",
+    "expo-build-properties": "*"
   },
   "peerDependenciesMeta": {
     "expo": {
+      "optional": true
+    },
+    "expo-build-properties": {
       "optional": true
     }
   },
