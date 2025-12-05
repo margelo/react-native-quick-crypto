@@ -264,7 +264,7 @@ These algorithms provide quantum-resistant cryptography.
   * 🚧 `subtle.importKey(format, keyData, algorithm, extractable, keyUsages)`
   * ✅ `subtle.sign(algorithm, key, data)`
   * ✅ `subtle.unwrapKey(format, wrappedKey, unwrappingKey, unwrapAlgo, unwrappedKeyAlgo, extractable, keyUsages)`
-  * 🚧 `subtle.verify(algorithm, key, signature, data)`
+  * ✅ `subtle.verify(algorithm, key, signature, data)`
   * ✅ `subtle.wrapKey(format, key, wrappingKey, wrapAlgo)`
 
 ## `subtle.decrypt`

@@ -187,4 +187,6 @@ tsconfig.tsbuildinfo
 # development stuffs
 *scratch*
 
+# agents
+.claude/settings.local.json
 .agent/
