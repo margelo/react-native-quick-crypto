@@ -6,6 +6,15 @@ This document attempts to describe the implementation status of Crypto APIs/Inte
 * ` ` - not implemented in Node
 * ❌ - implemented in Node, not RNQC
 * ✅ - implemented in Node and RNQC
+* 🚧 - work in progress
+
+## Post-Quantum Cryptography (PQC)
+
+- **ML-DSA** (Module Lattice Digital Signature Algorithm, FIPS 204) - ML-DSA-44, ML-DSA-65, ML-DSA-87
+- **ML-KEM** (Module Lattice Key Encapsulation Mechanism, FIPS 203) - ML-KEM-512, ML-KEM-768, ML-KEM-1024
+
+These algorithms provide quantum-resistant cryptography.
+
 
 # `Crypto`
 
