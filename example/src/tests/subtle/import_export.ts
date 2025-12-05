@@ -1483,11 +1483,6 @@ async function testImportSpki(
   expect(key.extractable).to.equal(extractable);
   expect(key.usages).to.deep.equal(publicUsages);
   expect(key.algorithm.name).to.equal(name);
-  console.log('[RSA TEST DEBUG]', {
-    modulusLength: key.algorithm.modulusLength,
-    expected: parseInt(size, 10),
-    algorithm: JSON.stringify(key.algorithm),
-  });
   expect(key.algorithm.modulusLength).to.equal(parseInt(size, 10));
   expect(key.algorithm.publicExponent).to.deep.equal(new Uint8Array([1, 0, 1]));
   expect((key.algorithm.hash as { name: string }).name).to.equal(hash);

@@ -380,23 +380,46 @@ async function aesKwCipher(
   key: CryptoKey,
   data: ArrayBuffer,
 ): Promise<ArrayBuffer> {
+  const isWrap = mode === CipherOrWrapMode.kWebCryptoCipherEncrypt;
+
+  // AES-KW requires input to be a multiple of 8 bytes (64 bits)
+  if (data.byteLength % 8 !== 0) {
+    throw lazyDOMException(
+      `AES-KW input length must be a multiple of 8 bytes, got ${data.byteLength}`,
+      'OperationError',
+    );
+  }
+
+  // AES-KW requires at least 16 bytes of input (128 bits)
+  if (isWrap && data.byteLength < 16) {
+    throw lazyDOMException(
+      `AES-KW input must be at least 16 bytes, got ${data.byteLength}`,
+      'OperationError',
+    );
+  }
+
   // Get cipher type based on key length
   const keyLength = (key.algorithm as { length: number }).length;
-  const isWrap = mode === CipherOrWrapMode.kWebCryptoCipherEncrypt;
-  const cipherType = isWrap
-    ? `id-aes${keyLength}-wrap`
-    : `id-aes${keyLength}-wrap`;
+  // Use aes*-wrap for both operations (matching Node.js)
+  const cipherType = `aes${keyLength}-wrap`;
 
-  // AES-KW uses the same cipher for both wrap and unwrap,
-  // but Node.js distinguishes with different cipher names
+  // Export key material
+  const exportedKey = key.keyObject.export();
+  const cipherKey = bufferLikeToArrayBuffer(exportedKey);
+
+  // AES-KW uses a default IV as specified in RFC 3394
+  const defaultWrapIV = new Uint8Array([
+    0xa6, 0xa6, 0xa6, 0xa6, 0xa6, 0xa6, 0xa6, 0xa6,
+  ]);
+
   const factory =
     NitroModules.createHybridObject<CipherFactory>('CipherFactory');
 
   const cipher = factory.createCipher({
     isCipher: isWrap,
     cipherType,
-    cipherKey: bufferLikeToArrayBuffer(key.keyObject.export()),
-    iv: new ArrayBuffer(0), // AES-KW doesn't use IV
+    cipherKey,
+    iv: defaultWrapIV.buffer, // RFC 3394 default IV for AES-KW
   });
 
   // Process data
@@ -1625,7 +1648,20 @@ export class Subtle {
     if (format === 'jwk') {
       const jwkString = JSON.stringify(exported);
       const buffer = SBuffer.from(jwkString, 'utf8');
-      keyData = bufferLikeToArrayBuffer(buffer);
+
+      // For AES-KW, pad to multiple of 8 bytes (accounting for null terminator)
+      if (wrapAlgorithm.name === 'AES-KW') {
+        const length = buffer.length;
+        // Add 1 for null terminator, then pad to multiple of 8
+        const paddedLength = Math.ceil((length + 1) / 8) * 8;
+        const paddedBuffer = SBuffer.alloc(paddedLength);
+        buffer.copy(paddedBuffer);
+        // Null terminator for JSON string (remaining bytes are already zeros from alloc)
+        paddedBuffer.writeUInt8(0, length);
+        keyData = bufferLikeToArrayBuffer(paddedBuffer);
+      } else {
+        keyData = bufferLikeToArrayBuffer(buffer);
+      }
     } else {
       keyData = exported as ArrayBuffer;
     }
@@ -1670,7 +1706,20 @@ export class Subtle {
     let keyData: BufferLike | JWK;
     if (format === 'jwk') {
       const buffer = SBuffer.from(decrypted);
-      const jwkString = buffer.toString('utf8');
+      // For AES-KW, the data may be padded - find the null terminator
+      let jwkString: string;
+      if (unwrapAlgorithm.name === 'AES-KW') {
+        // Find the null terminator (if present) to get the original string
+        const nullIndex = buffer.indexOf(0);
+        if (nullIndex !== -1) {
+          jwkString = buffer.toString('utf8', 0, nullIndex);
+        } else {
+          // No null terminator, try to parse the whole buffer
+          jwkString = buffer.toString('utf8').trim();
+        }
+      } else {
+        jwkString = buffer.toString('utf8');
+      }
       keyData = JSON.parse(jwkString) as JWK;
     } else {
       keyData = decrypted;
