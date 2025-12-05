@@ -74,7 +74,6 @@
   "dependencies": {
     "@craftzdog/react-native-buffer": "6.1.0",
     "events": "3.3.0",
-    "expo-build-properties": "0.14.6",
     "react-native-quick-base64": "2.2.2",
     "readable-stream": "4.5.2",
     "safe-buffer": "^5.2.1",
@@ -96,10 +95,14 @@
     "react": "*",
     "react-native": "*",
     "react-native-nitro-modules": ">=0.29.1",
-    "expo": ">=48.0.0"
+    "expo": ">=48.0.0",
+    "expo-build-properties": "*"
   },
   "peerDependenciesMeta": {
     "expo": {
+      "optional": true
+    },
+    "expo-build-properties": {
       "optional": true
     }
   },
