@@ -297,8 +297,9 @@ void collect_ciphers(EVP_CIPHER* cipher, void* arg) {
     if (name_str == "NULL" || name_str.find("CTS") != std::string::npos ||
         name_str.find("SIV") != std::string::npos ||  // Covers -SIV and -GCM-SIV
         name_str.find("WRAP") != std::string::npos || // Covers -WRAP-INV and -WRAP-PAD-INV
-        name_str.find("SM4-") != std::string::npos) {
-      return; // Skip adding this cipher
+        name_str.find("SM4-") != std::string::npos ||
+        name_str.find("-ETM") != std::string::npos) { // TLS-internal ciphers, not for general use
+      return;                                         // Skip adding this cipher
     }
 
     // If not filtered out, add it to the list
