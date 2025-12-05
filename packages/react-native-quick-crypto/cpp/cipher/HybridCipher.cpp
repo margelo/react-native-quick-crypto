@@ -86,6 +86,14 @@ void HybridCipher::init(const std::shared_ptr<ArrayBuffer> cipher_key, const std
     ctx = nullptr;
     throw std::runtime_error("HybridCipher: Failed to set key/IV: " + std::string(err_buf));
   }
+
+  // For AES-KW (wrap ciphers), set the WRAP_ALLOW flag and disable padding
+  std::string cipher_name(cipher_type);
+  if (cipher_name.find("-wrap") != std::string::npos) {
+    // This flag is required for AES-KW in OpenSSL 3.x
+    EVP_CIPHER_CTX_set_flags(ctx, EVP_CIPHER_CTX_FLAG_WRAP_ALLOW);
+    EVP_CIPHER_CTX_set_padding(ctx, 0);
+  }
 }
 
 std::shared_ptr<ArrayBuffer> HybridCipher::update(const std::shared_ptr<ArrayBuffer>& data) {
@@ -100,7 +108,15 @@ std::shared_ptr<ArrayBuffer> HybridCipher::update(const std::shared_ptr<ArrayBuf
   uint8_t* out = new uint8_t[out_len];
   // Perform the cipher update operation. The real size of the output is
   // returned in out_len
-  EVP_CipherUpdate(ctx, out, &out_len, native_data->data(), in_len);
+  int ret = EVP_CipherUpdate(ctx, out, &out_len, native_data->data(), in_len);
+
+  if (!ret) {
+    unsigned long err = ERR_get_error();
+    char err_buf[256];
+    ERR_error_string_n(err, err_buf, sizeof(err_buf));
+    delete[] out;
+    throw std::runtime_error("Cipher update failed: " + std::string(err_buf));
+  }
 
   // Create and return a new buffer of exact size needed
   return std::make_shared<NativeArrayBuffer>(out, out_len, [=]() { delete[] out; });

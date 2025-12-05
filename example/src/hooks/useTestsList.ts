@@ -19,6 +19,7 @@ import '../tests/keys/public_cipher';
 import '../tests/keys/sign_verify_streaming';
 import '../tests/pbkdf2/pbkdf2_tests';
 import '../tests/random/random_tests';
+import '../tests/subtle/x25519_x448';
 import '../tests/subtle/deriveBits';
 import '../tests/subtle/derive_key';
 import '../tests/subtle/digest';
@@ -28,7 +29,6 @@ import '../tests/subtle/import_export';
 import '../tests/subtle/jwk_rfc7517_tests';
 import '../tests/subtle/sign_verify';
 import '../tests/subtle/wrap_unwrap';
-import '../tests/subtle/x25519_x448';
 
 export const useTestsList = (): [
   TestSuites,
