@@ -42,6 +42,7 @@ import { getRandomValues } from './random';
 import { createHmac } from './hmac';
 import { createSign, createVerify } from './keys/signVerify';
 import { ed_generateKeyPairWebCrypto, Ed } from './ed';
+import { mldsa_generateKeyPairWebCrypto, type MlDsaVariant } from './mldsa';
 // import { pbkdf2DeriveBits } from './pbkdf2';
 // import { aesCipher, aesGenerateKey, aesImportKey, getAlgorithmName } from './aes';
 // import { rsaCipher, rsaExportKey, rsaImportKey, rsaKeyGenerate } from './rsa';
@@ -782,6 +783,53 @@ function edImportKey(
   return new CryptoKey(keyObject, { name }, keyUsages, extractable);
 }
 
+function mldsaImportKey(
+  format: ImportFormat,
+  data: BufferLike,
+  algorithm: SubtleAlgorithm,
+  extractable: boolean,
+  keyUsages: KeyUsage[],
+): CryptoKey {
+  const { name } = algorithm;
+
+  // Validate usages
+  if (hasAnyNotIn(keyUsages, ['sign', 'verify'])) {
+    throw lazyDOMException(
+      `Unsupported key usage for ${name} key`,
+      'SyntaxError',
+    );
+  }
+
+  let keyObject: KeyObject;
+
+  if (format === 'spki') {
+    // Import public key
+    const keyData = bufferLikeToArrayBuffer(data);
+    keyObject = KeyObject.createKeyObject(
+      'public',
+      keyData,
+      KFormatType.DER,
+      KeyEncoding.SPKI,
+    );
+  } else if (format === 'pkcs8') {
+    // Import private key
+    const keyData = bufferLikeToArrayBuffer(data);
+    keyObject = KeyObject.createKeyObject(
+      'private',
+      keyData,
+      KFormatType.DER,
+      KeyEncoding.PKCS8,
+    );
+  } else {
+    throw lazyDOMException(
+      `Unsupported format for ${name} import: ${format}`,
+      'NotSupportedError',
+    );
+  }
+
+  return new CryptoKey(keyObject, { name }, keyUsages, extractable);
+}
+
 const exportKeySpki = async (
   key: CryptoKey,
 ): Promise<ArrayBuffer | unknown> => {
@@ -807,6 +855,18 @@ const exportKeySpki = async (
     case 'Ed448':
       if (key.type === 'public') {
         // Export Ed key in SPKI DER format
+        return bufferLikeToArrayBuffer(
+          key.keyObject.handle.exportKey(KFormatType.DER, KeyEncoding.SPKI),
+        );
+      }
+      break;
+    case 'ML-DSA-44':
+    // Fall through
+    case 'ML-DSA-65':
+    // Fall through
+    case 'ML-DSA-87':
+      if (key.type === 'public') {
+        // Export ML-DSA key in SPKI DER format
         return bufferLikeToArrayBuffer(
           key.keyObject.handle.exportKey(KFormatType.DER, KeyEncoding.SPKI),
         );
@@ -844,6 +904,18 @@ const exportKeyPkcs8 = async (
     case 'Ed448':
       if (key.type === 'private') {
         // Export Ed key in PKCS8 DER format
+        return bufferLikeToArrayBuffer(
+          key.keyObject.handle.exportKey(KFormatType.DER, KeyEncoding.PKCS8),
+        );
+      }
+      break;
+    case 'ML-DSA-44':
+    // Fall through
+    case 'ML-DSA-65':
+    // Fall through
+    case 'ML-DSA-87':
+      if (key.type === 'private') {
+        // Export ML-DSA key in PKCS8 DER format
         return bufferLikeToArrayBuffer(
           key.keyObject.handle.exportKey(KFormatType.DER, KeyEncoding.PKCS8),
         );
@@ -1121,6 +1193,36 @@ function edSignVerify(
   }
 }
 
+function mldsaSignVerify(
+  key: CryptoKey,
+  data: BufferLike,
+  signature?: BufferLike,
+): ArrayBuffer | boolean {
+  const isSign = signature === undefined;
+  const expectedKeyType = isSign ? 'private' : 'public';
+
+  if (key.type !== expectedKeyType) {
+    throw lazyDOMException(
+      `Key must be a ${expectedKeyType} key`,
+      'InvalidAccessError',
+    );
+  }
+
+  const dataBuffer = bufferLikeToArrayBuffer(data);
+
+  if (isSign) {
+    const signer = createSign('');
+    signer.update(dataBuffer);
+    const sig = signer.sign({ key: key });
+    return sig.buffer.slice(sig.byteOffset, sig.byteOffset + sig.byteLength);
+  } else {
+    const signatureBuffer = bufferLikeToArrayBuffer(signature!);
+    const verifier = createVerify('');
+    verifier.update(dataBuffer);
+    return verifier.verify({ key: key }, signatureBuffer);
+  }
+}
+
 const signVerify = (
   algorithm: SubtleAlgorithm,
   key: CryptoKey,
@@ -1149,6 +1251,10 @@ const signVerify = (
     case 'Ed25519':
     case 'Ed448':
       return edSignVerify(key, data, signature);
+    case 'ML-DSA-44':
+    case 'ML-DSA-65':
+    case 'ML-DSA-87':
+      return mldsaSignVerify(key, data, signature);
   }
   throw lazyDOMException(
     `Unrecognized algorithm name '${algorithm.name}' for '${usage}'`,
@@ -1318,6 +1424,18 @@ export class Subtle {
         );
         checkCryptoKeyPairUsages(result as CryptoKeyPair);
         break;
+      case 'ML-DSA-44':
+      // Fall through
+      case 'ML-DSA-65':
+      // Fall through
+      case 'ML-DSA-87':
+        result = await mldsa_generateKeyPairWebCrypto(
+          algorithm.name as MlDsaVariant,
+          extractable,
+          keyUsages,
+        );
+        checkCryptoKeyPairUsages(result as CryptoKeyPair);
+        break;
       default:
         throw new Error(
           `'subtle.generateKey()' is not implemented for ${algorithm.name}.
@@ -1399,6 +1517,19 @@ export class Subtle {
       // Fall through
       case 'Ed448':
         result = edImportKey(
+          format,
+          data as BufferLike,
+          normalizedAlgorithm,
+          extractable,
+          keyUsages,
+        );
+        break;
+      case 'ML-DSA-44':
+      // Fall through
+      case 'ML-DSA-65':
+      // Fall through
+      case 'ML-DSA-87':
+        result = mldsaImportKey(
           format,
           data as BufferLike,
           normalizedAlgorithm,

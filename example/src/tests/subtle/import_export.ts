@@ -2056,3 +2056,134 @@ test(SUITE, 'RSASSA-PKCS1-v1_5 jwk', async () => {
 //     );
 //   }
 // }
+
+// --- ML-DSA Import/Export Tests ---
+
+type MlDsaVariant = 'ML-DSA-44' | 'ML-DSA-65' | 'ML-DSA-87';
+const MLDSA_VARIANTS: MlDsaVariant[] = ['ML-DSA-44', 'ML-DSA-65', 'ML-DSA-87'];
+
+for (const variant of MLDSA_VARIANTS) {
+  test(SUITE, `${variant} spki export/import`, async () => {
+    const generated = await subtle.generateKey({ name: variant }, true, [
+      'sign',
+      'verify',
+    ]);
+    const { publicKey } = generated as CryptoKeyPair;
+
+    const exported = await subtle.exportKey('spki', publicKey as CryptoKey);
+    expect(exported).to.be.instanceOf(ArrayBuffer);
+    expect((exported as ArrayBuffer).byteLength).to.be.greaterThan(0);
+
+    const imported = await subtle.importKey(
+      'spki',
+      exported,
+      { name: variant },
+      true,
+      ['verify'],
+    );
+    expect(imported.type).to.equal('public');
+    expect(imported.algorithm.name).to.equal(variant);
+    expect(imported.usages).to.deep.equal(['verify']);
+    expect(imported.extractable).to.equal(true);
+  });
+
+  test(SUITE, `${variant} pkcs8 export/import`, async () => {
+    const generated = await subtle.generateKey({ name: variant }, true, [
+      'sign',
+      'verify',
+    ]);
+    const { privateKey } = generated as CryptoKeyPair;
+
+    const exported = await subtle.exportKey('pkcs8', privateKey as CryptoKey);
+    expect(exported).to.be.instanceOf(ArrayBuffer);
+    expect((exported as ArrayBuffer).byteLength).to.be.greaterThan(0);
+
+    const imported = await subtle.importKey(
+      'pkcs8',
+      exported,
+      { name: variant },
+      true,
+      ['sign'],
+    );
+    expect(imported.type).to.equal('private');
+    expect(imported.algorithm.name).to.equal(variant);
+    expect(imported.usages).to.deep.equal(['sign']);
+    expect(imported.extractable).to.equal(true);
+  });
+
+  test(SUITE, `${variant} round-trip with sign/verify`, async () => {
+    const testData = new TextEncoder().encode('ML-DSA import/export test');
+
+    const generated = await subtle.generateKey({ name: variant }, true, [
+      'sign',
+      'verify',
+    ]);
+    const { publicKey, privateKey } = generated as CryptoKeyPair;
+
+    // Export keys
+    const exportedPublic = await subtle.exportKey(
+      'spki',
+      publicKey as CryptoKey,
+    );
+    const exportedPrivate = await subtle.exportKey(
+      'pkcs8',
+      privateKey as CryptoKey,
+    );
+
+    // Import keys
+    const importedPublic = await subtle.importKey(
+      'spki',
+      exportedPublic,
+      { name: variant },
+      true,
+      ['verify'],
+    );
+    const importedPrivate = await subtle.importKey(
+      'pkcs8',
+      exportedPrivate,
+      { name: variant },
+      true,
+      ['sign'],
+    );
+
+    // Sign with imported private key
+    const signature = await subtle.sign(
+      { name: variant },
+      importedPrivate,
+      testData,
+    );
+
+    // Verify with imported public key
+    const isValid = await subtle.verify(
+      { name: variant },
+      importedPublic,
+      signature,
+      testData,
+    );
+    expect(isValid).to.equal(true);
+
+    // Also verify with original public key
+    const isValidOriginal = await subtle.verify(
+      { name: variant },
+      publicKey as CryptoKey,
+      signature,
+      testData,
+    );
+    expect(isValidOriginal).to.equal(true);
+  });
+}
+
+// ML-DSA error handling tests
+test(SUITE, 'ML-DSA-44 importKey rejects invalid format', async () => {
+  await assertThrowsAsync(
+    async () =>
+      await subtle.importKey(
+        'raw',
+        new Uint8Array(32),
+        { name: 'ML-DSA-44' },
+        true,
+        ['verify'],
+      ),
+    'NotSupportedError',
+  );
+});

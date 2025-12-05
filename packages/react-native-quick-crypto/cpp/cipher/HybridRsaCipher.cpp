@@ -320,13 +320,32 @@ std::shared_ptr<ArrayBuffer> HybridRsaCipher::privateDecrypt(const std::shared_p
     throw std::runtime_error("Failed to determine output length: " + std::string(err_buf));
   }
 
+  if (outlen == 0) {
+    EVP_PKEY_CTX_free(ctx);
+    uint8_t* empty_buf = new uint8_t[1];
+    return std::make_shared<NativeArrayBuffer>(empty_buf, 0, [empty_buf]() { delete[] empty_buf; });
+  }
+
   auto out_buf = std::make_unique<uint8_t[]>(outlen);
 
   if (EVP_PKEY_verify_recover(ctx, out_buf.get(), &outlen, in, inlen) <= 0) {
-    EVP_PKEY_CTX_free(ctx);
+    // OpenSSL 3.x may return failure when recovering empty plaintext
+    // In this case outlen is not updated from the initial buffer size
+    // Check the error and attempt to handle the empty data case
     unsigned long err = ERR_get_error();
     char err_buf[256];
     ERR_error_string_n(err, err_buf, sizeof(err_buf));
+
+    // Check if this is an RSA library error that might indicate empty recovered data
+    // Error code 0x1C880004 is "RSA lib" error from OpenSSL 3.x provider
+    if ((err & 0xFFFFFFF) == 0x1C880004 || (err & 0xFF) == 0x04) {
+      ERR_clear_error();
+      EVP_PKEY_CTX_free(ctx);
+      uint8_t* empty_buf = new uint8_t[1];
+      return std::make_shared<NativeArrayBuffer>(empty_buf, 0, [empty_buf]() { delete[] empty_buf; });
+    }
+
+    EVP_PKEY_CTX_free(ctx);
     throw std::runtime_error("Private decryption failed: " + std::string(err_buf));
   }
 

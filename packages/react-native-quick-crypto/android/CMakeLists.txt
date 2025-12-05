@@ -40,6 +40,7 @@ add_library(
   ../cpp/hmac/HybridHmac.cpp
   ../cpp/keys/HybridKeyObjectHandle.cpp
   ../cpp/keys/KeyObjectData.cpp
+  ../cpp/mldsa/HybridMlDsaKeyPair.cpp
   ../cpp/pbkdf2/HybridPbkdf2.cpp
   ../cpp/random/HybridRandom.cpp
   ../cpp/rsa/HybridRsaKeyPair.cpp
@@ -47,7 +48,7 @@ add_library(
   ../cpp/sign/HybridVerifyHandle.cpp
   ${BLAKE3_SOURCES}
   ../deps/fastpbkdf2/fastpbkdf2.c
-  ../deps/ncrypto/ncrypto.cc
+  ../deps/ncrypto/src/ncrypto.cpp
 )
 
 # add Nitrogen specs
@@ -63,6 +64,7 @@ include_directories(
   "../cpp/hash"
   "../cpp/hmac"
   "../cpp/keys"
+  "../cpp/mldsa"
   "../cpp/pbkdf2"
   "../cpp/random"
   "../cpp/rsa"
@@ -70,7 +72,7 @@ include_directories(
   "../cpp/utils"
   "../deps/blake3/c"
   "../deps/fastpbkdf2"
-  "../deps/ncrypto"
+  "../deps/ncrypto/include"
 )
 
 # Third party libraries (Prefabs)

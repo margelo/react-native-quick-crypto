@@ -38,6 +38,9 @@ namespace margelo::nitro::crypto {
     ED448      SWIFT_NAME(ed448) = 6,
     X25519      SWIFT_NAME(x25519) = 7,
     X448      SWIFT_NAME(x448) = 8,
+    ML_DSA_44      SWIFT_NAME(mlDsa44) = 9,
+    ML_DSA_65      SWIFT_NAME(mlDsa65) = 10,
+    ML_DSA_87      SWIFT_NAME(mlDsa87) = 11,
   } CLOSED_ENUM;
 
 } // namespace margelo::nitro::crypto
@@ -59,6 +62,9 @@ namespace margelo::nitro {
         case hashString("ed448"): return margelo::nitro::crypto::AsymmetricKeyType::ED448;
         case hashString("x25519"): return margelo::nitro::crypto::AsymmetricKeyType::X25519;
         case hashString("x448"): return margelo::nitro::crypto::AsymmetricKeyType::X448;
+        case hashString("ml-dsa-44"): return margelo::nitro::crypto::AsymmetricKeyType::ML_DSA_44;
+        case hashString("ml-dsa-65"): return margelo::nitro::crypto::AsymmetricKeyType::ML_DSA_65;
+        case hashString("ml-dsa-87"): return margelo::nitro::crypto::AsymmetricKeyType::ML_DSA_87;
         default: [[unlikely]]
           throw std::invalid_argument("Cannot convert \"" + unionValue + "\" to enum AsymmetricKeyType - invalid value!");
       }
@@ -74,6 +80,9 @@ namespace margelo::nitro {
         case margelo::nitro::crypto::AsymmetricKeyType::ED448: return JSIConverter<std::string>::toJSI(runtime, "ed448");
         case margelo::nitro::crypto::AsymmetricKeyType::X25519: return JSIConverter<std::string>::toJSI(runtime, "x25519");
         case margelo::nitro::crypto::AsymmetricKeyType::X448: return JSIConverter<std::string>::toJSI(runtime, "x448");
+        case margelo::nitro::crypto::AsymmetricKeyType::ML_DSA_44: return JSIConverter<std::string>::toJSI(runtime, "ml-dsa-44");
+        case margelo::nitro::crypto::AsymmetricKeyType::ML_DSA_65: return JSIConverter<std::string>::toJSI(runtime, "ml-dsa-65");
+        case margelo::nitro::crypto::AsymmetricKeyType::ML_DSA_87: return JSIConverter<std::string>::toJSI(runtime, "ml-dsa-87");
         default: [[unlikely]]
           throw std::invalid_argument("Cannot convert AsymmetricKeyType to JS - invalid value: "
                                     + std::to_string(static_cast<int>(arg)) + "!");
@@ -94,6 +103,9 @@ namespace margelo::nitro {
         case hashString("ed448"):
         case hashString("x25519"):
         case hashString("x448"):
+        case hashString("ml-dsa-44"):
+        case hashString("ml-dsa-65"):
+        case hashString("ml-dsa-87"):
           return true;
         default:
           return false;

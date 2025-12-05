@@ -29,6 +29,7 @@
 #include "HybridRsaKeyPair.hpp"
 #include "HybridSignHandle.hpp"
 #include "HybridVerifyHandle.hpp"
+#include "HybridMlDsaKeyPair.hpp"
 
 namespace margelo::nitro::crypto {
 
@@ -166,6 +167,15 @@ int initialize(JavaVM* vm) {
                       "The HybridObject \"HybridVerifyHandle\" is not default-constructible! "
                       "Create a public constructor that takes zero arguments to be able to autolink this HybridObject.");
         return std::make_shared<HybridVerifyHandle>();
+      }
+    );
+    HybridObjectRegistry::registerHybridObjectConstructor(
+      "MlDsaKeyPair",
+      []() -> std::shared_ptr<HybridObject> {
+        static_assert(std::is_default_constructible_v<HybridMlDsaKeyPair>,
+                      "The HybridObject \"HybridMlDsaKeyPair\" is not default-constructible! "
+                      "Create a public constructor that takes zero arguments to be able to autolink this HybridObject.");
+        return std::make_shared<HybridMlDsaKeyPair>();
       }
     );
   });

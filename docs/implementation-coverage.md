@@ -1,11 +1,17 @@
 # Implementation Coverage - NodeJS
 This document attempts to describe the implementation status of Crypto APIs/Interfaces from Node.js in the `react-native-quick-crypto` library.
 
-> Note: This is the status for version 1.x and higher. For version `0.x` see [this document](https://github.com/margelo/react-native-quick-crypto/blob/0.x/docs/implementation-coverage.md) and the [0.x branch](https://github.com/margelo/react-native-quick-crypto/tree/0.x).
-
 * ` ` - not implemented in Node
 * ❌ - implemented in Node, not RNQC
 * ✅ - implemented in Node and RNQC
+* 🚧 - work in progress
+
+## Post-Quantum Cryptography (PQC)
+
+- **ML-DSA** (Module Lattice Digital Signature Algorithm, FIPS 204) - ML-DSA-44, ML-DSA-65, ML-DSA-87
+- **ML-KEM** (Module Lattice Key Encapsulation Mechanism, FIPS 203) - ML-KEM-512, ML-KEM-768, ML-KEM-1024
+
+These algorithms provide quantum-resistant cryptography.
 
 # `Crypto`
 
@@ -147,13 +153,11 @@ This document attempts to describe the implementation status of Crypto APIs/Inte
   * ❌ `crypto.secureHeapUsed()`
   * ❌ `crypto.setEngine(engine[, flags])`
   * ❌ `crypto.setFips(bool)`
-  * 🚧 `crypto.sign(algorithm, data, key[, callback])`
+  * ✅ `crypto.sign(algorithm, data, key[, callback])`
   * 🚧 `crypto.subtle` (see below)
   * ❌ `crypto.timingSafeEqual(a, b)`
-  * 🚧 `crypto.verify(algorithm, data, key, signature[, callback])`
-  * ❌ `crypto.webcrypto` (see below)
-
-🚧 Details below still a work in progress 🚧
+  * ✅ `crypto.verify(algorithm, data, key, signature[, callback])`
+  * 🚧 `crypto.webcrypto` (see below)
 
 ## `crypto.diffieHellman`
 | type       | Status |
@@ -204,22 +208,22 @@ This document attempts to describe the implementation status of Crypto APIs/Inte
 ## `crypto.sign`
 | Algorithm           | Status |
 | ---------           | :----: |
-| `RSASSA-PKCS1-v1_5` | ❌ |
-| `RSA-PSS`           | ❌ |
-| `ECDSA`             | ❌ |
+| `RSASSA-PKCS1-v1_5` | ✅ |
+| `RSA-PSS`           | ✅ |
+| `ECDSA`             | ✅ |
 | `Ed25519`           | ✅ |
 | `Ed448`             | ✅ |
-| `HMAC`              | ❌ |
+| `HMAC`              | ✅ |
 
 ## `crypto.verify`
 | Algorithm           | Status |
 | ---------           | :----: |
-| `RSASSA-PKCS1-v1_5` | ❌ |
-| `RSA-PSS`           | ❌ |
-| `ECDSA`             | ❌ |
+| `RSASSA-PKCS1-v1_5` | ✅ |
+| `RSA-PSS`           | ✅ |
+| `ECDSA`             | ✅ |
 | `Ed25519`           | ✅ |
 | `Ed448`             | ✅ |
-| `HMAC`              | ❌ |
+| `HMAC`              | ✅ |
 
 # `WebCrypto`
 
@@ -240,7 +244,7 @@ This document attempts to describe the implementation status of Crypto APIs/Inte
 
 # `SubtleCrypto`
 
-* 🚧 Class: `SubtleCrypto`
+* ❌ Class: `SubtleCrypto`
   * ❌ static `supports(operation, algorithm[, lengthOrAdditionalAlgorithm])`
   * ❌ `subtle.decapsulateBits(decapsulationAlgorithm, decapsulationKey, ciphertext)`
   * ❌ `subtle.decapsulateKey(decapsulationAlgorithm, decapsulationKey, ciphertext, sharedKeyAlgorithm, extractable, usages)`
@@ -255,9 +259,9 @@ This document attempts to describe the implementation status of Crypto APIs/Inte
   * 🚧 `subtle.generateKey(algorithm, extractable, keyUsages)`
   * ❌ `subtle.getPublicKey(key, keyUsages)`
   * 🚧 `subtle.importKey(format, keyData, algorithm, extractable, keyUsages)`
-  * 🚧 `subtle.sign(algorithm, key, data)`
+  * ✅ `subtle.sign(algorithm, key, data)`
   * ❌ `subtle.unwrapKey(format, wrappedKey, unwrappingKey, unwrapAlgo, unwrappedKeyAlgo, extractable, keyUsages)`
-  * 🚧 `subtle.verify(algorithm, key, signature, data)`
+  * ✅ `subtle.verify(algorithm, key, signature, data)`
   * ❌ `subtle.wrapKey(format, key, wrappingKey, wrapAlgo)`
 
 ## `subtle.decrypt`
@@ -311,27 +315,27 @@ This document attempts to describe the implementation status of Crypto APIs/Inte
 
 ## `subtle.exportKey`
 | Key Type            | `spki` | `pkcs8` | `jwk` | `raw` | `raw-secret` | `raw-public` | `raw-seed` |
-| ------------------- | :----: | :-----: | :---: | :---: | :---: | :---: | :---: |
-| `AES-CBC`           |   |   | ✅ | ✅ | ✅ |   |   |
-| `AES-CTR`           |   |   | ✅ | ✅ | ✅ |   |   |
-| `AES-GCM`           |   |   | ✅ | ✅ | ✅ |   |   |
-| `AES-KW`            |   |   | ✅ | ✅ | ✅ |   |   |
-| `AES-OCB`           |   |   | ❌ |   | ❌ |   |   |
-| `ChaCha20-Poly1305` |   |   | ❌ |   | ❌ |   |   |
-| `ECDH`              | ✅ | ✅ | ✅ | ✅ |   | ✅ |   |
-| `ECDSA`             | ✅ | ✅ | ✅ | ✅ |   | ✅ |   |
-| `Ed25519`           | ❌ | ❌ | ❌ | ❌ |   | ❌ |   |
-| `Ed448`             | ❌ | ❌ | ❌ | ❌ |   | ❌ |   |
-| `HMAC`              |   |   | ✅ | ✅ | ✅ |   |   |
-| `ML-DSA-44`         | ❌ | ❌ | ❌ |   |   | ❌ | ❌ |
-| `ML-DSA-65`         | ❌ | ❌ | ❌ |   |   | ❌ | ❌ |
-| `ML-DSA-87`         | ❌ | ❌ | ❌ |   |   | ❌ | ❌ |
-| `ML-KEM-512`        | ❌ | ❌ |   |   |   | ❌ | ❌ |
-| `ML-KEM-768`        | ❌ | ❌ |   |   |   | ❌ | ❌ |
-| `ML-KEM-1024`       | ❌ | ❌ |   |   |   | ❌ | ❌ |
-| `RSA-OAEP`          | ✅ | ✅ | ✅ |   |   |   |   |
-| `RSA-PSS`           | ✅ | ✅ | ✅ |   |   |   |   |
-| `RSASSA-PKCS1-v1_5` | ✅ | ✅ | ✅ |   |   |   |   |
+| ------------------- | :----: | :-----: | :---: | :---: | :----------: | :----------: | :--------: |
+| `AES-CBC`           |        |         | ✅    | ✅    | ✅           |              |            |
+| `AES-CTR`           |        |         | ✅    | ✅    | ✅           |              |            |
+| `AES-GCM`           |        |         | ✅    | ✅    | ✅           |              |            |
+| `AES-KW`            |        |         | ✅    | ✅    | ✅           |              |            |
+| `AES-OCB`           |        |         | ❌    |       | ❌           |              |            |
+| `ChaCha20-Poly1305` |        |         | ❌    |       | ❌           |              |            |
+| `ECDH`              | ✅     | ✅      | ✅    | ✅    |              | ✅           |            |
+| `ECDSA`             | ✅     | ✅      | ✅    | ✅    |              | ✅           |            |
+| `Ed25519`           | ✅     | ✅      | ❌    | ❌    |              | ❌           |            |
+| `Ed448`             | ✅     | ✅      | ❌    | ❌    |              | ❌           |            |
+| `HMAC`              |        |         | ✅    | ✅    | ✅           |              |            |
+| `ML-DSA-44`         | ✅     | ✅      | ✅    |       |              | ✅           | ✅         |
+| `ML-DSA-65`         | ✅     | ✅      | ✅    |       |              | ✅           | ✅         |
+| `ML-DSA-87`         | ✅     | ✅      | ✅    |       |              | ✅           | ✅         |
+| `ML-KEM-512`        | ❌     | ❌      |       |       |              | ❌           | ❌         |
+| `ML-KEM-768`        | ❌     | ❌      |       |       |              | ❌           | ❌         |
+| `ML-KEM-1024`       | ❌     | ❌      |       |       |              | ❌           | ❌         |
+| `RSA-OAEP`          | ✅     | ✅      | ✅    |       |              |              |            |
+| `RSA-PSS`           | ✅     | ✅      | ✅    |       |              |              |            |
+| `RSASSA-PKCS1-v1_5` | ✅     | ✅      | ✅    |       |              |              |            |
 
 * ` ` - not implemented in Node
 * ❌ - implemented in Node, not RNQC
@@ -346,9 +350,9 @@ This document attempts to describe the implementation status of Crypto APIs/Inte
 | `ECDSA`             | ✅ |
 | `Ed25519`           | ✅ |
 | `Ed448`             | ✅ |
-| `ML-DSA-44`         | ❌ |
-| `ML-DSA-65`         | ❌ |
-| `ML-DSA-87`         | ❌ |
+| `ML-DSA-44`         | ✅ |
+| `ML-DSA-65`         | ✅ |
+| `ML-DSA-87`         | ✅ |
 | `ML-KEM-512`        | ❌ |
 | `ML-KEM-768`        | ❌ |
 | `ML-KEM-1024`       | ❌ |
@@ -367,48 +371,48 @@ This document attempts to describe the implementation status of Crypto APIs/Inte
 | `AES-KW`            | ❌ |
 | `AES-OCB`           | ❌ |
 | `ChaCha20-Poly1305` | ❌ |
-| `HMAC`              | ❌ |
+| `HMAC`              | ✅ |
 
 ## `subtle.importKey`
 | Key Type            | `spki` | `pkcs8` | `jwk` | `raw` | `raw-secret` | `raw-public` | `raw-seed` |
-| ------------------- | :---: | :---: | :---: | :---: | :---: | :---: | :---: |
-| `AES-CBC`           |   |   | ✅ | ✅ | ✅ |   |   |
-| `AES-CTR`           |   |   | ✅ | ✅ | ✅ |   |   |
-| `AES-GCM`           |   |   | ✅ | ✅ | ✅ |   |   |
-| `AES-KW`            |   |   | ✅ | ✅ | ✅ |   |   |
-| `AES-OCB`           |   |   | ❌ |  | ❌ |   |   |
-| `ChaCha20-Poly1305`  |   |   | ❌ |   | ❌ |   |   |
-| `ECDH`              | ✅ | ✅ | ✅ | ✅ |   | ✅ |   |
-| `ECDSA`             | ✅ | ✅ | ✅ | ✅ |   | ✅ |   |
-| `Ed25519`           | ❌ | ❌ | ❌ | ❌ |   | ❌ |   |
-| `Ed448`             | ❌ | ❌ | ❌ | ❌ |   | ❌ |   |
-| `HDKF`              |   |   |   | ❌ | ❌ |   |   |
-| `HMAC`              |   |   | ✅ | ✅ | ✅ |   |   |
-| `ML-DSA-44`         | ❌ | ❌ | ❌ |   |   | ❌ | ❌ |
-| `ML-DSA-65`         | ❌ | ❌ | ❌ |   |   | ❌ | ❌ |
-| `ML-DSA-87`         | ❌ | ❌ | ❌ |   |   | ❌ | ❌ |
-| `ML-KEM-512`        | ❌ | ❌ |   |   |   | ❌ | ❌ |
-| `ML-KEM-768`        | ❌ | ❌ |   |   |   | ❌ | ❌ |
-| `ML-KEM-1024`       | ❌ | ❌ |   |   |   | ❌ | ❌ |
-| `PBKDF2`            |   |   |   | ✅ | ✅ |   |   |
-| `RSA-OAEP`          | ✅ | ❌ | ✅ |   |   |   |   |
-| `RSA-PSS`           | ✅ | ❌ | ✅ |   |   |   |   |
-| `RSASSA-PKCS1-v1_5` | ✅ | ❌ | ✅ |   |   |   |   |
-| `X25519`            | ❌ | ❌ | ❌ | ❌ |   | ❌ |   |
-| `X448`              | ❌ | ❌ | ❌ | ❌ |   | ❌ |   |
+| ------------------- | :----: | :-----: | :---: | :---: | :----------: | :----------: | :--------: |
+| `AES-CBC`           |        |         | ✅    | ✅    | ✅           |              |            |
+| `AES-CTR`           |        |         | ✅    | ✅    | ✅           |              |            |
+| `AES-GCM`           |        |         | ✅    | ✅    | ✅           |              |            |
+| `AES-KW`            |        |         | ✅    | ✅    | ✅           |              |            |
+| `AES-OCB`           |        |         | ❌    |       | ❌           |              |            |
+| `ChaCha20-Poly1305` |        |         | ❌    |       | ❌           |              |            |
+| `ECDH`              | ✅     | ✅      | ✅    | ✅    |              | ✅           |            |
+| `ECDSA`             | ✅     | ✅      | ✅    | ✅    |              | ✅           |            |
+| `Ed25519`           | ✅     | ✅      | ❌    | ❌    |              | ❌           |            |
+| `Ed448`             | ✅     | ✅      | ❌    | ❌    |              | ❌           |            |
+| `HKDF`              |        |         |       | ❌    | ❌           |              |            |
+| `HMAC`              |        |         | ✅    | ✅    | ✅           |              |            |
+| `ML-DSA-44`         | ✅     | ✅      | ✅    |       |              | ✅           | ✅         |
+| `ML-DSA-65`         | ✅     | ✅      | ✅    |       |              | ✅           | ✅         |
+| `ML-DSA-87`         | ✅     | ✅      | ✅    |       |              | ✅           | ✅         |
+| `ML-KEM-512`        | ❌     | ❌      |       |       |              | ❌           | ❌         |
+| `ML-KEM-768`        | ❌     | ❌      |       |       |              | ❌           | ❌         |
+| `ML-KEM-1024`       | ❌     | ❌      |       |       |              | ❌           | ❌         |
+| `PBKDF2`            |        |         |       | ✅    | ✅           |              |            |
+| `RSA-OAEP`          | ✅     | ✅      | ✅    |       |              |              |            |
+| `RSA-PSS`           | ✅     | ✅      | ✅    |       |              |              |            |
+| `RSASSA-PKCS1-v1_5` | ✅     | ✅      | ✅    |       |              |              |            |
+| `X25519`            | ❌     | ❌      | ❌    | ❌    |              | ❌           |            |
+| `X448`              | ❌     | ❌      | ❌    | ❌    |              | ❌           |            |
 
 ## `subtle.sign`
 | Algorithm           | Status |
 | ---------           | :----: |
 | `ECDSA`             | ✅ |
-| `Ed25519`           | ❌ |
-| `Ed448`             | ❌ |
-| `HMAC`              | ❌ |
-| `ML-DSA-44`         | ❌ |
-| `ML-DSA-65`         | ❌ |
-| `ML-DSA-87`         | ❌ |
-| `RSA-PSS`           | ❌ |
-| `RSASSA-PKCS1-v1_5` | ❌ |
+| `Ed25519`           | ✅ |
+| `Ed448`             | ✅ |
+| `HMAC`              | ✅ |
+| `ML-DSA-44`         | ✅ |
+| `ML-DSA-65`         | ✅ |
+| `ML-DSA-87`         | ✅ |
+| `RSA-PSS`           | ✅ |
+| `RSASSA-PKCS1-v1_5` | ✅ |
 
 ## `subtle.unwrapKey`
 
@@ -453,14 +457,14 @@ This document attempts to describe the implementation status of Crypto APIs/Inte
 | Algorithm           | Status |
 | ---------           | :----: |
 | `ECDSA`             | ✅ |
-| `Ed25519`           | ❌ |
-| `Ed448`             | ❌ |
-| `HMAC`              | ❌ |
-| `ML-DSA-44`         | ❌ |
-| `ML-DSA-65`         | ❌ |
-| `ML-DSA-87`         | ❌ |
-| `RSA-PSS`           | ❌ |
-| `RSASSA-PKCS1-v1_5` | ❌ |
+| `Ed25519`           | ✅ |
+| `Ed448`             | ✅ |
+| `HMAC`              | ✅ |
+| `ML-DSA-44`         | ✅ |
+| `ML-DSA-65`         | ✅ |
+| `ML-DSA-87`         | ✅ |
+| `RSA-PSS`           | ✅ |
+| `RSASSA-PKCS1-v1_5` | ✅ |
 
 ## `subtle.wrapKey`
 
