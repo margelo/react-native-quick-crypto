@@ -72,13 +72,10 @@ target 'QuickCryptoExample' do
       unless existing_phase
         phase = app_target.new_shell_script_build_phase(embed_phase_name)
         phase.shell_script = <<~SCRIPT
-          # Embed SPM frameworks (OpenSSL, Clibsodium) from QuickCrypto into app bundle
-          # SPM builds frameworks to BUILT_PRODUCTS_DIR but doesn't embed them automatically
-
-          mkdir -p "${BUILT_PRODUCTS_DIR}/${FRAMEWORKS_FOLDER_PATH}"
-
-          # Embed OpenSSL.framework (always required for ML-DSA)
+          # Embed OpenSSL.framework from SPM build into app bundle
+          # SPM builds the framework to BUILT_PRODUCTS_DIR but doesn't embed it
           OPENSSL_FRAMEWORK="${BUILT_PRODUCTS_DIR}/OpenSSL.framework"
+
           if [ -d "$OPENSSL_FRAMEWORK" ]; then
             echo "Found OpenSSL.framework at $OPENSSL_FRAMEWORK"
             rsync -av --delete "$OPENSSL_FRAMEWORK" "${BUILT_PRODUCTS_DIR}/${FRAMEWORKS_FOLDER_PATH}/"
@@ -89,18 +86,6 @@ target 'QuickCryptoExample' do
             echo "OpenSSL.framework embedded successfully"
           else
             echo "warning: OpenSSL.framework not found at $OPENSSL_FRAMEWORK"
-          fi
-
-          # Embed Sodium.framework (optional, when SODIUM_ENABLED=1)
-          SODIUM_FRAMEWORK="${BUILT_PRODUCTS_DIR}/Sodium.framework"
-          if [ -d "$SODIUM_FRAMEWORK" ]; then
-            echo "Found Sodium.framework at $SODIUM_FRAMEWORK"
-            rsync -av --delete "$SODIUM_FRAMEWORK" "${BUILT_PRODUCTS_DIR}/${FRAMEWORKS_FOLDER_PATH}/"
-
-            if [ -n "${EXPANDED_CODE_SIGN_IDENTITY:-}" ] && [ "${CODE_SIGNING_REQUIRED:-}" != "NO" ]; then
-              /usr/bin/codesign --force --sign "${EXPANDED_CODE_SIGN_IDENTITY}" --preserve-metadata=identifier,entitlements "${BUILT_PRODUCTS_DIR}/${FRAMEWORKS_FOLDER_PATH}/Sodium.framework"
-            fi
-            echo "Sodium.framework embedded successfully"
           fi
         SCRIPT
 

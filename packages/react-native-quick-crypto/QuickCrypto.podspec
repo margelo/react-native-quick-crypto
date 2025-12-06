@@ -22,6 +22,27 @@ Pod::Spec.new do |s|
   sodium_enabled = ENV['SODIUM_ENABLED'] == '1'
   Pod::UI.puts("[QuickCrypto]  🧂 has libsodium #{sodium_enabled ? "enabled" : "disabled"}!")
 
+  if sodium_enabled
+    # Build libsodium from source for XSalsa20 cipher support
+    # CocoaPods packages are outdated (1.0.12) and SPM causes module conflicts
+    s.prepare_command = <<-CMD
+      set -e
+      mkdir -p ios
+      curl -L -o ios/libsodium.tar.gz https://download.libsodium.org/libsodium/releases/libsodium-1.0.20-stable.tar.gz
+      tar -xzf ios/libsodium.tar.gz -C ios
+      cd ios/libsodium-stable
+      ./configure --disable-shared --enable-static
+      make -j$(sysctl -n hw.ncpu)
+      cd ../../
+      rm -f ios/libsodium.tar.gz
+    CMD
+  else
+    s.prepare_command = <<-CMD
+      rm -rf ios/libsodium-stable
+      rm -f ios/libsodium.tar.gz
+    CMD
+  end
+
   base_source_files = [
     # implementation (Swift)
     "ios/**/*.{swift}",
@@ -70,6 +91,10 @@ Pod::Spec.new do |s|
     "deps/blake3/test_vectors/**/*",
   ]
 
+  if sodium_enabled
+    base_source_files += ["ios/libsodium-stable/src/libsodium/**/*.{h,c}"]
+  end
+
   s.source_files = base_source_files
 
   xcconfig = {
@@ -89,10 +114,18 @@ Pod::Spec.new do |s|
   ]
 
   if sodium_enabled
+    sodium_headers = [
+      "\"$(PODS_TARGET_SRCROOT)/ios/libsodium-stable/src/libsodium/include\"",
+      "\"$(PODS_TARGET_SRCROOT)/ios/libsodium-stable/src/libsodium/include/sodium\"",
+      "\"$(PODS_TARGET_SRCROOT)/ios/libsodium-stable\"",
+      "\"$(PODS_ROOT)/../../packages/react-native-quick-crypto/ios/libsodium-stable/src/libsodium/include\"",
+      "\"$(PODS_ROOT)/../../packages/react-native-quick-crypto/ios/libsodium-stable/src/libsodium/include/sodium\""
+    ]
+    xcconfig["HEADER_SEARCH_PATHS"] = (cpp_headers + sodium_headers).join(' ')
     xcconfig["GCC_PREPROCESSOR_DEFINITIONS"] = "$(inherited) FOLLY_NO_CONFIG FOLLY_CFG_NO_COROUTINES BLSALLOC_SODIUM=1"
+  else
+    xcconfig["HEADER_SEARCH_PATHS"] = cpp_headers.join(' ')
   end
-
-  xcconfig["HEADER_SEARCH_PATHS"] = cpp_headers.join(' ')
 
   s.pod_target_xcconfig = xcconfig
 
@@ -109,15 +142,6 @@ Pod::Spec.new do |s|
     requirement: {kind: 'upToNextMajorVersion', minimumVersion: '3.6.0'},
     products: ['OpenSSL']
   )
-
-  # libsodium via SPM for XSalsa20 cipher support (when SODIUM_ENABLED=1)
-  if sodium_enabled
-    spm_dependency(s,
-      url: 'https://github.com/jedisct1/swift-sodium.git',
-      requirement: {kind: 'upToNextMajorVersion', minimumVersion: '0.9.1'},
-      products: ['Sodium']
-    )
-  end
 
   install_modules_dependencies(s)
 end
