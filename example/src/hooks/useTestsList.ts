@@ -11,6 +11,7 @@ import '../tests/cfrg/x25519_tests';
 import '../tests/constants/constants_tests';
 import '../tests/hash/hash_tests';
 import '../tests/hmac/hmac_tests';
+import '../tests/hkdf/hkdf_tests';
 import '../tests/jose/jose';
 import '../tests/keys/create_keys';
 import '../tests/keys/generate_key';
@@ -40,9 +41,15 @@ export const useTestsList = (): [
 
   const toggle = useCallback(
     (description: string) => {
-      setSuites(suites => {
-        suites[description]!.value = !suites[description]!.value;
-        return suites;
+      setSuites(prevSuites => {
+        const newSuites = { ...prevSuites };
+        if (newSuites[description]) {
+          newSuites[description] = {
+            ...newSuites[description],
+            value: !newSuites[description].value,
+          };
+        }
+        return newSuites;
       });
     },
     [setSuites],

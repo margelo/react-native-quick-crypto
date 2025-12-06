@@ -49,6 +49,7 @@ import {
   Ed,
 } from './ed';
 import { mldsa_generateKeyPairWebCrypto, type MlDsaVariant } from './mldsa';
+import { hkdfDeriveBits, type HkdfAlgorithm } from './hkdf';
 // import { pbkdf2DeriveBits } from './pbkdf2';
 // import { aesCipher, aesGenerateKey, aesImportKey, getAlgorithmName } from './aes';
 // import { rsaCipher, rsaExportKey, rsaImportKey, rsaKeyGenerate } from './rsa';
@@ -1235,6 +1236,28 @@ const importGenericSecretKey = async (
   throw new Error(`Unable to import ${name} key with format ${format}`);
 };
 
+const hkdfImportKey = async (
+  format: ImportFormat,
+  keyData: BufferLike | BinaryLike,
+  algorithm: SubtleAlgorithm,
+  extractable: boolean,
+  keyUsages: KeyUsage[],
+): Promise<CryptoKey> => {
+  const { name } = algorithm;
+  if (hasAnyNotIn(keyUsages, ['deriveKey', 'deriveBits'])) {
+    throw new Error(`Unsupported key usage for a ${name} key`);
+  }
+
+  switch (format) {
+    case 'raw': {
+      const keyObject = createSecretKey(keyData as BinaryLike);
+      return new CryptoKey(keyObject, { name }, keyUsages, extractable);
+    }
+    default:
+      throw new Error(`Unable to import ${name} key with format ${format}`);
+  }
+};
+
 const checkCryptoKeyPairUsages = (pair: CryptoKeyPair) => {
   if (
     pair.privateKey &&
@@ -1536,6 +1559,12 @@ export class Subtle {
       // Fall through
       case 'X448':
         return xDeriveBits(algorithm, baseKey, length);
+      case 'HKDF':
+        return hkdfDeriveBits(
+          algorithm as unknown as HkdfAlgorithm,
+          baseKey,
+          length,
+        );
     }
     throw new Error(
       `'subtle.deriveBits()' for ${algorithm.name} is not implemented.`,
@@ -1576,6 +1605,13 @@ export class Subtle {
       // Fall through
       case 'X448':
         derivedBits = await xDeriveBits(algorithm, baseKey, length);
+        break;
+      case 'HKDF':
+        derivedBits = hkdfDeriveBits(
+          algorithm as unknown as HkdfAlgorithm,
+          baseKey,
+          length,
+        );
         break;
       default:
         throw new Error(
@@ -1904,6 +1940,15 @@ export class Subtle {
           normalizedAlgorithm,
           format,
           data as BufferLike | BinaryLike,
+          extractable,
+          keyUsages,
+        );
+        break;
+      case 'HKDF':
+        result = await hkdfImportKey(
+          format,
+          data as BufferLike | BinaryLike,
+          normalizedAlgorithm,
           extractable,
           keyUsages,
         );

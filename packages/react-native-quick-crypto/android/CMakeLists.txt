@@ -38,6 +38,7 @@ add_library(
   ../cpp/ed25519/HybridEdKeyPair.cpp
   ../cpp/hash/HybridHash.cpp
   ../cpp/hmac/HybridHmac.cpp
+  ../cpp/hkdf/HybridHkdf.cpp
   ../cpp/keys/HybridKeyObjectHandle.cpp
   ../cpp/keys/KeyObjectData.cpp
   ../cpp/mldsa/HybridMlDsaKeyPair.cpp

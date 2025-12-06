@@ -6,7 +6,7 @@ import {
   TouchableOpacity,
   ActivityIndicator,
 } from 'react-native';
-import BouncyCheckbox from 'react-native-bouncy-checkbox';
+import { Checkbox } from './Checkbox';
 import { useNavigation } from '@react-navigation/native';
 import { colors } from '../styles/colors';
 import type { BenchmarkSuite } from '../benchmarks/benchmarks';
@@ -60,10 +60,9 @@ export const BenchmarkItem: React.FC<BenchmarkItemProps> = ({
           <ActivityIndicator size="small" color={colors.blue} />
         </View>
       ) : (
-        <BouncyCheckbox
+        <Checkbox
           isChecked={suite.enabled}
           onPress={() => toggle()}
-          disableText={true}
           fillColor={colors.blue}
           style={styles.checkbox}
         />
