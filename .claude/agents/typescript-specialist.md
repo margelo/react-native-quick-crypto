@@ -53,8 +53,8 @@ You are a TypeScript specialist focused on the JavaScript/TypeScript layer of Re
 3. **API Compatibility Priority**
    - WebCrypto API first (for subtle.* methods)
    - Node.js API second (for crypto.* polyfills)
-   - 0.x compatibility third (for migration)
-   - Check Node.js `deps/ncrypto` for reference implementations
+   - ncrypto compatibility third (for working w/ OpenSSL)
+   - Check Node.js's separate repo `$REPOS/ncrypto` for reference implementations
 
 **HIGH - ENFORCE STRICTLY:**
 
@@ -125,11 +125,6 @@ When implementing features, check in order:
 2. **Node.js** (for `crypto.*` polyfills)
    - `$REPOS/node/deps/ncrypto` - Node.js crypto externalization
    - Node.js crypto module documentation
-   - May need updating to OpenSSL 3.3+
-
-3. **RNQC 0.x** (for migration reference)
-   - `$REPOS/rnqc/0.x` - Old implementation
-   - Uses OpenSSL 1.1.1 (deprecated patterns)
 
 ## Common Patterns
 

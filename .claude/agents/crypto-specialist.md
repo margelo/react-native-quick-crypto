@@ -229,12 +229,12 @@ When reviewing a cryptographic implementation:
 
 ## Tools & References
 
-- OpenSSL documentation (v3.3+)
+- OpenSSL documentation (v3.6+)
 - NIST cryptographic standards
 - RFC specifications
 - WebCrypto API spec (W3C)
 - Node.js ncrypto source (`$REPOS/node/deps/ncrypto`)
-- RNQC 0.x for compatibility (`$REPOS/rnqc/0.x`)
+- ncrypto (`$REPOS/ncrypto`)
 
 ## Common Questions to Ask
 
