@@ -115,6 +115,7 @@
 				13B07F8E1A680F5B00A75B9A /* Resources */,
 				00DD1BFF1BD5951E006B06BC /* Bundle React Native code and images */,
 				8C63FDE6D14F20AAC744357A /* Embed SPM Frameworks (OpenSSL) */,
+				F008C3222B5CD8109E252C6E /* Embed SPM Frameworks (QuickCrypto) */,
 				00EEFC60759A1932668264C0 /* [CP] Embed Pods Frameworks */,
 				E235C05ADACE081382539298 /* [CP] Copy Pods Resources */,
 			);
@@ -261,6 +262,24 @@
 			shellPath = /bin/sh;
 			shellScript = "\"${PODS_ROOT}/Target Support Files/Pods-QuickCryptoExample/Pods-QuickCryptoExample-resources.sh\"\n";
 			showEnvVarsInLog = 0;
+		};
+		F008C3222B5CD8109E252C6E /* Embed SPM Frameworks (QuickCrypto) */ = {
+			isa = PBXShellScriptBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			inputFileListPaths = (
+			);
+			inputPaths = (
+			);
+			name = "Embed SPM Frameworks (QuickCrypto)";
+			outputFileListPaths = (
+			);
+			outputPaths = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+			shellPath = /bin/sh;
+			shellScript = "# Embed SPM frameworks (OpenSSL, Clibsodium) from QuickCrypto into app bundle\n# SPM builds frameworks to BUILT_PRODUCTS_DIR but doesn't embed them automatically\n\nmkdir -p \"${BUILT_PRODUCTS_DIR}/${FRAMEWORKS_FOLDER_PATH}\"\n\n# Embed OpenSSL.framework (always required for ML-DSA)\nOPENSSL_FRAMEWORK=\"${BUILT_PRODUCTS_DIR}/OpenSSL.framework\"\nif [ -d \"$OPENSSL_FRAMEWORK\" ]; then\n  echo \"Found OpenSSL.framework at $OPENSSL_FRAMEWORK\"\n  rsync -av --delete \"$OPENSSL_FRAMEWORK\" \"${BUILT_PRODUCTS_DIR}/${FRAMEWORKS_FOLDER_PATH}/\"\n\n  if [ -n \"${EXPANDED_CODE_SIGN_IDENTITY:-}\" ] && [ \"${CODE_SIGNING_REQUIRED:-}\" != \"NO\" ]; then\n    /usr/bin/codesign --force --sign \"${EXPANDED_CODE_SIGN_IDENTITY}\" --preserve-metadata=identifier,entitlements \"${BUILT_PRODUCTS_DIR}/${FRAMEWORKS_FOLDER_PATH}/OpenSSL.framework\"\n  fi\n  echo \"OpenSSL.framework embedded successfully\"\nelse\n  echo \"warning: OpenSSL.framework not found at $OPENSSL_FRAMEWORK\"\nfi\n\n# Embed Clibsodium.framework (optional, when SODIUM_ENABLED=1)\nCLIBSODIUM_FRAMEWORK=\"${BUILT_PRODUCTS_DIR}/Clibsodium.framework\"\nif [ -d \"$CLIBSODIUM_FRAMEWORK\" ]; then\n  echo \"Found Clibsodium.framework at $CLIBSODIUM_FRAMEWORK\"\n  rsync -av --delete \"$CLIBSODIUM_FRAMEWORK\" \"${BUILT_PRODUCTS_DIR}/${FRAMEWORKS_FOLDER_PATH}/\"\n\n  if [ -n \"${EXPANDED_CODE_SIGN_IDENTITY:-}\" ] && [ \"${CODE_SIGNING_REQUIRED:-}\" != \"NO\" ]; then\n    /usr/bin/codesign --force --sign \"${EXPANDED_CODE_SIGN_IDENTITY}\" --preserve-metadata=identifier,entitlements \"${BUILT_PRODUCTS_DIR}/${FRAMEWORKS_FOLDER_PATH}/Clibsodium.framework\"\n  fi\n  echo \"Clibsodium.framework embedded successfully\"\nfi\n";
 		};
 /* End PBXShellScriptBuildPhase section */
 
