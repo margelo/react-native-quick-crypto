@@ -15,7 +15,7 @@ This project uses the **4-Layer Orchestra Architecture** for efficient multi-age
 When implementing features, favor in this order:
 1. **WebCrypto API** - Modern standard, best for `subtle.*` methods
 2. **Node.js Implementation** - Use `$REPOS/node/deps/ncrypto` as reference
-3. **RNQC 0.x** - Legacy reference at `$REPOS/rnqc/0.x` (OpenSSL 1.1.1, deprecated)
+3. **ncrypto** - submodule code reference at `$REPOS/ncrypto` (do work w/ OpenSSL)
 
 **Always check Node.js `deps/ncrypto` before implementing new features.**
 
@@ -24,8 +24,8 @@ When implementing features, favor in this order:
 - **TypeScript** - Type system (strict mode, no `any`)
 - **Nitro Modules** - Native bridging
 - **C++20 or higher** - Modern C++ (smart pointers, RAII)
-- **OpenSSL 3.3+** - Cryptographic library (EVP APIs only)
-- **Bun 1.2+** - TypeScript package manager
+- **OpenSSL 3.6+** - Cryptographic library (EVP APIs only)
+- **Bun 1.3+** - TypeScript package manager
 
 ### 3. Code Philosophy
 - Minimize code rather than add more
@@ -40,26 +40,13 @@ When implementing features, favor in this order:
 - No key material in errors/logs
 - Validate against test vectors (NIST, RFC, Node.js)
 
-## Project Structure
-
-```
-react-native-quick-crypto/
-├── src/                  # TypeScript source
-├── cpp/                  # C++ native implementation
-├── example/              # React Native test app
-│
-├── .claude/              # Orchestration configuration
-    ├── agents/           # Specialist agent definitions
-    └── rules/            # XML rules for context management
-```
-
 ## Rules Summary
 
 For full details, see `.claude/rules/*.xml`:
 
 ### architecture.xml
 - Project context and goals
-- API priority order (WebCrypto → Node.js → 0.x)
+- API priority order (WebCrypto → Node.js → ncrypto)
 - Tech stack requirements
 - Code philosophy
 - Testing context (RN environment)
@@ -77,7 +64,7 @@ For full details, see `.claude/rules/*.xml`:
 ### code-cpp.xml
 - C++20 minimum with modern features
 - Smart pointers for all ownership
-- OpenSSL 3.3+ EVP APIs only (no deprecated)
+- OpenSSL 3.6+ EVP APIs only (no deprecated)
 - RAII for all resources
 - Proper error handling (ERR_get_error)
 - Memory safety (no leaks, no raw ownership)
@@ -119,11 +106,11 @@ Use these instead of web searches:
 
 - **Node.js**: `$REPOS/node`
   - `deps/ncrypto` - Use as bible for crypto operations
-  - May need updating to OpenSSL 3.3+ patterns
+  - May need updating to OpenSSL 3.6+ patterns
 
-- **RNQC 0.x**: `$REPOS/rnqc/0.x`
-  - Legacy branch (OpenSSL 1.1.1)
-  - Migration reference only, don't copy patterns
+- **ncrypto**: `$REPOS/ncrypto`
+  - separate crypto lib broken out from Node.js
+  - Patterns and tools to access OpenSSL
 
 ## Testing
 

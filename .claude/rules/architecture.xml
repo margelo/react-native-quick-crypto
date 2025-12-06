@@ -10,7 +10,6 @@
       <item>This is a React Native project that offers cryptographic operations in native code</item>
       <item>Uses Nitro Modules to bridge JavaScript and C++</item>
       <item>Part of the API strives to be a polyfill of the Node.js crypto module</item>
-      <item>Goal: Migrate from OpenSSL 1.1.1 to OpenSSL 3.3+ with modern C++ and Nitro Modules</item>
     </context>
     <mustAcknowledge>true</mustAcknowledge>
   </rule>
@@ -30,12 +29,12 @@
     </priority>
     <priority>
       <rank>3</rank>
-      <source>RNQC 0.x Implementation</source>
-      <rationale>Legacy reference at $REPOS/rnqc/0.x (uses OpenSSL 1.1.1, deprecated)</rationale>
+      <source>ncrypto Implementation</source>
+      <rationale>reference at $REPOS/ncrypto (now a separate repo from nodejs)</rationale>
     </priority>
     <mustAcknowledge>true</mustAcknowledge>
     <instructions>
-      Always check Node.js deps/ncrypto before implementing new features. It may need upgrading to OpenSSL 3.3+ patterns.
+      Always check Node.js deps/ncrypto before implementing new features. It may need upgrading to OpenSSL 3.6+ patterns.
     </instructions>
   </rule>
 
@@ -47,8 +46,8 @@
       <tool>TypeScript - Type system</tool>
       <tool>Nitro Modules - Native bridging</tool>
       <tool>C++20 or higher - Modern C++</tool>
-      <tool>OpenSSL 3.3+ - Cryptographic library</tool>
-      <tool>Bun 1.2+ - TypeScript package manager</tool>
+      <tool>OpenSSL 3.6+ - Cryptographic library</tool>
+      <tool>Bun 1.3+ - TypeScript package manager</tool>
     </stack>
     <instructions>
       Use modern features from each technology. No legacy patterns.
@@ -87,16 +86,16 @@
       <reference>
         <path>$REPOS/node</path>
         <description>Node.js source code</description>
-        <focus>deps/ncrypto - Externalized crypto code, use as reference for implementations</focus>
+        <focus>use as reference for crypto/subtle implementations</focus>
       </reference>
       <reference>
-        <path>$REPOS/rnqc/0.x</path>
-        <description>RNQC 0.x legacy branch</description>
-        <focus>Uses OpenSSL 1.1.1 - migration reference only, don't copy patterns</focus>
+        <path>$REPOS/ncrypto</path>
+        <description>ncrypto sharable library used by Node.js</description>
+        <focus>Abstracts OpenSSL calls and utilities from Node.js code</focus>
       </reference>
     </references>
     <instructions>
-      Update this library's copy of ncrypto patterns occasionally when implementing new features.
+      Update this library's submodule of ncrypto occasionally when implementing new features.
     </instructions>
   </rule>
 

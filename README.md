@@ -10,7 +10,7 @@
 
 A fast implementation of Node's `crypto` module.
 
-> Note: This version `1.x` completed a major refactor, porting to OpenSSL 3.3+, New Architecture, Bridgeless, and [`Nitro Modules`](https://github.com/mrousavy/react-native-nitro).  It should be at or above feature-parity compared to the `0.x` version.  Status, as always, will be represented in [implementation-coverage.md](../main/docs/implementation-coverage.md).
+> Note: This version `1.x` completed a major refactor, porting to OpenSSL 3.6+, New Architecture, Bridgeless, and [`Nitro Modules`](https://github.com/mrousavy/react-native-nitro).  It should be at or above feature-parity compared to the `0.x` version.  Status, as always, will be represented in [implementation-coverage.md](../main/docs/implementation-coverage.md).
 
 > Note: Minimum supported version of React Native is `0.75`.  If you need to use earlier versions, please use `0.x` versions of this library.
 
