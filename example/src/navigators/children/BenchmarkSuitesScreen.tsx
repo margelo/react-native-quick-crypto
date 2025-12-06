@@ -1,5 +1,6 @@
 import React from 'react';
-import { View, Text, StyleSheet, SafeAreaView, FlatList } from 'react-native';
+import { View, Text, StyleSheet, FlatList } from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
 import { BenchmarkItem } from '../../components/BenchmarkItem';
 import { useBenchmarks } from '../../hooks/useBenchmarks';
 import { Button } from '../../components/Button';
