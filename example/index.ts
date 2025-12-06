@@ -31,8 +31,24 @@ if (typeof global.structuredClone === 'undefined') {
 import 'event-target-polyfill';
 
 // readable-stream
-// @ts-expect-error - although process.version is readonly, we're setting it for readable-stream
-global.process.version = 'v22.0.0';
+if (typeof global.process !== 'undefined') {
+  const descriptor = Object.getOwnPropertyDescriptor(global.process, 'version');
+  if (!descriptor || descriptor.writable || descriptor.configurable) {
+    try {
+      Object.defineProperty(global.process, 'version', {
+        value: 'v22.0.0',
+        writable: true,
+        enumerable: true,
+        configurable: true,
+      });
+    } catch (e) {
+      console.warn('Failed to define process.version:', e);
+    }
+  }
+} else {
+  // @ts-expect-error - process is not defined
+  global.process = { version: 'v22.0.0' };
+}
 
 import { AppRegistry } from 'react-native';
 import App from './src/App';

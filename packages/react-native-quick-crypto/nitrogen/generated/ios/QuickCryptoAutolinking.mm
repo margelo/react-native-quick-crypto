@@ -17,6 +17,7 @@
 #include "HybridEdKeyPair.hpp"
 #include "HybridHash.hpp"
 #include "HybridHmac.hpp"
+#include "HybridHkdf.hpp"
 #include "HybridKeyObjectHandle.hpp"
 #include "HybridPbkdf2.hpp"
 #include "HybridRandom.hpp"
@@ -96,6 +97,15 @@
                     "The HybridObject \"HybridHmac\" is not default-constructible! "
                     "Create a public constructor that takes zero arguments to be able to autolink this HybridObject.");
       return std::make_shared<HybridHmac>();
+    }
+  );
+  HybridObjectRegistry::registerHybridObjectConstructor(
+    "Hkdf",
+    []() -> std::shared_ptr<HybridObject> {
+      static_assert(std::is_default_constructible_v<HybridHkdf>,
+                    "The HybridObject \"HybridHkdf\" is not default-constructible! "
+                    "Create a public constructor that takes zero arguments to be able to autolink this HybridObject.");
+      return std::make_shared<HybridHkdf>();
     }
   );
   HybridObjectRegistry::registerHybridObjectConstructor(
