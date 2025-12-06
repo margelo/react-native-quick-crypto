@@ -15,6 +15,7 @@ import type {
   AesCbcParams,
   AesGcmParams,
   RsaOaepParams,
+  ChaCha20Poly1305Params,
 } from './utils';
 import { KFormatType, KeyEncoding } from './utils';
 import {
@@ -41,7 +42,12 @@ import { rsa_generateKeyPair } from './rsa';
 import { getRandomValues } from './random';
 import { createHmac } from './hmac';
 import { createSign, createVerify } from './keys/signVerify';
-import { ed_generateKeyPairWebCrypto, Ed } from './ed';
+import {
+  ed_generateKeyPairWebCrypto,
+  x_generateKeyPairWebCrypto,
+  xDeriveBits,
+  Ed,
+} from './ed';
 import { mldsa_generateKeyPairWebCrypto, type MlDsaVariant } from './mldsa';
 // import { pbkdf2DeriveBits } from './pbkdf2';
 // import { aesCipher, aesGenerateKey, aesImportKey, getAlgorithmName } from './aes';
@@ -344,6 +350,156 @@ async function aesGcmCipher(
   // Set additional authenticated data if provided
   if (algorithm.additionalData) {
     cipher.setAAD(bufferLikeToArrayBuffer(algorithm.additionalData));
+  }
+
+  // Process data
+  const updated = cipher.update(processData);
+  const final = cipher.final();
+
+  if (mode === CipherOrWrapMode.kWebCryptoCipherEncrypt) {
+    // For encryption, append auth tag to result
+    const tag = cipher.getAuthTag();
+    const result = new Uint8Array(
+      updated.byteLength + final.byteLength + tag.byteLength,
+    );
+    result.set(new Uint8Array(updated), 0);
+    result.set(new Uint8Array(final), updated.byteLength);
+    result.set(new Uint8Array(tag), updated.byteLength + final.byteLength);
+    return result.buffer;
+  } else {
+    // For decryption, just concatenate plaintext
+    const result = new Uint8Array(updated.byteLength + final.byteLength);
+    result.set(new Uint8Array(updated), 0);
+    result.set(new Uint8Array(final), updated.byteLength);
+    return result.buffer;
+  }
+}
+
+async function aesKwCipher(
+  mode: CipherOrWrapMode,
+  key: CryptoKey,
+  data: ArrayBuffer,
+): Promise<ArrayBuffer> {
+  const isWrap = mode === CipherOrWrapMode.kWebCryptoCipherEncrypt;
+
+  // AES-KW requires input to be a multiple of 8 bytes (64 bits)
+  if (data.byteLength % 8 !== 0) {
+    throw lazyDOMException(
+      `AES-KW input length must be a multiple of 8 bytes, got ${data.byteLength}`,
+      'OperationError',
+    );
+  }
+
+  // AES-KW requires at least 16 bytes of input (128 bits)
+  if (isWrap && data.byteLength < 16) {
+    throw lazyDOMException(
+      `AES-KW input must be at least 16 bytes, got ${data.byteLength}`,
+      'OperationError',
+    );
+  }
+
+  // Get cipher type based on key length
+  const keyLength = (key.algorithm as { length: number }).length;
+  // Use aes*-wrap for both operations (matching Node.js)
+  const cipherType = `aes${keyLength}-wrap`;
+
+  // Export key material
+  const exportedKey = key.keyObject.export();
+  const cipherKey = bufferLikeToArrayBuffer(exportedKey);
+
+  // AES-KW uses a default IV as specified in RFC 3394
+  const defaultWrapIV = new Uint8Array([
+    0xa6, 0xa6, 0xa6, 0xa6, 0xa6, 0xa6, 0xa6, 0xa6,
+  ]);
+
+  const factory =
+    NitroModules.createHybridObject<CipherFactory>('CipherFactory');
+
+  const cipher = factory.createCipher({
+    isCipher: isWrap,
+    cipherType,
+    cipherKey,
+    iv: defaultWrapIV.buffer, // RFC 3394 default IV for AES-KW
+  });
+
+  // Process data
+  const updated = cipher.update(data);
+  const final = cipher.final();
+
+  // Concatenate results
+  const result = new Uint8Array(updated.byteLength + final.byteLength);
+  result.set(new Uint8Array(updated), 0);
+  result.set(new Uint8Array(final), updated.byteLength);
+
+  return result.buffer;
+}
+
+async function chaCha20Poly1305Cipher(
+  mode: CipherOrWrapMode,
+  key: CryptoKey,
+  data: ArrayBuffer,
+  algorithm: ChaCha20Poly1305Params,
+): Promise<ArrayBuffer> {
+  const { iv, additionalData, tagLength = 128 } = algorithm;
+
+  // Validate IV (must be 12 bytes for ChaCha20-Poly1305)
+  const ivBuffer = bufferLikeToArrayBuffer(iv);
+  if (!ivBuffer || ivBuffer.byteLength !== 12) {
+    throw lazyDOMException(
+      'ChaCha20-Poly1305 IV must be exactly 12 bytes',
+      'OperationError',
+    );
+  }
+
+  // Validate tag length (only 128-bit supported)
+  if (tagLength !== 128) {
+    throw lazyDOMException(
+      'ChaCha20-Poly1305 only supports 128-bit auth tags',
+      'NotSupportedError',
+    );
+  }
+
+  const tagByteLength = 16; // 128 bits = 16 bytes
+
+  // Create cipher using existing ChaCha20-Poly1305 implementation
+  const factory =
+    NitroModules.createHybridObject<CipherFactory>('CipherFactory');
+  const cipher = factory.createCipher({
+    isCipher: mode === CipherOrWrapMode.kWebCryptoCipherEncrypt,
+    cipherType: 'chacha20-poly1305',
+    cipherKey: bufferLikeToArrayBuffer(key.keyObject.export()),
+    iv: ivBuffer,
+    authTagLen: tagByteLength,
+  });
+
+  let processData: ArrayBuffer;
+  let authTag: ArrayBuffer | undefined;
+
+  if (mode === CipherOrWrapMode.kWebCryptoCipherDecrypt) {
+    // For decryption, extract auth tag from end of data
+    const dataView = new Uint8Array(data);
+
+    if (dataView.byteLength < tagByteLength) {
+      throw lazyDOMException(
+        'The provided data is too small.',
+        'OperationError',
+      );
+    }
+
+    // Split data and tag
+    const ciphertextLength = dataView.byteLength - tagByteLength;
+    processData = dataView.slice(0, ciphertextLength).buffer;
+    authTag = dataView.slice(ciphertextLength).buffer;
+
+    // Set auth tag for verification
+    cipher.setAuthTag(authTag);
+  } else {
+    processData = data;
+  }
+
+  // Set additional authenticated data if provided
+  if (additionalData) {
+    cipher.setAAD(bufferLikeToArrayBuffer(additionalData));
   }
 
   // Process data
@@ -737,7 +893,12 @@ function edImportKey(
   const { name } = algorithm;
 
   // Validate usages
-  if (hasAnyNotIn(keyUsages, ['sign', 'verify'])) {
+  const isX = name === 'X25519' || name === 'X448';
+  const allowedUsages: KeyUsage[] = isX
+    ? ['deriveKey', 'deriveBits']
+    : ['sign', 'verify'];
+
+  if (hasAnyNotIn(keyUsages, allowedUsages)) {
     throw lazyDOMException(
       `Unsupported key usage for ${name} key`,
       'SyntaxError',
@@ -853,8 +1014,12 @@ const exportKeySpki = async (
     case 'Ed25519':
     // Fall through
     case 'Ed448':
+    // Fall through
+    case 'X25519':
+    // Fall through
+    case 'X448':
       if (key.type === 'public') {
-        // Export Ed key in SPKI DER format
+        // Export Ed/X key in SPKI DER format
         return bufferLikeToArrayBuffer(
           key.keyObject.handle.exportKey(KFormatType.DER, KeyEncoding.SPKI),
         );
@@ -902,8 +1067,12 @@ const exportKeyPkcs8 = async (
     case 'Ed25519':
     // Fall through
     case 'Ed448':
+    // Fall through
+    case 'X25519':
+    // Fall through
+    case 'X448':
       if (key.type === 'private') {
-        // Export Ed key in PKCS8 DER format
+        // Export Ed/X key in PKCS8 DER format
         return bufferLikeToArrayBuffer(
           key.keyObject.handle.exportKey(KFormatType.DER, KeyEncoding.PKCS8),
         );
@@ -937,6 +1106,19 @@ const exportKeyRaw = (key: CryptoKey): ArrayBuffer | unknown => {
         return ecExportKey(key, KWebCryptoKeyFormat.kWebCryptoKeyFormatRaw);
       }
       break;
+    case 'Ed25519':
+    // Fall through
+    case 'Ed448':
+    // Fall through
+    case 'X25519':
+    // Fall through
+    case 'X448':
+      if (key.type === 'public') {
+        // Export raw public key
+        const exported = key.keyObject.handle.exportKey();
+        return bufferLikeToArrayBuffer(exported);
+      }
+      break;
     case 'AES-CTR':
     // Fall through
     case 'AES-CBC':
@@ -944,6 +1126,8 @@ const exportKeyRaw = (key: CryptoKey): ArrayBuffer | unknown => {
     case 'AES-GCM':
     // Fall through
     case 'AES-KW':
+    // Fall through
+    case 'ChaCha20-Poly1305':
     // Fall through
     case 'HMAC': {
       const exported = key.keyObject.export();
@@ -994,6 +1178,8 @@ const exportKeyJWK = (key: CryptoKey): ArrayBuffer | unknown => {
     case 'AES-GCM':
     // Fall through
     case 'AES-KW':
+    // Fall through
+    case 'ChaCha20-Poly1305':
       if (key.algorithm.length === undefined) {
         throw lazyDOMException(
           `Algorithm ${key.algorithm.name} missing required length property`,
@@ -1290,6 +1476,15 @@ const cipherOrWrap = async (
     // Fall through
     case 'AES-GCM':
       return aesCipher(mode, key, data, algorithm);
+    case 'AES-KW':
+      return aesKwCipher(mode, key, data);
+    case 'ChaCha20-Poly1305':
+      return chaCha20Poly1305Cipher(
+        mode,
+        key,
+        data,
+        algorithm as ChaCha20Poly1305Params,
+      );
   }
 };
 
@@ -1325,17 +1520,76 @@ export class Subtle {
     baseKey: CryptoKey,
     length: number,
   ): Promise<ArrayBuffer> {
-    if (!baseKey.keyUsages.includes('deriveBits')) {
-      throw new Error('baseKey does not have deriveBits usage');
+    // Allow either deriveBits OR deriveKey usage (WebCrypto spec allows both)
+    if (
+      !baseKey.keyUsages.includes('deriveBits') &&
+      !baseKey.keyUsages.includes('deriveKey')
+    ) {
+      throw new Error('baseKey does not have deriveBits or deriveKey usage');
     }
     if (baseKey.algorithm.name !== algorithm.name)
       throw new Error('Key algorithm mismatch');
     switch (algorithm.name) {
       case 'PBKDF2':
         return pbkdf2DeriveBits(algorithm, baseKey, length);
+      case 'X25519':
+      // Fall through
+      case 'X448':
+        return xDeriveBits(algorithm, baseKey, length);
     }
     throw new Error(
       `'subtle.deriveBits()' for ${algorithm.name} is not implemented.`,
+    );
+  }
+
+  async deriveKey(
+    algorithm: SubtleAlgorithm,
+    baseKey: CryptoKey,
+    derivedKeyAlgorithm: SubtleAlgorithm,
+    extractable: boolean,
+    keyUsages: KeyUsage[],
+  ): Promise<CryptoKey> {
+    // Validate baseKey usage
+    if (
+      !baseKey.usages.includes('deriveKey') &&
+      !baseKey.usages.includes('deriveBits')
+    ) {
+      throw lazyDOMException(
+        'baseKey does not have deriveKey or deriveBits usage',
+        'InvalidAccessError',
+      );
+    }
+
+    // Calculate required key length
+    const length = getKeyLength(derivedKeyAlgorithm);
+
+    // Step 1: Derive bits
+    let derivedBits: ArrayBuffer;
+    if (baseKey.algorithm.name !== algorithm.name)
+      throw new Error('Key algorithm mismatch');
+
+    switch (algorithm.name) {
+      case 'PBKDF2':
+        derivedBits = await pbkdf2DeriveBits(algorithm, baseKey, length);
+        break;
+      case 'X25519':
+      // Fall through
+      case 'X448':
+        derivedBits = await xDeriveBits(algorithm, baseKey, length);
+        break;
+      default:
+        throw new Error(
+          `'subtle.deriveKey()' for ${algorithm.name} is not implemented.`,
+        );
+    }
+
+    // Step 2: Import as key
+    return this.importKey(
+      'raw',
+      derivedBits,
+      derivedKeyAlgorithm,
+      extractable,
+      keyUsages,
     );
   }
 
@@ -1370,6 +1624,115 @@ export class Subtle {
       case 'raw':
         return exportKeyRaw(key) as ArrayBuffer;
     }
+  }
+
+  async wrapKey(
+    format: ImportFormat,
+    key: CryptoKey,
+    wrappingKey: CryptoKey,
+    wrapAlgorithm: EncryptDecryptParams,
+  ): Promise<ArrayBuffer> {
+    // Validate wrappingKey usage
+    if (!wrappingKey.usages.includes('wrapKey')) {
+      throw lazyDOMException(
+        'wrappingKey does not have wrapKey usage',
+        'InvalidAccessError',
+      );
+    }
+
+    // Step 1: Export the key
+    const exported = await this.exportKey(format, key);
+
+    // Step 2: Convert to ArrayBuffer if JWK
+    let keyData: ArrayBuffer;
+    if (format === 'jwk') {
+      const jwkString = JSON.stringify(exported);
+      const buffer = SBuffer.from(jwkString, 'utf8');
+
+      // For AES-KW, pad to multiple of 8 bytes (accounting for null terminator)
+      if (wrapAlgorithm.name === 'AES-KW') {
+        const length = buffer.length;
+        // Add 1 for null terminator, then pad to multiple of 8
+        const paddedLength = Math.ceil((length + 1) / 8) * 8;
+        const paddedBuffer = SBuffer.alloc(paddedLength);
+        buffer.copy(paddedBuffer);
+        // Null terminator for JSON string (remaining bytes are already zeros from alloc)
+        paddedBuffer.writeUInt8(0, length);
+        keyData = bufferLikeToArrayBuffer(paddedBuffer);
+      } else {
+        keyData = bufferLikeToArrayBuffer(buffer);
+      }
+    } else {
+      keyData = exported as ArrayBuffer;
+    }
+
+    // Step 3: Encrypt the exported key
+    return cipherOrWrap(
+      CipherOrWrapMode.kWebCryptoCipherEncrypt,
+      wrapAlgorithm,
+      wrappingKey,
+      keyData,
+      'wrapKey',
+    );
+  }
+
+  async unwrapKey(
+    format: ImportFormat,
+    wrappedKey: BufferLike,
+    unwrappingKey: CryptoKey,
+    unwrapAlgorithm: EncryptDecryptParams,
+    unwrappedKeyAlgorithm: SubtleAlgorithm | AnyAlgorithm,
+    extractable: boolean,
+    keyUsages: KeyUsage[],
+  ): Promise<CryptoKey> {
+    // Validate unwrappingKey usage
+    if (!unwrappingKey.usages.includes('unwrapKey')) {
+      throw lazyDOMException(
+        'unwrappingKey does not have unwrapKey usage',
+        'InvalidAccessError',
+      );
+    }
+
+    // Step 1: Decrypt the wrapped key
+    const decrypted = await cipherOrWrap(
+      CipherOrWrapMode.kWebCryptoCipherDecrypt,
+      unwrapAlgorithm,
+      unwrappingKey,
+      bufferLikeToArrayBuffer(wrappedKey),
+      'unwrapKey',
+    );
+
+    // Step 2: Convert to appropriate format
+    let keyData: BufferLike | JWK;
+    if (format === 'jwk') {
+      const buffer = SBuffer.from(decrypted);
+      // For AES-KW, the data may be padded - find the null terminator
+      let jwkString: string;
+      if (unwrapAlgorithm.name === 'AES-KW') {
+        // Find the null terminator (if present) to get the original string
+        const nullIndex = buffer.indexOf(0);
+        if (nullIndex !== -1) {
+          jwkString = buffer.toString('utf8', 0, nullIndex);
+        } else {
+          // No null terminator, try to parse the whole buffer
+          jwkString = buffer.toString('utf8').trim();
+        }
+      } else {
+        jwkString = buffer.toString('utf8');
+      }
+      keyData = JSON.parse(jwkString) as JWK;
+    } else {
+      keyData = decrypted;
+    }
+
+    // Step 3: Import the key
+    return this.importKey(
+      format,
+      keyData,
+      unwrappedKeyAlgorithm,
+      extractable,
+      keyUsages,
+    );
   }
 
   async generateKey(
@@ -1411,6 +1774,26 @@ export class Subtle {
           keyUsages,
         );
         break;
+      case 'ChaCha20-Poly1305': {
+        const length = (algorithm as AesKeyGenParams).length ?? 256;
+
+        if (length !== 256) {
+          throw lazyDOMException(
+            'ChaCha20-Poly1305 only supports 256-bit keys',
+            'NotSupportedError',
+          );
+        }
+
+        result = await aesGenerateKey(
+          {
+            name: 'ChaCha20-Poly1305',
+            length: 256,
+          } as unknown as AesKeyGenParams,
+          extractable,
+          keyUsages,
+        );
+        break;
+      }
       case 'HMAC':
         result = await hmacGenerateKey(algorithm, extractable, keyUsages);
         break;
@@ -1431,6 +1814,16 @@ export class Subtle {
       case 'ML-DSA-87':
         result = await mldsa_generateKeyPairWebCrypto(
           algorithm.name as MlDsaVariant,
+          extractable,
+          keyUsages,
+        );
+        checkCryptoKeyPairUsages(result as CryptoKeyPair);
+        break;
+      case 'X25519':
+      // Fall through
+      case 'X448':
+        result = await x_generateKeyPairWebCrypto(
+          algorithm.name.toLowerCase() as 'x25519' | 'x448',
           extractable,
           keyUsages,
         );
@@ -1496,6 +1889,8 @@ export class Subtle {
       case 'AES-GCM':
       // Fall through
       case 'AES-KW':
+      // Fall through
+      case 'ChaCha20-Poly1305':
         result = await aesImportKey(
           normalizedAlgorithm,
           format,
@@ -1513,6 +1908,10 @@ export class Subtle {
           keyUsages,
         );
         break;
+      case 'X25519':
+      // Fall through
+      case 'X448':
+      // Fall through
       case 'Ed25519':
       // Fall through
       case 'Ed448':
@@ -1560,7 +1959,43 @@ export class Subtle {
     key: CryptoKey,
     data: BufferLike,
   ): Promise<ArrayBuffer> {
-    return signVerify(algorithm, key, data) as ArrayBuffer;
+    const normalizedAlgorithm = normalizeAlgorithm(algorithm, 'sign');
+
+    if (normalizedAlgorithm.name === 'HMAC') {
+      // Validate key usage
+      if (!key.usages.includes('sign')) {
+        throw lazyDOMException(
+          'Key does not have sign usage',
+          'InvalidAccessError',
+        );
+      }
+
+      // Get hash algorithm from key or algorithm params
+      // Hash can be either a string or an object with name property
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const alg = normalizedAlgorithm as any;
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const keyAlg = key.algorithm as any;
+      let hashAlgorithm = 'SHA-256';
+
+      if (typeof alg.hash === 'string') {
+        hashAlgorithm = alg.hash;
+      } else if (alg.hash?.name) {
+        hashAlgorithm = alg.hash.name;
+      } else if (typeof keyAlg.hash === 'string') {
+        hashAlgorithm = keyAlg.hash;
+      } else if (keyAlg.hash?.name) {
+        hashAlgorithm = keyAlg.hash.name;
+      }
+
+      // Create HMAC and sign
+      const keyData = key.keyObject.export();
+      const hmac = createHmac(hashAlgorithm, keyData);
+      hmac.update(bufferLikeToArrayBuffer(data));
+      return bufferLikeToArrayBuffer(hmac.digest());
+    }
+
+    return signVerify(normalizedAlgorithm, key, data) as ArrayBuffer;
   }
 
   async verify(
@@ -1568,9 +2003,84 @@ export class Subtle {
     key: CryptoKey,
     signature: BufferLike,
     data: BufferLike,
-  ): Promise<ArrayBuffer> {
-    return signVerify(algorithm, key, data, signature) as ArrayBuffer;
+  ): Promise<boolean> {
+    const normalizedAlgorithm = normalizeAlgorithm(algorithm, 'verify');
+
+    if (normalizedAlgorithm.name === 'HMAC') {
+      // Validate key usage
+      if (!key.usages.includes('verify')) {
+        throw lazyDOMException(
+          'Key does not have verify usage',
+          'InvalidAccessError',
+        );
+      }
+
+      // Get hash algorithm
+      // Hash can be either a string or an object with name property
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const alg = normalizedAlgorithm as any;
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const keyAlg = key.algorithm as any;
+      let hashAlgorithm = 'SHA-256';
+
+      if (typeof alg.hash === 'string') {
+        hashAlgorithm = alg.hash;
+      } else if (alg.hash?.name) {
+        hashAlgorithm = alg.hash.name;
+      } else if (typeof keyAlg.hash === 'string') {
+        hashAlgorithm = keyAlg.hash;
+      } else if (keyAlg.hash?.name) {
+        hashAlgorithm = keyAlg.hash.name;
+      }
+
+      // Create HMAC and compute expected signature
+      const keyData = key.keyObject.export();
+      const hmac = createHmac(hashAlgorithm, keyData);
+      const dataBuffer = bufferLikeToArrayBuffer(data);
+      hmac.update(dataBuffer);
+      const expectedDigest = hmac.digest();
+      const expected = new Uint8Array(bufferLikeToArrayBuffer(expectedDigest));
+
+      // Constant-time comparison
+      const signatureArray = new Uint8Array(bufferLikeToArrayBuffer(signature));
+      if (expected.length !== signatureArray.length) {
+        return false;
+      }
+
+      // Manual constant-time comparison
+      let result = 0;
+      for (let i = 0; i < expected.length; i++) {
+        result |= expected[i]! ^ signatureArray[i]!;
+      }
+      return result === 0;
+    }
+
+    return signVerify(normalizedAlgorithm, key, data, signature) as boolean;
   }
 }
 
 export const subtle = new Subtle();
+
+function getKeyLength(algorithm: SubtleAlgorithm): number {
+  const name = algorithm.name;
+
+  switch (name) {
+    case 'AES-CTR':
+    case 'AES-CBC':
+    case 'AES-GCM':
+    case 'AES-KW':
+    case 'ChaCha20-Poly1305':
+      return (algorithm as AesKeyGenParams).length || 256;
+
+    case 'HMAC': {
+      const hmacAlg = algorithm as { length?: number };
+      return hmacAlg.length || 256;
+    }
+
+    default:
+      throw lazyDOMException(
+        `Cannot determine key length for ${name}`,
+        'NotSupportedError',
+      );
+  }
+}

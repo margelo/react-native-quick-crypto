@@ -361,3 +361,105 @@ export async function ed_generateKeyPairWebCrypto(
 
   return { publicKey, privateKey };
 }
+
+export async function x_generateKeyPairWebCrypto(
+  type: 'x25519' | 'x448',
+  extractable: boolean,
+  keyUsages: KeyUsage[],
+): Promise<CryptoKeyPair> {
+  if (hasAnyNotIn(keyUsages, ['deriveKey', 'deriveBits'])) {
+    throw lazyDOMException(`Unsupported key usage for ${type}`, 'SyntaxError');
+  }
+
+  const publicUsages = getUsagesUnion(keyUsages);
+  const privateUsages = getUsagesUnion(keyUsages, 'deriveKey', 'deriveBits');
+
+  if (privateUsages.length === 0) {
+    throw lazyDOMException('Usages cannot be empty', 'SyntaxError');
+  }
+
+  // Request DER-encoded SPKI for public key, PKCS8 for private key
+  const config = {
+    publicFormat: KFormatType.DER,
+    publicType: KeyEncoding.SPKI,
+    privateFormat: KFormatType.DER,
+    privateType: KeyEncoding.PKCS8,
+  };
+  const ed = new Ed(type, config);
+  await ed.generateKeyPair();
+
+  const algorithmName = type === 'x25519' ? 'X25519' : 'X448';
+
+  const publicKeyData = ed.getPublicKey();
+  const privateKeyData = ed.getPrivateKey();
+
+  const pub = KeyObject.createKeyObject(
+    'public',
+    publicKeyData,
+    KFormatType.DER,
+    KeyEncoding.SPKI,
+  ) as PublicKeyObject;
+  const publicKey = new CryptoKey(
+    pub,
+    { name: algorithmName } as SubtleAlgorithm,
+    publicUsages,
+    true,
+  );
+
+  const priv = KeyObject.createKeyObject(
+    'private',
+    privateKeyData,
+    KFormatType.DER,
+    KeyEncoding.PKCS8,
+  ) as PrivateKeyObjectClass;
+  const privateKey = new CryptoKey(
+    priv,
+    { name: algorithmName } as SubtleAlgorithm,
+    privateUsages,
+    extractable,
+  );
+
+  return { publicKey, privateKey };
+}
+
+export function xDeriveBits(
+  algorithm: SubtleAlgorithm,
+  baseKey: CryptoKey,
+  length: number | null,
+): ArrayBuffer {
+  const publicParams = algorithm as SubtleAlgorithm & { public?: CryptoKey };
+  const publicKey = publicParams.public;
+
+  if (!publicKey) {
+    throw new Error('Public key is required for X25519/X448 derivation');
+  }
+
+  if (baseKey.algorithm.name !== publicKey.algorithm.name) {
+    throw new Error('Keys must be of the same algorithm');
+  }
+
+  const type = baseKey.algorithm.name.toLowerCase() as 'x25519' | 'x448';
+  const ed = new Ed(type, {});
+
+  // Export raw keys
+  const privateKeyBytes = baseKey.keyObject.handle.exportKey();
+  const publicKeyBytes = publicKey.keyObject.handle.exportKey();
+
+  const privateKeyTyped = new Uint8Array(privateKeyBytes);
+  const publicKeyTyped = new Uint8Array(publicKeyBytes);
+
+  const secret = ed.getSharedSecret(privateKeyTyped, publicKeyTyped);
+
+  // If length is null, return the full secret
+  if (length === null) {
+    return secret;
+  }
+
+  // If length is specified, truncate
+  const byteLength = Math.ceil(length / 8);
+  if (secret.byteLength >= byteLength) {
+    return secret.slice(0, byteLength);
+  }
+
+  throw new Error('Derived key is shorter than requested length');
+}

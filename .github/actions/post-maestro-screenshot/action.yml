@@ -14,7 +14,7 @@ inputs:
     default: 'unknown'
   imgbb-api-key:
     description: 'ImgBB API key for image hosting'
-    required: true
+    required: false
 
 runs:
   using: 'composite'
@@ -69,7 +69,7 @@ runs:
         fi
 
     - name: Upload screenshot to ImgBB
-      if: steps.check-screenshot.outputs.exists == 'true' && github.event_name == 'pull_request'
+      if: steps.check-screenshot.outputs.exists == 'true' && github.event_name == 'pull_request' && inputs.imgbb-api-key != ''
       id: upload-screenshot
       uses: McCzarny/upload-image@v2.0.0
       with:
@@ -82,6 +82,7 @@ runs:
       uses: peter-evans/find-comment@v3
       id: find-comment
       if: github.event_name == 'pull_request'
+      continue-on-error: true
       with:
         issue-number: ${{ github.event.pull_request.number }}
         comment-author: 'github-actions[bot]'
@@ -89,6 +90,7 @@ runs:
 
     - name: Create or update PR comment (with screenshot)
       if: github.event_name == 'pull_request' && steps.check-screenshot.outputs.exists == 'true' && steps.upload-screenshot.outputs.url
+      continue-on-error: true
       uses: peter-evans/create-or-update-comment@v4
       with:
         token: ${{ inputs.github-token }}
@@ -113,6 +115,7 @@ runs:
 
     - name: Create or update PR comment (no screenshot)
       if: github.event_name == 'pull_request' && steps.check-screenshot.outputs.exists != 'true'
+      continue-on-error: true
       uses: peter-evans/create-or-update-comment@v4
       with:
         token: ${{ inputs.github-token }}
@@ -135,6 +138,7 @@ runs:
 
     - name: Create or update PR comment (upload failed)
       if: github.event_name == 'pull_request' && steps.check-screenshot.outputs.exists == 'true' && !steps.upload-screenshot.outputs.url
+      continue-on-error: true
       uses: peter-evans/create-or-update-comment@v4
       with:
         token: ${{ inputs.github-token }}

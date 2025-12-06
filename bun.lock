@@ -30,7 +30,7 @@
     },
     "example": {
       "name": "react-native-quick-crypto-example",
-      "version": "1.0.0",
+      "version": "1.0.1",
       "dependencies": {
         "@craftzdog/react-native-buffer": "6.1.0",
         "@noble/ciphers": "^2.0.1",
@@ -47,7 +47,7 @@
         "react": "19.1.0",
         "react-native": "0.81.1",
         "react-native-bouncy-checkbox": "4.1.2",
-        "react-native-fast-encoder": "^0.3.1",
+        "react-native-fast-encoder": "0.3.1",
         "react-native-nitro-modules": "0.29.1",
         "react-native-quick-base64": "2.2.2",
         "react-native-quick-crypto": "workspace:*",
@@ -87,7 +87,7 @@
     },
     "packages/react-native-quick-crypto": {
       "name": "react-native-quick-crypto",
-      "version": "1.0.0",
+      "version": "1.0.1",
       "dependencies": {
         "@craftzdog/react-native-buffer": "6.1.0",
         "events": "3.3.0",
@@ -1308,7 +1308,7 @@
 
     "expo-asset": ["expo-asset@12.0.10", "", { "dependencies": { "@expo/image-utils": "^0.8.7", "expo-constants": "~18.0.10" }, "peerDependencies": { "expo": "*", "react": "*", "react-native": "*" } }, "sha512-pZyeJkoDsALh4gpCQDzTA/UCLaPH/1rjQNGubmLn/uDM27S4iYJb/YWw4+CNZOtd5bCUOhDPg5DtGQnydNFSXg=="],
 
-    "expo-build-properties": ["expo-build-properties@1.0.9", "", { "dependencies": { "ajv": "^8.11.0", "semver": "^7.6.0" }, "peerDependencies": { "expo": "*" } }, "sha512-2icttCy3OPTk/GWIFt+vwA+0hup53jnmYb7JKRbvNvrrOrz+WblzpeoiaOleI2dYG/vjwpNO8to8qVyKhYJtrQ=="],
+    "expo-build-properties": ["expo-build-properties@1.0.10", "", { "dependencies": { "ajv": "^8.11.0", "semver": "^7.6.0" }, "peerDependencies": { "expo": "*" } }, "sha512-mFCZbrbrv0AP5RB151tAoRzwRJelqM7bCJzCkxpu+owOyH+p/rFC/q7H5q8B9EpVWj8etaIuszR+gKwohpmu1Q=="],
 
     "expo-constants": ["expo-constants@18.0.10", "", { "dependencies": { "@expo/config": "~12.0.10", "@expo/env": "~2.0.7" }, "peerDependencies": { "expo": "*", "react-native": "*" } }, "sha512-Rhtv+X974k0Cahmvx6p7ER5+pNhBC0XbP1lRviL2J1Xl4sT2FBaIuIxF/0I0CbhOsySf0ksqc5caFweAy9Ewiw=="],
 
@@ -1340,7 +1340,7 @@
 
     "fast-levenshtein": ["fast-levenshtein@2.0.6", "", {}, ""],
 
-    "fast-uri": ["fast-uri@3.1.0", "", {}, "sha512-iPeeDKJSWf4IEOasVVrknXpaBV0IApz/gp7S2bb7Z4Lljbl2MGJRqInZiUrQwV16cpzw/D3S5j5Julj/gT52AA=="],
+    "fast-uri": ["fast-uri@3.0.6", "", {}, "sha512-Atfo14OibSv5wAp4VWNsFYE1AchQRTv9cBGWET4pZWHzYshFSS9NQI6I57rdKn9croWVMbYFbLhJ+yJvmZIIHw=="],
 
     "fast-xml-parser": ["fast-xml-parser@4.4.1", "", { "dependencies": { "strnum": "^1.0.5" }, "bin": { "fxparser": "src/cli/cli.js" } }, ""],
 

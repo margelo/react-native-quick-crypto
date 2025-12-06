@@ -1,6 +1,8 @@
 # Implementation Coverage - NodeJS
 This document attempts to describe the implementation status of Crypto APIs/Interfaces from Node.js in the `react-native-quick-crypto` library.
 
+> Note: This is the status for version 1.x and higher. For version `0.x` see [this document](https://github.com/margelo/react-native-quick-crypto/blob/0.x/docs/implementation-coverage.md) and the [0.x branch](https://github.com/margelo/react-native-quick-crypto/tree/0.x).
+
 * ` ` - not implemented in Node
 * ❌ - implemented in Node, not RNQC
 * ✅ - implemented in Node and RNQC
@@ -12,6 +14,7 @@ This document attempts to describe the implementation status of Crypto APIs/Inte
 - **ML-KEM** (Module Lattice Key Encapsulation Mechanism, FIPS 203) - ML-KEM-512, ML-KEM-768, ML-KEM-1024
 
 These algorithms provide quantum-resistant cryptography.
+
 
 # `Crypto`
 
@@ -260,9 +263,9 @@ These algorithms provide quantum-resistant cryptography.
   * ❌ `subtle.getPublicKey(key, keyUsages)`
   * 🚧 `subtle.importKey(format, keyData, algorithm, extractable, keyUsages)`
   * ✅ `subtle.sign(algorithm, key, data)`
-  * ❌ `subtle.unwrapKey(format, wrappedKey, unwrappingKey, unwrapAlgo, unwrappedKeyAlgo, extractable, keyUsages)`
+  * ✅ `subtle.unwrapKey(format, wrappedKey, unwrappingKey, unwrapAlgo, unwrappedKeyAlgo, extractable, keyUsages)`
   * ✅ `subtle.verify(algorithm, key, signature, data)`
-  * ❌ `subtle.wrapKey(format, key, wrappingKey, wrapAlgo)`
+  * ✅ `subtle.wrapKey(format, key, wrappingKey, wrapAlgo)`
 
 ## `subtle.decrypt`
 | Algorithm  | Status |
@@ -271,13 +274,14 @@ These algorithms provide quantum-resistant cryptography.
 | `AES-CTR`  | ✅ |
 | `AES-CBC`  | ✅ |
 | `AES-GCM`  | ✅ |
+| `ChaCha20-Poly1305` | ✅ |
 
 ## `subtle.deriveBits`
 | Algorithm  | Status |
 | ---------  | :----: |
 | `ECDH`     | ❌ |
-| `X25519`   | ❌ |
-| `X448`     | ❌ |
+| `X25519`   | ✅ |
+| `X448`     | ✅ |
 | `HKDF`     | ❌ |
 | `PBKDF2`   | ✅ |
 
@@ -286,9 +290,9 @@ These algorithms provide quantum-resistant cryptography.
 | ---------  | :----: |
 | `ECDH`     | ❌ |
 | `HKDF`     | ❌ |
-| `PBKDF2`   | ❌ |
-| `X25519`   | ❌ |
-| `X448`     | ❌ |
+| `PBKDF2`   | ✅ |
+| `X25519`   | ✅ |
+| `X448`     | ✅ |
 
 ## `subtle.digest`
 | Algorithm   | Status |
@@ -310,7 +314,7 @@ These algorithms provide quantum-resistant cryptography.
 | `AES-CBC`           | ✅ |
 | `AES-GCM`           | ✅ |
 | `AES-OCB`           | ❌ |
-| `ChaCha20-Poly1305` | ❌ |
+| `ChaCha20-Poly1305` | ✅ |
 | `RSA-OAEP`          | ✅ |
 
 ## `subtle.exportKey`
@@ -398,8 +402,8 @@ These algorithms provide quantum-resistant cryptography.
 | `RSA-OAEP`          | ✅     | ✅      | ✅    |       |              |              |            |
 | `RSA-PSS`           | ✅     | ✅      | ✅    |       |              |              |            |
 | `RSASSA-PKCS1-v1_5` | ✅     | ✅      | ✅    |       |              |              |            |
-| `X25519`            | ❌     | ❌      | ❌    | ❌    |              | ❌           |            |
-| `X448`              | ❌     | ❌      | ❌    | ❌    |              | ❌           |            |
+| `X25519`            | ✅     | ✅      | ✅    | ✅    |              | ✅           |            |
+| `X448`              | ✅     | ✅      | ✅    | ✅    |              | ✅           |            |
 
 ## `subtle.sign`
 | Algorithm           | Status |
@@ -421,10 +425,10 @@ These algorithms provide quantum-resistant cryptography.
 | ------------------- | :----: |
 | `AES-CBC`           | ❌ |
 | `AES-CTR`           | ❌ |
-| `AES-GCM`           | ❌ |
-| `AES-KW`            | ❌ |
+| `AES-GCM`           | ✅ |
+| `AES-KW`            | ✅ |
 | `AES-OCB`           | ❌ |
-| `ChaCha20-Poly1305` | ❌ |
+| `ChaCha20-Poly1305` | ✅ |
 | `RSA-OAEP`          | ❌ |
 
 ### unwrapped key algorithms
@@ -473,8 +477,8 @@ These algorithms provide quantum-resistant cryptography.
 | ------------------- | :----: |
 | `AES-CBC`           | ❌ |
 | `AES-CTR`           | ❌ |
-| `AES-GCM`           | ❌ |
-| `AES-KW`            | ❌ |
+| `AES-GCM`           | ✅ |
+| `AES-KW`            | ✅ |
 | `AES-OCB`           | ❌ |
-| `ChaCha20-Poly1305` | ❌ |
+| `ChaCha20-Poly1305` | ✅ |
 | `RSA-OAEP`          | ❌ |
