@@ -59,14 +59,14 @@ target 'QuickCryptoExample' do
       end
     end
 
-    # Embed OpenSSL.framework from SPM into the app bundle
+    # Embed SPM frameworks from QuickCrypto into the app bundle
     # SPM frameworks added to Pods project need manual embedding
     main_project_path = File.join(installer.sandbox.root.parent, 'QuickCryptoExample.xcodeproj')
     main_project = Xcodeproj::Project.open(main_project_path)
     app_target = main_project.targets.find { |t| t.name == 'QuickCryptoExample' }
 
     if app_target
-      embed_phase_name = 'Embed SPM Frameworks (OpenSSL)'
+      embed_phase_name = 'Embed SPM Frameworks (QuickCrypto)'
       existing_phase = app_target.shell_script_build_phases.find { |p| p.name == embed_phase_name }
 
       unless existing_phase
@@ -78,10 +78,8 @@ target 'QuickCryptoExample' do
 
           if [ -d "$OPENSSL_FRAMEWORK" ]; then
             echo "Found OpenSSL.framework at $OPENSSL_FRAMEWORK"
-            mkdir -p "${BUILT_PRODUCTS_DIR}/${FRAMEWORKS_FOLDER_PATH}"
             rsync -av --delete "$OPENSSL_FRAMEWORK" "${BUILT_PRODUCTS_DIR}/${FRAMEWORKS_FOLDER_PATH}/"
 
-            # Code sign if required
             if [ -n "${EXPANDED_CODE_SIGN_IDENTITY:-}" ] && [ "${CODE_SIGNING_REQUIRED:-}" != "NO" ]; then
               /usr/bin/codesign --force --sign "${EXPANDED_CODE_SIGN_IDENTITY}" --preserve-metadata=identifier,entitlements "${BUILT_PRODUCTS_DIR}/${FRAMEWORKS_FOLDER_PATH}/OpenSSL.framework"
             fi
@@ -98,7 +96,7 @@ target 'QuickCryptoExample' do
         end
 
         main_project.save
-        Pod::UI.puts "[QuickCrypto] Added 'Embed SPM Frameworks (OpenSSL)' build phase"
+        Pod::UI.puts "[QuickCrypto] Added 'Embed SPM Frameworks (QuickCrypto)' build phase"
       end
     end
   end

@@ -23,63 +23,21 @@ Pod::Spec.new do |s|
   Pod::UI.puts("[QuickCrypto]  🧂 has libsodium #{sodium_enabled ? "enabled" : "disabled"}!")
 
   if sodium_enabled
-    # cocoapod for Sodium has not been updated for a while, so we need to build it ourselves
-    # https://github.com/jedisct1/swift-sodium/issues/264#issuecomment-2864963850
+    # Build libsodium from source for XSalsa20 cipher support
+    # CocoaPods packages are outdated (1.0.12) and SPM causes module conflicts
     s.prepare_command = <<-CMD
-      set -e  # Exit on any error
-      set -x  # Print commands as they execute
-
-      # Create ios directory if it doesn't exist
+      set -e
       mkdir -p ios
-
-      # Download libsodium with verbose output
-      echo "Downloading libsodium..."
-      curl -L -v -o ios/libsodium.tar.gz https://download.libsodium.org/libsodium/releases/libsodium-1.0.20-stable.tar.gz
-
-      # Verify download
-      if [ ! -f ios/libsodium.tar.gz ]; then
-        echo "ERROR: Failed to download libsodium.tar.gz"
-        exit 1
-      fi
-
-      echo "Download size: $(wc -c < ios/libsodium.tar.gz) bytes"
-
-      # Clean previous extraction
-      rm -rf ios/libsodium-stable
-
-      # Extract the full tarball
-      echo "Extracting libsodium..."
+      curl -L -o ios/libsodium.tar.gz https://download.libsodium.org/libsodium/releases/libsodium-1.0.20-stable.tar.gz
       tar -xzf ios/libsodium.tar.gz -C ios
-
-      # Verify extraction
-      if [ ! -d ios/libsodium-stable ]; then
-        echo "ERROR: Failed to extract libsodium"
-        exit 1
-      fi
-
-      # Run configure and make to generate all headers including private ones
-      echo "Configuring libsodium..."
       cd ios/libsodium-stable
       ./configure --disable-shared --enable-static
-
-      echo "Building libsodium..."
       make -j$(sysctl -n hw.ncpu)
-
-      # Verify build success
-      if [ ! -f src/libsodium/.libs/libsodium.a ]; then
-        echo "ERROR: libsodium build failed - static library not found"
-        exit 1
-      fi
-
-      echo "libsodium build completed successfully"
-
-      # Cleanup
       cd ../../
       rm -f ios/libsodium.tar.gz
     CMD
   else
     s.prepare_command = <<-CMD
-      # Clean up libsodium files if they exist
       rm -rf ios/libsodium-stable
       rm -f ios/libsodium.tar.gz
     CMD
@@ -164,7 +122,7 @@ Pod::Spec.new do |s|
       "\"$(PODS_ROOT)/../../packages/react-native-quick-crypto/ios/libsodium-stable/src/libsodium/include/sodium\""
     ]
     xcconfig["HEADER_SEARCH_PATHS"] = (cpp_headers + sodium_headers).join(' ')
-    xcconfig["GCC_PREPROCESSOR_DEFINITIONS"] = "$(inherited) BLSALLOC_SODIUM=1"
+    xcconfig["GCC_PREPROCESSOR_DEFINITIONS"] = "$(inherited) FOLLY_NO_CONFIG FOLLY_CFG_NO_COROUTINES BLSALLOC_SODIUM=1"
   else
     xcconfig["HEADER_SEARCH_PATHS"] = cpp_headers.join(' ')
   end
