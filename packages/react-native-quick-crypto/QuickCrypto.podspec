@@ -115,7 +115,7 @@ Pod::Spec.new do |s|
     spm_dependency(s,
       url: 'https://github.com/jedisct1/swift-sodium.git',
       requirement: {kind: 'upToNextMajorVersion', minimumVersion: '0.9.1'},
-      products: ['Clibsodium']
+      products: ['Sodium']
     )
   end
 

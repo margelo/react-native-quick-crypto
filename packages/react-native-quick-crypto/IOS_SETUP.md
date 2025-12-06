@@ -5,7 +5,7 @@
 QuickCrypto uses Swift Package Manager (SPM) dependencies that must be manually embedded in your app bundle:
 
 - **OpenSSL 3.6+** (required) - For ML-DSA post-quantum cryptography support
-- **Clibsodium** (optional) - For XSalsa20 cipher support (when `SODIUM_ENABLED=1`)
+- **Sodium** (optional) - For XSalsa20 cipher support via libsodium (when `SODIUM_ENABLED=1`)
 
 ### Why is this needed?
 
@@ -47,11 +47,11 @@ post_install do |installer|
           fi
         fi
 
-        # Embed Clibsodium.framework (optional, if SODIUM_ENABLED=1)
-        if [ -d "${BUILT_PRODUCTS_DIR}/Clibsodium.framework" ]; then
-          rsync -av --delete "${BUILT_PRODUCTS_DIR}/Clibsodium.framework" "${BUILT_PRODUCTS_DIR}/${FRAMEWORKS_FOLDER_PATH}/"
+        # Embed Sodium.framework (optional, if SODIUM_ENABLED=1)
+        if [ -d "${BUILT_PRODUCTS_DIR}/Sodium.framework" ]; then
+          rsync -av --delete "${BUILT_PRODUCTS_DIR}/Sodium.framework" "${BUILT_PRODUCTS_DIR}/${FRAMEWORKS_FOLDER_PATH}/"
           if [ -n "${EXPANDED_CODE_SIGN_IDENTITY:-}" ]; then
-            /usr/bin/codesign --force --sign "${EXPANDED_CODE_SIGN_IDENTITY}" --preserve-metadata=identifier,entitlements "${BUILT_PRODUCTS_DIR}/${FRAMEWORKS_FOLDER_PATH}/Clibsodium.framework"
+            /usr/bin/codesign --force --sign "${EXPANDED_CODE_SIGN_IDENTITY}" --preserve-metadata=identifier,entitlements "${BUILT_PRODUCTS_DIR}/${FRAMEWORKS_FOLDER_PATH}/Sodium.framework"
           fi
         fi
       SCRIPT

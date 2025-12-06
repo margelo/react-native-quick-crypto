@@ -91,16 +91,16 @@ target 'QuickCryptoExample' do
             echo "warning: OpenSSL.framework not found at $OPENSSL_FRAMEWORK"
           fi
 
-          # Embed Clibsodium.framework (optional, when SODIUM_ENABLED=1)
-          CLIBSODIUM_FRAMEWORK="${BUILT_PRODUCTS_DIR}/Clibsodium.framework"
-          if [ -d "$CLIBSODIUM_FRAMEWORK" ]; then
-            echo "Found Clibsodium.framework at $CLIBSODIUM_FRAMEWORK"
-            rsync -av --delete "$CLIBSODIUM_FRAMEWORK" "${BUILT_PRODUCTS_DIR}/${FRAMEWORKS_FOLDER_PATH}/"
+          # Embed Sodium.framework (optional, when SODIUM_ENABLED=1)
+          SODIUM_FRAMEWORK="${BUILT_PRODUCTS_DIR}/Sodium.framework"
+          if [ -d "$SODIUM_FRAMEWORK" ]; then
+            echo "Found Sodium.framework at $SODIUM_FRAMEWORK"
+            rsync -av --delete "$SODIUM_FRAMEWORK" "${BUILT_PRODUCTS_DIR}/${FRAMEWORKS_FOLDER_PATH}/"
 
             if [ -n "${EXPANDED_CODE_SIGN_IDENTITY:-}" ] && [ "${CODE_SIGNING_REQUIRED:-}" != "NO" ]; then
-              /usr/bin/codesign --force --sign "${EXPANDED_CODE_SIGN_IDENTITY}" --preserve-metadata=identifier,entitlements "${BUILT_PRODUCTS_DIR}/${FRAMEWORKS_FOLDER_PATH}/Clibsodium.framework"
+              /usr/bin/codesign --force --sign "${EXPANDED_CODE_SIGN_IDENTITY}" --preserve-metadata=identifier,entitlements "${BUILT_PRODUCTS_DIR}/${FRAMEWORKS_FOLDER_PATH}/Sodium.framework"
             fi
-            echo "Clibsodium.framework embedded successfully"
+            echo "Sodium.framework embedded successfully"
           fi
         SCRIPT
 
