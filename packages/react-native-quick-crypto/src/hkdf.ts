@@ -71,24 +71,22 @@ export function hkdf(
     }
 
     const nativeMod = getNative();
-    // Nitro methods are synchronous unless async is specified, but to match Node.js callback style we can wrap or if we want true async offloading we'd need Promise support in Native.
-    // The spec defined deriveKey as synchronous returning ArrayBuffer.
-    // Node.js hkdf is async (updates in thread pool).
-    // For now, we will execute synchronously and call callback.
-    // If we wanted true async, we should have defined it as Promise in Nitro spec.
-    // Given the task is to act like Node.js, and this is "Quick Crypto", we might want it to be fast.
-    // However, crypto ops can be heavy.
-    // Let's implement sync for now as per spec.
-
-    const result = nativeMod.deriveKey(
-      normalizedDigest,
-      sanitizedKey,
-      sanitizedSalt,
-      sanitizedInfo,
-      keylen,
-    );
-
-    callback(null, Buffer.from(result));
+    nativeMod
+      .hkdf(
+        normalizedDigest,
+        sanitizedKey,
+        sanitizedSalt,
+        sanitizedInfo,
+        keylen,
+      )
+      .then(
+        res => {
+          callback(null, Buffer.from(res));
+        },
+        err => {
+          callback(err);
+        },
+      );
   } catch (err) {
     callback(err as Error);
   }

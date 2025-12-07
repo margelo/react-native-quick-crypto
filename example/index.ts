@@ -31,23 +31,13 @@ if (typeof global.structuredClone === 'undefined') {
 import 'event-target-polyfill';
 
 // readable-stream
-if (typeof global.process !== 'undefined') {
-  const descriptor = Object.getOwnPropertyDescriptor(global.process, 'version');
-  if (!descriptor || descriptor.writable || descriptor.configurable) {
-    try {
-      Object.defineProperty(global.process, 'version', {
-        value: 'v22.0.0',
-        writable: true,
-        enumerable: true,
-        configurable: true,
-      });
-    } catch (e) {
-      console.warn('Failed to define process.version:', e);
-    }
-  }
-} else {
+if (global.process == null) {
   // @ts-expect-error - process is not defined
-  global.process = { version: 'v22.0.0' };
+  global.process = {};
+}
+if (global.process.version == null) {
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  (global.process as any).version = 'v22.0.0';
 }
 
 import { AppRegistry } from 'react-native';

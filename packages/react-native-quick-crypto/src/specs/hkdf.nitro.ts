@@ -8,4 +8,12 @@ export interface Hkdf extends HybridObject<{ ios: 'c++'; android: 'c++' }> {
     info: ArrayBuffer,
     length: number,
   ): ArrayBuffer;
+
+  hkdf(
+    algorithm: string,
+    key: ArrayBuffer,
+    salt: ArrayBuffer,
+    info: ArrayBuffer,
+    length: number,
+  ): Promise<ArrayBuffer>;
 }

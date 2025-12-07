@@ -8,10 +8,25 @@
 #include <vector>
 
 #include "HybridHkdf.hpp"
+#include "Utils.hpp"
 
 namespace margelo::nitro::crypto {
 
-std::shared_ptr<ArrayBuffer> HybridHkdf::deriveKey(const std::string& algorithm, const std::shared_ptr<ArrayBuffer>& key,
+std::shared_ptr<Promise<std::shared_ptr<ArrayBuffer>>> HybridHkdf::hkdf(const std::string& algorithm,
+                                                                        const std::shared_ptr<ArrayBuffer>& key,
+                                                                        const std::shared_ptr<ArrayBuffer>& salt,
+                                                                        const std::shared_ptr<ArrayBuffer>& info, double length) {
+  // get owned NativeArrayBuffers before passing to sync function
+  auto nativeKey = ToNativeArrayBuffer(key);
+  auto nativeSalt = ToNativeArrayBuffer(salt);
+  auto nativeInfo = ToNativeArrayBuffer(info);
+
+  return Promise<std::shared_ptr<ArrayBuffer>>::async([this, algorithm, nativeKey, nativeSalt, nativeInfo, length]() {
+    return this->deriveKey(algorithm, nativeKey, nativeSalt, nativeInfo, length);
+  });
+}
+
+std::shared_ptr<ArrayBuffer> HybridHkdf::deriveKey(const std::string& algorithm, const std::shared_ptr<ArrayBuffer>& baseKey,
                                                    const std::shared_ptr<ArrayBuffer>& salt, const std::shared_ptr<ArrayBuffer>& info,
                                                    double length) {
   EVP_KDF* kdf = EVP_KDF_fetch(nullptr, "HKDF", nullptr);
@@ -32,8 +47,8 @@ std::shared_ptr<ArrayBuffer> HybridHkdf::deriveKey(const std::string& algorithm,
   params[paramIndex++] = OSSL_PARAM_construct_utf8_string(OSSL_KDF_PARAM_DIGEST, const_cast<char*>(algorithm.c_str()), 0);
 
   // Key (Input Keying Material)
-  if (key && key->size() > 0) {
-    params[paramIndex++] = OSSL_PARAM_construct_octet_string(OSSL_KDF_PARAM_KEY, key->data(), key->size());
+  if (baseKey && baseKey->size() > 0) {
+    params[paramIndex++] = OSSL_PARAM_construct_octet_string(OSSL_KDF_PARAM_KEY, baseKey->data(), baseKey->size());
   } else {
     // Empty key is allowed in HKDF (defaults to zero string of hashLen) but explicit param usually expected if not null
     // If we want empty, we can pass generic empty buffer or handle it.

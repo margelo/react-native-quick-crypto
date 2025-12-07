@@ -49,26 +49,12 @@ export const install = () => {
 };
 
 // random, cipher, hash use nextTick
-if (typeof global.process !== 'undefined') {
-  const descriptor = Object.getOwnPropertyDescriptor(
-    global.process,
-    'nextTick',
-  );
-  if (!descriptor || descriptor.writable || descriptor.configurable) {
-    try {
-      Object.defineProperty(global.process, 'nextTick', {
-        value: setImmediate,
-        writable: true,
-        enumerable: true,
-        configurable: true,
-      });
-    } catch (e) {
-      console.warn('Failed to define process.nextTick:', e);
-    }
-  }
-} else {
+if (global.process == null) {
   // @ts-expect-error - process is not defined
-  global.process = { nextTick: setImmediate };
+  global.process = {};
+}
+if (global.process.nextTick == null) {
+  global.process.nextTick = setImmediate;
 }
 
 // exports

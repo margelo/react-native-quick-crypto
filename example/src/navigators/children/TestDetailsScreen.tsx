@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { SafeAreaView, ScrollView, StyleSheet, Text, View } from 'react-native';
-import { Checkbox } from '../../components/Checkbox';
+import BouncyCheckbox from 'react-native-bouncy-checkbox';
 import { CorrectResultItem } from '../../components/CorrectResultItem';
 import { IncorrectResultItem } from '../../components/IncorrectResultItem';
 import { Suite } from '../../components/Suite';
@@ -25,22 +25,24 @@ export const TestDetailsScreen = ({ route }) => {
       </View>
       <View style={styles.showMenu}>
         <View style={styles.showMenuItem}>
-          <Checkbox
+          <BouncyCheckbox
             isChecked={showFailed}
             onPress={() => setShowFailed(!showFailed)}
             fillColor="red"
             style={styles.checkbox}
             testID="show-failed-checkbox"
+            disableBuiltInState={true}
           />
           <Text style={styles.showMenuLabel}>Show Failed</Text>
         </View>
         <View style={styles.showMenuItem}>
-          <Checkbox
+          <BouncyCheckbox
             isChecked={showPassed}
             onPress={() => setShowPassed(!showPassed)}
             fillColor={colors.green}
             style={styles.checkbox}
             testID="show-passed-checkbox"
+            disableBuiltInState={true}
           />
           <Text style={styles.showMenuLabel}>Show Passed</Text>
         </View>
