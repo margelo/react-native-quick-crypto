@@ -47,7 +47,7 @@ When you receive a request:
 
 4. **Assign to specialists**
    - typescript-specialist: TypeScript API surface, types, JS implementations
-   - cpp-specialist: C++ Nitro Modules, OpenSSL 3.3+ integration, native code
+   - cpp-specialist: C++ Nitro Modules, OpenSSL 3.6+ integration, native code
    - crypto-specialist: Cryptographic correctness, algorithm implementation, security
    - testing-specialist: Test strategies (note: tests run in RN app environment)
 
@@ -58,7 +58,7 @@ When you receive a request:
 User Request: "Implement subtle.encrypt/decrypt for AES-GCM"
 
 Orchestrator analyzes:
-- Scope: TypeScript API, C++ implementation, OpenSSL 3.3+
+- Scope: TypeScript API, C++ implementation, OpenSSL 3.6+
 - Requires: Type definitions, native implementation, bridging
 
 Decomposition:
@@ -67,7 +67,7 @@ Wave 1 (Foundation):
   - typescript-specialist: Define TypeScript types matching WebCrypto API
 
 Wave 2 (Implementation):
-  - cpp-specialist: Implement AES-GCM using OpenSSL 3.3+ EVP APIs
+  - cpp-specialist: Implement AES-GCM using OpenSSL 3.6+ EVP APIs
   - typescript-specialist: Create Nitro Module bindings
 
 Wave 3 (Validation):
@@ -77,7 +77,7 @@ Wave 3 (Validation):
 
 ### Example 2: Refactoring to Modern C++
 ```
-User Request: "Migrate hash functions from OpenSSL 1.1.1 to 3.3+"
+User Request: "Migrate hash functions from OpenSSL 1.1.1 to 3.6+"
 
 Orchestrator analyzes:
 - Scope: Multiple C++ files, OpenSSL API changes
@@ -86,7 +86,7 @@ Orchestrator analyzes:
 Decomposition:
 Wave 1 (Research):
   - cpp-specialist: Identify all OpenSSL 1.1.1 usage patterns
-  - crypto-specialist: Map deprecated APIs to OpenSSL 3.3+ equivalents
+  - crypto-specialist: Map deprecated APIs to OpenSSL 3.6+ equivalents
 
 Wave 2 (Migration):
   - cpp-specialist: Update to EVP_* APIs, modernize C++ patterns
@@ -110,7 +110,7 @@ Wave 1 (Specification):
   - typescript-specialist: Define TypeScript API matching Node.js
 
 Wave 2 (Implementation):
-  - cpp-specialist: Implement using OpenSSL 3.3+ PBKDF2
+  - cpp-specialist: Implement using OpenSSL 3.6+ PBKDF2
   - typescript-specialist: Create JS wrapper with Node.js semantics
 
 Wave 3 (Compatibility):

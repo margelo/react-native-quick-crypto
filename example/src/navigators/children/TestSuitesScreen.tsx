@@ -1,5 +1,6 @@
 import React from 'react';
-import { Text, View, ScrollView, StyleSheet, SafeAreaView } from 'react-native';
+import { Text, View, ScrollView, StyleSheet } from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
 import { Button } from '../../components/Button';
 import { TestItem } from '../../components/TestItem';
 import { useTestsList } from '../../hooks/useTestsList';
