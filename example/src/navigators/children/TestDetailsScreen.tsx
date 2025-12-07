@@ -20,7 +20,7 @@ export const TestDetailsScreen = ({ route }) => {
   const [showPassed, setShowPassed] = useState<boolean>(true);
 
   return (
-    <SafeAreaView style={styles.container}>
+    <SafeAreaView style={styles.container} edges={['left', 'right']}>
       <View>
         <Text style={styles.title}>Test Results for '{suiteName}' Suite</Text>
       </View>

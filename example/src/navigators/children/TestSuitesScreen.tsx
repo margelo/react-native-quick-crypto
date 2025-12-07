@@ -13,7 +13,7 @@ export const TestSuitesScreen = () => {
   let totalCount = 0;
 
   return (
-    <SafeAreaView style={styles.mainContainer}>
+    <SafeAreaView style={styles.mainContainer} edges={['left', 'right']}>
       <View style={styles.testList}>
         <ScrollView style={styles.scrollView} testID="test-suites-list">
           {Object.entries(suites).map(([suiteName, suite], index) => {

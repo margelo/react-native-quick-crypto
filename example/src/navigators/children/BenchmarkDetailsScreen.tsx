@@ -21,7 +21,7 @@ export const BenchmarkDetailsScreen = ({
   const { results, name }: RouteParams = route.params;
 
   return (
-    <SafeAreaView style={styles.container}>
+    <SafeAreaView style={styles.container} edges={['left', 'right']}>
       <View>
         <Text style={styles.title}>Benchmark Results for '{name}' Suite</Text>
       </View>

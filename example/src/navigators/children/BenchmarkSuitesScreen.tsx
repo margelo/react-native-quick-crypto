@@ -12,7 +12,7 @@ export const BenchmarkSuitesScreen = () => {
   let totalCount = 0;
 
   return (
-    <SafeAreaView style={styles.mainContainer}>
+    <SafeAreaView style={styles.mainContainer} edges={['left', 'right']}>
       <View style={styles.benchmarkList}>
         <FlatList
           data={suites}
