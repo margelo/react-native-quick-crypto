@@ -45,8 +45,8 @@
   </rule>
 
   <rule severity="CRITICAL" enforcement="BLOCKING">
-    <name>OpenSSL 3.3+ APIs Only</name>
-    <description>Use OpenSSL 3.3+ or higher EVP APIs, no deprecated functions</description>
+    <name>OpenSSL 3.6+ APIs Only</name>
+    <description>Use OpenSSL 3.6+ or higher EVP APIs, no deprecated functions</description>
     <requirements>
       <requirement>EVP high-level APIs only</requirement>
       <requirement>No low-level deprecated APIs (AES_*, SHA256_*, etc.)</requirement>
@@ -69,7 +69,7 @@
     </migrations>
     <mustAcknowledge>true</mustAcknowledge>
     <rationale>
-      OpenSSL 1.1.1 is deprecated. OpenSSL 3.x provides better security, performance, and future support.
+      OpenSSL 3.6+ provides better security, performance, and future support.
     </rationale>
   </rule>
 
@@ -146,17 +146,11 @@
         <name>Node.js ncrypto</name>
         <path>$REPOS/node/deps/ncrypto</path>
         <description>Node.js externalized crypto code - primary reference</description>
-        <note>May need updating to OpenSSL 3.3+ patterns</note>
+        <note>May need updating to OpenSSL 3.6+ patterns</note>
       </source>
       <source priority="2">
-        <name>OpenSSL 3.3+ Documentation</name>
+        <name>OpenSSL 3.6+ Documentation</name>
         <description>Official OpenSSL API documentation and migration guides</description>
-      </source>
-      <source priority="3">
-        <name>RNQC 0.x</name>
-        <path>$REPOS/rnqc/0.x</path>
-        <description>Legacy implementation - migration reference only</description>
-        <warning>Uses OpenSSL 1.1.1 - don't copy patterns directly</warning>
       </source>
     </sources>
   </rule>
@@ -182,7 +176,7 @@
       <setting>C++20 minimum standard</setting>
       <setting>Enable all warnings (-Wall -Wextra)</setting>
       <setting>Treat warnings as errors</setting>
-      <setting>Link against OpenSSL 3.3+</setting>
+      <setting>Link against OpenSSL 3.6+</setting>
     </settings>
   </rule>
 

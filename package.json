@@ -18,8 +18,7 @@
     "format:fix": "bun --filter='*' format:fix",
     "prepare": "husky && bun --filter='react-native-quick-crypto' prepare",
     "lint-staged": "lint-staged --no-stash",
-    "release": "./scripts/release.sh",
-    "yalc": "cd packages/react-native-quick-crypto && bun yalc push --replace --sig"
+    "release": "./scripts/release.sh"
   },
   "lint-staged": {
     "example/**/*.{js,jsx,ts,tsx}": [
@@ -33,8 +32,8 @@
   },
   "devDependencies": {
     "@eslint/compat": "1.2.8",
-    "husky": "^9.1.7",
-    "lint-staged": "^16.1.6",
+    "husky": "9.1.7",
+    "lint-staged": "16.1.6",
     "@eslint/js": "9.24.0",
     "@release-it/bumper": "7.0.5",
     "@release-it/conventional-changelog": "10.0.1",
@@ -49,8 +48,7 @@
     "prettier": "3.5.3",
     "release-it": "19.0.5",
     "typescript": "5.8.3",
-    "typescript-eslint": "8.43.0",
-    "yalc": "^1.0.0-pre.53"
+    "typescript-eslint": "8.43.0"
   },
   "packageManager": "bun@1.2.0",
   "release-it": {
@@ -103,6 +101,6 @@
     "example"
   ],
   "dependencies": {
-    "caniuse-lite": "^1.0.30001757"
+    "caniuse-lite": "1.0.30001757"
   }
 }
