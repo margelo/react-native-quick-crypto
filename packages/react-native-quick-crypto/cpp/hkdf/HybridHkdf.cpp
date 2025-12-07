@@ -12,23 +12,23 @@
 
 namespace margelo::nitro::crypto {
 
-std::shared_ptr<Promise<std::shared_ptr<ArrayBuffer>>> HybridHkdf::hkdf(const std::string& algorithm,
-                                                                        const std::shared_ptr<ArrayBuffer>& key,
-                                                                        const std::shared_ptr<ArrayBuffer>& salt,
-                                                                        const std::shared_ptr<ArrayBuffer>& info, double length) {
+std::shared_ptr<Promise<std::shared_ptr<ArrayBuffer>>> HybridHkdf::deriveKey(const std::string& algorithm,
+                                                                             const std::shared_ptr<ArrayBuffer>& key,
+                                                                             const std::shared_ptr<ArrayBuffer>& salt,
+                                                                             const std::shared_ptr<ArrayBuffer>& info, double length) {
   // get owned NativeArrayBuffers before passing to sync function
   auto nativeKey = ToNativeArrayBuffer(key);
   auto nativeSalt = ToNativeArrayBuffer(salt);
   auto nativeInfo = ToNativeArrayBuffer(info);
 
   return Promise<std::shared_ptr<ArrayBuffer>>::async([this, algorithm, nativeKey, nativeSalt, nativeInfo, length]() {
-    return this->deriveKey(algorithm, nativeKey, nativeSalt, nativeInfo, length);
+    return this->deriveKeySync(algorithm, nativeKey, nativeSalt, nativeInfo, length);
   });
 }
 
-std::shared_ptr<ArrayBuffer> HybridHkdf::deriveKey(const std::string& algorithm, const std::shared_ptr<ArrayBuffer>& baseKey,
-                                                   const std::shared_ptr<ArrayBuffer>& salt, const std::shared_ptr<ArrayBuffer>& info,
-                                                   double length) {
+std::shared_ptr<ArrayBuffer> HybridHkdf::deriveKeySync(const std::string& algorithm, const std::shared_ptr<ArrayBuffer>& baseKey,
+                                                       const std::shared_ptr<ArrayBuffer>& salt, const std::shared_ptr<ArrayBuffer>& info,
+                                                       double length) {
   EVP_KDF* kdf = EVP_KDF_fetch(nullptr, "HKDF", nullptr);
   if (kdf == nullptr) {
     throw std::runtime_error("Failed to fetch HKDF implementation: " + std::to_string(ERR_get_error()));

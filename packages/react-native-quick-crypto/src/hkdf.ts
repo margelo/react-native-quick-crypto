@@ -72,7 +72,7 @@ export function hkdf(
 
     const nativeMod = getNative();
     nativeMod
-      .hkdf(
+      .deriveKey(
         normalizedDigest,
         sanitizedKey,
         sanitizedSalt,
@@ -109,7 +109,7 @@ export function hkdfSync(
   }
 
   const nativeMod = getNative();
-  const result = nativeMod.deriveKey(
+  const result = nativeMod.deriveKeySync(
     normalizedDigest,
     sanitizedKey,
     sanitizedSalt,
@@ -140,7 +140,7 @@ export function hkdfDeriveBits(
   const normalizedDigest = normalizeHashName(hashName);
 
   const nativeMod = getNative();
-  const result = nativeMod.deriveKey(
+  const result = nativeMod.deriveKeySync(
     normalizedDigest,
     binaryLikeToArrayBuffer(keyBuffer),
     binaryLikeToArrayBuffer(salt),

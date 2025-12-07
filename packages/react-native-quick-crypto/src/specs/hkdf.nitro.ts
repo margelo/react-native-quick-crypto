@@ -1,7 +1,7 @@
 import type { HybridObject } from 'react-native-nitro-modules';
 
 export interface Hkdf extends HybridObject<{ ios: 'c++'; android: 'c++' }> {
-  deriveKey(
+  deriveKeySync(
     algorithm: string,
     key: ArrayBuffer,
     salt: ArrayBuffer,
@@ -9,7 +9,7 @@ export interface Hkdf extends HybridObject<{ ios: 'c++'; android: 'c++' }> {
     length: number,
   ): ArrayBuffer;
 
-  hkdf(
+  deriveKey(
     algorithm: string,
     key: ArrayBuffer,
     salt: ArrayBuffer,

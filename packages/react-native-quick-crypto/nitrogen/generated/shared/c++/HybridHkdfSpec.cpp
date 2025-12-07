@@ -14,8 +14,8 @@ namespace margelo::nitro::crypto {
     HybridObject::loadHybridMethods();
     // load custom methods/properties
     registerHybrids(this, [](Prototype& prototype) {
+      prototype.registerHybridMethod("deriveKeySync", &HybridHkdfSpec::deriveKeySync);
       prototype.registerHybridMethod("deriveKey", &HybridHkdfSpec::deriveKey);
-      prototype.registerHybridMethod("hkdf", &HybridHkdfSpec::hkdf);
     });
   }
 

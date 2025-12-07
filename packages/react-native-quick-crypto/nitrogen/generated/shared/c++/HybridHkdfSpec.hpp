@@ -51,8 +51,8 @@ namespace margelo::nitro::crypto {
 
     public:
       // Methods
-      virtual std::shared_ptr<ArrayBuffer> deriveKey(const std::string& algorithm, const std::shared_ptr<ArrayBuffer>& key, const std::shared_ptr<ArrayBuffer>& salt, const std::shared_ptr<ArrayBuffer>& info, double length) = 0;
-      virtual std::shared_ptr<Promise<std::shared_ptr<ArrayBuffer>>> hkdf(const std::string& algorithm, const std::shared_ptr<ArrayBuffer>& key, const std::shared_ptr<ArrayBuffer>& salt, const std::shared_ptr<ArrayBuffer>& info, double length) = 0;
+      virtual std::shared_ptr<ArrayBuffer> deriveKeySync(const std::string& algorithm, const std::shared_ptr<ArrayBuffer>& key, const std::shared_ptr<ArrayBuffer>& salt, const std::shared_ptr<ArrayBuffer>& info, double length) = 0;
+      virtual std::shared_ptr<Promise<std::shared_ptr<ArrayBuffer>>> deriveKey(const std::string& algorithm, const std::shared_ptr<ArrayBuffer>& key, const std::shared_ptr<ArrayBuffer>& salt, const std::shared_ptr<ArrayBuffer>& info, double length) = 0;
 
     protected:
       // Hybrid Setup
