@@ -35,7 +35,7 @@
     "events": "3.3.0",
     "react": "19.1.0",
     "react-native": "0.81.1",
-    "react-native-bouncy-checkbox": "4.1.2",
+    "react-native-bouncy-checkbox": "2.1.10",
     "react-native-fast-encoder": "0.3.1",
     "react-native-nitro-modules": "0.29.1",
     "react-native-quick-base64": "2.2.2",

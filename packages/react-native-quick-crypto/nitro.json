@@ -15,6 +15,7 @@
     "EdKeyPair": { "cpp": "HybridEdKeyPair" },
     "Hash": { "cpp": "HybridHash" },
     "Hmac": { "cpp": "HybridHmac" },
+    "Hkdf": { "cpp": "HybridHkdf" },
     "KeyObjectHandle": { "cpp": "HybridKeyObjectHandle" },
     "Pbkdf2": { "cpp": "HybridPbkdf2" },
     "Random": { "cpp": "HybridRandom" },

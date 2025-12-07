@@ -63,9 +63,9 @@ export const BenchmarkItem: React.FC<BenchmarkItemProps> = ({
         <BouncyCheckbox
           isChecked={suite.enabled}
           onPress={() => toggle()}
-          disableText={true}
           fillColor={colors.blue}
           style={styles.checkbox}
+          disableBuiltInState={true}
         />
       )}
       <TouchableOpacity

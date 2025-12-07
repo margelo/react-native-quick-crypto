@@ -29,10 +29,10 @@ export const TestDetailsScreen = ({ route }) => {
           <BouncyCheckbox
             isChecked={showFailed}
             onPress={() => setShowFailed(!showFailed)}
-            disableText={true}
             fillColor="red"
             style={styles.checkbox}
             testID="show-failed-checkbox"
+            disableBuiltInState={true}
           />
           <Text style={styles.showMenuLabel}>Show Failed</Text>
         </View>
@@ -40,10 +40,10 @@ export const TestDetailsScreen = ({ route }) => {
           <BouncyCheckbox
             isChecked={showPassed}
             onPress={() => setShowPassed(!showPassed)}
-            disableText={true}
             fillColor={colors.green}
             style={styles.checkbox}
             testID="show-passed-checkbox"
+            disableBuiltInState={true}
           />
           <Text style={styles.showMenuLabel}>Show Passed</Text>
         </View>

@@ -138,8 +138,8 @@ These algorithms provide quantum-resistant cryptography.
   * ✅ `crypto.getHashes()`
   * ✅ `crypto.getRandomValues(typedArray)`
   * ❌ `crypto.hash(algorithm, data[, options])`
-  * ❌ `crypto.hkdf(digest, ikm, salt, info, keylen, callback)`
-  * ❌ `crypto.hkdfSync(digest, ikm, salt, info, keylen)`
+  * ✅ `crypto.hkdf(digest, ikm, salt, info, keylen, callback)`
+  * ✅ `crypto.hkdfSync(digest, ikm, salt, info, keylen)`
   * ✅ `crypto.pbkdf2(password, salt, iterations, keylen, digest, callback)`
   * ✅ `crypto.pbkdf2Sync(password, salt, iterations, keylen, digest)`
   * ✅ `crypto.privateDecrypt(privateKey, buffer)`
@@ -282,14 +282,14 @@ These algorithms provide quantum-resistant cryptography.
 | `ECDH`     | ❌ |
 | `X25519`   | ✅ |
 | `X448`     | ✅ |
-| `HKDF`     | ❌ |
+| `HKDF`     | ✅ |
 | `PBKDF2`   | ✅ |
 
 ## `subtle.deriveKey`
 | Algorithm  | Status |
 | ---------  | :----: |
 | `ECDH`     | ❌ |
-| `HKDF`     | ❌ |
+| `HKDF`     | ✅ |
 | `PBKDF2`   | ✅ |
 | `X25519`   | ✅ |
 | `X448`     | ✅ |
@@ -390,7 +390,7 @@ These algorithms provide quantum-resistant cryptography.
 | `ECDSA`             | ✅     | ✅      | ✅    | ✅    |              | ✅           |            |
 | `Ed25519`           | ✅     | ✅      | ❌    | ❌    |              | ❌           |            |
 | `Ed448`             | ✅     | ✅      | ❌    | ❌    |              | ❌           |            |
-| `HKDF`              |        |         |       | ❌    | ❌           |              |            |
+| `HKDF`              |        |         |       | ✅    | ❌           |              |            |
 | `HMAC`              |        |         | ✅    | ✅    | ✅           |              |            |
 | `ML-DSA-44`         | ✅     | ✅      | ✅    |       |              | ✅           | ✅         |
 | `ML-DSA-65`         | ✅     | ✅      | ✅    |       |              | ✅           | ✅         |

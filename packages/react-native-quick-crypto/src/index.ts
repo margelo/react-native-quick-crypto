@@ -8,6 +8,7 @@ import * as cipher from './cipher';
 import * as ed from './ed';
 import { hashExports as hash } from './hash';
 import { hmacExports as hmac } from './hmac';
+import * as hkdf from './hkdf';
 import * as pbkdf2 from './pbkdf2';
 import * as random from './random';
 import { constants } from './constants';
@@ -27,6 +28,7 @@ const QuickCrypto = {
   ...ed,
   ...hash,
   ...hmac,
+  ...hkdf,
   ...pbkdf2,
   ...random,
   ...utils,
@@ -47,7 +49,13 @@ export const install = () => {
 };
 
 // random, cipher, hash use nextTick
-global.process.nextTick = setImmediate;
+if (global.process == null) {
+  // @ts-expect-error - process is not defined
+  global.process = {};
+}
+if (global.process.nextTick == null) {
+  global.process.nextTick = setImmediate;
+}
 
 // exports
 export default QuickCrypto;
@@ -57,6 +65,7 @@ export * from './ed';
 export * from './keys';
 export * from './hash';
 export * from './hmac';
+export * from './hkdf';
 export * from './pbkdf2';
 export * from './random';
 export * from './utils';

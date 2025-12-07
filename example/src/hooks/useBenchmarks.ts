@@ -5,6 +5,7 @@ import ed from '../benchmarks/ed/ed25519';
 import pbkdf2 from '../benchmarks/pbkdf2/pbkdf2';
 import random from '../benchmarks/random/randomBytes';
 import xsalsa20 from '../benchmarks/cipher/xsalsa20';
+import hkdf from '../benchmarks/hkdf/hkdf';
 
 export const useBenchmarks = (): [
   BenchmarkSuite[],
@@ -23,6 +24,7 @@ export const useBenchmarks = (): [
     newSuites.push(new BenchmarkSuite('blake3', blake3));
     newSuites.push(new BenchmarkSuite('ed', ed));
     newSuites.push(new BenchmarkSuite('pbkdf2', pbkdf2));
+    newSuites.push(new BenchmarkSuite('hkdf', hkdf));
     newSuites.push(
       new BenchmarkSuite('random', random, {
         'browserify/randombytes':

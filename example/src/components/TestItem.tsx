@@ -46,9 +46,9 @@ export const TestItem: React.FC<TestItemProps> = ({
         onPress={() => {
           onToggle(description);
         }}
-        disableText={true}
         fillColor={colors.blue}
         style={styles.checkbox}
+        disableBuiltInState={true}
       />
       <TouchableOpacity
         style={styles.touchable}

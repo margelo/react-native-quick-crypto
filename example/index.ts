@@ -31,8 +31,14 @@ if (typeof global.structuredClone === 'undefined') {
 import 'event-target-polyfill';
 
 // readable-stream
-// @ts-expect-error - although process.version is readonly, we're setting it for readable-stream
-global.process.version = 'v22.0.0';
+if (global.process == null) {
+  // @ts-expect-error - process is not defined
+  global.process = {};
+}
+if (global.process.version == null) {
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  (global.process as any).version = 'v22.0.0';
+}
 
 import { AppRegistry } from 'react-native';
 import App from './src/App';
