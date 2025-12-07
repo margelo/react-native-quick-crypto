@@ -151,8 +151,8 @@ These algorithms provide quantum-resistant cryptography.
   * ✅ `crypto.randomFillSync(buffer[, offset][, size])`
   * ✅ `crypto.randomInt([min, ]max[, callback])`
   * ✅ `crypto.randomUUID([options])`
-  * ❌ `crypto.scrypt(password, salt, keylen[, options], callback)`
-  * ❌ `crypto.scryptSync(password, salt, keylen[, options])`
+  * ✅ `crypto.scrypt(password, salt, keylen[, options], callback)`
+  * ✅ `crypto.scryptSync(password, salt, keylen[, options])`
   * ❌ `crypto.secureHeapUsed()`
   * ❌ `crypto.setEngine(engine[, flags])`
   * ❌ `crypto.setFips(bool)`

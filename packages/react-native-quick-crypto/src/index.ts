@@ -9,6 +9,7 @@ import * as ed from './ed';
 import { hashExports as hash } from './hash';
 import { hmacExports as hmac } from './hmac';
 import * as pbkdf2 from './pbkdf2';
+import * as scrypt from './scrypt';
 import * as random from './random';
 import { constants } from './constants';
 
@@ -28,6 +29,7 @@ const QuickCrypto = {
   ...hash,
   ...hmac,
   ...pbkdf2,
+  ...scrypt,
   ...random,
   ...utils,
   ...subtle,
@@ -58,6 +60,7 @@ export * from './keys';
 export * from './hash';
 export * from './hmac';
 export * from './pbkdf2';
+export * from './scrypt';
 export * from './random';
 export * from './utils';
 export * from './subtle';

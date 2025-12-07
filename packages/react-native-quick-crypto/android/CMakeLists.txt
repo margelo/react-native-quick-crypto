@@ -44,6 +44,7 @@ add_library(
   ../cpp/pbkdf2/HybridPbkdf2.cpp
   ../cpp/random/HybridRandom.cpp
   ../cpp/rsa/HybridRsaKeyPair.cpp
+  ../cpp/scrypt/HybridScrypt.cpp
   ../cpp/sign/HybridSignHandle.cpp
   ../cpp/sign/HybridVerifyHandle.cpp
   ${BLAKE3_SOURCES}
@@ -69,6 +70,7 @@ include_directories(
   "../cpp/random"
   "../cpp/rsa"
   "../cpp/sign"
+  "../cpp/scrypt"
   "../cpp/utils"
   "../deps/blake3/c"
   "../deps/fastpbkdf2"
