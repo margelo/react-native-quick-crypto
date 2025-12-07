@@ -44,10 +44,10 @@ export const BenchmarkItem: React.FC<BenchmarkItemProps> = ({
 
   // results handling
   const usTput = suite.results.reduce((acc, result) => {
-    return acc + (result.us?.throughput.mean || 0);
+    return acc + (result.us?.throughput?.mean || 0);
   }, 0);
   const themTput = suite.results.reduce((acc, result) => {
-    return acc + (result.them?.throughput.mean || 0);
+    return acc + (result.them?.throughput?.mean || 0);
   }, 0);
   const times = calculateTimes(usTput, themTput);
   const timesStyle = usTput > themTput ? styles.faster : styles.slower;

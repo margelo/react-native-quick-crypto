@@ -26,6 +26,7 @@
 #include "HybridSignHandle.hpp"
 #include "HybridVerifyHandle.hpp"
 #include "HybridMlDsaKeyPair.hpp"
+#include "HybridScrypt.hpp"
 
 @interface QuickCryptoAutolinking : NSObject
 @end
@@ -178,6 +179,15 @@
                     "The HybridObject \"HybridMlDsaKeyPair\" is not default-constructible! "
                     "Create a public constructor that takes zero arguments to be able to autolink this HybridObject.");
       return std::make_shared<HybridMlDsaKeyPair>();
+    }
+  );
+  HybridObjectRegistry::registerHybridObjectConstructor(
+    "Scrypt",
+    []() -> std::shared_ptr<HybridObject> {
+      static_assert(std::is_default_constructible_v<HybridScrypt>,
+                    "The HybridObject \"HybridScrypt\" is not default-constructible! "
+                    "Create a public constructor that takes zero arguments to be able to autolink this HybridObject.");
+      return std::make_shared<HybridScrypt>();
     }
   );
 }
