@@ -42,16 +42,28 @@ export class BenchmarkSuite {
     const us = tasks.find(t => t.name === 'rnqc');
     const themTasks = tasks.filter(t => t.name !== 'rnqc');
 
-    themTasks.map(them => {
-      const notes = this.notes?.[them.name] ?? '';
+    if (themTasks.length > 0) {
+      themTasks.map(them => {
+        const notes = this.notes?.[them.name] ?? '';
+        this.addResult({
+          errorMsg: undefined,
+          challenger: them.name,
+          notes,
+          benchName: b.name,
+          them: them.result,
+          us: us?.result,
+        });
+      });
+    } else if (us) {
+      // No comparison benchmarks, just show rnqc results
       this.addResult({
         errorMsg: undefined,
-        challenger: them.name,
-        notes,
+        challenger: 'N/A',
+        notes: '',
         benchName: b.name,
-        them: them.result,
-        us: us?.result,
+        them: undefined,
+        us: us.result,
       });
-    });
+    }
   };
 }
