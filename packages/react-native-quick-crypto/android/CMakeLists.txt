@@ -63,6 +63,7 @@ include_directories(
   "../cpp/ec"
   "../cpp/ed25519"
   "../cpp/hash"
+  "../cpp/hkdf"
   "../cpp/hmac"
   "../cpp/keys"
   "../cpp/mldsa"

@@ -108,6 +108,7 @@ Pod::Spec.new do |s|
   # Add cpp subdirectories to header search paths
   cpp_headers = [
     "\"$(PODS_TARGET_SRCROOT)/cpp/utils\"",
+    "\"$(PODS_TARGET_SRCROOT)/cpp/hkdf\"",
     "\"$(PODS_TARGET_SRCROOT)/deps/ncrypto/include\"",
     "\"$(PODS_TARGET_SRCROOT)/deps/blake3/c\"",
     "\"$(PODS_TARGET_SRCROOT)/deps/fastpbkdf2\""
