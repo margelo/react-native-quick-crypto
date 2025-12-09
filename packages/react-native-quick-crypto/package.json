@@ -36,6 +36,7 @@
     "*.podspec",
     "README.md",
     "app.plugin.js",
+    "scripts",
     "!**/__tests__",
     "!**/__fixtures__",
     "!**/__mocks__"
