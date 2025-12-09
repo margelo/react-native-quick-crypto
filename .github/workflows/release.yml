@@ -6,7 +6,7 @@ on:
       version:
         description: 'Version to release (e.g., 1.0.0-beta.21) or increment (patch, minor, major, prepatch, preminor, premajor, prerelease)'
         required: true
-        default: 'prerelease'
+        default: 'patch'
       dry-run:
         description: 'Dry run (no actual publish)'
         type: boolean
