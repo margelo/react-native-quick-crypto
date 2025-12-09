@@ -64,7 +64,7 @@
       "release": true
     },
     "hooks": {
-      "before:release": "bun bundle-install && bun pods && git add example/ios/Podfile.lock"
+      "before:release": "bun bundle-install && bun pods && git add example/ios/Podfile.lock bun.lock"
     },
     "plugins": {
       "@release-it/conventional-changelog": {
