@@ -118,6 +118,7 @@
 				F008C3222B5CD8109E252C6E /* Embed SPM Frameworks (QuickCrypto) */,
 				00EEFC60759A1932668264C0 /* [CP] Embed Pods Frameworks */,
 				E235C05ADACE081382539298 /* [CP] Copy Pods Resources */,
+				0F887C4BF3EDDB98EDD8A258 /* [CP-User] [CP-User] Embed OpenSSL Framework */,
 			);
 			buildRules = (
 			);
@@ -205,6 +206,22 @@
 			shellPath = /bin/sh;
 			shellScript = "\"${PODS_ROOT}/Target Support Files/Pods-QuickCryptoExample/Pods-QuickCryptoExample-frameworks.sh\"\n";
 			showEnvVarsInLog = 0;
+		};
+		0F887C4BF3EDDB98EDD8A258 /* [CP-User] [CP-User] Embed OpenSSL Framework */ = {
+			isa = PBXShellScriptBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			inputPaths = (
+				"${BUILT_PRODUCTS_DIR}/OpenSSL.framework",
+			);
+			name = "[CP-User] [CP-User] Embed OpenSSL Framework";
+			outputPaths = (
+				"${TARGET_BUILD_DIR}/${FRAMEWORKS_FOLDER_PATH}/OpenSSL.framework",
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+			shellPath = /bin/sh;
+			shellScript = "#!/bin/bash\nset -e\n\nOPENSSL_FRAMEWORK=\"${BUILT_PRODUCTS_DIR}/OpenSSL.framework\"\n\nif [ -d \"$OPENSSL_FRAMEWORK\" ]; then\n  echo \"[QuickCrypto] Copying OpenSSL.framework to app bundle\"\n  mkdir -p \"${TARGET_BUILD_DIR}/${FRAMEWORKS_FOLDER_PATH}\"\n  cp -Rf \"$OPENSSL_FRAMEWORK\" \"${TARGET_BUILD_DIR}/${FRAMEWORKS_FOLDER_PATH}/\"\n  \n  # Code sign the framework (only if code signing is required and not a simulator build)\n  if [ \"${CODE_SIGNING_REQUIRED}\" = \"YES\" ] && [ \"${EFFECTIVE_PLATFORM_NAME}\" != \"-iphonesimulator\" ]; then\n    codesign --force --sign \"${EXPANDED_CODE_SIGN_IDENTITY}\" --preserve-metadata=identifier,entitlements --timestamp=none \"${TARGET_BUILD_DIR}/${FRAMEWORKS_FOLDER_PATH}/OpenSSL.framework\" || true\n  fi\n  echo \"[QuickCrypto] Successfully embedded OpenSSL.framework\"\nelse\n  echo \"[QuickCrypto] Warning: OpenSSL.framework not found at $OPENSSL_FRAMEWORK\"\nfi\n";
 		};
 		8C63FDE6D14F20AAC744357A /* Embed SPM Frameworks (OpenSSL) */ = {
 			isa = PBXShellScriptBuildPhase;
