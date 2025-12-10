@@ -38,6 +38,19 @@ export interface RsaCipher
   ): ArrayBuffer;
 
   /**
+   * Decrypt data using public key (inverse of privateEncrypt, for signature verification)
+   * @param keyHandle The public key handle
+   * @param data The data to decrypt
+   * @param padding RSA padding mode (1=PKCS1)
+   * @returns Decrypted data
+   */
+  publicDecrypt(
+    keyHandle: KeyObjectHandle,
+    data: ArrayBuffer,
+    padding: number,
+  ): ArrayBuffer;
+
+  /**
    * Encrypt data using private key (for signatures)
    * @param keyHandle The private key handle
    * @param data The data to encrypt
@@ -51,15 +64,19 @@ export interface RsaCipher
   ): ArrayBuffer;
 
   /**
-   * Decrypt data using public key (for signature verification)
-   * @param keyHandle The public key handle
+   * Decrypt data using private key (inverse of publicEncrypt)
+   * @param keyHandle The private key handle
    * @param data The data to decrypt
-   * @param padding RSA padding mode (1=PKCS1)
+   * @param padding RSA padding mode (1=PKCS1, 4=OAEP)
+   * @param hashAlgorithm The hash algorithm for OAEP (e.g., 'SHA-256')
+   * @param label Optional label for OAEP
    * @returns Decrypted data
    */
   privateDecrypt(
     keyHandle: KeyObjectHandle,
     data: ArrayBuffer,
     padding: number,
+    hashAlgorithm: string,
+    label?: ArrayBuffer,
   ): ArrayBuffer;
 }

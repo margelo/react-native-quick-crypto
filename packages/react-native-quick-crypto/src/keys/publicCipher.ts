@@ -27,6 +27,8 @@ type PublicCipherInput =
 interface PrivateCipherOptions {
   key: BinaryLike | KeyObject | CryptoKey;
   padding?: number;
+  oaepHash?: string;
+  oaepLabel?: BinaryLike;
 }
 
 type PrivateCipherInput =
@@ -53,23 +55,33 @@ function preparePublicCipherKey(
     if (isEncrypt && key.type !== 'public') {
       throw new Error('publicEncrypt requires a public key');
     }
-    if (!isEncrypt && key.type !== 'private') {
-      throw new Error('publicDecrypt requires a private key');
-    }
+    // publicDecrypt accepts both public and private keys (Node.js behavior)
+    // A private key contains the public components needed for verify_recover
     keyObj = key;
   } else if (isCryptoKey(key)) {
     const cryptoKey = key as CryptoKey;
     keyObj = cryptoKey.keyObject;
   } else if (isStringOrBuffer(key)) {
     const data = toAB(key);
-    // Detect if it's PEM format (contains PEM headers) or DER binary
     const isPem = typeof key === 'string' && key.includes('-----BEGIN');
-    keyObj = KeyObject.createKeyObject(
-      isEncrypt ? 'public' : 'private',
-      data,
-      isPem ? KFormatType.PEM : KFormatType.DER,
-      isEncrypt ? KeyEncoding.SPKI : KeyEncoding.PKCS8,
-    );
+    const isPrivatePem =
+      typeof key === 'string' && key.includes('-----BEGIN PRIVATE');
+    // publicDecrypt accepts both public and private keys (Node.js behavior)
+    if (!isEncrypt && isPrivatePem) {
+      keyObj = KeyObject.createKeyObject(
+        'private',
+        data,
+        KFormatType.PEM,
+        KeyEncoding.PKCS8,
+      );
+    } else {
+      keyObj = KeyObject.createKeyObject(
+        'public',
+        data,
+        isPem ? KFormatType.PEM : KFormatType.DER,
+        KeyEncoding.SPKI,
+      );
+    }
   } else if (typeof key === 'object' && 'key' in key) {
     const options = key as PublicCipherOptions;
     const result = preparePublicCipherKey(options.key, isEncrypt);
@@ -118,23 +130,17 @@ export function publicDecrypt(
   key: PublicCipherInput,
   buffer: BinaryLike,
 ): Buffer {
-  const { keyHandle, padding, oaepHash, oaepLabel } = preparePublicCipherKey(
-    key,
-    false,
-  );
+  const { keyHandle, padding } = preparePublicCipherKey(key, false);
 
   const rsaCipher: RsaCipher = NitroModules.createHybridObject('RsaCipher');
   const data = toAB(buffer);
-  const paddingMode = padding ?? constants.RSA_PKCS1_OAEP_PADDING;
-  const hashAlgorithm = oaepHash || 'SHA-256';
+  const paddingMode = padding ?? constants.RSA_PKCS1_PADDING;
 
   try {
-    const decrypted = rsaCipher.decrypt(
+    const decrypted = rsaCipher.publicDecrypt(
       keyHandle.handle,
       data,
       paddingMode,
-      hashAlgorithm,
-      oaepLabel,
     );
     return Buffer.from(decrypted);
   } catch (error) {
@@ -148,16 +154,20 @@ function preparePrivateCipherKey(
 ): {
   keyHandle: KeyObject;
   padding?: number;
+  oaepHash?: string;
+  oaepLabel?: ArrayBuffer;
 } {
   let keyObj: KeyObject;
   let padding: number | undefined;
+  let oaepHash: string | undefined;
+  let oaepLabel: ArrayBuffer | undefined;
 
   if (key instanceof KeyObject) {
     if (isEncrypt && key.type !== 'private') {
       throw new Error('privateEncrypt requires a private key');
     }
-    if (!isEncrypt && key.type !== 'public') {
-      throw new Error('privateDecrypt requires a public key');
+    if (!isEncrypt && key.type !== 'private') {
+      throw new Error('privateDecrypt requires a private key');
     }
     keyObj = key;
   } else if (isCryptoKey(key)) {
@@ -167,21 +177,25 @@ function preparePrivateCipherKey(
     const data = toAB(key);
     const isPem = typeof key === 'string' && key.includes('-----BEGIN');
     keyObj = KeyObject.createKeyObject(
-      isEncrypt ? 'private' : 'public',
+      'private',
       data,
       isPem ? KFormatType.PEM : KFormatType.DER,
-      isEncrypt ? KeyEncoding.PKCS8 : KeyEncoding.SPKI,
+      KeyEncoding.PKCS8,
     );
   } else if (typeof key === 'object' && 'key' in key) {
     const options = key as PrivateCipherOptions;
     const result = preparePrivateCipherKey(options.key, isEncrypt);
     keyObj = result.keyHandle;
     padding = options.padding;
+    oaepHash = options.oaepHash;
+    if (options.oaepLabel) {
+      oaepLabel = toAB(options.oaepLabel);
+    }
   } else {
     throw new Error('Invalid key input');
   }
 
-  return { keyHandle: keyObj, padding };
+  return { keyHandle: keyObj, padding, oaepHash, oaepLabel };
 }
 
 export function privateEncrypt(
@@ -210,17 +224,23 @@ export function privateDecrypt(
   key: PrivateCipherInput,
   buffer: BinaryLike,
 ): Buffer {
-  const { keyHandle, padding } = preparePrivateCipherKey(key, false);
+  const { keyHandle, padding, oaepHash, oaepLabel } = preparePrivateCipherKey(
+    key,
+    false,
+  );
 
   const rsaCipher: RsaCipher = NitroModules.createHybridObject('RsaCipher');
   const data = toAB(buffer);
-  const paddingMode = padding ?? constants.RSA_PKCS1_PADDING;
+  const paddingMode = padding ?? constants.RSA_PKCS1_OAEP_PADDING;
+  const hashAlgorithm = oaepHash || 'SHA-256';
 
   try {
     const decrypted = rsaCipher.privateDecrypt(
       keyHandle.handle,
       data,
       paddingMode,
+      hashAlgorithm,
+      oaepLabel,
     );
     return Buffer.from(decrypted);
   } catch (error) {

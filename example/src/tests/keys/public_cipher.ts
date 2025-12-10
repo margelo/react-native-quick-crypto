@@ -15,7 +15,7 @@ import type { WebCryptoKeyPair } from 'react-native-quick-crypto';
 import { expect } from 'chai';
 import { test, assertThrowsAsync, decodeHex } from '../util';
 
-const SUITE = 'keys.publicEncrypt/publicDecrypt';
+const SUITE = 'keys.publicEncrypt/privateDecrypt';
 
 // RSA 2048-bit test keys from fixtures
 // Source: Node.js test fixtures / WebCrypto test vectors
@@ -90,7 +90,7 @@ const testMessage = Buffer.from('Test message for RSA encryption');
 
 // --- Basic Encrypt/Decrypt Tests ---
 
-test(SUITE, 'publicEncrypt/publicDecrypt round-trip with DER keys', () => {
+test(SUITE, 'publicEncrypt/privateDecrypt round-trip with DER keys', () => {
   const publicKey = createPublicKey({
     key: Buffer.from(spki),
     format: 'der',
@@ -104,12 +104,12 @@ test(SUITE, 'publicEncrypt/publicDecrypt round-trip with DER keys', () => {
   });
 
   const encrypted = publicEncrypt(publicKey, shortPlaintext);
-  const decrypted = publicDecrypt(privateKey, encrypted);
+  const decrypted = privateDecrypt(privateKey, encrypted);
 
   expect(decrypted.toString()).to.equal(shortPlaintext.toString());
 });
 
-test(SUITE, 'publicEncrypt/publicDecrypt with KeyObject', () => {
+test(SUITE, 'publicEncrypt/privateDecrypt with KeyObject', () => {
   const publicKey = createPublicKey({
     key: Buffer.from(spki),
     format: 'der',
@@ -123,14 +123,14 @@ test(SUITE, 'publicEncrypt/publicDecrypt with KeyObject', () => {
   });
 
   const encrypted = publicEncrypt(publicKey, testMessage);
-  const decrypted = publicDecrypt(privateKey, encrypted);
+  const decrypted = privateDecrypt(privateKey, encrypted);
 
   expect(Buffer.compare(decrypted, testMessage)).to.equal(0);
 });
 
 // --- OAEP Hash Algorithm Tests ---
 
-test(SUITE, 'publicEncrypt/publicDecrypt with SHA-1 hash', () => {
+test(SUITE, 'publicEncrypt/privateDecrypt with SHA-1 hash', () => {
   const publicKey = createPublicKey({
     key: Buffer.from(spki),
     format: 'der',
@@ -147,7 +147,7 @@ test(SUITE, 'publicEncrypt/publicDecrypt with SHA-1 hash', () => {
     { key: publicKey, oaepHash: 'SHA-1' },
     shortPlaintext,
   );
-  const decrypted = publicDecrypt(
+  const decrypted = privateDecrypt(
     { key: privateKey, oaepHash: 'SHA-1' },
     encrypted,
   );
@@ -155,7 +155,7 @@ test(SUITE, 'publicEncrypt/publicDecrypt with SHA-1 hash', () => {
   expect(decrypted.toString()).to.equal(shortPlaintext.toString());
 });
 
-test(SUITE, 'publicEncrypt/publicDecrypt with SHA-256 hash', () => {
+test(SUITE, 'publicEncrypt/privateDecrypt with SHA-256 hash', () => {
   const publicKey = createPublicKey({
     key: Buffer.from(spki),
     format: 'der',
@@ -172,7 +172,7 @@ test(SUITE, 'publicEncrypt/publicDecrypt with SHA-256 hash', () => {
     { key: publicKey, oaepHash: 'SHA-256' },
     shortPlaintext,
   );
-  const decrypted = publicDecrypt(
+  const decrypted = privateDecrypt(
     { key: privateKey, oaepHash: 'SHA-256' },
     encrypted,
   );
@@ -180,7 +180,7 @@ test(SUITE, 'publicEncrypt/publicDecrypt with SHA-256 hash', () => {
   expect(decrypted.toString()).to.equal(shortPlaintext.toString());
 });
 
-test(SUITE, 'publicEncrypt/publicDecrypt with SHA-384 hash', () => {
+test(SUITE, 'publicEncrypt/privateDecrypt with SHA-384 hash', () => {
   const publicKey = createPublicKey({
     key: Buffer.from(spki),
     format: 'der',
@@ -197,7 +197,7 @@ test(SUITE, 'publicEncrypt/publicDecrypt with SHA-384 hash', () => {
     { key: publicKey, oaepHash: 'SHA-384' },
     shortPlaintext,
   );
-  const decrypted = publicDecrypt(
+  const decrypted = privateDecrypt(
     { key: privateKey, oaepHash: 'SHA-384' },
     encrypted,
   );
@@ -205,7 +205,7 @@ test(SUITE, 'publicEncrypt/publicDecrypt with SHA-384 hash', () => {
   expect(decrypted.toString()).to.equal(shortPlaintext.toString());
 });
 
-test(SUITE, 'publicEncrypt/publicDecrypt with SHA-512 hash', () => {
+test(SUITE, 'publicEncrypt/privateDecrypt with SHA-512 hash', () => {
   const publicKey = createPublicKey({
     key: Buffer.from(spki),
     format: 'der',
@@ -222,7 +222,7 @@ test(SUITE, 'publicEncrypt/publicDecrypt with SHA-512 hash', () => {
     { key: publicKey, oaepHash: 'SHA-512' },
     shortPlaintext,
   );
-  const decrypted = publicDecrypt(
+  const decrypted = privateDecrypt(
     { key: privateKey, oaepHash: 'SHA-512' },
     encrypted,
   );
@@ -232,7 +232,7 @@ test(SUITE, 'publicEncrypt/publicDecrypt with SHA-512 hash', () => {
 
 // --- OAEP Label Tests ---
 
-test(SUITE, 'publicEncrypt/publicDecrypt with OAEP label', () => {
+test(SUITE, 'publicEncrypt/privateDecrypt with OAEP label', () => {
   const publicKey = createPublicKey({
     key: Buffer.from(spki),
     format: 'der',
@@ -249,7 +249,7 @@ test(SUITE, 'publicEncrypt/publicDecrypt with OAEP label', () => {
     { key: publicKey, oaepHash: 'SHA-256', oaepLabel: label },
     shortPlaintext,
   );
-  const decrypted = publicDecrypt(
+  const decrypted = privateDecrypt(
     { key: privateKey, oaepHash: 'SHA-256', oaepLabel: label },
     encrypted,
   );
@@ -278,18 +278,18 @@ test(SUITE, 'Decrypt fails with wrong OAEP label', async () => {
   const wrongLabel = Buffer.from('wrong label');
 
   await assertThrowsAsync(async () => {
-    publicDecrypt(
+    privateDecrypt(
       { key: privateKey, oaepHash: 'SHA-256', oaepLabel: wrongLabel },
       encrypted,
     );
-  }, 'publicDecrypt failed');
+  }, 'privateDecrypt failed');
 });
 
 // --- generateKeyPair Integration Tests ---
 
 test(
   SUITE,
-  'publicEncrypt/publicDecrypt with generateKeyPair RSA',
+  'publicEncrypt/privateDecrypt with generateKeyPair RSA',
   async () => {
     const { privateKey, publicKey } = await new Promise<{
       privateKey: string;
@@ -317,7 +317,7 @@ test(
     const privKeyObj = createPrivateKey(privateKey);
 
     const encrypted = publicEncrypt(pubKeyObj, testMessage);
-    const decrypted = publicDecrypt(privKeyObj, encrypted);
+    const decrypted = privateDecrypt(privKeyObj, encrypted);
 
     expect(Buffer.compare(decrypted, testMessage)).to.equal(0);
   },
@@ -364,7 +364,7 @@ test(SUITE, 'publicEncrypt compatible with subtle.decrypt', async () => {
   expect(Buffer.from(decrypted).toString()).to.equal(shortPlaintext.toString());
 });
 
-test(SUITE, 'subtle.encrypt compatible with publicDecrypt', async () => {
+test(SUITE, 'subtle.encrypt compatible with privateDecrypt', async () => {
   // Import keys for WebCrypto
   const cryptoKeyPair = await subtle.generateKey(
     {
@@ -386,7 +386,7 @@ test(SUITE, 'subtle.encrypt compatible with publicDecrypt', async () => {
     shortPlaintext,
   );
 
-  // Export private key for publicDecrypt
+  // Export private key for privateDecrypt
   const privateKeyPkcs8 = await subtle.exportKey('pkcs8', keyPair.privateKey);
   const privateKeyObj = createPrivateKey({
     key: Buffer.from(privateKeyPkcs8 as ArrayBuffer),
@@ -394,8 +394,8 @@ test(SUITE, 'subtle.encrypt compatible with publicDecrypt', async () => {
     type: 'pkcs8',
   });
 
-  // Decrypt with publicDecrypt
-  const decrypted = publicDecrypt(
+  // Decrypt with privateDecrypt
+  const decrypted = privateDecrypt(
     { key: privateKeyObj, oaepHash: 'SHA-256' },
     Buffer.from(encrypted),
   );
@@ -424,8 +424,8 @@ test(SUITE, 'Decrypt fails with wrong hash algorithm', async () => {
   );
 
   await assertThrowsAsync(async () => {
-    publicDecrypt({ key: privateKey, oaepHash: 'SHA-1' }, encrypted);
-  }, 'publicDecrypt failed');
+    privateDecrypt({ key: privateKey, oaepHash: 'SHA-1' }, encrypted);
+  }, 'privateDecrypt failed');
 });
 
 test(SUITE, 'publicEncrypt throws with invalid key', async () => {
@@ -436,7 +436,7 @@ test(SUITE, 'publicEncrypt throws with invalid key', async () => {
 
 // --- Different Key Sizes ---
 
-test(SUITE, 'publicEncrypt/publicDecrypt with 4096-bit RSA', async () => {
+test(SUITE, 'publicEncrypt/privateDecrypt with 4096-bit RSA', async () => {
   const { privateKey, publicKey } = await new Promise<{
     privateKey: string;
     publicKey: string;
@@ -463,14 +463,14 @@ test(SUITE, 'publicEncrypt/publicDecrypt with 4096-bit RSA', async () => {
   const privKeyObj = createPrivateKey(privateKey);
 
   const encrypted = publicEncrypt(pubKeyObj, testMessage);
-  const decrypted = publicDecrypt(privKeyObj, encrypted);
+  const decrypted = privateDecrypt(privKeyObj, encrypted);
 
   expect(Buffer.compare(decrypted, testMessage)).to.equal(0);
 });
 
 // --- Empty and Edge Case Plaintexts ---
 
-test(SUITE, 'publicEncrypt/publicDecrypt with empty plaintext', () => {
+test(SUITE, 'publicEncrypt/privateDecrypt with empty plaintext', () => {
   const publicKey = createPublicKey({
     key: Buffer.from(spki),
     format: 'der',
@@ -485,12 +485,12 @@ test(SUITE, 'publicEncrypt/publicDecrypt with empty plaintext', () => {
 
   const emptyBuffer = Buffer.from('');
   const encrypted = publicEncrypt(publicKey, emptyBuffer);
-  const decrypted = publicDecrypt(privateKey, encrypted);
+  const decrypted = privateDecrypt(privateKey, encrypted);
 
   expect(decrypted.length).to.equal(0);
 });
 
-test(SUITE, 'publicEncrypt/publicDecrypt with single byte plaintext', () => {
+test(SUITE, 'publicEncrypt/privateDecrypt with single byte plaintext', () => {
   const publicKey = createPublicKey({
     key: Buffer.from(spki),
     format: 'der',
@@ -505,7 +505,7 @@ test(SUITE, 'publicEncrypt/publicDecrypt with single byte plaintext', () => {
 
   const singleByte = Buffer.from([0x42]);
   const encrypted = publicEncrypt(publicKey, singleByte);
-  const decrypted = publicDecrypt(privateKey, encrypted);
+  const decrypted = privateDecrypt(privateKey, encrypted);
 
   expect(decrypted.length).to.equal(1);
   expect(decrypted[0]).to.equal(0x42);
@@ -532,7 +532,7 @@ test(SUITE, 'publicEncrypt with max size plaintext for SHA-256', () => {
     { key: publicKey, oaepHash: 'SHA-256' },
     maxPlaintext,
   );
-  const decrypted = publicDecrypt(
+  const decrypted = privateDecrypt(
     { key: privateKey, oaepHash: 'SHA-256' },
     encrypted,
   );
@@ -557,7 +557,7 @@ test(SUITE, 'publicEncrypt fails with oversized plaintext', async () => {
 
 // --- PKCS1 v1.5 Padding Tests ---
 
-test(SUITE, 'publicEncrypt/publicDecrypt with PKCS1 padding', () => {
+test(SUITE, 'publicEncrypt/privateDecrypt with PKCS1 padding', () => {
   const publicKey = createPublicKey({
     key: Buffer.from(spki),
     format: 'der',
@@ -574,7 +574,7 @@ test(SUITE, 'publicEncrypt/publicDecrypt with PKCS1 padding', () => {
     { key: publicKey, padding: constants.RSA_PKCS1_PADDING },
     shortPlaintext,
   );
-  const decrypted = publicDecrypt(
+  const decrypted = privateDecrypt(
     { key: privateKey, padding: constants.RSA_PKCS1_PADDING },
     encrypted,
   );
@@ -599,7 +599,7 @@ test(SUITE, 'PKCS1 padding round-trip with longer message', () => {
     { key: publicKey, padding: constants.RSA_PKCS1_PADDING },
     testMessage,
   );
-  const decrypted = publicDecrypt(
+  const decrypted = privateDecrypt(
     { key: privateKey, padding: constants.RSA_PKCS1_PADDING },
     encrypted,
   );
@@ -626,7 +626,7 @@ test(SUITE, 'PKCS1 padding max plaintext size', () => {
     { key: publicKey, padding: constants.RSA_PKCS1_PADDING },
     maxPlaintext,
   );
-  const decrypted = publicDecrypt(
+  const decrypted = privateDecrypt(
     { key: privateKey, padding: constants.RSA_PKCS1_PADDING },
     encrypted,
   );
@@ -678,11 +678,11 @@ test(SUITE, 'OAEP and PKCS1 produce different ciphertexts', () => {
   );
 
   // Both should decrypt correctly with matching padding
-  const decryptedOaep = publicDecrypt(
+  const decryptedOaep = privateDecrypt(
     { key: privateKey, padding: constants.RSA_PKCS1_OAEP_PADDING },
     encryptedOaep,
   );
-  const decryptedPkcs1 = publicDecrypt(
+  const decryptedPkcs1 = privateDecrypt(
     { key: privateKey, padding: constants.RSA_PKCS1_PADDING },
     encryptedPkcs1,
   );
@@ -694,11 +694,11 @@ test(SUITE, 'OAEP and PKCS1 produce different ciphertexts', () => {
   expect(Buffer.compare(encryptedOaep, encryptedPkcs1)).to.not.equal(0);
 });
 
-// --- privateEncrypt / privateDecrypt Tests ---
+// --- privateEncrypt / publicDecrypt Tests ---
 
-const PRIVATE_CIPHER_SUITE = 'keys.privateEncrypt/privateDecrypt';
+const PRIVATE_CIPHER_SUITE = 'keys.privateEncrypt/publicDecrypt';
 
-test(PRIVATE_CIPHER_SUITE, 'privateEncrypt/privateDecrypt round-trip', () => {
+test(PRIVATE_CIPHER_SUITE, 'privateEncrypt/publicDecrypt round-trip', () => {
   const publicKey = createPublicKey({
     key: Buffer.from(spki),
     format: 'der',
@@ -711,17 +711,17 @@ test(PRIVATE_CIPHER_SUITE, 'privateEncrypt/privateDecrypt round-trip', () => {
     type: 'pkcs8',
   });
 
-  // Encrypt with private key
+  // Encrypt with private key (signing)
   const encrypted = privateEncrypt(privateKey, shortPlaintext);
-  // Decrypt with public key
-  const decrypted = privateDecrypt(publicKey, encrypted);
+  // Decrypt with public key (verification)
+  const decrypted = publicDecrypt(publicKey, encrypted);
 
   expect(decrypted.toString()).to.equal(shortPlaintext.toString());
 });
 
 test(
   PRIVATE_CIPHER_SUITE,
-  'privateEncrypt/privateDecrypt with explicit PKCS1 padding',
+  'privateEncrypt/publicDecrypt with explicit PKCS1 padding',
   () => {
     const publicKey = createPublicKey({
       key: Buffer.from(spki),
@@ -739,7 +739,7 @@ test(
       { key: privateKey, padding: constants.RSA_PKCS1_PADDING },
       testMessage,
     );
-    const decrypted = privateDecrypt(
+    const decrypted = publicDecrypt(
       { key: publicKey, padding: constants.RSA_PKCS1_PADDING },
       encrypted,
     );
@@ -748,7 +748,7 @@ test(
   },
 );
 
-test(PRIVATE_CIPHER_SUITE, 'privateEncrypt with PEM key', () => {
+test(PRIVATE_CIPHER_SUITE, 'privateEncrypt/publicDecrypt with PEM key', () => {
   const publicKey = createPublicKey({
     key: Buffer.from(spki),
     format: 'der',
@@ -766,14 +766,14 @@ test(PRIVATE_CIPHER_SUITE, 'privateEncrypt with PEM key', () => {
   const publicPem = publicKey.export({ type: 'spki', format: 'pem' });
 
   const encrypted = privateEncrypt(privatePem as string, shortPlaintext);
-  const decrypted = privateDecrypt(publicPem as string, encrypted);
+  const decrypted = publicDecrypt(publicPem as string, encrypted);
 
   expect(decrypted.toString()).to.equal(shortPlaintext.toString());
 });
 
 test(
   PRIVATE_CIPHER_SUITE,
-  'privateEncrypt/privateDecrypt with generateKeyPair',
+  'privateEncrypt/publicDecrypt with generateKeyPair',
   async () => {
     const { privateKey, publicKey } = await new Promise<{
       privateKey: string;
@@ -798,32 +798,36 @@ test(
     });
 
     const encrypted = privateEncrypt(privateKey, testMessage);
-    const decrypted = privateDecrypt(publicKey, encrypted);
+    const decrypted = publicDecrypt(publicKey, encrypted);
 
     expect(Buffer.compare(decrypted, testMessage)).to.equal(0);
   },
 );
 
-test(PRIVATE_CIPHER_SUITE, 'privateEncrypt max plaintext size', () => {
-  const publicKey = createPublicKey({
-    key: Buffer.from(spki),
-    format: 'der',
-    type: 'spki',
-  });
+test(
+  PRIVATE_CIPHER_SUITE,
+  'privateEncrypt/publicDecrypt max plaintext size',
+  () => {
+    const publicKey = createPublicKey({
+      key: Buffer.from(spki),
+      format: 'der',
+      type: 'spki',
+    });
 
-  const privateKey = createPrivateKey({
-    key: Buffer.from(pkcs8),
-    format: 'der',
-    type: 'pkcs8',
-  });
+    const privateKey = createPrivateKey({
+      key: Buffer.from(pkcs8),
+      format: 'der',
+      type: 'pkcs8',
+    });
 
-  // For RSA PKCS1 v1.5 signing: max = keySize - 11 = 256 - 11 = 245 bytes
-  const maxPlaintext = Buffer.alloc(245, 'D');
-  const encrypted = privateEncrypt(privateKey, maxPlaintext);
-  const decrypted = privateDecrypt(publicKey, encrypted);
+    // For RSA PKCS1 v1.5 signing: max = keySize - 11 = 256 - 11 = 245 bytes
+    const maxPlaintext = Buffer.alloc(245, 'D');
+    const encrypted = privateEncrypt(privateKey, maxPlaintext);
+    const decrypted = publicDecrypt(publicKey, encrypted);
 
-  expect(Buffer.compare(decrypted, maxPlaintext)).to.equal(0);
-});
+    expect(Buffer.compare(decrypted, maxPlaintext)).to.equal(0);
+  },
+);
 
 test(
   PRIVATE_CIPHER_SUITE,
@@ -856,41 +860,59 @@ test(PRIVATE_CIPHER_SUITE, 'privateEncrypt requires private key', async () => {
   }, 'privateEncrypt requires a private key');
 });
 
-test(PRIVATE_CIPHER_SUITE, 'privateDecrypt requires public key', async () => {
-  const privateKey = createPrivateKey({
-    key: Buffer.from(pkcs8),
-    format: 'der',
-    type: 'pkcs8',
-  });
+test(
+  PRIVATE_CIPHER_SUITE,
+  'publicDecrypt accepts both public and private keys',
+  () => {
+    const publicKey = createPublicKey({
+      key: Buffer.from(spki),
+      format: 'der',
+      type: 'spki',
+    });
 
-  const encrypted = privateEncrypt(privateKey, shortPlaintext);
+    const privateKey = createPrivateKey({
+      key: Buffer.from(pkcs8),
+      format: 'der',
+      type: 'pkcs8',
+    });
 
-  await assertThrowsAsync(async () => {
-    privateDecrypt(privateKey, encrypted);
-  }, 'privateDecrypt requires a public key');
-});
+    const encrypted = privateEncrypt(privateKey, shortPlaintext);
 
-test(PRIVATE_CIPHER_SUITE, 'privateEncrypt empty plaintext', () => {
-  const publicKey = createPublicKey({
-    key: Buffer.from(spki),
-    format: 'der',
-    type: 'spki',
-  });
+    // Should work with public key
+    const decrypted1 = publicDecrypt(publicKey, encrypted);
+    expect(decrypted1.toString()).to.equal(shortPlaintext.toString());
 
-  const privateKey = createPrivateKey({
-    key: Buffer.from(pkcs8),
-    format: 'der',
-    type: 'pkcs8',
-  });
+    // Should also work with private key (Node.js behavior)
+    const decrypted2 = publicDecrypt(privateKey, encrypted);
+    expect(decrypted2.toString()).to.equal(shortPlaintext.toString());
+  },
+);
 
-  const emptyBuffer = Buffer.from('');
-  const encrypted = privateEncrypt(privateKey, emptyBuffer);
-  const decrypted = privateDecrypt(publicKey, encrypted);
+test(
+  PRIVATE_CIPHER_SUITE,
+  'privateEncrypt/publicDecrypt empty plaintext',
+  () => {
+    const publicKey = createPublicKey({
+      key: Buffer.from(spki),
+      format: 'der',
+      type: 'spki',
+    });
 
-  expect(decrypted.length).to.equal(0);
-});
+    const privateKey = createPrivateKey({
+      key: Buffer.from(pkcs8),
+      format: 'der',
+      type: 'pkcs8',
+    });
 
-test(PRIVATE_CIPHER_SUITE, 'privateEncrypt single byte', () => {
+    const emptyBuffer = Buffer.from('');
+    const encrypted = privateEncrypt(privateKey, emptyBuffer);
+    const decrypted = publicDecrypt(publicKey, encrypted);
+
+    expect(decrypted.length).to.equal(0);
+  },
+);
+
+test(PRIVATE_CIPHER_SUITE, 'privateEncrypt/publicDecrypt single byte', () => {
   const publicKey = createPublicKey({
     key: Buffer.from(spki),
     format: 'der',
@@ -905,40 +927,106 @@ test(PRIVATE_CIPHER_SUITE, 'privateEncrypt single byte', () => {
 
   const singleByte = Buffer.from([0x42]);
   const encrypted = privateEncrypt(privateKey, singleByte);
-  const decrypted = privateDecrypt(publicKey, encrypted);
+  const decrypted = publicDecrypt(publicKey, encrypted);
 
   expect(decrypted.length).to.equal(1);
   expect(decrypted[0]).to.equal(0x42);
 });
 
+test(SUITE, 'publicEncrypt/privateDecrypt standard RSA flow with PKCS1', () => {
+  const publicKey = createPublicKey({
+    key: Buffer.from(spki),
+    format: 'der',
+    type: 'spki',
+  });
+
+  const privateKey = createPrivateKey({
+    key: Buffer.from(pkcs8),
+    format: 'der',
+    type: 'pkcs8',
+  });
+
+  // Standard RSA flow: encrypt with public key, decrypt with private key
+  // This matches issue #494 scenario: Rust server encrypts with public key,
+  // React Native client decrypts with private key
+  const encrypted = publicEncrypt(
+    { key: publicKey, padding: constants.RSA_PKCS1_PADDING },
+    shortPlaintext,
+  );
+
+  const decrypted = privateDecrypt(
+    { key: privateKey, padding: constants.RSA_PKCS1_PADDING },
+    encrypted,
+  );
+
+  expect(decrypted.toString()).to.equal(shortPlaintext.toString());
+});
+
 test(
-  PRIVATE_CIPHER_SUITE,
-  'publicEncrypt/privateDecrypt are inverses (cross-compatibility)',
-  () => {
-    const publicKey = createPublicKey({
-      key: Buffer.from(spki),
-      format: 'der',
-      type: 'spki',
+  SUITE,
+  'publicEncrypt/privateDecrypt with PEM keys (issue #494 scenario)',
+  async () => {
+    const { privateKey, publicKey } = await new Promise<{
+      privateKey: string;
+      publicKey: string;
+    }>((resolve, reject) => {
+      generateKeyPair(
+        'rsa',
+        {
+          modulusLength: 2048,
+          publicKeyEncoding: { type: 'spki', format: 'pem' },
+          privateKeyEncoding: { type: 'pkcs8', format: 'pem' },
+        },
+        (err, pubKey, privKey) => {
+          if (err) reject(err);
+          else
+            resolve({
+              privateKey: privKey as string,
+              publicKey: pubKey as string,
+            });
+        },
+      );
     });
 
-    const privateKey = createPrivateKey({
-      key: Buffer.from(pkcs8),
-      format: 'der',
-      type: 'pkcs8',
-    });
-
-    // publicEncrypt with PKCS1 -> privateDecrypt with private key (standard decrypt)
+    // Simulate external encryption (e.g., Rust server encrypting data)
     const encrypted = publicEncrypt(
       { key: publicKey, padding: constants.RSA_PKCS1_PADDING },
-      shortPlaintext,
+      testMessage,
     );
 
-    // This should work with publicDecrypt using private key
-    const decrypted = publicDecrypt(
+    // Client-side decryption with private key (issue #494 use case)
+    const decrypted = privateDecrypt(
       { key: privateKey, padding: constants.RSA_PKCS1_PADDING },
       encrypted,
     );
 
-    expect(decrypted.toString()).to.equal(shortPlaintext.toString());
+    expect(Buffer.compare(decrypted, testMessage)).to.equal(0);
   },
 );
+
+test(SUITE, 'publicEncrypt/privateDecrypt are inverses', () => {
+  const publicKey = createPublicKey({
+    key: Buffer.from(spki),
+    format: 'der',
+    type: 'spki',
+  });
+
+  const privateKey = createPrivateKey({
+    key: Buffer.from(pkcs8),
+    format: 'der',
+    type: 'pkcs8',
+  });
+
+  // publicEncrypt with PKCS1 -> privateDecrypt with private key (correct pair)
+  const encrypted = publicEncrypt(
+    { key: publicKey, padding: constants.RSA_PKCS1_PADDING },
+    shortPlaintext,
+  );
+
+  const decrypted = privateDecrypt(
+    { key: privateKey, padding: constants.RSA_PKCS1_PADDING },
+    encrypted,
+  );
+
+  expect(decrypted.toString()).to.equal(shortPlaintext.toString());
+});
