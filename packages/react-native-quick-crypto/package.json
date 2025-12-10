@@ -118,7 +118,7 @@
       "release": false
     },
     "hooks": {
-      "after:bump": "bun tsc && bun lint && bun format && bun prepare"
+      "after:bump": "cd ../.. && bun i && cd packages/react-native-quick-crypto && bun tsc && bun lint && bun format && bun prepare"
     },
     "plugins": {
       "@release-it/bumper": {
