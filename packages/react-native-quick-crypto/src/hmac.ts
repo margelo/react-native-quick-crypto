@@ -54,7 +54,12 @@ class Hmac extends Stream.Transform {
     const defaultEncoding: Encoding = 'utf8';
     inputEncoding = inputEncoding ?? defaultEncoding;
 
-    this.native.update(binaryLikeToArrayBuffer(data, inputEncoding));
+    // Optimize: pass UTF-8 strings directly to C++ without conversion
+    if (typeof data === 'string' && inputEncoding === 'utf8') {
+      this.native.update(data);
+    } else {
+      this.native.update(binaryLikeToArrayBuffer(data, inputEncoding));
+    }
 
     return this; // to support chaining syntax createHmac().update().digest()
   }

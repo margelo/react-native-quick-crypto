@@ -24,12 +24,36 @@ export const BenchmarkResultItemHeader: React.FC = () => {
 export const BenchmarkResultItem: React.FC<BenchmarkResultItemProps> = ({
   result,
 }: BenchmarkResultItemProps) => {
+  // Check if benchmark errored out
+  const usHasError = result.us?.error !== undefined;
+  const themHasError = result.them?.error !== undefined;
+
+  if (usHasError || themHasError) {
+    return (
+      <View>
+        <View style={styles.subContainer}>
+          <Text style={[styles.sub, styles.benchName]}>{result.benchName}</Text>
+        </View>
+        <View style={styles.subContainer}>
+          <Text style={[styles.sub, styles.subLabel]}>error</Text>
+          <Text style={[styles.sub, styles.subValue, styles.slower]}>
+            {usHasError ? 'rnqc failed' : ''}
+            {usHasError && themHasError ? ' / ' : ''}
+            {themHasError ? `${result.challenger} failed` : ''}
+          </Text>
+        </View>
+      </View>
+    );
+  }
+
+  const hasComparison = result.them !== undefined;
+
   const rows = ['throughput', 'latency'].map((key, i) => {
     const us = result.us![key as Key].mean;
-    const them = result.them![key as Key].mean;
+    const them = hasComparison ? result.them![key as Key].mean : 0;
     const comparison = key === 'throughput' ? us > them : us < them;
     const places = key === 'throughput' ? 2 : 3;
-    const times = calculateTimes(us, them);
+    const times = hasComparison ? calculateTimes(us, them) : 0;
     const emoji = comparison ? '🐇' : '🐢';
     const timesType = comparison ? 'faster' : 'slower';
     const timesStyle = timesType === 'faster' ? styles.faster : styles.slower;
@@ -41,11 +65,15 @@ export const BenchmarkResultItem: React.FC<BenchmarkResultItemProps> = ({
           <Text style={[styles.text, styles.description]}>
             {key} {key === 'throughput' ? '(ops/s)' : '(ms)'}
           </Text>
-          <Text style={[styles.value, timesStyle]}>
-            {formatNumber(times, 2, 'x')}
-          </Text>
+          {hasComparison && (
+            <Text style={[styles.value, timesStyle]}>
+              {formatNumber(times, 2, 'x')}
+            </Text>
+          )}
           <Text style={styles.value}>{formatNumber(us, places, '')}</Text>
-          <Text style={styles.value}>{formatNumber(them, places, '')}</Text>
+          {hasComparison && (
+            <Text style={styles.value}>{formatNumber(them, places, '')}</Text>
+          )}
         </View>
       </View>
     );

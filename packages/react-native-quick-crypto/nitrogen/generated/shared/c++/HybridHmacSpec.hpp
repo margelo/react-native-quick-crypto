@@ -18,6 +18,7 @@ namespace NitroModules { class ArrayBuffer; }
 
 #include <string>
 #include <NitroModules/ArrayBuffer.hpp>
+#include <variant>
 
 namespace margelo::nitro::crypto {
 
@@ -51,7 +52,7 @@ namespace margelo::nitro::crypto {
     public:
       // Methods
       virtual void createHmac(const std::string& algorithm, const std::shared_ptr<ArrayBuffer>& key) = 0;
-      virtual void update(const std::shared_ptr<ArrayBuffer>& data) = 0;
+      virtual void update(const std::variant<std::string, std::shared_ptr<ArrayBuffer>>& data) = 0;
       virtual std::shared_ptr<ArrayBuffer> digest() = 0;
 
     protected:

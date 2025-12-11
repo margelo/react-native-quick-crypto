@@ -28,13 +28,13 @@ export class BenchmarkSuite {
 
   async run() {
     this.results = [];
-    const promises = this.benchmarks.map(async benchFn => {
+    // Run benchmarks sequentially to avoid timing interference
+    for (const benchFn of this.benchmarks) {
       const b = await benchFn();
       await b.run();
       this.processResults(b);
-      this.state = 'done';
-    });
-    await Promise.all(promises);
+    }
+    this.state = 'done';
   }
 
   processResults = (b: Bench): void => {
