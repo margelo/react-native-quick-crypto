@@ -1,9 +1,11 @@
 import { useEffect, useState } from 'react';
 import { BenchmarkSuite } from '../benchmarks/benchmarks';
 import blake3 from '../benchmarks/blake3/blake3';
+import cipher from '../benchmarks/cipher/cipher';
 import ed from '../benchmarks/ed/ed25519';
 import hkdf from '../benchmarks/hkdf/hkdf';
 import hash from '../benchmarks/hash/hash';
+import hmac from '../benchmarks/hmac/hmac';
 import pbkdf2 from '../benchmarks/pbkdf2/pbkdf2';
 import random from '../benchmarks/random/randomBytes';
 import xsalsa20 from '../benchmarks/cipher/xsalsa20';
@@ -23,10 +25,11 @@ export const useBenchmarks = (): [
   useEffect(() => {
     const newSuites: BenchmarkSuite[] = [];
     newSuites.push(new BenchmarkSuite('blake3', blake3));
-    newSuites.push(new BenchmarkSuite('cipher', xsalsa20));
+    newSuites.push(new BenchmarkSuite('cipher', [...xsalsa20, ...cipher]));
     newSuites.push(new BenchmarkSuite('ed', ed));
     newSuites.push(new BenchmarkSuite('pbkdf2', pbkdf2));
     newSuites.push(new BenchmarkSuite('hash', hash));
+    newSuites.push(new BenchmarkSuite('hmac', hmac));
     newSuites.push(new BenchmarkSuite('hkdf', hkdf));
     newSuites.push(
       new BenchmarkSuite('random', random, {

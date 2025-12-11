@@ -3,6 +3,7 @@
 #include <openssl/evp.h>
 #include <optional>
 #include <string>
+#include <variant>
 #include <vector>
 
 #include "HybridHmacSpec.hpp"
@@ -19,7 +20,7 @@ class HybridHmac : public HybridHmacSpec {
  public:
   // Methods
   void createHmac(const std::string& algorithm, const std::shared_ptr<ArrayBuffer>& key) override;
-  void update(const std::shared_ptr<ArrayBuffer>& data) override;
+  void update(const std::variant<std::string, std::shared_ptr<ArrayBuffer>>& data) override;
   std::shared_ptr<ArrayBuffer> digest() override;
 
  private:

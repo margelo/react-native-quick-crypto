@@ -4,28 +4,14 @@ import { sha256 } from '@noble/hashes/sha2';
 import browserify from 'crypto-browserify';
 import type { BenchFn } from '../../types/benchmarks';
 import { Bench } from 'tinybench';
+import { text1MB, text8MB, buffer1MB, buffer8MB } from '../testData';
 
-// Generate test data of different sizes using repeating pattern
-const generateString = (sizeInMB: number): string => {
-  const chunk =
-    'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
-  const bytesPerMB = 1024 * 1024;
-  const totalBytes = Math.floor(sizeInMB * bytesPerMB);
-  const repeatCount = Math.ceil(totalBytes / chunk.length);
-  return chunk.repeat(repeatCount).substring(0, totalBytes);
-};
-
-// Pre-generate test data (8MB as reported in issue)
-const text100KB = generateString(0.1);
-const text1MB = generateString(1);
-const text8MB = generateString(8);
-
-const hash_sha256_8mb: BenchFn = () => {
+const hash_sha256_8mb_string: BenchFn = () => {
   const bench = new Bench({
     name: 'hash sha256 8MB string',
-    time: 10,
-    iterations: 1,
-    warmupIterations: 0,
+    iterations: 3,
+    warmupIterations: 1,
+    time: 0,
   });
 
   bench
@@ -46,12 +32,12 @@ const hash_sha256_8mb: BenchFn = () => {
   return bench;
 };
 
-const hash_sha256_1mb: BenchFn = () => {
+const hash_sha256_1mb_string: BenchFn = () => {
   const bench = new Bench({
     name: 'hash sha256 1MB string',
-    time: 50,
-    iterations: 2,
-    warmupIterations: 0,
+    iterations: 5,
+    warmupIterations: 2,
+    time: 0,
   });
 
   bench
@@ -72,29 +58,61 @@ const hash_sha256_1mb: BenchFn = () => {
   return bench;
 };
 
-const hash_sha256_100kb: BenchFn = () => {
+const hash_sha256_8mb_buffer: BenchFn = () => {
   const bench = new Bench({
-    name: 'hash sha256 100KB string',
-    iterations: 5,
+    name: 'hash sha256 8MB Buffer',
+    iterations: 3,
+    warmupIterations: 1,
+    time: 0,
   });
 
   bench
     .add('rnqc', () => {
       const hash = rnqc.createHash('sha256');
-      hash.update(text100KB);
+      hash.update(buffer8MB);
       hash.digest('hex');
     })
     .add('@noble/hashes/sha256', () => {
-      sha256(text100KB);
+      sha256(buffer8MB);
     })
     .add('browserify', () => {
       const hash = browserify.createHash('sha256');
-      hash.update(text100KB);
+      hash.update(buffer8MB);
       hash.digest('hex');
     });
 
-  bench.warmupTime = 100;
   return bench;
 };
 
-export default [hash_sha256_100kb, hash_sha256_1mb, hash_sha256_8mb];
+const hash_sha256_1mb_buffer: BenchFn = () => {
+  const bench = new Bench({
+    name: 'hash sha256 1MB Buffer',
+    iterations: 5,
+    warmupIterations: 2,
+    time: 0,
+  });
+
+  bench
+    .add('rnqc', () => {
+      const hash = rnqc.createHash('sha256');
+      hash.update(buffer1MB);
+      hash.digest('hex');
+    })
+    .add('@noble/hashes/sha256', () => {
+      sha256(buffer1MB);
+    })
+    .add('browserify', () => {
+      const hash = browserify.createHash('sha256');
+      hash.update(buffer1MB);
+      hash.digest('hex');
+    });
+
+  return bench;
+};
+
+export default [
+  hash_sha256_1mb_string,
+  hash_sha256_1mb_buffer,
+  hash_sha256_8mb_string,
+  hash_sha256_8mb_buffer,
+];
