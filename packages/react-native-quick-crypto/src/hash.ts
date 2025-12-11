@@ -98,7 +98,12 @@ class Hash extends Stream.Transform {
     const defaultEncoding: Encoding = 'utf8';
     inputEncoding = inputEncoding ?? defaultEncoding;
 
-    this.native.update(binaryLikeToArrayBuffer(data, inputEncoding));
+    // OPTIMIZED PATH: Pass UTF-8 strings directly to native without conversion
+    if (typeof data === 'string' && inputEncoding === 'utf8') {
+      this.native.update(data);
+    } else {
+      this.native.update(binaryLikeToArrayBuffer(data, inputEncoding));
+    }
 
     return this; // to support chaining syntax createHash().update().digest()
   }

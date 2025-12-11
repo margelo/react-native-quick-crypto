@@ -21,7 +21,7 @@ class HybridHash : public HybridHashSpec {
  public:
   // Methods
   void createHash(const std::string& algorithm, const std::optional<double> outputLength) override;
-  void update(const std::shared_ptr<ArrayBuffer>& data) override;
+  void update(const std::variant<std::string, std::shared_ptr<ArrayBuffer>>& data) override;
   std::shared_ptr<ArrayBuffer> digest(const std::optional<std::string>& encoding = std::nullopt) override;
   std::shared_ptr<margelo::nitro::crypto::HybridHashSpec> copy(const std::optional<double> outputLength) override;
   std::vector<std::string> getSupportedHashAlgorithms() override;

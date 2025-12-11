@@ -68,14 +68,21 @@ void HybridHash::createHash(const std::string& hashAlgorithmArg, const std::opti
   }
 }
 
-void HybridHash::update(const std::shared_ptr<ArrayBuffer>& data) {
+void HybridHash::update(const std::variant<std::string, std::shared_ptr<ArrayBuffer>>& data) {
   if (!ctx) {
     throw std::runtime_error("Hash context not initialized");
   }
 
-  // Update the digest with the data
-  if (EVP_DigestUpdate(ctx, reinterpret_cast<const uint8_t*>(data->data()), data->size()) != 1) {
-    throw std::runtime_error("Failed to update hash digest: " + std::to_string(ERR_get_error()));
+  if (std::holds_alternative<std::string>(data)) {
+    const std::string& str = std::get<std::string>(data);
+    if (EVP_DigestUpdate(ctx, reinterpret_cast<const uint8_t*>(str.data()), str.length()) != 1) {
+      throw std::runtime_error("Failed to update hash digest: " + std::to_string(ERR_get_error()));
+    }
+  } else {
+    const std::shared_ptr<ArrayBuffer>& buffer = std::get<std::shared_ptr<ArrayBuffer>>(data);
+    if (EVP_DigestUpdate(ctx, reinterpret_cast<const uint8_t*>(buffer->data()), buffer->size()) != 1) {
+      throw std::runtime_error("Failed to update hash digest: " + std::to_string(ERR_get_error()));
+    }
   }
 }
 

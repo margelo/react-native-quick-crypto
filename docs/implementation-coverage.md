@@ -253,7 +253,7 @@ These algorithms provide quantum-resistant cryptography.
   * ❌ `subtle.decapsulateKey(decapsulationAlgorithm, decapsulationKey, ciphertext, sharedKeyAlgorithm, extractable, usages)`
   * ✅ `subtle.decrypt(algorithm, key, data)`
   * 🚧 `subtle.deriveBits(algorithm, baseKey, length)`
-  * ❌ `subtle.deriveKey(algorithm, baseKey, derivedKeyAlgorithm, extractable, keyUsages)`
+  * 🚧 `subtle.deriveKey(algorithm, baseKey, derivedKeyAlgorithm, extractable, keyUsages)`
   * 🚧 `subtle.digest(algorithm, data)`
   * ❌ `subtle.encapsulateBits(encapsulationAlgorithm, encapsulationKey)`
   * ❌ `subtle.encapsulateKey(encapsulationAlgorithm, encapsulationKey, sharedKeyAlgorithm, extractable, usages)`
