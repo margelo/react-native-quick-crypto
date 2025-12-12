@@ -3,6 +3,9 @@ README.md
 
 ios/**
 
+# Downloaded by CocoaPods prepare_command
+OpenSSL.xcframework/
+
 .cache/**
 build/**
 compile_commands.json
