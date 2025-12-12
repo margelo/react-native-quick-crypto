@@ -114,11 +114,9 @@
 				13B07F8C1A680F5B00A75B9A /* Frameworks */,
 				13B07F8E1A680F5B00A75B9A /* Resources */,
 				00DD1BFF1BD5951E006B06BC /* Bundle React Native code and images */,
-				8C63FDE6D14F20AAC744357A /* Embed SPM Frameworks (OpenSSL) */,
-				F008C3222B5CD8109E252C6E /* Embed SPM Frameworks (QuickCrypto) */,
 				00EEFC60759A1932668264C0 /* [CP] Embed Pods Frameworks */,
 				E235C05ADACE081382539298 /* [CP] Copy Pods Resources */,
-				0F887C4BF3EDDB98EDD8A258 /* [CP-User] [CP-User] Embed OpenSSL Framework */,
+				218A62117F2E6018338554EF /* [QuickCrypto] Embed & Sign SPM Frameworks */,
 			);
 			buildRules = (
 			);
@@ -207,23 +205,7 @@
 			shellScript = "\"${PODS_ROOT}/Target Support Files/Pods-QuickCryptoExample/Pods-QuickCryptoExample-frameworks.sh\"\n";
 			showEnvVarsInLog = 0;
 		};
-		0F887C4BF3EDDB98EDD8A258 /* [CP-User] [CP-User] Embed OpenSSL Framework */ = {
-			isa = PBXShellScriptBuildPhase;
-			buildActionMask = 2147483647;
-			files = (
-			);
-			inputPaths = (
-				"${BUILT_PRODUCTS_DIR}/OpenSSL.framework",
-			);
-			name = "[CP-User] [CP-User] Embed OpenSSL Framework";
-			outputPaths = (
-				"${TARGET_BUILD_DIR}/${FRAMEWORKS_FOLDER_PATH}/OpenSSL.framework",
-			);
-			runOnlyForDeploymentPostprocessing = 0;
-			shellPath = /bin/sh;
-			shellScript = "#!/bin/bash\nset -e\n\nOPENSSL_FRAMEWORK=\"${BUILT_PRODUCTS_DIR}/OpenSSL.framework\"\n\nif [ -d \"$OPENSSL_FRAMEWORK\" ]; then\n  echo \"[QuickCrypto] Copying OpenSSL.framework to app bundle\"\n  mkdir -p \"${TARGET_BUILD_DIR}/${FRAMEWORKS_FOLDER_PATH}\"\n  cp -Rf \"$OPENSSL_FRAMEWORK\" \"${TARGET_BUILD_DIR}/${FRAMEWORKS_FOLDER_PATH}/\"\n  \n  # Code sign the framework (only if code signing is required and not a simulator build)\n  if [ \"${CODE_SIGNING_REQUIRED}\" = \"YES\" ] && [ \"${EFFECTIVE_PLATFORM_NAME}\" != \"-iphonesimulator\" ]; then\n    codesign --force --sign \"${EXPANDED_CODE_SIGN_IDENTITY}\" --preserve-metadata=identifier,entitlements --timestamp=none \"${TARGET_BUILD_DIR}/${FRAMEWORKS_FOLDER_PATH}/OpenSSL.framework\" || true\n  fi\n  echo \"[QuickCrypto] Successfully embedded OpenSSL.framework\"\nelse\n  echo \"[QuickCrypto] Warning: OpenSSL.framework not found at $OPENSSL_FRAMEWORK\"\nfi\n";
-		};
-		8C63FDE6D14F20AAC744357A /* Embed SPM Frameworks (OpenSSL) */ = {
+		218A62117F2E6018338554EF /* [QuickCrypto] Embed & Sign SPM Frameworks */ = {
 			isa = PBXShellScriptBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
@@ -232,14 +214,14 @@
 			);
 			inputPaths = (
 			);
-			name = "Embed SPM Frameworks (OpenSSL)";
+			name = "[QuickCrypto] Embed & Sign SPM Frameworks";
 			outputFileListPaths = (
 			);
 			outputPaths = (
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 			shellPath = /bin/sh;
-			shellScript = "# Embed OpenSSL.framework from SPM build into app bundle\n# SPM builds the framework to BUILT_PRODUCTS_DIR but doesn't embed it\nOPENSSL_FRAMEWORK=\"${BUILT_PRODUCTS_DIR}/OpenSSL.framework\"\n\nif [ -d \"$OPENSSL_FRAMEWORK\" ]; then\n  echo \"Found OpenSSL.framework at $OPENSSL_FRAMEWORK\"\n  mkdir -p \"${BUILT_PRODUCTS_DIR}/${FRAMEWORKS_FOLDER_PATH}\"\n  rsync -av --delete \"$OPENSSL_FRAMEWORK\" \"${BUILT_PRODUCTS_DIR}/${FRAMEWORKS_FOLDER_PATH}/\"\n\n  # Code sign if required\n  if [ -n \"${EXPANDED_CODE_SIGN_IDENTITY:-}\" ] && [ \"${CODE_SIGNING_REQUIRED:-}\" != \"NO\" ]; then\n    /usr/bin/codesign --force --sign \"${EXPANDED_CODE_SIGN_IDENTITY}\" --preserve-metadata=identifier,entitlements \"${BUILT_PRODUCTS_DIR}/${FRAMEWORKS_FOLDER_PATH}/OpenSSL.framework\"\n  fi\n  echo \"OpenSSL.framework embedded successfully\"\nelse\n  echo \"warning: OpenSSL.framework not found at $OPENSSL_FRAMEWORK\"\nfi\n";
+			shellScript = "set -euo pipefail\n\n# Embed and sign SPM frameworks (OpenSSL) from QuickCrypto\n# This phase MUST run LAST, after all other framework embedding\n# See: https://github.com/margelo/react-native-quick-crypto/issues/857\n\nFRAMEWORKS_DIR=\"${BUILT_PRODUCTS_DIR}/${FRAMEWORKS_FOLDER_PATH}\"\nmkdir -p \"$FRAMEWORKS_DIR\"\n\nsign_framework() {\n  local framework_path=\"$1\"\n  local framework_name=$(basename \"$framework_path\")\n\n  if [ ! -d \"$framework_path\" ]; then\n    echo \"warning: $framework_name not found at $framework_path, skipping\"\n    return 0\n  fi\n\n  echo \"[QuickCrypto] Processing $framework_name...\"\n\n  # Copy to app bundle\n  rsync -av --delete \"$framework_path\" \"$FRAMEWORKS_DIR/\"\n\n  local dest_framework=\"$FRAMEWORKS_DIR/$framework_name\"\n\n  # Sign if required (physical device builds only)\n  if [ \"${CODE_SIGNING_REQUIRED:-NO}\" = \"YES\" ] && [ -n \"${EXPANDED_CODE_SIGN_IDENTITY:-}\" ]; then\n    echo \"[QuickCrypto] Signing $framework_name with identity: ${EXPANDED_CODE_SIGN_IDENTITY}\"\n\n    # Make framework writable (rsync preserves read-only from source)\n    chmod -R u+w \"$dest_framework\"\n\n    # Strip existing signature and re-sign with app's identity\n    # This is required for pre-signed xcframeworks from SPM\n    /usr/bin/codesign --force --deep --sign \"${EXPANDED_CODE_SIGN_IDENTITY}\" \\\n      --timestamp=none \\\n      \"$dest_framework\"\n\n    echo \"[QuickCrypto] Successfully signed $framework_name\"\n  else\n    echo \"[QuickCrypto] Code signing not required (simulator build)\"\n  fi\n}\n\n# Sign OpenSSL.framework from SPM\nsign_framework \"${BUILT_PRODUCTS_DIR}/OpenSSL.framework\"\n\necho \"[QuickCrypto] SPM framework embedding complete\"\n";
 		};
 		C38B50BA6285516D6DCD4F65 /* [CP] Check Pods Manifest.lock */ = {
 			isa = PBXShellScriptBuildPhase;
@@ -280,24 +262,6 @@
 			shellScript = "\"${PODS_ROOT}/Target Support Files/Pods-QuickCryptoExample/Pods-QuickCryptoExample-resources.sh\"\n";
 			showEnvVarsInLog = 0;
 		};
-		F008C3222B5CD8109E252C6E /* Embed SPM Frameworks (QuickCrypto) */ = {
-			isa = PBXShellScriptBuildPhase;
-			buildActionMask = 2147483647;
-			files = (
-			);
-			inputFileListPaths = (
-			);
-			inputPaths = (
-			);
-			name = "Embed SPM Frameworks (QuickCrypto)";
-			outputFileListPaths = (
-			);
-			outputPaths = (
-			);
-			runOnlyForDeploymentPostprocessing = 0;
-			shellPath = /bin/sh;
-			shellScript = "# Embed SPM frameworks (OpenSSL, Clibsodium) from QuickCrypto into app bundle\n# SPM builds frameworks to BUILT_PRODUCTS_DIR but doesn't embed them automatically\n\nmkdir -p \"${BUILT_PRODUCTS_DIR}/${FRAMEWORKS_FOLDER_PATH}\"\n\n# Embed OpenSSL.framework (always required for ML-DSA)\nOPENSSL_FRAMEWORK=\"${BUILT_PRODUCTS_DIR}/OpenSSL.framework\"\nif [ -d \"$OPENSSL_FRAMEWORK\" ]; then\n  echo \"Found OpenSSL.framework at $OPENSSL_FRAMEWORK\"\n  rsync -av --delete \"$OPENSSL_FRAMEWORK\" \"${BUILT_PRODUCTS_DIR}/${FRAMEWORKS_FOLDER_PATH}/\"\n\n  if [ -n \"${EXPANDED_CODE_SIGN_IDENTITY:-}\" ] && [ \"${CODE_SIGNING_REQUIRED:-}\" != \"NO\" ]; then\n    /usr/bin/codesign --force --sign \"${EXPANDED_CODE_SIGN_IDENTITY}\" --preserve-metadata=identifier,entitlements \"${BUILT_PRODUCTS_DIR}/${FRAMEWORKS_FOLDER_PATH}/OpenSSL.framework\"\n  fi\n  echo \"OpenSSL.framework embedded successfully\"\nelse\n  echo \"warning: OpenSSL.framework not found at $OPENSSL_FRAMEWORK\"\nfi\n\n# Embed Clibsodium.framework (optional, when SODIUM_ENABLED=1)\nCLIBSODIUM_FRAMEWORK=\"${BUILT_PRODUCTS_DIR}/Clibsodium.framework\"\nif [ -d \"$CLIBSODIUM_FRAMEWORK\" ]; then\n  echo \"Found Clibsodium.framework at $CLIBSODIUM_FRAMEWORK\"\n  rsync -av --delete \"$CLIBSODIUM_FRAMEWORK\" \"${BUILT_PRODUCTS_DIR}/${FRAMEWORKS_FOLDER_PATH}/\"\n\n  if [ -n \"${EXPANDED_CODE_SIGN_IDENTITY:-}\" ] && [ \"${CODE_SIGNING_REQUIRED:-}\" != \"NO\" ]; then\n    /usr/bin/codesign --force --sign \"${EXPANDED_CODE_SIGN_IDENTITY}\" --preserve-metadata=identifier,entitlements \"${BUILT_PRODUCTS_DIR}/${FRAMEWORKS_FOLDER_PATH}/Clibsodium.framework\"\n  fi\n  echo \"Clibsodium.framework embedded successfully\"\nfi\n";
-		};
 /* End PBXShellScriptBuildPhase section */
 
 /* Begin PBXSourcesBuildPhase section */
@@ -319,6 +283,7 @@
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				CLANG_ENABLE_MODULES = YES;
 				CURRENT_PROJECT_VERSION = 1;
+				DEVELOPMENT_TEAM = 64977D8TY3;
 				ENABLE_BITCODE = NO;
 				INFOPLIST_FILE = QuickCryptoExample/Info.plist;
 				IPHONEOS_DEPLOYMENT_TARGET = 16.1;
@@ -347,6 +312,7 @@
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				CLANG_ENABLE_MODULES = YES;
 				CURRENT_PROJECT_VERSION = 1;
+				DEVELOPMENT_TEAM = 64977D8TY3;
 				INFOPLIST_FILE = QuickCryptoExample/Info.plist;
 				IPHONEOS_DEPLOYMENT_TARGET = 16.1;
 				LD_RUNPATH_SEARCH_PATHS = (

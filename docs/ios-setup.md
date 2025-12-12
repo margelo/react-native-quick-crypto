@@ -1,86 +1,29 @@
 # iOS Setup Guide
 
-## SPM Framework Embedding Required
+## SPM Framework Signing (Physical Devices)
 
-QuickCrypto uses Swift Package Manager (SPM) dependencies that must be manually embedded in your app bundle:
+QuickCrypto uses OpenSSL via Swift Package Manager (SPM). On **physical iOS devices**, SPM frameworks require additional configuration to be properly embedded and code-signed in your app bundle.
 
-- **OpenSSL 3.6+** (required) - For ML-DSA post-quantum cryptography support
-- **Sodium** (optional) - For XSalsa20 cipher support via libsodium (when `SODIUM_ENABLED=1`)
+> **Simulator builds work without this configuration.** This is only required for physical device deployment.
 
-### Why is this needed?
+### Quick Setup
 
-CocoaPods doesn't automatically embed SPM frameworks into the final app bundle. Without this configuration, you'll encounter runtime errors:
-
-```
-dyld: Library not loaded: @rpath/OpenSSL.framework/OpenSSL
-```
-
-This is a temporary limitation of mixing CocoaPods + SPM. It will be resolved when React Native fully migrates to SPM (expected 2026).
-
-## Configuration
-
-Add the following to your `ios/Podfile` inside the `post_install` hook:
-
-```ruby
-post_install do |installer|
-  # ... your existing post_install code (react_native_post_install, etc.) ...
-
-  # Embed SPM frameworks from QuickCrypto
-  main_project_path = File.join(installer.sandbox.root.parent, 'YourAppName.xcodeproj')
-  main_project = Xcodeproj::Project.open(main_project_path)
-  app_target = main_project.targets.find { |t| t.name == 'YourAppName' }
-
-  if app_target
-    embed_phase_name = 'Embed SPM Frameworks (QuickCrypto)'
-    existing_phase = app_target.shell_script_build_phases.find { |p| p.name == embed_phase_name }
-
-    unless existing_phase
-      phase = app_target.new_shell_script_build_phase(embed_phase_name)
-      phase.shell_script = <<~SCRIPT
-        mkdir -p "${BUILT_PRODUCTS_DIR}/${FRAMEWORKS_FOLDER_PATH}"
-
-        # Embed OpenSSL.framework (required for ML-DSA)
-        if [ -d "${BUILT_PRODUCTS_DIR}/OpenSSL.framework" ]; then
-          rsync -av --delete "${BUILT_PRODUCTS_DIR}/OpenSSL.framework" "${BUILT_PRODUCTS_DIR}/${FRAMEWORKS_FOLDER_PATH}/"
-          if [ -n "${EXPANDED_CODE_SIGN_IDENTITY:-}" ]; then
-            /usr/bin/codesign --force --sign "${EXPANDED_CODE_SIGN_IDENTITY}" --preserve-metadata=identifier,entitlements "${BUILT_PRODUCTS_DIR}/${FRAMEWORKS_FOLDER_PATH}/OpenSSL.framework"
-          fi
-        fi
-
-        # Embed Sodium.framework (optional, if SODIUM_ENABLED=1)
-        if [ -d "${BUILT_PRODUCTS_DIR}/Sodium.framework" ]; then
-          rsync -av --delete "${BUILT_PRODUCTS_DIR}/Sodium.framework" "${BUILT_PRODUCTS_DIR}/${FRAMEWORKS_FOLDER_PATH}/"
-          if [ -n "${EXPANDED_CODE_SIGN_IDENTITY:-}" ]; then
-            /usr/bin/codesign --force --sign "${EXPANDED_CODE_SIGN_IDENTITY}" --preserve-metadata=identifier,entitlements "${BUILT_PRODUCTS_DIR}/${FRAMEWORKS_FOLDER_PATH}/Sodium.framework"
-          fi
-        fi
-      SCRIPT
-
-      # Insert before the CocoaPods embed frameworks phase
-      embed_pods_phase = app_target.shell_script_build_phases.find { |p| p.name == '[CP] Embed Pods Frameworks' }
-      if embed_pods_phase
-        app_target.build_phases.move(phase, app_target.build_phases.index(embed_pods_phase))
-      end
-
-      main_project.save
-    end
-  end
-end
-```
-
-**Important:** Replace `YourAppName` with your actual Xcode target name (usually matches your app name).
-
-## Example
-
-See the [example app's Podfile](../../example/ios/Podfile) for a complete working reference.
-
-## Enabling libsodium (Optional)
-
-To enable XSalsa20 cipher support, set the environment variable before installing pods:
+Add to your `ios/Podfile`:
 
 ```ruby
 # At the top of your Podfile
-ENV['SODIUM_ENABLED'] = '1'
+require_relative '../node_modules/react-native-quick-crypto/scripts/quickcrypto_spm_fix'
+
+target 'YourAppName' do
+  # ... your pods ...
+
+  post_install do |installer|
+    react_native_post_install(installer)  # if you have this
+    
+    # Fix QuickCrypto SPM framework signing for physical devices
+    quickcrypto_fix_spm_signing(installer)
+  end
+end
 ```
 
 Then run:
@@ -89,25 +32,64 @@ Then run:
 cd ios && pod install
 ```
 
-## Troubleshooting
+### Why is this needed?
 
-### Error: "Library not loaded: @rpath/OpenSSL.framework/OpenSSL"
+When you try to install on a physical device without this fix, you'll see:
 
-This means the SPM frameworks aren't being embedded. Verify:
-
-1. The `post_install` hook is properly configured in your Podfile
-2. You're using `use_frameworks! :linkage => :dynamic` (required for SPM dependencies)
-3. Run `cd ios && pod install` after modifying the Podfile
-4. Clean build folder in Xcode (Cmd+Shift+K) and rebuild
-
-### Dynamic Frameworks Required
-
-QuickCrypto requires dynamic framework linking due to SPM dependencies. Add this to your Podfile:
-
-```ruby
-use_frameworks! :linkage => :dynamic
+```
+Failed to verify code signature of .../OpenSSL.framework : 0xe8008015
 ```
 
-## Future
+This happens because:
+1. OpenSSL is distributed as a pre-built, pre-signed xcframework via SPM
+2. CocoaPods' `spm_dependency` adds it to the Pods project but doesn't embed it in your app
+3. The framework must be re-signed with your app's code signing identity
 
-When React Native completes its migration to Swift Package Manager (expected 2026), this manual embedding step will no longer be necessary. SPM packages will be properly integrated by default.
+This is a known limitation of mixing CocoaPods + SPM. See [issue #857](https://github.com/margelo/react-native-quick-crypto/issues/857).
+
+### Multiple Targets
+
+If you have multiple app targets, specify which one:
+
+```ruby
+quickcrypto_fix_spm_signing(installer, app_target_name: 'YourSpecificTarget')
+```
+
+## Enabling libsodium (Optional)
+
+For XSalsa20 cipher support, set the environment variable before your target:
+
+```ruby
+ENV['SODIUM_ENABLED'] = '1'
+
+target 'YourAppName' do
+  # ...
+end
+```
+
+## Troubleshooting
+
+### Error: `0xe8008015` on physical device
+
+This is the code signing error. Make sure you've added `quickcrypto_fix_spm_signing(installer)` to your Podfile's `post_install` hook and run `pod install`.
+
+### Error: "Library not loaded: @rpath/OpenSSL.framework"
+
+Same fix - the `quickcrypto_fix_spm_signing` function handles both embedding and signing.
+
+### Build still fails after adding the fix
+
+1. Clean build: `Cmd+Shift+K` in Xcode
+2. Delete derived data: `rm -rf ~/Library/Developer/Xcode/DerivedData`
+3. Run `pod install` again
+4. Rebuild
+
+### "Could not find main Xcode project" warning
+
+The helper script couldn't find your `.xcodeproj` file. Use the `app_target_name` parameter or check that your project structure is standard.
+
+## The SPM Situation
+
+Yes, this is unfortunate. CocoaPods is being deprecated, SPM is supposed to be the future, but SPM's handling of binary frameworks with CocoaPods is broken. The `spm_dependency` bridge in React Native doesn't properly handle framework embedding and code signing.
+
+This workaround will be unnecessary when React Native fully migrates to SPM (timeline unclear).
