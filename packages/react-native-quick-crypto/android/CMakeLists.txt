@@ -48,6 +48,7 @@ add_library(
   ../cpp/scrypt/HybridScrypt.cpp
   ../cpp/sign/HybridSignHandle.cpp
   ../cpp/sign/HybridVerifyHandle.cpp
+  ../cpp/utils/HybridUtils.cpp
   ${BLAKE3_SOURCES}
   ../deps/fastpbkdf2/fastpbkdf2.c
   ../deps/ncrypto/src/ncrypto.cpp

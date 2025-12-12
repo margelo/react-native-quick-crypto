@@ -24,7 +24,8 @@
     "SignHandle": { "cpp": "HybridSignHandle" },
     "VerifyHandle": { "cpp": "HybridVerifyHandle" },
     "MlDsaKeyPair": { "cpp": "HybridMlDsaKeyPair" },
-    "Scrypt": { "cpp": "HybridScrypt" }
+    "Scrypt": { "cpp": "HybridScrypt" },
+    "Utils": { "cpp": "HybridUtils" }
   },
   "ignorePaths": ["node_modules", "lib"]
 }

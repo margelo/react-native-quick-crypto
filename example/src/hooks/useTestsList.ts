@@ -21,6 +21,7 @@ import '../tests/keys/sign_verify_streaming';
 import '../tests/pbkdf2/pbkdf2_tests';
 import '../tests/scrypt/scrypt_tests';
 import '../tests/random/random_tests';
+import '../tests/utils/timingSafeEqual_tests';
 import '../tests/subtle/x25519_x448';
 import '../tests/subtle/deriveBits';
 import '../tests/subtle/derive_key';
