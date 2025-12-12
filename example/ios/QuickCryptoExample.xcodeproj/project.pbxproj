@@ -116,7 +116,6 @@
 				00DD1BFF1BD5951E006B06BC /* Bundle React Native code and images */,
 				00EEFC60759A1932668264C0 /* [CP] Embed Pods Frameworks */,
 				E235C05ADACE081382539298 /* [CP] Copy Pods Resources */,
-				218A62117F2E6018338554EF /* [QuickCrypto] Embed & Sign SPM Frameworks */,
 			);
 			buildRules = (
 			);
@@ -204,24 +203,6 @@
 			shellPath = /bin/sh;
 			shellScript = "\"${PODS_ROOT}/Target Support Files/Pods-QuickCryptoExample/Pods-QuickCryptoExample-frameworks.sh\"\n";
 			showEnvVarsInLog = 0;
-		};
-		218A62117F2E6018338554EF /* [QuickCrypto] Embed & Sign SPM Frameworks */ = {
-			isa = PBXShellScriptBuildPhase;
-			buildActionMask = 2147483647;
-			files = (
-			);
-			inputFileListPaths = (
-			);
-			inputPaths = (
-			);
-			name = "[QuickCrypto] Embed & Sign SPM Frameworks";
-			outputFileListPaths = (
-			);
-			outputPaths = (
-			);
-			runOnlyForDeploymentPostprocessing = 0;
-			shellPath = /bin/sh;
-			shellScript = "set -euo pipefail\n\n# Embed and sign SPM frameworks (OpenSSL) from QuickCrypto\n# This phase MUST run LAST, after all other framework embedding\n# See: https://github.com/margelo/react-native-quick-crypto/issues/857\n\nFRAMEWORKS_DIR=\"${BUILT_PRODUCTS_DIR}/${FRAMEWORKS_FOLDER_PATH}\"\nmkdir -p \"$FRAMEWORKS_DIR\"\n\nsign_framework() {\n  local framework_path=\"$1\"\n  local framework_name=$(basename \"$framework_path\")\n\n  if [ ! -d \"$framework_path\" ]; then\n    echo \"warning: $framework_name not found at $framework_path, skipping\"\n    return 0\n  fi\n\n  echo \"[QuickCrypto] Processing $framework_name...\"\n\n  # Copy to app bundle\n  rsync -av --delete \"$framework_path\" \"$FRAMEWORKS_DIR/\"\n\n  local dest_framework=\"$FRAMEWORKS_DIR/$framework_name\"\n\n  # Sign if required (physical device builds only)\n  if [ \"${CODE_SIGNING_REQUIRED:-NO}\" = \"YES\" ] && [ -n \"${EXPANDED_CODE_SIGN_IDENTITY:-}\" ]; then\n    echo \"[QuickCrypto] Signing $framework_name with identity: ${EXPANDED_CODE_SIGN_IDENTITY}\"\n\n    # Make framework writable (rsync preserves read-only from source)\n    chmod -R u+w \"$dest_framework\"\n\n    # Strip existing signature and re-sign with app's identity\n    # This is required for pre-signed xcframeworks from SPM\n    /usr/bin/codesign --force --deep --sign \"${EXPANDED_CODE_SIGN_IDENTITY}\" \\\n      --timestamp=none \\\n      \"$dest_framework\"\n\n    echo \"[QuickCrypto] Successfully signed $framework_name\"\n  else\n    echo \"[QuickCrypto] Code signing not required (simulator build)\"\n  fi\n}\n\n# Sign OpenSSL.framework from SPM\nsign_framework \"${BUILT_PRODUCTS_DIR}/OpenSSL.framework\"\n\necho \"[QuickCrypto] SPM framework embedding complete\"\n";
 		};
 		C38B50BA6285516D6DCD4F65 /* [CP] Check Pods Manifest.lock */ = {
 			isa = PBXShellScriptBuildPhase;

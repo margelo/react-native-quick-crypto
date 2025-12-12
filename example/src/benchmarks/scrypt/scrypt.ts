@@ -1,7 +1,5 @@
 import rnqc from 'react-native-quick-crypto';
 import * as noble from '@noble/hashes/scrypt';
-// @ts-expect-error - crypto-browserify is not typed
-import browserify from 'crypto-browserify';
 import type { BenchFn } from '../../types/benchmarks';
 import { Bench } from 'tinybench';
 
@@ -42,20 +40,6 @@ const scrypt_async: BenchFn = () => {
     })
     .add('@noble/hashes/scrypt', async () => {
       await noble.scryptAsync('password', 'salt', { N, r, p, dkLen: keylen });
-    })
-    .add('browserify/scrypt', async () => {
-      await new Promise<void>((resolve, reject) => {
-        browserify.scrypt(
-          'password',
-          'salt',
-          keylen,
-          { N, r, p },
-          (err: unknown) => {
-            if (err) reject(err);
-            else resolve();
-          },
-        );
-      });
     });
 
   bench.warmupTime = 100;
@@ -84,9 +68,6 @@ const scrypt_sync: BenchFn = () => {
     })
     .add('@noble/hashes/scrypt', () => {
       noble.scrypt('password', 'salt', { N, r, p, dkLen: keylen });
-    })
-    .add('browserify/scrypt', () => {
-      browserify.scryptSync('password', 'salt', keylen, { N, r, p });
     });
 
   bench.warmupTime = 100;

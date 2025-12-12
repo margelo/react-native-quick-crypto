@@ -8,6 +8,7 @@ import hash from '../benchmarks/hash/hash';
 import hmac from '../benchmarks/hmac/hmac';
 import pbkdf2 from '../benchmarks/pbkdf2/pbkdf2';
 import random from '../benchmarks/random/randomBytes';
+import scrypt from '../benchmarks/scrypt/scrypt';
 import xsalsa20 from '../benchmarks/cipher/xsalsa20';
 
 export const useBenchmarks = (): [
@@ -37,6 +38,7 @@ export const useBenchmarks = (): [
           'polyfilled with RNQC, so a somewhat senseless benchmark',
       }),
     );
+    newSuites.push(new BenchmarkSuite('scrypt', scrypt));
     setSuites(newSuites);
   }, []);
 

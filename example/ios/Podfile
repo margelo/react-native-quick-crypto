@@ -1,9 +1,6 @@
 ENV['RCT_NEW_ARCH_ENABLED'] = '1'
 ENV['SODIUM_ENABLED'] = '1'
 
-# Fix QuickCrypto SPM framework signing for physical devices
-require_relative '../../packages/react-native-quick-crypto/scripts/quickcrypto_spm_fix'
-
 # Resolve react_native_pods.rb with node to allow for hoisting
 require Pod::Executable.execute_command('node', ['-p',
   'require.resolve(
@@ -62,7 +59,5 @@ target 'QuickCryptoExample' do
       end
     end
 
-    # Fix QuickCrypto SPM framework signing for physical devices
-    quickcrypto_fix_spm_signing(installer)
   end
 end

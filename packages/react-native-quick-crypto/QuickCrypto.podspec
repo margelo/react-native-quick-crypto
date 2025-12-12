@@ -22,11 +22,22 @@ Pod::Spec.new do |s|
   sodium_enabled = ENV['SODIUM_ENABLED'] == '1'
   Pod::UI.puts("[QuickCrypto]  🧂 has libsodium #{sodium_enabled ? "enabled" : "disabled"}!")
 
+  # OpenSSL 3.6+ vendored xcframework (not yet on CocoaPods trunk)
+  openssl_version = "3.6.0000"
+  openssl_url = "https://github.com/krzyzanowskim/OpenSSL/releases/download/#{openssl_version}/OpenSSL.xcframework.zip"
+
   if sodium_enabled
     # Build libsodium from source for XSalsa20 cipher support
     # CocoaPods packages are outdated (1.0.12) and SPM causes module conflicts
     s.prepare_command = <<-CMD
       set -e
+      # Download OpenSSL.xcframework
+      if [ ! -d "OpenSSL.xcframework" ]; then
+        curl -L -o OpenSSL.xcframework.zip #{openssl_url}
+        unzip -o OpenSSL.xcframework.zip
+        rm -f OpenSSL.xcframework.zip
+      fi
+      # Build libsodium
       mkdir -p ios
       curl -L -o ios/libsodium.tar.gz https://download.libsodium.org/libsodium/releases/libsodium-1.0.20-stable.tar.gz
       tar -xzf ios/libsodium.tar.gz -C ios
@@ -38,10 +49,20 @@ Pod::Spec.new do |s|
     CMD
   else
     s.prepare_command = <<-CMD
+      set -e
+      # Download OpenSSL.xcframework
+      if [ ! -d "OpenSSL.xcframework" ]; then
+        curl -L -o OpenSSL.xcframework.zip #{openssl_url}
+        unzip -o OpenSSL.xcframework.zip
+        rm -f OpenSSL.xcframework.zip
+      fi
+      # Clean up libsodium if previously built
       rm -rf ios/libsodium-stable
       rm -f ios/libsodium.tar.gz
     CMD
   end
+
+  s.vendored_frameworks = "OpenSSL.xcframework"
 
   base_source_files = [
     # implementation (Swift)
@@ -136,13 +157,6 @@ Pod::Spec.new do |s|
 
   s.dependency "React-jsi"
   s.dependency "React-callinvoker"
-
-  # OpenSSL 3.6+ via SPM for ML-DSA (post-quantum cryptography) support
-  spm_dependency(s,
-    url: 'https://github.com/krzyzanowskim/OpenSSL.git',
-    requirement: {kind: 'upToNextMajorVersion', minimumVersion: '3.6.0'},
-    products: ['OpenSSL']
-  )
 
   install_modules_dependencies(s)
 end
