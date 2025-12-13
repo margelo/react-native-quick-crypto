@@ -413,6 +413,128 @@ testRSAKeyGen(
   ['encrypt', 'wrapKey'],
 );
 
+// --- X25519/X448 Key Generation Tests (from subtle.cfrg suite) ---
+
+test(
+  SUITE,
+  'X25519 - generateKey, exportKey, importKey, deriveBits',
+  async () => {
+    const format = 'raw';
+    const algorithm = { name: 'X25519' } as const;
+
+    const aliceKeys = (await subtle.generateKey(algorithm, true, [
+      'deriveKey',
+      'deriveBits',
+    ])) as TestCryptoKeyPair;
+
+    const bobKeys = (await subtle.generateKey(algorithm, true, [
+      'deriveKey',
+      'deriveBits',
+    ])) as TestCryptoKeyPair;
+
+    expect(aliceKeys.publicKey.algorithm.name).to.equal('X25519');
+    expect(aliceKeys.privateKey.algorithm.name).to.equal('X25519');
+
+    const alicePubRaw = await subtle.exportKey(format, aliceKeys.publicKey);
+    const bobPubRaw = await subtle.exportKey(format, bobKeys.publicKey);
+
+    const alicePubImported = await subtle.importKey(
+      format,
+      alicePubRaw,
+      algorithm,
+      true,
+      [],
+    );
+
+    const bobPubImported = await subtle.importKey(
+      format,
+      bobPubRaw,
+      algorithm,
+      true,
+      [],
+    );
+
+    const bitsLength = 256;
+    const aliceShared = await subtle.deriveBits(
+      { name: 'X25519', public: bobPubImported } as any,
+      aliceKeys.privateKey,
+      bitsLength,
+    );
+
+    const bobShared = await subtle.deriveBits(
+      { name: 'X25519', public: alicePubImported } as any,
+      bobKeys.privateKey,
+      bitsLength,
+    );
+
+    const aliceSharedView = new Uint8Array(aliceShared);
+    const bobSharedView = new Uint8Array(bobShared);
+
+    expect(aliceSharedView.length).to.equal(bitsLength / 8);
+    expect(aliceSharedView).to.deep.equal(bobSharedView);
+  },
+);
+
+test(
+  SUITE,
+  'X448 - generateKey, exportKey, importKey, deriveBits',
+  async () => {
+    const format = 'spki';
+    const algorithm = { name: 'X448' } as const;
+
+    const aliceKeys = (await subtle.generateKey(algorithm, true, [
+      'deriveKey',
+      'deriveBits',
+    ])) as TestCryptoKeyPair;
+
+    const bobKeys = (await subtle.generateKey(algorithm, true, [
+      'deriveKey',
+      'deriveBits',
+    ])) as TestCryptoKeyPair;
+
+    expect(aliceKeys.publicKey.algorithm.name).to.equal('X448');
+    expect(aliceKeys.privateKey.algorithm.name).to.equal('X448');
+
+    const alicePubSpki = await subtle.exportKey(format, aliceKeys.publicKey);
+    const bobPubSpki = await subtle.exportKey(format, bobKeys.publicKey);
+
+    const alicePubImported = await subtle.importKey(
+      format,
+      alicePubSpki,
+      algorithm,
+      true,
+      [],
+    );
+
+    const bobPubImported = await subtle.importKey(
+      format,
+      bobPubSpki,
+      algorithm,
+      true,
+      [],
+    );
+
+    const bitsLength = 448;
+    const aliceShared = await subtle.deriveBits(
+      { name: 'X448', public: bobPubImported } as any,
+      aliceKeys.privateKey,
+      bitsLength,
+    );
+
+    const bobShared = await subtle.deriveBits(
+      { name: 'X448', public: alicePubImported } as any,
+      bobKeys.privateKey,
+      bitsLength,
+    );
+
+    const aliceSharedView = new Uint8Array(aliceShared);
+    const bobSharedView = new Uint8Array(bobShared);
+
+    expect(aliceSharedView.length).to.equal(56);
+    expect(aliceSharedView).to.deep.equal(bobSharedView);
+  },
+);
+
 // --- ML-DSA Key Generation Tests ---
 
 type MlDsaVariant = 'ML-DSA-44' | 'ML-DSA-65' | 'ML-DSA-87';

@@ -123,8 +123,7 @@ const styles = StyleSheet.create({
     color: colors.red,
   },
   count: {
-    fontSize: 12,
-    fontWeight: 'bold',
+    fontSize: 11,
     flex: 1,
     textAlign: 'right',
   },
