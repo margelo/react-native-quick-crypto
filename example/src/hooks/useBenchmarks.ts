@@ -7,6 +7,8 @@ import hkdf from '../benchmarks/hkdf/hkdf';
 import hash from '../benchmarks/hash/hash';
 import hmac from '../benchmarks/hmac/hmac';
 import pbkdf2 from '../benchmarks/pbkdf2/pbkdf2';
+import ecdh from '../benchmarks/ecdh/ecdh';
+import dh from '../benchmarks/dh/dh';
 import random from '../benchmarks/random/randomBytes';
 import scrypt from '../benchmarks/scrypt/scrypt';
 import xsalsa20 from '../benchmarks/cipher/xsalsa20';
@@ -32,6 +34,8 @@ export const useBenchmarks = (): [
     newSuites.push(new BenchmarkSuite('hash', hash));
     newSuites.push(new BenchmarkSuite('hmac', hmac));
     newSuites.push(new BenchmarkSuite('hkdf', hkdf));
+    newSuites.push(new BenchmarkSuite('ecdh', ecdh));
+    newSuites.push(new BenchmarkSuite('dh', dh));
     newSuites.push(
       new BenchmarkSuite('random', random, {
         'browserify/randombytes':

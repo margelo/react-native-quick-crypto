@@ -28,6 +28,8 @@
 #include "HybridMlDsaKeyPair.hpp"
 #include "HybridScrypt.hpp"
 #include "HybridUtils.hpp"
+#include "HybridECDH.hpp"
+#include "HybridDiffieHellman.hpp"
 
 @interface QuickCryptoAutolinking : NSObject
 @end
@@ -198,6 +200,24 @@
                     "The HybridObject \"HybridUtils\" is not default-constructible! "
                     "Create a public constructor that takes zero arguments to be able to autolink this HybridObject.");
       return std::make_shared<HybridUtils>();
+    }
+  );
+  HybridObjectRegistry::registerHybridObjectConstructor(
+    "ECDH",
+    []() -> std::shared_ptr<HybridObject> {
+      static_assert(std::is_default_constructible_v<HybridECDH>,
+                    "The HybridObject \"HybridECDH\" is not default-constructible! "
+                    "Create a public constructor that takes zero arguments to be able to autolink this HybridObject.");
+      return std::make_shared<HybridECDH>();
+    }
+  );
+  HybridObjectRegistry::registerHybridObjectConstructor(
+    "DiffieHellman",
+    []() -> std::shared_ptr<HybridObject> {
+      static_assert(std::is_default_constructible_v<HybridDiffieHellman>,
+                    "The HybridObject \"HybridDiffieHellman\" is not default-constructible! "
+                    "Create a public constructor that takes zero arguments to be able to autolink this HybridObject.");
+      return std::make_shared<HybridDiffieHellman>();
     }
   );
 }
