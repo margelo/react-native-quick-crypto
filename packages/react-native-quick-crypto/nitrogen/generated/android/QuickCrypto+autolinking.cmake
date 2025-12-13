@@ -30,6 +30,8 @@ target_sources(
   ../nitrogen/generated/shared/c++/HybridBlake3Spec.cpp
   ../nitrogen/generated/shared/c++/HybridCipherSpec.cpp
   ../nitrogen/generated/shared/c++/HybridCipherFactorySpec.cpp
+  ../nitrogen/generated/shared/c++/HybridDiffieHellmanSpec.cpp
+  ../nitrogen/generated/shared/c++/HybridECDHSpec.cpp
   ../nitrogen/generated/shared/c++/HybridEcKeyPairSpec.cpp
   ../nitrogen/generated/shared/c++/HybridEdKeyPairSpec.cpp
   ../nitrogen/generated/shared/c++/HybridHashSpec.cpp

@@ -160,7 +160,8 @@ function internalGenerateKeyPair(
         } else {
           throw new Error(`Unsupported key type: ${type}`);
         }
-        return [undefined, result.publicKey, result.privateKey];
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        return [undefined, result.publicKey as any, result.privateKey as any];
       } catch (error) {
         return [error as Error, undefined, undefined];
       }
@@ -182,7 +183,8 @@ function internalGenerateKeyPair(
     } else {
       throw new Error(`Unsupported key type: ${type}`);
     }
-    return [undefined, result.publicKey, result.privateKey];
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    return [undefined, result.publicKey as any, result.privateKey as any];
   } catch (error) {
     return [error as Error, undefined, undefined];
   }
