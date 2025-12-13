@@ -55,7 +55,13 @@ cd ios && pod install
 ```
 
 <h3>
-  Expo  <a href="#"><img src="./docs/img/expo.png" height="12" /></a>
+  Expo  <a href="#">
+    <picture>
+      <source media="(prefers-color-scheme: dark)" srcset="./docs/img/expo/dark.png" />
+      <source media="(prefers-color-scheme: light)" srcset="./docs/img/expo/light.png" />
+      <img alt="Expo" src="./docs/img/expo/light.png" height="12" />
+    </picture>
+  </a>
 </h3>
 
 ```sh
