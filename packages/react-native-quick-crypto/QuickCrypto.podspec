@@ -132,6 +132,9 @@ Pod::Spec.new do |s|
   cpp_headers = [
     "\"$(PODS_TARGET_SRCROOT)/cpp/utils\"",
     "\"$(PODS_TARGET_SRCROOT)/cpp/hkdf\"",
+    "\"$(PODS_TARGET_SRCROOT)/cpp/dh\"",
+    "\"$(PODS_TARGET_SRCROOT)/cpp/ecdh\"",
+    "\"$(PODS_TARGET_SRCROOT)/nitrogen/generated/shared/c++\"",
     "\"$(PODS_TARGET_SRCROOT)/deps/ncrypto/include\"",
     "\"$(PODS_TARGET_SRCROOT)/deps/blake3/c\"",
     "\"$(PODS_TARGET_SRCROOT)/deps/fastpbkdf2\""
