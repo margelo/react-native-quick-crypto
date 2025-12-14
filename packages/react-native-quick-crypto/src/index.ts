@@ -12,6 +12,8 @@ import * as hkdf from './hkdf';
 import * as pbkdf2 from './pbkdf2';
 import * as scrypt from './scrypt';
 import * as random from './random';
+import * as ecdh from './ecdh';
+import * as dh from './diffie-hellman';
 import { constants } from './constants';
 
 // utils import
@@ -33,6 +35,8 @@ const QuickCrypto = {
   ...pbkdf2,
   ...scrypt,
   ...random,
+  ...ecdh,
+  ...dh,
   ...utils,
   ...subtle,
   constants,
@@ -71,6 +75,8 @@ export * from './hkdf';
 export * from './pbkdf2';
 export * from './scrypt';
 export * from './random';
+export * from './ecdh';
+export * from './diffie-hellman';
 export * from './utils';
 export * from './subtle';
 export { subtle, isCryptoKeyPair } from './subtle';

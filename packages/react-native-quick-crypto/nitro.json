@@ -1,31 +1,80 @@
 {
-  "cxxNamespace": ["crypto"],
+  "cxxNamespace": [
+    "crypto"
+  ],
   "ios": {
     "iosModuleName": "QuickCrypto"
   },
   "android": {
-    "androidNamespace": ["crypto"],
+    "androidNamespace": [
+      "crypto"
+    ],
     "androidCxxLibName": "QuickCrypto"
   },
   "autolinking": {
-    "Blake3": { "cpp": "HybridBlake3" },
-    "Cipher": { "cpp": "HybridCipher" },
-    "CipherFactory": { "cpp": "HybridCipherFactory" },
-    "EcKeyPair": { "cpp": "HybridEcKeyPair" },
-    "EdKeyPair": { "cpp": "HybridEdKeyPair" },
-    "Hash": { "cpp": "HybridHash" },
-    "Hmac": { "cpp": "HybridHmac" },
-    "Hkdf": { "cpp": "HybridHkdf" },
-    "KeyObjectHandle": { "cpp": "HybridKeyObjectHandle" },
-    "Pbkdf2": { "cpp": "HybridPbkdf2" },
-    "Random": { "cpp": "HybridRandom" },
-    "RsaCipher": { "cpp": "HybridRsaCipher" },
-    "RsaKeyPair": { "cpp": "HybridRsaKeyPair" },
-    "SignHandle": { "cpp": "HybridSignHandle" },
-    "VerifyHandle": { "cpp": "HybridVerifyHandle" },
-    "MlDsaKeyPair": { "cpp": "HybridMlDsaKeyPair" },
-    "Scrypt": { "cpp": "HybridScrypt" },
-    "Utils": { "cpp": "HybridUtils" }
+    "Blake3": {
+      "cpp": "HybridBlake3"
+    },
+    "Cipher": {
+      "cpp": "HybridCipher"
+    },
+    "CipherFactory": {
+      "cpp": "HybridCipherFactory"
+    },
+    "EcKeyPair": {
+      "cpp": "HybridEcKeyPair"
+    },
+    "EdKeyPair": {
+      "cpp": "HybridEdKeyPair"
+    },
+    "Hash": {
+      "cpp": "HybridHash"
+    },
+    "Hmac": {
+      "cpp": "HybridHmac"
+    },
+    "Hkdf": {
+      "cpp": "HybridHkdf"
+    },
+    "KeyObjectHandle": {
+      "cpp": "HybridKeyObjectHandle"
+    },
+    "Pbkdf2": {
+      "cpp": "HybridPbkdf2"
+    },
+    "Random": {
+      "cpp": "HybridRandom"
+    },
+    "RsaCipher": {
+      "cpp": "HybridRsaCipher"
+    },
+    "RsaKeyPair": {
+      "cpp": "HybridRsaKeyPair"
+    },
+    "SignHandle": {
+      "cpp": "HybridSignHandle"
+    },
+    "VerifyHandle": {
+      "cpp": "HybridVerifyHandle"
+    },
+    "MlDsaKeyPair": {
+      "cpp": "HybridMlDsaKeyPair"
+    },
+    "Scrypt": {
+      "cpp": "HybridScrypt"
+    },
+    "Utils": {
+      "cpp": "HybridUtils"
+    },
+    "ECDH": {
+      "cpp": "HybridECDH"
+    },
+    "DiffieHellman": {
+      "cpp": "HybridDiffieHellman"
+    }
   },
-  "ignorePaths": ["node_modules", "lib"]
+  "ignorePaths": [
+    "node_modules",
+    "lib"
+  ]
 }

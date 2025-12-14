@@ -37,7 +37,12 @@ import type { KeyObjectHandle } from './specs/keyObjectHandle.nitro';
 import type { RsaCipher } from './specs/rsaCipher.nitro';
 import type { CipherFactory } from './specs/cipher.nitro';
 import { pbkdf2DeriveBits } from './pbkdf2';
-import { ecImportKey, ecdsaSignVerify, ec_generateKeyPair } from './ec';
+import {
+  ecImportKey,
+  ecdsaSignVerify,
+  ec_generateKeyPair,
+  ecDeriveBits,
+} from './ec';
 import { rsa_generateKeyPair } from './rsa';
 import { getRandomValues } from './random';
 import { createHmac } from './hmac';
@@ -1559,6 +1564,8 @@ export class Subtle {
       // Fall through
       case 'X448':
         return xDeriveBits(algorithm, baseKey, length);
+      case 'ECDH':
+        return ecDeriveBits(algorithm, baseKey, length);
       case 'HKDF':
         return hkdfDeriveBits(
           algorithm as unknown as HkdfAlgorithm,
