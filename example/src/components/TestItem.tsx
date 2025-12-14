@@ -6,58 +6,70 @@ import { useNavigation } from '@react-navigation/native';
 import { colors } from '../styles/colors';
 
 type TestItemProps = {
-  suiteIndex: number;
+  suiteIndex?: number;
   description: string;
-  value: boolean;
+  value?: boolean;
   count: number;
-  results: TestResult[];
-  onToggle: (description: string) => void;
+  results?: TestResult[];
+  onToggle?: (description: string) => void;
+  isFooter?: boolean;
+  passCount?: number;
+  failCount?: number;
 };
 
 export const TestItem: React.FC<TestItemProps> = ({
-  suiteIndex,
+  suiteIndex = 0,
   description,
-  value,
+  value = false,
   count,
-  results,
+  results = [],
   onToggle,
+  isFooter = false,
+  passCount,
+  failCount,
 }: TestItemProps) => {
   const navigation = useNavigation();
 
   // get pass/fail stats from results
-  let pass = 0;
-  let fail = 0;
-  results.map(r => {
-    if (r.type === 'correct') {
-      pass++;
-    }
-    if (r.type === 'incorrect') {
-      fail++;
-    }
-  });
+  let pass = passCount ?? 0;
+  let fail = failCount ?? 0;
+
+  if (!isFooter) {
+    results.map(r => {
+      if (r.type === 'correct') {
+        pass++;
+      }
+      if (r.type === 'incorrect') {
+        fail++;
+      }
+    });
+  }
 
   return (
-    <View
-      style={styles.container}
-      testID={`test-suite-${description.replace(/\s+/g, '-').toLowerCase()}`}
-    >
-      <BouncyCheckbox
-        isChecked={value}
-        onPress={() => {
-          onToggle(description);
-        }}
-        fillColor={colors.blue}
-        style={styles.checkbox}
-        disableBuiltInState={true}
-      />
+    <View style={styles.container}>
+      {isFooter ? (
+        <Text style={styles.timer}>⏱️</Text>
+      ) : (
+        <BouncyCheckbox
+          isChecked={value}
+          onPress={() => {
+            onToggle?.(description);
+          }}
+          fillColor={colors.blue}
+          style={styles.checkbox}
+          disableBuiltInState={true}
+        />
+      )}
       <TouchableOpacity
         style={styles.touchable}
         onPress={() => {
-          // @ts-expect-error - not dealing with navigation types rn
-          navigation.navigate('TestDetailsScreen', {
-            results,
-            suiteName: description,
-          });
+          if (!isFooter) {
+            // @ts-expect-error - not dealing with navigation types rn
+            navigation.navigate('TestDetailsScreen', {
+              results,
+              suiteName: description,
+            });
+          }
         }}
       >
         <Text
@@ -70,21 +82,33 @@ export const TestItem: React.FC<TestItemProps> = ({
         <Text
           style={[styles.pass, styles.count]}
           numberOfLines={1}
-          testID={`test-suite-${suiteIndex}-pass-count`}
+          testID={
+            isFooter
+              ? 'completion-stats'
+              : `test-suite-${suiteIndex}-pass-count`
+          }
         >
-          {pass || ''}
+          {isFooter ? pass : pass || ''}
         </Text>
         <Text
           style={[styles.fail, styles.count]}
           numberOfLines={1}
-          testID={`test-suite-${suiteIndex}-fail-count`}
+          testID={
+            isFooter
+              ? 'total-fail-count'
+              : `test-suite-${suiteIndex}-fail-count`
+          }
         >
-          {fail || ''}
+          {isFooter ? fail : fail || ''}
         </Text>
         <Text
           style={styles.count}
           numberOfLines={1}
-          testID={`test-suite-${suiteIndex}-total-count`}
+          testID={
+            isFooter
+              ? 'total-test-count'
+              : `test-suite-${suiteIndex}-total-count`
+          }
         >
           {count}
         </Text>
@@ -104,12 +128,13 @@ const styles = StyleSheet.create({
     borderBottomWidth: 1,
     borderBottomColor: colors.gray,
     paddingHorizontal: 10,
+    marginVertical: -1,
   },
   checkbox: {
-    transform: [{ scaleX: 0.7 }, { scaleY: 0.7 }],
+    transform: [{ scaleX: 0.6 }, { scaleY: 0.6 }],
   },
   label: {
-    fontSize: 12,
+    fontSize: 11,
     flex: 8,
   },
   touchable: {
@@ -126,5 +151,11 @@ const styles = StyleSheet.create({
     fontSize: 11,
     flex: 1,
     textAlign: 'right',
+    paddingHorizontal: 1,
+  },
+  timer: {
+    fontSize: 14,
+    paddingHorizontal: 6,
+    paddingVertical: 4,
   },
 });

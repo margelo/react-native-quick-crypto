@@ -13,13 +13,6 @@ jsEngine: graaljs
 - assertVisible: 'Check All'
 - assertVisible: 'Clear All'
 
-# Clear any previous test results
-- tapOn: 'Clear All'
-
-# Wait for clear to complete
-- waitForAnimationToEnd:
-    timeout: 2000
-
 # Select all tests by tapping "Check All"
 - tapOn: 'Check All'
 
