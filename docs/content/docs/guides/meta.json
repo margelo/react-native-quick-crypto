@@ -1,0 +1,12 @@
+{
+    "title": "Guides",
+    "pages": [
+        "e2ee-chat",
+        "totp-2fa",
+        "large-files",
+        "secure-storage",
+        "crypto-wallet",
+        "migration",
+        "nitro-integration"
+    ]
+}

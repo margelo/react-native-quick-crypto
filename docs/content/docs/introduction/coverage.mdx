@@ -1,0 +1,29 @@
+---
+title: Implementation Coverage
+description: Detailed status of Node.js API compatibility
+---
+
+import { CoverageTable } from '../../../components/CoverageTable';
+
+This page tracks the implementation status of `react-native-quick-crypto` against the standard Node.js `crypto` API and the W3C WebCrypto API.
+
+import { CheckCircle2, AlertTriangle, XCircle } from 'lucide-react';
+
+<div className="flex flex-wrap gap-x-6 gap-y-2 my-4 text-sm text-fd-muted-foreground">
+    <div className="flex items-center gap-2">
+        <CheckCircle2 className="w-4 h-4 text-green-500" />
+        <span><strong className="text-fd-foreground">Implemented</strong>: Full support</span>
+    </div>
+    <div className="flex items-center gap-2">
+        <AlertTriangle className="w-4 h-4 text-yellow-500" />
+        <span><strong className="text-fd-foreground">Partial</strong>: Not fully implemented</span>
+    </div>
+    <div className="flex items-center gap-2">
+        <XCircle className="w-4 h-4 text-red-500" />
+        <span><strong className="text-fd-foreground">Missing</strong>: Not implemented</span>
+    </div>
+</div>
+
+<div className="mt-8">
+    <CoverageTable />
+</div>

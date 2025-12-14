@@ -1,0 +1,120 @@
+---
+title: Scrypt
+description: Memory-hard password-based key derivation
+---
+
+import { Callout } from 'fumadocs-ui/components/callout';
+import { TypeTable } from 'fumadocs-ui/components/type-table';
+import { Tab, Tabs } from 'fumadocs-ui/components/tabs';
+
+**Scrypt** is a password-based key derivation function (KDF) that is designed to be **memory-hard**. It prevents custom hardware attacks (like ASICs) by requiring large amounts of memory to solve.
+
+## Table of Contents
+
+- [Theory](#theory)
+- [Module Methods](#module-methods)
+- [Real-World Examples](#real-world-examples)
+
+## Theory
+
+Standard hashes are computationally cheap. Specialized hardware (ASICs, GPUs) can calculate billions of SHA-256 hashes per second, making them effective at brute-forcing passwords.
+
+Scrypt resists this by requiring large amounts of **Memory (RAM)** to compute.
+*   It generates a large random dataset in memory.
+*   It reads excessively from random locations in that dataset.
+*   This defeats hardware acceleration because memory is expensive and difficult to parallelize on a massive scale.
+
+**Parameters:**
+1.  **N (Cost)**: CPU/Memory cost.
+2.  **r (Block Size)**: Memory block size.
+3.  **p (Parallelization)**: Independent threads.
+
+```math
+\text{Memory} \approx 128 \times r \times N \text{ bytes}
+```
+
+```math
+\text{CPU Cost} \approx 4 \times N \times r \times p
+```
+
+---
+
+## Module Methods
+
+### scrypt(password, salt, keylen[, options], callback)
+
+Asynchronously derives a key.
+
+**Parameters:**
+
+<TypeTable
+  type={{
+    password: { description: 'The password.', type: 'string | Buffer | TypedArray' },
+    salt: { description: 'Salt. Should be random.', type: 'string | Buffer | TypedArray' },
+    keylen: { description: 'Desired output length.', type: 'number' },
+    options: { description: 'Parameters.', type: 'Object' },
+    'options.N': { description: 'Cost factor. Default: 16384.', type: 'number' },
+    'options.r': { description: 'Block size. Default: 8.', type: 'number' },
+    'options.p': { description: 'Parallelization. Default: 1.', type: 'number' },
+    'options.maxmem': { description: 'Memory limit check. Default: 32MB. Increase if N is high.', type: 'number' },
+    callback: { description: 'Called with `(err, derivedKey)`.', type: 'Function' }
+  }}
+/>
+
+**Returns:** `void`
+
+**Example:**
+
+```ts
+import { scrypt, randomBytes } from 'react-native-quick-crypto';
+
+const pass = 'correct horse battery staple';
+const salt = randomBytes(16);
+
+const opts = { N: 32768, r: 8, p: 1, maxmem: 64 * 1024 * 1024 };
+
+scrypt(pass, salt, 64, opts, (err, key) => {
+  if (err) throw err;
+  console.log('Derived Key:', key.toString('hex'));
+});
+```
+
+### scryptSync(password, salt, keylen[, options])
+
+Synchronous version. **Warning**: This will block the entire JS thread. Use with caution in React Native.
+
+**Returns:** `Buffer`
+
+---
+
+## Real-World Examples
+
+### Wallet Encryption
+
+Encouraging high-security parameters (~32MB RAM) for encrypting crypto wallets.
+
+```ts
+import { scrypt, randomBytes, createCipheriv } from 'react-native-quick-crypto';
+
+function encryptWallet(privateKey: Buffer, password: string): Promise<Object> {
+    return new Promise((resolve, reject) => {
+        const salt = randomBytes(32);
+        const iv = randomBytes(16);
+        
+        // Derive encryption key
+        scrypt(password, salt, 32, { N: 32768, r: 8, p: 1 }, (err, derivedKey) => {
+            if (err) return reject(err);
+            
+            const cipherKey = derivedKey.slice(0, 32); 
+            const cipher = createCipheriv('aes-256-ctr', cipherKey, iv);
+            let ciphertext = cipher.update(privateKey);
+            ciphertext = Buffer.concat([ciphertext, cipher.final()]);
+            
+            resolve({
+                kdf: 'scrypt',
+                ciphertext: ciphertext.toString('hex')
+            });
+        });
+    });
+}
+```

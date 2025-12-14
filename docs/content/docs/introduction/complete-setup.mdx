@@ -1,0 +1,199 @@
+---
+title: Complete Setup Process
+description: Detailed guide for installation and configuration
+---
+
+import { Tab, Tabs } from 'fumadocs-ui/components/tabs';
+import { Step, Steps } from 'fumadocs-ui/components/steps';
+import { Callout } from 'fumadocs-ui/components/callout';
+
+This guide covers the full installation process, including how to configure RNQC as a drop-in replacement for the Node.js crypto module.
+
+## Installation
+
+<Tabs items={['React Native', 'Expo']}>
+
+<Tab value="React Native">
+
+Install the package and the required `react-native-nitro-modules` core.
+
+<Steps>
+
+<Step>
+### Install Dependencies
+
+```bash
+bun add react-native-quick-crypto react-native-nitro-modules
+```
+</Step>
+
+<Step>
+### Install Pods (iOS)
+Navigate to the iOS directory and install CocoaPods.
+
+```bash
+cd ios && pod install
+```
+</Step>
+
+</Steps>
+
+</Tab>
+
+<Tab value="Expo">
+
+For Expo projects, use the Expo CLI to ensure compatibility.
+
+<Steps>
+
+<Step>
+### Install Dependencies
+
+```bash
+npx expo install react-native-quick-crypto
+```
+</Step>
+
+<Step>
+### Add Config Plugin
+Add the library to your `plugins` list in `app.json` (or `app.config.js`).
+
+```json title="app.json"
+{
+  "expo": {
+    "plugins": [
+      "react-native-quick-crypto"
+    ]
+  }
+}
+```
+</Step>
+
+<Step>
+### Prebuild
+Generate the native android and ios directories.
+
+```bash
+npx expo prebuild
+```
+
+<Callout type="warn">
+  This library requires native code. You **must** run `prebuild` to generate the native directories. It will not work in Expo Go.
+</Callout>
+</Step>
+
+</Steps>
+
+</Tab>
+
+</Tabs>
+
+## Global Polyfill (Recommended)
+
+If you want `crypto` and `Buffer` to be available globally (as they are in Node.js), import the `install` function as early as possible in your application's entry point (e.g., `index.js`).
+
+```ts
+import { install } from 'react-native-quick-crypto';
+
+install();
+```
+
+
+## Configuration
+
+<Tabs items={['Metro Config (Recommended)', 'Babel Plugin']}>
+
+<Tab value="Metro Config (Recommended)">
+
+Use `metro.config.js` to redirect imports at the bundler level. This is generally more robust.
+
+<Steps>
+
+<Step>
+### Open Config
+Open your `metro.config.js` file.
+</Step>
+
+<Step>
+### Add Resolver
+Add the `resolveRequest` handler to redirect `crypto` imports.
+
+```js title="metro.config.js"
+const { getDefaultConfig } = require('@react-native/metro-config');
+
+const config = getDefaultConfig(__dirname);
+
+config.resolver.resolveRequest = (context, moduleName, platform) => {
+  if (moduleName === 'crypto') {
+    // when importing crypto, resolve to react-native-quick-crypto
+    return context.resolveRequest(
+      context,
+      'react-native-quick-crypto',
+      platform,
+    );
+  }
+  
+  // otherwise chain to the standard Metro resolver.
+  return context.resolveRequest(context, moduleName, platform);
+};
+
+module.exports = config;
+```
+</Step>
+
+</Steps>
+
+</Tab>
+
+<Tab value="Babel Plugin">
+
+Alternatively, use `babel-plugin-module-resolver` to alias imports during transpilation.
+
+<Steps>
+
+<Step>
+### Install Plugin
+
+```bash
+yarn add --dev babel-plugin-module-resolver
+```
+</Step>
+
+<Step>
+### Update Babel Config
+Add the plugin to your `babel.config.js`.
+
+```diff title="babel.config.js"
+module.exports = {
+  presets: ['module:metro-react-native-babel-preset'],
+  plugins: [
++   [
++     'module-resolver',
++     {
++       alias: {
++         'crypto': 'react-native-quick-crypto',
++         'stream': 'readable-stream',
++         'buffer': '@craftzdog/react-native-buffer',
++       },
++     },
++   ],
+    ...
+  ],
+};
+```
+</Step>
+
+<Step>
+### Reset Cache
+Restart your bundler to apply changes.
+
+```bash
+yarn start --reset-cache
+```
+</Step>
+
+</Steps>
+
+</Tab>
+
+</Tabs>

@@ -1,0 +1,188 @@
+---
+title: Random
+description: Cryptographically strong random values
+---
+
+import { Callout } from 'fumadocs-ui/components/callout';
+import { TypeTable } from 'fumadocs-ui/components/type-table';
+
+The `Random` module provides functionality to generate cryptographically strong pseudo-random data.
+
+## Table of Contents
+
+- [Theory](#theory)
+- [Module Methods](#module-methods)
+- [Real-World Examples](#real-world-examples)
+- [Security Considerations](#security-considerations)
+
+## Theory
+
+Standard random number generators (like `Math.random()`) are **Pseudo-Random Number Generators (PRNGs)**. They use a mathematical formula starting from a "seed". If you know the seed or enough outputs, you can predict all future outputs.
+
+Cryptographically secure systems require **CSPRNGs (Cryptographically Strong PRNGs)**. These are designed to be unpredictable even if an attacker knows the algorithm.
+
+RNQC delegates randomness to the underlying Operating System's entropy pool:
+*   **iOS/macOS**: `SecRandomCopyBytes`
+*   **Android**: `SecureRandom`
+
+This ensures that generated keys, salts, and nonces are secure.
+
+---
+
+## Module Methods
+
+### randomBytes(size[, callback])
+
+Generates cryptographically strong pseudo-random data.
+
+**Parameters:**
+
+<TypeTable
+  type={{
+    size: { description: 'The number of bytes to generate.', type: 'number' },
+    callback: { description: 'Optional. If provided, generation is async.', type: 'Function' }
+  }}
+/>
+
+**Returns:** `Buffer` (if sync) or `void` (if async).
+
+**Example:**
+
+```ts twoslash
+// @noErrors
+import { randomBytes } from 'crypto';
+
+// Sync (Blocking)
+const buf = randomBytes(16);
+//    ^?
+
+// Async (Non-Blocking)
+randomBytes(256, (err, buf) => {
+  if (err) throw err;
+  console.log(`${buf.length} bytes generated.`);
+});
+```
+
+---
+
+### randomFill(buffer[, offset][, size], callback)
+### randomFillSync(buffer[, offset][, size])
+
+Populates an *existing* buffer with random data.
+
+**Parameters:**
+
+<TypeTable
+  type={{
+    buffer: { description: 'Buffer to fill.', type: 'Buffer | TypedArray' },
+    offset: { description: 'Start position. Default: 0', type: 'number' },
+    size: { description: 'Bytes to fill. Default: buffer.length - offset', type: 'number' }
+  }}
+/>
+
+---
+
+### randomInt([min], max[, callback])
+
+Returns a random integer `n` such that `min <= n < max`. The implementation avoids **modulo bias**.
+
+**Parameters:**
+
+<TypeTable
+  type={{
+    min: { description: 'Lower bound (inclusive). Default: 0.', type: 'number' },
+    max: { description: 'Upper bound (exclusive).', type: 'number' },
+    callback: { description: 'Optional callback.', type: 'Function' }
+  }}
+/>
+
+**Example:**
+
+```ts twoslash
+// @noErrors
+import { randomInt } from 'crypto';
+
+// Range: [0, 100)
+const n = randomInt(100);
+//    ^?
+
+// Range: [10, 50)
+const m = randomInt(10, 50);
+```
+
+---
+
+### randomUUID([options])
+
+Generates a random RFC 4122 Version 4 UUID.
+
+**Parameters:**
+
+<TypeTable
+  type={{
+    options: { description: 'Configuration.', type: 'Object' },
+    'options.disableEntropyCache': { description: 'Disable internal buffering.', type: 'boolean' }
+  }}
+/>
+
+**Returns:** `string` e.g. `'f47ac10b-58cc-4372-a567-0e02b2c3d479'`
+
+---
+
+## Real-World Examples
+
+### API Key Generation
+
+Generating a URL-safe random string.
+
+```ts
+import { randomBytes } from 'react-native-quick-crypto';
+
+function generateApiKey(lengthBytes = 32): string {
+    const buffer = randomBytes(lengthBytes);
+    return buffer.toString('base64')
+        .replace(/\+/g, '-')
+        .replace(/\//g, '_')
+        .replace(/=/g, '');
+}
+```
+
+### Nonce Generation
+
+For encryption algorithms like AES-GCM or ChaCha20-Poly1305, you need a nonce.
+
+```ts
+import { randomBytes } from 'react-native-quick-crypto';
+
+const NONCE_SIZE = 12;
+
+function generateNonce(): Buffer {
+    return randomBytes(NONCE_SIZE);
+}
+```
+
+### Secure Shuffle
+
+Shuffling an array using the Fisher-Yates algorithm with CSPRNG.
+
+```ts
+import { randomInt } from 'react-native-quick-crypto';
+
+async function secureShuffle<T>(array: T[]): Promise<T[]> {
+    const arr = [...array];
+    for (let i = arr.length - 1; i > 0; i--) {
+        const j = await new Promise<number>((resolve, reject) => {
+            randomInt(0, i + 1, (err, n) => err ? reject(err) : resolve(n));
+        });
+        [arr[i], arr[j]] = [arr[j], arr[i]];
+    }
+    return arr;
+}
+```
+
+---
+
+## Security Considerations
+
+### Blocking the Event Loop
+`randomBytes` (synchronous) taps into system sources. While generally fast, requesting large amounts of entropy on a constrained device could potentially block the Main/UI thread. For generating 4KB or less (keys, nonces), sync is fine. For larger buffers, use the asynchronous version or `randomUUID`.

@@ -1,0 +1,239 @@
+---
+title: HMAC
+description: Hash-based Message Authentication Code
+---
+
+import { Callout } from 'fumadocs-ui/components/callout';
+import { TypeTable } from 'fumadocs-ui/components/type-table';
+import { Tab, Tabs } from 'fumadocs-ui/components/tabs';
+
+The `Hmac` module provides support for creating cryptographic **Hash-based Message Authentication Codes** (HMAC). It uses a cryptographic hash function (like SHA-256) in combination with a secret key to verify both the integrity and authenticity of a message.
+
+## Table of Contents
+
+- [Theory](#theory)
+- [Class: Hmac](#class-hmac)
+- [Module Methods](#module-methods)
+- [Real-World Examples](#real-world-examples)
+- [Security Considerations](#security-considerations)
+
+## Theory
+
+A Message Authentication Code (MAC) allows two parties who share a secret key to verify that a message has not been tampered with.
+
+1.  **Sender**: Computes `Tag = HMAC(Key, Message)` and sends `[Message, Tag]`.
+2.  **Receiver**: Computes `ExpectedTag = HMAC(Key, ReceivedMessage)`.
+3.  **Verify**: If `Tag === ExpectedTag`, the message is authentic.
+
+HMAC is defined in **RFC 2104**. It avoids simple "length extension attacks" that plague naive constructions like `Hash(Key + Message)` by using a nested hashing structure:
+
+```math
+HMAC(K, m) = H((K' \oplus opad) \parallel H((K' \oplus ipad) \parallel m))
+```
+
+Where:
+*   `H` is the hash function.
+*   `K'` is the key padded to block size.
+*   `opad` is the outer padding (0x5c repeated).
+*   `ipad` is the inner padding (0x36 repeated).
+
+---
+
+## Class: Hmac
+
+The `Hmac` class creates HMAC streams. Instances are created using `createHmac()`.
+
+### hmac.update(data[, inputEncoding])
+
+Updates the HMAC content with the given `data`. This method can be called multiple times.
+
+**Parameters:**
+
+<TypeTable
+  type={{
+    data: {
+        description: 'Data to update the HMAC with.',
+        type: 'string | Buffer | TypedArray | DataView',
+    },
+    inputEncoding: {
+        description: 'Encoding of `data` if it is a string.',
+        type: '"utf8" | "ascii" | "latin1" | "hex" | "base64"',
+    }
+  }}
+/>
+
+**Returns:** `Hmac`
+
+**Example:**
+
+```ts
+hmac.update('part 1');
+hmac.update('part 2');
+```
+
+---
+
+### hmac.digest([encoding])
+
+Calculates the HMAC digest of all of the data passed.
+
+**Parameters:**
+
+<TypeTable
+  type={{
+    encoding: {
+        description: 'Output encoding. If not provided, a Buffer is returned.',
+        type: '"hex" | "base64" | "base64url"',
+    }
+  }}
+/>
+
+**Returns:** `Buffer | string`
+
+**Example:**
+
+```ts
+import { createHmac } from 'react-native-quick-crypto';
+
+const hmac = createHmac('sha256', 'secret');
+hmac.update('data');
+const sig = hmac.digest('hex');
+```
+
+---
+
+## Module Methods
+
+### createHmac(algorithm, key[, options])
+
+Creates and returns an `Hmac` object.
+
+**Parameters:**
+
+<TypeTable
+  type={{
+    algorithm: {
+        description: 'The algorithm name (e.g., "sha256", "sha512").',
+        type: 'string',
+    },
+    key: {
+        description: 'The secret key.',
+        type: 'string | Buffer | TypedArray | DataView | KeyObject',
+    },
+    options: {
+        description: 'Stream constructor options.',
+        type: 'TransformOptions',
+    }
+  }}
+/>
+
+**Returns:** `Hmac`
+
+**Example:**
+
+```ts
+import { createHmac } from 'react-native-quick-crypto';
+
+const hmac = createHmac('sha256', 'super-secret-key');
+```
+
+---
+
+## Real-World Examples
+
+### API Request Signing (AWS Style)
+
+Rest APIs often use HMAC to authenticate requests.
+
+```ts
+import { createHmac } from 'react-native-quick-crypto';
+
+function signApiRequest(
+  method: string, 
+  path: string, 
+  body: string, 
+  timestamp: string, 
+  secret: string
+): string {
+  // Create the canonical string: method + path + timestamp + bodyHash
+  const bodyHash = createHmac('sha256', secret).update(body).digest('hex'); 
+  const stringToSign = `${method}\n${path}\n${timestamp}\n${bodyHash}`;
+  
+  // Sign the canonical string with the secret
+  const hmac = createHmac('sha256', secret);
+  hmac.update(stringToSign);
+  
+  return hmac.digest('hex');
+}
+```
+
+### Webhook Signature Validation
+
+When receiving a webhook (e.g., from Stripe or GitHub), you must verify it came from them using `timingSafeEqual`.
+
+```ts
+import { createHmac, timingSafeEqual } from 'react-native-quick-crypto';
+
+function verifyWebhook(
+  payload: string, 
+  signatureHeader: string, 
+  secret: string
+): boolean {
+  // Compute expected signature
+  const hmac = createHmac('sha256', secret);
+  hmac.update(payload);
+  const expectedInfo = hmac.digest('hex');
+  
+  // Constants-time comparison
+  const expectedBuf = Buffer.from(expectedInfo, 'hex');
+  const receivedBuf = Buffer.from(signatureHeader, 'hex');
+  
+  if (expectedBuf.length !== receivedBuf.length) {
+    return false;
+  }
+  
+  return timingSafeEqual(expectedBuf, receivedBuf);
+}
+```
+
+### TOTP (Google Authenticator)
+
+Time-Based One-Time Passwords use HMAC-SHA1.
+
+```
+TOTP = Truncate(HMAC-SHA1(K, Floor(Time / 30)))
+```
+
+```ts
+import { createHmac } from 'react-native-quick-crypto';
+
+function generateTOTP(secretBytes: Buffer): string {
+    const time = Math.floor(Date.now() / 1000 / 30);
+    const timeBuf = Buffer.alloc(8);
+    timeBuf.writeBigUInt64BE(BigInt(time));
+    
+    const hmac = createHmac('sha1', secretBytes);
+    hmac.update(timeBuf);
+    const hash = hmac.digest();
+    
+    // Dynamic Truncation
+    const offset = hash[hash.length - 1] & 0x0f;
+    const binary = ((hash[offset] & 0x7f) << 24) |
+                   ((hash[offset + 1] & 0xff) << 16) |
+                   ((hash[offset + 2] & 0xff) << 8) |
+                   (hash[offset + 3] & 0xff);
+        
+    const otp = binary % 1000000;
+    return otp.toString().padStart(6, '0');
+}
+```
+
+---
+
+## Security Considerations
+
+### Timing Attacks
+When comparing HMAC signatures, **never** use standard string comparisons (`===` or `==`). This creates a timing side-channel where the comparison returns faster if the first byte is wrong, leaking information to an attacker. usage of `crypto.timingSafeEqual()` is mandatory for verifying signatures.
+
+### Key Strength
+The security of the HMAC is directly tied to the strength of the secret key. If the key is weak (e.g., a short password), an attacker can brute-force the key offline by observing a single valid `(message, tag)` pair.

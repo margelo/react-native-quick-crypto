@@ -1,0 +1,89 @@
+---
+title: Migration Guide
+description: Moving from legacy libraries to RNQC
+---
+
+import { Callout } from 'fumadocs-ui/components/callout';
+import { Step, Steps } from 'fumadocs-ui/components/steps';
+
+If you are coming from `react-native-crypto` (the slow, standard shim) or `expo-crypto`, here is how to upgrade.
+
+## Why Upgrade?
+*   **Performance**: 10x-60x faster depending on the operation.
+*   **Compatibility**: Supports modern Node.js 16+ crypto APIs.
+*   **Correctness**: Passes the official Node.js test suite.
+
+## Migrating from `react-native-crypto`
+
+`react-native-crypto` (and `rn-nodeify`) relies on the React Native Bridge and pure JS fallbacks, which are extremely slow.
+
+<Steps>
+
+<Step>
+### Uninstall Legacy Libs
+
+Remove the old shims.
+
+```bash
+npm uninstall react-native-crypto rn-nodeify react-native-randombytes
+```
+</Step>
+
+<Step>
+### Install RNQC
+
+```bash
+npm install react-native-quick-crypto
+cd ios && pod install
+```
+</Step>
+
+<Step>
+### Global Polyfill (Optional)
+
+If your dependencies (like `ethers.js` or `bitcoinjs-lib`) expect `crypto` to be available globally:
+
+```ts title="index.js"
+// Top of your entry file
+import { install } from 'react-native-quick-crypto';
+
+install(); // Patches global.crypto and global.Buffer
+```
+
+Alternatively, you can just import `crypto` from the package directly if you don't want global side-effects:
+
+```ts
+import crypto from 'react-native-quick-crypto';
+```
+</Step>
+
+</Steps>
+
+## Migrating from `expo-crypto`
+
+`expo-crypto` is a lightweight wrapper around system APIs. It is distinct from Node.js `crypto`.
+
+| Feature | Expo Crypto | RNQC |
+| :--- | :--- | :--- |
+| **API Style** | `Crypto.digestStringAsync()` | `crypto.createHash().update().digest()` |
+| **Streams** | ❌ No | ✅ Yes |
+| **Ciphers** | ❌ No (Just Hashing) | ✅ AES, ChaCha20, etc. |
+| **Sync Methods** | ❌ Limited | ✅ Full Support |
+
+If you only need simple hashing (SHA-256), `expo-crypto` is fine. If you need **encryption, decryption, or complex key derivation**, you need RNQC.
+
+### Code Comparison
+
+**Expo Crypto (digest):**
+```ts
+const digest = await Crypto.digestStringAsync(
+  Crypto.CryptoDigestAlgorithm.SHA256,
+  'Hello world'
+);
+```
+
+**RNQC (digest):**
+```ts
+import { createHash } from 'react-native-quick-crypto';
+const digest = createHash('sha256').update('Hello world').digest('hex');
+```
