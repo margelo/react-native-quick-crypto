@@ -1,6 +1,8 @@
 {
     "title": "Guides",
     "pages": [
+        "contributing",
+        "writing-documentation",
         "e2ee-chat",
         "totp-2fa",
         "large-files",

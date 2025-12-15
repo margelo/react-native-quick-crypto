@@ -1,3 +1,7 @@
+/**
+ * This file tracks the implementation status of react-native-quick-crypto against the standard Node.js crypto API and the W3C WebCrypto API.
+ */
+
 export type CapabilityStatus = 'implemented' | 'missing' | 'partial' | 'not-in-node';
 
 export interface CoverageItem {

@@ -153,6 +153,10 @@ Not all cryptographic algorithms are supported yet. See the [implementation cove
 
 See the [contributing guide](CONTRIBUTING.md) to learn how to contribute to the repository and the development workflow.
 
+For more detailed guides, check out our documentation website:
+- [Contributing Guide]([prod-docs]/docs/guides/contributing)
+- [Writing Documentation]([prod-docs]/docs/guides/writing-documentation)
+
 ## License
 
 - react-native-quick-crypto is licensed under MIT.
