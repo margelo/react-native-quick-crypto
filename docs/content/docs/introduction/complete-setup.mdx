@@ -197,3 +197,19 @@ yarn start --reset-cache
 </Tab>
 
 </Tabs>
+
+## XSalsa20 Support (Optional)
+
+If you need to use the `xsalsa20` cipher algorithm, you must enable libsodium support by setting an environment variable **before building your native code**:
+
+```bash
+export RN_QUICK_CRYPTO_LIBSODIUM=1
+```
+
+This can be done:
+- **iOS**: Set in your Xcode build settings or in a pre-build script
+- **Android**: Add to your `gradle.properties` or as a build environment variable
+
+<Callout type="warn">
+  Without this flag, attempting to use `xsalsa20` will throw a runtime error: `"libsodium must be enabled to use this cipher"`
+</Callout>

@@ -15,7 +15,7 @@ React Native has historically lacked a robust, high-performance cryptographic st
 
 **RNQC was created because complex apps need a FULL, INDEPENDENT cryptographic standard.**
 
-We wanted a complete, standalone cryptographic library for React Native where you can simply call `install()` to polyfill the environment, ensuring all your cryptographic operations run smoothly and **up to 58x faster** than standard JS solutions.
+We wanted a complete, standalone cryptographic library for React Native where you can simply call `install()` to polyfill the environment, ensuring all your cryptographic operations run smoothly and **hundreds of times faster** than standard JS solutions.
 
 <Callout type="info" title="Built by Margelo">
   This library was built at **Margelo**, an elite app development agency, specifically to power high-performance crypto apps and wallets.
@@ -29,8 +29,8 @@ We wanted a complete, standalone cryptographic library for React Native where yo
 We believe improved performance shouldn't require code rewrites. 
 RNQC implements the **exact** Node.js API surface. If you know Node `crypto`, you know RNQC. There is zero learning curve.
 
-### 2. Performance First (JSI)
-We bypass the "Bridge". All operations communicate directly with C++ via the **JavaScript Interface (JSI)**.
+### 2. Performance First (Nitro Modules)
+We bypass the "Bridge". All operations communicate directly with C++ via **Nitro Modules**, a modern architecture built on top of JSI (JavaScript Interface).
 Heavy tasks (like `pbkdf2` or key generation) are offloaded to a dedicated native thread pool to ensure your UI **never freezes**, even during intensive encryption.
 
 ### 3. Secure Defaults
@@ -40,18 +40,18 @@ We don't roll our own crypto. All primitives map directly to the platform-native
 
 ## Architecture
 
-RNQC bridges the gap between the JavaScript world and native C++ performance using JSI.
+RNQC bridges the gap between the JavaScript world and native C++ performance using **Nitro Modules**.
 
 ```mermaid
 graph TD
-    JS[JavaScript Thread] -->|JSI Call| C[C++ Host Object]
+    JS[JavaScript Thread] -->|Nitro Module Call| C[C++ Hybrid Object]
     C -->|Direct Memory Access| O[OpenSSL / Native Crypto]
     O -->|Result| C
     C -->|Return Value| JS
 ```
 
-### The JSI Advantage
-Unlike the legacy Bridge, which relies on asynchronous JSON message passing (slow, serializable-only), **JSI (JavaScript Interface)** allows C++ code to expose "Host Objects" directly to the JavaScript runtime.
+### Nitro Modules Architecture
+Unlike the legacy Bridge, which relies on asynchronous JSON message passing (slow, serializable-only), **Nitro Modules** provides a modern architecture built on JSI (JavaScript Interface), allowing C++ code to expose "Hybrid Objects" directly to the JavaScript runtime.
 1.  **Zero Serialization**: Data (like `ArrayBuffer`) is shared by reference. No cloning large buffers.
 2.  **Synchronous Execution**: Methods like `randomBytes` or `update` run instantly, just like native JS functions.
 3.  **Thread Safety**: Heavy operations automatically offload to a C++ thread pool to prevent UI jank.
