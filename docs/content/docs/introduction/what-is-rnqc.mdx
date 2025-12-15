@@ -65,7 +65,5 @@ Unlike the legacy Bridge, which relies on asynchronous JSON message passing (slo
 | **Web3 / Blockchain** | <Check className="text-green-500" /> | Essential for wallet generation, signing transactions, and hashing (Keccak/SHA) securely and quickly. |
 | **Auth (JWT/Jose)** | <Check className="text-green-500" /> | Drastically speeds up token verification and signing compared to JS-only implementations. |
 | **End-to-End Encryption** | <Check className="text-green-500" /> | Using standard algorithms (AES-GCM, RSA) on the native thread prevents UI jank. |
-| **Simple Random Strings** | <HelpCircle className="text-yellow-500" /> | If you only need random numbers, consider [`react-native-get-random-values`](https://github.com/LinusU/react-native-get-random-values) for a lighter
-
- alternative. Use RNQC if you need other crypto operations too. |
+| **Simple Random Strings** | <HelpCircle className="text-yellow-500" /> | If you only need random numbers, consider [`react-native-get-random-values`](https://github.com/LinusU/react-native-get-random-values) for a lighter alternative. Use RNQC if you need other crypto operations too. |
 | **UI-Only Apps** | <X className="text-red-500" /> | If your app has zero security or hashing requirements, you probably don't need this. |
