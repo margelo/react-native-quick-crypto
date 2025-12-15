@@ -190,3 +190,8 @@ tsconfig.tsbuildinfo
 # agents
 .claude/settings.local.json
 .agent/
+
+# docs
+docs/.next/
+docs/.source/
+docs/next-env.d.ts
