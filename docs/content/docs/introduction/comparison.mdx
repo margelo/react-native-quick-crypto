@@ -22,7 +22,7 @@ RNQC is designed to be the faster, more complete alternative to existing solutio
 
 ## Visual Comparison
 
-### Standard Bridge vs. RNQC JSI
+### Standard Bridge vs. RNQC Nitro
 
 ```mermaid
 sequenceDiagram
@@ -72,7 +72,7 @@ JSI allows us to define "Hybrid Objects" that can spawn their own C++ threads. W
 Proof is in the numbers. We benchmarked RNQC against standard JS implementations (`browserify`) and other native libraries.
 
 <Callout type="info">
-  **Note**: These are results from real tests, but actual performance may vary depending on real-life situations.
+  **Benchmark Philosophy**: These comparisons are not meant to disparage pure JavaScript libraries. Libraries like `@noble/hashes` and `@noble/curves` perform exceptionally well in browser and Node.js environments. However, React Native lacks Node.js crypto APIs, so these benchmarks demonstrate the performance advantage of native implementations when pure JS is the only alternative on mobile.
 </Callout>
 
 **Environment**: iPhone 15 Pro, iOS 17.
