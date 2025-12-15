@@ -101,6 +101,7 @@ export const COVERAGE_DATA: CoverageCategory[] = [
                     { name: 'asymmetricKeyDetails', status: 'missing' },
                     { name: 'equals', status: 'missing' },
                     { name: 'symmetricKeySize', status: 'missing' },
+                    { name: 'toCryptoKey', status: 'missing' },
                     { name: 'from', status: 'missing', note: 'static' }
                 ]
             },
@@ -118,8 +119,8 @@ export const COVERAGE_DATA: CoverageCategory[] = [
             { name: 'constants', status: 'implemented' },
             { name: 'createCipheriv', status: 'implemented' },
             { name: 'createDecipheriv', status: 'implemented' },
-            { name: 'createDiffieHellman', status: 'implemented' },
-            { name: 'createDiffieHellmanGroup', status: 'implemented' },
+            { name: 'createDiffieHellman', status: 'missing' },
+            { name: 'createDiffieHellmanGroup', status: 'missing' },
             { name: 'createECDH', status: 'missing' },
             { name: 'createHash', status: 'implemented' },
             { name: 'createHmac', status: 'implemented' },
@@ -186,7 +187,7 @@ export const COVERAGE_DATA: CoverageCategory[] = [
             { name: 'getCipherInfo', status: 'missing' },
             { name: 'getCiphers', status: 'implemented' },
             { name: 'getCurves', status: 'missing' },
-            { name: 'getDiffieHellman', status: 'implemented' },
+            { name: 'getDiffieHellman', status: 'missing' },
             { name: 'getFips', status: 'missing' },
             { name: 'getHashes', status: 'implemented' },
             { name: 'getRandomValues', status: 'implemented' },
@@ -231,6 +232,17 @@ export const COVERAGE_DATA: CoverageCategory[] = [
     {
         title: 'WebCrypto (Subtle)',
         items: [
+            {
+                name: 'crypto.subtle',
+                subItems: [
+                    { name: 'decapsulateBits', status: 'missing' },
+                    { name: 'decapsulateKey', status: 'missing' },
+                    { name: 'encapsulateBits', status: 'missing' },
+                    { name: 'encapsulateKey', status: 'missing' },
+                    { name: 'getPublicKey', status: 'missing' },
+                    { name: 'supports', status: 'missing' }
+                ]
+            },
             {
                 name: 'crypto.subtle.decrypt',
                 subItems: [

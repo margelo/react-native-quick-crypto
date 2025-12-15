@@ -9,7 +9,7 @@ import { Step, Steps } from 'fumadocs-ui/components/steps';
 If you are coming from `react-native-crypto` (the slow, standard shim) or `expo-crypto`, here is how to upgrade.
 
 ## Why Upgrade?
-*   **Performance**: 10x-60x faster depending on the operation.
+*   **Performance**: **Hundreds of times faster** (via C++/JSI).
 *   **Compatibility**: Supports modern Node.js 16+ crypto APIs.
 *   **Correctness**: Passes the official Node.js test suite.
 
@@ -76,6 +76,8 @@ If you only need simple hashing (SHA-256), `expo-crypto` is fine. If you need **
 
 **Expo Crypto (digest):**
 ```ts
+import * as Crypto from 'expo-crypto';
+
 const digest = await Crypto.digestStringAsync(
   Crypto.CryptoDigestAlgorithm.SHA256,
   'Hello world'

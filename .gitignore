@@ -190,3 +190,6 @@ tsconfig.tsbuildinfo
 # agents
 .claude/settings.local.json
 .agent/
+
+# exclude docs lib
+!docs/lib

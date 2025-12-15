@@ -194,7 +194,7 @@ export function CoverageTable() {
             ) : (
                 filteredCategories.map((category) => (
                     <div key={category.title} className="bg-fd-card rounded-xl border border-fd-border overflow-hidden">
-                        <div className="px-6 py-4 bg-fd-secondary/30 border-b border-fd-border">
+                        <div className="px-6 py-4 bg-fd-card border-b border-fd-border sticky top-[var(--fd-nav-height)] z-10">
                             <h3 className="font-semibold text-lg">{category.title}</h3>
                             {category.description && (
                                 <p className="text-sm text-fd-muted-foreground mt-1">{category.description}</p>

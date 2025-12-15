@@ -36,6 +36,14 @@ const getContributorDetails = unstable_cache(
 
             if (!res.ok) {
                 if (res.status === 404) return null;
+                if (res.status === 403) {
+                    console.warn(`[API] Rate limit hit for user ${login}. Using fallback.`);
+                    return {
+                        login,
+                        avatar_url: `https://github.com/${login}.png`,
+                        html_url: `https://github.com/${login}`
+                    };
+                }
                 throw new Error(`GitHub User API Error: ${res.status}`);
             }
 

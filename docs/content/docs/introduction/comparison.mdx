@@ -12,7 +12,7 @@ RNQC is designed to be the faster, more complete alternative to existing solutio
 
 | Feature | RNQC | react-native-crypto | react-native-fast-crypto |
 | :--- | :---: | :---: | :---: |
-| **Performance** | **JSI** (Native C++) | 🐢 Bridge (JS-shim) | ⚡️ JSI (Partial) |
+| **Performance** | **Nitro** (Native C++) | 🐢 Bridge (JS-shim) | ⚡️ JSI (Partial) |
 | **Node.js API** | **1:1 Compatible** | Compatible | Custom API |
 | **Sync Methods** | Fully Supported | Async Only | Supported |
 | **Thread Safety** | **Off-Main-Thread** | Blocks JS Thread | Off-Main-Thread |
@@ -29,7 +29,7 @@ sequenceDiagram
     participant JS as Javascript Code
     participant B as Bridge (JSON)
     participant N as Native Module
-    participant JSI as RNQC (JSI)
+    participant Nitro as RNQC (Nitro)
     
     note over JS, B: Standard Module (Slow)
     JS->>B: Serialize JSON (Base64)
@@ -38,10 +38,10 @@ sequenceDiagram
     N->>B: Send Result JSON
     B->>JS: Deserialize JSON
     
-    note over JS, JSI: RNQC (Fast)
-    JS->>JSI: Direct C++ Call (ArrayBuffer Ref)
-    JSI->>JSI: Hash Memory Directly
-    JSI->>JS: Return Result
+    note over JS, Nitro: RNQC (Fast)
+    JS->>Nitro: Direct C++ Call (ArrayBuffer Ref)
+    Nitro->>Nitro: Hash Memory Directly
+    Nitro->>JS: Return Result
 ```
 
 ---
@@ -57,7 +57,7 @@ Standard React Native modules (like `react-native-crypto`) communicate via the B
 3.  **Native**: Deserializes JSON, decodes Base64 to bytes.
 4.  **Native**: Hashes bytes.
 
-**RNQC (JSI)**:
+**RNQC (Nitro)**:
 1.  **JS**: Holds a reference to an `ArrayBuffer`.
 2.  **C++**: Reads that memory address directly. **Hash.**
 3.  **Done.**
@@ -72,14 +72,16 @@ JSI allows us to define "Hybrid Objects" that can spawn their own C++ threads. W
 Proof is in the numbers. We benchmarked RNQC against standard JS implementations (`browserify`) and other native libraries.
 
 <Callout type="info">
-  **Benchmark Philosophy**: These comparisons are not meant to disparage pure JavaScript libraries. Libraries like `@noble/hashes` and `@noble/curves` perform exceptionally well in browser and Node.js environments. However, React Native lacks Node.js crypto APIs, so these benchmarks demonstrate the performance advantage of native implementations when pure JS is the only alternative on mobile.
+  **Benchmark Philosophy**: This is not meant to disparage the other libraries. On the contrary, they perform amazingly well when used in a server-side Node environment or browser. This library exists because React Native does not have that environment nor the Node Crypto API implementation at hand. So the benchmark suite is there to show you the speedup vs. the alternative of using a pure JS library on React Native.
 </Callout>
 
 **Environment**: iPhone 15 Pro, iOS 17.
 
 ## 1. Hashing (BLAKE3)
 
-BLAKE3 is optimized for speed. RNQC (via JSI) processes large inputs **90x faster** than JS implementations.
+![Blake3 Benchmark](/img/benchmarks/blake3.png)
+
+BLAKE3 is optimized for speed. RNQC (via Nitro) processes large inputs **90x faster** than JS implementations.
 
 | Operation | RNQC | @noble/hashes | Speedup |
 | :--- | :--- | :--- | :--- |
@@ -89,14 +91,19 @@ BLAKE3 is optimized for speed. RNQC (via JSI) processes large inputs **90x faste
 
 ## 2. Encryption (AES-GCM / Salsa20)
 
+![Cipher Benchmark](/img/benchmarks/cipher.png)
+
 Native encryption prevents frame drops. `AES-256-GCM` is over **100x faster** for large buffers.
 
 | Operation | RNQC | JS / Browserify | Speedup |
 | :--- | :--- | :--- | :--- |
 | **XSalsa20 (64KB)** | **852 ops/s** | 7.39 ops/s | **115x** 🚀 |
-| **AES-256-GCM (1MB)** | **177 ops/s** | 0.18 ops/s | **962x** 🚀 |
+| **AES-256-GCM (1MB)** | **177 ops/s** | 0.18 ops/s (browserify) | **962x** 🚀 |
+| **AES-256-GCM (1MB)** | **177 ops/s** | 1.32 ops/s (@noble) | **134x** 🚀 |
 
 ## 3. Key Derivation (PBKDF2)
+
+![PBKDF2 Benchmark](/img/benchmarks/pbkdf2.png)
 
 Password hashing is computationally expensive. Running this on the JS thread freezes the UI.
 
@@ -107,6 +114,8 @@ Password hashing is computationally expensive. Running this on the JS thread fre
 
 ## 4. Signatures (Ed25519)
 
+![Ed25519 Benchmark](/img/benchmarks/ed25519.png)
+
 Essential for crypto wallets. Verify signatures instantly without lag.
 
 | Operation | RNQC | @noble/curves | Speedup |
@@ -115,6 +124,8 @@ Essential for crypto wallets. Verify signatures instantly without lag.
 | **Sign/Verify (sync)** | **17,108 ops/s** | 60 ops/s | **285x** 🚀 |
 
 ## 5. HKDF
+
+![HKDF Benchmark](/img/benchmarks/hkdf.png)
 
 Standard key derivation is **over 100x faster**.
 
