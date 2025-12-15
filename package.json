@@ -98,6 +98,7 @@
   },
   "workspaces": [
     "packages/react-native-quick-crypto",
+    "packages/react-native-quick-bip39",
     "example"
   ],
   "dependencies": {
