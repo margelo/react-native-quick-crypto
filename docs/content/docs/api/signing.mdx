@@ -1,0 +1,1087 @@
+---
+title: Signing & Verification
+description: Create and verify digital signatures
+---
+
+import { Callout } from 'fumadocs-ui/components/callout';
+import { TypeTable } from 'fumadocs-ui/components/type-table';
+import { Step, Steps } from 'fumadocs-ui/components/steps';
+
+The signing module provides implementations for creating and verifying digital signatures using various cryptographic algorithms. Digital signatures provide **authentication** (proof of origin) and **integrity** (proof data hasn't changed).
+
+<Callout type="info" title="Common Use Cases">
+  **JWT authentication tokens**, **API request signing** (AWS Signature V4, OAuth), **code signing** for mobile apps, **document verification** in legal/financial systems, and **blockchain transactions**.
+</Callout>
+
+## Table of Contents
+
+- [Theory](#theory)
+- [Class: Sign](#class-sign)  
+- [Class: Verify](#class-verify)
+- [Module Methods](#module-methods)
+- [Real-World Examples](#real-world-examples)
+- [Supported Algorithms](#supported-algorithms)
+
+## Theory
+
+Digital signatures provide three core security guarantees:
+1.  **Authentication**: Confirms the identity of the signer (only the holder of the private key could have created it).
+2.  **Integrity**: Guarantees the data has not been altered since it was signed.
+3.  **Non-repudiation**: The signer cannot deny having signed the data.
+
+They work by hashing the data and then encrypting that hash with the signer's private key. The recipient validates it by decrypting the hash with the signer's public key and comparing it to their own hash of the data.
+
+---
+
+## Class: Sign
+
+The `Sign` class creates digital signatures. Instances are created using the `createSign()` factory function.
+
+```ts
+import { createSign, generateKeyPairSync } from 'react-native-quick-crypto';
+
+// Generate RSA key pair
+const { publicKey, privateKey } = generateKeyPairSync('rsa', {
+  modulusLength: 2048,
+});
+
+// Create signer
+const sign = createSign('SHA256');
+sign.update('some data to sign');
+sign.end();
+const signature = sign.sign(privateKey);
+```
+
+### sign.update(data[, inputEncoding])
+
+Updates the `Sign` content with the given `data`. This method can be called multiple times with new data as it is streamed.
+
+**Parameters:**
+
+| Name | Type | Description |
+|:-----|:-----|:------------|
+| `data` | `string \| Buffer \| TypedArray \| DataView` | The data to sign |
+| `inputEncoding` | `string` | The encoding of the data string (if `data` is a string). One of `'utf8'`, `'ascii'`, or `'latin1'`. Default: `'utf8'` |
+
+**Returns:** `this` (for method chaining)
+
+**Examples:**
+
+```ts
+import { createSign } from 'react-native-quick-crypto';
+
+const sign = createSign('SHA256');
+
+// Single update
+sign.update('Hello World');
+
+// Multiple updates (useful for streaming)
+sign.update('Hello');
+sign.update(' ');
+sign.update('World');
+
+// With encoding
+sign.update('48656c6c6f', 'hex'); // "Hello" in hex
+```
+
+**Streaming large files:**
+
+```ts
+import { createSign } from 'react-native-quick-crypto';
+import RNFS from 'react-native-fs';
+
+async function signLargeFile(filePath: string, privateKey: any) {
+  const sign = createSign('SHA256');
+  
+  // Read file in chunks
+  const chunkSize = 1024 * 1024; // 1MB chunks
+  const fileSize = (await RNFS.stat(filePath)).size;
+  
+  for (let offset = 0; offset < fileSize; offset += chunkSize) {
+    const chunk = await RNFS.read(filePath, chunkSize, offset, 'base64');
+    sign.update(chunk, 'base64');
+  }
+  
+  return sign.sign(privateKey, 'hex');
+}
+```
+
+---
+
+### sign.sign(privateKey[, outputEncoding])
+
+Calculates the signature on all the data passed through using either `sign.update()` or by the stream interface.
+
+**Parameters:**
+
+| Name | Type | Description |
+|:-----|:-----|:------------|
+| `privateKey` | `KeyObject \| string \| Buffer \| Object` | Private key for signing. Can be a `KeyObject`, PEM-encoded string, DER buffer, or an object with additional options |
+| `outputEncoding` | `string` | Encoding for the return value. One of `'hex'`, `'base64'`, or `'base64url'`. If not provided, returns `Buffer` |
+
+When `privateKey` is an object, it may contain:
+
+<TypeTable
+  type={{
+    key: {
+        description: 'The private key (KeyObject, PEM string, or Buffer)',
+        type: 'KeyObject | string | Buffer'
+    },
+    dsaEncoding: {
+        description: 'For DSA/ECDSA only. Signature format: "der" (default, ASN.1) or "ieee-p1363" (raw r||s)',
+        type: '"der" | "ieee-p1363"'
+    },
+    padding: {
+        description: 'RSA padding mode (e.g., constants.RSA_PKCS1_PADDING or RSA_PKCS1_PSS_PADDING)',
+        type: 'number'
+    },
+    saltLength: {
+        description: 'Salt length when using PSS padding. Default: maximum permissible',
+        type: 'number'
+    },
+    passphrase: {
+        description: 'Passphrase for encrypted private keys',
+        type: 'string | Buffer'
+    }
+  }}
+/>
+
+**Returns:** `Buffer` (if no encoding) or `string`
+
+**Important:** The `Sign` object cannot be used again after `sign()` is called. Create a new instance if you need to sign more data.
+
+**Examples:**
+
+Basic signing:
+
+```ts
+import { createSign } from 'react-native-quick-crypto';
+
+const sign = createSign('SHA256');
+sign.update('data to sign');
+
+// As Buffer
+const signatureBuffer = sign.sign(privateKey);
+
+// As hex string
+const signatureHex = sign.sign(privateKey, 'hex');
+
+// As base64
+const signatureB64 = sign.sign(privateKey, 'base64');
+```
+
+Signing with encrypted private key:
+
+```ts
+import { createSign } from 'react-native-quick-crypto';
+
+const encryptedPrivateKeyPEM = `-----BEGIN ENCRYPTED PRIVATE KEY-----
+...
+-----END ENCRYPTED PRIVATE KEY-----`;
+
+const sign = createSign('SHA256');
+sign.update('secure data');
+
+const signature = sign.sign({
+  key: encryptedPrivateKeyPEM,
+  passphrase: 'my-secret-password'
+}, 'hex');
+```
+
+RSA-PSS signing (more secure than PKCS#1 v1.5):
+
+```ts
+import { createSign, constants } from 'react-native-quick-crypto';
+
+const sign = createSign('SHA256');
+sign.update('important message');
+
+const signature = sign.sign({
+  key: rsaPrivateKey,
+  padding: constants.RSA_PKCS1_PSS_PADDING,
+  saltLength: constants.RSA_PSS_SALTLEN_MAX_SIGN
+}, 'base64');
+```
+
+ECDSA with IEEE-P1363 format:
+
+```ts
+import { createSign } from 'react-native-quick-crypto';
+
+const sign = createSign('SHA256');
+sign.update('data');
+
+// IEEE-P1363 format (r || s) - used in some blockchain systems
+const signature = sign.sign({
+  key: ecPrivateKey,
+  dsaEncoding: 'ieee-p1363'
+}, 'hex');
+```
+
+---
+
+## Class: Verify
+
+The `Verify` class verifies digital signatures. Instances are created using the `createVerify()` factory function.
+
+```ts
+import { createVerify } from 'react-native-quick-crypto';
+
+const verify = createVerify('SHA256');
+verify.update('some data to sign');
+verify.end();
+const isValid = verify.verify(publicKey, signature);
+
+console.log(isValid); // true or false
+```
+
+### verify.update(data[, inputEncoding])
+
+Updates the `Verify` content with the given `data`. Must be called with the **exact same data** that was signed, in the **exact same order**.
+
+**Parameters:**
+
+| Name | Type | Description |
+|:-----|:-----|:------------|
+| `data` | `string \| Buffer \| TypedArray \| DataView` | The data to verify |
+| `inputEncoding` | `string` | The encoding of the data string (if `data` is a string). One of `'utf8'`, `'ascii'`, or `'latin1'`. Default: `'utf8'` |
+
+**Returns:** `this` (for method chaining)
+
+**Examples:**
+
+```ts
+import { createVerify } from 'react-native-quick-crypto';
+
+const verify = createVerify('SHA256');
+
+// Must match signing data exactly
+verify.update('Hello World');
+
+// Or multiple updates (must match signing order)
+verify.update('Hello');
+verify.update(' ');
+verify.update('World');
+```
+
+---
+
+### verify.verify(publicKey, signature[, signatureEncoding])
+
+Verifies the provided `signature` data using the given `publicKey`.
+
+**Parameters:**
+
+| Name | Type | Description |
+|:-----|:-----|:------------|
+| `publicKey` | `KeyObject \| string \| Buffer \| Object` | Public key for verification. Can be a `KeyObject`, PEM-encoded string, DER buffer, or an object with options |
+| `signature` | `string \| Buffer \| TypedArray \| DataView` | The signature to verify |
+| `signatureEncoding` | `string` | Encoding of `signature` if it's a string. One of `'hex'`, `'base64'`, or `'base64url'` |
+
+When `publicKey` is an object, it may contain:
+
+<TypeTable
+  type={{
+    key: {
+        description: 'The public key (KeyObject, PEM string, or Buffer)',
+        type: 'KeyObject | string | Buffer'
+    },
+    dsaEncoding: {
+        description: 'For DSA/ECDSA only. Must match the encoding used during signing',
+        type: '"der" | "ieee-p1363"'
+    },
+    padding: {
+        description: 'RSA padding mode (must match signing padding)',
+        type: 'number'
+    },
+    saltLength: {
+        description: 'Salt length when using PSS padding (must match signing)',
+        type: 'number'
+    }
+  }}
+/>
+
+**Returns:** `boolean` - `true` if the signature is valid for the given data and public key, `false` otherwise.
+
+**Examples:**
+
+Basic verification:
+
+```ts
+import { createVerify } from 'react-native-quick-crypto';
+
+const verify = createVerify('SHA256');
+verify.update('data to sign');
+
+// Verify hex signature
+const isValid = verify.verify(publicKey, signatureHex, 'hex');
+
+// Verify base64 signature
+const isValid2 = verify.verify(publicKey, signatureB64, 'base64');
+
+// Verify buffer signature
+const isValid3 = verify.verify(publicKey, signatureBuffer);
+```
+
+Verifying RSA-PSS signatures:
+
+```ts
+import { createVerify, constants } from 'react-native-quick-crypto';
+
+const verify = createVerify('SHA256');
+verify.update('important message');
+
+const isValid = verify.verify({
+  key: rsaPublicKey,
+  padding: constants.RSA_PKCS1_PSS_PADDING,
+  saltLength: constants.RSA_PSS_SALTLEN_AUTO // Auto-detect salt length
+}, signature, 'base64');
+```
+
+Verifying ECDSA with IEEE-P1363:
+
+```ts
+import { createVerify } from 'react-native-quick-crypto';
+
+const verify = createVerify('SHA256');
+verify.update('data');
+
+const isValid = verify.verify({
+  key: ecPublicKey,
+  dsaEncoding: 'ieee-p1363'
+}, signature, 'hex');
+```
+
+---
+
+## Module Methods
+
+### createSign(algorithm)
+
+Creates and returns a `Sign` object that uses the given algorithm.
+
+**Parameters:**
+
+| Name | Type | Description |
+|:-----|:-----|:------------|
+| `algorithm` | `string` | The hash algorithm to use. Common values: `'SHA256'`, `'SHA384'`, `'SHA512'`, `'SHA1'` (deprecated) |
+
+**Returns:** `Sign` instance
+
+**Algorithm Selection Guide:**
+
+| Algorithm | Security | Speed | Use Case |
+|:----------|:---------|:------|:---------|
+| `SHA256` | High | Fast | General purpose, JWTs, most APIs |
+| `SHA384` | Very High | Medium | Financial systems, high compliance |
+| `SHA512` | Maximum | Slower | Maximum security requirements |
+| `SHA1` | ⚠️ Broken | Fast | **Legacy only** - avoid in new code |
+
+**Examples:**
+
+```ts
+import { createSign } from 'react-native-quick-crypto';
+
+// SHA-256 (recommended for general use)
+const sign256 = createSign('SHA256');
+
+// SHA-512 (maximum security)
+const sign512 = createSign('SHA512');
+
+// SHA-384 (balanced)
+const sign384 = createSign('SHA384');
+```
+
+---
+
+### createVerify(algorithm)
+
+Creates and returns a `Verify` object that uses the given algorithm. **Must use the same algorithm that was used for signing.**
+
+**Parameters:**
+
+| Name | Type | Description |
+|:-----|:-----|:------------|
+| `algorithm` | `string` | The hash algorithm. Must match the algorithm used in `createSign()` |
+
+**Returns:** `Verify` instance
+
+**Examples:**
+
+```ts
+import { createVerify } from 'react-native-quick-crypto';
+
+const verify = createVerify('SHA256'); // Must match signer's algorithm
+```
+
+---
+
+## Real-World Examples
+
+### Example 1: JWT Token Implementation
+
+Complete JWT creation and verification:
+
+```ts
+import {
+  createSign,
+  createVerify,
+  generateKeyPairSync
+} from 'react-native-quick-crypto';
+
+// Generate keys (do once, save securely)
+const { publicKey, privateKey } = generateKeyPairSync('rsa', {
+  modulusLength: 2048,
+  publicExponent: 0x10001,
+});
+
+function createJWT(payload: object): string {
+  // Create header
+  const header = {
+    alg: 'RS256',
+    typ: 'JWT'
+  };
+
+  // Encode header and payload
+  const encodedHeader = Buffer.from(JSON.stringify(header))
+    .toString('base64url');
+  const encodedPayload = Buffer.from(JSON.stringify(payload))
+    .toString('base64url');
+
+  const dataToSign = `${encodedHeader}.${encodedPayload}`;
+
+  // Sign
+  const sign = createSign('SHA256');
+  sign.update(dataToSign);
+  const signature = sign.sign(privateKey, 'base64url');
+
+  // Combine
+  return `${dataToSign}.${signature}`;
+}
+
+function verifyJWT(token: string): { valid: boolean; payload?: any } {
+  const parts = token.split('.');
+  if (parts.length !== 3) {
+    return { valid: false };
+  }
+
+  const [encodedHeader, encodedPayload, signature] = parts;
+  const dataToVerify = `${encodedHeader}.${encodedPayload}`;
+
+  // Verify signature
+  const verify = createVerify('SHA256');
+  verify.update(dataToVerify);
+  const isValid = verify.verify(publicKey, signature, 'base64url');
+
+  if (!isValid) {
+    return { valid: false };
+  }
+
+  // Decode payload
+  const payload = JSON.parse(
+    Buffer.from(encodedPayload, 'base64url').toString()
+  );
+
+  // Check expiration
+  if (payload.exp && payload.exp < Date.now() / 1000) {
+    return { valid: false };
+  }
+
+  return { valid: true, payload };
+}
+
+// Usage
+const jwt = createJWT({
+  sub: 'user123',
+  iat: Math.floor(Date.now() / 1000),
+  exp: Math.floor(Date.now() / 1000) + 3600  // 1 hour
+});
+
+console.log('JWT:', jwt);
+
+const result = verifyJWT(jwt);
+console.log('Valid:', result.valid);
+console.log('Payload:', result.payload);
+```
+
+### Example 2: API Request Signing (AWS-Style)
+
+Sign HTTP requests to prevent tampering and replay attacks:
+
+```ts
+import { createSign, createVerify } from 'react-native-quick-crypto';
+
+interface SignedRequest {
+  method: string;
+  url: string;
+  timestamp: number;
+  body: string;
+  signature: string;
+}
+
+function signRequest(
+  method: string,
+  url: string,
+  body: object,
+  privateKey: any
+): SignedRequest {
+  const timestamp = Date.now();
+  
+  // Create canonical string (order matters!)
+  const canonical = [
+    method.toUpperCase(),
+    url,
+    timestamp.toString(),
+    JSON.stringify(body)
+  ].join('\n');
+
+  // Sign
+  const sign = createSign('SHA256');
+  sign.update(canonical);
+  const signature = sign.sign(privateKey, 'base64');
+
+  return {
+    method,
+    url,
+    timestamp,
+    body: JSON.stringify(body),
+    signature
+  };
+}
+
+function verifyRequest(
+  request: SignedRequest,
+  publicKey: any,
+  maxAge: number = 300000 // 5 minutes
+): boolean {
+  // Check timestamp (prevent replay attacks)
+  if (Date.now() - request.timestamp > maxAge) {
+    console.log('Request expired');
+    return false;
+  }
+
+  // Reconstruct canonical string
+  const canonical = [
+    request.method.toUpperCase(),
+    request.url,
+    request.timestamp.toString(),
+    request.body
+  ].join('\n');
+
+  // Verify
+  const verify = createVerify('SHA256');
+  verify.update(canonical);
+  return verify.verify(publicKey, request.signature, 'base64');
+}
+
+// Usage
+const signedReq = signRequest(
+  'POST',
+  '/api/transfer',
+  { amount: 100, to: 'account456' },
+  privateKey
+);
+
+// Send to server with headers
+fetch(signedReq.url, {
+  method: signedReq.method,
+  headers: {
+    'X-Timestamp': signedReq.timestamp.toString(),
+    'X-Signature': signedReq.signature,
+    'Content-Type': 'application/json'
+  },
+  body: signedReq.body
+});
+
+// Server-side verification
+const isValid = verifyRequest(signedReq, publicKey);
+```
+
+### Example 3: Code/App Update Signing
+
+Sign mobile app updates to ensure authenticity:
+
+```ts
+import {
+  createSign,
+  createVerify,
+  createHash
+} from 'react-native-quick-crypto';
+import RNFS from 'react-native-fs';
+
+interface SignedUpdate {
+  version: string;
+  fileHash: string;
+  fileSize: number;
+  timestamp: number;
+  signature: string;
+}
+
+async function signAppUpdate(
+  bundlePath: string,
+  version: string,
+  privateKey: any
+): Promise<SignedUpdate> {
+  // Read file
+  const bundleData = await RNFS.readFile(bundlePath, 'base64');
+  const bundleBuffer = Buffer.from(bundleData, 'base64');
+
+  // Calculate file hash
+  const hash = createHash('sha256');
+  hash.update(bundleBuffer);
+  const fileHash = hash.digest('hex');
+
+  const timestamp = Date.now();
+  const fileSize = bundleBuffer.length;
+
+  // Create manifest
+  const manifest = JSON.stringify({
+    version,
+    fileHash,
+    fileSize,
+    timestamp
+  });
+
+  // Sign manifest
+  const sign = createSign('SHA256');
+  sign.update(manifest);
+  const signature = sign.sign(privateKey, 'base64');
+
+  return {
+    version,
+    fileHash,
+    fileSize,
+    timestamp,
+    signature
+  };
+}
+
+async function verifyAndApplyUpdate(
+  bundlePath: string,
+  updateInfo: SignedUpdate,
+  trustedPublicKey: any
+): Promise<boolean> {
+  // Reconstruct manifest
+  const manifest = JSON.stringify({
+    version: updateInfo.version,
+    fileHash: updateInfo.fileHash,
+    fileSize: updateInfo.fileSize,
+    timestamp: updateInfo.timestamp
+  });
+
+  // Verify signature
+  const verify = createVerify('SHA256');
+  verify.update(manifest);
+  const signatureValid = verify.verify(
+    trustedPublicKey,
+    updateInfo.signature,
+    'base64'
+  );
+
+  if (!signatureValid) {
+    console.error('Update signature invalid!');
+    return false;
+  }
+
+  // Verify file hash
+  const bundleData = await RNFS.readFile(bundlePath, 'base64');
+  const bundleBuffer = Buffer.from(bundleData, 'base64');
+  
+  const hash = createHash('sha256');
+  hash.update(bundleBuffer);
+  const actualHash = hash.digest('hex');
+
+  if (actualHash !== updateInfo.fileHash) {
+    console.error('File corrupted or tampered!');
+    return false;
+  }
+
+  // Verify file size
+  if (bundleBuffer.length !== updateInfo.fileSize) {
+    console.error('File size mismatch!');
+    return false;
+  }
+
+  console.log('Update verified successfully!');
+  // Safe to apply update...
+  return true;
+}
+```
+
+### Example 4: Multi-Party Document Signing
+
+Multiple parties sign the same document:
+
+```ts
+import { createSign, createVerify } from 'react-native-quick-crypto';
+
+interface Signature {
+  signer: string;
+  signedAt: number;
+  signature: string;
+}
+
+class SignedDocument {
+  private content: string;
+  private signatures: Signature[] = [];
+
+  constructor(content: string) {
+    this.content = content;
+  }
+
+  addSignature(signerName: string, privateKey: any): void {
+    const timestamp = Date.now();
+    
+    // Include all previous signatures in new signature
+    const dataToSign = JSON.stringify({
+      content: this.content,
+      signer: signerName,
+      signedAt: timestamp,
+      previousSignatures: this.signatures
+    });
+
+    const sign = createSign('SHA256');
+    sign.update(dataToSign);
+    const signature = sign.sign(privateKey, 'base64');
+
+    this.signatures.push({
+      signer: signerName,
+      signedAt: timestamp,
+      signature
+    });
+  }
+
+  verifySignature(
+    index: number,
+    publicKey: any
+  ): boolean {
+    if (index >= this.signatures.length) {
+      return false;
+    }
+
+    const sig = this.signatures[index];
+    const previousSigs = this.signatures.slice(0, index);
+
+    const dataToVerify = JSON.stringify({
+      content: this.content,
+      signer: sig.signer,
+      signedAt: sig.signedAt,
+      previousSignatures: previousSigs
+    });
+
+    const verify = createVerify('SHA256');
+    verify.update(dataToVerify);
+    return verify.verify(publicKey, sig.signature, 'base64');
+  }
+
+  verifyAll(publicKeys: Map<string, any>): boolean {
+    for (let i = 0; i < this.signatures.length; i++) {
+      const sig = this.signatures[i];
+      const publicKey = publicKeys.get(sig.signer);
+      
+      if (!publicKey || !this.verifySignature(i, publicKey)) {
+        console.log(`Signature ${i} (${sig.signer}) failed verification`);
+        return false;
+      }
+    }
+    return true;
+  }
+
+  getSignatures(): Signature[] {
+    return [...this.signatures];
+  }
+}
+
+// Usage
+const document = new SignedDocument('Contract: Transfer $1M...');
+
+// Alice signs
+document.addSignature('Alice', alicePrivateKey);
+
+// Bob signs
+document.addSignature('Bob', bobPrivateKey);
+
+// Charlie signs
+document.addSignature('Charlie', charliePrivateKey);
+
+// Verify all signatures
+const publicKeys = new Map([
+  ['Alice', alicePublicKey],
+  ['Bob', bobPublicKey],
+  ['Charlie', charliePublicKey]
+]);
+
+const allValid = document.verifyAll(publicKeys);
+console.log('All signatures valid:', allValid);
+```
+
+---
+
+## Supported Algorithms
+
+### Hash Algorithms
+
+The algorithm string passed to `createSign()` and `createVerify()` determines the hash function used. Supported algorithms:
+
+| Algorithm | Output Size | Security Level | Recommended Use |
+|:----------|:------------|:---------------|:----------------|
+| `SHA256` | 256 bits | High | **General purpose - recommended** |
+| `SHA384` | 384 bits | Very High | High-security applications |
+| `SHA512` | 512 bits | Maximum | Maximum security requirements |
+| `SHA1` | 160 bits | ⚠️ **Broken** | **Legacy only - avoid!** |
+
+### Key Types & Signature Schemes
+
+Different key types support different signature schemes:
+
+#### RSA Keys
+
+- **RSASSA-PKCS1-v1_5**: Default RSA signature scheme
+- **RSA-PSS**: Probabilistic Signature Scheme (more secure)
+
+```ts
+import { constants } from 'react-native-quick-crypto';
+
+// PKCS#1 v1.5 (default)
+sign.sign(rsaPrivateKey);
+
+// RSA-PSS (recommended)
+sign.sign({
+  key: rsaPrivateKey,
+  padding: constants.RSA_PKCS1_PSS_PADDING
+});
+```
+
+#### ECDSA Keys (Elliptic Curve)
+
+- Supported curves: `P-256`, `P-384`, `P-521`, `secp256k1`
+- Signature encodings: DER (default) or IEEE-P1363
+
+```ts
+// DER encoding (default)
+sign.sign(ecPrivateKey);
+
+// IEEE-P1363 (used in blockchain)
+sign.sign({
+  key: ecPrivateKey,
+  dsaEncoding: 'ieee-p1363'
+});
+```
+
+#### Ed25519 Keys
+
+- Modern, fast, simple
+- No hash function parameter needed (uses internal hash)
+- Fixed 64-byte signatures
+
+```ts
+import { sign as edSign, verify as edVerify } from 'react-native-quick-crypto';
+
+// Ed25519 uses different API
+const signature = edSign(null, data, ed25519PrivateKey);
+const isValid = edVerify(null, data, ed25519PublicKey, signature);
+```
+
+---
+
+## Security Considerations
+
+<Callout type="warn" title="Critical Security Practices">
+  1. **Never expose private keys** - Store in device Keychain/KeyStore, not AsyncStorage
+  2. **Use strong algorithms** - SHA-256 minimum, prefer SHA-384/512 for high security
+  3. **Avoid SHA-1** - It's cryptographically broken
+  4. **Verify algorithm match** - Signing and verification must use same algorithm
+  5. **Include timestamps** - Prevent replay attacks
+</Callout>
+
+### Best Practices
+
+**1. Algorithm Selection:**
+```ts
+// ✅ Good - SHA-256 or better
+const sign = createSign('SHA256');
+
+// ❌ Bad - SHA-1 is broken
+const sign = createSign('SHA1');
+```
+
+**2. Key Management:**
+```ts
+// ✅ Good - Use Keychain/KeyStore
+import * as Keychain from 'react-native-keychain';
+
+await Keychain.setGenericPassword(
+  'privateKey',
+  privateKeyPEM,
+  { service: 'com.myapp.signing' }
+);
+
+// ❌ Bad - Plain storage
+await AsyncStorage.setItem('privateKey', privateKeyPEM);
+```
+
+**3. Prevent Replay Attacks:**
+```ts
+// ✅ Good - Include timestamp and nonce
+const dataToSign = JSON.stringify({
+  data: actualData,
+  timestamp: Date.now(),
+  nonce: randomBytes(16).toString('hex')
+});
+
+// ❌ Bad - No timestamp
+const dataToSign = JSON.stringify(actualData);
+```
+
+**4. Use Authenticated Contexts:**
+```ts
+// ✅ Good - Include context in signature
+const canonical = `${method}\n${url}\n${timestamp}\n${body}`;
+
+// ❌ Bad - Signature could be reused for different requests
+const canonical = body;
+```
+
+---
+
+## Common Errors
+
+### Error: `error:04800074:PEM routines::bad password read`
+
+**Cause:** Your private key is encrypted, but you didn't provide the passphrase.
+
+**Solution:**
+```ts
+// ❌ Wrong: Calling sign.sign() with encrypted key but no passphrase
+// sign.sign(encryptedPrivateKey); // Throws error!
+
+// ✅ Correct
+const sign = createSign('SHA256');
+sign.update('data');
+sign.sign({
+  key: encryptedPrivateKey,
+  passphrase: 'your-password'
+}, 'hex');
+```
+
+---
+
+### Verification always returns `false`
+
+**Possible causes:**
+
+1. **Different algorithms:**
+```ts
+// ❌ Wrong: Using different algorithms for signing and verification
+// const sign = createSign('SHA256');
+// const verify = createVerify('SHA512'); // Different! Will fail!
+
+// ✅ Correct
+const sign = createSign('SHA256');
+const verify = createVerify('SHA256'); // Same algorithm
+```
+
+2. **Data mismatch:**
+```ts
+// ❌ Wrong: Data mismatch - extra space in verification
+// sign.update('Hello World');
+// verify.update('Hello  World'); // Extra space! Will fail!
+
+// ✅ Correct: Use exact same data
+const { publicKey, privateKey } = generateKeyPairSync('rsa', { modulusLength: 2048 });
+const data = 'Hello World';
+const sign = createSign('SHA256');
+sign.update(data);
+const signature = sign.sign(privateKey);
+const verify = createVerify('SHA256');
+verify.update(data); // Exact same string
+verify.verify(publicKey, signature); // Success
+```
+
+3. **Encoding issues:**
+```ts
+// ❌ Wrong: Encoding mismatch - stringified vs object
+// sign.update(JSON.stringify(data)); // Stringified
+// verify.update(data); // Not stringified! Will fail!
+
+// ✅ Correct: Use same encoding
+const { publicKey, privateKey } = generateKeyPairSync('rsa', { modulusLength: 2048 });
+const data = { foo: 'bar' };
+const payload = JSON.stringify(data);
+const sign = createSign('SHA256');
+sign.update(payload);
+const signature = sign.sign(privateKey);
+const verify = createVerify('SHA256');
+verify.update(payload); // Same encoding
+verify.verify(publicKey, signature); // Success
+```
+
+4. **Wrong key pair:**
+```ts
+// ❌ Wrong: Using mismatched key pair
+// sign.sign(privateKeyA);
+// verify.verify(publicKeyB, sig); // Different pair! Will fail!
+
+// ✅ Correct: Use matching key pair
+const { publicKey, privateKey } = generateKeyPairSync('rsa', { modulusLength: 2048 });
+const sign = createSign('SHA256');
+sign.update('test');
+const signature = sign.sign(privateKey);
+const verify = createVerify('SHA256');
+verify.update('test');
+verify.verify(publicKey, signature); // Matching pair
+```
+
+---
+
+### Error: `sign.sign is not a function` after calling it once
+
+**Cause:** `Sign` objects are single-use. After calling `sign()`, the object is unusable.
+
+**Solution:**
+```ts
+// ❌ Wrong: Reusing Sign object after calling sign()
+// const sign = createSign('SHA256');
+// const sig1 = sign.sign(key1);
+// const sig2 = sign.sign(key2); // Error! Object is single-use
+
+// ✅ Correct: Create new Sign object for each signature
+const { privateKey: key1 } = generateKeyPairSync('rsa', { modulusLength: 2048 });
+const {  privateKey: key2 } = generateKeyPairSync('rsa', { modulusLength: 2048 });
+const sign1 = createSign('SHA256');
+sign1.update('test');
+const sig1 = sign1.sign(key1);
+
+const sign2 = createSign('SHA256');
+sign2.update('test');
+const sig2 = sign2.sign(key2);
+```
+
+---
+
+## Performance Notes
+
+**Signature generation performance** (RSA-2048, SHA-256, typical mobile device):
+- Sign operation: ~5ms (200 signatures/second)
+- Verify operation: ~0.5ms (2000 verifications/second)
+
+**Recommendations:**
+1. **Verification is 10× faster than signing** - batch verify when possible
+2. **Use ECDSA for better performance** - 10-100× faster than RSA
+3. **Consider Ed25519 for maximum speed** - fastest option available
+4. **Run signing on background thread** for large files to avoid UI freezes
+
+```ts
+// Example: Background signing
+import { createSign } from 'react-native-quick-crypto';
+
+async function signInBackground(data: string, key: any): Promise<string> {
+  return new Promise((resolve) => {
+    setTimeout(() => {
+      const sign = createSign('SHA256');
+      sign.update(data);
+      resolve(sign.sign(key, 'hex'));
+    }, 0);
+  });
+}
+```

@@ -1,0 +1,75 @@
+---
+title: HKDF
+description: HMAC-based Extract-and-Expand Key Derivation Function
+---
+
+import { TypeTable } from 'fumadocs-ui/components/type-table';
+
+## Table of Contents
+
+- [Theory](#theory)
+- [Module Methods](#module-methods)
+
+
+## Theory
+
+HKDF (RFC 5869) is a simple key derivation function based on HMAC. It is often used to derive multiple session keys from a single master secret.
+
+It follows a standard "Extract-then-Expand" paradigm:
+
+1. **Extract**: Derives a fixed-length pseudorandom key ($PRK$) from the input keying material ($IKM$) and optional salt.
+2. **Expand**: Expands the $PRK$ into multiple cryptographically strong output keys.
+
+```math
+PRK = \text{HMAC-Hash}(salt, IKM)
+```
+```math
+OKM = \text{HMAC-Hash}(PRK, info \parallel 0x01) \parallel \dots
+```
+
+## Module Methods
+
+### hkdfSync(digest, key, salt, info, keylen)
+
+Synchronous HKDF derivation.
+
+```ts
+import QuickCrypto from 'react-native-quick-crypto';
+
+// Combined Extract + Expand
+const derived = QuickCrypto.hkdfSync(
+  'sha256',       // Digest
+  'ikm-secret',   // Input Key Material
+  'salt',         // Salt
+  'context-info', // Context Info
+  64              // Output length
+);
+```
+
+
+### hkdf(digest, key, salt, info, keylen, callback)
+
+<TypeTable
+  type={{
+    digest: {
+        description: 'Hash algorithm (e.g. "sha256")',
+        type: 'string',
+    },
+    key: {
+        description: 'Input Key Material (IKM)',
+        type: 'BinaryLike',
+    },
+    salt: {
+        description: 'Salt value (optional but recommended)',
+        type: 'BinaryLike',
+    },
+    info: {
+        description: 'Context/Application Information',
+        type: 'BinaryLike',
+    },
+    keylen: {
+        description: 'Length in bytes of derived key',
+        type: 'number',
+    }
+  }}
+/>
