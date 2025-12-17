@@ -1,0 +1,128 @@
+---
+title: Ed25519 & X25519
+description: High-performance signatures and key exchange
+---
+
+import { Callout } from 'fumadocs-ui/components/callout';
+
+# Ed25519 & X25519
+
+## Table of Contents
+
+- [Theory](#theory)
+- [Module Methods](#module-methods)
+- [Usage](#usage)
+- [Best Practices](#best-practices)
+
+## Theory
+
+**Ed25519** (Edwards-curve Digital Signature Algorithm) and **X25519** (Elliptic Curve Diffie-Hellman on Curve25519) are state-of-the-art cryptographic primitives that offer high security, high performance, and small key sizes.
+
+<Callout type="info" title="Why use them?">
+  **Ed25519** is the gold standard for signatures (used in SSH, TLS 1.3, Signal).
+  **X25519** is the gold standard for key exchange (ECDH).
+  They are faster and safer than RSA and older NIST curves.
+</Callout>
+
+## Module Methods
+
+Use `generateKeyPair` or `generateKeyPairSync`.
+
+```ts
+import { generateKeyPairSync } from 'react-native-quick-crypto';
+
+// Ed25519 (Signatures)
+const edKeys = generateKeyPairSync('ed25519');
+console.log(edKeys.publicKey.export({ format: 'pem', type: 'spki' }));
+
+// X25519 (Key Exchange)
+const xKeys = generateKeyPairSync('x25519');
+console.log(xKeys.publicKey.export({ format: 'pem', type: 'spki' }));
+```
+
+## Usage
+
+### Ed25519 Signatures
+
+Ed25519 signatures are deterministic and do not require random number generation during signing, making them safe against weak RNG vulnerabilities.
+
+```ts
+import { generateKeyPairSync, createSign, createVerify } from 'react-native-quick-crypto';
+
+const { publicKey, privateKey } = generateKeyPairSync('ed25519');
+const message = 'Hello, secure world!';
+
+// Sign
+// Note: For Ed25519, we use null as algorithm or specific flow depending on implementation
+// react-native-quick-crypto implies compatibility with Node.js
+const signer = createSign('ed25519' as any); // Type cast if needed
+signer.update(message);
+const signature = signer.sign(privateKey);
+
+console.log('Signature:', signature.toString('hex'));
+
+// Verify
+const verifier = createVerify('ed25519' as any);
+verifier.update(message);
+const isValid = verifier.verify(publicKey, signature);
+
+console.log('Valid:', isValid); // true
+```
+
+### X25519 Key Exchange
+
+X25519 is used for Diffie-Hellman key exchange.
+
+```ts
+import { generateKeyPairSync, diffieHellman } from 'react-native-quick-crypto';
+
+// Alice
+const alice = generateKeyPairSync('x25519');
+
+// Bob
+const bob = generateKeyPairSync('x25519');
+
+// Exchange (using hypothetical diffieHellman helper or similar mechanism)
+// Note: Node.js uses crypto.diffieHellman({ privateKey, publicKey })
+// react-native-quick-crypto may support this via similar API
+
+/*
+const secret = diffieHellman({
+  privateKey: alice.privateKey,
+  publicKey: bob.publicKey
+});
+*/
+```
+
+## Best Practices
+
+<Callout type="warn" title="Security Warning">
+  Never confuse Ed25519 (signing) with X25519 (encryption/exchange). They use the same underlying curve but different coordinates and formulas.
+</Callout>
+
+1. **Use Ed25519 for Signatures**: It's faster and safer than RSA.
+2. **Use X25519 for ECDH**: It's efficient and secure.
+3. **Don't use Ed25519 keys for X25519** directly without conversion (and vice versa).
+
+## Common Errors
+
+### Wrong Algorithm
+
+Trying to use RSA options with Ed25519.
+
+```ts
+// ❌ Wrong
+// const signer = createSign('SHA256'); // Ed25519 hashes internally
+
+// ✅ Correct
+// const signer = createSign(null); // or 'ed25519'
+```
+
+### Key Mismatch
+
+Mixing Ed25519 and X25519 keys.
+
+```ts
+// ❌ Wrong
+// sign(null, data, x25519PrivateKey); // Error: invalid key type
+```

@@ -1,8 +1,8 @@
 <a href="https://margelo.com">
   <picture>
-    <source media="(prefers-color-scheme: dark)" srcset="./docs/img/banner-dark.png" />
-    <source media="(prefers-color-scheme: light)" srcset="./docs/img/banner-light.png" />
-    <img alt="react-native-quick-crypto" src="./docs/img/banner-light.png" />
+    <source media="(prefers-color-scheme: dark)" srcset="./.docs/img/banner-dark.png" />
+    <source media="(prefers-color-scheme: light)" srcset="./.docs/img/banner-light.png" />
+    <img alt="react-native-quick-crypto" src="./.docs/img/banner-light.png" />
   </picture>
 </a>
 
@@ -46,7 +46,7 @@ There is a benchmark suite in the Example app in this repo that has benchmarks o
 ## Installation
 
 <h3>
-  React Native  <a href="#"><img src="./docs/img/react-native.png" height="15" /></a>
+  React Native  <a href="#"><img src="./.docs/img/react-native.png" height="15" /></a>
 </h3>
 
 ```sh
@@ -55,7 +55,7 @@ cd ios && pod install
 ```
 
 <h3>
-  Expo  <a href="#"><img src="./docs/img/expo.png" height="12" /></a>
+  Expo  <a href="#"><img src="./.docs/img/expo.png" height="12" /></a>
 </h3>
 
 ```sh
@@ -152,6 +152,10 @@ Not all cryptographic algorithms are supported yet. See the [implementation cove
 ## Contributing
 
 See the [contributing guide](CONTRIBUTING.md) to learn how to contribute to the repository and the development workflow.
+
+For more detailed guides, check out our documentation website:
+- [Contributing Guide]([prod-docs]/docs/guides/contributing)
+- [Writing Documentation]([prod-docs]/docs/guides/writing-documentation)
 
 ## License
 

@@ -1,0 +1,851 @@
+---
+title: Public Cipher (RSA Encryption)
+description: Asymmetric encryption and decryption
+---
+
+import { Callout } from 'fumadocs-ui/components/callout';
+import { TypeTable } from 'fumadocs-ui/components/type-table';
+import { Step, Steps } from 'fumadocs-ui/components/steps';
+
+The public cipher module provides asymmetric encryption/decryption using RSA. In asymmetric cryptography, data encrypted with a **public key** can only be decrypted with the corresponding **private key**, enabling secure communication without pre-shared secrets.
+
+<Callout type="info" title="Common Use Cases">
+  **Secure messaging** (encrypt messages for specific recipients), **key exchange** (encrypt symmetric keys for bulk data encryption), **password-less authentication**, and **secure file sharing**.
+</Callout>
+
+## Table of Contents
+
+- [Theory](#theory)
+- [Module Methods](#module-methods)
+- [Hybrid Encryption Pattern](#hybrid-encryption-pattern)
+- [Padding Modes](#padding-modes)
+- [Real-World Examples](#real-world-examples)
+- [Security Considerations](#security-considerations)
+
+## Theory
+
+RSA (Rivest–Shamir–Adleman) is a public-key cryptosystem that is widely used for secure data transmission. It relies on the practical difficulty of factoring the product of two large prime numbers, the "factoring problem".
+
+### Key Concepts
+
+- **Public Key**: Shared openly. Used for **encrypting** data intended for the key owner, or **verifying** signatures from the key owner.
+- **Private Key**: Kept secret. Used for **decrypting** data sent to the key owner, or **signing** data to prove authenticity.
+- **Padding**: Crucial for security. Raw RSA is deterministic and unsafe; padding schemes like OAEP introduce randomness.
+
+---
+
+## Module Methods
+
+### publicEncrypt(key, buffer)
+
+Encrypts `buffer` with a public key. Anyone with the public key can encrypt, but only the private key holder can decrypt.
+
+**Parameters:**
+
+| Name | Type | Description |
+|:-----|:-----|:------------|
+| `key` | `KeyObject \| string \| Buffer \| Object` | Public key for encryption. Can be a `KeyObject`, PEM-encoded string, DER buffer, or an object with encryption options |
+| `buffer` | `string \| Buffer \| TypedArray \| DataView` | Data to encrypt. **Maximum size** depends on key size and padding (~190 bytes for RSA-2048 with OAEP) |
+
+When `key` is an object, it may contain:
+
+<TypeTable
+  type={{
+    key: {
+        description: 'The public key (KeyObject, PEM string, or Buffer)',
+        type: 'KeyObject | string | Buffer'
+    },
+    padding: {
+        description: 'RSA padding mode (e.g., RSA_PKCS1_OAEP_PADDING)',
+        type: 'number'
+    },
+    oaepHash: {
+        description: 'Hash function for OAEP padding (default: "sha1", recommended: "sha256")',
+        type: 'string'
+    },
+    oaepLabel: {
+        description: 'Optional label for OAEP (default: empty)',  
+        type: 'Buffer'
+    }
+  }}
+/>
+
+**Returns:** `Buffer` - The encrypted data
+
+**Examples:**
+
+Basic encryption:
+
+```ts
+import { publicEncrypt, generateKeyPairSync } from 'react-native-quick-crypto';
+
+const { publicKey, privateKey } = generateKeyPairSync('rsa', {
+  modulusLength: 2048,
+});
+
+// Encrypt with public key
+const message = 'Secret message';
+const encrypted = publicEncrypt(publicKey, Buffer.from(message));
+
+console.log('Encrypted:', encrypted.toString('base64'));
+```
+
+Encryption with OAEP padding (recommended):
+
+```ts
+import { publicEncrypt, constants } from 'react-native-quick-crypto';
+
+const encrypted = publicEncrypt({
+  key: publicKeyPEM,
+  padding: constants.RSA_PKCS1_OAEP_PADDING,
+  oaepHash: 'sha256' // More secure than default sha1
+}, Buffer.from('secret data'));
+```
+
+Encryption with OAEP label:
+
+```ts
+import { publicEncrypt, constants } from 'react-native-quick-crypto';
+
+// Label provides additional context/domain separation
+const encrypted = publicEncrypt({
+  key: publicKey,
+  padding: constants.RSA_PKCS1_OAEP_PADDING,
+  oaepHash: 'sha256',
+  oaepLabel: Buffer.from('user-messages-v1')
+}, Buffer.from('message'));
+```
+
+---
+
+### privateDecrypt(key, buffer)
+
+Decrypts `buffer` with a private key. Only the private key holder can decrypt data encrypted with the corresponding public key.
+
+**Parameters:**
+
+| Name | Type | Description |
+|:-----|:-----|:------------|
+| `key` | `KeyObject \| string \| Buffer \| Object` | Private key for decryption. Can be a `KeyObject`, PEM-encoded string, DER buffer, or an object with decryption options |
+| `buffer` | `Buffer \| TypedArray \| DataView` | Encrypted data to decrypt |
+
+When `key` is an object, it may contain:
+
+<TypeTable
+  type={{
+    key: {
+        description: 'The private key (KeyObject, PEM string, or Buffer)',
+        type: 'KeyObject | string | Buffer'
+    },
+    passphrase: {
+        description: 'Passphrase for encrypted private keys',
+        type: 'string | Buffer'
+    },
+    padding: {
+        description: 'RSA padding mode (must match encryption padding)',
+        type: 'number'
+    },
+    oaepHash: {
+        description: 'Hash function for OAEP (must match encryption)',
+        type: 'string'
+    },
+    oaepLabel: {
+        description: 'OAEP label (must match encryption)',
+        type: 'Buffer'
+    }
+  }}
+/>
+
+**Returns:** `Buffer` - The decrypted plaintext
+
+**Examples:**
+
+Basic decryption:
+
+```ts
+import { privateDecrypt } from 'react-native-quick-crypto';
+
+const decrypted = privateDecrypt(privateKey, encryptedBuffer);
+console.log('Decrypted:', decrypted.toString());
+```
+
+Decryption with encrypted private key:
+
+```ts
+import { privateDecrypt } from 'react-native-quick-crypto';
+
+const decrypted = privateDecrypt({
+  key: encryptedPrivateKeyPEM,
+  passphrase: 'my-secret-password'
+}, encryptedData);
+```
+
+Decryption with OAEP parameters:
+
+```ts
+import { privateDecrypt, constants } from 'react-native-quick-crypto';
+
+const decrypted = privateDecrypt({
+  key: privateKey,
+  padding: constants.RSA_PKCS1_OAEP_PADDING,
+  oaepHash: 'sha256',
+  oaepLabel: Buffer.from('user-messages-v1')
+}, encryptedData);
+```
+
+---
+
+### privateEncrypt(key, buffer)
+
+Encrypts `buffer` with a private key. This is used for **signature-like operations** where you want to prove possession of the private key. Not recommended for actual signing - use `createSign()` instead.
+
+**Parameters:**
+
+| Name | Type | Description |
+|:-----|:-----|:------------|
+| `key` | `KeyObject \| string \| Buffer \| Object` | Private key for encryption |
+| `buffer` | `string \| Buffer \| TypedArray \| DataView` | Data to encrypt with private key |
+
+**Returns:** `Buffer` - The encrypted data
+
+**Note:** For digital signatures, prefer `createSign()` over `privateEncrypt()`.
+
+---
+
+### publicDecrypt(key, buffer)
+
+Decrypts `buffer` that was encrypted with `privateEncrypt()`. Anyone with the public key can decrypt, proving the data came from the private key holder.
+
+**Parameters:**
+
+| Name | Type | Description |
+|:-----|:-----|:------------|
+| `key` | `KeyObject \| string \| Buffer \| Object` | Public key for decryption |
+| `buffer` | `Buffer \| TypedArray \| DataView` | Data encrypted with `privateEncrypt()` |
+
+**Returns:** `Buffer` - The decrypted data
+
+---
+
+## Hybrid Encryption Pattern
+
+RSA can only encrypt small amounts of data (< key size). For larger data, use **hybrid encryption**: encrypt the data with AES, then encrypt the AES key with RSA.
+
+### Pattern: Encrypt Large Data
+
+```ts
+import {
+  publicEncrypt,
+  randomBytes,
+  createCipheriv,
+  constants
+} from 'react-native-quick-crypto';
+
+function hybridEncrypt(
+  publicKey: any,
+  data: Buffer
+): { encryptedKey: Buffer; iv: Buffer; encryptedData: Buffer } {
+  // Generate AES key and IV
+  const aesKey = randomBytes(32);
+  const iv = randomBytes(16);
+
+  // Encrypt data with AES
+  const cipher = createCipheriv('aes-256-cbc', aesKey, iv);
+  const encryptedData = Buffer.concat([
+    cipher.update(data),
+    cipher.final()
+  ]);
+
+  // Encrypt AES key with RSA
+  const encryptedKey = publicEncrypt({
+    key: publicKey,
+    padding: constants.RSA_PKCS1_OAEP_PADDING,
+    oaepHash: 'sha256'
+  }, aesKey);
+
+  return {
+    encryptedKey,
+    iv,
+    encryptedData
+  };
+}
+
+// Usage
+const largeFile = Buffer.alloc(10 * 1024 * 1024); // 10 MB
+const encrypted = hybridEncrypt(publicKey, largeFile);
+
+// Transmit: encrypted.encryptedKey, encrypted.iv, encrypted.encryptedData
+```
+
+### Pattern: Decrypt Large Data
+
+```ts
+import {
+  privateDecrypt,
+  createDecipheriv,
+  constants
+} from 'react-native-quick-crypto';
+
+function hybridDecrypt(
+  privateKey: any,
+  encryptedKey: Buffer,
+  iv: Buffer,
+  encryptedData: Buffer
+): Buffer {
+  // Decrypt AES key with RSA
+  const aesKey = privateDecrypt({
+    key: privateKey,
+    padding: constants.RSA_PKCS1_OAEP_PADDING,
+    oaepHash: 'sha256'
+  }, encryptedKey);
+
+  // Decrypt data with AES
+  const decipher = createDecipheriv('aes-256-cbc', aesKey, iv);
+  const decrypted = Buffer.concat([
+    decipher.update(encryptedData),
+    decipher.final()
+  ]);
+
+  return decrypted;
+}
+
+// Usage
+const decrypted = hybridDecrypt(
+  privateKey,
+  encrypted.encryptedKey,
+  encrypted.iv,
+  encrypted.encryptedData
+);
+```
+
+---
+
+## Padding Modes
+
+RSA requires padding for security. The padding mode **must match** between encryption and decryption.
+
+### Available Padding Modes
+
+| Padding | Constant | Security | Use Case |
+|:--------|:---------|:---------|:---------|
+| **OAEP** | `RSA_PKCS1_OAEP_PADDING` | **Recommended** | Modern applications, maximum security |
+| **PKCS#1 v1.5** | `RSA_PKCS1_PADDING` | Legacy | Compatibility with older systems |
+| **None** | `RSA_NO_PADDING` | ⚠️ **Insecure** | Never use in production |
+
+### OAEP Padding (Recommended)
+
+Optimal Asymmetric Encryption Padding provides the best security:
+
+```ts
+import { publicEncrypt, privateDecrypt, constants } from 'react-native-quick-crypto';
+
+// Encrypt with OAEP
+const encrypted = publicEncrypt({
+  key: publicKey,
+  padding: constants.RSA_PKCS1_OAEP_PADDING,
+  oaepHash: 'sha256' // Recommended over default 'sha1'
+}, data);
+
+// Decrypt with OAEP (must use same hash!)
+const decrypted = privateDecrypt({
+  key: privateKey,
+  padding: constants.RSA_PKCS1_OAEP_PADDING,
+  oaepHash: 'sha256'
+}, encrypted);
+```
+
+### PKCS#1 v1.5 Padding (Legacy)
+
+Only for compatibility with older systems:
+
+```ts
+import { publicEncrypt, privateDecrypt, constants } from 'react-native-quick-crypto';
+
+const encrypted = publicEncrypt({
+  key: publicKey,
+  padding: constants.RSA_PKCS1_PADDING
+}, data);
+
+const decrypted = privateDecrypt({
+  key: privateKey,
+  padding: constants.RSA_PKCS1_PADDING
+}, encrypted);
+```
+
+---
+
+## Real-World Examples
+
+### Example 1: Secure Messaging
+
+End-to-end encrypted messages between users:
+
+```ts
+import {
+  publicEncrypt,
+  privateDecrypt,
+  randomBytes,
+  createCipheriv,
+  createDecipheriv,
+  constants
+} from 'react-native-quick-crypto';
+
+class SecureMessenger {
+  constructor(
+    private myPrivateKey: any,
+    private myPublicKey: any
+  ) {}
+
+  // Encrypt message for recipient
+  encryptFor(
+    recipientPublicKey: any,
+    message: string
+  ): { encryptedKey: string; iv: string; ciphertext: string } {
+    // Generate ephemeral AES key
+    const aesKey = randomBytes(32);
+    const iv = randomBytes(16);
+
+    // Encrypt message with AES
+    const cipher = createCipheriv('aes-256-gcm', aesKey, iv);
+    let ciphertext = cipher.update(message, 'utf8', 'base64');
+    ciphertext += cipher.final('base64');
+    const authTag = cipher.getAuthTag();
+
+    // Encrypt AES key with recipient's public key
+    const encryptedKey = publicEncrypt({
+      key: recipientPublicKey,
+      padding: constants.RSA_PKCS1_OAEP_PADDING,
+      oaepHash: 'sha256'
+    }, aesKey);
+
+    return {
+      encryptedKey: encryptedKey.toString('base64'),
+      iv: iv.toString('base64') + ':' + authTag.toString('base64'),
+      ciphertext
+    };
+  }
+
+  // Decrypt message from sender
+  decryptFrom(
+    encrypted: { encryptedKey: string; iv: string; ciphertext: string }
+  ): string {
+    // Decrypt AES key with my private key
+    const aesKey = privateDecrypt({
+      key: this.myPrivateKey,
+      padding: constants.RSA_PKCS1_OAEP_PADDING,
+      oaepHash: 'sha256'
+    }, Buffer.from(encrypted.encryptedKey, 'base64'));
+
+    // Parse IV and auth tag
+    const [ivB64, tagB64] = encrypted.iv.split(':');
+    const iv = Buffer.from(ivB64, 'base64');
+    const authTag = Buffer.from(tagB64, 'base64');
+
+    // Decrypt message with AES
+    const decipher = createDecipheriv('aes-256-gcm', aesKey, iv);
+    decipher.setAuthTag(authTag);
+    
+    let message = decipher.update(encrypted.ciphertext, 'base64', 'utf8');
+    message += decipher.final('utf8');
+
+    return message;
+  }
+}
+
+// Usage
+const alice = new SecureMessenger(alicePrivateKey, alicePublicKey);
+const bob = new SecureMessenger(bobPrivateKey, bobPublicKey);
+
+// Alice sends encrypted message to Bob
+const encrypted = alice.encryptFor(bobPublicKey, 'Meet at 3pm');
+
+// Bob decrypts
+const message = bob.decryptFrom(encrypted);
+console.log(message); // "Meet at 3pm"
+```
+
+### Example 2: Secure File Sharing
+
+Share encrypted files with specific users:
+
+```ts
+import {
+  publicEncrypt,
+  privateDecrypt,
+  randomBytes,
+  createCipheriv,
+  createDecipheriv,
+  constants
+} from 'react-native-quick-crypto';
+import RNFS from 'react-native-fs';
+
+interface EncryptedFile {
+  encryptedKeys: Map<string, string>; // User ID -> encrypted AES key
+  iv: string;
+  encryptedPath: string;
+}
+
+async function encryptFileForMultipleUsers(
+  filePath: string,
+  recipientPublicKeys: Map<string, any> // User ID -> Public Key
+): Promise<EncryptedFile> {
+  // Read file
+  const fileData = await RNFS.readFile(filePath, 'base64');
+  const fileBuffer = Buffer.from(fileData, 'base64');
+
+  // Generate single AES key for file
+  const aesKey = randomBytes(32);
+  const iv = randomBytes(16);
+
+  // Encrypt file with AES
+  const cipher = createCipheriv('aes-256-cbc', aesKey, iv);
+  const encryptedData = Buffer.concat([
+    cipher.update(fileBuffer),
+    cipher.final()
+  ]);
+
+  // Save encrypted file
+  const encryptedPath = filePath + '.encrypted';
+  await RNFS.writeFile(
+    encryptedPath,
+    encryptedData.toString('base64'),
+    'base64'
+  );
+
+  // Encrypt AES key for each recipient
+  const encryptedKeys = new Map<string, string>();
+  
+  for (const [userId, publicKey] of recipientPublicKeys.entries()) {
+    const encryptedKey = publicEncrypt({
+      key: publicKey,
+      padding: constants.RSA_PKCS1_OAEP_PADDING,
+      oaepHash: 'sha256'
+    }, aesKey);
+
+    encryptedKeys.set(userId, encryptedKey.toString('base64'));
+  }
+
+  return {
+    encryptedKeys,
+    iv: iv.toString('base64'),
+    encryptedPath
+  };
+}
+
+async function decryptFile(
+  userId: string,
+  privateKey: any,
+  encryptedFile: EncryptedFile,
+  outputPath: string
+): Promise<void> {
+  // Get my encrypted key
+  const encryptedKeyB64 = encryptedFile.encryptedKeys.get(userId);
+  if (!encryptedKeyB64) {
+    throw new Error('You do not have access to this file');
+  }
+
+  // Decrypt AES key
+  const aesKey = privateDecrypt({
+    key: privateKey,
+    padding: constants.RSA_PKCS1_OAEP_PADDING,
+    oaepHash: 'sha256'
+  }, Buffer.from(encryptedKeyB64, 'base64'));
+
+  // Read encrypted file
+  const encryptedData = await RNFS.readFile(
+    encryptedFile.encryptedPath,
+    'base64'
+  );
+
+  // Decrypt file
+  const decipher = createDecipheriv(
+    'aes-256-cbc',
+    aesKey,
+    Buffer.from(encryptedFile.iv, 'base64')
+  );
+
+  const decrypted = Buffer.concat([
+    decipher.update(Buffer.from(encryptedData, 'base64')),
+    decipher.final()
+  ]);
+
+  // Save decrypted file
+  await RNFS.writeFile(outputPath, decrypted.toString('base64'), 'base64');
+}
+
+// Usage
+const recipients = new Map([
+  ['alice', alicePublicKey],
+  ['bob', bobPublicKey],
+  ['charlie', charliePublicKey]
+]);
+
+const encrypted = await encryptFileForMultipleUsers(
+  '/path/to/document.pdf',
+  recipients
+);
+
+// Bob decrypts
+await decryptFile('bob', bobPrivateKey, encrypted, '/path/to/decrypted.pdf');
+```
+
+### Example 3: Password-less Authentication
+
+Authenticate without sending passwords:
+
+```ts
+import {
+  publicEncrypt,
+  privateDecrypt,
+  randomBytes,
+  constants
+} from 'react-native-quick-crypto';
+
+class AuthChallenge {
+  // Server generates challenge
+  static createChallenge(userPublicKey: any): {
+    challenge: string;
+    encrypted: string;
+  } {
+    // Generate random challenge
+    const challenge = randomBytes(32).toString('hex');
+
+    // Encrypt with user's public key
+    const encrypted = publicEncrypt({
+      key: userPublicKey,
+      padding: constants.RSA_PKCS1_OAEP_PADDING,
+      oaepHash: 'sha256'
+    }, Buffer.from(challenge));
+
+    return {
+      challenge, // Store server-side
+      encrypted: encrypted.toString('base64') // Send to client
+    };
+  }
+
+  // Client decrypts and signs response
+  static respondToChallenge(
+    encryptedChallenge: string,
+    privateKey: any
+  ): string {
+    // Decrypt challenge
+    const challenge = privateDecrypt({
+      key: privateKey,
+      padding: constants.RSA_PKCS1_OAEP_PADDING,
+      oaepHash: 'sha256'
+    }, Buffer.from(encryptedChallenge, 'base64'));
+
+    // Return decrypted challenge (proves key ownership)
+    return challenge.toString('hex');
+  }
+
+  // Server verifies response
+  static verifyResponse(
+    originalChallenge: string,
+    response: string
+  ): boolean {
+    return originalChallenge === response;
+  }
+}
+
+// Authentication flow
+const { challenge: serverChallenge, encrypted } = 
+  AuthChallenge.createChallenge(userPublicKey);
+
+const response = AuthChallenge.respondToChallenge(encrypted, userPrivateKey);
+
+const authenticated = AuthChallenge.verifyResponse(serverChallenge, response);
+console.log('Authenticated:', authenticated);
+```
+
+---
+
+## Security Considerations
+
+<Callout type="warn" title="Critical Security Rules">
+  1. **Minimum 2048-bit keys** - Smaller keys are vulnerable to factorization
+  2. **Use OAEP padding** - PKCS#1 v1.5 has known vulnerabilities
+  3. **Never encrypt large data directly** - Use hybrid encryption
+  4. **Protect private keys** - Store in device Keychain/KeyStore
+  5. **Use sha256 or better** - Default sha1 in OAEP is weak
+</Callout>
+
+### Best Practices
+
+**1. Key Size:**
+```ts
+// ✅ Good - 2048-bit minimum
+generateKeyPairSync('rsa', { modulusLength: 2048 });
+
+// ✅ Better - 3072-bit for high security
+generateKeyPairSync('rsa', { modulusLength: 3072 });
+
+// ❌ Bad - 1024-bit is breakable
+generateKeyPairSync('rsa', { modulusLength: 1024 });
+```
+
+**2. Padding Selection:**
+```ts
+// ✅ Good - OAEP with SHA-256
+publicEncrypt({
+  key: publicKey,
+  padding: constants.RSA_PKCS1_OAEP_PADDING,
+  oaepHash: 'sha256'
+}, data);
+
+// ⚠️ Acceptable - OAEP with default SHA-1 (upgrade to SHA-256)
+publicEncrypt({
+  key: publicKey,
+  padding: constants.RSA_PKCS1_OAEP_PADDING
+}, data);
+
+// ❌ Bad - PKCS#1 v1.5 (vulnerable to attacks)
+publicEncrypt({
+  key: publicKey,
+  padding: constants.RSA_PKCS1_PADDING
+}, data);
+
+// ❌ Never - No padding (completely insecure)
+publicEncrypt({
+  key: publicKey,
+  padding: constants.RSA_NO_PADDING
+}, data);
+```
+
+**3. Data Size Limits:**
+```ts
+// ✅ Good - Use hybrid encryption for large data
+// const { encryptedKey, iv, encryptedData } = hybridEncrypt(publicKey, largeFile);
+
+// ❌ Bad: Direct encryption of large data will fail
+// publicEncrypt(publicKey, largeFile); // Error: data too large
+```
+
+**4. Key Storage:**
+```ts
+// ✅ Good - Secure storage
+import * as Keychain from 'react-native-keychain';
+await Keychain.setGenericPassword(
+  'privateKey',
+  privateKeyPEM,
+  { service: 'com.myapp.keys', accessible: Keychain.ACCESSIBLE.WHEN_UNLOCKED }
+);
+
+// ❌ Bad - Plain storage
+import AsyncStorage from '@react-native-async-storage/async-storage';
+await AsyncStorage.setItem('privateKey', privateKeyPEM);
+```
+
+---
+
+## Common Errors
+
+### Error: `data too large for key size`
+
+**Cause:** You're trying to encrypt more data than RSA can handle.
+
+**Maximum data sizes:**
+- RSA-2048 with OAEP: ~190 bytes
+- RSA-2048 with PKCS#1: ~245 bytes
+- RSA-4096 with OAEP: ~446 bytes
+
+**Solution:** Use hybrid encryption:
+
+```ts
+// ❌ Wrong - Direct encryption of large data
+const encrypted = publicEncrypt(publicKey, largeData); // Error!
+
+// ✅ Correct - Hybrid encryption
+const { encryptedKey, iv, encryptedData } = hybridEncrypt(publicKey, largeData);
+```
+
+---
+
+### Error: `error:04800074:PEM routines::bad password read`
+
+**Cause:** Private key is encrypted but passphrase wasn't provided.
+
+**Solution:**
+```ts
+// ❌ Wrong: Encrypted key without passphrase
+// privateDecrypt(encryptedPrivateKey, data); // Error!
+
+// ✅ Correct
+privateDecrypt({
+  key: encryptedPrivateKey,
+  passphrase: 'my-password'
+}, data);
+```
+
+---
+
+### Decryption produces garbage
+
+**Possible causes:**
+
+1. **Padding mismatch:**
+```ts
+// ❌ Wrong: Different padding modes
+// publicEncrypt({ padding: RSA_PKCS1_OAEP_PADDING }, data);
+// privateDecrypt({ padding: RSA_PKCS1_PADDING }, encrypted); // Different!
+
+// ✅ Correct: Same padding on both sides
+const { publicKey, privateKey } = generateKeyPairSync('rsa', { modulusLength: 2048 });
+const data = Buffer.from('test');
+const padding = constants.RSA_PKCS1_OAEP_PADDING;
+const encrypted = publicEncrypt({ key: publicKey, padding }, data);
+const decrypted = privateDecrypt({ key: privateKey, padding }, encrypted);
+```
+
+2. **OAEP hash mismatch:**
+```ts
+// ❌ Wrong: Different OAEP hash
+// publicEncrypt({ oaepHash: 'sha256' }, data);
+// privateDecrypt({ oaepHash: 'sha1' }, encrypted); // Different hash!
+
+// ✅ Correct: Same hash on both sides
+const { publicKey, privateKey } = generateKeyPairSync('rsa', { modulusLength: 2048 });
+const data = Buffer.from('test');
+const oaepHash = 'sha256';
+const encrypted = publicEncrypt({ key: publicKey, padding: constants.RSA_PKCS1_OAEP_PADDING, oaepHash }, data);
+const decrypted = privateDecrypt({ key: privateKey, padding: constants.RSA_PKCS1_OAEP_PADDING, oaepHash }, encrypted);
+```
+
+3. **Wrong key pair:**
+```ts
+// ❌ Wrong: Different key pairs
+// publicEncrypt(publicKeyA, data);
+// privateDecrypt(privateKeyB, encrypted); // Unrelated keys!
+
+// ✅ Correct: Matching key pair
+const { publicKey, privateKey } = generateKeyPairSync('rsa', { modulusLength: 2048 });
+const encrypted = publicEncrypt(publicKey, data);
+const decrypted = privateDecrypt(privateKey, encrypted);
+```
+
+---
+
+## Performance Notes
+
+**Encryption/Decryption performance** (RSA-2048, typical mobile device):
+- Encryption (public key): ~2ms
+- Decryption (private key): ~20ms
+
+**Key observations:**
+- **Private key operations are 10× slower** than public key operations
+- **Consider ECDH/X25519 for key exchange** - much faster than RSA
+- **Batch operations when possible** to amortize setup costs
+- **Use hybrid encryption** for large data (AES is 1000× faster than RSA for bulk data)
+
+```ts
+// Performance comparison
+import { performance } from 'react-native-performance';
+
+const start = performance.now();
+const encrypted = publicEncrypt(publicKey, data);
+console.log('Encryption:', performance.now() - start, 'ms'); // ~2ms
+
+const start2 = performance.now();
+const decrypted = privateDecrypt(privateKey, encrypted);
+console.log('Decryption:', performance.now() - start2, 'ms'); // ~20ms
+```
