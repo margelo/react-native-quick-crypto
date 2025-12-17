@@ -191,7 +191,12 @@ tsconfig.tsbuildinfo
 .claude/settings.local.json
 .agent/
 
+<<<<<<< HEAD
 # docs
 docs/.next/
 docs/.source/
 docs/next-env.d.ts
+=======
+# exclude docs lib
+!docs/lib
+>>>>>>> docs

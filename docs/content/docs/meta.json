@@ -1,0 +1,9 @@
+{
+    "title": "React Native Quick Crypto",
+    "root": true,
+    "pages": [
+        "introduction",
+        "guides",
+        "api"
+    ]
+}

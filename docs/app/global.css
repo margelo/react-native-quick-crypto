@@ -1,0 +1,327 @@
+@import 'fumadocs-twoslash/twoslash.css';
+
+/* Satoshi */
+@font-face {
+    font-family: 'Satoshi';
+    src: url('/fonts/Satoshi-Regular.woff2') format('woff2');
+    font-weight: 400;
+    font-display: swap;
+    font-style: normal;
+}
+
+@font-face {
+    font-family: 'Satoshi';
+    src: url('/fonts/Satoshi-Medium.woff2') format('woff2');
+    font-weight: 500;
+    font-display: swap;
+    font-style: normal;
+}
+
+@font-face {
+    font-family: 'Satoshi';
+    src: url('/fonts/Satoshi-Bold.woff2') format('woff2');
+    font-weight: 700;
+    font-display: swap;
+    font-style: normal;
+}
+
+/* Clash Display */
+@font-face {
+    font-family: 'Clash Display';
+    src: url('/fonts/ClashDisplay-Regular.woff2') format('woff2');
+    font-weight: 400;
+    font-display: swap;
+    font-style: normal;
+}
+
+@font-face {
+    font-family: 'Clash Display';
+    src: url('/fonts/ClashDisplay-Medium.woff2') format('woff2');
+    font-weight: 500;
+    font-display: swap;
+    font-style: normal;
+}
+
+@font-face {
+    font-family: 'Clash Display';
+    src: url('/fonts/ClashDisplay-Semibold.woff2') format('woff2');
+    font-weight: 600;
+    font-display: swap;
+    font-style: normal;
+}
+
+@font-face {
+    font-family: 'Clash Display';
+    src: url('/fonts/ClashDisplay-Bold.woff2') format('woff2');
+    font-weight: 700;
+    font-display: swap;
+    font-style: normal;
+}
+
+@import 'tailwindcss';
+@import 'fumadocs-ui/css/neutral.css';
+@import 'fumadocs-ui/css/preset.css';
+
+@theme {
+    --font-sans: 'Satoshi', sans-serif;
+    --font-heading: 'Clash Display', sans-serif;
+
+    --color-primary: #232A3F;
+    --color-accent: #D32E5E;
+    --color-background: #F0F9FF;
+
+    /* Light Mode (Default) - Quick Crypto Branding */
+    /* Background: #F0F9FF */
+    --color-fd-background: hsl(204, 100%, 97%);
+    /* Foreground: #232A3F */
+    --color-fd-foreground: hsl(225, 29%, 19%);
+
+    /* Muted: Slightly darker/desaturated for contrast */
+    --color-fd-muted: hsl(204, 30%, 90%);
+    --color-fd-muted-foreground: hsl(225, 20%, 40%);
+
+    /* Popover: Matches bg */
+    --color-fd-popover: hsl(204, 100%, 97%);
+    --color-fd-popover-foreground: hsl(225, 29%, 19%);
+
+    /* Card: Slightly distinct from bg */
+    --color-fd-card: hsl(204, 50%, 98%);
+    --color-fd-card-foreground: hsl(225, 29%, 19%);
+
+    /* Border: Subtle blue-grey */
+    --color-fd-border: hsl(225, 20%, 85%);
+    --color-fd-input: hsl(225, 20%, 85%);
+
+    /* Primary: #232A3F */
+    --color-fd-primary: hsl(225, 29%, 19%);
+    --color-fd-primary-foreground: hsl(0, 0%, 100%);
+
+    /* Secondary: Lighter blue */
+    --color-fd-secondary: hsl(204, 30%, 90%);
+    --color-fd-secondary-foreground: hsl(225, 29%, 19%);
+
+    /* Accent: #D32E5E */
+    --color-fd-accent: hsl(342, 65%, 50%);
+    --color-fd-accent-foreground: hsl(0, 0%, 100%);
+
+    --color-fd-ring: hsl(225, 29%, 19%);
+}
+
+.dark {
+    /* Dark Mode - Quick Crypto Branding */
+    /* Background: #191E2D */
+    --color-fd-background: hsl(225, 29%, 14%);
+    /* Foreground: #E0E0E0 */
+    --color-fd-foreground: hsl(0, 0%, 88%);
+
+    /* Muted: Slightly lighter than bg */
+    --color-fd-muted: hsl(225, 30%, 20%);
+    --color-fd-muted-foreground: hsl(215, 20%, 65%);
+
+    /* Popover: Matches bg */
+    --color-fd-popover: hsl(225, 29%, 14%);
+    --color-fd-popover-foreground: hsl(0, 0%, 88%);
+
+    /* Card: Slightly lighter than bg */
+    --color-fd-card: hsl(225, 29%, 16%);
+    --color-fd-card-foreground: hsl(0, 0%, 88%);
+
+    /* Border: Darker blue-grey */
+    --color-fd-border: hsl(225, 30%, 25%);
+    --color-fd-input: hsl(225, 30%, 25%);
+
+    /* Primary: Must be LIGHT in dark mode for text visibility */
+    /* Using a very light blue to pop against #191E2D */
+    --color-fd-primary: hsl(204, 100%, 85%);
+    /* Text on Primary: Dark Brand Blue */
+    --color-fd-primary-foreground: hsl(225, 29%, 19%);
+
+    /* Secondary: Darker mute */
+    --color-fd-secondary: hsl(225, 30%, 20%);
+    --color-fd-secondary-foreground: hsl(0, 0%, 88%);
+
+    /* Accent: #D32E5E */
+    --color-fd-accent: hsl(342, 65%, 50%);
+    --color-fd-accent-foreground: hsl(0, 0%, 100%);
+
+    --color-fd-ring: hsl(204, 100%, 85%);
+
+    /* Navbar Link Fonts */
+    nav a {
+        font-weight: 700;
+    }
+}
+
+/* Light Mode Sidebar Override to match main background */
+#nd-sidebar {
+    /* Ensure it blends with the main background #F0F9FF */
+    --color-fd-sidebar: hsl(204, 100%, 97%);
+    background-color: hsl(204, 100%, 97%);
+}
+
+/* Sidebar Overrides to match branding (Blue-Grey instead of Grayscale) */
+.dark #nd-sidebar {
+    --color-fd-muted: hsl(225, 30%, 20%);
+    --color-fd-secondary: hsl(225, 30%, 20%);
+    --color-fd-muted-foreground: hsl(215, 20%, 65%);
+    /* Force sidebar to match main background */
+    background-color: hsl(var(--color-fd-background));
+    --color-fd-sidebar: hsl(var(--color-fd-background));
+}
+
+@layer components {
+
+    /* Navbar specific overrides - keeping these to strictly enforce the requested header colors if variables fail, or to style the header specifically distinct from the body if desired (which seemed to be the case before). 
+       However, the user wants "full setup" via variables. 
+       We will keep the header explicit styles for now as they match the variables but ensure proper implementation.
+    */
+    header {
+        background-color: hsl(var(--color-fd-background));
+        border-bottom: 2px solid var(--color-fd-border);
+        /* Use border variable */
+    }
+
+    .dark header {
+        background-color: hsl(var(--color-fd-background));
+        border-bottom: 2px solid var(--color-fd-border);
+    }
+
+    .hero-title {
+        font-family: 'Clash Display', sans-serif;
+        font-weight: 700;
+        /* Bold/Extrabold */
+        color: white;
+        /* create the deep 3D extrusion effect using text-shadow */
+        text-shadow:
+            0 1px 0 #3b5284,
+            0 2px 0 #3b5284,
+            0 3px 0 #3b5284,
+            0 4px 0 #3b5284,
+            0 5px 0 #3b5284,
+            0 6px 0px #232A3F,
+            0 7px 0px #232A3F,
+            0 8px 0px #232A3F,
+            0 9px 0px #1d2334;
+        /* Ensure it pops on dark mode */
+    }
+
+    /* Subtitle style */
+    .hero-subtitle {
+        font-family: 'Satoshi', sans-serif;
+        font-weight: 500;
+        /* Custom hardcoded color as requested, no variables */
+        color: #232a3f;
+    }
+
+    [data-theme='dark'] .hero-subtitle {
+        /* Custom hardcoded color as requested, no variables */
+        color: #f1f5f9;
+    }
+
+    /* Feature Description style - Custom hardcoded colors */
+    .feature-description {
+        color: #334155;
+    }
+
+    [data-theme='dark'] .feature-description {
+        /* Brighter/Lighter color for better visibility in dark mode: #94a3b8 -> #e2e8f0 */
+        color: #e2e8f0;
+    }
+
+    .hero-button {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-weight: 700;
+        font-size: 1.3rem;
+        padding: 10px 45px;
+        border-radius: 8px;
+        color: white;
+        border: 2px solid #212a41;
+        background: #d32e5e;
+        /* background: color(display-p3 0.7608 0.2431 0.3725); */
+        transition: transform 0.2s ease;
+        position: relative;
+        transform-style: preserve-3d;
+    }
+
+    [data-theme='dark'] .hero-button {
+        color: #e0e0e0;
+        border-color: #0000005e;
+        background: #ff4c7c;
+        /* background: color(display-p3 0.8431 0.3294 0.4863); */
+    }
+
+    .hero-button::before,
+    .hero-button::after {
+        content: '';
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        position: absolute;
+        width: 100%;
+        height: 100%;
+        border: 2px solid #212a41;
+        border-radius: 8px;
+        transition: transform 0.2s ease;
+        transform: translateZ(-1px);
+    }
+
+    [data-theme='dark'] .hero-button::before,
+    [data-theme='dark'] .hero-button::after {
+        border-color: #0000005e;
+    }
+
+    .hero-button::before {
+        background-color: #289eec;
+    }
+
+    [data-theme='dark'] .hero-button::before {
+        background-color: #1c7ab3;
+    }
+
+    .hero-button::after {
+        background-color: #59b3ef;
+    }
+
+    [data-theme='dark'] .hero-button::after {
+        background-color: #3399ff;
+    }
+
+    .hero-button:hover {
+        transform: translate(-16px, -16px);
+        text-decoration: none;
+        color: white;
+    }
+
+    [data-theme='dark'] .hero-button:hover {
+        color: #e0e0e0;
+    }
+
+    .hero-button:hover::before {
+        transform: translate(8px, 8px) translateZ(-1px);
+    }
+
+
+    .hero-button:hover::after {
+        transform: translate(16px, 16px) translateZ(-2px);
+    }
+}
+
+/* Custom: Hover on Search Trigger -> Pink KBD */
+/* Targeting the KBD element inside the search button in the header AND sidebar */
+header button:hover kbd,
+#nd-sidebar button:hover kbd {
+    color: var(--color-fd-accent);
+    border-color: var(--color-fd-accent);
+    background-color: var(--color-fd-accent-foreground);
+}
+
+/* Custom: Fix Card text contrast on hover */
+/* When cards turn pink (accent) on hover, force text to be white/contrast */
+a[data-card]:hover,
+a[data-card]:hover * {
+    color: var(--color-fd-accent-foreground) !important;
+}
+
+/* Dark mode adjustment if needed, but variables handle it */

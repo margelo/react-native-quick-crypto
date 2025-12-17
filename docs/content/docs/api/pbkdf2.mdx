@@ -1,0 +1,103 @@
+---
+title: PBKDF2
+description: Password-Based Key Derivation Function 2
+---
+
+import { Callout } from 'fumadocs-ui/components/callout';
+import { TypeTable } from 'fumadocs-ui/components/type-table';
+
+**PBKDF2** (Password-Based Key Derivation Function 2) is a standard algorithm for securely deriving keys from passwords.
+
+## Table of Contents
+
+- [Theory](#theory)
+- [Module Methods](#module-methods)
+- [Real-World Examples](#real-world-examples)
+
+## Theory
+
+PBKDF2 applies a Pseudorandom Function (typically **HMAC-SHA256**) to the password along with a salt value, and repeats this process many times (iterations).
+
+```math
+DK = T_1 \parallel T_2 \parallel \dots \parallel T_{dklen/hlen}
+```
+```math
+T_i = F(Password, Salt, c, i)
+```
+```math
+F(P, S, c, i) = U_1 \oplus U_2 \oplus \dots \oplus U_c
+```
+
+**Iterations**: Repeated hashing forces an attacker to spend significantly more computing power to verify each password guess.
+
+**Salt**: A random value added to the password. It prevents the use of "Rainbow Tables" (pre-computed hash databases) and ensures that two users with the same password have different hashes.
+
+---
+
+## Module Methods
+
+### pbkdf2(password, salt, iterations, keylen, digest, callback)
+
+Asynchronous key derivation.
+
+**Parameters:**
+
+<TypeTable
+  type={{
+    password: { description: 'Password.', type: 'string | Buffer | TypedArray' },
+    salt: { description: 'Salt.', type: 'string | Buffer | TypedArray' },
+    iterations: { description: 'Number of iterations (e.g. 600000).', type: 'number' },
+    keylen: { description: 'Output key length.', type: 'number' },
+    digest: { description: '"sha1", "sha256", "sha512".', type: 'string' },
+    callback: { description: '`(err, key)`.', type: 'Function' }
+  }}
+/>
+
+**Returns:** `void`
+
+**Example:**
+
+```ts
+import { pbkdf2, randomBytes } from 'react-native-quick-crypto';
+
+const pass = 'password123';
+const salt = randomBytes(16);
+
+pbkdf2(pass, salt, 600000, 64, 'sha512', (err, derivedKey) => {
+  if (err) throw err;
+  console.log(derivedKey.toString('hex'));
+});
+```
+
+### pbkdf2Sync(password, salt, iterations, keylen, digest)
+
+Synchronous version.
+
+**Returns:** `Buffer`
+
+---
+
+## Real-World Examples
+
+### User Registration
+
+Securely hashing a user's password before storing it in a database.
+
+```ts
+import { pbkdf2, randomBytes } from 'react-native-quick-crypto';
+
+function hashUserPassword(password: string): Promise<{ salt: string, hash: string }> {
+    return new Promise((resolve, reject) => {
+        const salt = randomBytes(16);
+        const iterations = 600000;
+        
+        pbkdf2(password, salt, iterations, 64, 'sha512', (err, key) => {
+            if (err) return reject(err);
+            resolve({
+                salt: salt.toString('hex'),
+                hash: key.toString('hex')
+            });
+        });
+    });
+}
+```

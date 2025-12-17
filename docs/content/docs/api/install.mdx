@@ -1,0 +1,57 @@
+---
+title: install
+description: Global polyfill injection
+---
+
+import { Callout } from 'fumadocs-ui/components/callout';
+import { Step, Steps } from 'fumadocs-ui/components/steps';
+
+The `install()` function is a helper that patches the global JavaScript environment to make `react-native-quick-crypto` behave as a drop-in replacement for Node.js `crypto`.
+
+<Callout type="warn">
+This modifies `global.Buffer` and `global.crypto`. Ensure you want this global side-effect before calling.
+</Callout>
+
+## Installation Flow
+
+<Steps>
+
+<Step>
+### Import
+Import the install function at the very top of your application's entry file (e.g., `index.js`).
+
+```ts title="index.ts"
+import { install } from 'react-native-quick-crypto';
+```
+</Step>
+
+<Step>
+### Execute
+Call `install()` **before** any other imports that might depend on crypto.
+
+```ts title="index.ts"
+install(); 
+
+// Now import your App
+import App from './src/App';
+```
+</Step>
+
+<Step>
+### Verify
+You can now use global crypto without imports.
+
+```ts
+// Anywhere in your app
+const id = crypto.randomUUID(); 
+const buf = Buffer.from('hello');
+```
+</Step>
+
+</Steps>
+
+## What gets polyfilled?
+
+1.  **`global.Buffer`**: Via [`@craftzdog/react-native-buffer`](https://github.com/craftzdog/react-native-buffer).
+2.  **`global.crypto`**: Points to `QuickCrypto`.
+3.  **`global.process`**: Adds `process.nextTick` (mapped to `setImmediate`).

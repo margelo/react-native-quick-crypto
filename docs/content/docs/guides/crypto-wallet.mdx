@@ -1,0 +1,102 @@
+---
+title: Crypto Wallet
+description: High-performance key derivation primitives
+---
+
+import { Callout } from 'fumadocs-ui/components/callout';
+import { Step, Steps } from 'fumadocs-ui/components/steps';
+
+`react-native-quick-crypto` is the **engine** that powers many high-performance crypto wallets. 
+
+While it does not provide high-level wallet standards (like BIP39 wordlists) out of the box, it provides the **fast cryptographic primitives** (`pbkdf2`, `hmac`, `randomBytes`) that make wallet generation instant on mobile devices.
+
+## The Performance Bottleneck
+
+Generating a wallet involves **PBKDF2** (Password-Based Key Derivation Function 2) with **2048 iterations**. 
+*   **Pure JS**: ~1500ms on older Android phones. ( Blocks UI )
+*   **RNQC**: ~20ms. ( Instant )
+
+## Implementation
+
+This guide shows how to implement the core cryptographic operations of a wallet manually using RNQC.
+
+<Steps>
+
+<Step>
+### 1. Generate Entropy (Randomness)
+
+Every wallet starts with random data. We use the OS's cryptographically secure random number generator.
+
+```ts
+import { randomBytes } from 'react-native-quick-crypto';
+
+const entropy = randomBytes(16); 
+```
+
+<Callout type="info">
+In a full BIP39 implementation, you would convert this `entropy` into a list of 12 words using a standard wordlist.
+</Callout>
+</Step>
+
+<Step>
+### 2. Mnemonic to Seed (PBKDF2)
+
+Converting the mnemonic (words) into a binary seed is the "heavy lifting". This is where RNQC shines.
+
+```ts
+import { pbkdf2 } from 'react-native-quick-crypto';
+
+export function mnemonicToSeed(mnemonic: string, passphrase = ''): Promise<Buffer> {
+  return new Promise((resolve, reject) => {
+    const salt = 'mnemonic' + passphrase;
+    
+    // BIP39 Standard requires SHA-512, 2048 iterations, 64 bytes output
+    pbkdf2(mnemonic, salt, 2048, 64, 'sha512', (err, key) => {
+      if (err) return reject(err);
+      resolve(key);
+    });
+  });
+}
+```
+</Step>
+
+<Step>
+### 3. HD Key Derivation (HMAC-SHA512)
+
+Once you have the seed, you derive child keys (for Bitcoin, Ethereum, etc) using **HMAC-SHA512**.
+
+```ts
+import { createHmac } from 'react-native-quick-crypto';
+
+// A stripped-down example of BIP32 derivation
+export function deriveChildKey(parentKey: Buffer, chainCode: Buffer, index: number) {
+  const hmac = createHmac('sha512', chainCode);
+  
+  // Data = 0x00 || ParentKey || Index (BigEndian)
+  const data = Buffer.alloc(37);
+  data[0] = 0x00;
+  parentKey.copy(data, 1);
+  data.writeUInt32BE(index, 33);
+  
+  hmac.update(data);
+  const I = hmac.digest();
+  
+  // Split I into Left (Private Key) and Right (Chain Code)
+  const IL = I.subarray(0, 32);
+  const IR = I.subarray(32);
+  
+  return { privateKey: IL, chainCode: IR };
+}
+```
+</Step>
+
+</Steps>
+
+## Frequently Asked Questions
+
+### Do I need `bip39` libraries?
+Yes, if you need the **English Wordlist** to convert random bytes into words like "horse battery staple". RNQC doesn't bundle dictionary files to keep the app size small.
+
+You use a library like `@scure/bip39` for the *words*, and configure it to use RNQC for the *math* (PBKDF2/SHA512) to get the best performance.
+
+Hopefully, we will soon see a fully **JSI-based BIP39** library for React Native that integrates directly with these primitives!

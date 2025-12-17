@@ -1,0 +1,256 @@
+---
+title: Hash
+description: Create cryptographic message digests
+---
+
+import { Callout } from 'fumadocs-ui/components/callout';
+import { TypeTable } from 'fumadocs-ui/components/type-table';
+import { Tab, Tabs } from 'fumadocs-ui/components/tabs';
+
+The `Hash` class is a utility for creating fixed-size message digests from arbitrary data. It is fully compatible with the Node.js `crypto.createHash` API and implements the `stream.Transform` interface.
+
+## Table of Contents
+
+- [Theory](#theory)
+- [Class: Hash](#class-hash)
+- [Stream API](#stream-api)
+- [Module Methods](#module-methods)
+- [Supported Algorithms](#supported-algorithms)
+- [Real-World Examples](#real-world-examples)
+- [Security Considerations](#security-considerations)
+
+## Theory
+
+A cryptographic hash function `H(x)` takes an input of arbitrary length and produces a fixed-length output (the "digest"). Key properties include:
+
+1.  **Deterministic**: The same input always produces the exact same output.
+2.  **Efficient**: It is computationally fast to calculate the hash for any given message.
+3.  **Avalanche Effect**: A small change to the input (e.g., flipping 1 bit) should change the output so significantly that it appears uncorrelated.
+4.  **Pre-image Resistance**: Given a hash `h`, it should be computationally infeasible to find any message `m` such that `H(m) = h`.
+5.  **Collision Resistance**: It should be computationally infeasible to find two different messages `m1` and `m2` such that `H(m1) = H(m2)`.
+
+Algorithms like **MD5**, **SHA-1**, and **SHA-2** (SHA-256, SHA-512) use the Merkle-Damgård construction. The input is padded and split into fixed-size blocks. A compression function iteratively processes these blocks.
+
+**SHA-3** (Keccak) uses a "Sponge" construction. It "absorbs" data into a large internal state, permutes it, and then "squeezes" out the hash. This allows for arbitrary output lengths (XOFs), utilized in SHAKE128/SHAKE256.
+
+<Callout type="info" title="Performance Optimization">
+  RNQC optimizes passing strings to native code. If you have string data, pass it directly to `update()` rather than converting it to a Buffer first. This avoids an unnecessary round-trip copy across the React Native bridge.
+</Callout>
+
+---
+
+## Class: Hash
+
+The `Hash` class creates digest streams. Instances are created using `createHash()`.
+
+### hash.update(data[, inputEncoding])
+
+Updates the hash content with the given `data`. This method can be called multiple times with new data as it is streamed.
+
+**Parameters:**
+
+<TypeTable
+  type={{
+    data: {
+        description: 'Data to update the hash with.',
+        type: 'string | Buffer | TypedArray | DataView',
+    },
+    inputEncoding: {
+        description: 'Encoding of `data` if it is a string. If omitted, "utf8" is assumed.',
+        type: '"utf8" | "ascii" | "latin1" | "hex" | "base64"',
+    }
+  }}
+/>
+
+**Returns:** `Hash` (this, for chaining)
+
+**Example:**
+
+```ts
+const hash = createHash('sha512');
+hash.update('utf8 string');
+hash.update('48656c6c6f', 'hex'); // "Hello"
+```
+
+---
+
+### hash.digest([encoding])
+
+Calculates the digest of all of the data passed to be hashed (using the `hash.update()` method).
+
+**Parameters:**
+
+<TypeTable
+  type={{
+    encoding: {
+        description: 'The encoding of the return value. If not provided, a Buffer is returned.',
+        type: '"hex" | "base64" | "base64url"',
+    }
+  }}
+/>
+
+**Returns:** `Buffer | string`
+
+<Callout type="warn">
+  The `Hash` object can not be used again after `hash.digest()` method has been called. Attempting to call `update` or `digest` again will throw a native error (`ERR_CRYPTO_HASH_FINALIZED`).
+</Callout>
+
+**Example:**
+
+```ts twoslash
+// @noErrors
+import { createHash } from 'crypto';
+
+const hash = createHash('sha256');
+hash.update('hello');
+const digest = hash.digest('hex');
+//    ^?
+```
+
+---
+
+### hash.copy([options])
+
+Creates a new `Hash` object that contains a **deep copy** of the internal state of the current `Hash` object.
+
+**Parameters:**
+
+<TypeTable
+  type={{
+    options: { description: 'Options for the new stream.', type: 'Object' },
+    'options.outputLength': { description: 'For XOFs, override output length.', type: 'number' }
+  }}
+/>
+
+**Returns:** `Hash` (New instance)
+
+**Example:**
+
+```ts
+const hash = createHash('sha256');
+hash.update('block1');
+const snapshot = hash.copy(); 
+hash.update('block2-A');
+snapshot.update('block2-B');
+```
+
+---
+
+## Stream API
+
+Since `Hash` implements `stream.Transform`, you can use standard Node.js stream methods.
+
+### hash.write(chunk[, encoding][, callback])
+
+Writes data to the stream.
+
+### hash.pipe(destination)
+
+Pipes the output digest to a destination stream.
+
+**Example:**
+
+```ts
+import fs from 'fs';
+const hash = createHash('sha256');
+const input = fs.createReadStream('file.txt');
+input.pipe(hash).pipe(process.stdout);
+```
+
+---
+
+## Module Methods
+
+### createHash(algorithm[, options])
+
+Creates and returns a `Hash` object that can be used to generate hash digests using the given `algorithm`.
+
+**Parameters:**
+
+<TypeTable
+  type={{
+    algorithm: { description: 'The algorithm name.', type: 'string' },
+    options: { description: 'Stream options.', type: 'Object' }
+  }}
+/>
+
+**Returns:** `Hash`
+
+### getHashes()
+
+Returns an array of the names of the supported hash algorithms.
+
+**Returns:** `string[]`
+
+---
+
+## Supported Algorithms
+
+Support depends on the version of OpenSSL bundled with the OS (iOS/Android), but typically includes:
+
+| Algorithm | Digest Size | Security | Notes |
+| :--- | :--- | :--- | :--- |
+| **MD5** | 128 bits | ❌ **Broken** | Use only for non-crypto checksums. |
+| **SHA-1** | 160 bits | ❌ **Broken** | Do not use for new signatures. |
+| **SHA-256** | 256 bits | ✅ **Secure** | Industry standard. |
+| **SHA-512** | 512 bits | ✅ **Secure** | Faster on 64-bit CPUs. |
+| **SHA-3** | Variable | ✅ **Secure** | NIST standard (Keccak). |
+| **BLAKE2b** | 512 bits | ✅ **Secure** | High speed. |
+
+---
+
+## Real-World Examples
+
+### File Checksum (Streaming)
+
+Computing the hash of a large file without loading it entirely into memory.
+
+```ts
+import { createHash } from 'react-native-quick-crypto';
+import RNFS from 'react-native-fs';
+
+async function computeFileHash(filePath: string): Promise<string> {
+    const hash = createHash('sha256');
+    const stats = await RNFS.stat(filePath);
+    const fileSize = stats.size;
+    const chunkSize = 1024 * 1024; // 1MB
+
+    let offset = 0;
+    while (offset < fileSize) {
+        const chunk = await RNFS.read(filePath, chunkSize, offset, 'base64');
+        hash.update(chunk, 'base64');
+        offset += chunkSize;
+    }
+
+    return hash.digest('hex');
+}
+```
+
+### Git Object ID (SHA-1)
+
+Git calculates Object IDs (OIDs) by taking the SHA-1 hash of: `type + space + length + null byte + content`.
+
+```ts
+import { createHash } from 'react-native-quick-crypto';
+
+function calculateGitBlobId(content: string): string {
+    const hash = createHash('sha1');
+    const size = Buffer.byteLength(content, 'utf8');
+    const header = `blob ${size}\0`;
+    
+    hash.update(header);
+    hash.update(content);
+    
+    return hash.digest('hex');
+}
+```
+
+---
+
+## Security Considerations
+
+### Algorithm Selection
+Always prefer SHA-256 or SHA-512 for new applications. Avoid MD5 and SHA-1 unless required for compatibility with legacy systems.
+
+### Password Hashing
+**Do not** use `createHash` (SHA-256 etc.) for passwords. They are too fast and vulnerable to brute-force attacks. Use `scrypt` or `pbkdf2` instead.

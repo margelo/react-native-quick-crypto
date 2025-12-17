@@ -1,0 +1,121 @@
+---
+title: Writing Documentation
+description: Guidelines for writing and structuring documentation pages.
+---
+
+To maintain consistency across the `react-native-quick-crypto` documentation, all API reference pages should follow a standard structure. This ensures that users can easily find the information they need, whether it's theoretical background, API signatures, or practical examples.
+
+
+import { Callout } from 'fumadocs-ui/components/callout';
+
+<Callout title="Pro Tip" type="info">
+  The best way to understand the structure is to look at existing well-documented pages.
+  Check out the [Cipher](/docs/api/cipher) (Symmetric Encryption) or [Hash](/docs/api/hash) pages for excellent examples of this structure in action.
+</Callout>
+
+## Page Structure
+
+A typical API documentation page should follow this order:
+
+1.  **Introduction**: A brief overview of what the module or class does.
+2.  **Table of Contents**: Automatically generated, but ensure your headers are structured correctly.
+3.  **Theory** (Optional): Specific cryptographic concepts relevant to the module.
+4.  **Class / Module**: The main class or module description.
+5.  **Methods**: Detailed API signatures.
+6.  **Real-World Examples**: clear, copy-pasteable examples.
+
+### 1. Theory
+
+Provide a high-level explanation of the cryptographic concept. This helps users who might be new to crypto understand *what* they are using before they learn *how* to use it.
+
+-   Explain the algorithm or concept (e.g., "Symmetric ciphers use the same key...").
+-   Mention key properties (e.g., "Block size", "Key size").
+-   Add security warnings if applicable (e.g., "Never reuse an IV").
+
+### 2. Class / Module
+
+Describe the main class or entry point. If the module exports a class (like `Hash` or `Cipher`), document it here.
+
+### 3. Methods
+
+For each method, provide:
+
+-   **Signature**: The method name and arguments.
+-   **Description**: What the method does.
+-   **Parameters**: Use the `<TypeTable />` component to document parameters.
+-   **Returns**: What the method returns.
+
+**Example TypeTable:**
+
+```tsx
+import { TypeTable } from 'fumadocs-ui/components/type-table';
+
+<TypeTable
+  type={{
+    data: { description: 'Data to encrypt.', type: 'string | Buffer' },
+    encoding: { description: 'Output encoding.', type: 'string' }
+  }}
+/>
+```
+
+### 4. Real-World Examples
+
+Provide complete, runnable examples. Users should be able to copy the code and run it to see it working.
+
+-   Use **TypeScript** code blocks.
+-   Include necessary imports.
+-   Show common use cases (e.g., "Encrypting a string", "Hashing a file").
+
+## Formatting Guidelines
+
+### Frontmatter
+
+Every MDX file must start with a frontmatter block:
+
+```yaml
+---
+title: Page Title
+description: Brief description for SEO and previews.
+---
+```
+
+### Headings & TOC
+
+The Table of Contents is generated from your headings.
+
+-   Use **Heading 2 (`##`)** for main sections (Theory, Class, Examples).
+-   Use **Heading 3 (`###`)** for specific methods or subsections.
+-   **Avoid** Heading 1 (`#`); it is reserved for the page title.
+
+### Code Blocks
+
+Use standard Markdown code blocks with language identifiers.
+
+```typescript
+import { randomBytes } from 'react-native-quick-crypto';
+const buf = randomBytes(32);
+```
+
+### Callouts
+
+Use the Fumadocs `Callout` component for alerts, notes, or warnings.
+
+```tsx
+import { Callout } from 'fumadocs-ui/components/callout';
+
+<Callout title="Note">
+  Useful information goes here.
+</Callout>
+
+<Callout type="warn" title="Warning">
+  Critical security information.
+</Callout>
+
+<Callout type="error" title="Danger">
+  Do not do this.
+</Callout>
+```
+
+## Updating Coverage
+
+If you are documenting a new feature, remember to update [`docs/data/coverage.ts`](https://github.com/margelo/react-native-quick-crypto/blob/main/docs/data/coverage.ts) to reflect the new implementation status. This powers the [Implementation Coverage](/docs/introduction/coverage) page.

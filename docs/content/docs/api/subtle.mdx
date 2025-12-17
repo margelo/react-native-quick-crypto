@@ -1,0 +1,144 @@
+---
+title: Subtle (WebCrypto)
+description: W3C Web Cryptography API
+---
+
+import { Callout } from 'fumadocs-ui/components/callout';
+import { TypeTable } from 'fumadocs-ui/components/type-table';
+import { Tab, Tabs } from 'fumadocs-ui/components/tabs';
+
+The `SubtleCrypto` interface allows you to perform cryptographic operations using the standardized W3C Web Cryptography API.
+
+## Table of Contents
+
+- [Theory](#theory)
+- [Module Methods](#module-methods)
+- [Real-World Examples](#real-world-examples)
+
+## Theory
+
+The WebCrypto API differs from the Node.js API in two main ways:
+
+1.  **Asynchronous Promises**: All operations (`encrypt`, `verify`, etc.) return Promises. This reflects the intense nature of crypto operations and prevents UI blocking.
+2.  **Unextractable Keys**: A `CryptoKey` object is a handle to a key. If marked `extractable: false`, the raw key bytes can never be accessed by JavaScript code, protecting it from XSS attacks.
+
+---
+
+## Module Methods
+
+### encrypt(algorithm, key, data)
+
+Encrypts data.
+
+**Parameters:**
+
+<TypeTable
+  type={{
+    algorithm: { description: 'Params (e.g. { name: "AES-GCM", iv: ... }).', type: 'Object' },
+    key: { description: 'The CryptoKey.', type: 'CryptoKey' },
+    data: { description: 'Data to encrypt.', type: 'BufferSource' }
+  }}
+/>
+
+### decrypt(algorithm, key, data)
+
+Decrypts data.
+
+### sign(algorithm, key, data)
+
+Generates a digital signature.
+
+### verify(algorithm, key, signature, data)
+
+Verifies a digital signature. Returns `true` or `false`.
+
+### digest(algorithm, data)
+
+Generates a hash digest (e.g., SHA-256).
+
+### generateKey(algorithm, extractable, keyUsages)
+
+Generates a new key or key pair.
+
+**Example (RSA-OAEP):**
+
+```ts
+const keyPair = await subtle.generateKey(
+  {
+    name: "RSA-OAEP",
+    modulusLength: 4096,
+    publicExponent: new Uint8Array([1, 0, 1]),
+    hash: "SHA-256"
+  },
+  true,
+  ["encrypt", "decrypt"]
+);
+```
+
+### importKey(format, keyData, algorithm, extractable, keyUsages)
+
+Imports a key (raw, pkcs8, spki, jwk).
+
+### exportKey(format, key)
+
+Exports a key (if extractable).
+
+---
+
+## Real-World Examples
+
+### End-to-End Encryption
+
+Symmetric encryption with a random key.
+
+```ts
+import { subtle } from 'react-native-quick-crypto';
+
+async function secureMessage(msg: string) {
+    // Generate Key
+    const key = await subtle.generateKey(
+        { name: "AES-GCM", length: 256 },
+        true,
+        ["encrypt", "decrypt"]
+    );
+    
+    // Encrypt
+    const iv = QuickCrypto.getRandomValues(new Uint8Array(12));
+    const encoded = new TextEncoder().encode(msg);
+    
+    const ciphertext = await subtle.encrypt(
+        { name: "AES-GCM", iv: iv },
+        key,
+        encoded
+    );
+    
+    return { key, iv, ciphertext };
+}
+```
+
+### JWT Verification
+
+Importing a public key from a JWK to verify a token.
+
+```ts
+async function verifyToken(token: string, jwk: any) {
+    const pubKey = await subtle.importKey(
+        "jwk",
+        jwk,
+        { name: "ECDSA", namedCurve: "P-256" },
+        false,
+        ["verify"]
+    );
+    
+    const [header, payload, sigBase64] = token.split('.');
+    const data = new TextEncoder().encode(`${header}.${payload}`);
+    const signature = Buffer.from(sigBase64, 'base64');
+    
+    return await subtle.verify(
+        { name: "ECDSA", hash: "SHA-256" },
+        pubKey,
+        signature,
+        data
+    );
+}
+```

@@ -1,0 +1,51 @@
+---
+title: API Reference
+description: Comprehensive documentation for all RNQC modules.
+---
+
+import { Cards, Card } from 'fumadocs-ui/components/card';
+
+RNQC mirrors the Node.js `crypto` API while adding specialized high-performance modules.
+
+## Core Modules
+
+<Cards>
+  <Card title="install()" href="/docs/api/install">
+    Global polyfill injection for drop-in compatibility.
+  </Card>
+  <Card title="Cipher" href="/docs/api/cipher">
+    Symmetric encryption (AES, ChaCha20).
+  </Card>
+  <Card title="Hash" href="/docs/api/hash">
+    Message digests (SHA-2, SHA-3, MD5).
+  </Card>
+  <Card title="HMAC" href="/docs/api/hmac">
+    Keyed-hash message authentication.
+  </Card>
+   <Card title="Random" href="/docs/api/random">
+    CSPRNG, UUIDs, and random integers.
+  </Card>
+  <Card title="Keys" href="/docs/api/keys">
+    Key generation (RSA, EC) and conversion.
+  </Card>
+</Cards>
+
+## Specialized Modules
+
+<Cards>
+  <Card title="BLAKE3" href="/docs/api/blake3">
+    Next-gen high-performance hashing.
+  </Card>
+  <Card title="PBKDF2" href="/docs/api/pbkdf2">
+    Password-based key derivation (RFC 2898).
+  </Card>
+  <Card title="Scrypt" href="/docs/api/scrypt">
+    Memory-hard key derivation.
+  </Card>
+  <Card title="HKDF" href="/docs/api/hkdf">
+    Extract-and-Expand KDF (RFC 5869).
+  </Card>
+  <Card title="Subtle (WebCrypto)" href="/docs/api/subtle">
+    W3C Web Cryptography API implementation.
+  </Card>
+</Cards>

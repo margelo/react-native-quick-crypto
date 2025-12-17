@@ -1,0 +1,13 @@
+{
+    "title": "Introduction",
+    "defaultOpen": true,
+    "pages": [
+        "quick-start",
+        "complete-setup",
+        "what-is-rnqc",
+        "comparison",
+        "coverage",
+        "community",
+        "releases"
+    ]
+}
