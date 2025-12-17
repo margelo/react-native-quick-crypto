@@ -1,0 +1,220 @@
+---
+title: BIP39
+description: Mnemonic generation and seed derivation
+---
+
+import { Callout } from 'fumadocs-ui/components/callout';
+import { TypeTable } from 'fumadocs-ui/components/type-table';
+import { Tab, Tabs } from 'fumadocs-ui/components/tabs';
+
+The `BIP39` module is a high-performance, lightweight implementation of the [Bitcoin Improvement Proposal 39](https://github.com/bitcoin/bips/blob/master/bip-0039.mediawiki) standard. It provides functions to generate mnemonics, validate them, and derive seeds.
+
+<Callout type="info" title="Separate Package">
+  This module is distributed as a separate package [`react-native-quick-bip39`](https://github.com/margelo/react-native-quick-bip39) to maintain a lightweight core for `react-native-quick-crypto`. You must install it separately.
+</Callout>
+
+## Table of Contents
+
+- [Theory](#theory)
+- [Module Methods](#module-methods)
+- [Multi-Language Support](#multi-language-support)
+- [Performance & Bundle Size](#performance--bundle-size)
+- [Security Considerations](#security-considerations)
+
+## Theory
+
+**BIP39** describes the implementation of a Mnemonic Code generation scheme. It consists of two main parts: generates the mnemonic and converting it into a binary seed.
+
+### 1. Generating the Mnemonic
+Authentication tokens are generated from a source of random information, called **entropy**. The allowed size of the entropy is 128-256 bits. A checksum is appended to this initial entropy, allowing errors to be detected (e.g., typo in a word). These bits are then split into 11-bit chunks, each mapping to a word in a predefined wordlist of 2048 words.
+
+| Entropy (bits) | Checksum (bits) | Total (bits) | Mnemonic Length (words) |
+| :--- | :--- | :--- | :--- |
+| 128 | 4 | 132 | **12** (Standard) |
+| 160 | 5 | 165 | 15 |
+| 192 | 6 | 198 | 18 |
+| 224 | 7 | 231 | 21 |
+| 256 | 8 | 264 | **24** (High Security) |
+
+### 2. From Mnemonic to Seed
+A user may decide to protect their mnemonic with a passphrase. A **salt** is created using the string `"mnemonic"` + the optional passphrase.
+The `pbkdf2` function (using `HMAC-SHA512`) is then applied with **2048 iterations** to derive a 512-bit (64-byte) seed. This seed can be later used to generate deterministic wallets (BIP-32) or similar keys.
+
+---
+
+## Module Methods
+
+### generateMnemonic(strength[, wordlist])
+
+Generates a random mnemonic phrase.
+
+**Parameters:**
+
+<TypeTable
+  type={{
+    strength: {
+      description: 'Entropy bits. Must be a multiple of 32 (128-256).',
+      type: '128 | 160 | 192 | 224 | 256',
+      default: '128'
+    },
+    wordlist: {
+      description: 'Array of 2048 words.',
+      type: 'string[]',
+      default: 'english'
+    }
+  }}
+/>
+
+**Returns:** `string` (space-separated mnemonic)
+
+**Example:**
+
+```ts
+import { generateMnemonic } from 'react-native-quick-bip39';
+
+const mnemonic = generateMnemonic(128);
+// "orphan fresh utility slice magnet believe..."
+```
+
+---
+
+### validateMnemonic(mnemonic[, wordlist])
+
+Validates a mnemonic phrase against a wordlist. Checks for valid word count (multiple of 3), existence in wordlist, and correct checksum.
+
+**Parameters:**
+
+<TypeTable
+  type={{
+    mnemonic: {
+      description: 'The mnemonic phrase to validate.',
+      type: 'string',
+    },
+    wordlist: {
+      description: 'Array of 2048 words.',
+      type: 'string[]',
+      default: 'english'
+    }
+  }}
+/>
+
+**Returns:** `boolean`
+
+---
+
+### mnemonicToSeed(mnemonic[, password])
+
+Converts a mnemonic phrase to a binary seed asynchronously using PBKDF2 (SHA-512) with 2048 iterations. This method offloads work to the native thread pool, keeping the UI responsive.
+
+**Parameters:**
+
+<TypeTable
+  type={{
+    mnemonic: {
+      description: 'The mnemonic phrase.',
+      type: 'string',
+    },
+    password: {
+      description: 'Optional passphrase (salt extension).',
+      type: 'string',
+      default: '""'
+    }
+  }}
+/>
+
+**Returns:** `Promise<Buffer>` (64 bytes)
+
+**Example:**
+
+```ts
+import { mnemonicToSeed } from 'react-native-quick-bip39';
+
+const seed = await mnemonicToSeed('orphan fresh...');
+```
+
+---
+
+### mnemonicToSeedSync(mnemonic[, password])
+
+Synchronous version of `mnemonicToSeed`. Blocks the JS thread until completion.
+
+**Parameters:**
+
+<TypeTable
+  type={{
+    mnemonic: { description: 'The mnemonic phrase.', type: 'string' },
+    password: { description: 'Optional passphrase.', type: 'string' }
+  }}
+/>
+
+**Returns:** `Buffer` (64 bytes)
+
+---
+
+### entropyToMnemonic(entropy[, wordlist])
+
+Converts raw entropy bytes to a mnemonic phrase.
+
+**Parameters:**
+
+<TypeTable
+  type={{
+    entropy: {
+      description: 'Buffer of entropy bytes (16-32 bytes).',
+      type: 'Buffer',
+    },
+    wordlist: {
+      description: 'Array of 2048 words.',
+      type: 'string[]',
+      default: 'english'
+    }
+  }}
+/>
+
+**Returns:** `string`
+
+---
+
+## Multi-Language Support
+
+To keep bundle sizes small (~19KB), only the **English** wordlist is included by default. Additional languages must be imported explicitly.
+
+Supported languages: `english` (default), `spanish`, `french`, `italian`, `japanese`, `korean`, `chinese_simplified`, `chinese_traditional`, `czech`, `portuguese`.
+
+**Example:**
+
+```ts
+import { generateMnemonic } from 'react-native-quick-bip39';
+import { wordlist as spanish } from 'react-native-quick-bip39/wordlists/spanish';
+
+const mnemonic = generateMnemonic(128, spanish);
+```
+
+<Callout type="warn">
+  Importing all languages increases bundle size significantly (up to ~283 KB). Only import what you need.
+</Callout>
+
+### Performance & Bundle Size
+
+- **Performance**: Up to **100x faster** than pure JS implementations for seed derivation, thanks to C++ JSI bindings for PBKDF2.
+- **Bundle Size**: **~19 KB** (minified) when using default English wordlist.
+
+---
+
+## Real-World Examples
+
+### Building a Crypto Wallet
+For a complete guide on how to build a high-performance HD Wallet using `react-native-quick-bip39` alongside `react-native-quick-crypto`, check out the dedicated **[Crypto Wallet Guide](/docs/guides/crypto-wallet)**.
+
+---
+
+## Security Considerations
+
+### 1. Passphrase Protection
+BIP39 allows a user to define a password (passphrase). This serves as a "13th word" (or 25th) and significantly increases the difficulty of a brute force attack, as well as providing plausible deniability (an empty wallet can be derived from the mnemonic without password).
+
+### 2. Randomness (Entropy)
+`generateMnemonic` uses `react-native-quick-crypto`'s `randomBytes` which uses the OS's cryptographically secure pseudo-random number generator (CSPRNG). Do not attempt to generate your own entropy using `Math.random()`, as it is not secure.
+
+### 3. Checksum Verification
+Always validate user input using `validateMnemonic`. The checksum provides a basic check (1 in 256 chance of false positive for 12 words), but it ensures transcription errors are caught early.
