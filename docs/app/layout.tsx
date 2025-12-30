@@ -2,6 +2,7 @@ import { RootProvider } from 'fumadocs-ui/provider/next';
 import localFont from 'next/font/local';
 import './global.css';
 import 'katex/dist/katex.css';
+import { basePath } from '@/lib/basePath';
 
 const satoshi = localFont({
   src: [
@@ -59,7 +60,15 @@ export default function Layout({ children }: { children: React.ReactNode }) {
       className={`${satoshi.variable} ${clashDisplay.variable}`}
       suppressHydrationWarning>
       <body className="flex flex-col min-h-screen">
-        <RootProvider>{children}</RootProvider>
+        <RootProvider
+          search={{
+            options: {
+              type: 'static',
+              api: `${basePath}/api/search`,
+            },
+          }}>
+          {children}
+        </RootProvider>
       </body>
     </html>
   );
