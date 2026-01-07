@@ -123,7 +123,9 @@ Pod::Spec.new do |s|
     "GCC_PREPROCESSOR_DEFINITIONS" => "$(inherited) FOLLY_NO_CONFIG FOLLY_CFG_NO_COROUTINES",
     # Set C++ standard to C++20
     "CLANG_CXX_LANGUAGE_STANDARD" => "c++20",
-    "CLANG_ALLOW_NON_MODULAR_INCLUDES_IN_FRAMEWORK_MODULES" => "YES"
+    "CLANG_ALLOW_NON_MODULAR_INCLUDES_IN_FRAMEWORK_MODULES" => "YES",
+    # Exclude ARM NEON source when building x86_64 simulator (no NEON support).
+    "EXCLUDED_SOURCE_FILE_NAMES[sdk=iphonesimulator*][arch=x86_64]" => "deps/blake3/c/blake3_neon.c"
   }
 
   # Add cpp subdirectories to header search paths
