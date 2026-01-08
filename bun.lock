@@ -34,7 +34,7 @@
         "@craftzdog/react-native-buffer": "6.1.0",
         "@noble/ciphers": "2.0.1",
         "@noble/curves": "1.7.0",
-        "@noble/hashes": "1.5.0",
+        "@noble/hashes": "2.0.1",
         "@react-navigation/bottom-tabs": "7.8.6",
         "@react-navigation/native": "7.1.22",
         "@react-navigation/native-stack": "7.8.1",
@@ -49,7 +49,7 @@
         "react-native-fast-encoder": "0.3.1",
         "react-native-nitro-modules": "0.29.1",
         "react-native-quick-base64": "2.2.2",
-        "react-native-quick-crypto": "workspace:*",
+        "react-native-quick-crypto": "1.0.6",
         "react-native-safe-area-context": "5.6.2",
         "react-native-screens": "4.18.0",
         "react-native-vector-icons": "10.3.0",
@@ -575,7 +575,7 @@
 
     "@noble/curves": ["@noble/curves@1.7.0", "", { "dependencies": { "@noble/hashes": "1.6.0" } }, ""],
 
-    "@noble/hashes": ["@noble/hashes@1.5.0", "", {}, "sha512-1j6kQFb7QRru7eKN3ZDvRcP13rugwdxZqCjbiAVZfIJwgj2A65UmT4TgARXGlXgnRkORLTDTrO19ZErt7+QXgA=="],
+    "@noble/hashes": ["@noble/hashes@2.0.1", "", {}, "sha512-XlOlEbQcE9fmuXxrVTXCTlG2nlRXa9Rj3rr5Ue/+tX+nmkgbX720YHh0VR3hBF9xDvwnb8D2shVGOwNx+ulArw=="],
 
     "@nodelib/fs.scandir": ["@nodelib/fs.scandir@2.1.5", "", { "dependencies": { "@nodelib/fs.stat": "2.0.5", "run-parallel": "^1.1.9" } }, ""],
 
