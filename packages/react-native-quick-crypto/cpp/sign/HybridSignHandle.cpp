@@ -2,7 +2,7 @@
 
 #include "../keys/HybridKeyObjectHandle.hpp"
 #include "SignUtils.hpp"
-#include "Utils.hpp"
+#include "utils/Utils.hpp"
 
 #include <cstring>
 #include <openssl/err.h>

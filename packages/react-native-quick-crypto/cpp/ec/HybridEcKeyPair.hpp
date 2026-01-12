@@ -6,7 +6,7 @@
 #include <string>
 
 #include "HybridEcKeyPairSpec.hpp"
-#include "Utils.hpp"
+#include "utils/Utils.hpp"
 
 namespace margelo::nitro::crypto {
 

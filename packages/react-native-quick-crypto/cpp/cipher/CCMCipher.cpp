@@ -1,5 +1,5 @@
 #include "CCMCipher.hpp"
-#include "Utils.hpp"
+#include "utils/Utils.hpp"
 #include <openssl/err.h>
 #include <openssl/evp.h>
 #include <stdexcept>
