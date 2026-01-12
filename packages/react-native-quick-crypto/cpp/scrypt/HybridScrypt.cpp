@@ -6,7 +6,7 @@
 #include <vector>
 
 #include "HybridScrypt.hpp"
-#include "Utils.hpp"
+#include "utils/Utils.hpp"
 
 namespace margelo::nitro::crypto {
 

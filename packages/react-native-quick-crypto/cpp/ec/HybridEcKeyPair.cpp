@@ -21,7 +21,7 @@
 #endif
 
 #include "HybridEcKeyPair.hpp"
-#include "Utils.hpp"
+#include "utils/Utils.hpp"
 
 namespace margelo::nitro::crypto {
 

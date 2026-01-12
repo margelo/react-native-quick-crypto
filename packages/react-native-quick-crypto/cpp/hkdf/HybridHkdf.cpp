@@ -8,7 +8,7 @@
 #include <vector>
 
 #include "HybridHkdf.hpp"
-#include "Utils.hpp"
+#include "utils/Utils.hpp"
 
 namespace margelo::nitro::crypto {
 
