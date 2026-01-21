@@ -10,7 +10,7 @@
 
 A fast implementation of Node's `crypto` module.
 
-> Note: This version `1.x` completed a major refactor, porting to OpenSSL 3.6+, New Architecture, Bridgeless, and [`Nitro Modules`](https://github.com/mrousavy/react-native-nitro).  It should be at or above feature-parity compared to the `0.x` version.  Status, as always, will be represented in [implementation-coverage.md](../main/docs/implementation-coverage.md).
+> Note: This version `1.x` completed a major refactor, porting to OpenSSL 3.6+, New Architecture, Bridgeless, and [`Nitro Modules`](https://github.com/mrousavy/react-native-nitro).  It should be at or above feature-parity compared to the `0.x` version.  Status, as always, will be represented in [implementation-coverage.md](./.docs/implementation-coverage.md).
 
 > Note: Minimum supported version of React Native is `0.75`.  If you need to use earlier versions, please use `0.x` versions of this library.
 
@@ -139,7 +139,7 @@ const hashed = QuickCrypto.createHash('sha256')
 
 ## Limitations
 
-Not all cryptographic algorithms are supported yet. See the [implementation coverage](./docs/implementation-coverage.md) document for more details. If you need a specific algorithm, please open a `feature request` issue and we'll see what we can do.
+Not all cryptographic algorithms are supported yet. See the [implementation coverage](./.docs/implementation-coverage.md) document for more details. If you need a specific algorithm, please open a `feature request` issue and we'll see what we can do.
 
 ## Community Discord
 
