@@ -7,7 +7,7 @@
 #include <vector>
 
 #include "HybridHash.hpp"
-#include "Utils.hpp"
+#include "QuickCryptoUtils.hpp"
 
 namespace margelo::nitro::crypto {
 

@@ -3,7 +3,7 @@
 #include <openssl/err.h>
 #include <openssl/evp.h>
 
-#include "Utils.hpp"
+#include "QuickCryptoUtils.hpp"
 #include <cstdio>
 #include <iomanip>
 

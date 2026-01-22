@@ -1,5 +1,5 @@
 #include "ChaCha20Poly1305Cipher.hpp"
-#include "Utils.hpp"
+#include "QuickCryptoUtils.hpp"
 #include <openssl/err.h>
 #include <openssl/evp.h>
 #include <stdexcept>

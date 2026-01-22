@@ -1,5 +1,5 @@
 #include "HybridPbkdf2.hpp"
-#include "Utils.hpp"
+#include "QuickCryptoUtils.hpp"
 
 namespace margelo::nitro::crypto {
 
