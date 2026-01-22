@@ -5,7 +5,7 @@
 #include "KFormatType.hpp"
 #include "KeyEncoding.hpp"
 #include "KeyType.hpp"
-#include "Utils.hpp"
+#include "QuickCryptoUtils.hpp"
 #include <ncrypto.h>
 
 namespace margelo::nitro::crypto {

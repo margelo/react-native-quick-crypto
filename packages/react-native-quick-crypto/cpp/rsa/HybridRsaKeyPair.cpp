@@ -11,7 +11,7 @@
 #include <string>
 
 #include "HybridRsaKeyPair.hpp"
-#include "Utils.hpp"
+#include "QuickCryptoUtils.hpp"
 
 namespace margelo::nitro::crypto {
 

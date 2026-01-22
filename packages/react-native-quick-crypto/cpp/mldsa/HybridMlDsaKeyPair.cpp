@@ -5,7 +5,7 @@
 #include <openssl/err.h>
 #include <openssl/pem.h>
 
-#include "Utils.hpp"
+#include "QuickCryptoUtils.hpp"
 
 #if OPENSSL_VERSION_NUMBER >= 0x30500000L
 #define RNQC_HAS_ML_DSA 1

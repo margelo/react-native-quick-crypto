@@ -3,7 +3,7 @@
 
 #include "../utils/base64.h"
 #include "HybridKeyObjectHandle.hpp"
-#include "Utils.hpp"
+#include "QuickCryptoUtils.hpp"
 #include <openssl/bn.h>
 #include <openssl/ec.h>
 #include <openssl/evp.h>
