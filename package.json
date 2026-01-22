@@ -46,7 +46,7 @@
     "eslint-plugin-react-native": "5.0.0",
     "nitro-codegen": "0.29.4",
     "prettier": "3.5.3",
-    "release-it": "19.0.5",
+    "release-it": "19.2.2",
     "typescript": "5.8.3",
     "typescript-eslint": "8.43.0"
   },
