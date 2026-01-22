@@ -25,7 +25,7 @@
     "@craftzdog/react-native-buffer": "6.1.0",
     "@noble/ciphers": "2.0.1",
     "@noble/curves": "1.7.0",
-    "@noble/hashes": "1.5.0",
+    "@noble/hashes": "2.0.1",
     "@react-navigation/bottom-tabs": "7.8.6",
     "@react-navigation/native": "7.1.22",
     "@react-navigation/native-stack": "7.8.1",
