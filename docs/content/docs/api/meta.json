@@ -4,6 +4,7 @@
     "pages": [
         "index",
         "install",
+        "bip39",
         "cipher",
         "hash",
         "hmac",
