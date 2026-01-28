@@ -134,6 +134,8 @@ export const COVERAGE_DATA: CoverageCategory[] = [
             { name: 'createSign', status: 'implemented' },
             { name: 'createVerify', status: 'implemented' },
             { name: 'decapsulate', status: 'missing' },
+            { name: 'sign', status: 'implemented', note: 'One-shot signing' },
+            { name: 'verify', status: 'implemented', note: 'One-shot verification' },
             {
                 name: 'diffieHellman',
                 subItems: [
