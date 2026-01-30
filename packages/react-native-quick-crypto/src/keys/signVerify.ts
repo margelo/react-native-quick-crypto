@@ -258,11 +258,10 @@ export function sign(
   key: KeyInput,
   callback?: SignCallback,
 ): Buffer | void {
-  if (key === null || key === undefined) {
-    throw new Error('Private key is required');
-  }
-
   const doSign = (): Buffer => {
+    if (key === null || key === undefined) {
+      throw new Error('Private key is required');
+    }
     const signer = new Sign(algorithm ?? '');
     signer.update(data);
     return signer.sign(key);
@@ -301,11 +300,10 @@ export function verify(
   signature: BinaryLike,
   callback?: VerifyCallback,
 ): boolean | void {
-  if (key === null || key === undefined) {
-    throw new Error('Key is required');
-  }
-
   const doVerify = (): boolean => {
+    if (key === null || key === undefined) {
+      throw new Error('Key is required');
+    }
     const verifier = new Verify(algorithm ?? '');
     verifier.update(data);
     return verifier.verify(key, signature);
