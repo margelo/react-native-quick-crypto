@@ -83,7 +83,7 @@ jobs:
       - name: Cache DerivedData
         uses: actions/cache@v4
         with:
-          path: example/ios/build
+          path: ~/Library/Developer/Xcode/DerivedData
           key: ${{ runner.os }}-deriveddata-${{ hashFiles('example/ios/Podfile.lock', 'package.json', 'bun.lock') }}-xcode16.4
           restore-keys: |
             ${{ runner.os }}-deriveddata-
@@ -104,7 +104,6 @@ jobs:
         working-directory: ./example/
         env:
           IOS_SIMULATOR_DEVICE: 'iPhone 16 Pro'
-          IOS_BUILD_FOLDER: 'ios/build'
 
       - name: Show ccache stats
         if: always()
