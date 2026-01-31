@@ -1,14 +1,10 @@
 {
-  "cxxNamespace": [
-    "crypto"
-  ],
+  "cxxNamespace": ["crypto"],
   "ios": {
     "iosModuleName": "QuickCrypto"
   },
   "android": {
-    "androidNamespace": [
-      "crypto"
-    ],
+    "androidNamespace": ["crypto"],
     "androidCxxLibName": "QuickCrypto"
   },
   "autolinking": {
@@ -21,6 +17,12 @@
     "CipherFactory": {
       "cpp": "HybridCipherFactory"
     },
+    "DiffieHellman": {
+      "cpp": "HybridDiffieHellman"
+    },
+    "ECDH": {
+      "cpp": "HybridECDH"
+    },
     "EcKeyPair": {
       "cpp": "HybridEcKeyPair"
     },
@@ -30,14 +32,17 @@
     "Hash": {
       "cpp": "HybridHash"
     },
-    "Hmac": {
-      "cpp": "HybridHmac"
-    },
     "Hkdf": {
       "cpp": "HybridHkdf"
     },
+    "Hmac": {
+      "cpp": "HybridHmac"
+    },
     "KeyObjectHandle": {
       "cpp": "HybridKeyObjectHandle"
+    },
+    "MlDsaKeyPair": {
+      "cpp": "HybridMlDsaKeyPair"
     },
     "Pbkdf2": {
       "cpp": "HybridPbkdf2"
@@ -51,30 +56,18 @@
     "RsaKeyPair": {
       "cpp": "HybridRsaKeyPair"
     },
-    "SignHandle": {
-      "cpp": "HybridSignHandle"
-    },
-    "VerifyHandle": {
-      "cpp": "HybridVerifyHandle"
-    },
-    "MlDsaKeyPair": {
-      "cpp": "HybridMlDsaKeyPair"
-    },
     "Scrypt": {
       "cpp": "HybridScrypt"
+    },
+    "SignHandle": {
+      "cpp": "HybridSignHandle"
     },
     "Utils": {
       "cpp": "HybridUtils"
     },
-    "ECDH": {
-      "cpp": "HybridECDH"
-    },
-    "DiffieHellman": {
-      "cpp": "HybridDiffieHellman"
+    "VerifyHandle": {
+      "cpp": "HybridVerifyHandle"
     }
   },
-  "ignorePaths": [
-    "node_modules",
-    "lib"
-  ]
+  "ignorePaths": ["node_modules", "lib"]
 }

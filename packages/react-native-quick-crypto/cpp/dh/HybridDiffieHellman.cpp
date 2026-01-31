@@ -1,118 +1,122 @@
 #include "HybridDiffieHellman.hpp"
-#include "Utils.hpp"
+#include "QuickCryptoUtils.hpp"
 #include <NitroModules/ArrayBuffer.hpp>
+#include <openssl/bn.h>
 #include <openssl/dh.h>
 #include <openssl/err.h>
 #include <openssl/evp.h>
 #include <stdexcept>
 
 namespace margelo::nitro::crypto {
+
+// Smart pointer type aliases for RAII
+using BN_ptr = std::unique_ptr<BIGNUM, decltype(&BN_free)>;
+using DH_ptr = std::unique_ptr<DH, decltype(&DH_free)>;
+using EVP_PKEY_CTX_ptr = std::unique_ptr<EVP_PKEY_CTX, decltype(&EVP_PKEY_CTX_free)>;
+
+// Minimum DH prime size for security (2048 bits = 256 bytes)
+static constexpr int kMinDHPrimeBits = 2048;
+
+// Suppress deprecation warnings for DH_* functions
+// Node.js ncrypto uses the same pattern - these APIs work but are deprecated in OpenSSL 3.x
 #pragma clang diagnostic push
 #pragma clang diagnostic ignored "-Wdeprecated-declarations"
 
 void HybridDiffieHellman::init(const std::shared_ptr<ArrayBuffer>& prime, const std::shared_ptr<ArrayBuffer>& generator) {
-  if (_pkey) {
-    EVP_PKEY_free(_pkey);
-    _pkey = nullptr;
+  // Create DH structure
+  DH_ptr dh(DH_new(), DH_free);
+  if (!dh) {
+    throw std::runtime_error("DiffieHellman: failed to create DH structure");
   }
 
-  // Create DH parameters from prime and generator
-  DH* dh = DH_new();
-  if (!dh)
-    throw std::runtime_error("Failed to create DH");
-
+  // Convert prime and generator to BIGNUMs
   BIGNUM* p = BN_bin2bn(prime->data(), static_cast<int>(prime->size()), nullptr);
   BIGNUM* g = BN_bin2bn(generator->data(), static_cast<int>(generator->size()), nullptr);
 
   if (!p || !g) {
-    DH_free(dh);
     if (p)
       BN_free(p);
     if (g)
       BN_free(g);
-    throw std::runtime_error("Failed to convert parameters to BIGNUM");
+    throw std::runtime_error("DiffieHellman: failed to convert parameters to BIGNUM");
   }
 
-  if (DH_set0_pqg(dh, p, nullptr, g) != 1) {
-    DH_free(dh);
+  // DH_set0_pqg takes ownership of p and g on success
+  if (DH_set0_pqg(dh.get(), p, nullptr, g) != 1) {
     BN_free(p);
-    BN_free(g); // DH_set0_pqg takes ownership only on success.
-    throw std::runtime_error("Failed to set DH parameters");
+    BN_free(g);
+    throw std::runtime_error("DiffieHellman: failed to set DH parameters");
   }
 
-  _pkey = EVP_PKEY_new();
-  if (!_pkey) {
-    DH_free(dh);
-    throw std::runtime_error("Failed to create EVP_PKEY");
+  // Create EVP_PKEY and assign DH to it
+  EVP_PKEY_ptr pkey(EVP_PKEY_new(), EVP_PKEY_free);
+  if (!pkey) {
+    throw std::runtime_error("DiffieHellman: failed to create EVP_PKEY");
   }
 
-  if (EVP_PKEY_assign_DH(_pkey, dh) != 1) {
-    EVP_PKEY_free(_pkey);
-    _pkey = nullptr;
-    DH_free(dh); // Assign takes ownership
-    throw std::runtime_error("Failed to assign DH to EVP_PKEY");
+  // EVP_PKEY_assign_DH takes ownership of dh on success
+  if (EVP_PKEY_assign_DH(pkey.get(), dh.get()) != 1) {
+    throw std::runtime_error("DiffieHellman: failed to assign DH to EVP_PKEY");
   }
+  dh.release(); // EVP_PKEY now owns the DH
+
+  _pkey = std::move(pkey);
 }
 
 void HybridDiffieHellman::initWithSize(double primeLength, double generator) {
-  if (_pkey) {
-    EVP_PKEY_free(_pkey);
-    _pkey = nullptr;
+  int primeBits = static_cast<int>(primeLength);
+  int gen = static_cast<int>(generator);
+
+  // Validate minimum key size for security
+  if (primeBits < kMinDHPrimeBits) {
+    throw std::runtime_error("DiffieHellman: prime length must be at least 2048 bits");
   }
 
-  // Generate parameters
-  EVP_PKEY_CTX* pctx = EVP_PKEY_CTX_new_id(EVP_PKEY_DH, nullptr);
-  if (!pctx)
-    throw std::runtime_error("Failed to create context");
-
-  if (EVP_PKEY_paramgen_init(pctx) <= 0) {
-    EVP_PKEY_CTX_free(pctx);
-    throw std::runtime_error("Failed to init paramgen");
+  // Create parameter generation context
+  EVP_PKEY_CTX_ptr pctx(EVP_PKEY_CTX_new_id(EVP_PKEY_DH, nullptr), EVP_PKEY_CTX_free);
+  if (!pctx) {
+    throw std::runtime_error("DiffieHellman: failed to create parameter context");
   }
 
-  if (EVP_PKEY_CTX_set_dh_paramgen_prime_len(pctx, (int)primeLength) <= 0) {
-    EVP_PKEY_CTX_free(pctx);
-    throw std::runtime_error("Failed to set prime length");
+  if (EVP_PKEY_paramgen_init(pctx.get()) <= 0) {
+    throw std::runtime_error("DiffieHellman: failed to initialize parameter generation");
   }
 
-  if (EVP_PKEY_CTX_set_dh_paramgen_generator(pctx, (int)generator) <= 0) {
-    EVP_PKEY_CTX_free(pctx);
-    throw std::runtime_error("Failed to set generator");
+  if (EVP_PKEY_CTX_set_dh_paramgen_prime_len(pctx.get(), primeBits) <= 0) {
+    throw std::runtime_error("DiffieHellman: failed to set prime length");
+  }
+
+  if (EVP_PKEY_CTX_set_dh_paramgen_generator(pctx.get(), gen) <= 0) {
+    throw std::runtime_error("DiffieHellman: failed to set generator");
   }
 
   EVP_PKEY* params = nullptr;
-  if (EVP_PKEY_paramgen(pctx, &params) <= 0) {
-    EVP_PKEY_CTX_free(pctx);
-    throw std::runtime_error("Failed to generate parameters");
+  if (EVP_PKEY_paramgen(pctx.get(), &params) <= 0) {
+    throw std::runtime_error("DiffieHellman: failed to generate parameters");
   }
 
-  EVP_PKEY_CTX_free(pctx);
-  _pkey = params;
+  _pkey.reset(params);
 }
 
 std::shared_ptr<ArrayBuffer> HybridDiffieHellman::generateKeys() {
   ensureInitialized();
 
-  EVP_PKEY_CTX* kctx = EVP_PKEY_CTX_new(_pkey, nullptr);
-  if (!kctx)
-    throw std::runtime_error("Failed to create keygen context");
-
-  if (EVP_PKEY_keygen_init(kctx) <= 0) {
-    EVP_PKEY_CTX_free(kctx);
-    throw std::runtime_error("Failed to init keygen");
+  EVP_PKEY_CTX_ptr kctx(EVP_PKEY_CTX_new(_pkey.get(), nullptr), EVP_PKEY_CTX_free);
+  if (!kctx) {
+    throw std::runtime_error("DiffieHellman: failed to create keygen context");
   }
 
-  EVP_PKEY* new_key = nullptr;
-  if (EVP_PKEY_keygen(kctx, &new_key) <= 0) {
-    EVP_PKEY_CTX_free(kctx);
-    throw std::runtime_error("Failed to generate key");
+  if (EVP_PKEY_keygen_init(kctx.get()) <= 0) {
+    throw std::runtime_error("DiffieHellman: failed to initialize key generation");
   }
 
-  EVP_PKEY_CTX_free(kctx);
+  EVP_PKEY* newKey = nullptr;
+  if (EVP_PKEY_keygen(kctx.get(), &newKey) <= 0) {
+    throw std::runtime_error("DiffieHellman: failed to generate key pair");
+  }
 
   // Replace parameters-only key with full key (which includes parameters)
-  EVP_PKEY_free(_pkey);
-  _pkey = new_key;
+  _pkey.reset(newKey);
 
   return getPublicKey();
 }
@@ -120,174 +124,315 @@ std::shared_ptr<ArrayBuffer> HybridDiffieHellman::generateKeys() {
 std::shared_ptr<ArrayBuffer> HybridDiffieHellman::computeSecret(const std::shared_ptr<ArrayBuffer>& otherPublicKey) {
   ensureInitialized();
 
-  // Create peer key from public key buffer
-  // We need to create a new EVP_PKEY with the same parameters as ours, but with the peer's public key.
-
-  const DH* our_dh = EVP_PKEY_get0_DH(_pkey);
-  if (!our_dh)
-    throw std::runtime_error("Not a DH key");
-
+  const DH* ourDh = getDH();
   const BIGNUM *p, *q, *g;
-  DH_get0_pqg(our_dh, &p, &q, &g);
+  DH_get0_pqg(ourDh, &p, &q, &g);
 
-  DH* peer_dh = DH_new();
-  BIGNUM* peer_p = BN_dup(p);
-  BIGNUM* peer_g = BN_dup(g);
-  BIGNUM* peer_pub_key = BN_bin2bn(otherPublicKey->data(), static_cast<int>(otherPublicKey->size()), nullptr);
-
-  if (!peer_dh || !peer_p || !peer_g || !peer_pub_key) {
-    DH_free(peer_dh);
-    BN_free(peer_p);
-    BN_free(peer_g);
-    BN_free(peer_pub_key);
-    throw std::runtime_error("Failed to create peer DH");
+  // Create peer DH with same parameters but peer's public key
+  DH_ptr peerDh(DH_new(), DH_free);
+  if (!peerDh) {
+    throw std::runtime_error("DiffieHellman: failed to create peer DH structure");
   }
 
-  DH_set0_pqg(peer_dh, peer_p, nullptr, peer_g);
-  DH_set0_key(peer_dh, peer_pub_key, nullptr);
+  // Duplicate parameters for peer
+  BIGNUM* peerP = BN_dup(p);
+  BIGNUM* peerG = BN_dup(g);
+  BIGNUM* peerPubKey = BN_bin2bn(otherPublicKey->data(), static_cast<int>(otherPublicKey->size()), nullptr);
 
-  EVP_PKEY* peer_pkey = EVP_PKEY_new();
-  EVP_PKEY_assign_DH(peer_pkey, peer_dh);
-
-  // Derive
-  EVP_PKEY_CTX* ctx = EVP_PKEY_CTX_new(_pkey, nullptr);
-  if (!ctx || EVP_PKEY_derive_init(ctx) <= 0 || EVP_PKEY_derive_set_peer(ctx, peer_pkey) <= 0) {
-    if (ctx)
-      EVP_PKEY_CTX_free(ctx);
-    EVP_PKEY_free(peer_pkey);
-    throw std::runtime_error("Failed to init derive");
+  if (!peerP || !peerG || !peerPubKey) {
+    if (peerP)
+      BN_free(peerP);
+    if (peerG)
+      BN_free(peerG);
+    if (peerPubKey)
+      BN_free(peerPubKey);
+    throw std::runtime_error("DiffieHellman: failed to create peer parameters");
   }
 
-  size_t secret_len;
-  if (EVP_PKEY_derive(ctx, nullptr, &secret_len) <= 0) {
-    EVP_PKEY_CTX_free(ctx);
-    EVP_PKEY_free(peer_pkey);
-    throw std::runtime_error("Failed to get secret length");
+  // Set peer DH parameters (takes ownership on success)
+  if (DH_set0_pqg(peerDh.get(), peerP, nullptr, peerG) != 1) {
+    BN_free(peerP);
+    BN_free(peerG);
+    BN_free(peerPubKey);
+    throw std::runtime_error("DiffieHellman: failed to set peer DH parameters");
   }
 
-  std::vector<uint8_t> secret(secret_len);
-  if (EVP_PKEY_derive(ctx, secret.data(), &secret_len) <= 0) {
-    EVP_PKEY_CTX_free(ctx);
-    EVP_PKEY_free(peer_pkey);
-    throw std::runtime_error("Failed to derive");
+  // Set peer public key (takes ownership on success)
+  if (DH_set0_key(peerDh.get(), peerPubKey, nullptr) != 1) {
+    BN_free(peerPubKey);
+    throw std::runtime_error("DiffieHellman: failed to set peer public key");
   }
 
-  EVP_PKEY_CTX_free(ctx);
-  EVP_PKEY_free(peer_pkey);
+  // Create peer EVP_PKEY
+  EVP_PKEY_ptr peerPkey(EVP_PKEY_new(), EVP_PKEY_free);
+  if (!peerPkey) {
+    throw std::runtime_error("DiffieHellman: failed to create peer EVP_PKEY");
+  }
 
-  return ToNativeArrayBuffer(std::string(secret.begin(), secret.end()));
+  // EVP_PKEY_assign_DH takes ownership of peerDh on success
+  if (EVP_PKEY_assign_DH(peerPkey.get(), peerDh.get()) != 1) {
+    throw std::runtime_error("DiffieHellman: failed to assign peer DH to EVP_PKEY");
+  }
+  peerDh.release(); // EVP_PKEY now owns the DH
+
+  // Derive shared secret using EVP API
+  EVP_PKEY_CTX_ptr ctx(EVP_PKEY_CTX_new(_pkey.get(), nullptr), EVP_PKEY_CTX_free);
+  if (!ctx) {
+    throw std::runtime_error("DiffieHellman: failed to create derive context");
+  }
+
+  if (EVP_PKEY_derive_init(ctx.get()) <= 0) {
+    throw std::runtime_error("DiffieHellman: failed to initialize key derivation");
+  }
+
+  if (EVP_PKEY_derive_set_peer(ctx.get(), peerPkey.get()) <= 0) {
+    throw std::runtime_error("DiffieHellman: failed to set peer key for derivation");
+  }
+
+  // Get required buffer size
+  size_t secretLen = 0;
+  if (EVP_PKEY_derive(ctx.get(), nullptr, &secretLen) <= 0) {
+    throw std::runtime_error("DiffieHellman: failed to get shared secret length");
+  }
+
+  // Derive the shared secret
+  std::vector<uint8_t> secret(secretLen);
+  if (EVP_PKEY_derive(ctx.get(), secret.data(), &secretLen) <= 0) {
+    throw std::runtime_error("DiffieHellman: failed to derive shared secret");
+  }
+
+  // Resize to actual length (may be smaller due to leading zeros)
+  secret.resize(secretLen);
+
+  return ToNativeArrayBuffer(secret);
 }
 
 std::shared_ptr<ArrayBuffer> HybridDiffieHellman::getPrime() {
   ensureInitialized();
-  const DH* dh = EVP_PKEY_get0_DH(_pkey);
+  const DH* dh = getDH();
+
   const BIGNUM *p, *q, *g;
   DH_get0_pqg(dh, &p, &q, &g);
-  if (!p)
-    throw std::runtime_error("No prime");
+  if (!p) {
+    throw std::runtime_error("DiffieHellman: no prime available");
+  }
 
   int len = BN_num_bytes(p);
   std::vector<uint8_t> buf(len);
   BN_bn2bin(p, buf.data());
-  return ToNativeArrayBuffer(std::string(buf.begin(), buf.end()));
+
+  return ToNativeArrayBuffer(buf);
 }
 
 std::shared_ptr<ArrayBuffer> HybridDiffieHellman::getGenerator() {
   ensureInitialized();
-  const DH* dh = EVP_PKEY_get0_DH(_pkey);
+  const DH* dh = getDH();
+
   const BIGNUM *p, *q, *g;
   DH_get0_pqg(dh, &p, &q, &g);
-  if (!g)
-    throw std::runtime_error("No generator");
+  if (!g) {
+    throw std::runtime_error("DiffieHellman: no generator available");
+  }
 
   int len = BN_num_bytes(g);
   std::vector<uint8_t> buf(len);
   BN_bn2bin(g, buf.data());
-  return ToNativeArrayBuffer(std::string(buf.begin(), buf.end()));
+
+  return ToNativeArrayBuffer(buf);
 }
 
 std::shared_ptr<ArrayBuffer> HybridDiffieHellman::getPublicKey() {
   ensureInitialized();
-  const DH* dh = EVP_PKEY_get0_DH(_pkey);
+  const DH* dh = getDH();
+
   const BIGNUM *pub, *priv;
   DH_get0_key(dh, &pub, &priv);
-  if (!pub)
-    throw std::runtime_error("No public key");
+  if (!pub) {
+    throw std::runtime_error("DiffieHellman: no public key available");
+  }
 
   int len = BN_num_bytes(pub);
   std::vector<uint8_t> buf(len);
   BN_bn2bin(pub, buf.data());
-  return ToNativeArrayBuffer(std::string(buf.begin(), buf.end()));
+
+  return ToNativeArrayBuffer(buf);
 }
 
 std::shared_ptr<ArrayBuffer> HybridDiffieHellman::getPrivateKey() {
   ensureInitialized();
-  const DH* dh = EVP_PKEY_get0_DH(_pkey);
+  const DH* dh = getDH();
+
   const BIGNUM *pub, *priv;
   DH_get0_key(dh, &pub, &priv);
-  if (!priv)
-    throw std::runtime_error("No private key");
+  if (!priv) {
+    throw std::runtime_error("DiffieHellman: no private key available");
+  }
 
   int len = BN_num_bytes(priv);
   std::vector<uint8_t> buf(len);
   BN_bn2bin(priv, buf.data());
-  return ToNativeArrayBuffer(std::string(buf.begin(), buf.end()));
+
+  return ToNativeArrayBuffer(buf);
 }
 
 void HybridDiffieHellman::setPublicKey(const std::shared_ptr<ArrayBuffer>& publicKey) {
   ensureInitialized();
-  const DH* dh = EVP_PKEY_get0_DH(_pkey);
-  BIGNUM* pub = BN_bin2bn(publicKey->data(), static_cast<int>(publicKey->size()), nullptr);
-  if (!pub)
-    throw std::runtime_error("Failed to convert public key");
+  const DH* dh = getDH();
 
-  // We need to keep private key if it exists
-  const BIGNUM *old_pub, *old_priv;
-  DH_get0_key(dh, &old_pub, &old_priv);
+  // Get existing keys
+  const BIGNUM *oldPub, *oldPriv;
+  DH_get0_key(dh, &oldPub, &oldPriv);
 
-  BIGNUM* priv = old_priv ? BN_dup(old_priv) : nullptr;
-
-  // Since dh is const, we need to replace the whole key or cast away const (dangerous).
-  // Better: Create new DH, copy params, set new keys, replace EVP_PKEY.
-  DH* new_dh = DH_new();
+  // Get parameters
   const BIGNUM *p, *q, *g;
   DH_get0_pqg(dh, &p, &q, &g);
-  DH_set0_pqg(new_dh, BN_dup(p), q ? BN_dup(q) : nullptr, BN_dup(g));
-  DH_set0_key(new_dh, pub, priv);
 
-  EVP_PKEY_free(_pkey);
-  _pkey = EVP_PKEY_new();
-  EVP_PKEY_assign_DH(_pkey, new_dh);
+  // Create new DH with copied parameters
+  DH_ptr newDh(DH_new(), DH_free);
+  if (!newDh) {
+    throw std::runtime_error("DiffieHellman: failed to create new DH structure");
+  }
+
+  // Duplicate parameters
+  BIGNUM* newP = BN_dup(p);
+  BIGNUM* newQ = q ? BN_dup(q) : nullptr;
+  BIGNUM* newG = BN_dup(g);
+
+  if (!newP || !newG) {
+    if (newP)
+      BN_free(newP);
+    if (newQ)
+      BN_free(newQ);
+    if (newG)
+      BN_free(newG);
+    throw std::runtime_error("DiffieHellman: failed to duplicate parameters");
+  }
+
+  if (DH_set0_pqg(newDh.get(), newP, newQ, newG) != 1) {
+    BN_free(newP);
+    if (newQ)
+      BN_free(newQ);
+    BN_free(newG);
+    throw std::runtime_error("DiffieHellman: failed to set parameters");
+  }
+
+  // Convert new public key
+  BIGNUM* newPub = BN_bin2bn(publicKey->data(), static_cast<int>(publicKey->size()), nullptr);
+  BIGNUM* newPriv = oldPriv ? BN_dup(oldPriv) : nullptr;
+
+  if (!newPub) {
+    if (newPriv)
+      BN_free(newPriv);
+    throw std::runtime_error("DiffieHellman: failed to convert public key");
+  }
+
+  if (DH_set0_key(newDh.get(), newPub, newPriv) != 1) {
+    BN_free(newPub);
+    if (newPriv)
+      BN_free(newPriv);
+    throw std::runtime_error("DiffieHellman: failed to set keys");
+  }
+
+  // Create new EVP_PKEY
+  EVP_PKEY_ptr newPkey(EVP_PKEY_new(), EVP_PKEY_free);
+  if (!newPkey) {
+    throw std::runtime_error("DiffieHellman: failed to create new EVP_PKEY");
+  }
+
+  if (EVP_PKEY_assign_DH(newPkey.get(), newDh.get()) != 1) {
+    throw std::runtime_error("DiffieHellman: failed to assign DH to EVP_PKEY");
+  }
+  newDh.release();
+
+  _pkey = std::move(newPkey);
 }
 
 void HybridDiffieHellman::setPrivateKey(const std::shared_ptr<ArrayBuffer>& privateKey) {
   ensureInitialized();
-  const DH* dh = EVP_PKEY_get0_DH(_pkey);
-  BIGNUM* priv = BN_bin2bn(privateKey->data(), static_cast<int>(privateKey->size()), nullptr);
-  if (!priv)
-    throw std::runtime_error("Failed to convert private key");
+  const DH* dh = getDH();
 
-  // We need to keep public key if it exists
-  const BIGNUM *old_pub, *old_priv;
-  DH_get0_key(dh, &old_pub, &old_priv);
+  // Get existing keys
+  const BIGNUM *oldPub, *oldPriv;
+  DH_get0_key(dh, &oldPub, &oldPriv);
 
-  BIGNUM* pub = old_pub ? BN_dup(old_pub) : nullptr;
-
-  DH* new_dh = DH_new();
+  // Get parameters
   const BIGNUM *p, *q, *g;
   DH_get0_pqg(dh, &p, &q, &g);
-  DH_set0_pqg(new_dh, BN_dup(p), q ? BN_dup(q) : nullptr, BN_dup(g));
-  DH_set0_key(new_dh, pub, priv);
 
-  EVP_PKEY_free(_pkey);
-  _pkey = EVP_PKEY_new();
-  EVP_PKEY_assign_DH(_pkey, new_dh);
+  // Create new DH with copied parameters
+  DH_ptr newDh(DH_new(), DH_free);
+  if (!newDh) {
+    throw std::runtime_error("DiffieHellman: failed to create new DH structure");
+  }
+
+  // Duplicate parameters
+  BIGNUM* newP = BN_dup(p);
+  BIGNUM* newQ = q ? BN_dup(q) : nullptr;
+  BIGNUM* newG = BN_dup(g);
+
+  if (!newP || !newG) {
+    if (newP)
+      BN_free(newP);
+    if (newQ)
+      BN_free(newQ);
+    if (newG)
+      BN_free(newG);
+    throw std::runtime_error("DiffieHellman: failed to duplicate parameters");
+  }
+
+  if (DH_set0_pqg(newDh.get(), newP, newQ, newG) != 1) {
+    BN_free(newP);
+    if (newQ)
+      BN_free(newQ);
+    BN_free(newG);
+    throw std::runtime_error("DiffieHellman: failed to set parameters");
+  }
+
+  // Convert new private key
+  BIGNUM* newPub = oldPub ? BN_dup(oldPub) : nullptr;
+  BIGNUM* newPriv = BN_bin2bn(privateKey->data(), static_cast<int>(privateKey->size()), nullptr);
+
+  if (!newPriv) {
+    if (newPub)
+      BN_free(newPub);
+    throw std::runtime_error("DiffieHellman: failed to convert private key");
+  }
+
+  if (DH_set0_key(newDh.get(), newPub, newPriv) != 1) {
+    if (newPub)
+      BN_free(newPub);
+    BN_free(newPriv);
+    throw std::runtime_error("DiffieHellman: failed to set keys");
+  }
+
+  // Create new EVP_PKEY
+  EVP_PKEY_ptr newPkey(EVP_PKEY_new(), EVP_PKEY_free);
+  if (!newPkey) {
+    throw std::runtime_error("DiffieHellman: failed to create new EVP_PKEY");
+  }
+
+  if (EVP_PKEY_assign_DH(newPkey.get(), newDh.get()) != 1) {
+    throw std::runtime_error("DiffieHellman: failed to assign DH to EVP_PKEY");
+  }
+  newDh.release();
+
+  _pkey = std::move(newPkey);
 }
 
-void HybridDiffieHellman::ensureInitialized() {
-  if (!_pkey)
-    throw std::runtime_error("DiffieHellman not initialized");
+void HybridDiffieHellman::ensureInitialized() const {
+  if (!_pkey) {
+    throw std::runtime_error("DiffieHellman: not initialized");
+  }
+}
+
+const DH* HybridDiffieHellman::getDH() const {
+  const DH* dh = EVP_PKEY_get0_DH(_pkey.get());
+  if (!dh) {
+    throw std::runtime_error("DiffieHellman: key is not a DH key");
+  }
+  return dh;
 }
 
 #pragma clang diagnostic pop
+
 } // namespace margelo::nitro::crypto
