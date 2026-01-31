@@ -8,7 +8,39 @@ PODS:
   - hermes-engine (0.81.1):
     - hermes-engine/Pre-built (= 0.81.1)
   - hermes-engine/Pre-built (0.81.1)
-  - NitroModules (0.29.1):
+  - MMKVCore (2.2.4)
+  - NitroMmkv (4.0.1):
+    - boost
+    - DoubleConversion
+    - fast_float
+    - fmt
+    - glog
+    - hermes-engine
+    - MMKVCore (= 2.2.4)
+    - NitroModules
+    - RCT-Folly
+    - RCT-Folly/Fabric
+    - RCTRequired
+    - RCTTypeSafety
+    - React-callinvoker
+    - React-Core
+    - React-debug
+    - React-Fabric
+    - React-featureflags
+    - React-graphics
+    - React-ImageManager
+    - React-jsi
+    - React-NativeModulesApple
+    - React-RCTFabric
+    - React-renderercss
+    - React-rendererdebug
+    - React-utils
+    - ReactCodegen
+    - ReactCommon/turbomodule/bridging
+    - ReactCommon/turbomodule/core
+    - SocketRocket
+    - Yoga
+  - NitroModules (0.32.0):
     - boost
     - DoubleConversion
     - fast_float
@@ -2527,7 +2559,8 @@ DEPENDENCIES:
   - fmt (from `../../node_modules/react-native/third-party-podspecs/fmt.podspec`)
   - glog (from `../../node_modules/react-native/third-party-podspecs/glog.podspec`)
   - hermes-engine (from `../../node_modules/react-native/sdks/hermes-engine/hermes-engine.podspec`)
-  - NitroModules (from `../../node_modules/react-native-nitro-modules`)
+  - NitroMmkv (from `../../node_modules/react-native-mmkv`)
+  - NitroModules (from `../node_modules/react-native-nitro-modules`)
   - QuickCrypto (from `../../node_modules/react-native-quick-crypto`)
   - RCT-Folly (from `../../node_modules/react-native/third-party-podspecs/RCT-Folly.podspec`)
   - RCTDeprecation (from `../../node_modules/react-native/ReactApple/Libraries/RCTFoundation/RCTDeprecation`)
@@ -2603,6 +2636,7 @@ DEPENDENCIES:
 
 SPEC REPOS:
   trunk:
+    - MMKVCore
     - SocketRocket
 
 EXTERNAL SOURCES:
@@ -2621,8 +2655,10 @@ EXTERNAL SOURCES:
   hermes-engine:
     :podspec: "../../node_modules/react-native/sdks/hermes-engine/hermes-engine.podspec"
     :tag: hermes-2025-07-07-RNv0.81.0-e0fc67142ec0763c6b6153ca2bf96df815539782
+  NitroMmkv:
+    :path: "../../node_modules/react-native-mmkv"
   NitroModules:
-    :path: "../../node_modules/react-native-nitro-modules"
+    :path: "../node_modules/react-native-nitro-modules"
   QuickCrypto:
     :path: "../../node_modules/react-native-quick-crypto"
   RCT-Folly:
@@ -2772,8 +2808,10 @@ SPEC CHECKSUMS:
   fmt: a40bb5bd0294ea969aaaba240a927bd33d878cdd
   glog: 5683914934d5b6e4240e497e0f4a3b42d1854183
   hermes-engine: 4f8246b1f6d79f625e0d99472d1f3a71da4d28ca
-  NitroModules: 1715fe0e22defd9e2cdd48fb5e0dbfd01af54bec
-  QuickCrypto: caf4428f9962661f593c73ce57b8bbcf9d1376e2
+  MMKVCore: f2dd4c9befea04277a55e84e7812f930537993df
+  NitroMmkv: afbc5b2fbf963be567c6c545aa1efcf6a9cec68e
+  NitroModules: f964d2f3f5b392d0c0303737085cc30e375dc43f
+  QuickCrypto: 3535d8d740ff3bf335703e6f2a7a62b9534714cb
   RCT-Folly: 846fda9475e61ec7bcbf8a3fe81edfcaeb090669
   RCTDeprecation: c4b9e2fd0ab200e3af72b013ed6113187c607077
   RCTRequired: e97dd5dafc1db8094e63bc5031e0371f092ae92a
@@ -2845,6 +2883,6 @@ SPEC CHECKSUMS:
   SocketRocket: d4aabe649be1e368d1318fdf28a022d714d65748
   Yoga: 11c9686a21e2cd82a094a723649d9f4507200fb0
 
-PODFILE CHECKSUM: 36c6d27eaa3ccd179672014ad06e56eb12f2a223
+PODFILE CHECKSUM: a5090f4ac3407148ff99f415080dc459d30b71bd
 
 COCOAPODS: 1.15.2
