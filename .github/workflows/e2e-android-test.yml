@@ -27,8 +27,17 @@ jobs:
     env:
       EMULATOR_API_LEVEL: 34
       OUTPUT_DIR: ~/output
+      GRADLE_OPTS: '-Dorg.gradle.daemon=false -Dorg.gradle.caching=true'
 
     steps:
+      - name: Maximize build space
+        uses: AdityaGarg8/remove-unwanted-software@v5
+        with:
+          remove-dotnet: 'true'
+          remove-haskell: 'true'
+          remove-codeql: 'true'
+          remove-docker-images: 'true'
+
       - name: Checkout
         uses: actions/checkout@v5
 
@@ -50,7 +59,18 @@ jobs:
         with:
           distribution: 'corretto'
           java-version: '17'
-          cache: gradle
+
+      - name: Cache Gradle
+        uses: actions/cache@v4
+        with:
+          path: |
+            ~/.gradle/caches
+            ~/.gradle/wrapper
+            example/android/app/.cxx
+            example/android/app/build
+          key: ${{ runner.os }}-gradle-${{ hashFiles('**/*.gradle*', '**/gradle-wrapper.properties') }}
+          restore-keys: |
+            ${{ runner.os }}-gradle-
 
       - name: Cache Android SDK
         uses: actions/cache@v4
@@ -93,7 +113,7 @@ jobs:
           path: |
             ~/.android/avd/*
             ~/.android/adb*
-          key: avd-${{ env.EMULATOR_API_LEVEL }}
+          key: avd-pixel7pro-${{ env.EMULATOR_API_LEVEL }}
 
       - name: Create AVD and Generate Snapshot for Caching
         if: steps.avd-cache.outputs.cache-hit != 'true'
@@ -101,6 +121,7 @@ jobs:
         with:
           api-level: ${{ env.EMULATOR_API_LEVEL }}
           arch: x86_64
+          profile: pixel_7_pro
           force-avd-creation: false
           emulator-options: -no-window -gpu swiftshader_indirect -noaudio -no-boot-anim -camera-back none -no-metrics
           disable-animations: false
@@ -117,12 +138,17 @@ jobs:
         with:
           api-level: ${{ env.EMULATOR_API_LEVEL }}
           arch: x86_64
-          profile: pixel_6
+          profile: pixel_7_pro
           force-avd-creation: false
           emulator-options: -no-snapshot-save -no-window -gpu swiftshader_indirect -noaudio -no-boot-anim -camera-back none -no-metrics
           disable-animations: true
           working-directory: ./example/
           script: ./test/e2e/run-android.sh
+
+      - name: Stop Gradle Daemon
+        if: always()
+        working-directory: ./example/android
+        run: ./gradlew --stop
 
       - name: Post Maestro Screenshot to PR
         if: always()
