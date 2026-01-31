@@ -54,9 +54,9 @@ jobs:
         id: pods-cache
         with:
           path: example/ios/Pods
-          key: ${{ runner.os }}-pods-${{ hashFiles('example/ios/Podfile.lock') }}
+          key: ${{ runner.os }}-pods-v2-${{ hashFiles('example/ios/Podfile.lock') }}
           restore-keys: |
-            ${{ runner.os }}-pods-
+            ${{ runner.os }}-pods-v2-
 
       - name: Install CocoaPods
         if: steps.pods-cache.outputs.cache-hit != 'true'
@@ -67,9 +67,9 @@ jobs:
         uses: actions/cache@v4
         with:
           path: ~/Library/Developer/Xcode/DerivedData
-          key: ${{ runner.os }}-deriveddata-${{ hashFiles('example/ios/Podfile.lock', 'package.json', 'bun.lock') }}-xcode16.4
+          key: ${{ runner.os }}-dd-v2-${{ hashFiles('example/ios/Podfile.lock', 'package.json', 'bun.lock') }}-xcode16.4
           restore-keys: |
-            ${{ runner.os }}-deriveddata-
+            ${{ runner.os }}-dd-v2-
 
       - name: Install Maestro CLI
         run: |
