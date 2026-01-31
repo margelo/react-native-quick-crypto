@@ -5,6 +5,7 @@
 #include <limits>
 #include <openssl/err.h>
 #include <string>
+#include <vector>
 
 #include "Macros.hpp"
 #include <NitroModules/ArrayBuffer.hpp>
@@ -41,6 +42,19 @@ inline std::shared_ptr<margelo::nitro::NativeArrayBuffer> ToNativeArrayBuffer(st
   size_t size = str.size();
   uint8_t* data = new uint8_t[size];
   memcpy(data, str.data(), size);
+  return std::make_shared<margelo::nitro::NativeArrayBuffer>(data, size, [=]() { delete[] data; });
+}
+
+inline std::shared_ptr<margelo::nitro::NativeArrayBuffer> ToNativeArrayBuffer(const std::vector<uint8_t>& vec) {
+  size_t size = vec.size();
+  uint8_t* data = new uint8_t[size];
+  memcpy(data, vec.data(), size);
+  return std::make_shared<margelo::nitro::NativeArrayBuffer>(data, size, [=]() { delete[] data; });
+}
+
+inline std::shared_ptr<margelo::nitro::NativeArrayBuffer> ToNativeArrayBuffer(const uint8_t* ptr, size_t size) {
+  uint8_t* data = new uint8_t[size];
+  memcpy(data, ptr, size);
   return std::make_shared<margelo::nitro::NativeArrayBuffer>(data, size, [=]() { delete[] data; });
 }
 

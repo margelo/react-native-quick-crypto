@@ -17,6 +17,8 @@ import '../tests/keys/public_cipher';
 import '../tests/keys/sign_verify_streaming';
 import '../tests/keys/sign_verify_oneshot';
 import '../tests/pbkdf2/pbkdf2_tests';
+import '../tests/ecdh/ecdh_tests';
+import '../tests/dh/dh_tests';
 import '../tests/random/random_tests';
 import '../tests/scrypt/scrypt_tests';
 import '../tests/subtle/deriveBits';

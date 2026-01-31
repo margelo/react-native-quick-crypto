@@ -8,24 +8,66 @@
     "androidCxxLibName": "QuickCrypto"
   },
   "autolinking": {
-    "Blake3": { "cpp": "HybridBlake3" },
-    "Cipher": { "cpp": "HybridCipher" },
-    "CipherFactory": { "cpp": "HybridCipherFactory" },
-    "EcKeyPair": { "cpp": "HybridEcKeyPair" },
-    "EdKeyPair": { "cpp": "HybridEdKeyPair" },
-    "Hash": { "cpp": "HybridHash" },
-    "Hmac": { "cpp": "HybridHmac" },
-    "Hkdf": { "cpp": "HybridHkdf" },
-    "KeyObjectHandle": { "cpp": "HybridKeyObjectHandle" },
-    "Pbkdf2": { "cpp": "HybridPbkdf2" },
-    "Random": { "cpp": "HybridRandom" },
-    "RsaCipher": { "cpp": "HybridRsaCipher" },
-    "RsaKeyPair": { "cpp": "HybridRsaKeyPair" },
-    "SignHandle": { "cpp": "HybridSignHandle" },
-    "VerifyHandle": { "cpp": "HybridVerifyHandle" },
-    "MlDsaKeyPair": { "cpp": "HybridMlDsaKeyPair" },
-    "Scrypt": { "cpp": "HybridScrypt" },
-    "Utils": { "cpp": "HybridUtils" }
+    "Blake3": {
+      "cpp": "HybridBlake3"
+    },
+    "Cipher": {
+      "cpp": "HybridCipher"
+    },
+    "CipherFactory": {
+      "cpp": "HybridCipherFactory"
+    },
+    "DiffieHellman": {
+      "cpp": "HybridDiffieHellman"
+    },
+    "ECDH": {
+      "cpp": "HybridECDH"
+    },
+    "EcKeyPair": {
+      "cpp": "HybridEcKeyPair"
+    },
+    "EdKeyPair": {
+      "cpp": "HybridEdKeyPair"
+    },
+    "Hash": {
+      "cpp": "HybridHash"
+    },
+    "Hkdf": {
+      "cpp": "HybridHkdf"
+    },
+    "Hmac": {
+      "cpp": "HybridHmac"
+    },
+    "KeyObjectHandle": {
+      "cpp": "HybridKeyObjectHandle"
+    },
+    "MlDsaKeyPair": {
+      "cpp": "HybridMlDsaKeyPair"
+    },
+    "Pbkdf2": {
+      "cpp": "HybridPbkdf2"
+    },
+    "Random": {
+      "cpp": "HybridRandom"
+    },
+    "RsaCipher": {
+      "cpp": "HybridRsaCipher"
+    },
+    "RsaKeyPair": {
+      "cpp": "HybridRsaKeyPair"
+    },
+    "Scrypt": {
+      "cpp": "HybridScrypt"
+    },
+    "SignHandle": {
+      "cpp": "HybridSignHandle"
+    },
+    "Utils": {
+      "cpp": "HybridUtils"
+    },
+    "VerifyHandle": {
+      "cpp": "HybridVerifyHandle"
+    }
   },
   "ignorePaths": ["node_modules", "lib"]
 }

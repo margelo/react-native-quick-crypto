@@ -10,6 +10,7 @@ import {
   type GenerateKeyPairPromiseReturn,
   type GenerateKeyPairReturn,
   type KeyPairGenConfig,
+  type KeyPairKey,
   type KeyPairType,
 } from '../utils';
 import { parsePrivateKeyEncoding, parsePublicKeyEncoding } from './utils';
@@ -160,7 +161,11 @@ function internalGenerateKeyPair(
         } else {
           throw new Error(`Unsupported key type: ${type}`);
         }
-        return [undefined, result.publicKey, result.privateKey];
+        return [
+          undefined,
+          result.publicKey as KeyPairKey,
+          result.privateKey as KeyPairKey,
+        ];
       } catch (error) {
         return [error as Error, undefined, undefined];
       }
@@ -182,7 +187,11 @@ function internalGenerateKeyPair(
     } else {
       throw new Error(`Unsupported key type: ${type}`);
     }
-    return [undefined, result.publicKey, result.privateKey];
+    return [
+      undefined,
+      result.publicKey as KeyPairKey,
+      result.privateKey as KeyPairKey,
+    ];
   } catch (error) {
     return [error as Error, undefined, undefined];
   }
