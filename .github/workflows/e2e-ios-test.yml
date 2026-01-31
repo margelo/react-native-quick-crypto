@@ -28,10 +28,6 @@ jobs:
       RCT_USE_RN_DEP: 1
       RCT_USE_PREBUILT_RNCORE: 1
       OUTPUT_DIR: ~/output
-      CCACHE_SLOPPINESS: clang_index_store,file_stat_matches,include_file_ctime,include_file_mtime,ivfsoverlay,pch_defines,modules,system_headers,time_macros
-      CCACHE_FILECLONE: 'true'
-      CCACHE_DEPEND: 'true'
-      CCACHE_INODECACHE: 'true'
 
     steps:
       - name: Checkout
@@ -41,17 +37,6 @@ jobs:
         run: |
           sudo xcode-select -s "/Applications/Xcode_16.4.app/Contents/Developer"
           xcodebuild -version
-
-      - name: Setup ccache
-        uses: hendrikmuhs/ccache-action@v1.2
-        with:
-          max-size: 1.5G
-          key: ${{ runner.os }}-ccache-ios-e2e
-
-      - name: Configure ccache
-        run: |
-          ccache --version
-          ccache --zero-stats
 
       - name: Install Bun
         uses: ./.github/actions/setup-bun
@@ -69,16 +54,14 @@ jobs:
         id: pods-cache
         with:
           path: example/ios/Pods
-          key: ${{ runner.os }}-pods-ccache-${{ hashFiles('example/ios/Podfile.lock') }}
+          key: ${{ runner.os }}-pods-${{ hashFiles('example/ios/Podfile.lock') }}
           restore-keys: |
-            ${{ runner.os }}-pods-ccache-
+            ${{ runner.os }}-pods-
 
       - name: Install CocoaPods
         if: steps.pods-cache.outputs.cache-hit != 'true'
         working-directory: ./example
         run: bun pods
-        env:
-          USE_CCACHE: '1'
 
       - name: Cache DerivedData
         uses: actions/cache@v4
@@ -104,10 +87,6 @@ jobs:
         working-directory: ./example/
         env:
           IOS_SIMULATOR_DEVICE: 'iPhone 16 Pro'
-
-      - name: Show ccache stats
-        if: always()
-        run: ccache --show-stats
 
       - name: Post Maestro Screenshot to PR
         if: always()
