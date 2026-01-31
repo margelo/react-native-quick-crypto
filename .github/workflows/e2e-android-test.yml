@@ -72,16 +72,6 @@ jobs:
           restore-keys: |
             ${{ runner.os }}-gradle-
 
-      - name: Cache Android SDK
-        uses: actions/cache@v4
-        with:
-          path: |
-            "${{ env.ANDROID_SDK_ROOT }}"
-            ~/.android
-          key: "${{ runner.os }}-android-sdk-${{ hashFiles('.github/workflows/e2e-android-test.yml') }}"
-          restore-keys: |
-            "${{ runner.os }}-android-sdk-"
-
       - name: Install System Dependencies
         run: |
           sudo apt-get update

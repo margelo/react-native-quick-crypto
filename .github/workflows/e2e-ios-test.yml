@@ -69,9 +69,9 @@ jobs:
         id: pods-cache
         with:
           path: example/ios/Pods
-          key: ${{ runner.os }}-pods-${{ hashFiles('example/ios/Podfile.lock') }}
+          key: ${{ runner.os }}-pods-ccache-${{ hashFiles('example/ios/Podfile.lock') }}
           restore-keys: |
-            ${{ runner.os }}-pods-
+            ${{ runner.os }}-pods-ccache-
 
       - name: Install CocoaPods
         if: steps.pods-cache.outputs.cache-hit != 'true'
