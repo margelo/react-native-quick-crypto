@@ -53,10 +53,6 @@ test(SUITE, 'should set private key', () => {
   const alice2 = crypto.createECDH('prime256v1');
   alice2.setPrivateKey(priv);
 
-  // Public key should be derived/set (depending on impl, but usually settable)
-  // In our implementation setPrivateKey derives public key?
-  // Let's check consistency.
-  // If setPrivateKey derives public key, we can check it matches
   const pub1 = alice.getPublicKey();
   const pub2 = alice2.getPublicKey();
 

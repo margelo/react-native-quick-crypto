@@ -17,7 +17,9 @@ const ecdh_p256_genKeys: BenchFn = () => {
       ecdh.generateKeys();
     })
     .add('@noble/curves', () => {
-      p256.utils.randomPrivateKey();
+      // Generate private key and derive public key for fair comparison
+      const priv = p256.utils.randomPrivateKey();
+      p256.getPublicKey(priv);
     });
 
   bench.warmupTime = 100;

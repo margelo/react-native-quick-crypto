@@ -34,25 +34,25 @@ These algorithms provide quantum-resistant cryptography.
   * ✅ `decipher.setAuthTag(buffer[, encoding])`
   * ✅ `decipher.setAutoPadding([autoPadding])`
   * ✅ `decipher.update(data[, inputEncoding][, outputEncoding])`
-* ❌ Class: `DiffieHellman`
-  * ❌ `diffieHellman.computeSecret(otherPublicKey[, inputEncoding][, outputEncoding])`
-  * ❌ `diffieHellman.generateKeys([encoding])`
-  * ❌ `diffieHellman.getGenerator([encoding])`
-  * ❌ `diffieHellman.getPrime([encoding])`
-  * ❌ `diffieHellman.getPrivateKey([encoding])`
-  * ❌ `diffieHellman.getPublicKey([encoding])`
-  * ❌ `diffieHellman.setPrivateKey(privateKey[, encoding])`
-  * ❌ `diffieHellman.setPublicKey(publicKey[, encoding])`
+* ✅ Class: `DiffieHellman`
+  * ✅ `diffieHellman.computeSecret(otherPublicKey[, inputEncoding][, outputEncoding])`
+  * ✅ `diffieHellman.generateKeys([encoding])`
+  * ✅ `diffieHellman.getGenerator([encoding])`
+  * ✅ `diffieHellman.getPrime([encoding])`
+  * ✅ `diffieHellman.getPrivateKey([encoding])`
+  * ✅ `diffieHellman.getPublicKey([encoding])`
+  * ✅ `diffieHellman.setPrivateKey(privateKey[, encoding])`
+  * ✅ `diffieHellman.setPublicKey(publicKey[, encoding])`
   * ❌ `diffieHellman.verifyError`
-* ❌ Class: `DiffieHellmanGroup`
-* ❌ Class: `ECDH`
+* ✅ Class: `DiffieHellmanGroup`
+* ✅ Class: `ECDH`
   * ❌ static `ECDH.convertKey(key, curve[, inputEncoding[, outputEncoding[, format]]])`
-  * ❌ `ecdh.computeSecret(otherPublicKey[, inputEncoding][, outputEncoding])`
-  * ❌ `ecdh.generateKeys([encoding[, format]])`
-  * ❌ `ecdh.getPrivateKey([encoding])`
-  * ❌ `ecdh.getPublicKey([encoding][, format])`
-  * ❌ `ecdh.setPrivateKey(privateKey[, encoding])`
-  * ❌ `ecdh.setPublicKey(publicKey[, encoding])`
+  * ✅ `ecdh.computeSecret(otherPublicKey[, inputEncoding][, outputEncoding])`
+  * ✅ `ecdh.generateKeys([encoding[, format]])`
+  * ✅ `ecdh.getPrivateKey([encoding])`
+  * ✅ `ecdh.getPublicKey([encoding][, format])`
+  * ✅ `ecdh.setPrivateKey(privateKey[, encoding])`
+  * ✅ `ecdh.setPublicKey(publicKey[, encoding])`
 * ✅ Class: `Hash`
   * ✅ `hash.copy([options])`
   * ✅ `hash.digest([encoding])`
@@ -109,10 +109,10 @@ These algorithms provide quantum-resistant cryptography.
   * ✅ `crypto.constants`
   * ✅ `crypto.createCipheriv(algorithm, key, iv[, options])`
   * ✅ `crypto.createDecipheriv(algorithm, key, iv[, options])`
-  * ❌ `crypto.createDiffieHellman(prime[, primeEncoding][, generator][, generatorEncoding])`
-  * ❌ `crypto.createDiffieHellman(primeLength[, generator])`
-  * ❌ `crypto.createDiffieHellmanGroup(name)`
-  * ❌ `crypto.createECDH(curveName)`
+  * ✅ `crypto.createDiffieHellman(prime[, primeEncoding][, generator][, generatorEncoding])`
+  * ✅ `crypto.createDiffieHellman(primeLength[, generator])`
+  * ✅ `crypto.getDiffieHellman(groupName)`
+  * ✅ `crypto.createECDH(curveName)`
   * ✅ `crypto.createHash(algorithm[, options])`
   * ✅ `crypto.createHmac(algorithm, key[, options])`
   * ✅ `crypto.createPrivateKey(key)`
@@ -133,7 +133,6 @@ These algorithms provide quantum-resistant cryptography.
   * ❌ `crypto.getCipherInfo(nameOrNid[, options])`
   * ✅ `crypto.getCiphers()`
   * ❌ `crypto.getCurves()`
-  * ❌ `crypto.getDiffieHellman(groupName)`
   * ❌ `crypto.getFips()`
   * ✅ `crypto.getHashes()`
   * ✅ `crypto.getRandomValues(typedArray)`
@@ -165,8 +164,8 @@ These algorithms provide quantum-resistant cryptography.
 ## `crypto.diffieHellman`
 | type       | Status |
 | ---------  | :----: |
-| `dh`       | ❌ |
-| `ec`       | ❌ |
+| `dh`       | ✅ |
+| `ec`       | ✅ |
 | `x448`     | ✅ |
 | `x25519`   | ✅ |
 
