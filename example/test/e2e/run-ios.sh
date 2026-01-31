@@ -15,7 +15,8 @@ echo "Build logs will be written to 'ios-build.log' in uploaded artifacts"
 export RCT_USE_RN_DEP=1
 export RCT_USE_PREBUILT_RNCORE=1
 touch $HOME/output/ios-build.log
-bun ios > $HOME/output/ios-build.log 2>&1
+BUILD_FOLDER="${IOS_BUILD_FOLDER:-ios/build}"
+bun ios --buildFolder "$BUILD_FOLDER" > $HOME/output/ios-build.log 2>&1
 
 # Wait for build to complete and app to be installed
 echo "Waiting for app to be installed..."
