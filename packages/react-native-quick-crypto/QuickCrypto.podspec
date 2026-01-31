@@ -39,7 +39,7 @@ Pod::Spec.new do |s|
 
     Pod::UI.puts "[QuickCrypto] ⬇️  Downloading OpenSSL.xcframework..."
     Dir.chdir(__dir__) do
-      system("curl -sL --connect-timeout 30 --max-time 300 -o OpenSSL.xcframework.zip #{openssl_url}") || raise("Failed to download OpenSSL")
+      system("curl -sSfL --connect-timeout 30 --max-time 300 -o OpenSSL.xcframework.zip #{openssl_url}") || raise("Failed to download OpenSSL")
       system("unzip -q -o OpenSSL.xcframework.zip") || raise("Failed to unzip OpenSSL")
       File.delete("OpenSSL.xcframework.zip") if File.exist?("OpenSSL.xcframework.zip")
     end

@@ -44,7 +44,7 @@
     "eslint-config-prettier": "10.1.8",
     "eslint-plugin-prettier": "5.5.4",
     "eslint-plugin-react-native": "5.0.0",
-    "nitro-codegen": "0.29.4",
+    "nitrogen": "catalog:",
     "prettier": "3.5.3",
     "release-it": "19.0.5",
     "typescript": "5.8.3",
@@ -100,6 +100,10 @@
     "packages/react-native-quick-crypto",
     "example"
   ],
+  "catalog": {
+    "react-native-nitro-modules": "0.33.2",
+    "nitrogen": "0.33.2"
+  },
   "dependencies": {
     "caniuse-lite": "1.0.30001757"
   }

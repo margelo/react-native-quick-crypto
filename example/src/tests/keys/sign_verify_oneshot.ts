@@ -20,7 +20,7 @@ const testDataBuffer = Buffer.from(testData);
 
 test(SUITE, 'sign and verify with RSA SHA256', () => {
   const signature = sign('SHA256', testData, rsaPrivateKeyPem);
-  expect(signature).to.be.instanceOf(Buffer);
+  expect(Buffer.isBuffer(signature)).to.equal(true);
 
   const isValid = verify('SHA256', testData, rsaPublicKeyPem, signature);
   expect(isValid).to.equal(true);
@@ -239,7 +239,7 @@ test(SUITE, 'sign with callback', async () => {
       rsaPrivateKeyPem,
       (err: Error | null, signature?: Buffer) => {
         expect(err).to.equal(null);
-        expect(signature).to.be.an.instanceOf(Buffer);
+        expect(Buffer.isBuffer(signature)).to.equal(true);
 
         const isValid = verify('SHA256', testData, rsaPublicKeyPem, signature!);
         expect(isValid).to.equal(true);

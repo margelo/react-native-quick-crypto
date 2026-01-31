@@ -39,7 +39,7 @@
     "react-native-bouncy-checkbox": "2.1.10",
     "react-native-fast-encoder": "0.3.1",
     "react-native-mmkv": "4.0.1",
-    "react-native-nitro-modules": "0.32.0",
+    "react-native-nitro-modules": "catalog:",
     "react-native-quick-base64": "2.2.2",
     "react-native-quick-crypto": "workspace:*",
     "react-native-safe-area-context": "5.6.2",
