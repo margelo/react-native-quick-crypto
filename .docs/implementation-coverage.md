@@ -158,7 +158,7 @@ These algorithms provide quantum-resistant cryptography.
   * ❌ `crypto.setFips(bool)`
   * ✅ `crypto.sign(algorithm, data, key[, callback])`
   * 🚧 `crypto.subtle` (see below)
-  * ❌ `crypto.timingSafeEqual(a, b)`
+  * ✅ `crypto.timingSafeEqual(a, b)`
   * ✅ `crypto.verify(algorithm, data, key, signature[, callback])`
   * 🚧 `crypto.webcrypto` (see below)
 

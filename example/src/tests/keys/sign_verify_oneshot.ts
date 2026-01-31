@@ -223,8 +223,9 @@ test(SUITE, 'Ed25519 sign and verify', async () => {
     );
   });
 
-  const signature = sign('SHA512', testData, privateKey);
-  const isValid = verify('SHA512', testData, publicKey, signature);
+  // Ed25519 uses its own internal hashing, so algorithm should be null
+  const signature = sign(null, testData, privateKey);
+  const isValid = verify(null, testData, publicKey, signature);
   expect(isValid).to.equal(true);
 });
 
@@ -297,4 +298,40 @@ test(SUITE, 'verify throws with null key', () => {
   expect(() => {
     verify('SHA256', testData, null as unknown as string, signature);
   }).to.throw('Key is required');
+});
+
+// --- Callback Error Handling Tests ---
+
+test(SUITE, 'sign callback receives error for invalid key', async () => {
+  await new Promise<void>(resolve => {
+    sign(
+      'SHA256',
+      testData,
+      null as unknown as string,
+      (err: Error | null, signature?: Buffer) => {
+        expect(err).to.be.instanceOf(Error);
+        expect(err?.message).to.equal('Private key is required');
+        expect(signature).to.equal(undefined);
+        resolve();
+      },
+    );
+  });
+});
+
+test(SUITE, 'verify callback receives error for invalid key', async () => {
+  const validSignature = sign('SHA256', testData, rsaPrivateKeyPem);
+  await new Promise<void>(resolve => {
+    verify(
+      'SHA256',
+      testData,
+      null as unknown as string,
+      validSignature,
+      (err: Error | null, result?: boolean) => {
+        expect(err).to.be.instanceOf(Error);
+        expect(err?.message).to.equal('Key is required');
+        expect(result).to.equal(undefined);
+        resolve();
+      },
+    );
+  });
 });
