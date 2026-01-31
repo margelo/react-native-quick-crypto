@@ -81,7 +81,7 @@ test(SUITE, 'should handle default options (async)', () => {
   // This just tests it doesn't crash and returns a buffer
   crypto.scrypt('password', 'salt', 32, (err, key) => {
     expect(err).to.be.null;
-    expect(key).to.be.instanceOf(Buffer);
+    expect(Buffer.isBuffer(key)).to.equal(true);
     expect(key!.length).to.equal(32);
   });
 });

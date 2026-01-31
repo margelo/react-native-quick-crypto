@@ -18,7 +18,7 @@
     "format:fix": "prettier --write \"**/*.{js,ts,tsx}\"",
     "prepare": "bun clean && bun tsc && bob build",
     "release": "release-it",
-    "specs": "nitro-codegen",
+    "specs": "nitrogen",
     "test": "jest"
   },
   "files": [
@@ -89,9 +89,9 @@
     "expo": "^54.0.25",
     "expo-build-properties": "^1.0.0",
     "jest": "29.7.0",
-    "nitro-codegen": "0.29.1",
+    "nitrogen": "catalog:",
     "react-native-builder-bob": "0.40.15",
-    "react-native-nitro-modules": "0.29.1"
+    "react-native-nitro-modules": "catalog:"
   },
   "peerDependencies": {
     "react": "*",
@@ -151,7 +151,7 @@
   },
   "trustedDependencies": [
     "react-native-quick-crypto",
-    "nitro-codegen",
+    "nitrogen",
     "react-native-nitro-modules"
   ]
 }

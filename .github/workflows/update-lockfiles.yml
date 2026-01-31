@@ -5,19 +5,19 @@ on:
     branches:
       - main
     paths:
-      - ".github/workflows/update-lockfiles.yml"
+      - '.github/workflows/update-lockfiles.yml'
   pull_request:
     paths:
-      - ".github/workflows/update-lockfiles.yml"
-      - "package.json"
-      - "**/package.json"
+      - '.github/workflows/update-lockfiles.yml'
+      - 'package.json'
+      - '**/package.json'
 
 permissions:
   contents: write
 
 jobs:
   update-lockfiles:
-    name: "Update lockfiles (Podfile.lock)"
+    name: 'Update lockfiles (Podfile.lock)'
     if: github.actor == 'dependabot[bot]'
     runs-on: macOS-latest
     steps:
@@ -26,9 +26,7 @@ jobs:
           fetch-depth: 0
           ref: ${{ github.event.pull_request.head.ref }}
 
-      - uses: oven-sh/setup-bun@v2
-        with:
-          bun-version: 1.2.9
+      - uses: ./.github/actions/setup-bun
 
       - name: Setup Ruby (bundle)
         uses: ruby/setup-ruby@v1

@@ -21,9 +21,7 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      - uses: oven-sh/setup-bun@v2
-        with:
-          bun-version: 1.2.9
+      - uses: ./.github/actions/setup-bun
 
       - name: Setup JDK
         uses: actions/setup-java@v4
