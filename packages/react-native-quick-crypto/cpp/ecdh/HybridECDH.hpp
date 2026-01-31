@@ -3,7 +3,6 @@
 #include <memory>
 #include <openssl/ec.h>
 #include <openssl/evp.h>
-
 #include <string>
 #include <vector>
 
@@ -14,19 +13,13 @@ namespace margelo::nitro::crypto {
 using namespace facebook;
 using margelo::nitro::ArrayBuffer;
 
+using EVP_PKEY_ptr = std::unique_ptr<EVP_PKEY, decltype(&EVP_PKEY_free)>;
+using EC_GROUP_ptr = std::unique_ptr<EC_GROUP, decltype(&EC_GROUP_free)>;
+
 class HybridECDH : public HybridECDHSpec {
  public:
-  HybridECDH() : HybridObject("ECDH") {}
-  virtual ~HybridECDH() {
-    if (_pkey) {
-      EVP_PKEY_free(_pkey);
-      _pkey = nullptr;
-    }
-    if (_group) {
-      EC_GROUP_free(_group);
-      _group = nullptr;
-    }
-  }
+  HybridECDH() : HybridObject("ECDH"), _pkey(nullptr, EVP_PKEY_free), _group(nullptr, EC_GROUP_free) {}
+  virtual ~HybridECDH() = default;
 
   void init(const std::string& curveName) override;
   std::shared_ptr<ArrayBuffer> generateKeys() override;
@@ -37,13 +30,13 @@ class HybridECDH : public HybridECDHSpec {
   void setPublicKey(const std::shared_ptr<ArrayBuffer>& publicKey) override;
 
  private:
-  EVP_PKEY* _pkey = nullptr;
-  EC_GROUP* _group = nullptr;
+  EVP_PKEY_ptr _pkey;
+  EC_GROUP_ptr _group;
   std::string _curveName;
   int _curveNid = 0;
 
-  void ensureInitialized();
-  int getCurveNid(const std::string& name);
+  void ensureInitialized() const;
+  static int getCurveNid(const std::string& name);
 };
 
 } // namespace margelo::nitro::crypto

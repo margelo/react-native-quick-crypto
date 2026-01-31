@@ -1,6 +1,7 @@
 #pragma once
 
 #include <memory>
+#include <openssl/dh.h>
 #include <openssl/evp.h>
 #include <string>
 #include <vector>
@@ -12,15 +13,12 @@ namespace margelo::nitro::crypto {
 using namespace facebook;
 using margelo::nitro::ArrayBuffer;
 
+using EVP_PKEY_ptr = std::unique_ptr<EVP_PKEY, decltype(&EVP_PKEY_free)>;
+
 class HybridDiffieHellman : public HybridDiffieHellmanSpec {
  public:
-  HybridDiffieHellman() : HybridObject("DiffieHellman") {}
-  virtual ~HybridDiffieHellman() {
-    if (_pkey) {
-      EVP_PKEY_free(_pkey);
-      _pkey = nullptr;
-    }
-  }
+  HybridDiffieHellman() : HybridObject("DiffieHellman"), _pkey(nullptr, EVP_PKEY_free) {}
+  virtual ~HybridDiffieHellman() = default;
 
   void init(const std::shared_ptr<ArrayBuffer>& prime, const std::shared_ptr<ArrayBuffer>& generator) override;
   void initWithSize(double primeLength, double generator) override;
@@ -34,9 +32,10 @@ class HybridDiffieHellman : public HybridDiffieHellmanSpec {
   void setPrivateKey(const std::shared_ptr<ArrayBuffer>& privateKey) override;
 
  private:
-  EVP_PKEY* _pkey = nullptr;
+  EVP_PKEY_ptr _pkey;
 
-  void ensureInitialized();
+  void ensureInitialized() const;
+  const DH* getDH() const;
 };
 
 } // namespace margelo::nitro::crypto
