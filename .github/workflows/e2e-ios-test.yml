@@ -83,6 +83,7 @@ jobs:
           key: ${{ runner.os }}-dd-v3-${{ hashFiles('example/ios/Podfile.lock', 'package.json', 'bun.lock') }}-xcode16.4
           restore-keys: |
             ${{ runner.os }}-dd-v3-
+          save-always: true
 
       - name: Install Maestro CLI
         run: |
