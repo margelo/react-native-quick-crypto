@@ -71,6 +71,8 @@ jobs:
           path: |
             example/ios/Pods
             ~/Library/Caches/CocoaPods
+            packages/react-native-quick-crypto/ios/libsodium-stable
+            packages/react-native-quick-crypto/deps
           key: ${{ runner.os }}-pods
 
       - name: Restore DerivedData cache
@@ -220,6 +222,8 @@ jobs:
           path: |
             example/ios/Pods
             ~/Library/Caches/CocoaPods
+            packages/react-native-quick-crypto/ios/libsodium-stable
+            packages/react-native-quick-crypto/deps
           key: ${{ runner.os }}-pods
 
       - name: Save DerivedData cache
