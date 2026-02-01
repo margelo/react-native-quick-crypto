@@ -69,9 +69,7 @@ jobs:
         id: pods-cache
         with:
           path: example/ios/Pods
-          key: ${{ runner.os }}-pods-v3-${{ hashFiles('example/ios/Podfile.lock') }}
-          restore-keys: |
-            ${{ runner.os }}-pods-v3-
+          key: ${{ runner.os }}-pods-${{ hashFiles('example/ios/Podfile.lock') }}
 
       - name: Install CocoaPods
         working-directory: ./example
@@ -82,16 +80,9 @@ jobs:
         uses: actions/cache/restore@v5
         with:
           path: ${{ env.DERIVED_DATA_PATH }}
-          key: ${{ runner.os }}-dd-v5-${{ hashFiles('example/ios/Podfile.lock', 'package.json', 'bun.lock') }}-xcode16.4
+          key: ${{ runner.os }}-dd-${{ hashFiles('example/ios/Podfile.lock', 'package.json', 'bun.lock') }}-xcode16.4
           restore-keys: |
-            ${{ runner.os }}-dd-v5-
-
-      - name: Clean DerivedData on partial cache hit
-        if: steps.dd-cache.outputs.cache-hit != 'true' && steps.dd-cache.outputs.cache-matched-key != ''
-        working-directory: ./example
-        run: |
-          echo "Partial cache hit detected, cleaning potentially stale DerivedData..."
-          rm -rf ios/build
+            ${{ runner.os }}-dd-
 
       - name: Boot iOS Simulator
         run: |
@@ -202,7 +193,7 @@ jobs:
         uses: actions/cache/save@v5
         with:
           path: ${{ env.DERIVED_DATA_PATH }}
-          key: ${{ runner.os }}-dd-v5-${{ hashFiles('example/ios/Podfile.lock', 'package.json', 'bun.lock') }}-xcode16.4
+          key: ${{ runner.os }}-dd-${{ hashFiles('example/ios/Podfile.lock', 'package.json', 'bun.lock') }}-xcode16.4
 
       - name: Exit with Test Result
         if: always()
