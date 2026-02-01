@@ -60,8 +60,8 @@ jobs:
           distribution: 'corretto'
           java-version: '17'
 
-      - name: Cache Gradle
-        uses: actions/cache@v4
+      - name: Restore Gradle cache
+        uses: actions/cache/restore@v5
         with:
           path: |
             ~/.gradle/caches
@@ -103,8 +103,8 @@ jobs:
           sudo udevadm control --reload-rules
           sudo udevadm trigger --name-match=kvm
 
-      - name: AVD cache
-        uses: actions/cache@v4
+      - name: Restore AVD cache
+        uses: actions/cache@v5
         id: avd-cache
         with:
           path: |
@@ -137,32 +137,20 @@ jobs:
           disable-animations: true
           working-directory: ./example
           script: |
-            # Start Metro Bundler
             echo "Starting Metro Bundler..."
             bun start > $HOME/output/metro.log 2>&1 &
             sleep 10
-
-            # Install the pre-built APK
             echo "Installing pre-built APK..."
             adb install android/app/build/outputs/apk/debug/app-debug.apk
-
-            # Launch the app
             echo "Launching app..."
             adb shell am start -n com.margelo.quickcrypto.example/.MainActivity
             sleep 5
-
-            # Run Maestro tests
             export PATH="$PATH:$HOME/.maestro/bin"
             export MAESTRO_DRIVER_STARTUP_TIMEOUT=300000
             export MAESTRO_CLI_NO_ANALYTICS=1
             export MAESTRO_CLI_ANALYSIS_NOTIFICATION_DISABLED=true
-
             echo "Running End-to-End tests on Android..."
-            maestro test \
-              test/e2e/test-suites-flow.yml \
-              --config .maestro/config.yml \
-              --env PLATFORM=android \
-              --test-output-dir $HOME/output
+            maestro test test/e2e/test-suites-flow.yml --config .maestro/config.yml --env PLATFORM=android --test-output-dir $HOME/output
 
       - name: Stop Gradle Daemon
         if: always()
@@ -199,6 +187,17 @@ jobs:
             ${{ env.OUTPUT_DIR }}/*.log
             ${{ env.OUTPUT_DIR }}/screenshots/*.png
           retention-days: 5
+
+      - name: Save Gradle cache
+        if: always()
+        uses: actions/cache/save@v5
+        with:
+          path: |
+            ~/.gradle/caches
+            ~/.gradle/wrapper
+            example/android/app/.cxx
+            example/android/app/build
+          key: ${{ runner.os }}-gradle-${{ hashFiles('**/*.gradle*', '**/gradle-wrapper.properties') }}
 
       - name: Exit with Test Result
         if: always()
