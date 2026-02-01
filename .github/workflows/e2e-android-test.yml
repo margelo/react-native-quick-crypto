@@ -70,6 +70,10 @@ jobs:
             example/android/build
             example/android/app/.cxx
             example/android/app/build
+            packages/react-native-quick-crypto/android/.cxx
+            packages/react-native-quick-crypto/android/build
+            node_modules/.bun/react-native-nitro-modules*/node_modules/react-native-nitro-modules/android/.cxx
+            node_modules/.bun/react-native-nitro-modules*/node_modules/react-native-nitro-modules/android/build
           key: ${{ runner.os }}-gradle
 
       - name: Install System Dependencies
@@ -172,6 +176,10 @@ jobs:
             example/android/build
             example/android/app/.cxx
             example/android/app/build
+            packages/react-native-quick-crypto/android/.cxx
+            packages/react-native-quick-crypto/android/build
+            node_modules/.bun/react-native-nitro-modules*/node_modules/react-native-nitro-modules/android/.cxx
+            node_modules/.bun/react-native-nitro-modules*/node_modules/react-native-nitro-modules/android/build
           key: ${{ runner.os }}-gradle
 
       - name: Exit with Test Result

@@ -44,6 +44,9 @@ jobs:
           path: |
             ~/.gradle/caches
             ~/.gradle/wrapper
+            example/android/.gradle
+            packages/react-native-quick-crypto/android/.cxx
+            packages/react-native-quick-crypto/android/build
           key: ${{ runner.os }}-gradle
 
       - name: Bootstrap JS
@@ -67,4 +70,7 @@ jobs:
           path: |
             ~/.gradle/caches
             ~/.gradle/wrapper
+            example/android/.gradle
+            packages/react-native-quick-crypto/android/.cxx
+            packages/react-native-quick-crypto/android/build
           key: ${{ runner.os }}-gradle
