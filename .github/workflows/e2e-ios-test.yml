@@ -65,22 +65,20 @@ jobs:
         run: bun install
 
       - name: Restore CocoaPods cache
-        uses: actions/cache@v5
         id: pods-cache
+        uses: actions/cache/restore@v5
         with:
           path: |
             example/ios/Pods
             ~/Library/Caches/CocoaPods
-          key: ${{ runner.os }}-pods-${{ hashFiles('example/ios/Podfile.lock') }}
+          key: ${{ runner.os }}-pods
 
       - name: Restore DerivedData cache
         id: dd-cache
         uses: actions/cache/restore@v5
         with:
           path: ${{ env.DERIVED_DATA_PATH }}
-          key: ${{ runner.os }}-dd-${{ hashFiles('example/ios/Podfile.lock', 'package.json', 'bun.lock') }}-xcode26.2
-          restore-keys: |
-            ${{ runner.os }}-dd-
+          key: ${{ runner.os }}-dd
 
       - name: Boot iOS Simulator (background)
         run: |
@@ -215,12 +213,21 @@ jobs:
             ${{ env.OUTPUT_DIR }}/screenshots/*.png
           retention-days: 5
 
+      - name: Save CocoaPods cache
+        if: always()
+        uses: actions/cache/save@v5
+        with:
+          path: |
+            example/ios/Pods
+            ~/Library/Caches/CocoaPods
+          key: ${{ runner.os }}-pods
+
       - name: Save DerivedData cache
         if: always()
         uses: actions/cache/save@v5
         with:
           path: ${{ env.DERIVED_DATA_PATH }}
-          key: ${{ runner.os }}-dd-${{ hashFiles('example/ios/Podfile.lock', 'package.json', 'bun.lock') }}-xcode26.2
+          key: ${{ runner.os }}-dd
 
       - name: Exit with Test Result
         if: always()

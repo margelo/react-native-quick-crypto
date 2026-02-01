@@ -70,9 +70,7 @@ jobs:
             example/android/build
             example/android/app/.cxx
             example/android/app/build
-          key: ${{ runner.os }}-gradle-${{ hashFiles('**/*.gradle*', '**/gradle-wrapper.properties') }}
-          restore-keys: |
-            ${{ runner.os }}-gradle-
+          key: ${{ runner.os }}-gradle
 
       - name: Install System Dependencies
         run: |
@@ -174,7 +172,7 @@ jobs:
             example/android/build
             example/android/app/.cxx
             example/android/app/build
-          key: ${{ runner.os }}-gradle-${{ hashFiles('**/*.gradle*', '**/gradle-wrapper.properties') }}
+          key: ${{ runner.os }}-gradle
 
       - name: Exit with Test Result
         if: always()
