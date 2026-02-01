@@ -30,7 +30,7 @@ When activated, create a pull request for the current branch:
 
 5. **Create the PR**:
    ```bash
-   gh pr create --title "<title>" --body "<body>" --base main
+   gh pr create --title "<title>" --body "<body>" --base main --assignee @me
    ```
 
 6. **Report the PR URL** to the user
