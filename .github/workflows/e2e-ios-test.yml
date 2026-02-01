@@ -74,7 +74,6 @@ jobs:
             ${{ runner.os }}-pods-v3-
 
       - name: Install CocoaPods
-        if: steps.pods-cache.outputs.cache-hit != 'true'
         working-directory: ./example
         run: bun pods
 

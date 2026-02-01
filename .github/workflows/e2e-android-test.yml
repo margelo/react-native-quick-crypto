@@ -66,11 +66,13 @@ jobs:
           path: |
             ~/.gradle/caches
             ~/.gradle/wrapper
+            example/android/.gradle
+            example/android/build
             example/android/app/.cxx
             example/android/app/build
-          key: ${{ runner.os }}-gradle-${{ hashFiles('**/*.gradle*', '**/gradle-wrapper.properties') }}
+          key: ${{ runner.os }}-gradle-v2-${{ hashFiles('**/*.gradle*', '**/gradle-wrapper.properties') }}
           restore-keys: |
-            ${{ runner.os }}-gradle-
+            ${{ runner.os }}-gradle-v2-
 
       - name: Install System Dependencies
         run: |
@@ -139,7 +141,16 @@ jobs:
           script: |
             echo "Starting Metro Bundler..."
             bun start > $HOME/output/metro.log 2>&1 &
-            sleep 10
+            echo "Waiting for Metro to start..."
+            for i in {1..30}; do
+              if curl -sf http://localhost:8081/status > /dev/null 2>&1; then
+                echo "Metro is ready!"
+                break
+              fi
+              sleep 1
+            done
+            echo "Setting up adb reverse for Metro..."
+            adb reverse tcp:8081 tcp:8081
             echo "Installing pre-built APK..."
             adb install android/app/build/outputs/apk/debug/app-debug.apk
             echo "Launching app..."
@@ -195,9 +206,11 @@ jobs:
           path: |
             ~/.gradle/caches
             ~/.gradle/wrapper
+            example/android/.gradle
+            example/android/build
             example/android/app/.cxx
             example/android/app/build
-          key: ${{ runner.os }}-gradle-${{ hashFiles('**/*.gradle*', '**/gradle-wrapper.properties') }}
+          key: ${{ runner.os }}-gradle-v2-${{ hashFiles('**/*.gradle*', '**/gradle-wrapper.properties') }}
 
       - name: Exit with Test Result
         if: always()
