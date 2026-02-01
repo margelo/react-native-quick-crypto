@@ -72,6 +72,7 @@ jobs:
         with:
           path: |
             example/ios/Pods
+            ~/.cocoapods/repos
             ~/Library/Caches/CocoaPods
             packages/react-native-quick-crypto/ios/libsodium-stable
             packages/react-native-quick-crypto/deps
@@ -223,6 +224,7 @@ jobs:
         with:
           path: |
             example/ios/Pods
+            ~/.cocoapods/repos
             ~/Library/Caches/CocoaPods
             packages/react-native-quick-crypto/ios/libsodium-stable
             packages/react-native-quick-crypto/deps
