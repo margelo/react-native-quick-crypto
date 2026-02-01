@@ -88,9 +88,9 @@
     "expo": "^54.0.25",
     "expo-build-properties": "^1.0.0",
     "jest": "29.7.0",
-    "nitrogen": "catalog:",
+    "nitrogen": "0.33.2",
     "react-native-builder-bob": "0.40.15",
-    "react-native-nitro-modules": "catalog:"
+    "react-native-nitro-modules": "0.33.2"
   },
   "peerDependencies": {
     "react": "*",

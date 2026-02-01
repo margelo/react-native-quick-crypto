@@ -20,7 +20,7 @@
         "eslint-plugin-react-native": "5.0.0",
         "husky": "9.1.7",
         "lint-staged": "16.1.6",
-        "nitrogen": "catalog:",
+        "nitrogen": "0.33.2",
         "prettier": "3.5.3",
         "release-it": "19.0.5",
         "typescript": "5.8.3",
@@ -31,7 +31,6 @@
       "name": "react-native-quick-crypto-example",
       "version": "1.0.8",
       "dependencies": {
-        "@craftzdog/react-native-buffer": "6.1.0",
         "@noble/ciphers": "2.0.1",
         "@noble/curves": "1.7.0",
         "@noble/hashes": "1.5.0",
@@ -48,7 +47,7 @@
         "react-native-bouncy-checkbox": "2.1.10",
         "react-native-fast-encoder": "0.3.1",
         "react-native-mmkv": "4.0.1",
-        "react-native-nitro-modules": "catalog:",
+        "react-native-nitro-modules": "0.33.2",
         "react-native-quick-base64": "2.2.2",
         "react-native-quick-crypto": "workspace:*",
         "react-native-safe-area-context": "5.6.2",
@@ -91,7 +90,6 @@
       "dependencies": {
         "@craftzdog/react-native-buffer": "6.1.0",
         "events": "3.3.0",
-        "react-native-quick-base64": "2.2.2",
         "readable-stream": "4.5.2",
         "safe-buffer": "^5.2.1",
         "util": "0.12.5",
@@ -105,9 +103,9 @@
         "expo": "^54.0.25",
         "expo-build-properties": "^1.0.0",
         "jest": "29.7.0",
-        "nitrogen": "catalog:",
+        "nitrogen": "0.33.2",
         "react-native-builder-bob": "0.40.15",
-        "react-native-nitro-modules": "catalog:",
+        "react-native-nitro-modules": "0.33.2",
       },
       "peerDependencies": {
         "expo": ">=48.0.0",
@@ -115,6 +113,7 @@
         "react": "*",
         "react-native": "*",
         "react-native-nitro-modules": ">=0.29.1",
+        "react-native-quick-base64": ">=2.1.0",
       },
       "optionalPeers": [
         "expo",
@@ -127,10 +126,6 @@
     "react-native-quick-crypto",
     "react-native-nitro-modules",
   ],
-  "catalog": {
-    "nitrogen": "0.33.2",
-    "react-native-nitro-modules": "0.33.2",
-  },
   "packages": {
     "@0no-co/graphql.web": ["@0no-co/graphql.web@1.2.0", "", { "peerDependencies": { "graphql": "^14.0.0 || ^15.0.0 || ^16.0.0" }, "optionalPeers": ["graphql"] }, "sha512-/1iHy9TTr63gE1YcR5idjx8UREz1s0kFhydf3bBLCXyqjhkIc6igAzTOx3zPifCwFR87tsh/4Pa9cNts6d2otw=="],
 
