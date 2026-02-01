@@ -2,6 +2,7 @@ import {
   Buffer,
   getCiphers,
   createCipheriv,
+  createDecipheriv,
   randomFillSync,
 } from 'react-native-quick-crypto';
 import { expect } from 'chai';
@@ -132,4 +133,92 @@ test(SUITE, 'GCM getAuthTag', () => {
 
   const tag = cipher.getAuthTag();
   expect(tag.length).to.equal(16);
+});
+
+// Issue #798: decipher.final() should throw on incorrect key for aes-256-gcm
+test(SUITE, 'GCM wrong key throws error (issue #798)', () => {
+  const correctKey = Buffer.from('a'.repeat(64), 'hex'); // 32 bytes
+  const wrongKey = Buffer.from('b'.repeat(64), 'hex'); // different 32 bytes
+  const testIv = randomFillSync(new Uint8Array(12));
+  const testPlaintext = Buffer.from('test data for encryption');
+  const testAad = Buffer.from('additional data');
+
+  // Encrypt with correct key
+  const cipher = createCipheriv('aes-256-gcm', correctKey, Buffer.from(testIv));
+  cipher.setAAD(testAad);
+  const encrypted = Buffer.concat([
+    cipher.update(testPlaintext),
+    cipher.final(),
+  ]);
+  const authTag = cipher.getAuthTag();
+
+  // Decrypt with wrong key - should throw on final()
+  const decipher = createDecipheriv(
+    'aes-256-gcm',
+    wrongKey,
+    Buffer.from(testIv),
+  );
+  decipher.setAAD(testAad);
+  decipher.setAuthTag(authTag);
+  decipher.update(encrypted);
+
+  expect(() => decipher.final()).to.throw();
+});
+
+test(SUITE, 'GCM tampered ciphertext throws error', () => {
+  const testKey = Buffer.from(randomFillSync(new Uint8Array(32)));
+  const testIv = randomFillSync(new Uint8Array(12));
+  const testPlaintext = Buffer.from('test data');
+  const testAad = Buffer.from('additional data');
+
+  const cipher = createCipheriv('aes-256-gcm', testKey, Buffer.from(testIv));
+  cipher.setAAD(testAad);
+  const encrypted = Buffer.concat([
+    cipher.update(testPlaintext),
+    cipher.final(),
+  ]);
+  const authTag = cipher.getAuthTag();
+
+  // Tamper with ciphertext
+  encrypted[0] = encrypted[0]! ^ 1;
+
+  const decipher = createDecipheriv(
+    'aes-256-gcm',
+    testKey,
+    Buffer.from(testIv),
+  );
+  decipher.setAAD(testAad);
+  decipher.setAuthTag(authTag);
+  decipher.update(encrypted);
+
+  expect(() => decipher.final()).to.throw();
+});
+
+test(SUITE, 'GCM tampered auth tag throws error', () => {
+  const testKey = Buffer.from(randomFillSync(new Uint8Array(32)));
+  const testIv = randomFillSync(new Uint8Array(12));
+  const testPlaintext = Buffer.from('test data');
+  const testAad = Buffer.from('additional data');
+
+  const cipher = createCipheriv('aes-256-gcm', testKey, Buffer.from(testIv));
+  cipher.setAAD(testAad);
+  const encrypted = Buffer.concat([
+    cipher.update(testPlaintext),
+    cipher.final(),
+  ]);
+  const authTag = cipher.getAuthTag();
+
+  // Tamper with auth tag
+  authTag[0] = authTag[0]! ^ 1;
+
+  const decipher = createDecipheriv(
+    'aes-256-gcm',
+    testKey,
+    Buffer.from(testIv),
+  );
+  decipher.setAAD(testAad);
+  decipher.setAuthTag(authTag);
+  decipher.update(encrypted);
+
+  expect(() => decipher.final()).to.throw();
 });
