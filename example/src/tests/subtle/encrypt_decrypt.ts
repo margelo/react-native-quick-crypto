@@ -1,9 +1,9 @@
 import {
+  Buffer,
   bufferLikeToArrayBuffer,
   getRandomValues,
   subtle,
 } from 'react-native-quick-crypto';
-import { Buffer } from '@craftzdog/react-native-buffer';
 import { test } from '../util';
 import { expect } from 'chai';
 import type {

@@ -3,8 +3,11 @@
  * https://github.com/nodejs/node/blob/main/test/parallel/test-crypto-hmac.js
  */
 
-import { Buffer } from '@craftzdog/react-native-buffer';
-import crypto, { createHmac, type Encoding } from 'react-native-quick-crypto';
+import crypto, {
+  Buffer,
+  createHmac,
+  type Encoding,
+} from 'react-native-quick-crypto';
 import { assert, expect } from 'chai';
 import { test } from '../util';
 

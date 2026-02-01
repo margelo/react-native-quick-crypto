@@ -1,8 +1,6 @@
-import { constants } from 'react-native-quick-crypto';
+import crypto, { Buffer, constants } from 'react-native-quick-crypto';
 import { expect } from 'chai';
 import { test } from '../util';
-import { Buffer } from '@craftzdog/react-native-buffer';
-import crypto from 'react-native-quick-crypto';
 
 const SUITE = 'utils';
 

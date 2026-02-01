@@ -6,8 +6,7 @@
  * @see https://datatracker.ietf.org/doc/html/rfc7539
  */
 
-import { Buffer } from '@craftzdog/react-native-buffer';
-import { createCipheriv } from 'react-native-quick-crypto';
+import { Buffer, createCipheriv } from 'react-native-quick-crypto';
 import { expect } from 'chai';
 import { test } from '../util';
 import { roundTrip, roundTripAuth } from './roundTrip';

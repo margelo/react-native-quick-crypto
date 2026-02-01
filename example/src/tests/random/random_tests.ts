@@ -1,9 +1,12 @@
 /* eslint-disable @typescript-eslint/no-unused-expressions */
-import { Buffer } from '@craftzdog/react-native-buffer';
 import { test } from '../util';
 import { expect } from 'chai';
 
-import crypto, { ab2str, abvToArrayBuffer } from 'react-native-quick-crypto';
+import crypto, {
+  ab2str,
+  abvToArrayBuffer,
+  Buffer,
+} from 'react-native-quick-crypto';
 
 // copied from https://github.com/nodejs/node/blob/master/test/parallel/test-crypto-random.js
 const SUITE = 'random';

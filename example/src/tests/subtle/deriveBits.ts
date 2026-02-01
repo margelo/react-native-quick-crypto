@@ -1,5 +1,6 @@
 import { expect } from 'chai';
-import {
+import crypto, {
+  Buffer,
   subtle,
   ab2str,
   type HashAlgorithm,
@@ -7,8 +8,6 @@ import {
   KeyObject,
 } from 'react-native-quick-crypto';
 import { test } from '../util';
-import crypto from 'react-native-quick-crypto';
-import { Buffer } from '@craftzdog/react-native-buffer';
 
 type TestFixture = [
   string,
