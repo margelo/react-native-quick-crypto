@@ -81,6 +81,7 @@ export * from './utils';
 export * from './subtle';
 export { subtle, isCryptoKeyPair } from './subtle';
 export { constants } from './constants';
+export { Buffer } from '@craftzdog/react-native-buffer';
 
 // Additional exports for CommonJS compatibility
 module.exports = QuickCrypto;

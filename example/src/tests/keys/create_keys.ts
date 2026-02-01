@@ -1,5 +1,5 @@
-import { Buffer } from '@craftzdog/react-native-buffer';
 import {
+  Buffer,
   createSecretKey,
   createPrivateKey,
   createPublicKey,

@@ -1,4 +1,3 @@
-import { Buffer } from '@craftzdog/react-native-buffer';
 import { assert, expect } from 'chai';
 import {
   fromByteArray,
@@ -19,6 +18,7 @@ import type {
 import {
   ab2str,
   binaryLikeToArrayBuffer,
+  Buffer,
   // createPublicKey, // TODO: for 'bad usages' test
   // createPrivateKey, // TODO: for 'bad usages' test
   getRandomValues,

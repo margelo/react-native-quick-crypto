@@ -22,7 +22,6 @@
     "build:ios": "cd ios && xcodebuild -workspace QuickCryptoExample.xcworkspace -scheme QuickCryptoExample -configuration Debug -sdk iphonesimulator CC=clang CPLUSPLUS=clang++ LD=clang LDPLUSPLUS=clang++ GCC_OPTIMIZATION_LEVEL=0 GCC_PRECOMPILE_PREFIX_HEADER=YES ASSETCATALOG_COMPILER_OPTIMIZATION=time DEBUG_INFORMATION_FORMAT=dwarf COMPILER_INDEX_STORE_ENABLE=NO"
   },
   "dependencies": {
-    "@craftzdog/react-native-buffer": "6.1.0",
     "@noble/ciphers": "2.0.1",
     "@noble/curves": "1.7.0",
     "@noble/hashes": "1.5.0",

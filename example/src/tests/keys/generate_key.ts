@@ -1,5 +1,8 @@
-import { Buffer } from '@craftzdog/react-native-buffer';
-import { generateKey, generateKeySync } from 'react-native-quick-crypto';
+import {
+  Buffer,
+  generateKey,
+  generateKeySync,
+} from 'react-native-quick-crypto';
 import { expect } from 'chai';
 import { test, assertThrowsAsync } from '../util';
 

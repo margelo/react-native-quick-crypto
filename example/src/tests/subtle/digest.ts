@@ -1,6 +1,6 @@
 import { expect } from 'chai';
-import { Buffer } from '@craftzdog/react-native-buffer';
 import {
+  Buffer,
   subtle,
   ab2str,
   toArrayBuffer,

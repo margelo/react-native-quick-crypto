@@ -1,6 +1,5 @@
 import { test } from '../util';
-import { Buffer } from '@craftzdog/react-native-buffer';
-import crypto from 'react-native-quick-crypto';
+import crypto, { Buffer } from 'react-native-quick-crypto';
 import { assert } from 'chai';
 
 const SUITE = 'ecdh';
