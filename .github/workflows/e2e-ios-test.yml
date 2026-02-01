@@ -114,7 +114,7 @@ jobs:
             -destination "platform=iOS Simulator,name=${{ env.DEVICE_NAME }}" \
             ONLY_ACTIVE_ARCH=YES \
             CODE_SIGNING_ALLOWED=NO \
-            build 2>&1 | tee $HOME/output/ios-build.log
+            build > $HOME/output/ios-build.log 2>&1
 
       - name: Show ccache stats
         if: always()
