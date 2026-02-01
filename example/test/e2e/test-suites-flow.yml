@@ -33,12 +33,12 @@ jsEngine: graaljs
 # Take screenshot of tests running (will be overwritten)
 - takeScreenshot: ${PLATFORM}-test-result
 
-# Wait for all tests to complete by waiting for completion stats to appear
-# The completion-stats element shows "✅ X | ❌ Y | ⏱️ Zms" when all tests finish
+# Wait for all tests to complete by waiting for duration text to appear
+# The footer shows duration (e.g., "1234ms") only after all tests finish
+# The completion-stats element is always visible but empty until tests complete
 - extendedWaitUntil:
-    visible:
-      id: 'completion-stats'
-    timeout: 60000
+    visible: "\\d+ms"
+    timeout: 120000
 
 # Wait a moment for UI to settle before taking final screenshot
 - waitForAnimationToEnd:

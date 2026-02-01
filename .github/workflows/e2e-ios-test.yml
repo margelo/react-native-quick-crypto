@@ -71,10 +71,6 @@ jobs:
           path: example/ios/Pods
           key: ${{ runner.os }}-pods-${{ hashFiles('example/ios/Podfile.lock', 'packages/react-native-quick-crypto/QuickCrypto.podspec') }}
 
-      - name: Install CocoaPods
-        working-directory: ./example
-        run: bun pods
-
       - name: Restore DerivedData cache
         id: dd-cache
         uses: actions/cache/restore@v5
@@ -83,6 +79,10 @@ jobs:
           key: ${{ runner.os }}-dd-${{ hashFiles('example/ios/Podfile.lock', 'package.json', 'bun.lock') }}-xcode16.4
           restore-keys: |
             ${{ runner.os }}-dd-
+
+      - name: Install CocoaPods
+        working-directory: ./example
+        run: bun pods
 
       - name: Boot iOS Simulator
         run: |
@@ -132,13 +132,25 @@ jobs:
         run: |
           echo "Starting Metro Bundler..."
           bun start > $HOME/output/metro.log 2>&1 &
-          sleep 3
+          echo "Waiting for Metro to be ready..."
+          for i in {1..60}; do
+            if curl -sf http://localhost:8081/status > /dev/null 2>&1; then
+              echo "Metro server is ready!"
+              break
+            fi
+            if [ $i -eq 60 ]; then
+              echo "Metro failed to start after 60 seconds"
+              cat $HOME/output/metro.log
+              exit 1
+            fi
+            sleep 1
+          done
 
       - name: Launch App
         run: |
           echo "Launching app..."
           xcrun simctl launch booted "com.margelo.quickcrypto.example"
-          echo "Waiting for app to be ready..."
+          echo "Waiting for app to initialize..."
           sleep 5
 
       - name: Run Maestro E2E Tests
