@@ -69,7 +69,7 @@ jobs:
         id: pods-cache
         with:
           path: example/ios/Pods
-          key: ${{ runner.os }}-pods-${{ hashFiles('example/ios/Podfile.lock') }}
+          key: ${{ runner.os }}-pods-${{ hashFiles('example/ios/Podfile.lock', 'packages/react-native-quick-crypto/QuickCrypto.podspec') }}
 
       - name: Install CocoaPods
         working-directory: ./example
