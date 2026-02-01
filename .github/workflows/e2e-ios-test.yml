@@ -79,12 +79,20 @@ jobs:
         run: bun pods
 
       - name: Restore DerivedData cache
+        id: dd-cache
         uses: actions/cache/restore@v5
         with:
           path: ${{ env.DERIVED_DATA_PATH }}
-          key: ${{ runner.os }}-dd-v3-${{ hashFiles('example/ios/Podfile.lock', 'package.json', 'bun.lock') }}-xcode16.4
+          key: ${{ runner.os }}-dd-v4-${{ hashFiles('example/ios/Podfile.lock', 'package.json', 'bun.lock') }}-xcode16.4
           restore-keys: |
-            ${{ runner.os }}-dd-v3-
+            ${{ runner.os }}-dd-v4-
+
+      - name: Clean DerivedData on partial cache hit
+        if: steps.dd-cache.outputs.cache-hit != 'true' && steps.dd-cache.outputs.cache-matched-key != ''
+        working-directory: ./example
+        run: |
+          echo "Partial cache hit detected, cleaning potentially stale DerivedData..."
+          rm -rf ios/build
 
       - name: Boot iOS Simulator
         run: |
@@ -95,7 +103,6 @@ jobs:
         working-directory: ./example
         run: |
           echo "Building iOS app with xcodebuild..."
-          echo "Build output will be available in ios-build.log artifact"
           set -o pipefail
           xcodebuild \
             CC=clang CPLUSPLUS=clang++ LD=clang LDPLUSPLUS=clang++ \
@@ -107,7 +114,7 @@ jobs:
             -destination "platform=iOS Simulator,name=${{ env.DEVICE_NAME }}" \
             ONLY_ACTIVE_ARCH=YES \
             CODE_SIGNING_ALLOWED=NO \
-            build > $HOME/output/ios-build.log 2>&1
+            build 2>&1 | tee $HOME/output/ios-build.log
 
       - name: Show ccache stats
         if: always()
@@ -196,7 +203,7 @@ jobs:
         uses: actions/cache/save@v5
         with:
           path: ${{ env.DERIVED_DATA_PATH }}
-          key: ${{ runner.os }}-dd-v3-${{ hashFiles('example/ios/Podfile.lock', 'package.json', 'bun.lock') }}-xcode16.4
+          key: ${{ runner.os }}-dd-v4-${{ hashFiles('example/ios/Podfile.lock', 'package.json', 'bun.lock') }}-xcode16.4
 
       - name: Exit with Test Result
         if: always()
