@@ -93,9 +93,20 @@
         <description>ncrypto sharable library used by Node.js</description>
         <focus>Abstracts OpenSSL calls and utilities from Node.js code</focus>
       </reference>
+      <reference>
+        <path>$REPOS/nitro</path>
+        <description>Nitro Modules source</description>
+        <focus>iOS CI caching patterns, Nitro bridging examples</focus>
+      </reference>
+      <reference>
+        <path>$REPOS/spicy</path>
+        <description>Spicy Golf app</description>
+        <focus>Android E2E patterns with Maestro</focus>
+      </reference>
     </references>
     <instructions>
       Update this library's submodule of ncrypto occasionally when implementing new features.
+      For CI work, reference Nitro (iOS) and Spicy (Android) workflows.
     </instructions>
   </rule>
 
