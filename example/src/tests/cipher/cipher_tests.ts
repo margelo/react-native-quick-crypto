@@ -167,10 +167,12 @@ test(SUITE, 'GCM wrong key throws error (issue #798)', () => {
 
 test(SUITE, 'GCM tampered ciphertext throws error', () => {
   const testKey = Buffer.from(randomFillSync(new Uint8Array(32)));
-  const testIv = Buffer.from(randomFillSync(new Uint8Array(12)));
+  const testIv = randomFillSync(new Uint8Array(12));
   const testPlaintext = Buffer.from('test data');
+  const testAad = Buffer.from('additional data');
 
-  const cipher = createCipheriv('aes-256-gcm', testKey, testIv);
+  const cipher = createCipheriv('aes-256-gcm', testKey, Buffer.from(testIv));
+  cipher.setAAD(testAad);
   const encrypted = Buffer.concat([
     cipher.update(testPlaintext),
     cipher.final(),
@@ -180,7 +182,12 @@ test(SUITE, 'GCM tampered ciphertext throws error', () => {
   // Tamper with ciphertext
   encrypted[0] = encrypted[0]! ^ 1;
 
-  const decipher = createDecipheriv('aes-256-gcm', testKey, testIv);
+  const decipher = createDecipheriv(
+    'aes-256-gcm',
+    testKey,
+    Buffer.from(testIv),
+  );
+  decipher.setAAD(testAad);
   decipher.setAuthTag(authTag);
   decipher.update(encrypted);
 
@@ -189,10 +196,12 @@ test(SUITE, 'GCM tampered ciphertext throws error', () => {
 
 test(SUITE, 'GCM tampered auth tag throws error', () => {
   const testKey = Buffer.from(randomFillSync(new Uint8Array(32)));
-  const testIv = Buffer.from(randomFillSync(new Uint8Array(12)));
+  const testIv = randomFillSync(new Uint8Array(12));
   const testPlaintext = Buffer.from('test data');
+  const testAad = Buffer.from('additional data');
 
-  const cipher = createCipheriv('aes-256-gcm', testKey, testIv);
+  const cipher = createCipheriv('aes-256-gcm', testKey, Buffer.from(testIv));
+  cipher.setAAD(testAad);
   const encrypted = Buffer.concat([
     cipher.update(testPlaintext),
     cipher.final(),
@@ -202,7 +211,12 @@ test(SUITE, 'GCM tampered auth tag throws error', () => {
   // Tamper with auth tag
   authTag[0] = authTag[0]! ^ 1;
 
-  const decipher = createDecipheriv('aes-256-gcm', testKey, testIv);
+  const decipher = createDecipheriv(
+    'aes-256-gcm',
+    testKey,
+    Buffer.from(testIv),
+  );
+  decipher.setAAD(testAad);
   decipher.setAuthTag(authTag);
   decipher.update(encrypted);
 
