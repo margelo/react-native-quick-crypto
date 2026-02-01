@@ -13,6 +13,7 @@ on:
       - 'cpp/**'
       - 'nitrogen/**'
       - 'src/**'
+      - 'packages/react-native-quick-crypto/android/**'
   push:
     branches: [main]
     paths:
@@ -20,6 +21,7 @@ on:
       - 'cpp/**'
       - 'nitrogen/**'
       - 'src/**'
+      - 'packages/react-native-quick-crypto/android/**'
 
 jobs:
   e2e-tests-android:
@@ -60,18 +62,6 @@ jobs:
           distribution: 'corretto'
           java-version: '17'
 
-      - name: Restore Gradle cache
-        uses: actions/cache/restore@v5
-        with:
-          path: |
-            ~/.gradle/caches
-            ~/.gradle/wrapper
-            example/android/.gradle
-            example/android/build
-            example/android/app/.cxx
-            example/android/app/build
-          key: ${{ runner.os }}-gradle
-
       - name: Install System Dependencies
         run: |
           sudo apt-get update
@@ -83,11 +73,36 @@ jobs:
       - name: Install Dependencies
         run: bun install
 
+      - name: Restore Gradle cache
+        uses: actions/cache/restore@v5
+        with:
+          path: |
+            ~/.gradle/caches
+            ~/.gradle/wrapper
+            example/android/.gradle
+            example/android/build
+            example/android/app/.cxx
+            example/android/app/build
+            packages/react-native-quick-crypto/android/.cxx
+            packages/react-native-quick-crypto/android/build
+            node_modules/.bun/react-native-nitro-modules*/node_modules/react-native-nitro-modules/android/.cxx
+            node_modules/.bun/react-native-nitro-modules*/node_modules/react-native-nitro-modules/android/build
+          key: ${{ runner.os }}-gradle
+
       - name: Build Android App
         working-directory: ./example/android
         run: |
           echo "Building Android app (x86_64 only)..."
           ./gradlew :app:assembleDebug -PreactNativeArchitectures=x86_64 --build-cache > $HOME/output/android-build.log 2>&1
+
+      - name: Run Gradle Lint
+        working-directory: ./example/android
+        run: ./gradlew :react-native-quick-crypto:lintDebug -PreactNativeArchitectures=x86_64
+
+      - name: Parse Gradle Lint Report
+        uses: yutailang0119/action-android-lint@v4
+        with:
+          report-path: packages/react-native-quick-crypto/android/build/reports/lint-results-debug.xml
 
       - name: Install Maestro CLI
         run: |
@@ -172,6 +187,10 @@ jobs:
             example/android/build
             example/android/app/.cxx
             example/android/app/build
+            packages/react-native-quick-crypto/android/.cxx
+            packages/react-native-quick-crypto/android/build
+            node_modules/.bun/react-native-nitro-modules*/node_modules/react-native-nitro-modules/android/.cxx
+            node_modules/.bun/react-native-nitro-modules*/node_modules/react-native-nitro-modules/android/build
           key: ${{ runner.os }}-gradle
 
       - name: Exit with Test Result
