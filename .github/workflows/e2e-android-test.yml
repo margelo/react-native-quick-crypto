@@ -138,32 +138,7 @@ jobs:
           emulator-options: -no-snapshot-save -no-window -gpu swiftshader_indirect -noaudio -no-boot-anim -camera-back none -no-metrics
           disable-animations: true
           working-directory: ./example
-          script: |
-            echo "Starting Metro Bundler..."
-            bun start > $HOME/output/metro.log 2>&1 &
-            echo "Waiting for Metro to start..."
-            i=0
-            while [ $i -lt 30 ]; do
-              if curl -sf http://localhost:8081/status > /dev/null 2>&1; then
-                echo "Metro is ready!"
-                break
-              fi
-              sleep 1
-              i=$((i+1))
-            done
-            echo "Setting up adb reverse for Metro..."
-            adb reverse tcp:8081 tcp:8081
-            echo "Installing pre-built APK..."
-            adb install android/app/build/outputs/apk/debug/app-debug.apk
-            echo "Launching app..."
-            adb shell am start -n com.margelo.quickcrypto.example/.MainActivity
-            sleep 5
-            export PATH="$PATH:$HOME/.maestro/bin"
-            export MAESTRO_DRIVER_STARTUP_TIMEOUT=300000
-            export MAESTRO_CLI_NO_ANALYTICS=1
-            export MAESTRO_CLI_ANALYSIS_NOTIFICATION_DISABLED=true
-            echo "Running End-to-End tests on Android..."
-            maestro test test/e2e/test-suites-flow.yml --config .maestro/config.yml --env PLATFORM=android --test-output-dir $HOME/output
+          script: ./test/e2e/scripts/test-android.sh
 
       - name: Stop Gradle Daemon
         if: always()

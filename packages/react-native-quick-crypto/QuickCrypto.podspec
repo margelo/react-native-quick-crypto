@@ -22,6 +22,26 @@ Pod::Spec.new do |s|
   sodium_enabled = ENV['SODIUM_ENABLED'] == '1'
   Pod::UI.puts("[QuickCrypto]  🧂 has libsodium #{sodium_enabled ? "enabled" : "disabled"}!")
 
+  # Ensure libsodium source is present during podspec evaluation when enabled.
+  # This is necessary because prepare_command is skipped for :path pods.
+  if sodium_enabled
+    sodium_version = "1.0.20"
+    sodium_dir = File.join(__dir__, "ios", "libsodium-stable")
+    sodium_header = File.join(sodium_dir, "src", "libsodium", "include", "sodium.h")
+    unless File.exist?(sodium_header)
+      FileUtils.mkdir_p(File.join(__dir__, "ios"))
+      FileUtils.rm_rf(sodium_dir) if File.directory?(sodium_dir)
+
+      Pod::UI.puts "[QuickCrypto] ⬇️  Downloading libsodium source..."
+      Dir.chdir(__dir__) do
+        system("curl -sSfL --connect-timeout 30 --max-time 300 -o ios/libsodium.tar.gz https://download.libsodium.org/libsodium/releases/libsodium-#{sodium_version}-stable.tar.gz") || raise("Failed to download libsodium")
+        system("tar -xzf ios/libsodium.tar.gz -C ios") || raise("Failed to extract libsodium")
+        File.delete("ios/libsodium.tar.gz") if File.exist?("ios/libsodium.tar.gz")
+      end
+      Pod::UI.puts "[QuickCrypto] ✅ libsodium source downloaded successfully"
+    end
+  end
+
   # OpenSSL 3.6+ vendored xcframework (not yet on CocoaPods trunk)
   openssl_version = "3.6.0001"
   openssl_url = "https://github.com/krzyzanowskim/OpenSSL/releases/download/#{openssl_version}/OpenSSL.xcframework.zip"
