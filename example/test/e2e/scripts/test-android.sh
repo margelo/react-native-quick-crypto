@@ -45,6 +45,19 @@ adb reverse tcp:8081 tcp:8081
 echo "Installing app to Android Emulator..."
 adb install -r "$APK_PATH"
 
+# Wait for the bundle to be ready (fetch the bundle to ensure Metro has it cached)
+echo "Waiting for bundle to be ready..."
+for i in {1..60}; do
+  if curl -sf "http://localhost:8081/index.bundle?platform=android&dev=true&minify=false" > /dev/null 2>&1; then
+    echo "Bundle is ready!"
+    break
+  fi
+  if [ $i -eq 60 ]; then
+    echo "Warning: Bundle may not be ready, continuing anyway..."
+  fi
+  sleep 2
+done
+
 # Note: Don't launch the app here - Maestro's launchApp command will do it.
 # Launching it twice can cause Metro connection issues.
 
@@ -60,5 +73,9 @@ maestro test \
   --config .maestro/config.yml \
   --env PLATFORM=android \
   --test-output-dir "$OUTPUT_DIR"
+
+# Capture logcat for crash debugging
+echo "Capturing logcat..."
+adb logcat -d > "$OUTPUT_DIR/logcat.log" 2>&1 || true
 
 echo "Tests completed"
