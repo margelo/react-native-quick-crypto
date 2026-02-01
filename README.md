@@ -114,7 +114,7 @@ module.exports = {
 +       alias: {
 +         'crypto': 'react-native-quick-crypto',
 +         'stream': 'readable-stream',
-+         'buffer': '@craftzdog/react-native-buffer',
++         'buffer': 'react-native-quick-crypto',
 +       },
 +     },
 +   ],
@@ -122,6 +122,8 @@ module.exports = {
   ],
 };
 ```
+
+> **Note:** `react-native-quick-crypto` re-exports `Buffer` from `@craftzdog/react-native-buffer`, so you can use either as the buffer alias. Using `react-native-quick-crypto` ensures a single Buffer instance across your app.
 
 Then restart your bundler using `yarn start --reset-cache`.
 
