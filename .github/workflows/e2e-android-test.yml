@@ -13,6 +13,7 @@ on:
       - 'cpp/**'
       - 'nitrogen/**'
       - 'src/**'
+      - 'packages/react-native-quick-crypto/android/**'
   push:
     branches: [main]
     paths:
@@ -20,6 +21,7 @@ on:
       - 'cpp/**'
       - 'nitrogen/**'
       - 'src/**'
+      - 'packages/react-native-quick-crypto/android/**'
 
 jobs:
   e2e-tests-android:
@@ -92,6 +94,15 @@ jobs:
         run: |
           echo "Building Android app (x86_64 only)..."
           ./gradlew :app:assembleDebug -PreactNativeArchitectures=x86_64 --build-cache > $HOME/output/android-build.log 2>&1
+
+      - name: Run Gradle Lint
+        working-directory: ./example/android
+        run: ./gradlew :react-native-quick-crypto:lintDebug -PreactNativeArchitectures=x86_64
+
+      - name: Parse Gradle Lint Report
+        uses: yutailang0119/action-android-lint@v4
+        with:
+          report-path: packages/react-native-quick-crypto/android/build/reports/lint-results-debug.xml
 
       - name: Install Maestro CLI
         run: |
