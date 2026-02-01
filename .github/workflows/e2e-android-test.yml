@@ -86,11 +86,10 @@ jobs:
         run: bun install
 
       - name: Build Android App
-        working-directory: ./example/android
+        working-directory: ./example
         run: |
-          echo "Building Android app with Gradle..."
-          echo "Build output will be available in android-build.log artifact"
-          ./gradlew :app:assembleDebug --no-daemon > $HOME/output/android-build.log 2>&1
+          echo "Building Android app (x86_64 only)..."
+          bun android --active-arch-only > $HOME/output/android-build.log 2>&1
 
       - name: Install Maestro CLI
         run: |
