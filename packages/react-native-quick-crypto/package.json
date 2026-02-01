@@ -75,7 +75,6 @@
   "dependencies": {
     "@craftzdog/react-native-buffer": "6.1.0",
     "events": "3.3.0",
-    "react-native-quick-base64": "2.2.2",
     "readable-stream": "4.5.2",
     "safe-buffer": "^5.2.1",
     "util": "0.12.5"
