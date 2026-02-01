@@ -68,7 +68,9 @@ jobs:
         uses: actions/cache@v5
         id: pods-cache
         with:
-          path: example/ios/Pods
+          path: |
+            example/ios/Pods
+            ~/Library/Caches/CocoaPods
           key: ${{ runner.os }}-pods-${{ hashFiles('example/ios/Podfile.lock') }}
 
       - name: Restore DerivedData cache
@@ -80,14 +82,13 @@ jobs:
           restore-keys: |
             ${{ runner.os }}-dd-
 
+      - name: Boot iOS Simulator (background)
+        run: |
+          xcrun simctl boot "${{ env.DEVICE_NAME }}" &
+
       - name: Install CocoaPods
         working-directory: ./example
         run: bun pods
-
-      - name: Boot iOS Simulator
-        run: |
-          xcrun simctl boot "${{ env.DEVICE_NAME }}" || true
-          xcrun simctl bootstatus "${{ env.DEVICE_NAME }}" -b
 
       - name: Build iOS App
         working-directory: ./example
@@ -109,6 +110,9 @@ jobs:
       - name: Show ccache stats
         if: always()
         run: ccache --show-stats
+
+      - name: Wait for Simulator
+        run: xcrun simctl bootstatus "${{ env.DEVICE_NAME }}" -b
 
       - name: Install App to Simulator
         working-directory: ./example
@@ -142,6 +146,17 @@ jobs:
               echo "Metro failed to start after 60 seconds"
               cat $HOME/output/metro.log
               exit 1
+            fi
+            sleep 1
+          done
+          echo "Waiting for bundle to be ready..."
+          for i in {1..120}; do
+            if curl -sf "http://localhost:8081/index.bundle?platform=ios&dev=true&minify=false" > /dev/null 2>&1; then
+              echo "Bundle is ready!"
+              break
+            fi
+            if [ $i -eq 120 ]; then
+              echo "Warning: Bundle may not be ready, continuing anyway..."
             fi
             sleep 1
           done
