@@ -27,16 +27,16 @@ jobs:
     env:
       OUTPUT_DIR: ~/output
       USE_CCACHE: '1'
-      DEVICE_NAME: 'iPhone 16 Pro'
+      DEVICE_NAME: 'iPhone 17 Pro'
       DERIVED_DATA_PATH: example/ios/build
 
     steps:
       - name: Checkout
         uses: actions/checkout@v4
 
-      - name: Select Xcode 16.4
+      - name: Select Xcode 26.2
         run: |
-          sudo xcode-select -s "/Applications/Xcode_16.4.app/Contents/Developer"
+          sudo xcode-select -s "/Applications/Xcode_26.2.app/Contents/Developer"
           xcodebuild -version
 
       - name: Setup ccache
@@ -78,7 +78,7 @@ jobs:
         uses: actions/cache/restore@v5
         with:
           path: ${{ env.DERIVED_DATA_PATH }}
-          key: ${{ runner.os }}-dd-${{ hashFiles('example/ios/Podfile.lock', 'package.json', 'bun.lock') }}-xcode16.4
+          key: ${{ runner.os }}-dd-${{ hashFiles('example/ios/Podfile.lock', 'package.json', 'bun.lock') }}-xcode26.2
           restore-keys: |
             ${{ runner.os }}-dd-
 
@@ -220,7 +220,7 @@ jobs:
         uses: actions/cache/save@v5
         with:
           path: ${{ env.DERIVED_DATA_PATH }}
-          key: ${{ runner.os }}-dd-${{ hashFiles('example/ios/Podfile.lock', 'package.json', 'bun.lock') }}-xcode16.4
+          key: ${{ runner.os }}-dd-${{ hashFiles('example/ios/Podfile.lock', 'package.json', 'bun.lock') }}-xcode26.2
 
       - name: Exit with Test Result
         if: always()
