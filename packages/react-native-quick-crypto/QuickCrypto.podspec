@@ -181,12 +181,15 @@ Pod::Spec.new do |s|
   ]
 
   if sodium_enabled
+    # Use absolute path from __dir__ which resolves symlinks correctly.
+    # This is necessary in monorepo setups where the podspec is accessed via symlink
+    # but the source files are resolved to their real paths during compilation.
+    real_sodium_include = File.join(__dir__, "ios", "libsodium-stable", "src", "libsodium", "include")
     sodium_headers = [
       "\"$(PODS_TARGET_SRCROOT)/ios/libsodium-stable/src/libsodium/include\"",
       "\"$(PODS_TARGET_SRCROOT)/ios/libsodium-stable/src/libsodium/include/sodium\"",
-      "\"$(PODS_TARGET_SRCROOT)/ios/libsodium-stable\"",
-      "\"$(PODS_ROOT)/../../packages/react-native-quick-crypto/ios/libsodium-stable/src/libsodium/include\"",
-      "\"$(PODS_ROOT)/../../packages/react-native-quick-crypto/ios/libsodium-stable/src/libsodium/include/sodium\""
+      "\"#{real_sodium_include}\"",
+      "\"#{real_sodium_include}/sodium\""
     ]
     xcconfig["HEADER_SEARCH_PATHS"] = (cpp_headers + sodium_headers).join(' ')
     xcconfig["GCC_PREPROCESSOR_DEFINITIONS"] = "$(inherited) FOLLY_NO_CONFIG FOLLY_CFG_NO_COROUTINES BLSALLOC_SODIUM=1"

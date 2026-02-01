@@ -45,10 +45,8 @@ adb reverse tcp:8081 tcp:8081
 echo "Installing app to Android Emulator..."
 adb install -r "$APK_PATH"
 
-# Launch the app
-echo "Launching app..."
-adb shell am start -n com.margelo.quickcrypto.example/.MainActivity
-sleep 5
+# Note: Don't launch the app here - Maestro's launchApp command will do it.
+# Launching it twice can cause Metro connection issues.
 
 # Run E2E tests
 export PATH="$PATH:$HOME/.maestro/bin"
