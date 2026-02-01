@@ -52,6 +52,6 @@ const buf = Buffer.from('hello');
 
 ## What gets polyfilled?
 
-1.  **`global.Buffer`**: Via [`@craftzdog/react-native-buffer`](https://github.com/craftzdog/react-native-buffer).
+1.  **`global.Buffer`**: Re-exported from [`@craftzdog/react-native-buffer`](https://github.com/craftzdog/react-native-buffer). You can also import it directly: `import { Buffer } from 'react-native-quick-crypto'`.
 2.  **`global.crypto`**: Points to `QuickCrypto`.
 3.  **`global.process`**: Adds `process.nextTick` (mapped to `setImmediate`).
