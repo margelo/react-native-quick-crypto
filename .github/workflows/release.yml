@@ -31,7 +31,9 @@ jobs:
       - name: Setup Node.js (for npm publish with OIDC)
         uses: actions/setup-node@v4
         with:
-          node-version: '24'
+          # Node 24 / npm 11 has a bug with workspace:* protocol
+          # https://github.com/npm/cli/issues/4367
+          node-version: '22'
           registry-url: 'https://registry.npmjs.org'
 
       - name: Setup Ruby (for CocoaPods)
