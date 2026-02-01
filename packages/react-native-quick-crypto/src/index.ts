@@ -40,6 +40,7 @@ const QuickCrypto = {
   ...utils,
   ...subtle,
   constants,
+  Buffer,
 };
 
 /**
