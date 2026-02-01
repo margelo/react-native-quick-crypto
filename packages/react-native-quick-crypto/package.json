@@ -97,6 +97,7 @@
     "react": "*",
     "react-native": "*",
     "react-native-nitro-modules": ">=0.29.1",
+    "react-native-quick-base64": ">=2.1.0",
     "expo": ">=48.0.0",
     "expo-build-properties": "*"
   },

@@ -55,3 +55,4 @@ const buf = Buffer.from('hello');
 1.  **`global.Buffer`**: Re-exported from [`@craftzdog/react-native-buffer`](https://github.com/craftzdog/react-native-buffer). You can also import it directly: `import { Buffer } from 'react-native-quick-crypto'`.
 2.  **`global.crypto`**: Points to `QuickCrypto`.
 3.  **`global.process`**: Adds `process.nextTick` (mapped to `setImmediate`).
+4.  **`global.base64ToArrayBuffer` / `global.base64FromArrayBuffer`**: Native base64 encoding/decoding from [`react-native-quick-base64`](https://github.com/craftzdog/react-native-quick-base64).

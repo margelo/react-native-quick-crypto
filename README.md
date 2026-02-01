@@ -50,7 +50,7 @@ There is a benchmark suite in the Example app in this repo that has benchmarks o
 </h3>
 
 ```sh
-bun add react-native-quick-crypto react-native-nitro-modules
+bun add react-native-quick-crypto react-native-nitro-modules react-native-quick-base64
 cd ios && pod install
 ```
 
