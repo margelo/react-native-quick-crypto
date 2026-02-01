@@ -1,9 +1,15 @@
 import { assert, expect } from 'chai';
-import {
-  fromByteArray,
-  toByteArray,
-  trimBase64Padding,
-} from 'react-native-quick-base64';
+
+declare global {
+  // eslint-disable-next-line no-var
+  var base64ToArrayBuffer: (
+    base64: string,
+    removeLinebreaks?: boolean,
+  ) => ArrayBuffer;
+  // eslint-disable-next-line no-var
+  var base64FromArrayBuffer: (buffer: ArrayBuffer, urlSafe?: boolean) => string;
+}
+
 import type {
   CryptoKey,
   CryptoKeyPair,
@@ -72,14 +78,19 @@ function base64ToArrayBuffer(val: string): ArrayBuffer {
   while (cleaned.endsWith('.')) {
     cleaned = cleaned.slice(0, -1);
   }
-  const arr = toByteArray(cleaned);
-  return binaryLikeToArrayBuffer(arr);
+  return global.base64ToArrayBuffer(cleaned);
 }
 
-// TODO: add in `url` from react-native-quick-base64 when 2.1.1 is released
 function arrayBufferToBase64(buffer: ArrayBuffer, urlSafe: boolean = false) {
-  const bytes = new Uint8Array(buffer);
-  return fromByteArray(bytes, urlSafe);
+  return global.base64FromArrayBuffer(buffer, urlSafe);
+}
+
+function trimBase64Padding(str: string): string {
+  return str.replace(/[.=]{1,2}$/, '');
+}
+
+function toByteArray(b64: string): Uint8Array {
+  return new Uint8Array(global.base64ToArrayBuffer(b64));
 }
 
 const SUITE = 'subtle.importKey/exportKey';

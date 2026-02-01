@@ -53,6 +53,10 @@ export const install = () => {
 
   // @ts-expect-error subtle isn't fully implemented and Cryptokey is missing
   global.crypto = QuickCrypto;
+
+  // Install base64 globals (base64ToArrayBuffer, base64FromArrayBuffer)
+  // eslint-disable-next-line @typescript-eslint/no-require-imports
+  require('react-native-quick-base64');
 };
 
 // random, cipher, hash use nextTick
