@@ -76,7 +76,7 @@
     "@craftzdog/react-native-buffer": "6.1.0",
     "events": "3.3.0",
     "react-native-quick-base64": "2.2.2",
-    "readable-stream": "4.5.2",
+    "readable-stream": "4.7.0",
     "safe-buffer": "^5.2.1",
     "util": "0.12.5"
   },
@@ -84,7 +84,7 @@
     "@types/jest": "29.5.11",
     "@types/node": "24.3.0",
     "@types/react": "18.3.3",
-    "@types/readable-stream": "4.0.18",
+    "@types/readable-stream": "4.0.23",
     "del-cli": "7.0.0",
     "expo": "^54.0.25",
     "expo-build-properties": "^1.0.0",
