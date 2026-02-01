@@ -83,6 +83,13 @@ jobs:
       - name: Install Dependencies
         run: bun install
 
+      - name: Build Android App
+        working-directory: ./example/android
+        run: |
+          echo "Building Android app with Gradle..."
+          echo "Build output will be available in android-build.log artifact"
+          ./gradlew :app:assembleDebug --no-daemon > $HOME/output/android-build.log 2>&1
+
       - name: Install Maestro CLI
         run: |
           export MAESTRO_VERSION=2.0.10
@@ -117,10 +124,6 @@ jobs:
           disable-animations: false
           script: echo "Generated AVD snapshot for caching."
 
-      - name: Make scripts executable
-        run: chmod +x test/e2e/*.sh
-        working-directory: ./example/
-
       - name: Run E2E Tests
         uses: reactivecircus/android-emulator-runner@v2
         id: test_android
@@ -132,13 +135,51 @@ jobs:
           force-avd-creation: false
           emulator-options: -no-snapshot-save -no-window -gpu swiftshader_indirect -noaudio -no-boot-anim -camera-back none -no-metrics
           disable-animations: true
-          working-directory: ./example/
-          script: ./test/e2e/run-android.sh
+          working-directory: ./example
+          script: |
+            # Start Metro Bundler
+            echo "Starting Metro Bundler..."
+            bun start > $HOME/output/metro.log 2>&1 &
+            sleep 10
+
+            # Install the pre-built APK
+            echo "Installing pre-built APK..."
+            adb install android/app/build/outputs/apk/debug/app-debug.apk
+
+            # Launch the app
+            echo "Launching app..."
+            adb shell am start -n com.margelo.quickcrypto.example/.MainActivity
+            sleep 5
+
+            # Run Maestro tests
+            export PATH="$PATH:$HOME/.maestro/bin"
+            export MAESTRO_DRIVER_STARTUP_TIMEOUT=300000
+            export MAESTRO_CLI_NO_ANALYTICS=1
+            export MAESTRO_CLI_ANALYSIS_NOTIFICATION_DISABLED=true
+
+            echo "Running End-to-End tests on Android..."
+            maestro test \
+              test/e2e/test-suites-flow.yml \
+              --config .maestro/config.yml \
+              --env PLATFORM=android \
+              --test-output-dir $HOME/output
 
       - name: Stop Gradle Daemon
         if: always()
         working-directory: ./example/android
         run: ./gradlew --stop
+
+      - name: Collect Screenshots
+        if: always()
+        run: |
+          mkdir -p $HOME/output/screenshots
+          LATEST_SCREENSHOT=$(find $HOME/output -name "screenshot-*.png" -type f 2>/dev/null | sort -r | head -1)
+          if [ -n "$LATEST_SCREENSHOT" ]; then
+            echo "Copying screenshot from $LATEST_SCREENSHOT to screenshots/android-test-result.png"
+            cp "$LATEST_SCREENSHOT" $HOME/output/screenshots/android-test-result.png
+          else
+            echo "No screenshot found to copy"
+          fi
 
       - name: Post Maestro Screenshot to PR
         if: always()
