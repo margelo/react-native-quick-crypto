@@ -78,6 +78,12 @@ For full details, see `.claude/rules/*.xml`:
 - Minimum key sizes
 - No key material in errors
 
+### ci-caching.xml
+- iOS Pods/DerivedData cache consistency (exact-match Pods, no restore-keys)
+- Cache key design (no version suffixes, use hashFiles)
+- Android Maestro patterns (don't launch app before Maestro)
+- Reference implementations (Nitro for iOS, Spicy for Android)
+
 ## When to Use Orchestration
 
 ### Use Orchestrator For:
@@ -111,6 +117,14 @@ Use these instead of web searches:
 - **ncrypto**: `$REPOS/ncrypto`
   - separate crypto lib broken out from Node.js
   - Patterns and tools to access OpenSSL
+
+- **Nitro**: `$REPOS/nitro`
+  - iOS CI caching patterns (super-fast builds)
+  - Nitro Modules bridging examples
+
+- **Spicy**: `$REPOS/spicy`
+  - Android E2E patterns with Maestro
+  - Separate build/test workflow
 
 ## Testing
 
