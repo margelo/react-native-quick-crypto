@@ -6,6 +6,8 @@ import '../tests/blake3/blake3_tests';
 import '../tests/cipher/cipher_tests';
 import '../tests/cipher/chacha_tests';
 import '../tests/cipher/xsalsa20_tests';
+import '../tests/cipher/xsalsa20_poly1305_tests';
+import '../tests/cipher/xchacha20_poly1305_tests';
 import '../tests/dh/dh_tests';
 import '../tests/ecdh/ecdh_tests';
 import '../tests/hash/hash_tests';

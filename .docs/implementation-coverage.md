@@ -121,7 +121,7 @@ These algorithms provide quantum-resistant cryptography.
   * ✅ `crypto.createSign(algorithm[, options])`
   * ✅ `crypto.createVerify(algorithm[, options])`
   * ❌ `crypto.decapsulate(key, ciphertext[, callback])`
-  * ❌ `crypto.diffieHellman(options[, callback])`
+  * ✅ `crypto.diffieHellman(options[, callback])`
   * ❌ `crypto.encapsulate(key[, callback])`
   * ❌ `crypto.fips` deprecated
   * ✅ `crypto.generateKey(type, options, callback)`
@@ -226,6 +226,18 @@ These algorithms provide quantum-resistant cryptography.
 | `Ed25519`           | ✅ |
 | `Ed448`             | ✅ |
 | `HMAC`              | ✅ |
+
+## Extended Ciphers (Beyond Node.js API)
+
+These ciphers are **not available in Node.js** but are provided by RNQC via libsodium for mobile use cases requiring extended nonces.
+
+| Cipher | Key | Nonce | Tag | AAD | Notes |
+| ------ | :-: | :---: | :-: | :-: | ----- |
+| `xchacha20-poly1305` | 32B | 24B | 16B | ✅ | AEAD with extended nonce |
+| `xsalsa20-poly1305` | 32B | 24B | 16B | ❌ | Authenticated encryption (secretbox) |
+| `xsalsa20` | 32B | 24B | - | - | Stream cipher (no authentication) |
+
+> **Note:** These ciphers require `SODIUM_ENABLED=1` on both iOS and Android.
 
 # `WebCrypto`
 
