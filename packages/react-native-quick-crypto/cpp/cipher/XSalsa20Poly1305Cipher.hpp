@@ -1,6 +1,6 @@
 #pragma once
 
-#if BLSALLOC_SODIUM
+#ifdef BLSALLOC_SODIUM
 #include "sodium.h"
 #else
 #define crypto_secretbox_xsalsa20poly1305_KEYBYTES 32U
@@ -25,6 +25,7 @@ class XSalsa20Poly1305Cipher : public HybridCipher {
   bool setAAD(const std::shared_ptr<ArrayBuffer>& data, std::optional<double> plaintextLength) override;
   std::shared_ptr<ArrayBuffer> getAuthTag() override;
   bool setAuthTag(const std::shared_ptr<ArrayBuffer>& tag) override;
+  bool setAutoPadding(bool autoPad) override;
 
  private:
   static constexpr size_t kKeySize = crypto_secretbox_xsalsa20poly1305_KEYBYTES;

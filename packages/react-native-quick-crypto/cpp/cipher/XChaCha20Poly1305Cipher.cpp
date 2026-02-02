@@ -13,6 +13,12 @@ XChaCha20Poly1305Cipher::~XChaCha20Poly1305Cipher() {
   sodium_memzero(key_, kKeySize);
   sodium_memzero(nonce_, kNonceSize);
   sodium_memzero(auth_tag_, kTagSize);
+  if (!data_buffer_.empty()) {
+    sodium_memzero(data_buffer_.data(), data_buffer_.size());
+  }
+  if (!aad_.empty()) {
+    sodium_memzero(aad_.data(), aad_.size());
+  }
 #else
   std::memset(key_, 0, kKeySize);
   std::memset(nonce_, 0, kNonceSize);
@@ -69,6 +75,7 @@ std::shared_ptr<ArrayBuffer> XChaCha20Poly1305Cipher::final() {
                                                             aad_.empty() ? nullptr : aad_.data(), aad_.size(), nullptr, nonce_, key_);
 
     if (result != 0) {
+      sodium_memzero(ciphertext, data_buffer_.size());
       delete[] ciphertext;
       throw std::runtime_error("XChaCha20Poly1305Cipher: encryption failed");
     }
@@ -89,6 +96,7 @@ std::shared_ptr<ArrayBuffer> XChaCha20Poly1305Cipher::final() {
                                                             aad_.empty() ? nullptr : aad_.data(), aad_.size(), nonce_, key_);
 
     if (result != 0) {
+      sodium_memzero(plaintext, data_buffer_.size());
       delete[] plaintext;
       throw std::runtime_error("XChaCha20Poly1305Cipher: decryption failed - authentication tag mismatch");
     }
@@ -144,6 +152,10 @@ bool XChaCha20Poly1305Cipher::setAuthTag(const std::shared_ptr<ArrayBuffer>& tag
   std::memcpy(auth_tag_, native_tag->data(), kTagSize);
   return true;
 #endif
+}
+
+bool XChaCha20Poly1305Cipher::setAutoPadding(bool autoPad) {
+  throw std::runtime_error("setAutoPadding is not supported for xchacha20-poly1305");
 }
 
 } // namespace margelo::nitro::crypto

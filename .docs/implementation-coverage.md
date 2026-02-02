@@ -121,7 +121,7 @@ These algorithms provide quantum-resistant cryptography.
   * ✅ `crypto.createSign(algorithm[, options])`
   * ✅ `crypto.createVerify(algorithm[, options])`
   * ❌ `crypto.decapsulate(key, ciphertext[, callback])`
-  * ✅ `crypto.diffieHellman(options[, callback])`
+  * ❌ `crypto.diffieHellman(options[, callback])`
   * ❌ `crypto.encapsulate(key[, callback])`
   * ❌ `crypto.fips` deprecated
   * ✅ `crypto.generateKey(type, options, callback)`
