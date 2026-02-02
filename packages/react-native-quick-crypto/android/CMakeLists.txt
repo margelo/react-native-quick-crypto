@@ -32,6 +32,8 @@ add_library(
   ../cpp/cipher/HybridRsaCipher.cpp
   ../cpp/cipher/OCBCipher.cpp
   ../cpp/cipher/XSalsa20Cipher.cpp
+  ../cpp/cipher/XSalsa20Poly1305Cipher.cpp
+  ../cpp/cipher/XChaCha20Poly1305Cipher.cpp
   ../cpp/cipher/ChaCha20Cipher.cpp
   ../cpp/cipher/ChaCha20Poly1305Cipher.cpp
   ../cpp/dh/HybridDiffieHellman.cpp
