@@ -111,7 +111,10 @@
   "release-it": {
     "npm": {
       "publish": true,
-      "skipChecks": true
+      "skipChecks": true,
+      "versionArgs": [
+        "--workspaces-update=false"
+      ]
     },
     "git": false,
     "github": {
