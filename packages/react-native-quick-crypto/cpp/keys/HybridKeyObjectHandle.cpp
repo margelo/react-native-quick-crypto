@@ -292,6 +292,42 @@ JWK HybridKeyObjectHandle::exportJwk(const JWK& key, bool handleRsaPss) {
     return result;
   }
 
+  // Export OKP keys (Ed25519, Ed448, X25519, X448) per RFC 8037
+  if (keyId == EVP_PKEY_ED25519 || keyId == EVP_PKEY_ED448 || keyId == EVP_PKEY_X25519 || keyId == EVP_PKEY_X448) {
+    result.kty = JWKkty::OKP;
+
+    switch (keyId) {
+      case EVP_PKEY_ED25519:
+        result.crv = "Ed25519";
+        break;
+      case EVP_PKEY_ED448:
+        result.crv = "Ed448";
+        break;
+      case EVP_PKEY_X25519:
+        result.crv = "X25519";
+        break;
+      case EVP_PKEY_X448:
+        result.crv = "X448";
+        break;
+    }
+
+    auto pubKey = pkey.rawPublicKey();
+    if (!pubKey) {
+      throw std::runtime_error("Failed to get raw public key for OKP JWK export");
+    }
+    result.x = base64url_encode(reinterpret_cast<const unsigned char*>(pubKey.get()), pubKey.size());
+
+    if (keyType == KeyType::PRIVATE) {
+      auto privKey = pkey.rawPrivateKey();
+      if (!privKey) {
+        throw std::runtime_error("Failed to get raw private key for OKP JWK export");
+      }
+      result.d = base64url_encode(reinterpret_cast<const unsigned char*>(privKey.get()), privKey.size());
+    }
+
+    return result;
+  }
+
   throw std::runtime_error("Unsupported key type for JWK export");
 }
 
@@ -595,6 +631,50 @@ std::optional<KeyType> HybridKeyObjectHandle::initJwk(const JWK& keyData, std::o
     KeyType type = isPrivate ? KeyType::PRIVATE : KeyType::PUBLIC;
     data_ = KeyObjectData::CreateAsymmetric(type, ncrypto::EVPKeyPointer(pkey));
     return type;
+  }
+
+  // Handle OKP keys (Ed25519, Ed448, X25519, X448) per RFC 8037
+  if (kty == JWKkty::OKP) {
+    bool isPrivate = keyData.d.has_value();
+
+    if (!keyData.crv.has_value() || !keyData.x.has_value()) {
+      throw std::runtime_error("JWK OKP key missing required fields (crv, x)");
+    }
+
+    std::string crv = keyData.crv.value();
+
+    int evpType;
+    if (crv == "Ed25519") {
+      evpType = EVP_PKEY_ED25519;
+    } else if (crv == "Ed448") {
+      evpType = EVP_PKEY_ED448;
+    } else if (crv == "X25519") {
+      evpType = EVP_PKEY_X25519;
+    } else if (crv == "X448") {
+      evpType = EVP_PKEY_X448;
+    } else {
+      throw std::runtime_error("Unsupported OKP curve: " + crv);
+    }
+
+    if (isPrivate) {
+      std::string privBytes = base64url_decode(keyData.d.value());
+      EVP_PKEY* pkey =
+          EVP_PKEY_new_raw_private_key(evpType, nullptr, reinterpret_cast<const unsigned char*>(privBytes.data()), privBytes.size());
+      if (!pkey) {
+        throw std::runtime_error("Failed to create OKP private key from JWK");
+      }
+      data_ = KeyObjectData::CreateAsymmetric(KeyType::PRIVATE, ncrypto::EVPKeyPointer(pkey));
+      return KeyType::PRIVATE;
+    } else {
+      std::string pubBytes = base64url_decode(keyData.x.value());
+      EVP_PKEY* pkey =
+          EVP_PKEY_new_raw_public_key(evpType, nullptr, reinterpret_cast<const unsigned char*>(pubBytes.data()), pubBytes.size());
+      if (!pkey) {
+        throw std::runtime_error("Failed to create OKP public key from JWK");
+      }
+      data_ = KeyObjectData::CreateAsymmetric(KeyType::PUBLIC, ncrypto::EVPKeyPointer(pkey));
+      return KeyType::PUBLIC;
+    }
   }
 
   throw std::runtime_error("Unsupported JWK key type");

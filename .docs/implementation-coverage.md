@@ -43,7 +43,7 @@ These algorithms provide quantum-resistant cryptography.
   * ✅ `diffieHellman.getPublicKey([encoding])`
   * ✅ `diffieHellman.setPrivateKey(privateKey[, encoding])`
   * ✅ `diffieHellman.setPublicKey(publicKey[, encoding])`
-  * ❌ `diffieHellman.verifyError`
+  * ✅ `diffieHellman.verifyError`
 * ✅ Class: `DiffieHellmanGroup`
 * ✅ Class: `ECDH`
   * ❌ static `ECDH.convertKey(key, curve[, inputEncoding[, outputEncoding[, format]]])`
@@ -65,8 +65,8 @@ These algorithms provide quantum-resistant cryptography.
   * ❌ `keyObject.asymmetricKeyDetails`
   * ✅ `keyObject.asymmetricKeyType`
   * ✅ `keyObject.export([options])`
-  * ❌ `keyObject.equals(otherKeyObject)`
-  * ❌ `keyObject.symmetricKeySize`
+  * ✅ `keyObject.equals(otherKeyObject)`
+  * ✅ `keyObject.symmetricKeySize`
   * ❌ `keyObject.toCryptoKey(algorithm, extractable, keyUsages)`
   * ✅ `keyObject.type`
 * ✅ Class: `Sign`
@@ -111,6 +111,7 @@ These algorithms provide quantum-resistant cryptography.
   * ✅ `crypto.createDecipheriv(algorithm, key, iv[, options])`
   * ✅ `crypto.createDiffieHellman(prime[, primeEncoding][, generator][, generatorEncoding])`
   * ✅ `crypto.createDiffieHellman(primeLength[, generator])`
+  * ✅ `crypto.createDiffieHellmanGroup(groupName)`
   * ✅ `crypto.getDiffieHellman(groupName)`
   * ✅ `crypto.createECDH(curveName)`
   * ✅ `crypto.createHash(algorithm[, options])`
@@ -136,7 +137,7 @@ These algorithms provide quantum-resistant cryptography.
   * ❌ `crypto.getFips()`
   * ✅ `crypto.getHashes()`
   * ✅ `crypto.getRandomValues(typedArray)`
-  * ❌ `crypto.hash(algorithm, data[, options])`
+  * ✅ `crypto.hash(algorithm, data[, outputEncoding])`
   * ✅ `crypto.hkdf(digest, ikm, salt, info, keylen, callback)`
   * ✅ `crypto.hkdfSync(digest, ikm, salt, info, keylen)`
   * ✅ `crypto.pbkdf2(password, salt, iterations, keylen, digest, callback)`
@@ -263,8 +264,8 @@ These ciphers are **not available in Node.js** but are provided by RNQC via libs
   * ❌ `subtle.decapsulateBits(decapsulationAlgorithm, decapsulationKey, ciphertext)`
   * ❌ `subtle.decapsulateKey(decapsulationAlgorithm, decapsulationKey, ciphertext, sharedKeyAlgorithm, extractable, usages)`
   * ✅ `subtle.decrypt(algorithm, key, data)`
-  * 🚧 `subtle.deriveBits(algorithm, baseKey, length)`
-  * 🚧 `subtle.deriveKey(algorithm, baseKey, derivedKeyAlgorithm, extractable, keyUsages)`
+  * ✅ `subtle.deriveBits(algorithm, baseKey, length)`
+  * ✅ `subtle.deriveKey(algorithm, baseKey, derivedKeyAlgorithm, extractable, keyUsages)`
   * 🚧 `subtle.digest(algorithm, data)`
   * ❌ `subtle.encapsulateBits(encapsulationAlgorithm, encapsulationKey)`
   * ❌ `subtle.encapsulateKey(encapsulationAlgorithm, encapsulationKey, sharedKeyAlgorithm, extractable, usages)`
@@ -299,7 +300,7 @@ These ciphers are **not available in Node.js** but are provided by RNQC via libs
 ## `subtle.deriveKey`
 | Algorithm  | Status |
 | ---------  | :----: |
-| `ECDH`     | ❌ |
+| `ECDH`     | ✅ |
 | `HKDF`     | ✅ |
 | `PBKDF2`   | ✅ |
 | `X25519`   | ✅ |
@@ -339,8 +340,8 @@ These ciphers are **not available in Node.js** but are provided by RNQC via libs
 | `ChaCha20-Poly1305` |        |         | ✅    |       | ✅           |              |            |
 | `ECDH`              | ✅     | ✅      | ✅    | ✅    |              | ✅           |            |
 | `ECDSA`             | ✅     | ✅      | ✅    | ✅    |              | ✅           |            |
-| `Ed25519`           | ✅     | ✅      | ❌    | ✅    |              | ❌           |            |
-| `Ed448`             | ✅     | ✅      | ❌    | ✅    |              | ❌           |            |
+| `Ed25519`           | ✅     | ✅      | ✅    | ✅    |              | ❌           |            |
+| `Ed448`             | ✅     | ✅      | ✅    | ✅    |              | ❌           |            |
 | `HMAC`              |        |         | ✅    | ✅    | ✅           |              |            |
 | `ML-DSA-44`         | ✅     | ✅      | ✅    |       |              | ✅           | ✅         |
 | `ML-DSA-65`         | ✅     | ✅      | ✅    |       |              | ✅           | ✅         |
@@ -399,8 +400,8 @@ These ciphers are **not available in Node.js** but are provided by RNQC via libs
 | `ChaCha20-Poly1305` |        |         | ✅    |       | ✅           |              |            |
 | `ECDH`              | ✅     | ✅      | ✅    | ✅    |              | ✅           |            |
 | `ECDSA`             | ✅     | ✅      | ✅    | ✅    |              | ✅           |            |
-| `Ed25519`           | ✅     | ✅      | ❌    | ❌    |              | ❌           |            |
-| `Ed448`             | ✅     | ✅      | ❌    | ❌    |              | ❌           |            |
+| `Ed25519`           | ✅     | ✅      | ✅    | ✅    |              | ❌           |            |
+| `Ed448`             | ✅     | ✅      | ✅    | ✅    |              | ❌           |            |
 | `HKDF`              |        |         |       | ✅    | ❌           |              |            |
 | `HMAC`              |        |         | ✅    | ✅    | ✅           |              |            |
 | `ML-DSA-44`         | ✅     | ✅      | ✅    |       |              | ✅           | ✅         |

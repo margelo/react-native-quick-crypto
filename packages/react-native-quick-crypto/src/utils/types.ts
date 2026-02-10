@@ -265,7 +265,7 @@ export type AsymmetricKeyType =
   | CFRGKeyPairType
   | PQCKeyPairType;
 
-type JWKkty = 'AES' | 'RSA' | 'EC' | 'oct';
+type JWKkty = 'AES' | 'RSA' | 'EC' | 'oct' | 'OKP';
 type JWKuse = 'sig' | 'enc';
 
 export interface JWK {

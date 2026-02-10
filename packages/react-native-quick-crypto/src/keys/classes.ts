@@ -89,6 +89,25 @@ export class KeyObject {
     throw new Error('export() must be implemented by subclasses');
   }
 
+  equals(otherKeyObject: KeyObject): boolean {
+    if (!(otherKeyObject instanceof KeyObject)) {
+      throw new TypeError('otherKeyObject must be a KeyObject');
+    }
+    if (this.type !== otherKeyObject.type) return false;
+
+    const thisExported = this.handle.exportKey();
+    const otherExported = otherKeyObject.handle.exportKey();
+
+    if (thisExported.byteLength !== otherExported.byteLength) return false;
+
+    const a = new Uint8Array(thisExported);
+    const b = new Uint8Array(otherExported);
+    for (let i = 0; i < a.length; i++) {
+      if (a[i] !== b[i]) return false;
+    }
+    return true;
+  }
+
   constructor(type: string, handle: KeyObjectHandle);
   constructor(type: string, key: ArrayBuffer);
   constructor(type: string, handleOrKey: KeyObjectHandle | ArrayBuffer) {
@@ -197,9 +216,9 @@ export class SecretKeyObject extends KeyObject {
     super('secret', handle);
   }
 
-  // get symmetricKeySize() {
-  //   return this.handle.getSymmetricKeySize();
-  // }
+  get symmetricKeySize(): number {
+    return this.handle.exportKey().byteLength;
+  }
 
   export(options: { format: 'pem' } & EncodingOptions): never;
   export(options: { format: 'der' } & EncodingOptions): Buffer;

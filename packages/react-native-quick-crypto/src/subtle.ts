@@ -17,7 +17,7 @@ import type {
   RsaOaepParams,
   ChaCha20Poly1305Params,
 } from './utils';
-import { KFormatType, KeyEncoding } from './utils';
+import { KFormatType, KeyEncoding, KeyType } from './utils';
 import {
   CryptoKey,
   KeyObject,
@@ -940,6 +940,19 @@ function edImportKey(
     // Raw public keys are just the key bytes
     handle.init(1, keyData); // 1 = public key type
     keyObject = new PublicKeyObject(handle);
+  } else if (format === 'jwk') {
+    const jwkData = data as unknown as JWK;
+    const handle =
+      NitroModules.createHybridObject<KeyObjectHandle>('KeyObjectHandle');
+    const keyType = handle.initJwk(jwkData);
+    if (keyType === undefined) {
+      throw lazyDOMException('Invalid JWK data', 'DataError');
+    }
+    if (keyType === KeyType.PRIVATE) {
+      keyObject = new PrivateKeyObject(handle);
+    } else {
+      keyObject = new PublicKeyObject(handle);
+    }
   } else {
     throw lazyDOMException(
       `Unsupported format for ${name} import: ${format}`,
@@ -1176,6 +1189,14 @@ const exportKeyJWK = (key: CryptoKey): ArrayBuffer | unknown => {
     // Fall through
     case 'ECDH':
       jwk.crv ||= key.algorithm.namedCurve;
+      return jwk;
+    case 'Ed25519':
+    // Fall through
+    case 'Ed448':
+    // Fall through
+    case 'X25519':
+    // Fall through
+    case 'X448':
       return jwk;
     case 'AES-CTR':
     // Fall through
@@ -1612,6 +1633,9 @@ export class Subtle {
       // Fall through
       case 'X448':
         derivedBits = await xDeriveBits(algorithm, baseKey, length);
+        break;
+      case 'ECDH':
+        derivedBits = await ecDeriveBits(algorithm, baseKey, length);
         break;
       case 'HKDF':
         derivedBits = hkdfDeriveBits(
