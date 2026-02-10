@@ -433,6 +433,16 @@ const DH* HybridDiffieHellman::getDH() const {
   return dh;
 }
 
+double HybridDiffieHellman::getVerifyError() {
+  ensureInitialized();
+  const DH* dh = getDH();
+  int codes = 0;
+  if (DH_check(const_cast<DH*>(dh), &codes) != 1) {
+    return 0;
+  }
+  return static_cast<double>(codes);
+}
+
 #pragma clang diagnostic pop
 
 } // namespace margelo::nitro::crypto

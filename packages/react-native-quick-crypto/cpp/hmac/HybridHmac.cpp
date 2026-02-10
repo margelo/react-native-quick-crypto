@@ -60,7 +60,7 @@ void HybridHmac::createHmac(const std::string& hmacAlgorithm, const std::shared_
   }
 }
 
-void HybridHmac::update(const std::variant<std::string, std::shared_ptr<ArrayBuffer>>& data) {
+void HybridHmac::update(const std::variant<std::shared_ptr<ArrayBuffer>, std::string>& data) {
   if (!ctx) {
     throw std::runtime_error("HMAC context not initialized");
   }

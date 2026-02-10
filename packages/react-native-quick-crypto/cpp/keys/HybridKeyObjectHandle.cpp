@@ -5,6 +5,7 @@
 #include "HybridKeyObjectHandle.hpp"
 #include "QuickCryptoUtils.hpp"
 #include <openssl/bn.h>
+#include <openssl/crypto.h>
 #include <openssl/ec.h>
 #include <openssl/evp.h>
 #include <openssl/obj_mac.h>
@@ -309,6 +310,8 @@ JWK HybridKeyObjectHandle::exportJwk(const JWK& key, bool handleRsaPss) {
       case EVP_PKEY_X448:
         result.crv = "X448";
         break;
+      default:
+        break;
     }
 
     auto pubKey = pkey.rawPublicKey();
@@ -371,7 +374,7 @@ AsymmetricKeyType HybridKeyObjectHandle::getAsymmetricKeyType() {
   }
 }
 
-bool HybridKeyObjectHandle::init(KeyType keyType, const std::variant<std::string, std::shared_ptr<ArrayBuffer>>& key,
+bool HybridKeyObjectHandle::init(KeyType keyType, const std::variant<std::shared_ptr<ArrayBuffer>, std::string>& key,
                                  std::optional<KFormatType> format, std::optional<KeyEncoding> type,
                                  const std::optional<std::shared_ptr<ArrayBuffer>>& passphrase) {
   // Reset any existing data to prevent state leakage
@@ -832,6 +835,34 @@ bool HybridKeyObjectHandle::initECRaw(const std::string& namedCurve, const std::
   // Store as public key
   this->data_ = KeyObjectData::CreateAsymmetric(KeyType::PUBLIC, std::move(pkey));
   return true;
+}
+
+bool HybridKeyObjectHandle::keyEquals(const std::shared_ptr<HybridKeyObjectHandleSpec>& other) {
+  auto otherHandle = std::dynamic_pointer_cast<HybridKeyObjectHandle>(other);
+  if (!otherHandle)
+    return false;
+
+  const auto& otherData = otherHandle->getKeyObjectData();
+  if (data_.GetKeyType() != otherData.GetKeyType())
+    return false;
+
+  if (data_.GetKeyType() == KeyType::SECRET) {
+    auto thisKey = data_.GetSymmetricKey();
+    auto otherKey = otherData.GetSymmetricKey();
+    if (thisKey->size() != otherKey->size())
+      return false;
+    return CRYPTO_memcmp(thisKey->data(), otherKey->data(), thisKey->size()) == 0;
+  }
+
+  const auto& thisPkey = data_.GetAsymmetricKey();
+  const auto& otherPkey = otherData.GetAsymmetricKey();
+  if (!thisPkey || !otherPkey)
+    return false;
+  return EVP_PKEY_eq(thisPkey.get(), otherPkey.get()) == 1;
+}
+
+double HybridKeyObjectHandle::getSymmetricKeySize() {
+  return static_cast<double>(data_.GetSymmetricKeySize());
 }
 
 } // namespace margelo::nitro::crypto

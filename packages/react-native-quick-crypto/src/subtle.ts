@@ -891,7 +891,7 @@ async function aesImportKey(
 
 function edImportKey(
   format: ImportFormat,
-  data: BufferLike,
+  data: BufferLike | JWK,
   algorithm: SubtleAlgorithm,
   extractable: boolean,
   keyUsages: KeyUsage[],
@@ -915,7 +915,7 @@ function edImportKey(
 
   if (format === 'spki') {
     // Import public key
-    const keyData = bufferLikeToArrayBuffer(data);
+    const keyData = bufferLikeToArrayBuffer(data as BufferLike);
     keyObject = KeyObject.createKeyObject(
       'public',
       keyData,
@@ -924,7 +924,7 @@ function edImportKey(
     );
   } else if (format === 'pkcs8') {
     // Import private key
-    const keyData = bufferLikeToArrayBuffer(data);
+    const keyData = bufferLikeToArrayBuffer(data as BufferLike);
     keyObject = KeyObject.createKeyObject(
       'private',
       keyData,
@@ -933,7 +933,7 @@ function edImportKey(
     );
   } else if (format === 'raw') {
     // Raw format - public key only for Ed keys
-    const keyData = bufferLikeToArrayBuffer(data);
+    const keyData = bufferLikeToArrayBuffer(data as BufferLike);
     const handle =
       NitroModules.createHybridObject<KeyObjectHandle>('KeyObjectHandle');
     // For raw Ed keys, we need to create them differently
@@ -941,7 +941,7 @@ function edImportKey(
     handle.init(1, keyData); // 1 = public key type
     keyObject = new PublicKeyObject(handle);
   } else if (format === 'jwk') {
-    const jwkData = data as unknown as JWK;
+    const jwkData = data as JWK;
     const handle =
       NitroModules.createHybridObject<KeyObjectHandle>('KeyObjectHandle');
     const keyType = handle.initJwk(jwkData);
@@ -1993,7 +1993,7 @@ export class Subtle {
       case 'Ed448':
         result = edImportKey(
           format,
-          data as BufferLike,
+          data as BufferLike | JWK,
           normalizedAlgorithm,
           extractable,
           keyUsages,

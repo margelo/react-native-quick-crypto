@@ -113,7 +113,7 @@ export class DiffieHellman {
   }
 
   get verifyError(): number {
-    return 0;
+    return this._hybrid.getVerifyError();
   }
 }
 
