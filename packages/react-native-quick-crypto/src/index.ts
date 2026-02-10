@@ -14,6 +14,7 @@ import * as scrypt from './scrypt';
 import * as random from './random';
 import * as ecdh from './ecdh';
 import * as dh from './diffie-hellman';
+import { getCurves } from './ec';
 import { constants } from './constants';
 
 // utils import
@@ -39,6 +40,7 @@ const QuickCrypto = {
   ...dh,
   ...utils,
   ...subtle,
+  getCurves,
   constants,
   Buffer,
 };
@@ -81,6 +83,7 @@ export * from './pbkdf2';
 export * from './scrypt';
 export * from './random';
 export * from './ecdh';
+export { getCurves } from './ec';
 export * from './diffie-hellman';
 export * from './utils';
 export * from './subtle';

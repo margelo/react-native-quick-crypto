@@ -34,6 +34,18 @@ import {
 import { Buffer } from '@craftzdog/react-native-buffer';
 import { ECDH } from './ecdh';
 
+class EcUtils {
+  private static native =
+    NitroModules.createHybridObject<EcKeyPair>('EcKeyPair');
+  public static getSupportedCurves(): string[] {
+    return this.native.getSupportedCurves();
+  }
+}
+
+export function getCurves(): string[] {
+  return EcUtils.getSupportedCurves();
+}
+
 export class Ec {
   native: EcKeyPair;
 
