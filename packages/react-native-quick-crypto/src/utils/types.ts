@@ -187,6 +187,7 @@ export type SubtleAlgorithm = {
   modulusLength?: number;
   publicExponent?: number | Uint8Array;
   saltLength?: number;
+  public?: CryptoKey;
 };
 
 export type KeyPairType =

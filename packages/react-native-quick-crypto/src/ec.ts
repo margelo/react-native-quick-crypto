@@ -488,8 +488,7 @@ export function ecDeriveBits(
   baseKey: CryptoKey,
   length: number | null,
 ): ArrayBuffer {
-  const publicParams = algorithm as SubtleAlgorithm & { public?: CryptoKey };
-  const publicKey = publicParams.public;
+  const publicKey = algorithm.public;
 
   if (!publicKey) {
     throw new Error('Public key is required for ECDH derivation');
@@ -508,31 +507,19 @@ export function ecDeriveBits(
     throw new Error('Curve name is missing');
   }
 
-  // Create new ECDH instance (Node.js style wrapper)
-  const ecdh = new ECDH(namedCurve);
+  const opensslCurve =
+    kNamedCurveAliases[namedCurve as keyof typeof kNamedCurveAliases];
+  const ecdh = new ECDH(opensslCurve);
 
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const jwkPrivate = baseKey.keyObject.export({ format: 'jwk' }) as any;
+  const jwkPrivate = baseKey.keyObject.handle.exportJwk({}, false);
   if (!jwkPrivate.d) throw new Error('Invalid private key');
   const privateBytes = Buffer.from(jwkPrivate.d, 'base64');
-
   ecdh.setPrivateKey(privateBytes);
 
-  // Public key
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const jwkPublic = publicKey.keyObject.export({ format: 'jwk' }) as any;
-
-  // HybridECDH `computeSecret` takes public key.
-  // My implementation `HybridECDH.cpp` `computeSecret` expects what?
-  // `derive_secret` -> `EVP_PKEY_derive_set_peer`
-  // `computeSecret` calls `EC_POINT_oct2point`. So it expects an uncompressed/compressed point (04... or 02/03...).
-  // JWK gives `x` and `y`. We can construct the uncompressed point 04 + x + y.
-
+  const jwkPublic = publicKey.keyObject.handle.exportJwk({}, false);
   if (!jwkPublic.x || !jwkPublic.y) throw new Error('Invalid public key');
   const x = Buffer.from(jwkPublic.x, 'base64');
   const y = Buffer.from(jwkPublic.y, 'base64');
-
-  // Uncompressed point: 0x04 || x || y
   const publicBytes = Buffer.concat([Buffer.from([0x04]), x, y]);
 
   const secret = ecdh.computeSecret(publicBytes);

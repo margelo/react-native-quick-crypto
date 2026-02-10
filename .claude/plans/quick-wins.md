@@ -33,6 +33,11 @@ straightforward to implement.
 - Return the size of a symmetric key in bytes
 - Simple property accessor
 
+## createDiffieHellmanGroup alias
+- Node.js exports `createDiffieHellmanGroup` as an alias for `getDiffieHellman`
+- `getDiffieHellman` already exists and works
+- Just add a re-export: `export { getDiffieHellman as createDiffieHellmanGroup }`
+
 ## diffieHellman.verifyError
 - DiffieHellman class is fully implemented except this property
 - Returns verification errors from DH parameter checking

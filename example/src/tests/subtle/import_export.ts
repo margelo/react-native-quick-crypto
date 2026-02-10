@@ -2193,3 +2193,91 @@ test(SUITE, 'ML-DSA-44 importKey rejects invalid format', async () => {
     'NotSupportedError',
   );
 });
+
+// --- Ed25519/Ed448 raw import/export Tests ---
+
+const edCurves = [
+  { name: 'Ed25519' as const, rawSize: 32 },
+  { name: 'Ed448' as const, rawSize: 57 },
+];
+
+for (const { name: curveName, rawSize } of edCurves) {
+  test(SUITE, `${curveName} raw export public key`, async () => {
+    const keyPair = (await subtle.generateKey({ name: curveName }, true, [
+      'sign',
+      'verify',
+    ])) as CryptoKeyPair;
+
+    const raw = (await subtle.exportKey(
+      'raw',
+      keyPair.publicKey as CryptoKey,
+    )) as ArrayBuffer;
+
+    expect(raw).to.be.instanceOf(ArrayBuffer);
+    expect(raw.byteLength).to.equal(rawSize);
+  });
+
+  test(SUITE, `${curveName} raw export/import round-trip`, async () => {
+    const keyPair = (await subtle.generateKey({ name: curveName }, true, [
+      'sign',
+      'verify',
+    ])) as CryptoKeyPair;
+
+    const raw = (await subtle.exportKey(
+      'raw',
+      keyPair.publicKey as CryptoKey,
+    )) as ArrayBuffer;
+
+    const imported = await subtle.importKey(
+      'raw',
+      raw,
+      { name: curveName },
+      true,
+      ['verify'],
+    );
+
+    expect(imported.type).to.equal('public');
+    expect(imported.algorithm.name).to.equal(curveName);
+    expect(imported.extractable).to.equal(true);
+    expect(imported.usages).to.deep.equal(['verify']);
+
+    const reExported = (await subtle.exportKey('raw', imported)) as ArrayBuffer;
+    expect(Buffer.from(raw).equals(Buffer.from(reExported))).to.equal(true);
+  });
+
+  test(SUITE, `${curveName} raw import then verify signature`, async () => {
+    const testData = new TextEncoder().encode(`${curveName} raw import test`);
+
+    const keyPair = (await subtle.generateKey({ name: curveName }, true, [
+      'sign',
+      'verify',
+    ])) as CryptoKeyPair;
+
+    const signature = await subtle.sign(
+      { name: curveName },
+      keyPair.privateKey as CryptoKey,
+      testData,
+    );
+
+    const raw = (await subtle.exportKey(
+      'raw',
+      keyPair.publicKey as CryptoKey,
+    )) as ArrayBuffer;
+
+    const importedPublic = await subtle.importKey(
+      'raw',
+      raw,
+      { name: curveName },
+      true,
+      ['verify'],
+    );
+
+    const isValid = await subtle.verify(
+      { name: curveName },
+      importedPublic,
+      signature,
+      testData,
+    );
+    expect(isValid).to.equal(true);
+  });
+}

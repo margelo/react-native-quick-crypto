@@ -136,7 +136,7 @@ export const COVERAGE_DATA: CoverageCategory[] = [
       { name: 'createCipheriv', status: 'implemented' },
       { name: 'createDecipheriv', status: 'implemented' },
       { name: 'createDiffieHellman', status: 'implemented' },
-      { name: 'createDiffieHellmanGroup', status: 'implemented' },
+      { name: 'createDiffieHellmanGroup', status: 'missing' },
       { name: 'createECDH', status: 'implemented' },
       { name: 'createHash', status: 'implemented' },
       { name: 'createHmac', status: 'implemented' },
@@ -151,8 +151,8 @@ export const COVERAGE_DATA: CoverageCategory[] = [
       {
         name: 'diffieHellman',
         subItems: [
-          { name: 'dh', status: 'implemented' },
-          { name: 'ec', status: 'implemented' },
+          { name: 'dh', status: 'missing' },
+          { name: 'ec', status: 'missing' },
           { name: 'x448', status: 'implemented' },
           { name: 'x25519', status: 'implemented' },
         ],
