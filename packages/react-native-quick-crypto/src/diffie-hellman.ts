@@ -111,6 +111,10 @@ export class DiffieHellman {
     }
     this._hybrid.setPrivateKey(keyBuf.buffer as ArrayBuffer);
   }
+
+  get verifyError(): number {
+    return this._hybrid.getVerifyError();
+  }
 }
 
 export function createDiffieHellman(
@@ -189,3 +193,5 @@ export function getDiffieHellman(groupName: string): DiffieHellman {
   // group.prime and group.generator are hex strings
   return new DiffieHellman(group.prime, group.generator, 'hex');
 }
+
+export { getDiffieHellman as createDiffieHellmanGroup };

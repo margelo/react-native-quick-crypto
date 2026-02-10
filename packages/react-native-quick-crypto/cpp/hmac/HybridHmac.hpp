@@ -20,7 +20,7 @@ class HybridHmac : public HybridHmacSpec {
  public:
   // Methods
   void createHmac(const std::string& algorithm, const std::shared_ptr<ArrayBuffer>& key) override;
-  void update(const std::variant<std::string, std::shared_ptr<ArrayBuffer>>& data) override;
+  void update(const std::variant<std::shared_ptr<ArrayBuffer>, std::string>& data) override;
   std::shared_ptr<ArrayBuffer> digest() override;
 
  private:

@@ -88,3 +88,34 @@ test(SUITE, 'should reject prime length below 2048 bits', () => {
     crypto.createDiffieHellman(512);
   }, /prime length must be at least 2048 bits/);
 });
+
+// createDiffieHellmanGroup alias
+test(
+  SUITE,
+  'createDiffieHellmanGroup should be an alias for getDiffieHellman',
+  () => {
+    const dh1 = crypto.getDiffieHellman('modp14');
+    const dh2 = crypto.createDiffieHellmanGroup('modp14');
+
+    assert.strictEqual(dh1.getPrime('hex'), dh2.getPrime('hex'));
+    assert.strictEqual(dh1.getGenerator('hex'), dh2.getGenerator('hex'));
+  },
+);
+
+test(SUITE, 'createDiffieHellmanGroup should throw for unknown group', () => {
+  assert.throws(() => {
+    crypto.createDiffieHellmanGroup('modp999');
+  }, /Unknown group/);
+});
+
+// verifyError property
+test(SUITE, 'verifyError should return 0 for valid DH params', () => {
+  const dh = crypto.getDiffieHellman('modp14');
+  assert.strictEqual(dh.verifyError, 0);
+});
+
+test(SUITE, 'verifyError should return 0 for created DH', () => {
+  const prime = Buffer.from(MODP14_PRIME, 'hex');
+  const dh = crypto.createDiffieHellman(prime, 2);
+  assert.strictEqual(dh.verifyError, 0);
+});

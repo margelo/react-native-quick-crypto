@@ -98,3 +98,67 @@ test(SUITE, 'X25519 deriveKey to AES-GCM', async () => {
     Buffer.from(bobRaw as ArrayBuffer).toString('hex'),
   );
 });
+
+// Test 3: ECDH deriveKey
+test(SUITE, 'ECDH P-256 deriveKey to AES-GCM', async () => {
+  const aliceKeyPair = await subtle.generateKey(
+    { name: 'ECDH', namedCurve: 'P-256' },
+    false,
+    ['deriveKey', 'deriveBits'],
+  );
+
+  const bobKeyPair = await subtle.generateKey(
+    { name: 'ECDH', namedCurve: 'P-256' },
+    false,
+    ['deriveKey', 'deriveBits'],
+  );
+
+  const aliceDerivedKey = await subtleAny.deriveKey(
+    {
+      name: 'ECDH',
+      public: (aliceKeyPair as CryptoKeyPair).publicKey,
+    },
+    (bobKeyPair as CryptoKeyPair).privateKey,
+    { name: 'AES-GCM', length: 256 },
+    true,
+    ['encrypt', 'decrypt'],
+  );
+
+  const bobDerivedKey = await subtleAny.deriveKey(
+    {
+      name: 'ECDH',
+      public: (bobKeyPair as CryptoKeyPair).publicKey,
+    },
+    (aliceKeyPair as CryptoKeyPair).privateKey,
+    { name: 'AES-GCM', length: 256 },
+    true,
+    ['encrypt', 'decrypt'],
+  );
+
+  const aliceRaw = await subtle.exportKey('raw', aliceDerivedKey as CryptoKey);
+  const bobRaw = await subtle.exportKey('raw', bobDerivedKey as CryptoKey);
+
+  expect(Buffer.from(aliceRaw as ArrayBuffer).toString('hex')).to.equal(
+    Buffer.from(bobRaw as ArrayBuffer).toString('hex'),
+  );
+
+  // Verify key works for encrypt/decrypt
+  const plaintext = new Uint8Array([1, 2, 3, 4]);
+  const iv = getRandomValues(new Uint8Array(12));
+
+  const ciphertext = await subtle.encrypt(
+    { name: 'AES-GCM', iv },
+    aliceDerivedKey as CryptoKey,
+    plaintext,
+  );
+
+  const decrypted = await subtle.decrypt(
+    { name: 'AES-GCM', iv },
+    bobDerivedKey as CryptoKey,
+    ciphertext,
+  );
+
+  expect(Buffer.from(decrypted).toString('hex')).to.equal(
+    Buffer.from(plaintext).toString('hex'),
+  );
+});

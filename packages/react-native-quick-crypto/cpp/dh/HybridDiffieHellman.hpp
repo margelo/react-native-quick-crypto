@@ -30,6 +30,7 @@ class HybridDiffieHellman : public HybridDiffieHellmanSpec {
   std::shared_ptr<ArrayBuffer> getPrivateKey() override;
   void setPublicKey(const std::shared_ptr<ArrayBuffer>& publicKey) override;
   void setPrivateKey(const std::shared_ptr<ArrayBuffer>& privateKey) override;
+  double getVerifyError() override;
 
  private:
   EVP_PKEY_ptr _pkey;

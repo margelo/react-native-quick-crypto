@@ -12,4 +12,5 @@ export interface DiffieHellman
   getPrivateKey(): ArrayBuffer;
   setPublicKey(publicKey: ArrayBuffer): void;
   setPrivateKey(privateKey: ArrayBuffer): void;
+  getVerifyError(): number;
 }

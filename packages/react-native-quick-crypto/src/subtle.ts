@@ -17,7 +17,7 @@ import type {
   RsaOaepParams,
   ChaCha20Poly1305Params,
 } from './utils';
-import { KFormatType, KeyEncoding } from './utils';
+import { KFormatType, KeyEncoding, KeyType } from './utils';
 import {
   CryptoKey,
   KeyObject,
@@ -891,7 +891,7 @@ async function aesImportKey(
 
 function edImportKey(
   format: ImportFormat,
-  data: BufferLike,
+  data: BufferLike | JWK,
   algorithm: SubtleAlgorithm,
   extractable: boolean,
   keyUsages: KeyUsage[],
@@ -915,7 +915,7 @@ function edImportKey(
 
   if (format === 'spki') {
     // Import public key
-    const keyData = bufferLikeToArrayBuffer(data);
+    const keyData = bufferLikeToArrayBuffer(data as BufferLike);
     keyObject = KeyObject.createKeyObject(
       'public',
       keyData,
@@ -924,7 +924,7 @@ function edImportKey(
     );
   } else if (format === 'pkcs8') {
     // Import private key
-    const keyData = bufferLikeToArrayBuffer(data);
+    const keyData = bufferLikeToArrayBuffer(data as BufferLike);
     keyObject = KeyObject.createKeyObject(
       'private',
       keyData,
@@ -933,13 +933,26 @@ function edImportKey(
     );
   } else if (format === 'raw') {
     // Raw format - public key only for Ed keys
-    const keyData = bufferLikeToArrayBuffer(data);
+    const keyData = bufferLikeToArrayBuffer(data as BufferLike);
     const handle =
       NitroModules.createHybridObject<KeyObjectHandle>('KeyObjectHandle');
     // For raw Ed keys, we need to create them differently
     // Raw public keys are just the key bytes
     handle.init(1, keyData); // 1 = public key type
     keyObject = new PublicKeyObject(handle);
+  } else if (format === 'jwk') {
+    const jwkData = data as JWK;
+    const handle =
+      NitroModules.createHybridObject<KeyObjectHandle>('KeyObjectHandle');
+    const keyType = handle.initJwk(jwkData);
+    if (keyType === undefined) {
+      throw lazyDOMException('Invalid JWK data', 'DataError');
+    }
+    if (keyType === KeyType.PRIVATE) {
+      keyObject = new PrivateKeyObject(handle);
+    } else {
+      keyObject = new PublicKeyObject(handle);
+    }
   } else {
     throw lazyDOMException(
       `Unsupported format for ${name} import: ${format}`,
@@ -1176,6 +1189,14 @@ const exportKeyJWK = (key: CryptoKey): ArrayBuffer | unknown => {
     // Fall through
     case 'ECDH':
       jwk.crv ||= key.algorithm.namedCurve;
+      return jwk;
+    case 'Ed25519':
+    // Fall through
+    case 'Ed448':
+    // Fall through
+    case 'X25519':
+    // Fall through
+    case 'X448':
       return jwk;
     case 'AES-CTR':
     // Fall through
@@ -1613,6 +1634,9 @@ export class Subtle {
       case 'X448':
         derivedBits = await xDeriveBits(algorithm, baseKey, length);
         break;
+      case 'ECDH':
+        derivedBits = await ecDeriveBits(algorithm, baseKey, length);
+        break;
       case 'HKDF':
         derivedBits = hkdfDeriveBits(
           algorithm as unknown as HkdfAlgorithm,
@@ -1969,7 +1993,7 @@ export class Subtle {
       case 'Ed448':
         result = edImportKey(
           format,
-          data as BufferLike,
+          data as BufferLike | JWK,
           normalizedAlgorithm,
           extractable,
           keyUsages,

@@ -26,7 +26,7 @@ class HybridKeyObjectHandle : public HybridKeyObjectHandleSpec {
 
   AsymmetricKeyType getAsymmetricKeyType() override;
 
-  bool init(KeyType keyType, const std::variant<std::string, std::shared_ptr<ArrayBuffer>>& key, std::optional<KFormatType> format,
+  bool init(KeyType keyType, const std::variant<std::shared_ptr<ArrayBuffer>, std::string>& key, std::optional<KFormatType> format,
             std::optional<KeyEncoding> type, const std::optional<std::shared_ptr<ArrayBuffer>>& passphrase) override;
 
   bool initECRaw(const std::string& namedCurve, const std::shared_ptr<ArrayBuffer>& keyData) override;
@@ -34,6 +34,10 @@ class HybridKeyObjectHandle : public HybridKeyObjectHandleSpec {
   std::optional<KeyType> initJwk(const JWK& keyData, std::optional<NamedCurve> namedCurve) override;
 
   KeyDetail keyDetail() override;
+
+  bool keyEquals(const std::shared_ptr<HybridKeyObjectHandleSpec>& other) override;
+
+  double getSymmetricKeySize() override;
 
   KeyObjectData& getKeyObjectData() {
     return data_;
