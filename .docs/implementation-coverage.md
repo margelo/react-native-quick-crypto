@@ -121,7 +121,7 @@ These algorithms provide quantum-resistant cryptography.
   * ✅ `crypto.createSign(algorithm[, options])`
   * ✅ `crypto.createVerify(algorithm[, options])`
   * ❌ `crypto.decapsulate(key, ciphertext[, callback])`
-  * ❌ `crypto.diffieHellman(options[, callback])`
+  * ✅ `crypto.diffieHellman(options[, callback])`
   * ❌ `crypto.encapsulate(key[, callback])`
   * ❌ `crypto.fips` deprecated
   * ✅ `crypto.generateKey(type, options, callback)`
@@ -290,7 +290,7 @@ These ciphers are **not available in Node.js** but are provided by RNQC via libs
 ## `subtle.deriveBits`
 | Algorithm  | Status |
 | ---------  | :----: |
-| `ECDH`     | ❌ |
+| `ECDH`     | ✅ |
 | `X25519`   | ✅ |
 | `X448`     | ✅ |
 | `HKDF`     | ✅ |
@@ -336,11 +336,11 @@ These ciphers are **not available in Node.js** but are provided by RNQC via libs
 | `AES-GCM`           |        |         | ✅    | ✅    | ✅           |              |            |
 | `AES-KW`            |        |         | ✅    | ✅    | ✅           |              |            |
 | `AES-OCB`           |        |         | ❌    |       | ❌           |              |            |
-| `ChaCha20-Poly1305` |        |         | ❌    |       | ❌           |              |            |
+| `ChaCha20-Poly1305` |        |         | ✅    |       | ✅           |              |            |
 | `ECDH`              | ✅     | ✅      | ✅    | ✅    |              | ✅           |            |
 | `ECDSA`             | ✅     | ✅      | ✅    | ✅    |              | ✅           |            |
-| `Ed25519`           | ✅     | ✅      | ❌    | ❌    |              | ❌           |            |
-| `Ed448`             | ✅     | ✅      | ❌    | ❌    |              | ❌           |            |
+| `Ed25519`           | ✅     | ✅      | ❌    | ✅    |              | ❌           |            |
+| `Ed448`             | ✅     | ✅      | ❌    | ✅    |              | ❌           |            |
 | `HMAC`              |        |         | ✅    | ✅    | ✅           |              |            |
 | `ML-DSA-44`         | ✅     | ✅      | ✅    |       |              | ✅           | ✅         |
 | `ML-DSA-65`         | ✅     | ✅      | ✅    |       |              | ✅           | ✅         |
@@ -374,8 +374,8 @@ These ciphers are **not available in Node.js** but are provided by RNQC via libs
 | `RSA-OAEP`          | ✅ |
 | `RSA-PSS`           | ✅ |
 | `RSASSA-PKCS1-v1_5` | ✅ |
-| `X25519`            | ❌ |
-| `X448`              | ❌ |
+| `X25519`            | ✅ |
+| `X448`              | ✅ |
 
 ### `CryptoKey` algorithms
 | Algorithm           | Status |
@@ -383,9 +383,9 @@ These ciphers are **not available in Node.js** but are provided by RNQC via libs
 | `AES-CTR`           | ✅ |
 | `AES-CBC`           | ✅ |
 | `AES-GCM`           | ✅ |
-| `AES-KW`            | ❌ |
+| `AES-KW`            | ✅ |
 | `AES-OCB`           | ❌ |
-| `ChaCha20-Poly1305` | ❌ |
+| `ChaCha20-Poly1305` | ✅ |
 | `HMAC`              | ✅ |
 
 ## `subtle.importKey`
@@ -396,7 +396,7 @@ These ciphers are **not available in Node.js** but are provided by RNQC via libs
 | `AES-GCM`           |        |         | ✅    | ✅    | ✅           |              |            |
 | `AES-KW`            |        |         | ✅    | ✅    | ✅           |              |            |
 | `AES-OCB`           |        |         | ❌    |       | ❌           |              |            |
-| `ChaCha20-Poly1305` |        |         | ❌    |       | ❌           |              |            |
+| `ChaCha20-Poly1305` |        |         | ✅    |       | ✅           |              |            |
 | `ECDH`              | ✅     | ✅      | ✅    | ✅    |              | ✅           |            |
 | `ECDSA`             | ✅     | ✅      | ✅    | ✅    |              | ✅           |            |
 | `Ed25519`           | ✅     | ✅      | ❌    | ❌    |              | ❌           |            |

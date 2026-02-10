@@ -427,8 +427,7 @@ export function xDeriveBits(
   baseKey: CryptoKey,
   length: number | null,
 ): ArrayBuffer {
-  const publicParams = algorithm as SubtleAlgorithm & { public?: CryptoKey };
-  const publicKey = publicParams.public;
+  const publicKey = algorithm.public;
 
   if (!publicKey) {
     throw new Error('Public key is required for X25519/X448 derivation');
