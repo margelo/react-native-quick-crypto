@@ -1,5 +1,6 @@
 #include <NitroModules/ArrayBuffer.hpp>
 #include <NitroModules/Promise.hpp>
+#include <algorithm>
 #include <memory>
 #include <openssl/bio.h>
 #include <openssl/buffer.h>
@@ -423,6 +424,26 @@ void HybridEcKeyPair::checkKeyPair() {
   if (this->pkey == nullptr) {
     throw std::runtime_error("EC KeyPair not initialized");
   }
+}
+
+std::vector<std::string> HybridEcKeyPair::getSupportedCurves() {
+  const size_t count = EC_get_builtin_curves(nullptr, 0);
+  std::vector<EC_builtin_curve> curves(count);
+  if (EC_get_builtin_curves(curves.data(), count) != count) {
+    throw std::runtime_error("Failed to enumerate EC curves");
+  }
+
+  std::vector<std::string> names;
+  names.reserve(count);
+  for (const auto& curve : curves) {
+    const char* sn = OBJ_nid2sn(curve.nid);
+    if (sn != nullptr) {
+      names.emplace_back(sn);
+    }
+  }
+
+  std::sort(names.begin(), names.end());
+  return names;
 }
 
 } // namespace margelo::nitro::crypto

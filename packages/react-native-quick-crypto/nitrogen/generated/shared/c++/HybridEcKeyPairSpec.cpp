@@ -23,6 +23,7 @@ namespace margelo::nitro::crypto {
       prototype.registerHybridMethod("setCurve", &HybridEcKeyPairSpec::setCurve);
       prototype.registerHybridMethod("sign", &HybridEcKeyPairSpec::sign);
       prototype.registerHybridMethod("verify", &HybridEcKeyPairSpec::verify);
+      prototype.registerHybridMethod("getSupportedCurves", &HybridEcKeyPairSpec::getSupportedCurves);
     });
   }
 

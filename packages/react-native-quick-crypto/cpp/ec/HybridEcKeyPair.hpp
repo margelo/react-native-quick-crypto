@@ -34,6 +34,7 @@ class HybridEcKeyPair : public HybridEcKeyPairSpec {
   std::shared_ptr<ArrayBuffer> sign(const std::shared_ptr<ArrayBuffer>& data, const std::string& hashAlgorithm) override;
   bool verify(const std::shared_ptr<ArrayBuffer>& data, const std::shared_ptr<ArrayBuffer>& signature,
               const std::string& hashAlgorithm) override;
+  std::vector<std::string> getSupportedCurves() override;
 
  protected:
   void checkKeyPair();
