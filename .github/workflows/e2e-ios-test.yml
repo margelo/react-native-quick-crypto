@@ -58,6 +58,13 @@ jobs:
       - name: Install Bun
         uses: ./.github/actions/setup-bun
 
+      - name: Setup Ruby (bundle)
+        uses: ruby/setup-ruby@v1
+        with:
+          ruby-version: 2.7.2
+          bundler-cache: true
+          working-directory: example
+
       - name: Create Directories
         run: |
           mkdir -p $HOME/output
@@ -91,7 +98,8 @@ jobs:
 
       - name: Install CocoaPods
         working-directory: ./example
-        run: bun pods
+        run: |
+          RCT_USE_RN_DEP=1 RCT_USE_PREBUILT_RNCORE=1 bundle exec pod install --project-directory=ios
 
       - name: Build iOS App
         working-directory: ./example

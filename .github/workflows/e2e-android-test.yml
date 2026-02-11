@@ -23,12 +23,17 @@ on:
       - 'src/**'
       - 'packages/react-native-quick-crypto/android/**'
 
+env:
+  EMULATOR_API_LEVEL: 34
+
 jobs:
-  e2e-tests-android:
+  # ============================================================================
+  # Build Job - Gradle build + lint (runs in parallel with AVD setup)
+  # ============================================================================
+  build:
+    name: Build
     runs-on: ubuntu-latest
     env:
-      EMULATOR_API_LEVEL: 34
-      OUTPUT_DIR: ~/output
       GRADLE_OPTS: '-Dorg.gradle.daemon=false -Dorg.gradle.caching=true'
 
     steps:
@@ -50,11 +55,6 @@ jobs:
 
       - name: Install Bun
         uses: ./.github/actions/setup-bun
-
-      - name: Create Directories
-        run: |
-          mkdir -p $HOME/output
-          mkdir -p $HOME/.maestro/tests/
 
       - name: Setup JDK
         uses: actions/setup-java@v4
@@ -93,7 +93,7 @@ jobs:
         working-directory: ./example/android
         run: |
           echo "Building Android app (x86_64 only)..."
-          ./gradlew :app:assembleDebug -PreactNativeArchitectures=x86_64 --build-cache > $HOME/output/android-build.log 2>&1
+          ./gradlew :app:assembleDebug -PreactNativeArchitectures=x86_64 --build-cache 2>&1 | tee $HOME/android-build.log
 
       - name: Run Gradle Lint
         working-directory: ./example/android
@@ -104,6 +104,129 @@ jobs:
         with:
           report-path: packages/react-native-quick-crypto/android/build/reports/lint-results-debug.xml
 
+      - name: Stop Gradle Daemon
+        if: always()
+        working-directory: ./example/android
+        run: ./gradlew --stop
+
+      - name: Upload APK
+        uses: actions/upload-artifact@v4
+        with:
+          name: android-apk
+          path: example/android/app/build/outputs/apk/debug/app-debug.apk
+          retention-days: 1
+
+      - name: Upload Build Log
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: android-build-log
+          path: ~/android-build.log
+          retention-days: 5
+
+      - name: Save Gradle cache
+        if: always()
+        uses: actions/cache/save@v5
+        with:
+          path: |
+            ~/.gradle/caches
+            ~/.gradle/wrapper
+            example/android/.gradle
+            example/android/build
+            example/android/app/.cxx
+            example/android/app/build
+            packages/react-native-quick-crypto/android/.cxx
+            packages/react-native-quick-crypto/android/build
+            node_modules/.bun/react-native-nitro-modules*/node_modules/react-native-nitro-modules/android/.cxx
+            node_modules/.bun/react-native-nitro-modules*/node_modules/react-native-nitro-modules/android/build
+          key: ${{ runner.os }}-gradle
+
+  # ============================================================================
+  # AVD Job - Create and cache emulator snapshot (runs in parallel with build)
+  # ============================================================================
+  avd:
+    name: Emulator
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Setup Android SDK
+        uses: android-actions/setup-android@v3
+
+      - name: Enable KVM
+        run: |
+          echo 'KERNEL=="kvm", GROUP="kvm", MODE="0666", OPTIONS+="static_node=kvm"' | sudo tee /etc/udev/rules.d/99-kvm4all.rules
+          sudo udevadm control --reload-rules
+          sudo udevadm trigger --name-match=kvm
+
+      - name: Restore AVD cache
+        uses: actions/cache/restore@v5
+        id: avd-cache
+        with:
+          path: |
+            ~/.android/avd/*
+            ~/.android/adb*
+          key: avd-pixel7pro-${{ env.EMULATOR_API_LEVEL }}
+
+      - name: Create AVD and Generate Snapshot for Caching
+        if: steps.avd-cache.outputs.cache-hit != 'true'
+        uses: reactivecircus/android-emulator-runner@v2
+        with:
+          api-level: ${{ env.EMULATOR_API_LEVEL }}
+          arch: x86_64
+          profile: pixel_7_pro
+          force-avd-creation: false
+          emulator-options: -no-window -gpu swiftshader_indirect -noaudio -no-boot-anim -camera-back none -no-metrics
+          disable-animations: false
+          script: echo "Generated AVD snapshot for caching."
+
+      - name: Save AVD cache
+        if: always()
+        uses: actions/cache/save@v5
+        with:
+          path: |
+            ~/.android/avd/*
+            ~/.android/adb*
+          key: avd-pixel7pro-${{ env.EMULATOR_API_LEVEL }}
+
+  # ============================================================================
+  # Test Job - Run E2E tests (needs both build and AVD)
+  # ============================================================================
+  test:
+    name: Test
+    needs: [build, avd]
+    runs-on: ubuntu-latest
+    env:
+      OUTPUT_DIR: ~/output
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v5
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v5
+        with:
+          node-version: '20'
+
+      - name: Install Bun
+        uses: ./.github/actions/setup-bun
+
+      - name: Create Directories
+        run: |
+          mkdir -p $HOME/output
+          mkdir -p $HOME/.maestro/tests/
+
+      - name: Setup Android SDK
+        uses: android-actions/setup-android@v3
+
+      - name: Install Dependencies
+        run: bun install
+
+      - name: Download APK
+        uses: actions/download-artifact@v4
+        with:
+          name: android-apk
+          path: example/android/app/build/outputs/apk/debug/
+
       - name: Install Maestro CLI
         run: |
           export MAESTRO_VERSION=2.0.10
@@ -111,15 +234,13 @@ jobs:
           echo "$HOME/.maestro/bin" >> $GITHUB_PATH
 
       - name: Enable KVM
-        if: env.SKIP_KVM != 'true'
         run: |
           echo 'KERNEL=="kvm", GROUP="kvm", MODE="0666", OPTIONS+="static_node=kvm"' | sudo tee /etc/udev/rules.d/99-kvm4all.rules
           sudo udevadm control --reload-rules
           sudo udevadm trigger --name-match=kvm
 
       - name: Restore AVD cache
-        uses: actions/cache@v5
-        id: avd-cache
+        uses: actions/cache/restore@v5
         with:
           path: |
             ~/.android/avd/*
@@ -139,11 +260,6 @@ jobs:
           disable-animations: true
           working-directory: ./example
           script: ./test/e2e/scripts/test-android.sh
-
-      - name: Stop Gradle Daemon
-        if: always()
-        working-directory: ./example/android
-        run: ./gradlew --stop
 
       - name: Collect Screenshots
         if: always()
@@ -175,23 +291,6 @@ jobs:
             ${{ env.OUTPUT_DIR }}/*.log
             ${{ env.OUTPUT_DIR }}/screenshots/*.png
           retention-days: 5
-
-      - name: Save Gradle cache
-        if: always()
-        uses: actions/cache/save@v5
-        with:
-          path: |
-            ~/.gradle/caches
-            ~/.gradle/wrapper
-            example/android/.gradle
-            example/android/build
-            example/android/app/.cxx
-            example/android/app/build
-            packages/react-native-quick-crypto/android/.cxx
-            packages/react-native-quick-crypto/android/build
-            node_modules/.bun/react-native-nitro-modules*/node_modules/react-native-nitro-modules/android/.cxx
-            node_modules/.bun/react-native-nitro-modules*/node_modules/react-native-nitro-modules/android/build
-          key: ${{ runner.os }}-gradle
 
       - name: Exit with Test Result
         if: always()
