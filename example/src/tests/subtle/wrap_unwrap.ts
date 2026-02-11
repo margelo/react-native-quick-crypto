@@ -1,7 +1,11 @@
 import { test } from '../util';
 import { expect } from 'chai';
 import { subtle, getRandomValues } from 'react-native-quick-crypto';
-import type { CryptoKey, CryptoKeyPair } from 'react-native-quick-crypto';
+import type {
+  AesOcbParams,
+  CryptoKey,
+  CryptoKeyPair,
+} from 'react-native-quick-crypto';
 
 const SUITE = 'subtle.wrapKey/unwrapKey';
 
@@ -200,7 +204,7 @@ test(SUITE, 'wrap/unwrap with AES-CBC', async () => {
   );
 });
 
-// Test 8: Wrap/unwrap with AES-OCB
+// Test 5: Wrap/unwrap with AES-OCB
 test(SUITE, 'wrap/unwrap with AES-OCB', async () => {
   const keyToWrap = await subtle.generateKey(
     { name: 'AES-GCM', length: 256 },
@@ -209,7 +213,7 @@ test(SUITE, 'wrap/unwrap with AES-OCB', async () => {
   );
 
   const wrappingKey = await subtle.generateKey(
-    { name: 'AES-OCB', length: 256 } as any, // eslint-disable-line @typescript-eslint/no-explicit-any
+    { name: 'AES-OCB', length: 256 },
     true,
     ['wrapKey', 'unwrapKey'],
   );
@@ -220,14 +224,14 @@ test(SUITE, 'wrap/unwrap with AES-OCB', async () => {
     'raw',
     keyToWrap as CryptoKey,
     wrappingKey as CryptoKey,
-    { name: 'AES-OCB', iv } as any, // eslint-disable-line @typescript-eslint/no-explicit-any
+    { name: 'AES-OCB', iv } as AesOcbParams,
   );
 
   const unwrapped = await subtle.unwrapKey(
     'raw',
     wrapped,
     wrappingKey as CryptoKey,
-    { name: 'AES-OCB', iv } as any, // eslint-disable-line @typescript-eslint/no-explicit-any
+    { name: 'AES-OCB', iv } as AesOcbParams,
     { name: 'AES-GCM', length: 256 },
     true,
     ['encrypt', 'decrypt'],
@@ -253,7 +257,7 @@ test(SUITE, 'wrap/unwrap with AES-OCB', async () => {
   );
 });
 
-// Test 5: Wrap/unwrap with AES-CTR
+// Test 6: Wrap/unwrap with AES-CTR
 test(SUITE, 'wrap/unwrap with AES-CTR', async () => {
   const keyToWrap = await subtle.generateKey(
     { name: 'HMAC', hash: 'SHA-256', length: 256 },
@@ -303,7 +307,7 @@ test(SUITE, 'wrap/unwrap with AES-CTR', async () => {
   );
 });
 
-// Test 6: Wrap/unwrap with RSA-OAEP
+// Test 7: Wrap/unwrap with RSA-OAEP
 test(SUITE, 'wrap/unwrap with RSA-OAEP', async () => {
   const keyToWrap = await subtle.generateKey(
     { name: 'AES-GCM', length: 128 },
@@ -359,7 +363,7 @@ test(SUITE, 'wrap/unwrap with RSA-OAEP', async () => {
   );
 });
 
-// Test 7: Wrap/unwrap with ChaCha20-Poly1305
+// Test 8: Wrap/unwrap with ChaCha20-Poly1305
 test(SUITE, 'wrap/unwrap with ChaCha20-Poly1305', async () => {
   const keyToWrap = await subtle.generateKey(
     { name: 'AES-GCM', length: 256 },

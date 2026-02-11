@@ -10,6 +10,7 @@ import type {
   AesCbcParams,
   AesCtrParams,
   AesGcmParams,
+  AesOcbParams,
   AnyAlgorithm,
   CryptoKey,
   DigestAlgorithm,
@@ -1222,20 +1223,19 @@ test(SUITE, 'AES-OCB basic roundtrip', async () => {
   const buf = getRandomValues(new Uint8Array(50));
   const iv = getRandomValues(new Uint8Array(12));
 
-  const key = await subtle.generateKey(
-    { name: 'AES-OCB', length: 256 } as any, // eslint-disable-line @typescript-eslint/no-explicit-any
-    true,
-    ['encrypt', 'decrypt'],
-  );
+  const key = await subtle.generateKey({ name: 'AES-OCB', length: 256 }, true, [
+    'encrypt',
+    'decrypt',
+  ]);
 
   const ciphertext = await subtle.encrypt(
-    { name: 'AES-OCB', iv } as any, // eslint-disable-line @typescript-eslint/no-explicit-any
+    { name: 'AES-OCB', iv } as AesOcbParams,
     key as CryptoKey,
     buf,
   );
 
   const plaintext = await subtle.decrypt(
-    { name: 'AES-OCB', iv } as any, // eslint-disable-line @typescript-eslint/no-explicit-any
+    { name: 'AES-OCB', iv } as AesOcbParams,
     key as CryptoKey,
     ciphertext,
   );
@@ -1252,13 +1252,13 @@ for (const keySize of [128, 192, 256]) {
     const iv = getRandomValues(new Uint8Array(12));
 
     const key = await subtle.generateKey(
-      { name: 'AES-OCB', length: keySize } as any, // eslint-disable-line @typescript-eslint/no-explicit-any
+      { name: 'AES-OCB', length: keySize },
       true,
       ['encrypt', 'decrypt'],
     );
 
     const ciphertext = await subtle.encrypt(
-      { name: 'AES-OCB', iv } as any, // eslint-disable-line @typescript-eslint/no-explicit-any
+      { name: 'AES-OCB', iv } as AesOcbParams,
       key as CryptoKey,
       buf,
     );
@@ -1267,7 +1267,7 @@ for (const keySize of [128, 192, 256]) {
     expect(ciphertext.byteLength).to.equal(buf.byteLength + 16);
 
     const plaintext = await subtle.decrypt(
-      { name: 'AES-OCB', iv } as any, // eslint-disable-line @typescript-eslint/no-explicit-any
+      { name: 'AES-OCB', iv } as AesOcbParams,
       key as CryptoKey,
       ciphertext,
     );
@@ -1284,20 +1284,19 @@ test(SUITE, 'AES-OCB with AAD', async () => {
   const iv = getRandomValues(new Uint8Array(12));
   const aad = getRandomValues(new Uint8Array(16));
 
-  const key = await subtle.generateKey(
-    { name: 'AES-OCB', length: 256 } as any, // eslint-disable-line @typescript-eslint/no-explicit-any
-    true,
-    ['encrypt', 'decrypt'],
-  );
+  const key = await subtle.generateKey({ name: 'AES-OCB', length: 256 }, true, [
+    'encrypt',
+    'decrypt',
+  ]);
 
   const ciphertext = await subtle.encrypt(
-    { name: 'AES-OCB', iv, additionalData: aad } as any, // eslint-disable-line @typescript-eslint/no-explicit-any
+    { name: 'AES-OCB', iv, additionalData: aad } as AesOcbParams,
     key as CryptoKey,
     plaintext,
   );
 
   const decrypted = await subtle.decrypt(
-    { name: 'AES-OCB', iv, additionalData: aad } as any, // eslint-disable-line @typescript-eslint/no-explicit-any
+    { name: 'AES-OCB', iv, additionalData: aad } as AesOcbParams,
     key as CryptoKey,
     ciphertext,
   );
@@ -1315,13 +1314,13 @@ for (const tagLength of [64, 96, 128]) {
     const tagByteLength = tagLength / 8;
 
     const key = await subtle.generateKey(
-      { name: 'AES-OCB', length: 256 } as any, // eslint-disable-line @typescript-eslint/no-explicit-any
+      { name: 'AES-OCB', length: 256 },
       true,
       ['encrypt', 'decrypt'],
     );
 
     const ciphertext = await subtle.encrypt(
-      { name: 'AES-OCB', iv, tagLength } as any, // eslint-disable-line @typescript-eslint/no-explicit-any
+      { name: 'AES-OCB', iv, tagLength } as AesOcbParams,
       key as CryptoKey,
       buf,
     );
@@ -1329,7 +1328,7 @@ for (const tagLength of [64, 96, 128]) {
     expect(ciphertext.byteLength).to.equal(buf.byteLength + tagByteLength);
 
     const plaintext = await subtle.decrypt(
-      { name: 'AES-OCB', iv, tagLength } as any, // eslint-disable-line @typescript-eslint/no-explicit-any
+      { name: 'AES-OCB', iv, tagLength } as AesOcbParams,
       key as CryptoKey,
       ciphertext,
     );
@@ -1342,17 +1341,16 @@ for (const tagLength of [64, 96, 128]) {
 
 // Test AES-OCB empty plaintext
 test(SUITE, 'AES-OCB empty plaintext', async () => {
-  const key = await subtle.generateKey(
-    { name: 'AES-OCB', length: 256 } as any, // eslint-disable-line @typescript-eslint/no-explicit-any
-    true,
-    ['encrypt', 'decrypt'],
-  );
+  const key = await subtle.generateKey({ name: 'AES-OCB', length: 256 }, true, [
+    'encrypt',
+    'decrypt',
+  ]);
 
   const iv = getRandomValues(new Uint8Array(12));
   const plaintext = new Uint8Array(0);
 
   const ciphertext = await subtle.encrypt(
-    { name: 'AES-OCB', iv } as any, // eslint-disable-line @typescript-eslint/no-explicit-any
+    { name: 'AES-OCB', iv } as AesOcbParams,
     key as CryptoKey,
     plaintext,
   );
@@ -1361,7 +1359,7 @@ test(SUITE, 'AES-OCB empty plaintext', async () => {
   expect(ciphertext.byteLength).to.equal(16);
 
   const decrypted = await subtle.decrypt(
-    { name: 'AES-OCB', iv } as any, // eslint-disable-line @typescript-eslint/no-explicit-any
+    { name: 'AES-OCB', iv } as AesOcbParams,
     key as CryptoKey,
     ciphertext,
   );
@@ -1376,7 +1374,7 @@ test(SUITE, 'AES-OCB key import/export raw', async () => {
   const key = await subtle.importKey(
     'raw',
     keyMaterial,
-    { name: 'AES-OCB' } as any, // eslint-disable-line @typescript-eslint/no-explicit-any
+    { name: 'AES-OCB' },
     true,
     ['encrypt', 'decrypt'],
   );
@@ -1390,17 +1388,16 @@ test(SUITE, 'AES-OCB key import/export raw', async () => {
 
 // Test AES-OCB tampered ciphertext
 test(SUITE, 'AES-OCB tampered ciphertext', async () => {
-  const key = await subtle.generateKey(
-    { name: 'AES-OCB', length: 256 } as any, // eslint-disable-line @typescript-eslint/no-explicit-any
-    true,
-    ['encrypt', 'decrypt'],
-  );
+  const key = await subtle.generateKey({ name: 'AES-OCB', length: 256 }, true, [
+    'encrypt',
+    'decrypt',
+  ]);
 
   const iv = getRandomValues(new Uint8Array(12));
   const plaintext = getRandomValues(new Uint8Array(32));
 
   const ciphertext = await subtle.encrypt(
-    { name: 'AES-OCB', iv } as any, // eslint-disable-line @typescript-eslint/no-explicit-any
+    { name: 'AES-OCB', iv } as AesOcbParams,
     key as CryptoKey,
     plaintext,
   );
@@ -1411,27 +1408,26 @@ test(SUITE, 'AES-OCB tampered ciphertext', async () => {
   await assertThrowsAsync(
     async () =>
       await subtle.decrypt(
-        { name: 'AES-OCB', iv } as any, // eslint-disable-line @typescript-eslint/no-explicit-any
+        { name: 'AES-OCB', iv } as AesOcbParams,
         key as CryptoKey,
         tamperedCiphertext,
       ),
-    'Failed to finalize',
+    'Cipher final failed',
   );
 });
 
 // Test AES-OCB tampered tag
 test(SUITE, 'AES-OCB tampered tag', async () => {
-  const key = await subtle.generateKey(
-    { name: 'AES-OCB', length: 256 } as any, // eslint-disable-line @typescript-eslint/no-explicit-any
-    true,
-    ['encrypt', 'decrypt'],
-  );
+  const key = await subtle.generateKey({ name: 'AES-OCB', length: 256 }, true, [
+    'encrypt',
+    'decrypt',
+  ]);
 
   const iv = getRandomValues(new Uint8Array(12));
   const plaintext = getRandomValues(new Uint8Array(32));
 
   const ciphertext = await subtle.encrypt(
-    { name: 'AES-OCB', iv } as any, // eslint-disable-line @typescript-eslint/no-explicit-any
+    { name: 'AES-OCB', iv } as AesOcbParams,
     key as CryptoKey,
     plaintext,
   );
@@ -1442,21 +1438,20 @@ test(SUITE, 'AES-OCB tampered tag', async () => {
   await assertThrowsAsync(
     async () =>
       await subtle.decrypt(
-        { name: 'AES-OCB', iv } as any, // eslint-disable-line @typescript-eslint/no-explicit-any
+        { name: 'AES-OCB', iv } as AesOcbParams,
         key as CryptoKey,
         tamperedCiphertext,
       ),
-    'Failed to finalize',
+    'Cipher final failed',
   );
 });
 
 // Test AES-OCB wrong AAD
 test(SUITE, 'AES-OCB wrong AAD', async () => {
-  const key = await subtle.generateKey(
-    { name: 'AES-OCB', length: 256 } as any, // eslint-disable-line @typescript-eslint/no-explicit-any
-    true,
-    ['encrypt', 'decrypt'],
-  );
+  const key = await subtle.generateKey({ name: 'AES-OCB', length: 256 }, true, [
+    'encrypt',
+    'decrypt',
+  ]);
 
   const iv = getRandomValues(new Uint8Array(12));
   const plaintext = getRandomValues(new Uint8Array(32));
@@ -1464,7 +1459,7 @@ test(SUITE, 'AES-OCB wrong AAD', async () => {
   const aad2 = getRandomValues(new Uint8Array(16));
 
   const ciphertext = await subtle.encrypt(
-    { name: 'AES-OCB', iv, additionalData: aad1 } as any, // eslint-disable-line @typescript-eslint/no-explicit-any
+    { name: 'AES-OCB', iv, additionalData: aad1 } as AesOcbParams,
     key as CryptoKey,
     plaintext,
   );
@@ -1472,10 +1467,10 @@ test(SUITE, 'AES-OCB wrong AAD', async () => {
   await assertThrowsAsync(
     async () =>
       await subtle.decrypt(
-        { name: 'AES-OCB', iv, additionalData: aad2 } as any, // eslint-disable-line @typescript-eslint/no-explicit-any
+        { name: 'AES-OCB', iv, additionalData: aad2 } as AesOcbParams,
         key as CryptoKey,
         ciphertext,
       ),
-    'Failed to finalize',
+    'Cipher final failed',
   );
 });

@@ -297,121 +297,31 @@ async function aesCbcCipher(
   return result.buffer;
 }
 
-async function aesGcmCipher(
-  mode: CipherOrWrapMode,
-  key: CryptoKey,
-  data: ArrayBuffer,
-  algorithm: AesGcmParams,
-): Promise<ArrayBuffer> {
-  const { tagLength = 128 } = algorithm;
-
-  // Validate tag length
-  const validTagLengths = [32, 64, 96, 104, 112, 120, 128];
-  if (!validTagLengths.includes(tagLength)) {
-    throw lazyDOMException(
-      `${tagLength} is not a valid AES-GCM tag length`,
-      'OperationError',
-    );
-  }
-
-  const tagByteLength = tagLength / 8;
-
-  // Get cipher type based on key length
-  const keyLength = (key.algorithm as { length: number }).length;
-  const cipherType = `aes-${keyLength}-gcm`;
-
-  // Create cipher
-  const factory =
-    NitroModules.createHybridObject<CipherFactory>('CipherFactory');
-  const cipher = factory.createCipher({
-    isCipher: mode === CipherOrWrapMode.kWebCryptoCipherEncrypt,
-    cipherType,
-    cipherKey: bufferLikeToArrayBuffer(key.keyObject.export()),
-    iv: bufferLikeToArrayBuffer(algorithm.iv),
-    authTagLen: tagByteLength,
-  });
-
-  let processData: ArrayBuffer;
-  let authTag: ArrayBuffer | undefined;
-
-  if (mode === CipherOrWrapMode.kWebCryptoCipherDecrypt) {
-    // For decryption, extract auth tag from end of data
-    const dataView = new Uint8Array(data);
-
-    if (dataView.byteLength < tagByteLength) {
-      throw lazyDOMException(
-        'The provided data is too small.',
-        'OperationError',
-      );
-    }
-
-    // Split data and tag
-    const ciphertextLength = dataView.byteLength - tagByteLength;
-    processData = dataView.slice(0, ciphertextLength).buffer;
-    authTag = dataView.slice(ciphertextLength).buffer;
-
-    // Set auth tag for verification
-    cipher.setAuthTag(authTag);
-  } else {
-    processData = data;
-  }
-
-  // Set additional authenticated data if provided
-  if (algorithm.additionalData) {
-    cipher.setAAD(bufferLikeToArrayBuffer(algorithm.additionalData));
-  }
-
-  // Process data
-  const updated = cipher.update(processData);
-  const final = cipher.final();
-
-  if (mode === CipherOrWrapMode.kWebCryptoCipherEncrypt) {
-    // For encryption, append auth tag to result
-    const tag = cipher.getAuthTag();
-    const result = new Uint8Array(
-      updated.byteLength + final.byteLength + tag.byteLength,
-    );
-    result.set(new Uint8Array(updated), 0);
-    result.set(new Uint8Array(final), updated.byteLength);
-    result.set(new Uint8Array(tag), updated.byteLength + final.byteLength);
-    return result.buffer;
-  } else {
-    // For decryption, just concatenate plaintext
-    const result = new Uint8Array(updated.byteLength + final.byteLength);
-    result.set(new Uint8Array(updated), 0);
-    result.set(new Uint8Array(final), updated.byteLength);
-    return result.buffer;
-  }
+interface AeadCipherConfig {
+  algorithmName: string;
+  validTagLengths: number[];
+  cipherSuffix: string;
+  iv: ArrayBuffer;
 }
 
-async function aesOcbCipher(
+async function aesAeadCipher(
   mode: CipherOrWrapMode,
   key: CryptoKey,
   data: ArrayBuffer,
-  algorithm: AesOcbParams,
+  config: AeadCipherConfig,
+  additionalData?: BufferLike,
+  tagLength: number = 128,
 ): Promise<ArrayBuffer> {
-  const { tagLength = 128 } = algorithm;
-
-  const validTagLengths = [64, 96, 128];
-  if (!validTagLengths.includes(tagLength)) {
+  if (!config.validTagLengths.includes(tagLength)) {
     throw lazyDOMException(
-      `${tagLength} is not a valid AES-OCB tag length`,
+      `${tagLength} is not a valid ${config.algorithmName} tag length`,
       'OperationError',
     );
   }
 
   const tagByteLength = tagLength / 8;
-
-  const ivBuffer = bufferLikeToArrayBuffer(algorithm.iv);
-  if (ivBuffer.byteLength < 1 || ivBuffer.byteLength > 15) {
-    throw lazyDOMException(
-      'AES-OCB algorithm.iv must be no more than 15 bytes',
-      'OperationError',
-    );
-  }
-
   const keyLength = (key.algorithm as { length: number }).length;
-  const cipherType = `aes-${keyLength}-ocb`;
+  const cipherType = `aes-${keyLength}-${config.cipherSuffix}`;
 
   const factory =
     NitroModules.createHybridObject<CipherFactory>('CipherFactory');
@@ -419,7 +329,7 @@ async function aesOcbCipher(
     isCipher: mode === CipherOrWrapMode.kWebCryptoCipherEncrypt,
     cipherType,
     cipherKey: bufferLikeToArrayBuffer(key.keyObject.export()),
-    iv: ivBuffer,
+    iv: config.iv,
     authTagLen: tagByteLength,
   });
 
@@ -438,14 +348,13 @@ async function aesOcbCipher(
     const ciphertextLength = dataView.byteLength - tagByteLength;
     processData = dataView.slice(0, ciphertextLength).buffer;
     const authTag = dataView.slice(ciphertextLength).buffer;
-
     cipher.setAuthTag(authTag);
   } else {
     processData = data;
   }
 
-  if (algorithm.additionalData) {
-    cipher.setAAD(bufferLikeToArrayBuffer(algorithm.additionalData));
+  if (additionalData) {
+    cipher.setAAD(bufferLikeToArrayBuffer(additionalData));
   }
 
   const updated = cipher.update(processData);
@@ -466,6 +375,56 @@ async function aesOcbCipher(
     result.set(new Uint8Array(final), updated.byteLength);
     return result.buffer;
   }
+}
+
+async function aesGcmCipher(
+  mode: CipherOrWrapMode,
+  key: CryptoKey,
+  data: ArrayBuffer,
+  algorithm: AesGcmParams,
+): Promise<ArrayBuffer> {
+  return aesAeadCipher(
+    mode,
+    key,
+    data,
+    {
+      algorithmName: 'AES-GCM',
+      validTagLengths: [32, 64, 96, 104, 112, 120, 128],
+      cipherSuffix: 'gcm',
+      iv: bufferLikeToArrayBuffer(algorithm.iv),
+    },
+    algorithm.additionalData,
+    algorithm.tagLength,
+  );
+}
+
+async function aesOcbCipher(
+  mode: CipherOrWrapMode,
+  key: CryptoKey,
+  data: ArrayBuffer,
+  algorithm: AesOcbParams,
+): Promise<ArrayBuffer> {
+  const ivBuffer = bufferLikeToArrayBuffer(algorithm.iv);
+  if (ivBuffer.byteLength < 1 || ivBuffer.byteLength > 15) {
+    throw lazyDOMException(
+      'AES-OCB algorithm.iv must be between 1 and 15 bytes',
+      'OperationError',
+    );
+  }
+
+  return aesAeadCipher(
+    mode,
+    key,
+    data,
+    {
+      algorithmName: 'AES-OCB',
+      validTagLengths: [64, 96, 128],
+      cipherSuffix: 'ocb',
+      iv: ivBuffer,
+    },
+    algorithm.additionalData,
+    algorithm.tagLength,
+  );
 }
 
 async function aesKwCipher(
