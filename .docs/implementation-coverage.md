@@ -286,6 +286,7 @@ These ciphers are **not available in Node.js** but are provided by RNQC via libs
 | `AES-CTR`  | ✅ |
 | `AES-CBC`  | ✅ |
 | `AES-GCM`  | ✅ |
+| `AES-OCB`           | ✅ |
 | `ChaCha20-Poly1305` | ✅ |
 
 ## `subtle.deriveBits`
@@ -325,7 +326,7 @@ These ciphers are **not available in Node.js** but are provided by RNQC via libs
 | `AES-CTR`           | ✅ |
 | `AES-CBC`           | ✅ |
 | `AES-GCM`           | ✅ |
-| `AES-OCB`           | ❌ |
+| `AES-OCB`           | ✅ |
 | `ChaCha20-Poly1305` | ✅ |
 | `RSA-OAEP`          | ✅ |
 
@@ -336,7 +337,7 @@ These ciphers are **not available in Node.js** but are provided by RNQC via libs
 | `AES-CTR`           |        |         | ✅    | ✅    | ✅           |              |            |
 | `AES-GCM`           |        |         | ✅    | ✅    | ✅           |              |            |
 | `AES-KW`            |        |         | ✅    | ✅    | ✅           |              |            |
-| `AES-OCB`           |        |         | ❌    |       | ❌           |              |            |
+| `AES-OCB`           |        |         | ✅    | ✅    | ✅           |              |            |
 | `ChaCha20-Poly1305` |        |         | ✅    |       | ✅           |              |            |
 | `ECDH`              | ✅     | ✅      | ✅    | ✅    |              | ✅           |            |
 | `ECDSA`             | ✅     | ✅      | ✅    | ✅    |              | ✅           |            |
@@ -385,7 +386,7 @@ These ciphers are **not available in Node.js** but are provided by RNQC via libs
 | `AES-CBC`           | ✅ |
 | `AES-GCM`           | ✅ |
 | `AES-KW`            | ✅ |
-| `AES-OCB`           | ❌ |
+| `AES-OCB`           | ✅ |
 | `ChaCha20-Poly1305` | ✅ |
 | `HMAC`              | ✅ |
 
@@ -396,7 +397,7 @@ These ciphers are **not available in Node.js** but are provided by RNQC via libs
 | `AES-CTR`           |        |         | ✅    | ✅    | ✅           |              |            |
 | `AES-GCM`           |        |         | ✅    | ✅    | ✅           |              |            |
 | `AES-KW`            |        |         | ✅    | ✅    | ✅           |              |            |
-| `AES-OCB`           |        |         | ❌    |       | ❌           |              |            |
+| `AES-OCB`           |        |         | ✅    | ✅    | ✅           |              |            |
 | `ChaCha20-Poly1305` |        |         | ✅    |       | ✅           |              |            |
 | `ECDH`              | ✅     | ✅      | ✅    | ✅    |              | ✅           |            |
 | `ECDSA`             | ✅     | ✅      | ✅    | ✅    |              | ✅           |            |
@@ -439,7 +440,7 @@ These ciphers are **not available in Node.js** but are provided by RNQC via libs
 | `AES-CTR`           | ✅ |
 | `AES-GCM`           | ✅ |
 | `AES-KW`            | ✅ |
-| `AES-OCB`           | ❌ |
+| `AES-OCB`           | ✅ |
 | `ChaCha20-Poly1305` | ✅ |
 | `RSA-OAEP`          | ✅ |
 
@@ -450,7 +451,7 @@ These ciphers are **not available in Node.js** but are provided by RNQC via libs
 | `AES-CTR`           | ✅ |
 | `AES-GCM`           | ✅ |
 | `AES-KW`            | ✅ |
-| `AES-OCB`           | ❌ |
+| `AES-OCB`           | ✅ |
 | `ChaCha20-Poly1305` | ✅ |
 | `ECDH`              | ✅ |
 | `ECDSA`             | ✅ |
@@ -491,6 +492,6 @@ These ciphers are **not available in Node.js** but are provided by RNQC via libs
 | `AES-CTR`           | ✅ |
 | `AES-GCM`           | ✅ |
 | `AES-KW`            | ✅ |
-| `AES-OCB`           | ❌ |
+| `AES-OCB`           | ✅ |
 | `ChaCha20-Poly1305` | ✅ |
 | `RSA-OAEP`          | ✅ |

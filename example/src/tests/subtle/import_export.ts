@@ -1795,14 +1795,14 @@ sizes.forEach(size => {
 test(SUITE, 'AES import/export raw-secret format', async () => {
   const keyData = getRandomValues(new Uint8Array(32));
   const key = await subtle.importKey(
-    'raw',
+    'raw-secret',
     keyData,
     { name: 'AES-GCM', length: 256 },
     true,
     ['encrypt', 'decrypt'],
   );
 
-  const exported = await subtle.exportKey('raw', key);
+  const exported = await subtle.exportKey('raw-secret', key);
   expect(Buffer.from(exported as ArrayBuffer).toString('hex')).to.equal(
     Buffer.from(keyData as Uint8Array).toString('hex'),
   );
@@ -1811,14 +1811,14 @@ test(SUITE, 'AES import/export raw-secret format', async () => {
 test(SUITE, 'HMAC import/export raw-secret format', async () => {
   const keyData = getRandomValues(new Uint8Array(32));
   const key = await subtle.importKey(
-    'raw',
+    'raw-secret',
     keyData,
     { name: 'HMAC', hash: 'SHA-256' },
     true,
     ['sign', 'verify'],
   );
 
-  const exported = await subtle.exportKey('raw', key);
+  const exported = await subtle.exportKey('raw-secret', key);
   expect(Buffer.from(exported as ArrayBuffer).toString('hex')).to.equal(
     Buffer.from(keyData as Uint8Array).toString('hex'),
   );
@@ -1827,7 +1827,7 @@ test(SUITE, 'HMAC import/export raw-secret format', async () => {
 test(SUITE, 'PBKDF2 import raw-secret format', async () => {
   const keyData = getRandomValues(new Uint8Array(32));
   const key = await subtle.importKey(
-    'raw',
+    'raw-secret',
     keyData,
     { name: 'PBKDF2' },
     false,
@@ -2281,3 +2281,51 @@ for (const { name: curveName, rawSize } of edCurves) {
     expect(isValid).to.equal(true);
   });
 }
+
+// AES-OCB JWK export/import roundtrip
+test(SUITE, 'AES-OCB export/import jwk', async () => {
+  const key = await subtle.generateKey({ name: 'AES-OCB', length: 256 }, true, [
+    'encrypt',
+    'decrypt',
+  ]);
+
+  const jwk = (await subtle.exportKey('jwk', key as CryptoKey)) as JWK;
+
+  expect(jwk.kty).to.equal('oct');
+  expect(jwk.alg).to.equal('A256OCB');
+  expect(jwk.ext).to.equal(true);
+  expect(jwk.key_ops).to.have.members(['encrypt', 'decrypt']);
+  expect(jwk.k).to.be.a('string');
+
+  const imported = await subtle.importKey(
+    'jwk',
+    jwk,
+    { name: 'AES-OCB' },
+    true,
+    ['encrypt', 'decrypt'],
+  );
+
+  const exportedRaw1 = await subtle.exportKey('raw', key as CryptoKey);
+  const exportedRaw2 = await subtle.exportKey('raw', imported as CryptoKey);
+  expect(Buffer.from(exportedRaw1 as ArrayBuffer).toString('hex')).to.equal(
+    Buffer.from(exportedRaw2 as ArrayBuffer).toString('hex'),
+  );
+});
+
+// AES-OCB raw-secret import/export
+test(SUITE, 'AES-OCB import/export raw-secret', async () => {
+  const keyData = getRandomValues(new Uint8Array(32));
+
+  const key = await subtle.importKey(
+    'raw-secret',
+    keyData,
+    { name: 'AES-OCB' },
+    true,
+    ['encrypt', 'decrypt'],
+  );
+
+  const exported = await subtle.exportKey('raw-secret', key as CryptoKey);
+  expect(Buffer.from(exported as ArrayBuffer).toString('hex')).to.equal(
+    Buffer.from(keyData as Uint8Array).toString('hex'),
+  );
+});

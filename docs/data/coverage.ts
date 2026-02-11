@@ -320,16 +320,12 @@ export const COVERAGE_DATA: CoverageCategory[] = [
       {
         name: 'crypto.subtle.exportKey',
         subItems: [
-          { name: 'AES-CBC', status: 'partial', note: 'jwk, raw' },
-          { name: 'AES-CTR', status: 'partial', note: 'jwk, raw, raw-secret' },
-          { name: 'AES-GCM', status: 'partial', note: 'jwk, raw, raw-secret' },
-          { name: 'AES-KW', status: 'partial', note: 'jwk, raw, raw-secret' },
-          { name: 'AES-OCB', status: 'partial', note: 'jwk, raw, raw-secret' },
-          {
-            name: 'ChaCha20-Poly1305',
-            status: 'partial',
-            note: 'jwk, raw',
-          },
+          { name: 'AES-CBC', status: 'implemented' },
+          { name: 'AES-CTR', status: 'implemented' },
+          { name: 'AES-GCM', status: 'implemented' },
+          { name: 'AES-KW', status: 'implemented' },
+          { name: 'AES-OCB', status: 'implemented' },
+          { name: 'ChaCha20-Poly1305', status: 'implemented' },
           {
             name: 'ECDH',
             status: 'partial',
@@ -342,7 +338,7 @@ export const COVERAGE_DATA: CoverageCategory[] = [
           },
           { name: 'Ed25519', status: 'partial', note: 'spki, pkcs8, raw, jwk' },
           { name: 'Ed448', status: 'partial', note: 'spki, pkcs8, raw, jwk' },
-          { name: 'HMAC', status: 'partial', note: 'jwk, raw, raw-secret' },
+          { name: 'HMAC', status: 'implemented' },
           {
             name: 'ML-DSA-44',
             status: 'partial',
@@ -400,12 +396,12 @@ export const COVERAGE_DATA: CoverageCategory[] = [
       {
         name: 'crypto.subtle.importKey',
         subItems: [
-          { name: 'AES-CBC', status: 'partial', note: 'jwk, raw, raw-secret' },
-          { name: 'AES-CTR', status: 'partial', note: 'jwk, raw, raw-secret' },
-          { name: 'AES-GCM', status: 'partial', note: 'jwk, raw, raw-secret' },
-          { name: 'AES-KW', status: 'partial', note: 'jwk, raw, raw-secret' },
-          { name: 'AES-OCB', status: 'partial', note: 'jwk, raw, raw-secret' },
-          { name: 'ChaCha20-Poly1305', status: 'partial', note: 'jwk, raw' },
+          { name: 'AES-CBC', status: 'implemented' },
+          { name: 'AES-CTR', status: 'implemented' },
+          { name: 'AES-GCM', status: 'implemented' },
+          { name: 'AES-KW', status: 'implemented' },
+          { name: 'AES-OCB', status: 'implemented' },
+          { name: 'ChaCha20-Poly1305', status: 'implemented' },
           {
             name: 'ECDH',
             status: 'partial',
@@ -418,8 +414,8 @@ export const COVERAGE_DATA: CoverageCategory[] = [
           },
           { name: 'Ed25519', status: 'partial', note: 'spki, pkcs8, raw, jwk' },
           { name: 'Ed448', status: 'partial', note: 'spki, pkcs8, raw, jwk' },
-          { name: 'HKDF', status: 'partial', note: 'raw' },
-          { name: 'HMAC', status: 'partial', note: 'jwk, raw, raw-secret' },
+          { name: 'HKDF', status: 'implemented' },
+          { name: 'HMAC', status: 'implemented' },
           {
             name: 'ML-DSA-44',
             status: 'partial',
@@ -438,7 +434,7 @@ export const COVERAGE_DATA: CoverageCategory[] = [
           { name: 'ML-KEM-512', status: 'missing' },
           { name: 'ML-KEM-768', status: 'missing' },
           { name: 'ML-KEM-1024', status: 'missing' },
-          { name: 'PBKDF2', status: 'partial', note: 'raw, raw-secret' },
+          { name: 'PBKDF2', status: 'implemented' },
           { name: 'RSA-OAEP', status: 'partial', note: 'spki, pkcs8, jwk' },
           { name: 'RSA-PSS', status: 'partial', note: 'spki, pkcs8, jwk' },
           {

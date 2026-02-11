@@ -462,7 +462,7 @@ export type DiffieHellmanCallback = (
 // from @paulmillr/noble-curves
 export type Hex = string | Uint8Array;
 
-export type ImportFormat = 'raw' | 'pkcs8' | 'spki' | 'jwk';
+export type ImportFormat = 'raw' | 'raw-secret' | 'pkcs8' | 'spki' | 'jwk';
 
 export type Operation =
   | 'encrypt'

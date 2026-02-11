@@ -91,7 +91,22 @@ function normalizeAlgorithm(
 }
 
 function getAlgorithmName(name: string, length: number): string {
-  return `${name}${length}`;
+  switch (name) {
+    case 'AES-CBC':
+      return `A${length}CBC`;
+    case 'AES-CTR':
+      return `A${length}CTR`;
+    case 'AES-GCM':
+      return `A${length}GCM`;
+    case 'AES-KW':
+      return `A${length}KW`;
+    case 'AES-OCB':
+      return `A${length}OCB`;
+    case 'ChaCha20-Poly1305':
+      return 'C20P';
+    default:
+      return `${name}${length}`;
+  }
 }
 
 // Placeholder implementations for missing functions
@@ -1733,6 +1748,8 @@ export class Subtle {
   ): Promise<ArrayBuffer | JWK> {
     if (!key.extractable) throw new Error('key is not extractable');
 
+    if (format === 'raw-secret') format = 'raw';
+
     switch (format) {
       case 'spki':
         return (await exportKeySpki(key)) as ArrayBuffer;
@@ -1967,6 +1984,7 @@ export class Subtle {
     extractable: boolean,
     keyUsages: KeyUsage[],
   ): Promise<CryptoKey> {
+    if (format === 'raw-secret') format = 'raw';
     const normalizedAlgorithm = normalizeAlgorithm(algorithm, 'importKey');
     let result: CryptoKey;
     switch (normalizedAlgorithm.name) {
