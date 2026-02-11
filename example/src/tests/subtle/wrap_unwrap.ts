@@ -3,9 +3,6 @@ import { expect } from 'chai';
 import { subtle, getRandomValues } from 'react-native-quick-crypto';
 import type { CryptoKey, CryptoKeyPair } from 'react-native-quick-crypto';
 
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-const subtleAny = subtle as any;
-
 const SUITE = 'subtle.wrapKey/unwrapKey';
 
 // Test 1: Wrap/unwrap AES key with AES-KW
@@ -22,14 +19,14 @@ test(SUITE, 'wrap/unwrap AES-256 with AES-KW', async () => {
     ['wrapKey', 'unwrapKey'],
   );
 
-  const wrapped = await subtleAny.wrapKey(
+  const wrapped = await subtle.wrapKey(
     'raw',
     keyToWrap as CryptoKey,
     wrappingKey as CryptoKey,
     { name: 'AES-KW' },
   );
 
-  const unwrapped = await subtleAny.unwrapKey(
+  const unwrapped = await subtle.unwrapKey(
     'raw',
     wrapped,
     wrappingKey as CryptoKey,
@@ -76,14 +73,14 @@ test(SUITE, 'wrap/unwrap with AES-GCM', async () => {
 
   const iv = getRandomValues(new Uint8Array(12));
 
-  const wrapped = await subtleAny.wrapKey(
+  const wrapped = await subtle.wrapKey(
     'raw',
     keyToWrap as CryptoKey,
     wrappingKey as CryptoKey,
     { name: 'AES-GCM', iv },
   );
 
-  const unwrapped = await subtleAny.unwrapKey(
+  const unwrapped = await subtle.unwrapKey(
     'raw',
     wrapped,
     wrappingKey as CryptoKey,
@@ -125,14 +122,14 @@ test(SUITE, 'wrap/unwrap JWK format', async () => {
     ['wrapKey', 'unwrapKey'],
   );
 
-  const wrapped = await subtleAny.wrapKey(
+  const wrapped = await subtle.wrapKey(
     'jwk',
     keyToWrap as CryptoKey,
     wrappingKey as CryptoKey,
     { name: 'AES-KW' },
   );
 
-  const unwrapped = await subtleAny.unwrapKey(
+  const unwrapped = await subtle.unwrapKey(
     'jwk',
     wrapped,
     wrappingKey as CryptoKey,
@@ -166,14 +163,14 @@ test(SUITE, 'wrap/unwrap with AES-CBC', async () => {
 
   const iv = getRandomValues(new Uint8Array(16));
 
-  const wrapped = await subtleAny.wrapKey(
+  const wrapped = await subtle.wrapKey(
     'raw',
     keyToWrap as CryptoKey,
     wrappingKey as CryptoKey,
     { name: 'AES-CBC', iv },
   );
 
-  const unwrapped = await subtleAny.unwrapKey(
+  const unwrapped = await subtle.unwrapKey(
     'raw',
     wrapped,
     wrappingKey as CryptoKey,
@@ -219,14 +216,14 @@ test(SUITE, 'wrap/unwrap with AES-CTR', async () => {
 
   const counter = getRandomValues(new Uint8Array(16));
 
-  const wrapped = await subtleAny.wrapKey(
+  const wrapped = await subtle.wrapKey(
     'raw',
     keyToWrap as CryptoKey,
     wrappingKey as CryptoKey,
     { name: 'AES-CTR', counter, length: 64 },
   );
 
-  const unwrapped = await subtleAny.unwrapKey(
+  const unwrapped = await subtle.unwrapKey(
     'raw',
     wrapped,
     wrappingKey as CryptoKey,
@@ -272,17 +269,17 @@ test(SUITE, 'wrap/unwrap with RSA-OAEP', async () => {
     ['wrapKey', 'unwrapKey'],
   );
 
-  const wrapped = await subtleAny.wrapKey(
+  const wrapped = await subtle.wrapKey(
     'raw',
     keyToWrap as CryptoKey,
-    (rsaKeyPair as CryptoKeyPair).publicKey,
+    (rsaKeyPair as CryptoKeyPair).publicKey as CryptoKey,
     { name: 'RSA-OAEP' },
   );
 
-  const unwrapped = await subtleAny.unwrapKey(
+  const unwrapped = await subtle.unwrapKey(
     'raw',
     wrapped,
-    (rsaKeyPair as CryptoKeyPair).privateKey,
+    (rsaKeyPair as CryptoKeyPair).privateKey as CryptoKey,
     { name: 'RSA-OAEP' },
     { name: 'AES-GCM', length: 128 },
     true,
@@ -325,14 +322,14 @@ test(SUITE, 'wrap/unwrap with ChaCha20-Poly1305', async () => {
 
   const iv = getRandomValues(new Uint8Array(12));
 
-  const wrapped = await subtleAny.wrapKey(
+  const wrapped = await subtle.wrapKey(
     'raw',
     keyToWrap as CryptoKey,
     wrappingKey as CryptoKey,
     { name: 'ChaCha20-Poly1305', iv },
   );
 
-  const unwrapped = await subtleAny.unwrapKey(
+  const unwrapped = await subtle.unwrapKey(
     'raw',
     wrapped,
     wrappingKey as CryptoKey,
