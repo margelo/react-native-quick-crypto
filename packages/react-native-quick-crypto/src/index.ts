@@ -12,6 +12,9 @@ import * as hkdf from './hkdf';
 import * as pbkdf2 from './pbkdf2';
 import * as scrypt from './scrypt';
 import * as random from './random';
+import * as ecdh from './ecdh';
+import * as dh from './diffie-hellman';
+import { getCurves } from './ec';
 import { constants } from './constants';
 
 // utils import
@@ -33,9 +36,13 @@ const QuickCrypto = {
   ...pbkdf2,
   ...scrypt,
   ...random,
+  ...ecdh,
+  ...dh,
   ...utils,
   ...subtle,
+  getCurves,
   constants,
+  Buffer,
 };
 
 /**
@@ -48,6 +55,10 @@ export const install = () => {
 
   // @ts-expect-error subtle isn't fully implemented and Cryptokey is missing
   global.crypto = QuickCrypto;
+
+  // Install base64 globals (base64ToArrayBuffer, base64FromArrayBuffer)
+  // eslint-disable-next-line @typescript-eslint/no-require-imports
+  require('react-native-quick-base64');
 };
 
 // random, cipher, hash use nextTick
@@ -71,10 +82,14 @@ export * from './hkdf';
 export * from './pbkdf2';
 export * from './scrypt';
 export * from './random';
+export * from './ecdh';
+export { getCurves } from './ec';
+export * from './diffie-hellman';
 export * from './utils';
 export * from './subtle';
 export { subtle, isCryptoKeyPair } from './subtle';
 export { constants } from './constants';
+export { Buffer } from '@craftzdog/react-native-buffer';
 
 // Additional exports for CommonJS compatibility
 module.exports = QuickCrypto;

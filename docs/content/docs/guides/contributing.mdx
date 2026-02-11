@@ -1,0 +1,168 @@
+---
+title: Contributing
+description: Learn how to contribute to react-native-quick-crypto.
+---
+
+We want this community to be friendly and respectful to each other. Please follow it in all your interactions with the project.
+
+## Development workflow
+
+To get started with the project, run `bun install` in the root directory to install the required dependencies for each package:
+
+```bash
+bun i
+```
+
+> While it's possible to use [`npm`](https://github.com/npm/cli), [`yarn`](https://classic.yarnpkg.com/), or [`pnpm`](https://pnpm.io), the tooling is built around [`bun`](https://bun.sh), so you'll have an easier time if you use `bun` for development.
+
+### C++ Development
+
+If you are using a VSCode-flavored IDE and the `clangd` extension, you can use the `scripts/setup_clang_env.sh` script to set up the environment for C++ development. This will create a `compile_commands.json` file in the root directory of the project, which will allow the IDE to provide proper includes, better code completion and navigation.  After that, add the following to your `.vscode/settings.json` file:
+
+```json
+{
+    "clangd.arguments": [
+        "-log=verbose", 
+        "-pretty", 
+        "--background-index", 
+        "--compile-commands-dir=${workspaceFolder}/packages/react-native-quick-crypto/"
+    ],
+}
+```
+
+### Running the Example App
+
+While developing, you can run the [example app](https://github.com/margelo/react-native-quick-crypto/tree/main/example) to test your changes. Any changes you make in your library's JavaScript code will be reflected in the example app without a rebuild. If you change any native code, then you'll need to rebuild the example app.
+
+To develop in iOS, build the CocoaPods dependencies:
+
+```bash
+pod install
+```
+
+To start the Metro bundler/packager:
+
+```bash
+bun start
+```
+
+To start the app:
+```bash
+bun ios # or android
+```
+
+### Native Files
+
+-   To edit the Objective-C files, open `example/ios/QuickCryptoExample.xcworkspace` in XCode and find the source files at `Pods > Development Pods > react-native-quick-crypto`.
+-   To edit the Kotlin files, open `example/android` in Android studio and find the source files at `margelo/quickcrypto` under `Android`.
+
+## Code Quality
+
+Make sure your code passes TypeScript and ESLint. Run the following to verify:
+
+```bash
+bun tsc
+bun lint
+bun format
+```
+
+To fix formatting errors, run the following:
+
+```bash
+bun lint:fix
+bun format:fix
+```
+
+Remember to add tests for your change if possible. Run the unit tests by:
+
+```bash
+bun test
+```
+
+## Commit message convention
+
+We follow the [conventional commits specification](https://www.conventionalcommits.org/en) for our commit messages:
+
+-   `fix`: bug fixes, e.g. fix crash due to deprecated method.
+-   `feat`: new features, e.g. add new method to the module.
+-   `refactor`: code refactor, e.g. migrate from class components to hooks.
+-   `docs`: changes into documentation, e.g. add usage example for the module..
+-   `test`: adding or updating tests, e.g. add integration tests using detox.
+-   `chore`: tooling changes, e.g. change CI config.
+
+## Documentation Structure
+
+The documentation website is built using [Fumadocs](https://fumadocs.vercel.app) and Next.js. The source code for the documentation is located in the `docs` directory.
+
+### Directory Layout
+
+-   **`docs/content`**: Contains the MDX files for the documentation pages.
+-   **`docs/components`**: React components used within the documentation (e.g., `CoverageTable.tsx`).
+-   **`docs/data`**: Data files used by the components (e.g., `coverage.ts`).
+
+### Adding a New Page
+
+To add a new page to the documentation:
+
+1.  Create a new `.mdx` file in `docs/content/docs/YOUR_SECTION/YOUR_PAGE.mdx`.
+2.  Add the required frontmatter at the top of the file:
+
+    ```yaml
+    ---
+    title: Your Page Title
+    description: A brief description of the page content.
+    ---
+    ```
+
+3.  Register the new page in `docs/content/docs/YOUR_SECTION/meta.json` to ensure it appears in the sidebar navigation.
+
+
+
+## Writing Documentation
+
+For detailed guidelines on how to structure API pages, use components, and format your documentation, please see the [Writing Documentation](/docs/guides/writing-documentation) guide.
+
+It covers:
+
+-   Standard Page Structure (Theory, Class, Methods, Examples).
+-   Table of Contents generation.
+-   Frontmatter and Code Blocks.
+-   Callouts and Alerts.
+
+## Updating Documentation Coverage
+
+The [`docs/data/coverage.ts`](https://github.com/margelo/react-native-quick-crypto/blob/main/docs/data/coverage.ts) file tracks the implementation status of various cryptographic features. It is crucial to keep this file up-to-date so that users know what is supported.
+
+> **Note:** This file feeds directly into the [Implementation Coverage](/docs/introduction/coverage) page. Updating this file automatically updates the coverage table on the website.
+
+When you implement a new feature (or partially implement it), please find the corresponding entry in `coverage.ts` and update its status. Change `'missing'` to `'implemented'` or `'partial'`.
+
+**Status Types:**
+
+-   `'implemented'`: The feature is fully implemented and supported.
+-   `'missing'`: The feature is not yet implemented.
+-   `'partial'`: The feature is partially implemented. Please add a `note` explaining what is missing or supported.
+-   `'not-in-node'`: The feature is specific to this library and does not exist in the standard Node.js crypto API.
+
+**Example:**
+
+```typescript
+{
+    name: 'MyNewFeature',
+    status: 'implemented', // or 'partial', 'missing'
+    note: 'Supports only specific options for now' // Optional
+}
+```
+
+## Sending a pull request
+
+> **Working on your first pull request?** You can learn how from this _free_ series: [How to Contribute to an Open Source Project on GitHub](https://app.egghead.io/playlists/how-to-contribute-to-an-open-source-project-on-github).
+
+When you're sending a pull request:
+
+-   Prefer small pull requests focused on one change.
+-   Verify that linters and tests are passing.
+-   Review the documentation to make sure it looks good.
+-   Follow the pull request template when opening a pull request.
+-   If you add a new feature or change the status of an existing one, please update `docs/data/coverage.ts` to reflect the changes.
+-   For pull requests that change the API or implementation, discuss with maintainers first by opening an issue.

@@ -1,8 +1,8 @@
 #include "HybridVerifyHandle.hpp"
 
 #include "../keys/HybridKeyObjectHandle.hpp"
+#include "QuickCryptoUtils.hpp"
 #include "SignUtils.hpp"
-#include "Utils.hpp"
 
 #include <cstring>
 #include <openssl/err.h>

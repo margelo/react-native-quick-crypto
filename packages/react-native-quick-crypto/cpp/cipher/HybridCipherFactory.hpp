@@ -10,8 +10,10 @@
 #include "GCMCipher.hpp"
 #include "HybridCipherFactorySpec.hpp"
 #include "OCBCipher.hpp"
-#include "Utils.hpp"
+#include "QuickCryptoUtils.hpp"
+#include "XChaCha20Poly1305Cipher.hpp"
 #include "XSalsa20Cipher.hpp"
+#include "XSalsa20Poly1305Cipher.hpp"
 
 namespace margelo::nitro::crypto {
 
@@ -88,10 +90,22 @@ class HybridCipherFactory : public HybridCipherFactorySpec {
     }
     EVP_CIPHER_free(cipher);
 
-    // libsodium
+    // libsodium ciphers
     std::string cipherName = toLower(args.cipherType);
     if (cipherName == "xsalsa20") {
       cipherInstance = std::make_shared<XSalsa20Cipher>();
+      cipherInstance->setArgs(args);
+      cipherInstance->init(args.cipherKey, args.iv);
+      return cipherInstance;
+    }
+    if (cipherName == "xsalsa20-poly1305") {
+      cipherInstance = std::make_shared<XSalsa20Poly1305Cipher>();
+      cipherInstance->setArgs(args);
+      cipherInstance->init(args.cipherKey, args.iv);
+      return cipherInstance;
+    }
+    if (cipherName == "xchacha20-poly1305") {
+      cipherInstance = std::make_shared<XChaCha20Poly1305Cipher>();
       cipherInstance->setArgs(args);
       cipherInstance->init(args.cipherKey, args.iv);
       return cipherInstance;

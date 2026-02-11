@@ -189,4 +189,8 @@ tsconfig.tsbuildinfo
 
 # agents
 .claude/settings.local.json
+.claude/progress
 .agent/
+
+# exclude docs lib
+!docs/lib

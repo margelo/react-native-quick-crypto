@@ -79,6 +79,9 @@ android {
   buildFeatures {
     buildConfig true
     prefab true
+    // Explicitly disable RenderScript (deprecated since Android 12, removed in AGP 9.0)
+    // to suppress 'isRenderscriptDebuggable is obsolete' warning. See #802.
+    renderScript = false
   }
 
 packagingOptions {

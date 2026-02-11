@@ -1,5 +1,5 @@
 {
-  "version": "1.0.6",
+  "version": "1.0.9",
   "type": "module",
   "scripts": {
     "clang-format": "./scripts/clang-format.sh",
@@ -44,7 +44,7 @@
     "eslint-config-prettier": "10.1.8",
     "eslint-plugin-prettier": "5.5.4",
     "eslint-plugin-react-native": "5.0.0",
-    "nitro-codegen": "0.29.4",
+    "nitrogen": "0.33.2",
     "prettier": "3.5.3",
     "release-it": "19.0.5",
     "typescript": "5.8.3",

@@ -29,4 +29,6 @@ export interface KeyObjectHandle
   initECRaw(namedCurve: string, keyData: ArrayBuffer): boolean;
   initJwk(keyData: JWK, namedCurve?: NamedCurve): KeyType | undefined;
   keyDetail(): KeyDetail;
+  keyEquals(other: KeyObjectHandle): boolean;
+  getSymmetricKeySize(): number;
 }

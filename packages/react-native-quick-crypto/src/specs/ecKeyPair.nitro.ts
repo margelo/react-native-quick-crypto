@@ -35,4 +35,6 @@ export interface EcKeyPair
     signature: ArrayBuffer,
     hashAlgorithm: string,
   ): boolean;
+
+  getSupportedCurves(): string[];
 }

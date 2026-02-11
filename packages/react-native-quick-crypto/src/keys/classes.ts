@@ -89,6 +89,13 @@ export class KeyObject {
     throw new Error('export() must be implemented by subclasses');
   }
 
+  equals(otherKeyObject: KeyObject): boolean {
+    if (!(otherKeyObject instanceof KeyObject)) {
+      throw new TypeError('otherKeyObject must be a KeyObject');
+    }
+    return this.handle.keyEquals(otherKeyObject.handle);
+  }
+
   constructor(type: string, handle: KeyObjectHandle);
   constructor(type: string, key: ArrayBuffer);
   constructor(type: string, handleOrKey: KeyObjectHandle | ArrayBuffer) {
@@ -197,9 +204,9 @@ export class SecretKeyObject extends KeyObject {
     super('secret', handle);
   }
 
-  // get symmetricKeySize() {
-  //   return this.handle.getSymmetricKeySize();
-  // }
+  get symmetricKeySize(): number {
+    return this.handle.getSymmetricKeySize();
+  }
 
   export(options: { format: 'pem' } & EncodingOptions): never;
   export(options: { format: 'der' } & EncodingOptions): Buffer;

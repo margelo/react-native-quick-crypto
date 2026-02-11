@@ -1,0 +1,244 @@
+---
+title: Ed25519 & X25519
+description: High-performance signatures and key exchange
+---
+
+import { Callout } from 'fumadocs-ui/components/callout';
+
+# Ed25519 & X25519
+
+## Table of Contents
+
+- [Theory](#theory)
+- [Node.js Compatible API](#nodejs-compatible-api)
+- [Ed Class (Noble-style API)](#ed-class-noble-style-api)
+- [Best Practices](#best-practices)
+
+## Theory
+
+**Ed25519** (Edwards-curve Digital Signature Algorithm) and **X25519** (Elliptic Curve Diffie-Hellman on Curve25519) are state-of-the-art cryptographic primitives that offer high security, high performance, and small key sizes.
+
+<Callout type="info" title="Why use them?">
+  **Ed25519** is the gold standard for signatures (used in SSH, TLS 1.3, Signal).
+  **X25519** is the gold standard for key exchange (ECDH).
+  They are faster and safer than RSA and older NIST curves.
+</Callout>
+
+## Node.js Compatible API
+
+Use `generateKeyPair` or `generateKeyPairSync` for Node.js-compatible key generation.
+
+```ts
+import { generateKeyPairSync } from 'react-native-quick-crypto';
+
+// Ed25519 (Signatures)
+const edKeys = generateKeyPairSync('ed25519');
+console.log(edKeys.publicKey.export({ format: 'pem', type: 'spki' }));
+
+// X25519 (Key Exchange)
+const xKeys = generateKeyPairSync('x25519');
+console.log(xKeys.publicKey.export({ format: 'pem', type: 'spki' }));
+```
+
+### Ed25519 Signatures (Node.js API)
+
+```ts
+import { generateKeyPairSync, sign, verify } from 'react-native-quick-crypto';
+
+const { publicKey, privateKey } = generateKeyPairSync('ed25519');
+const message = Buffer.from('Hello, secure world!');
+
+// Sign (one-shot)
+const signature = sign(null, message, privateKey);
+console.log('Signature:', signature.toString('hex'));
+
+// Verify (one-shot)
+const isValid = verify(null, message, publicKey, signature);
+console.log('Valid:', isValid); // true
+```
+
+### X25519 Key Exchange (Node.js API)
+
+```ts
+import { generateKeyPairSync, diffieHellman } from 'react-native-quick-crypto';
+
+// Alice generates her key pair
+const alice = generateKeyPairSync('x25519');
+
+// Bob generates his key pair
+const bob = generateKeyPairSync('x25519');
+
+// Both compute the same shared secret
+const aliceSecret = diffieHellman({
+  privateKey: alice.privateKey,
+  publicKey: bob.publicKey
+});
+
+const bobSecret = diffieHellman({
+  privateKey: bob.privateKey,
+  publicKey: alice.publicKey
+});
+
+// aliceSecret and bobSecret are identical
+```
+
+---
+
+## Ed Class (Noble-style API)
+
+<Callout type="info" title="Extended API">
+  The `Ed` class provides a simpler, more direct API inspired by the [@noble/curves](https://github.com/paulmillr/noble-curves) library. This is **not** part of the Node.js crypto API but offers a convenient alternative for developers familiar with noble libraries.
+</Callout>
+
+### Creating an Ed Instance
+
+```ts
+import { Ed } from 'react-native-quick-crypto';
+
+// For Ed25519 signatures
+const ed = new Ed('ed25519', {});
+
+// For X25519 key exchange
+const x = new Ed('x25519', {});
+
+// For Ed448 signatures
+const ed448 = new Ed('ed448', {});
+
+// For X448 key exchange
+const x448 = new Ed('x448', {});
+```
+
+### Key Generation
+
+```ts
+import { Ed } from 'react-native-quick-crypto';
+
+const ed = new Ed('ed25519', {});
+
+// Synchronous key generation
+ed.generateKeyPairSync();
+
+// Or async
+await ed.generateKeyPair();
+
+// Get the keys as ArrayBuffer
+const publicKey = ed.getPublicKey();
+const privateKey = ed.getPrivateKey();
+```
+
+### Signing and Verifying
+
+```ts
+import { Ed } from 'react-native-quick-crypto';
+
+const ed = new Ed('ed25519', {});
+ed.generateKeyPairSync();
+
+const message = new TextEncoder().encode('Hello, world!');
+
+// Sign (async)
+const signature = await ed.sign(message);
+
+// Verify (async)
+const isValid = await ed.verify(signature, message);
+console.log('Valid:', isValid); // true
+
+// Sync versions also available
+const signatureSync = ed.signSync(message);
+const isValidSync = ed.verifySync(signatureSync, message);
+```
+
+### X25519 Shared Secret (Diffie-Hellman)
+
+```ts
+import { Ed } from 'react-native-quick-crypto';
+
+// Alice
+const alice = new Ed('x25519', {});
+alice.generateKeyPairSync();
+
+// Bob
+const bob = new Ed('x25519', {});
+bob.generateKeyPairSync();
+
+// Compute shared secret
+const aliceSecret = alice.getSharedSecret(
+  alice.getPrivateKey(),
+  bob.getPublicKey()
+);
+
+const bobSecret = bob.getSharedSecret(
+  bob.getPrivateKey(),
+  alice.getPublicKey()
+);
+
+// Both secrets are identical - use for symmetric encryption
+```
+
+### Ed Class Methods Reference
+
+| Method | Description |
+|:-------|:------------|
+| `generateKeyPair()` | Async key pair generation |
+| `generateKeyPairSync()` | Sync key pair generation |
+| `getPublicKey()` | Returns public key as `ArrayBuffer` |
+| `getPrivateKey()` | Returns private key as `ArrayBuffer` |
+| `sign(message, key?)` | Async signing (uses internal key if not provided) |
+| `signSync(message, key?)` | Sync signing |
+| `verify(signature, message, key?)` | Async verification |
+| `verifySync(signature, message, key?)` | Sync verification |
+| `getSharedSecret(privateKey, publicKey)` | X25519/X448 Diffie-Hellman |
+| `diffieHellman(options, callback?)` | Node.js-style DH with KeyObjects |
+
+---
+
+## Best Practices
+
+<Callout type="warn" title="Security Warning">
+  Never confuse Ed25519 (signing) with X25519 (encryption/exchange). They use the same underlying curve but different coordinates and formulas.
+</Callout>
+
+1. **Use Ed25519 for Signatures**: It's faster and safer than RSA.
+2. **Use X25519 for ECDH**: It's efficient and secure.
+3. **Don't use Ed25519 keys for X25519** directly without conversion (and vice versa).
+4. **Choose the right API**: Use Node.js API for compatibility, Ed class for simplicity.
+
+## Common Errors
+
+### Wrong Algorithm
+
+Trying to use RSA options with Ed25519.
+
+```ts
+// ❌ Wrong - Ed25519 hashes internally
+const signer = createSign('SHA256');
+
+// ✅ Correct - use null for Ed25519
+const signature = sign(null, data, ed25519PrivateKey);
+```
+
+### Key Mismatch
+
+Mixing Ed25519 and X25519 keys.
+
+```ts
+// ❌ Wrong - can't sign with X25519 key
+sign(null, data, x25519PrivateKey); // Error: invalid key type
+
+// ✅ Correct - use Ed25519 for signing
+sign(null, data, ed25519PrivateKey);
+```
+
+### Wrong Ed Class Type
+
+```ts
+// ❌ Wrong - can't sign with x25519 Ed instance
+const x = new Ed('x25519', {});
+x.generateKeyPairSync();
+await x.sign(message); // Error!
+
+// ✅ Correct - use ed25519 for signing
+const ed = new Ed('ed25519', {});
+ed.generateKeyPairSync();
+await ed.sign(message);
+```

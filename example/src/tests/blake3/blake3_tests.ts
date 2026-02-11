@@ -1,6 +1,10 @@
-import { Buffer } from '@craftzdog/react-native-buffer';
 import { expect } from 'chai';
-import { Blake3, createBlake3, blake3 } from 'react-native-quick-crypto';
+import {
+  Blake3,
+  Buffer,
+  createBlake3,
+  blake3,
+} from 'react-native-quick-crypto';
 import { test } from '../util';
 
 const SUITE = 'blake3';

@@ -2,7 +2,7 @@
 #include <stdexcept> // For std::runtime_error
 
 #include "NitroModules/ArrayBuffer.hpp"
-#include "Utils.hpp"
+#include "QuickCryptoUtils.hpp"
 #include "XSalsa20Cipher.hpp"
 
 namespace margelo::nitro::crypto {

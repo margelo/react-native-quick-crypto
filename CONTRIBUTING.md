@@ -116,6 +116,29 @@ The `package.json` file contains various scripts for common tasks:
 - `bun test`: run unit tests with Jest.
 - `bun example`: start the Metro server for the example app.
 
+### Updating Documentation Coverage
+
+The [`docs/data/coverage.ts`](/docs/data/coverage.ts) file tracks the implementation status of various cryptographic features. It is crucial to keep this file up-to-date so that users know what is supported.
+
+When you implement a new feature (or partially implement it), please find the corresponding entry in `coverage.ts` and update its status.
+
+**Status Types:**
+
+-   `'implemented'`: The feature is fully implemented and supported.
+-   `'missing'`: The feature is not yet implemented.
+-   `'partial'`: The feature is partially implemented. Please add a `note` explaining what is missing or supported.
+-   `'not-in-node'`: The feature is specific to this library and does not exist in the standard Node.js crypto API.
+
+**Example:**
+
+```typescript
+{
+    name: 'MyNewFeature',
+    status: 'implemented', // or 'partial', 'missing'
+    note: 'Supports only specific options for now' // Optional
+}
+```
+
 ### Sending a pull request
 
 > **Working on your first pull request?** You can learn how from this _free_ series: [How to Contribute to an Open Source Project on GitHub](https://app.egghead.io/playlists/how-to-contribute-to-an-open-source-project-on-github).
@@ -126,4 +149,5 @@ When you're sending a pull request:
 - Verify that linters and tests are passing.
 - Review the documentation to make sure it looks good.
 - Follow the pull request template when opening a pull request.
+- If you add a new feature or change the status of an existing one, please update `docs/data/coverage.ts` to reflect the changes.
 - For pull requests that change the API or implementation, discuss with maintainers first by opening an issue.

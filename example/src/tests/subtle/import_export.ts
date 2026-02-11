@@ -1,10 +1,15 @@
-import { Buffer } from '@craftzdog/react-native-buffer';
 import { assert, expect } from 'chai';
-import {
-  fromByteArray,
-  toByteArray,
-  trimBase64Padding,
-} from 'react-native-quick-base64';
+
+declare global {
+  // eslint-disable-next-line no-var
+  var base64ToArrayBuffer: (
+    base64: string,
+    removeLinebreaks?: boolean,
+  ) => ArrayBuffer;
+  // eslint-disable-next-line no-var
+  var base64FromArrayBuffer: (buffer: ArrayBuffer, urlSafe?: boolean) => string;
+}
+
 import type {
   CryptoKey,
   CryptoKeyPair,
@@ -19,6 +24,7 @@ import type {
 import {
   ab2str,
   binaryLikeToArrayBuffer,
+  Buffer,
   // createPublicKey, // TODO: for 'bad usages' test
   // createPrivateKey, // TODO: for 'bad usages' test
   getRandomValues,
@@ -72,14 +78,19 @@ function base64ToArrayBuffer(val: string): ArrayBuffer {
   while (cleaned.endsWith('.')) {
     cleaned = cleaned.slice(0, -1);
   }
-  const arr = toByteArray(cleaned);
-  return binaryLikeToArrayBuffer(arr);
+  return global.base64ToArrayBuffer(cleaned);
 }
 
-// TODO: add in `url` from react-native-quick-base64 when 2.1.1 is released
 function arrayBufferToBase64(buffer: ArrayBuffer, urlSafe: boolean = false) {
-  const bytes = new Uint8Array(buffer);
-  return fromByteArray(bytes, urlSafe);
+  return global.base64FromArrayBuffer(buffer, urlSafe);
+}
+
+function trimBase64Padding(str: string): string {
+  return str.replace(/[.=]{1,2}$/, '');
+}
+
+function toByteArray(b64: string): Uint8Array {
+  return new Uint8Array(global.base64ToArrayBuffer(b64));
 }
 
 const SUITE = 'subtle.importKey/exportKey';
@@ -2182,3 +2193,91 @@ test(SUITE, 'ML-DSA-44 importKey rejects invalid format', async () => {
     'NotSupportedError',
   );
 });
+
+// --- Ed25519/Ed448 raw import/export Tests ---
+
+const edCurves = [
+  { name: 'Ed25519' as const, rawSize: 32 },
+  { name: 'Ed448' as const, rawSize: 57 },
+];
+
+for (const { name: curveName, rawSize } of edCurves) {
+  test(SUITE, `${curveName} raw export public key`, async () => {
+    const keyPair = (await subtle.generateKey({ name: curveName }, true, [
+      'sign',
+      'verify',
+    ])) as CryptoKeyPair;
+
+    const raw = (await subtle.exportKey(
+      'raw',
+      keyPair.publicKey as CryptoKey,
+    )) as ArrayBuffer;
+
+    expect(raw).to.be.instanceOf(ArrayBuffer);
+    expect(raw.byteLength).to.equal(rawSize);
+  });
+
+  test(SUITE, `${curveName} raw export/import round-trip`, async () => {
+    const keyPair = (await subtle.generateKey({ name: curveName }, true, [
+      'sign',
+      'verify',
+    ])) as CryptoKeyPair;
+
+    const raw = (await subtle.exportKey(
+      'raw',
+      keyPair.publicKey as CryptoKey,
+    )) as ArrayBuffer;
+
+    const imported = await subtle.importKey(
+      'raw',
+      raw,
+      { name: curveName },
+      true,
+      ['verify'],
+    );
+
+    expect(imported.type).to.equal('public');
+    expect(imported.algorithm.name).to.equal(curveName);
+    expect(imported.extractable).to.equal(true);
+    expect(imported.usages).to.deep.equal(['verify']);
+
+    const reExported = (await subtle.exportKey('raw', imported)) as ArrayBuffer;
+    expect(Buffer.from(raw).equals(Buffer.from(reExported))).to.equal(true);
+  });
+
+  test(SUITE, `${curveName} raw import then verify signature`, async () => {
+    const testData = new TextEncoder().encode(`${curveName} raw import test`);
+
+    const keyPair = (await subtle.generateKey({ name: curveName }, true, [
+      'sign',
+      'verify',
+    ])) as CryptoKeyPair;
+
+    const signature = await subtle.sign(
+      { name: curveName },
+      keyPair.privateKey as CryptoKey,
+      testData,
+    );
+
+    const raw = (await subtle.exportKey(
+      'raw',
+      keyPair.publicKey as CryptoKey,
+    )) as ArrayBuffer;
+
+    const importedPublic = await subtle.importKey(
+      'raw',
+      raw,
+      { name: curveName },
+      true,
+      ['verify'],
+    );
+
+    const isValid = await subtle.verify(
+      { name: curveName },
+      importedPublic,
+      signature,
+      testData,
+    );
+    expect(isValid).to.equal(true);
+  });
+}

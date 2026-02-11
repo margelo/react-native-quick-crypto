@@ -32,9 +32,13 @@ add_library(
   ../cpp/cipher/HybridRsaCipher.cpp
   ../cpp/cipher/OCBCipher.cpp
   ../cpp/cipher/XSalsa20Cipher.cpp
+  ../cpp/cipher/XSalsa20Poly1305Cipher.cpp
+  ../cpp/cipher/XChaCha20Poly1305Cipher.cpp
   ../cpp/cipher/ChaCha20Cipher.cpp
   ../cpp/cipher/ChaCha20Poly1305Cipher.cpp
+  ../cpp/dh/HybridDiffieHellman.cpp
   ../cpp/ec/HybridEcKeyPair.cpp
+  ../cpp/ecdh/HybridECDH.cpp
   ../cpp/ed25519/HybridEdKeyPair.cpp
   ../cpp/hash/HybridHash.cpp
   ../cpp/hmac/HybridHmac.cpp
@@ -62,7 +66,9 @@ include_directories(
   "src/main/cpp"
   "../cpp/blake3"
   "../cpp/cipher"
+  "../cpp/dh"
   "../cpp/ec"
+  "../cpp/ecdh"
   "../cpp/ed25519"
   "../cpp/hash"
   "../cpp/hkdf"

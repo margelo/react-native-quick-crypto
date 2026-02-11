@@ -3,9 +3,10 @@
  * https://github.com/nodejs/node/blob/master/test/parallel/test-crypto-hash.js
  */
 
-import { Buffer } from '@craftzdog/react-native-buffer';
 import {
+  Buffer,
   createHash,
+  hash,
   getHashes,
   type Encoding,
 } from 'react-native-quick-crypto';
@@ -282,4 +283,41 @@ test(SUITE, 'createHash with null outputLength', () => {
     // @ts-expect-error bad outputLength
     createHash('shake128', { outputLength: null });
   }).to.throw(/Output length must be a number/);
+});
+
+// crypto.hash() oneshot function tests
+test(SUITE, 'hash() oneshot - sha256 hex', () => {
+  const result = hash('sha256', 'Test123', 'hex');
+  const expected = createHash('sha256').update('Test123').digest('hex');
+  expect(result).to.equal(expected);
+});
+
+test(SUITE, 'hash() oneshot - sha256 base64', () => {
+  const result = hash('sha256', 'Test123', 'base64');
+  const expected = createHash('sha256').update('Test123').digest('base64');
+  expect(result).to.equal(expected);
+});
+
+test(SUITE, 'hash() oneshot - returns Buffer without encoding', () => {
+  const result = hash('sha256', 'Test123');
+  expect(Buffer.isBuffer(result)).to.equal(true);
+  expect(typeof result).to.not.equal('string');
+});
+
+test(SUITE, 'hash() oneshot - sha512', () => {
+  const result = hash('sha512', 'hello world', 'hex');
+  const expected = createHash('sha512').update('hello world').digest('hex');
+  expect(result).to.equal(expected);
+});
+
+test(SUITE, 'hash() oneshot - md5', () => {
+  const result = hash('md5', 'Test123', 'hex');
+  expect(result).to.equal('68eacb97d86f0c4621fa2b0e17cabd8c');
+});
+
+test(SUITE, 'hash() oneshot - Buffer input', () => {
+  const data = Buffer.from('hello');
+  const result = hash('sha256', data, 'hex');
+  const expected = createHash('sha256').update(data).digest('hex');
+  expect(result).to.equal(expected);
 });

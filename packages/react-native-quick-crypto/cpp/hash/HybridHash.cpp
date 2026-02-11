@@ -7,7 +7,7 @@
 #include <vector>
 
 #include "HybridHash.hpp"
-#include "Utils.hpp"
+#include "QuickCryptoUtils.hpp"
 
 namespace margelo::nitro::crypto {
 
@@ -68,7 +68,7 @@ void HybridHash::createHash(const std::string& hashAlgorithmArg, const std::opti
   }
 }
 
-void HybridHash::update(const std::variant<std::string, std::shared_ptr<ArrayBuffer>>& data) {
+void HybridHash::update(const std::variant<std::shared_ptr<ArrayBuffer>, std::string>& data) {
   if (!ctx) {
     throw std::runtime_error("Hash context not initialized");
   }

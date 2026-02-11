@@ -1,0 +1,269 @@
+---
+title: Cipher
+description: Symmetric encryption and decryption
+---
+
+import { Callout } from 'fumadocs-ui/components/callout';
+import { TypeTable } from 'fumadocs-ui/components/type-table';
+import { Tab, Tabs } from 'fumadocs-ui/components/tabs';
+
+The `Cipher` module provides implementations of symmetric cipher algorithms. It supports standard Block Ciphers (AES), Stream Ciphers (ChaCha20), and extended ciphers via libsodium (XChaCha20, XSalsa20).
+
+## Table of Contents
+
+- [Theory](#theory)
+- [Supported Algorithms](#supported-algorithms)
+- [Class: Cipher](#class-cipher)
+- [Class: Decipher](#class-decipher)
+- [Module Methods](#module-methods)
+- [Real-World Examples](#real-world-examples)
+
+## Theory
+
+Symmetric ciphers use the same key for encryption and decryption.
+*   **Block Ciphers** (e.g., AES) operate on fixed-size blocks of data (16 bytes).
+*   **Modes of Operation** determine how to encrypt data larger than a single block.
+    *   **GCM (Galois/Counter Mode)**: Provides both encryption and integrity (AEAD). **Recommended.**
+    *   **CBC (Cipher Block Chaining)**: Older standard. Malleable and requires padding.
+
+**AEAD (Authenticated Encryption with Associated Data)** ensures that the data cannot be modified by an attacker. It produces an **Authentication Tag**. If the tag doesn't match upon decryption, the operation fails.
+
+<Callout type="error" title="IV Reuse">
+  **Never reuse an IV/Nonce.** Using the same IV with the same Key for two different messages allows attackers to break the encryption (e.g., recovering the XOR of the plaintexts in GCM/CTR modes).
+</Callout>
+
+---
+
+## Supported Algorithms
+
+### Block Ciphers (AES)
+
+| Algorithm | Key Size | IV Size | Mode | AEAD |
+| --------- | -------- | ------- | ---- | :--: |
+| `aes-128-cbc` | 16 bytes | 16 bytes | CBC | No |
+| `aes-192-cbc` | 24 bytes | 16 bytes | CBC | No |
+| `aes-256-cbc` | 32 bytes | 16 bytes | CBC | No |
+| `aes-128-ctr` | 16 bytes | 16 bytes | CTR | No |
+| `aes-192-ctr` | 24 bytes | 16 bytes | CTR | No |
+| `aes-256-ctr` | 32 bytes | 16 bytes | CTR | No |
+| `aes-128-gcm` | 16 bytes | 12 bytes | GCM | Yes |
+| `aes-192-gcm` | 24 bytes | 12 bytes | GCM | Yes |
+| `aes-256-gcm` | 32 bytes | 12 bytes | GCM | Yes |
+| `aes-128-ccm` | 16 bytes | 7-13 bytes | CCM | Yes |
+| `aes-192-ccm` | 24 bytes | 7-13 bytes | CCM | Yes |
+| `aes-256-ccm` | 32 bytes | 7-13 bytes | CCM | Yes |
+| `aes-128-ocb` | 16 bytes | 12 bytes | OCB | Yes |
+| `aes-192-ocb` | 24 bytes | 12 bytes | OCB | Yes |
+| `aes-256-ocb` | 32 bytes | 12 bytes | OCB | Yes |
+
+### Stream Ciphers (ChaCha20)
+
+| Algorithm | Key Size | Nonce Size | Tag Size | AEAD | AAD |
+| --------- | -------- | ---------- | -------- | :--: | :-: |
+| `chacha20` | 32 bytes | 16 bytes | - | No | No |
+| `chacha20-poly1305` | 32 bytes | 12 bytes | 16 bytes | Yes | Yes |
+
+### Extended Ciphers (libsodium)
+
+<Callout type="warn" title="Requires SODIUM_ENABLED">
+  These ciphers require `SODIUM_ENABLED=1` on both iOS and Android. They are **not available in Node.js** and are provided as extensions for mobile use cases.
+</Callout>
+
+| Algorithm | Key Size | Nonce Size | Tag Size | AEAD | AAD | Notes |
+| --------- | -------- | ---------- | -------- | :--: | :-: | ----- |
+| `xchacha20-poly1305` | 32 bytes | 24 bytes | 16 bytes | Yes | Yes | Extended nonce variant |
+| `xsalsa20-poly1305` | 32 bytes | 24 bytes | 16 bytes | Yes | No | NaCl secretbox |
+| `xsalsa20` | 32 bytes | 24 bytes | - | No | No | Stream cipher only |
+
+The extended nonce (24 bytes vs 12 bytes) in XChaCha20 and XSalsa20 variants allows safe random nonce generation without risk of collision, making them ideal for high-volume encryption scenarios.
+
+---
+
+## Class: Cipher
+
+Instances of the `Cipher` class are used to encrypt data.
+
+### cipher.update(data[, inputEncoding][, outputEncoding])
+
+Encrypts data.
+
+**Parameters:**
+
+<TypeTable
+  type={{
+    data: { description: 'Data to encrypt.', type: 'string | Buffer' },
+    inputEncoding: { description: 'Encoding of input data.', type: 'string' },
+    outputEncoding: { description: 'Encoding of output data.', type: 'string' }
+  }}
+/>
+
+**Returns:** `Buffer | string`
+
+### cipher.final([outputEncoding])
+
+Returns any remaining encrypted data.
+
+### cipher.getAuthTag()
+
+For AEAD modes (GCM, CCM, Poly1305), returns the authentication tag. **Must be called after `final()`.**
+
+**Returns:** `Buffer`
+
+### cipher.setAAD(buffer[, options])
+
+Sets "Additional Authenticated Data" (AAD). This is data that is **not encrypted** but is **authenticated** (integrity protected).
+
+---
+
+## Class: Decipher
+
+Instances of the `Decipher` class are used to decrypt data.
+
+### decipher.update(data[, inputEncoding][, outputEncoding])
+### decipher.final([outputEncoding])
+
+### decipher.setAuthTag(buffer)
+
+Sets the tag to verify. **Must be called before `final()`.**
+
+### decipher.setAAD(buffer)
+
+Sets AAD to verify. **Must be called before `final()`.**
+
+---
+
+## Module Methods
+
+### createCipheriv(algorithm, key, iv[, options])
+
+Creates and returns a `Cipher` object.
+
+**Parameters:**
+
+<TypeTable
+  type={{
+    algorithm: { description: 'Algorithm name (e.g. "aes-256-gcm").', type: 'string' },
+    key: { description: 'Raw key bytes. 32 bytes for AES-256.', type: 'Buffer | TypedArray' },
+    iv: { description: 'Initialization Vector. 12 bytes for GCM.', type: 'Buffer | TypedArray' },
+    options: { description: 'Configuration options.', type: 'Object' }
+  }}
+/>
+
+**Returns:** `Cipher`
+
+### createDecipheriv(algorithm, key, iv[, options])
+
+Creates and returns a `Decipher` object.
+
+**Returns:** `Decipher`
+
+---
+
+## Real-World Examples
+
+### Authenticated Encryption (GCM)
+
+Complete encryption flow with integrity check.
+
+```ts
+import { createCipheriv, randomBytes } from 'react-native-quick-crypto';
+
+const key = randomBytes(32);
+
+function encrypt(text: string) {
+    const iv = randomBytes(12);
+    const cipher = createCipheriv('aes-256-gcm', key, iv);
+    
+    let enc = cipher.update(text, 'utf8', 'hex');
+    enc += cipher.final('hex');
+    
+    const tag = cipher.getAuthTag();
+    
+    return { 
+        data: enc, 
+        iv: iv.toString('hex'), 
+        tag: tag.toString('hex') 
+    };
+}
+```
+
+### File Encryption (Streaming)
+
+Encrypting a file using streams with AES-CTR (counter mode).
+
+```ts
+import { createCipheriv } from 'react-native-quick-crypto';
+const fs = require('fs'); // Mock
+
+const key = randomBytes(32);
+const iv = randomBytes(16);
+
+const cipher = createCipheriv('aes-256-ctr', key, iv);
+const input = fs.createReadStream('input.txt');
+const output = fs.createWriteStream('output.enc');
+
+input.pipe(cipher).pipe(output);
+```
+
+### XChaCha20-Poly1305 (Extended Nonce)
+
+XChaCha20-Poly1305 uses a 24-byte nonce, making random nonce generation safe for high-volume encryption.
+
+<Callout type="info" title="Requires libsodium">
+  Set `SODIUM_ENABLED=1` environment variable before building.
+</Callout>
+
+```ts
+import { createCipheriv, createDecipheriv, randomBytes } from 'react-native-quick-crypto';
+
+const key = randomBytes(32);
+
+function encrypt(plaintext: Buffer, aad?: Buffer) {
+    // 24-byte nonce - safe to generate randomly
+    const nonce = randomBytes(24);
+    
+    const cipher = createCipheriv('xchacha20-poly1305', key, nonce);
+    if (aad) cipher.setAAD(aad);
+    
+    const ciphertext = Buffer.concat([
+        cipher.update(plaintext),
+        cipher.final()
+    ]);
+    const tag = cipher.getAuthTag();
+    
+    return { ciphertext, nonce, tag };
+}
+
+function decrypt(ciphertext: Buffer, nonce: Buffer, tag: Buffer, aad?: Buffer) {
+    const decipher = createDecipheriv('xchacha20-poly1305', key, nonce);
+    if (aad) decipher.setAAD(aad);
+    decipher.setAuthTag(tag);
+    
+    return Buffer.concat([
+        decipher.update(ciphertext),
+        decipher.final()
+    ]);
+}
+```
+
+### XSalsa20-Poly1305 (NaCl Secretbox)
+
+XSalsa20-Poly1305 provides authenticated encryption without AAD support (similar to NaCl's secretbox).
+
+```ts
+import { createCipheriv, createDecipheriv, randomBytes } from 'react-native-quick-crypto';
+
+const key = randomBytes(32);
+const nonce = randomBytes(24);
+const message = Buffer.from('Secret message');
+
+// Encrypt
+const cipher = createCipheriv('xsalsa20-poly1305', key, nonce);
+const ciphertext = Buffer.concat([cipher.update(message), cipher.final()]);
+const tag = cipher.getAuthTag();
+
+// Decrypt
+const decipher = createDecipheriv('xsalsa20-poly1305', key, nonce);
+decipher.setAuthTag(tag);
+const plaintext = Buffer.concat([decipher.update(ciphertext), decipher.final()]);
+```

@@ -6,7 +6,7 @@
 #include <vector>
 
 #include "HybridCipher.hpp"
-#include "Utils.hpp"
+#include "QuickCryptoUtils.hpp"
 
 #include <openssl/err.h>
 #include <openssl/evp.h>

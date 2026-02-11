@@ -22,9 +22,49 @@ Pod::Spec.new do |s|
   sodium_enabled = ENV['SODIUM_ENABLED'] == '1'
   Pod::UI.puts("[QuickCrypto]  🧂 has libsodium #{sodium_enabled ? "enabled" : "disabled"}!")
 
+  # Ensure libsodium source is present during podspec evaluation when enabled.
+  # This is necessary because prepare_command is skipped for :path pods.
+  if sodium_enabled
+    sodium_version = "1.0.20"
+    sodium_dir = File.join(__dir__, "ios", "libsodium-stable")
+    sodium_header = File.join(sodium_dir, "src", "libsodium", "include", "sodium.h")
+    unless File.exist?(sodium_header)
+      FileUtils.mkdir_p(File.join(__dir__, "ios"))
+      FileUtils.rm_rf(sodium_dir) if File.directory?(sodium_dir)
+
+      Pod::UI.puts "[QuickCrypto] ⬇️  Downloading libsodium source..."
+      Dir.chdir(__dir__) do
+        system("curl -sSfL --connect-timeout 30 --max-time 300 -o ios/libsodium.tar.gz https://download.libsodium.org/libsodium/releases/libsodium-#{sodium_version}-stable.tar.gz") || raise("Failed to download libsodium")
+        system("tar -xzf ios/libsodium.tar.gz -C ios") || raise("Failed to extract libsodium")
+        File.delete("ios/libsodium.tar.gz") if File.exist?("ios/libsodium.tar.gz")
+      end
+      Pod::UI.puts "[QuickCrypto] ✅ libsodium source downloaded successfully"
+    end
+  end
+
   # OpenSSL 3.6+ vendored xcframework (not yet on CocoaPods trunk)
-  openssl_version = "3.6.0000"
+  openssl_version = "3.6.0001"
   openssl_url = "https://github.com/krzyzanowskim/OpenSSL/releases/download/#{openssl_version}/OpenSSL.xcframework.zip"
+
+  # Ensure OpenSSL.xcframework is present during podspec evaluation.
+  # This is necessary because prepare_command is skipped for :path pods,
+  # which is how React Native native modules are installed.
+  # See: https://github.com/margelo/react-native-quick-crypto/issues/882
+  openssl_dir = File.join(__dir__, "OpenSSL.xcframework")
+  openssl_plist = File.join(openssl_dir, "Info.plist")
+  unless File.exist?(openssl_plist)
+    # Clean up any partial download
+    FileUtils.rm_rf(openssl_dir) if File.directory?(openssl_dir)
+    FileUtils.rm_f(File.join(__dir__, "OpenSSL.xcframework.zip"))
+
+    Pod::UI.puts "[QuickCrypto] ⬇️  Downloading OpenSSL.xcframework..."
+    Dir.chdir(__dir__) do
+      system("curl -sSfL --connect-timeout 30 --max-time 300 -o OpenSSL.xcframework.zip #{openssl_url}") || raise("Failed to download OpenSSL")
+      system("unzip -q -o OpenSSL.xcframework.zip") || raise("Failed to unzip OpenSSL")
+      File.delete("OpenSSL.xcframework.zip") if File.exist?("OpenSSL.xcframework.zip")
+    end
+    Pod::UI.puts "[QuickCrypto] ✅ OpenSSL.xcframework downloaded successfully"
+  end
 
   if sodium_enabled
     # Build libsodium from source for XSalsa20 cipher support
@@ -123,25 +163,33 @@ Pod::Spec.new do |s|
     "GCC_PREPROCESSOR_DEFINITIONS" => "$(inherited) FOLLY_NO_CONFIG FOLLY_CFG_NO_COROUTINES",
     # Set C++ standard to C++20
     "CLANG_CXX_LANGUAGE_STANDARD" => "c++20",
-    "CLANG_ALLOW_NON_MODULAR_INCLUDES_IN_FRAMEWORK_MODULES" => "YES"
+    "CLANG_ALLOW_NON_MODULAR_INCLUDES_IN_FRAMEWORK_MODULES" => "YES",
+    # Exclude ARM NEON source when building x86_64 simulator (no NEON support).
+    "EXCLUDED_SOURCE_FILE_NAMES[sdk=iphonesimulator*][arch=x86_64]" => "deps/blake3/c/blake3_neon.c"
   }
 
   # Add cpp subdirectories to header search paths
   cpp_headers = [
     "\"$(PODS_TARGET_SRCROOT)/cpp/utils\"",
     "\"$(PODS_TARGET_SRCROOT)/cpp/hkdf\"",
+    "\"$(PODS_TARGET_SRCROOT)/cpp/dh\"",
+    "\"$(PODS_TARGET_SRCROOT)/cpp/ecdh\"",
+    "\"$(PODS_TARGET_SRCROOT)/nitrogen/generated/shared/c++\"",
     "\"$(PODS_TARGET_SRCROOT)/deps/ncrypto/include\"",
     "\"$(PODS_TARGET_SRCROOT)/deps/blake3/c\"",
     "\"$(PODS_TARGET_SRCROOT)/deps/fastpbkdf2\""
   ]
 
   if sodium_enabled
+    # Use absolute path from __dir__ which resolves symlinks correctly.
+    # This is necessary in monorepo setups where the podspec is accessed via symlink
+    # but the source files are resolved to their real paths during compilation.
+    real_sodium_include = File.join(__dir__, "ios", "libsodium-stable", "src", "libsodium", "include")
     sodium_headers = [
       "\"$(PODS_TARGET_SRCROOT)/ios/libsodium-stable/src/libsodium/include\"",
       "\"$(PODS_TARGET_SRCROOT)/ios/libsodium-stable/src/libsodium/include/sodium\"",
-      "\"$(PODS_TARGET_SRCROOT)/ios/libsodium-stable\"",
-      "\"$(PODS_ROOT)/../../packages/react-native-quick-crypto/ios/libsodium-stable/src/libsodium/include\"",
-      "\"$(PODS_ROOT)/../../packages/react-native-quick-crypto/ios/libsodium-stable/src/libsodium/include/sodium\""
+      "\"#{real_sodium_include}\"",
+      "\"#{real_sodium_include}/sodium\""
     ]
     xcconfig["HEADER_SEARCH_PATHS"] = (cpp_headers + sodium_headers).join(' ')
     xcconfig["GCC_PREPROCESSOR_DEFINITIONS"] = "$(inherited) FOLLY_NO_CONFIG FOLLY_CFG_NO_COROUTINES BLSALLOC_SODIUM=1"

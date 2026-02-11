@@ -1,6 +1,6 @@
 #include "HybridRsaCipher.hpp"
 #include "../keys/HybridKeyObjectHandle.hpp"
-#include "Utils.hpp"
+#include "QuickCryptoUtils.hpp"
 
 #include <cstring>
 #include <openssl/err.h>

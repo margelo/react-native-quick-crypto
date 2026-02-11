@@ -1,5 +1,4 @@
-import { Buffer } from '@craftzdog/react-native-buffer';
-import crypto, { hkdf, hkdfSync } from 'react-native-quick-crypto';
+import crypto, { Buffer, hkdf, hkdfSync } from 'react-native-quick-crypto';
 import { expect } from 'chai';
 import { test } from '../util';
 

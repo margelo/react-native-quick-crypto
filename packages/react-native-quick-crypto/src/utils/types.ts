@@ -187,6 +187,7 @@ export type SubtleAlgorithm = {
   modulusLength?: number;
   publicExponent?: number | Uint8Array;
   saltLength?: number;
+  public?: CryptoKey;
 };
 
 export type KeyPairType =
@@ -264,7 +265,7 @@ export type AsymmetricKeyType =
   | CFRGKeyPairType
   | PQCKeyPairType;
 
-type JWKkty = 'AES' | 'RSA' | 'EC' | 'oct';
+type JWKkty = 'AES' | 'RSA' | 'EC' | 'oct' | 'OKP';
 type JWKuse = 'sig' | 'enc';
 
 export interface JWK {

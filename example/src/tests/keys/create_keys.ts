@@ -1,5 +1,5 @@
-import { Buffer } from '@craftzdog/react-native-buffer';
 import {
+  Buffer,
   createSecretKey,
   createPrivateKey,
   createPublicKey,
@@ -411,3 +411,47 @@ test(
     }, '');
   },
 );
+
+// --- KeyObject.equals() Tests ---
+
+test(SUITE, 'equals - same secret keys are equal', () => {
+  const keyData = randomBytes(32);
+  const key1 = createSecretKey(keyData);
+  const key2 = createSecretKey(keyData);
+  expect(key1.equals(key2)).to.equal(true);
+});
+
+test(SUITE, 'equals - different secret keys are not equal', () => {
+  const key1 = createSecretKey(randomBytes(32));
+  const key2 = createSecretKey(randomBytes(32));
+  expect(key1.equals(key2)).to.equal(false);
+});
+
+test(SUITE, 'equals - same RSA public keys are equal', () => {
+  const key1 = createPublicKey(rsaPublicKeyPem);
+  const key2 = createPublicKey(rsaPublicKeyPem);
+  expect(key1.equals(key2)).to.equal(true);
+});
+
+test(SUITE, 'equals - different key types are not equal', () => {
+  const secretKey = createSecretKey(randomBytes(32));
+  const publicKey = createPublicKey(rsaPublicKeyPem);
+  expect(secretKey.equals(publicKey)).to.equal(false);
+});
+
+// --- KeyObject.symmetricKeySize Tests ---
+
+test(SUITE, 'symmetricKeySize - 16 byte key', () => {
+  const key = createSecretKey(randomBytes(16));
+  expect(key.symmetricKeySize).to.equal(16);
+});
+
+test(SUITE, 'symmetricKeySize - 32 byte key', () => {
+  const key = createSecretKey(randomBytes(32));
+  expect(key.symmetricKeySize).to.equal(32);
+});
+
+test(SUITE, 'symmetricKeySize - 64 byte key', () => {
+  const key = createSecretKey(randomBytes(64));
+  expect(key.symmetricKeySize).to.equal(64);
+});

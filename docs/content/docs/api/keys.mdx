@@ -1,0 +1,237 @@
+---
+title: Keys
+description: Key generation, import, and management
+---
+
+import { Callout } from 'fumadocs-ui/components/callout';
+import { TypeTable } from 'fumadocs-ui/components/type-table';
+import { Tab, Tabs } from 'fumadocs-ui/components/tabs';
+
+The `Keys` module manages the creation, import, export, and conversion of cryptographic keys. It supports asymmetric keys (RSA, EC, Ed25519) and symmetric keys (secret objects).
+
+## Table of Contents
+
+- [Theory](#theory)
+- [Class: KeyObject](#class-keyobject)
+- [Module Methods](#module-methods)
+- [Real-World Examples](#real-world-examples)
+
+## Theory
+
+Cryptography relies on **Symmetric** and **Asymmetric** keys.
+
+*   **Symmetric Keys**: A single secret string (e.g., 32 random bytes) used for both encryption and decryption (AES).
+*   **Asymmetric Keys**: A pair of keys.
+    *   **Public Key**: Shared openly. Used to encrypt messages for the owner or verify the owner's signature.
+    *   **Private Key**: Kept secret. Used to decrypt messages sent to the owner or create digital signatures.
+
+Keys are stored in various container formats:
+*   **PEM**: Textual format (`-----BEGIN PUBLIC KEY-----`).
+*   **DER**: Binary format.
+*   **PKCS#8**: The standard container for private keys.
+*   **SPKI**: The standard container for public keys.
+
+---
+
+## Class: KeyObject
+
+The `KeyObject` class is a handle to a native C++ key. It allows the JavaScript layer to refer to keys without copying the key material (which might be sensitive) into the JS garbage-collected heap.
+
+### Properties
+
+| Property | Type | Description |
+| :--- | :--- | :--- |
+| `type` | `'secret' \| 'public' \| 'private'` | The type of the key. |
+| `asymmetricKeyType` | `string` | The algorithm name (e.g., `'rsa'`, `'ec'`, `'ed25519'`). `undefined` if symmetric. |
+| `symmetricKeySize` | `number` | Key size in bytes (search only for secret keys). |
+
+### keyObject.export(options)
+
+Exports the key to a `Buffer` or `string`.
+
+**Parameters:**
+
+<TypeTable
+  type={{
+    options: { description: 'Configuration.', type: 'Object' },
+    'options.type': { 
+        description: 'Structure type.', 
+        type: '"pkcs1" | "spki" | "pkcs8" | "sec1"' 
+    },
+    'options.format': { 
+        description: 'Output format.', 
+        type: '"pem" | "der"' 
+    },
+    'options.cipher': { 
+        description: 'Cipher for encrypting private keys (e.g. "aes-256-cbc").', 
+        type: 'string' 
+    },
+    'options.passphrase': { 
+        description: 'Password for encryption.', 
+        type: 'string | Buffer' 
+    },
+  }}
+/>
+
+**Returns:** `string | Buffer`
+
+**Example:**
+
+```ts
+import { generateKeyPairSync } from 'react-native-quick-crypto';
+
+const { privateKey, publicKey } = generateKeyPairSync('rsa', {
+  modulusLength: 2048,
+});
+
+const pem = privateKey.export({
+  type: 'pkcs8',
+  format: 'pem'
+});
+```
+
+---
+
+## Module Methods
+
+### generateKeyPair(type, options, callback)
+
+Generates a new asymmetric key pair on a background thread.
+
+**Parameters:**
+
+<TypeTable
+  type={{
+    type: { description: 'Algorithm ("rsa", "ec", "x25519", etc).', type: 'string' },
+    options: { description: 'Generation parameters and export options.', type: 'Object' },
+    callback: { description: 'Called with `(err, publicKey, privateKey)`.', type: 'Function' }
+  }}
+/>
+
+**Example (RSA 4096):**
+
+```ts
+import { generateKeyPair } from 'react-native-quick-crypto';
+
+generateKeyPair('rsa', {
+  modulusLength: 4096,
+  publicKeyEncoding: {
+    type: 'spki',
+    format: 'pem'
+  },
+  privateKeyEncoding: {
+    type: 'pkcs8',
+    format: 'pem',
+    cipher: 'aes-256-cbc',
+    passphrase: 'strong-pass' 
+  }
+}, (err, pubKey, privKey) => {
+  // keys are PEM strings
+});
+```
+
+### createPublicKey(key)
+
+Converts a key representation into a `KeyObject`. It automatically detects if the input is PEM, DER, or another KeyObject.
+
+**Parameters:**
+
+<TypeTable
+  type={{
+    key: { 
+        description: 'PEM, DER, or KeyObject.',
+        type: 'string | Buffer | Object' 
+    }
+  }}
+/>
+
+**Returns:** `KeyObject` (type: 'public')
+
+### createPrivateKey(key)
+
+Converts a key representation into a `KeyObject`.
+
+**Parameters:**
+
+<TypeTable
+  type={{
+    key: { description: 'Key material.', type: 'string | Buffer | Object' }
+  }}
+/>
+
+**Example (Decrypting a Key):**
+
+```ts
+const privKey = createPrivateKey({
+  key: encryptedPemString,
+  passphrase: 'user-password'
+});
+```
+
+### createSecretKey(key)
+
+Creates a symmetric `KeyObject`.
+
+**Example:**
+
+```ts
+import { createSecretKey, randomBytes } from 'react-native-quick-crypto';
+
+const rawKey = randomBytes(32);
+const secret = createSecretKey(rawKey);
+```
+
+
+### generateKey(type, options, callback)
+
+Asynchronously generates a new symmetric key of the given `type`.
+
+**Parameters:**
+
+<TypeTable
+  type={{
+    type: { description: 'Key type: "aes" or "hmac".', type: 'string' },
+    options: { description: 'Configuration.', type: 'Object' },
+    'options.length': { description: 'Key length in bits (e.g., 256 for AES-256).', type: 'number' },
+    callback: { description: 'Called with `(err, key)`.', type: 'Function' }
+  }}
+/>
+
+**Example:**
+
+```ts
+import { generateKey } from 'react-native-quick-crypto';
+
+generateKey('aes', { length: 256 }, (err, key) => {
+  // key is a KeyObject (type: 'secret')
+  console.log(key.export().toString('hex'));
+});
+```
+
+### generateKeySync(type, options)
+
+Synchronously generates a new symmetric key.
+
+**Returns:** `KeyObject`
+
+---
+
+
+## Real-World Examples
+
+### Rotating API Keys
+
+Generating a new Ed25519 signing pair for an API client.
+
+```ts
+import { generateKeyPairSync } from 'react-native-quick-crypto';
+
+function rotateIdentity() {
+    const { publicKey, privateKey } = generateKeyPairSync('ed25519');
+    
+    return {
+        pub: publicKey.export({ type: 'spki', format: 'pem' }),
+        priv: privateKey.export({ type: 'pkcs8', format: 'pem' })
+    };
+}
+```

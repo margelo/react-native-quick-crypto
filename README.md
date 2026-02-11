@@ -1,8 +1,8 @@
 <a href="https://margelo.com">
   <picture>
-    <source media="(prefers-color-scheme: dark)" srcset="./docs/img/banner-dark.png" />
-    <source media="(prefers-color-scheme: light)" srcset="./docs/img/banner-light.png" />
-    <img alt="react-native-quick-crypto" src="./docs/img/banner-light.png" />
+    <source media="(prefers-color-scheme: dark)" srcset="./.docs/img/banner-dark.png" />
+    <source media="(prefers-color-scheme: light)" srcset="./.docs/img/banner-light.png" />
+    <img alt="react-native-quick-crypto" src="./.docs/img/banner-light.png" />
   </picture>
 </a>
 
@@ -10,7 +10,7 @@
 
 A fast implementation of Node's `crypto` module.
 
-> Note: This version `1.x` completed a major refactor, porting to OpenSSL 3.6+, New Architecture, Bridgeless, and [`Nitro Modules`](https://github.com/mrousavy/react-native-nitro).  It should be at or above feature-parity compared to the `0.x` version.  Status, as always, will be represented in [implementation-coverage.md](../main/docs/implementation-coverage.md).
+> Note: This version `1.x` completed a major refactor, porting to OpenSSL 3.6+, New Architecture, Bridgeless, and [`Nitro Modules`](https://github.com/mrousavy/react-native-nitro).  It should be at or above feature-parity compared to the `0.x` version.  Status, as always, will be represented in [implementation-coverage.md](./.docs/implementation-coverage.md).
 
 > Note: Minimum supported version of React Native is `0.75`.  If you need to use earlier versions, please use `0.x` versions of this library.
 
@@ -46,20 +46,20 @@ There is a benchmark suite in the Example app in this repo that has benchmarks o
 ## Installation
 
 <h3>
-  React Native  <a href="#"><img src="./docs/img/react-native.png" height="15" /></a>
+  React Native  <a href="#"><img src="./.docs/img/react-native.png" height="15" /></a>
 </h3>
 
 ```sh
-bun add react-native-quick-crypto react-native-nitro-modules
+bun add react-native-quick-crypto react-native-nitro-modules react-native-quick-base64
 cd ios && pod install
 ```
 
 <h3>
   Expo  <a href="#">
     <picture>
-      <source media="(prefers-color-scheme: dark)" srcset="./docs/img/expo/dark.png" />
-      <source media="(prefers-color-scheme: light)" srcset="./docs/img/expo/light.png" />
-      <img alt="Expo" src="./docs/img/expo/light.png" height="12" />
+      <source media="(prefers-color-scheme: dark)" srcset="./.docs/img/expo/dark.png" />
+      <source media="(prefers-color-scheme: light)" srcset="./.docs/img/expo/light.png" />
+      <img alt="Expo" src="./.docs/img/expo/light.png" height="12" />
     </picture>
   </a>
 </h3>
@@ -120,7 +120,7 @@ module.exports = {
 +       alias: {
 +         'crypto': 'react-native-quick-crypto',
 +         'stream': 'readable-stream',
-+         'buffer': '@craftzdog/react-native-buffer',
++         'buffer': 'react-native-quick-crypto',
 +       },
 +     },
 +   ],
@@ -128,6 +128,8 @@ module.exports = {
   ],
 };
 ```
+
+> **Note:** `react-native-quick-crypto` re-exports `Buffer` from `@craftzdog/react-native-buffer`, so you can use either as the buffer alias. Using `react-native-quick-crypto` ensures a single Buffer instance across your app.
 
 Then restart your bundler using `yarn start --reset-cache`.
 
@@ -145,7 +147,7 @@ const hashed = QuickCrypto.createHash('sha256')
 
 ## Limitations
 
-Not all cryptographic algorithms are supported yet. See the [implementation coverage](./docs/implementation-coverage.md) document for more details. If you need a specific algorithm, please open a `feature request` issue and we'll see what we can do.
+Not all cryptographic algorithms are supported yet. See the [implementation coverage](./.docs/implementation-coverage.md) document for more details. If you need a specific algorithm, please open a `feature request` issue and we'll see what we can do.
 
 ## Community Discord
 
@@ -158,6 +160,10 @@ Not all cryptographic algorithms are supported yet. See the [implementation cove
 ## Contributing
 
 See the [contributing guide](CONTRIBUTING.md) to learn how to contribute to the repository and the development workflow.
+
+For more detailed guides, check out our documentation website:
+- [Contributing Guide]([prod-docs]/docs/guides/contributing)
+- [Writing Documentation]([prod-docs]/docs/guides/writing-documentation)
 
 ## License
 

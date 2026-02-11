@@ -31,7 +31,25 @@ import {
   KeyEncoding,
   KFormatType,
 } from './utils';
-import { Buffer } from 'buffer';
+import { Buffer } from '@craftzdog/react-native-buffer';
+import { ECDH } from './ecdh';
+
+class EcUtils {
+  private static _native: EcKeyPair | undefined;
+  private static get native(): EcKeyPair {
+    if (!this._native) {
+      this._native = NitroModules.createHybridObject<EcKeyPair>('EcKeyPair');
+    }
+    return this._native;
+  }
+  public static getSupportedCurves(): string[] {
+    return this.native.getSupportedCurves();
+  }
+}
+
+export function getCurves(): string[] {
+  return EcUtils.getSupportedCurves();
+}
 
 export class Ec {
   native: EcKeyPair;
@@ -57,57 +75,6 @@ export class Ec {
     };
   }
 }
-
-// function verifyAcceptableEcKeyUse(
-//   name: AnyAlgorithm,
-//   isPublic: boolean,
-//   usages: KeyUsage[],
-// ): void {
-//   let checkSet;
-//   switch (name) {
-//     case 'ECDH':
-//       checkSet = isPublic ? [] : ['deriveKey', 'deriveBits'];
-//       break;
-//     case 'ECDSA':
-//       checkSet = isPublic ? ['verify'] : ['sign'];
-//       break;
-//     default:
-//       throw lazyDOMException(
-//         'The algorithm is not supported',
-//         'NotSupportedError',
-//       );
-//   }
-//   if (hasAnyNotIn(usages, checkSet)) {
-//     throw lazyDOMException(
-//       `Unsupported key usage for a ${name} key`,
-//       'SyntaxError',
-//     );
-//   }
-// }
-
-// function createECPublicKeyRaw(
-//   namedCurve: NamedCurve | undefined,
-//   keyDataBuffer: ArrayBuffer,
-// ): PublicKeyObject {
-//   if (!namedCurve) {
-//     throw new Error('Invalid namedCurve');
-//   }
-//   const handle = NitroModules.createHybridObject(
-//     'KeyObjectHandle',
-//   ) as KeyObjectHandle;
-
-//   if (!handle.initECRaw(kNamedCurveAliases[namedCurve], keyDataBuffer)) {
-//     console.log('keyData', ab2str(keyDataBuffer));
-//     throw new Error('Invalid keyData 1');
-//   }
-
-//   return new PublicKeyObject(handle);
-// }
-
-// // Node API
-// export function ec_exportKey(key: CryptoKey, format: KeyFormat): ArrayBuffer {
-//   return ec.native.exportKey(format, key.keyObject.handle);
-// }
 
 // Node API
 export function ecImportKey(
@@ -169,7 +136,7 @@ export function ecImportKey(
         expectedAlg = 'ECDH-ES';
       }
 
-      if (expectedAlg && jwk.alg !== expectedAlg) {
+      if (expectedAlg && jwk.alg !== undefined && jwk.alg !== expectedAlg) {
         throw lazyDOMException(
           'JWK "alg" does not match the requested algorithm',
           'DataError',
@@ -245,6 +212,7 @@ export function ecImportKey(
       NitroModules.createHybridObject<KeyObjectHandle>('KeyObjectHandle');
     const curveAlias =
       kNamedCurveAliases[namedCurve as keyof typeof kNamedCurveAliases];
+    // Only throw if initialization explicitly fails
     if (!handle.initECRaw(curveAlias, keyBuffer)) {
       throw lazyDOMException('Failed to import EC raw key', 'DataError');
     }
@@ -260,130 +228,7 @@ export function ecImportKey(
   }
 
   return new CryptoKey(keyObject, algorithm, keyUsages, extractable);
-  //     //   // verifyAcceptableEcKeyUse(name, true, usagesSet);
-  //     //   try {
-  //     //     keyObject = createPublicKey({
-  //     //       key: keyData,
-  //     //       format: 'der',
-  //     //       type: 'spki',
-  //     //     });
-  //     //   } catch (err) {
-  //     //     throw new Error(`Invalid keyData 2: ${err}`);
-  //     //   }
-  //     //   break;
-  //     // }
-  //     // case 'pkcs8': {
-  //     //   // verifyAcceptableEcKeyUse(name, false, usagesSet);
-  //     //   try {
-  //     //     keyObject = createPrivateKey({
-  //     //       key: keyData,
-  //     //       format: 'der',
-  //     //       type: 'pkcs8',
-  //     //     });
-  //     //   } catch (err) {
-  //     //     throw new Error(`Invalid keyData 3 ${err}`);
-  //     //   }
-  //     //   break;
-  //     // }
 }
-
-//     case 'jwk': {
-//       const data = keyData as JWK;
-
-//       if (!data.kty) throw lazyDOMException('Invalid keyData 4', 'DataError');
-//       if (data.kty !== 'EC')
-//         throw lazyDOMException('Invalid JWK "kty" Parameter', 'DataError');
-//       if (data.crv !== namedCurve)
-//         throw lazyDOMException(
-//           'JWK "crv" does not match the requested algorithm',
-//           'DataError',
-//         );
-
-//       verifyAcceptableEcKeyUse(name, data.d === undefined, keyUsages);
-
-//       if (keyUsages.length > 0 && data.use !== undefined) {
-//         const checkUse = name === 'ECDH' ? 'enc' : 'sig';
-//         if (data.use !== checkUse)
-//           throw lazyDOMException('Invalid JWK "use" Parameter', 'DataError');
-//       }
-
-//       validateKeyOps(data.key_ops, keyUsages);
-
-//       if (
-//         data.ext !== undefined &&
-//         data.ext === false &&
-//         extractable === true
-//       ) {
-//         throw lazyDOMException(
-//           'JWK "ext" Parameter and extractable mismatch',
-//           'DataError',
-//         );
-//       }
-
-//       if (algorithm.name === 'ECDSA' && data.alg !== undefined) {
-//         let algNamedCurve;
-//         switch (data.alg) {
-//           case 'ES256':
-//             algNamedCurve = 'P-256';
-//             break;
-//           case 'ES384':
-//             algNamedCurve = 'P-384';
-//             break;
-//           case 'ES512':
-//             algNamedCurve = 'P-521';
-//             break;
-//         }
-//         if (algNamedCurve !== namedCurve)
-//           throw lazyDOMException(
-//             'JWK "alg" does not match the requested algorithm',
-//             'DataError',
-//           );
-//       }
-
-//       const handle = NativeQuickCrypto.webcrypto.createKeyObjectHandle();
-//       const type = handle.initJwk(data, namedCurve);
-//       if (type === undefined)
-//         throw lazyDOMException('Invalid JWK', 'DataError');
-//       keyObject =
-//         type === KeyType.PRIVATE
-//           ? new PrivateKeyObject(handle)
-//           : new PublicKeyObject(handle);
-//       break;
-//     }
-//     case 'raw': {
-//       const data = keyData as BufferLike | BinaryLike;
-//       verifyAcceptableEcKeyUse(name, true, keyUsages);
-//       const buffer =
-//         typeof data === 'string'
-//           ? binaryLikeToArrayBuffer(data)
-//           : bufferLikeToArrayBuffer(data);
-//       keyObject = createECPublicKeyRaw(namedCurve, buffer);
-//       break;
-//     }
-//     default: {
-//       throw new Error(`Unknown EC import format: ${format}`);
-//     }
-//   }
-
-//   switch (algorithm.name) {
-//     case 'ECDSA':
-//     // Fall through
-//     case 'ECDH':
-//       if (keyObject.asymmetricKeyType !== ('ec' as AsymmetricKeyType))
-//         throw new Error('Invalid key type');
-//       break;
-//   }
-
-//   // if (!keyObject[kHandle].checkEcKeyData()) {
-//   //   throw new Error('Invalid keyData 5');
-//   // }
-
-//   // const { namedCurve: checkNamedCurve } = keyObject[kHandle].keyDetail({});
-//   // if (kNamedCurveAliases[namedCurve] !== checkNamedCurve)
-//   //   throw new Error('Named curve mismatch');
-
-//   return new CryptoKey(keyObject, { name, namedCurve }, keyUsages, extractable);
-// }
 
 // Node API
 export const ecdsaSignVerify = (
@@ -462,7 +307,6 @@ export async function ec_generateKeyPair(
     );
   }
 
-  // const usageSet = new SafeSet(keyUsages);
   switch (name) {
     case 'ECDSA':
       if (hasAnyNotIn(keyUsages, ['sign', 'verify'])) {
@@ -654,4 +498,60 @@ export function ec_generateKeyPairNodeSync(
   const ec = ec_prepareKeyGenParams(options);
   ec.generateKeyPairSync();
   return ec_formatKeyPairOutput(ec, encoding);
+}
+
+export function ecDeriveBits(
+  algorithm: SubtleAlgorithm,
+  baseKey: CryptoKey,
+  length: number | null,
+): ArrayBuffer {
+  const publicKey = algorithm.public;
+
+  if (!publicKey) {
+    throw new Error('Public key is required for ECDH derivation');
+  }
+
+  if (baseKey.algorithm.name !== publicKey.algorithm.name) {
+    throw new Error('Keys must be of the same algorithm');
+  }
+
+  if (baseKey.algorithm.namedCurve !== publicKey.algorithm.namedCurve) {
+    throw new Error('Keys must use the same curve');
+  }
+
+  const namedCurve = baseKey.algorithm.namedCurve;
+  if (!namedCurve) {
+    throw new Error('Curve name is missing');
+  }
+
+  const opensslCurve =
+    kNamedCurveAliases[namedCurve as keyof typeof kNamedCurveAliases];
+  const ecdh = new ECDH(opensslCurve);
+
+  const jwkPrivate = baseKey.keyObject.handle.exportJwk({}, false);
+  if (!jwkPrivate.d) throw new Error('Invalid private key');
+  const privateBytes = Buffer.from(jwkPrivate.d, 'base64');
+  ecdh.setPrivateKey(privateBytes);
+
+  const jwkPublic = publicKey.keyObject.handle.exportJwk({}, false);
+  if (!jwkPublic.x || !jwkPublic.y) throw new Error('Invalid public key');
+  const x = Buffer.from(jwkPublic.x, 'base64');
+  const y = Buffer.from(jwkPublic.y, 'base64');
+  const publicBytes = Buffer.concat([Buffer.from([0x04]), x, y]);
+
+  const secret = ecdh.computeSecret(publicBytes);
+  const secretBuf = Buffer.from(secret);
+
+  // If length is null, return full secret
+  if (length === null) {
+    return secretBuf.buffer;
+  }
+
+  // If length is specified, truncate
+  const byteLength = Math.ceil(length / 8);
+  if (secretBuf.byteLength >= byteLength) {
+    return secretBuf.subarray(0, byteLength).buffer as ArrayBuffer;
+  }
+
+  throw new Error('Derived key is shorter than requested length');
 }

@@ -4,7 +4,7 @@
 #include <cstring>
 #include <stdexcept>
 
-#include "Utils.hpp"
+#include "QuickCryptoUtils.hpp"
 
 namespace margelo::nitro::crypto {
 

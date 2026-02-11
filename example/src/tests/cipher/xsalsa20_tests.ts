@@ -1,5 +1,4 @@
-import { Buffer } from '@craftzdog/react-native-buffer';
-import { randomFillSync, xsalsa20 } from 'react-native-quick-crypto';
+import { Buffer, randomFillSync, xsalsa20 } from 'react-native-quick-crypto';
 import { expect } from 'chai';
 import { test } from '../util';
 

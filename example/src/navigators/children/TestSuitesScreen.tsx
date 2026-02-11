@@ -1,11 +1,5 @@
 import React, { useMemo } from 'react';
-import {
-  Text,
-  View,
-  FlatList,
-  StyleSheet,
-  TouchableOpacity,
-} from 'react-native';
+import { View, FlatList, StyleSheet } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Button } from '../../components/Button';
 import { TestItem } from '../../components/TestItem';
@@ -57,38 +51,22 @@ export const TestSuitesScreen = () => {
           testID="test-suites-list"
         />
       </View>
-      {results && Object.keys(results).length > 0 && stats && (
-        <View style={styles.footerItem}>
-          <View style={styles.footerCheckbox} />
-          <TouchableOpacity style={styles.footerContent} activeOpacity={1}>
-            <Text style={styles.footerLabel}>⏱️ {stats.duration}ms</Text>
-            <Text
-              style={[styles.pass, styles.footerCount]}
-              testID="completion-stats"
-            >
-              {Object.values(results).reduce(
-                (sum, suite) =>
-                  sum + suite.results.filter(r => r.type === 'correct').length,
-                0,
-              )}
-            </Text>
-            <Text
-              style={[styles.fail, styles.footerCount]}
-              testID="total-fail-count"
-            >
-              {Object.values(results).reduce(
-                (sum, suite) =>
-                  sum +
-                  suite.results.filter(r => r.type === 'incorrect').length,
-                0,
-              )}
-            </Text>
-            <Text style={styles.footerCount} testID="total-test-count">
-              {totalCount}
-            </Text>
-          </TouchableOpacity>
-        </View>
-      )}
+      <TestItem
+        suiteIndex={-1}
+        isFooter
+        description={stats ? `${stats?.duration}ms` : ''}
+        count={totalCount}
+        passCount={Object.values(results).reduce(
+          (sum, suite) =>
+            sum + suite.results.filter(r => r.type === 'correct').length,
+          0,
+        )}
+        failCount={Object.values(results).reduce(
+          (sum, suite) =>
+            sum + suite.results.filter(r => r.type === 'incorrect').length,
+          0,
+        )}
+      />
       <View style={styles.menu}>
         <Button
           title="Check All"
@@ -119,46 +97,16 @@ const styles = StyleSheet.create({
   },
   testList: {
     flex: 9,
+    borderTopWidth: 1,
+    borderTopColor: colors.gray,
+    borderBottomWidth: 1,
+    borderBottomColor: colors.gray,
   },
   menu: {
     flex: 1,
     flexDirection: 'row',
     alignItems: 'center',
-    alignContent: 'space-around',
     justifyContent: 'space-around',
-  },
-  footerItem: {
-    width: '100%',
-    flexDirection: 'row',
-    alignContent: 'center',
-    alignItems: 'center',
-    gap: 10,
-    borderTopWidth: 1,
-    borderTopColor: colors.gray,
-    paddingHorizontal: 10,
-    paddingVertical: 5,
-  },
-  footerCheckbox: {
-    width: 24,
-  },
-  footerContent: {
-    flex: 1,
-    flexDirection: 'row',
-  },
-  footerLabel: {
-    fontSize: 11,
-    fontWeight: 'bold',
-    flex: 8,
-  },
-  footerCount: {
-    fontSize: 11,
-    flex: 1,
-    textAlign: 'right',
-  },
-  pass: {
-    color: colors.green,
-  },
-  fail: {
-    color: colors.red,
+    marginVertical: -5,
   },
 });

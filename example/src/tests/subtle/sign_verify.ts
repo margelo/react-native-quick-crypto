@@ -1,4 +1,5 @@
 import {
+  Buffer,
   normalizeHashName,
   subtle,
   isCryptoKeyPair,
@@ -13,7 +14,6 @@ import type {
 } from 'react-native-quick-crypto';
 import { test } from '../util';
 import { expect } from 'chai';
-import { Buffer } from '@craftzdog/react-native-buffer';
 
 const encoder = new TextEncoder();
 

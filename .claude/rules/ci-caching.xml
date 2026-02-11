@@ -1,0 +1,92 @@
+<rules category="ci-caching">
+  <metadata>
+    <trigger>when working on GitHub Actions workflows or CI caching</trigger>
+  </metadata>
+
+  <rule severity="HIGH" enforcement="STRICT">
+    <name>Reference Implementations</name>
+    <description>Use these repos as reference for CI patterns</description>
+    <references>
+      <reference>
+        <path>$REPOS/nitro</path>
+        <description>Super-fast iOS builds with proper caching</description>
+        <files>.github/workflows/build-ios.yml</files>
+      </reference>
+      <reference>
+        <path>$REPOS/spicy</path>
+        <description>Working Android E2E with Maestro</description>
+        <files>.github/workflows/e2e.yml, tests/e2e/scripts/</files>
+      </reference>
+    </references>
+  </rule>
+
+  <rule severity="CRITICAL" enforcement="BLOCKING">
+    <name>iOS Pods and DerivedData Cache Consistency</name>
+    <description>Pods project files contain hardcoded paths to DerivedData</description>
+    <problem>
+      Pods cache contains xcodeproj files that reference paths like ios/build/generated/ios/*.cpp.
+      If Pods restores but DerivedData doesn't, build fails with "Build input file cannot be found".
+    </problem>
+    <solutions>
+      <solution>Use exact-match only for Pods cache (no restore-keys fallback)</solution>
+      <solution>Ensure DerivedData cache key is superset of Pods cache key</solution>
+      <solution>Restore DerivedData AFTER pod install runs (like Nitro does)</solution>
+    </solutions>
+    <antipattern>
+      Using restore-keys for Pods cache can restore stale Pods that reference non-existent codegen files.
+    </antipattern>
+  </rule>
+
+  <rule severity="HIGH" enforcement="STRICT">
+    <name>Cache Key Design</name>
+    <description>Cache keys should reflect dependencies</description>
+    <guidelines>
+      <guideline>Don't use version suffixes (v2, v3) - just delete caches with gh cache delete --all</guideline>
+      <guideline>Include all files that affect cache contents in hashFiles()</guideline>
+      <guideline>DerivedData key should include everything Pods key includes, plus more</guideline>
+    </guidelines>
+    <example>
+      Pods: runner.os-pods-hashFiles('Podfile.lock')
+      DD: runner.os-dd-hashFiles('Podfile.lock', 'package.json', 'bun.lock')-xcode16.4
+    </example>
+  </rule>
+
+  <rule severity="HIGH" enforcement="STRICT">
+    <name>Android Maestro App Launch</name>
+    <description>Don't launch app before Maestro</description>
+    <problem>
+      If you launch the app via adb before Maestro runs, Maestro's launchApp command
+      will restart it, potentially breaking Metro connection.
+    </problem>
+    <solution>
+      Let Maestro handle app launch. Only install the APK before Maestro runs.
+    </solution>
+  </rule>
+
+  <rule severity="MEDIUM" enforcement="GUIDANCE">
+    <name>Debugging CI Failures</name>
+    <description>Commands for investigating CI issues</description>
+    <commands>
+      <command>gh run list --branch BRANCH --limit 5</command>
+      <command>gh run view RUN_ID --log-failed</command>
+      <command>gh run download RUN_ID --name ARTIFACT -D /tmp/output</command>
+      <command>gh cache list</command>
+      <command>gh cache delete --all</command>
+    </commands>
+  </rule>
+
+  <rule severity="MEDIUM" enforcement="GUIDANCE">
+    <name>Build Speed Targets</name>
+    <description>Expected build times with proper caching</description>
+    <targets>
+      <target>iOS incremental build: under 2 minutes</target>
+      <target>Android incremental build: under 3 minutes</target>
+      <target>Full iOS build (no cache): ~15-20 minutes</target>
+      <target>Full Android build (no cache): ~10 minutes</target>
+    </targets>
+    <notes>
+      ccache handles C++ compilation caching.
+      DerivedData/Gradle caches handle build artifacts.
+    </notes>
+  </rule>
+</rules>

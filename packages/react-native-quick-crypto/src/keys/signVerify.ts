@@ -237,3 +237,87 @@ export function createSign(algorithm: string): Sign {
 export function createVerify(algorithm: string): Verify {
   return new Verify(algorithm);
 }
+
+type SignCallback = (err: Error | null, signature?: Buffer) => void;
+type VerifyCallback = (err: Error | null, result?: boolean) => void;
+
+export function sign(
+  algorithm: string | null | undefined,
+  data: BinaryLike,
+  key: KeyInput,
+): Buffer;
+export function sign(
+  algorithm: string | null | undefined,
+  data: BinaryLike,
+  key: KeyInput,
+  callback: SignCallback,
+): void;
+export function sign(
+  algorithm: string | null | undefined,
+  data: BinaryLike,
+  key: KeyInput,
+  callback?: SignCallback,
+): Buffer | void {
+  const doSign = (): Buffer => {
+    if (key === null || key === undefined) {
+      throw new Error('Private key is required');
+    }
+    const signer = new Sign(algorithm ?? '');
+    signer.update(data);
+    return signer.sign(key);
+  };
+
+  if (callback) {
+    try {
+      const signature = doSign();
+      process.nextTick(callback, null, signature);
+    } catch (err) {
+      process.nextTick(callback, err as Error);
+    }
+    return;
+  }
+
+  return doSign();
+}
+
+export function verify(
+  algorithm: string | null | undefined,
+  data: BinaryLike,
+  key: KeyInput,
+  signature: BinaryLike,
+): boolean;
+export function verify(
+  algorithm: string | null | undefined,
+  data: BinaryLike,
+  key: KeyInput,
+  signature: BinaryLike,
+  callback: VerifyCallback,
+): void;
+export function verify(
+  algorithm: string | null | undefined,
+  data: BinaryLike,
+  key: KeyInput,
+  signature: BinaryLike,
+  callback?: VerifyCallback,
+): boolean | void {
+  const doVerify = (): boolean => {
+    if (key === null || key === undefined) {
+      throw new Error('Key is required');
+    }
+    const verifier = new Verify(algorithm ?? '');
+    verifier.update(data);
+    return verifier.verify(key, signature);
+  };
+
+  if (callback) {
+    try {
+      const result = doVerify();
+      process.nextTick(callback, null, result);
+    } catch (err) {
+      process.nextTick(callback, err as Error);
+    }
+    return;
+  }
+
+  return doVerify();
+}

@@ -32,7 +32,7 @@ target 'QuickCryptoExample' do
       installer,
       config[:reactNativePath],
       :mac_catalyst_enabled => false,
-      # :ccache_enabled => true
+      :ccache_enabled => ENV['USE_CCACHE'] == '1'
     )
 
     # https://github.com/mrousavy/nitro/issues/422#issuecomment-2545988256

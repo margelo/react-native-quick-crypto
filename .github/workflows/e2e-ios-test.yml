@@ -13,6 +13,7 @@ on:
       - 'cpp/**'
       - 'nitrogen/**'
       - 'src/**'
+      - 'packages/react-native-quick-crypto/ios/**'
   push:
     branches: [main]
     paths:
@@ -20,28 +21,42 @@ on:
       - 'cpp/**'
       - 'nitrogen/**'
       - 'src/**'
+      - 'packages/react-native-quick-crypto/ios/**'
 
 jobs:
   e2e-tests-ios:
     runs-on: macos-15
     env:
-      RCT_USE_RN_DEP: 1
-      RCT_USE_PREBUILT_RNCORE: 1
       OUTPUT_DIR: ~/output
+      USE_CCACHE: '1'
+      DEVICE_NAME: 'iPhone 17 Pro'
+      DERIVED_DATA_PATH: example/ios/build
 
     steps:
       - name: Checkout
         uses: actions/checkout@v4
 
-      - name: Select Xcode 16.4
+      - name: Select Xcode 26.2
         run: |
-          sudo xcode-select -s "/Applications/Xcode_16.4.app/Contents/Developer"
+          sudo xcode-select -s "/Applications/Xcode_26.2.app/Contents/Developer"
           xcodebuild -version
 
-      - name: Install Bun
-        uses: oven-sh/setup-bun@v1
+      - name: Setup ccache
+        uses: hendrikmuhs/ccache-action@v1.2
         with:
-          bun-version: latest
+          max-size: 1.5G
+          key: ${{ runner.os }}-ccache-ios-e2e
+          create-symlink: true
+
+      - name: Configure ccache
+        run: |
+          echo "CCACHE_SLOPPINESS=clang_index_store,file_stat_matches,include_file_ctime,include_file_mtime,ivfsoverlay,pch_defines,modules,system_headers,time_macros" >> $GITHUB_ENV
+          echo "CCACHE_FILECLONE=true" >> $GITHUB_ENV
+          echo "CCACHE_DEPEND=true" >> $GITHUB_ENV
+          echo "CCACHE_INODECACHE=true" >> $GITHUB_ENV
+
+      - name: Install Bun
+        uses: ./.github/actions/setup-bun
 
       - name: Create Directories
         run: |
@@ -51,9 +66,67 @@ jobs:
       - name: Install Dependencies
         run: bun install
 
+      - name: Restore CocoaPods cache
+        id: pods-cache
+        uses: actions/cache/restore@v5
+        with:
+          path: |
+            example/ios/Pods
+            ~/.cocoapods/repos
+            ~/Library/Caches/CocoaPods
+            packages/react-native-quick-crypto/ios/libsodium-stable
+            packages/react-native-quick-crypto/deps
+          key: ${{ runner.os }}-pods
+
+      - name: Restore DerivedData cache
+        id: dd-cache
+        uses: actions/cache/restore@v5
+        with:
+          path: ${{ env.DERIVED_DATA_PATH }}
+          key: ${{ runner.os }}-dd
+
+      - name: Boot iOS Simulator (background)
+        run: |
+          xcrun simctl boot "${{ env.DEVICE_NAME }}" &
+
       - name: Install CocoaPods
         working-directory: ./example
         run: bun pods
+
+      - name: Build iOS App
+        working-directory: ./example
+        run: |
+          echo "Building iOS app with xcodebuild..."
+          set -o pipefail
+          xcodebuild \
+            CC=clang CPLUSPLUS=clang++ LD=clang LDPLUSPLUS=clang++ \
+            -derivedDataPath ios/build \
+            -workspace ios/QuickCryptoExample.xcworkspace \
+            -scheme QuickCryptoExample \
+            -sdk iphonesimulator \
+            -configuration Debug \
+            -destination "platform=iOS Simulator,name=${{ env.DEVICE_NAME }}" \
+            ONLY_ACTIVE_ARCH=YES \
+            CODE_SIGNING_ALLOWED=NO \
+            build > $HOME/output/ios-build.log 2>&1
+
+      - name: Show ccache stats
+        if: always()
+        run: ccache --show-stats
+
+      - name: Wait for Simulator
+        run: xcrun simctl bootstatus "${{ env.DEVICE_NAME }}" -b
+
+      - name: Install App to Simulator
+        working-directory: ./example
+        run: |
+          APP_PATH="ios/build/Build/Products/Debug-iphonesimulator/QuickCryptoExample.app"
+          if [ ! -d "$APP_PATH" ]; then
+            echo "Error: App not found at $APP_PATH"
+            exit 1
+          fi
+          echo "Installing app from $APP_PATH..."
+          xcrun simctl install booted "$APP_PATH"
 
       - name: Install Maestro CLI
         run: |
@@ -61,16 +134,70 @@ jobs:
           curl -Ls "https://get.maestro.mobile.dev" | bash
           echo "$HOME/.maestro/bin" >> $GITHUB_PATH
 
-      - name: Make scripts executable
-        run: chmod +x test/e2e/*.sh
-        working-directory: ./example/
+      - name: Start Metro Bundler
+        working-directory: ./example
+        run: |
+          echo "Starting Metro Bundler..."
+          bun start > $HOME/output/metro.log 2>&1 &
+          echo "Waiting for Metro to be ready..."
+          for i in {1..60}; do
+            if curl -sf http://localhost:8081/status > /dev/null 2>&1; then
+              echo "Metro server is ready!"
+              break
+            fi
+            if [ $i -eq 60 ]; then
+              echo "Metro failed to start after 60 seconds"
+              cat $HOME/output/metro.log
+              exit 1
+            fi
+            sleep 1
+          done
+          echo "Waiting for bundle to be ready..."
+          for i in {1..120}; do
+            if curl -sf "http://localhost:8081/index.bundle?platform=ios&dev=true&minify=false" > /dev/null 2>&1; then
+              echo "Bundle is ready!"
+              break
+            fi
+            if [ $i -eq 120 ]; then
+              echo "Warning: Bundle may not be ready, continuing anyway..."
+            fi
+            sleep 1
+          done
 
-      - name: Run E2E Tests
+      - name: Launch App
+        run: |
+          echo "Launching app..."
+          xcrun simctl launch booted "com.margelo.quickcrypto.example"
+          echo "Waiting for app to initialize..."
+          sleep 5
+
+      - name: Run Maestro E2E Tests
         id: test_ios
-        run: ./test/e2e/run-ios.sh
-        working-directory: ./example/
-        env:
-          IOS_SIMULATOR_DEVICE: 'iPhone 16 Pro'
+        working-directory: ./example
+        run: |
+          export PATH="$PATH:$HOME/.maestro/bin"
+          export MAESTRO_DRIVER_STARTUP_TIMEOUT=300000
+          export MAESTRO_CLI_NO_ANALYTICS=1
+          export MAESTRO_CLI_ANALYSIS_NOTIFICATION_DISABLED=true
+
+          echo "Running End-to-End tests on iOS..."
+          maestro test \
+            test/e2e/test-suites-flow.yml \
+            --config .maestro/config.yml \
+            --env PLATFORM=ios \
+            --test-output-dir $HOME/output
+
+      - name: Collect Screenshots
+        if: always()
+        run: |
+          mkdir -p $HOME/output/screenshots
+          LATEST_SCREENSHOT=$(find $HOME/output -name "screenshot-*.png" -type f 2>/dev/null | sort -r | head -1)
+          if [ -n "$LATEST_SCREENSHOT" ]; then
+            echo "Copying screenshot from $LATEST_SCREENSHOT to screenshots/ios-test-result.png"
+            cp "$LATEST_SCREENSHOT" $HOME/output/screenshots/ios-test-result.png
+          else
+            echo "No screenshot found to copy"
+          fi
 
       - name: Post Maestro Screenshot to PR
         if: always()
@@ -90,6 +217,25 @@ jobs:
             ${{ env.OUTPUT_DIR }}/*.log
             ${{ env.OUTPUT_DIR }}/screenshots/*.png
           retention-days: 5
+
+      - name: Save CocoaPods cache
+        if: always()
+        uses: actions/cache/save@v5
+        with:
+          path: |
+            example/ios/Pods
+            ~/.cocoapods/repos
+            ~/Library/Caches/CocoaPods
+            packages/react-native-quick-crypto/ios/libsodium-stable
+            packages/react-native-quick-crypto/deps
+          key: ${{ runner.os }}-pods
+
+      - name: Save DerivedData cache
+        if: always()
+        uses: actions/cache/save@v5
+        with:
+          path: ${{ env.DERIVED_DATA_PATH }}
+          key: ${{ runner.os }}-dd
 
       - name: Exit with Test Result
         if: always()

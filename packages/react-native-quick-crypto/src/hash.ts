@@ -272,8 +272,19 @@ const internalDigest = (
   return arrayBuffer;
 };
 
+export function hash(
+  algorithm: string,
+  data: BinaryLike,
+  outputEncoding?: Encoding,
+): string | Buffer {
+  const h = createHash(algorithm);
+  h.update(data);
+  return outputEncoding ? h.digest(outputEncoding) : h.digest();
+}
+
 export const hashExports = {
   createHash,
   getHashes,
+  hash,
   asyncDigest,
 };

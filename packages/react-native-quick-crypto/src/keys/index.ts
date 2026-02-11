@@ -7,7 +7,14 @@ import {
   PrivateKeyObject,
 } from './classes';
 import { generateKeyPair, generateKeyPairSync } from './generateKeyPair';
-import { createSign, createVerify, Sign, Verify } from './signVerify';
+import {
+  createSign,
+  createVerify,
+  sign,
+  verify,
+  Sign,
+  Verify,
+} from './signVerify';
 import {
   publicEncrypt,
   publicDecrypt,
@@ -236,6 +243,8 @@ export {
   KeyObject,
   createSign,
   createVerify,
+  sign,
+  verify,
   Sign,
   Verify,
   publicEncrypt,

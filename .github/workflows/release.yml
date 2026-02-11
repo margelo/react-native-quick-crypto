@@ -26,7 +26,7 @@ jobs:
           token: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Setup Bun
-        uses: oven-sh/setup-bun@v2
+        uses: ./.github/actions/setup-bun
 
       - name: Setup Node.js (for npm publish with OIDC)
         uses: actions/setup-node@v4

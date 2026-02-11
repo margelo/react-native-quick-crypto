@@ -1,9 +1,8 @@
-import rnqc from 'react-native-quick-crypto';
+import rnqc, { Buffer } from 'react-native-quick-crypto';
 import { hkdf } from '@noble/hashes/hkdf';
 import { sha256 } from '@noble/hashes/sha2';
 import type { BenchFn } from '../../types/benchmarks';
 import { Bench } from 'tinybench';
-import { Buffer } from '@craftzdog/react-native-buffer';
 
 const TIME_MS = 1000;
 
