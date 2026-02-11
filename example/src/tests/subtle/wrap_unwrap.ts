@@ -1,7 +1,11 @@
 import { test } from '../util';
 import { expect } from 'chai';
 import { subtle, getRandomValues } from 'react-native-quick-crypto';
-import type { CryptoKey, CryptoKeyPair } from 'react-native-quick-crypto';
+import type {
+  AesOcbParams,
+  CryptoKey,
+  CryptoKeyPair,
+} from 'react-native-quick-crypto';
 
 const SUITE = 'subtle.wrapKey/unwrapKey';
 
@@ -200,7 +204,60 @@ test(SUITE, 'wrap/unwrap with AES-CBC', async () => {
   );
 });
 
-// Test 5: Wrap/unwrap with AES-CTR
+// Test 5: Wrap/unwrap with AES-OCB
+test(SUITE, 'wrap/unwrap with AES-OCB', async () => {
+  const keyToWrap = await subtle.generateKey(
+    { name: 'AES-GCM', length: 256 },
+    true,
+    ['encrypt', 'decrypt'],
+  );
+
+  const wrappingKey = await subtle.generateKey(
+    { name: 'AES-OCB', length: 256 },
+    true,
+    ['wrapKey', 'unwrapKey'],
+  );
+
+  const iv = getRandomValues(new Uint8Array(12));
+
+  const wrapped = await subtle.wrapKey(
+    'raw',
+    keyToWrap as CryptoKey,
+    wrappingKey as CryptoKey,
+    { name: 'AES-OCB', iv } as AesOcbParams,
+  );
+
+  const unwrapped = await subtle.unwrapKey(
+    'raw',
+    wrapped,
+    wrappingKey as CryptoKey,
+    { name: 'AES-OCB', iv } as AesOcbParams,
+    { name: 'AES-GCM', length: 256 },
+    true,
+    ['encrypt', 'decrypt'],
+  );
+
+  const plaintext = getRandomValues(new Uint8Array(32));
+  const gcmIv = getRandomValues(new Uint8Array(12));
+
+  const ct = await subtle.encrypt(
+    { name: 'AES-GCM', iv: gcmIv },
+    keyToWrap as CryptoKey,
+    plaintext,
+  );
+
+  const pt = await subtle.decrypt(
+    { name: 'AES-GCM', iv: gcmIv },
+    unwrapped as CryptoKey,
+    ct,
+  );
+
+  expect(Buffer.from(pt).toString('hex')).to.equal(
+    Buffer.from(plaintext).toString('hex'),
+  );
+});
+
+// Test 6: Wrap/unwrap with AES-CTR
 test(SUITE, 'wrap/unwrap with AES-CTR', async () => {
   const keyToWrap = await subtle.generateKey(
     { name: 'HMAC', hash: 'SHA-256', length: 256 },
@@ -250,7 +307,7 @@ test(SUITE, 'wrap/unwrap with AES-CTR', async () => {
   );
 });
 
-// Test 6: Wrap/unwrap with RSA-OAEP
+// Test 7: Wrap/unwrap with RSA-OAEP
 test(SUITE, 'wrap/unwrap with RSA-OAEP', async () => {
   const keyToWrap = await subtle.generateKey(
     { name: 'AES-GCM', length: 128 },
@@ -306,7 +363,7 @@ test(SUITE, 'wrap/unwrap with RSA-OAEP', async () => {
   );
 });
 
-// Test 7: Wrap/unwrap with ChaCha20-Poly1305
+// Test 8: Wrap/unwrap with ChaCha20-Poly1305
 test(SUITE, 'wrap/unwrap with ChaCha20-Poly1305', async () => {
   const keyToWrap = await subtle.generateKey(
     { name: 'AES-GCM', length: 256 },

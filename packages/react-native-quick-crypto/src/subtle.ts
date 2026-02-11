@@ -14,6 +14,7 @@ import type {
   AesCtrParams,
   AesCbcParams,
   AesGcmParams,
+  AesOcbParams,
   RsaOaepParams,
   ChaCha20Poly1305Params,
 } from './utils';
@@ -90,7 +91,22 @@ function normalizeAlgorithm(
 }
 
 function getAlgorithmName(name: string, length: number): string {
-  return `${name}${length}`;
+  switch (name) {
+    case 'AES-CBC':
+      return `A${length}CBC`;
+    case 'AES-CTR':
+      return `A${length}CTR`;
+    case 'AES-GCM':
+      return `A${length}GCM`;
+    case 'AES-KW':
+      return `A${length}KW`;
+    case 'AES-OCB':
+      return `A${length}OCB`;
+    case 'ChaCha20-Poly1305':
+      return 'C20P';
+    default:
+      return `${name}${length}`;
+  }
 }
 
 // Placeholder implementations for missing functions
@@ -198,6 +214,8 @@ async function aesCipher(
       return aesCbcCipher(mode, key, data, algorithm as AesCbcParams);
     case 'AES-GCM':
       return aesGcmCipher(mode, key, data, algorithm as AesGcmParams);
+    case 'AES-OCB':
+      return aesOcbCipher(mode, key, data, algorithm as AesOcbParams);
     default:
       throw lazyDOMException(
         `Unsupported AES algorithm: ${name}`,
@@ -294,45 +312,45 @@ async function aesCbcCipher(
   return result.buffer;
 }
 
-async function aesGcmCipher(
+interface AeadCipherConfig {
+  algorithmName: string;
+  validTagLengths: number[];
+  cipherSuffix: string;
+  iv: ArrayBuffer;
+}
+
+async function aesAeadCipher(
   mode: CipherOrWrapMode,
   key: CryptoKey,
   data: ArrayBuffer,
-  algorithm: AesGcmParams,
+  config: AeadCipherConfig,
+  additionalData?: BufferLike,
+  tagLength: number = 128,
 ): Promise<ArrayBuffer> {
-  const { tagLength = 128 } = algorithm;
-
-  // Validate tag length
-  const validTagLengths = [32, 64, 96, 104, 112, 120, 128];
-  if (!validTagLengths.includes(tagLength)) {
+  if (!config.validTagLengths.includes(tagLength)) {
     throw lazyDOMException(
-      `${tagLength} is not a valid AES-GCM tag length`,
+      `${tagLength} is not a valid ${config.algorithmName} tag length`,
       'OperationError',
     );
   }
 
   const tagByteLength = tagLength / 8;
-
-  // Get cipher type based on key length
   const keyLength = (key.algorithm as { length: number }).length;
-  const cipherType = `aes-${keyLength}-gcm`;
+  const cipherType = `aes-${keyLength}-${config.cipherSuffix}`;
 
-  // Create cipher
   const factory =
     NitroModules.createHybridObject<CipherFactory>('CipherFactory');
   const cipher = factory.createCipher({
     isCipher: mode === CipherOrWrapMode.kWebCryptoCipherEncrypt,
     cipherType,
     cipherKey: bufferLikeToArrayBuffer(key.keyObject.export()),
-    iv: bufferLikeToArrayBuffer(algorithm.iv),
+    iv: config.iv,
     authTagLen: tagByteLength,
   });
 
   let processData: ArrayBuffer;
-  let authTag: ArrayBuffer | undefined;
 
   if (mode === CipherOrWrapMode.kWebCryptoCipherDecrypt) {
-    // For decryption, extract auth tag from end of data
     const dataView = new Uint8Array(data);
 
     if (dataView.byteLength < tagByteLength) {
@@ -342,28 +360,22 @@ async function aesGcmCipher(
       );
     }
 
-    // Split data and tag
     const ciphertextLength = dataView.byteLength - tagByteLength;
     processData = dataView.slice(0, ciphertextLength).buffer;
-    authTag = dataView.slice(ciphertextLength).buffer;
-
-    // Set auth tag for verification
+    const authTag = dataView.slice(ciphertextLength).buffer;
     cipher.setAuthTag(authTag);
   } else {
     processData = data;
   }
 
-  // Set additional authenticated data if provided
-  if (algorithm.additionalData) {
-    cipher.setAAD(bufferLikeToArrayBuffer(algorithm.additionalData));
+  if (additionalData) {
+    cipher.setAAD(bufferLikeToArrayBuffer(additionalData));
   }
 
-  // Process data
   const updated = cipher.update(processData);
   const final = cipher.final();
 
   if (mode === CipherOrWrapMode.kWebCryptoCipherEncrypt) {
-    // For encryption, append auth tag to result
     const tag = cipher.getAuthTag();
     const result = new Uint8Array(
       updated.byteLength + final.byteLength + tag.byteLength,
@@ -373,12 +385,61 @@ async function aesGcmCipher(
     result.set(new Uint8Array(tag), updated.byteLength + final.byteLength);
     return result.buffer;
   } else {
-    // For decryption, just concatenate plaintext
     const result = new Uint8Array(updated.byteLength + final.byteLength);
     result.set(new Uint8Array(updated), 0);
     result.set(new Uint8Array(final), updated.byteLength);
     return result.buffer;
   }
+}
+
+async function aesGcmCipher(
+  mode: CipherOrWrapMode,
+  key: CryptoKey,
+  data: ArrayBuffer,
+  algorithm: AesGcmParams,
+): Promise<ArrayBuffer> {
+  return aesAeadCipher(
+    mode,
+    key,
+    data,
+    {
+      algorithmName: 'AES-GCM',
+      validTagLengths: [32, 64, 96, 104, 112, 120, 128],
+      cipherSuffix: 'gcm',
+      iv: bufferLikeToArrayBuffer(algorithm.iv),
+    },
+    algorithm.additionalData,
+    algorithm.tagLength,
+  );
+}
+
+async function aesOcbCipher(
+  mode: CipherOrWrapMode,
+  key: CryptoKey,
+  data: ArrayBuffer,
+  algorithm: AesOcbParams,
+): Promise<ArrayBuffer> {
+  const ivBuffer = bufferLikeToArrayBuffer(algorithm.iv);
+  if (ivBuffer.byteLength < 1 || ivBuffer.byteLength > 15) {
+    throw lazyDOMException(
+      'AES-OCB algorithm.iv must be between 1 and 15 bytes',
+      'OperationError',
+    );
+  }
+
+  return aesAeadCipher(
+    mode,
+    key,
+    data,
+    {
+      algorithmName: 'AES-OCB',
+      validTagLengths: [64, 96, 128],
+      cipherSuffix: 'ocb',
+      iv: ivBuffer,
+    },
+    algorithm.additionalData,
+    algorithm.tagLength,
+  );
 }
 
 async function aesKwCipher(
@@ -1146,6 +1207,8 @@ const exportKeyRaw = (key: CryptoKey): ArrayBuffer | unknown => {
     // Fall through
     case 'AES-KW':
     // Fall through
+    case 'AES-OCB':
+    // Fall through
     case 'ChaCha20-Poly1305':
     // Fall through
     case 'HMAC': {
@@ -1205,6 +1268,8 @@ const exportKeyJWK = (key: CryptoKey): ArrayBuffer | unknown => {
     case 'AES-GCM':
     // Fall through
     case 'AES-KW':
+    // Fall through
+    case 'AES-OCB':
     // Fall through
     case 'ChaCha20-Poly1305':
       if (key.algorithm.length === undefined) {
@@ -1524,6 +1589,8 @@ const cipherOrWrap = async (
     case 'AES-CBC':
     // Fall through
     case 'AES-GCM':
+    // Fall through
+    case 'AES-OCB':
       return aesCipher(mode, key, data, algorithm);
     case 'AES-KW':
       return aesKwCipher(mode, key, data);
@@ -1681,6 +1748,8 @@ export class Subtle {
   ): Promise<ArrayBuffer | JWK> {
     if (!key.extractable) throw new Error('key is not extractable');
 
+    if (format === 'raw-secret') format = 'raw';
+
     switch (format) {
       case 'spki':
         return (await exportKeySpki(key)) as ArrayBuffer;
@@ -1835,6 +1904,8 @@ export class Subtle {
       case 'AES-GCM':
       // Fall through
       case 'AES-KW':
+      // Fall through
+      case 'AES-OCB':
         result = await aesGenerateKey(
           algorithm as AesKeyGenParams,
           extractable,
@@ -1913,6 +1984,7 @@ export class Subtle {
     extractable: boolean,
     keyUsages: KeyUsage[],
   ): Promise<CryptoKey> {
+    if (format === 'raw-secret') format = 'raw';
     const normalizedAlgorithm = normalizeAlgorithm(algorithm, 'importKey');
     let result: CryptoKey;
     switch (normalizedAlgorithm.name) {
@@ -1956,6 +2028,8 @@ export class Subtle {
       case 'AES-GCM':
       // Fall through
       case 'AES-KW':
+      // Fall through
+      case 'AES-OCB':
       // Fall through
       case 'ChaCha20-Poly1305':
         result = await aesImportKey(
@@ -2145,6 +2219,7 @@ function getKeyLength(algorithm: SubtleAlgorithm): number {
     case 'AES-CBC':
     case 'AES-GCM':
     case 'AES-KW':
+    case 'AES-OCB':
     case 'ChaCha20-Poly1305':
       return (algorithm as AesKeyGenParams).length || 256;
 

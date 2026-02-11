@@ -10,19 +10,15 @@
 
 A fast implementation of Node's `crypto` module.
 
-> Note: This version `1.x` completed a major refactor, porting to OpenSSL 3.6+, New Architecture, Bridgeless, and [`Nitro Modules`](https://github.com/mrousavy/react-native-nitro).  It should be at or above feature-parity compared to the `0.x` version.  Status, as always, will be represented in [implementation-coverage.md](./.docs/implementation-coverage.md).
-
-> Note: Minimum supported version of React Native is `0.75`.  If you need to use earlier versions, please use `0.x` versions of this library.
-
 ## Features
 
 Unlike any other current JS-based polyfills, react-native-quick-crypto is written in C/C++ JSI and provides much greater performance - especially on mobile devices.
-QuickCrypto can be used as a drop-in replacement for your Web3/Crypto apps to speed up common cryptography functions.
+QuickCrypto can be used as a drop-in replacement for your Web3/Crypto apps or CRDT-based local first databases to speed up common cryptography functions.
 
-- 🏎️ Up to 58x faster than all other solutions
-- ⚡️ Lightning fast implementation with pure C++ and JSI, instead of JS
+- 🏎️ Hundreds of times faster than all JS-based solutions
+- ⚡️ Lightning fast implementation with Nitro Modules (pure C++ and JSI) instead of JS
 - 🧪 Well tested in JS and C++ (OpenSSL)
-- 💰 Made for crypto apps and Wallets
+- 💰 Made for crypto apps and wallets
 - 🔢 Secure native compiled cryptography
 - 🔁 Easy drop-in replacement for [crypto-browserify](https://github.com/browserify/crypto-browserify) or [react-native-crypto](https://github.com/tradle/react-native-crypto)
 
@@ -32,6 +28,8 @@ QuickCrypto can be used as a drop-in replacement for your Web3/Crypto apps to sp
 | ------- | ------ | ------- |
 | `1.x`     | new [->](https://github.com/reactwg/react-native-new-architecture/blob/main/docs/enable-apps.md)  | Nitro Modules [->](https://github.com/mrousavy/nitro) |
 | `0.x`     | old, new 🤞  | Bridge & JSI |
+
+> Note: Minimum supported version of React Native is `0.75`.  If you need to use earlier versions, please use `0.x` versions of this library.
 
 ## Migration
 
@@ -55,7 +53,13 @@ cd ios && pod install
 ```
 
 <h3>
-  Expo  <a href="#"><img src="./.docs/img/expo.png" height="12" /></a>
+  Expo  <a href="#">
+    <picture>
+      <source media="(prefers-color-scheme: dark)" srcset="./.docs/img/expo/dark.png" />
+      <source media="(prefers-color-scheme: light)" srcset="./.docs/img/expo/light.png" />
+      <img alt="Expo" src="./.docs/img/expo/light.png" height="12" />
+      </picture>
+  </a>
 </h3>
 
 ```sh

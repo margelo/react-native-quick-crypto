@@ -13,9 +13,9 @@ void OCBCipher::init(const std::shared_ptr<ArrayBuffer>& key, const std::shared_
   HybridCipher::init(key, iv);
   auth_tag_len = tag_len;
 
-  // Set tag length for OCB (must be 12-16 bytes)
-  if (auth_tag_len < 12 || auth_tag_len > 16) {
-    throw std::runtime_error("OCB tag length must be between 12 and 16 bytes");
+  // Set tag length for OCB (must be 8-16 bytes)
+  if (auth_tag_len < 8 || auth_tag_len > 16) {
+    throw std::runtime_error("OCB tag length must be between 8 and 16 bytes");
   }
   if (EVP_CIPHER_CTX_ctrl(ctx, EVP_CTRL_AEAD_SET_TAG, auth_tag_len, nullptr) != 1) {
     throw std::runtime_error("Failed to set OCB tag length");
@@ -42,7 +42,7 @@ bool OCBCipher::setAuthTag(const std::shared_ptr<ArrayBuffer>& tag) {
   }
   auto native_tag = ToNativeArrayBuffer(tag);
   size_t tag_len = native_tag->size();
-  if (tag_len < 12 || tag_len > 16) {
+  if (tag_len < 8 || tag_len > 16) {
     throw std::runtime_error("Invalid OCB tag length");
   }
   if (EVP_CIPHER_CTX_ctrl(ctx, EVP_CTRL_AEAD_SET_TAG, tag_len, native_tag->data()) != 1) {

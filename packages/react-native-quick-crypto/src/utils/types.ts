@@ -80,7 +80,12 @@ export type KeyPairAlgorithm =
   | CFRGKeyPairAlgorithm
   | PQCKeyPairAlgorithm;
 
-export type AESAlgorithm = 'AES-CTR' | 'AES-CBC' | 'AES-GCM' | 'AES-KW';
+export type AESAlgorithm =
+  | 'AES-CTR'
+  | 'AES-CBC'
+  | 'AES-GCM'
+  | 'AES-KW'
+  | 'AES-OCB';
 
 export type SecretKeyAlgorithm = 'HMAC' | AESAlgorithm;
 
@@ -108,6 +113,7 @@ export type EncryptDecryptAlgorithm =
   | 'AES-CBC'
   | 'AES-GCM'
   | 'AES-KW'
+  | 'AES-OCB'
   | 'ChaCha20-Poly1305';
 
 export type RsaOaepParams = {
@@ -140,6 +146,13 @@ export type ChaCha20Poly1305Params = {
   additionalData?: BufferLike;
 };
 
+export type AesOcbParams = {
+  name: 'AES-OCB';
+  iv: BufferLike;
+  tagLength?: 64 | 96 | 128;
+  additionalData?: BufferLike;
+};
+
 export type AesKwParams = {
   name: 'AES-KW';
   wrappingKey?: BufferLike;
@@ -158,6 +171,7 @@ export type EncryptDecryptParams =
   | AesCbcParams
   | AesCtrParams
   | AesGcmParams
+  | AesOcbParams
   | AesKwParams
   | RsaOaepParams
   | ChaCha20Poly1305Params;
@@ -448,7 +462,7 @@ export type DiffieHellmanCallback = (
 // from @paulmillr/noble-curves
 export type Hex = string | Uint8Array;
 
-export type ImportFormat = 'raw' | 'pkcs8' | 'spki' | 'jwk';
+export type ImportFormat = 'raw' | 'raw-secret' | 'pkcs8' | 'spki' | 'jwk';
 
 export type Operation =
   | 'encrypt'

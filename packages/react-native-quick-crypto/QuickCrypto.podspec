@@ -143,6 +143,9 @@ Pod::Spec.new do |s|
     "deps/blake3/c/example.c",
     "deps/blake3/c/example_tbb.c",
     "deps/blake3/c/blake3_tbb.cpp",
+    # Exclude ncrypto version.h to avoid header name collision with libsodium's version.h
+    # (ncrypto.h includes it via relative path "ncrypto/version.h" which still resolves)
+    "deps/ncrypto/include/ncrypto/version.h",
     # Exclude non-C parts of BLAKE3 repo (Rust, benchmarks, tools, etc.)
     "deps/blake3/src/**/*",
     "deps/blake3/b3sum/**/*",
