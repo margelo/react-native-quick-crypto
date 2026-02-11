@@ -200,6 +200,59 @@ test(SUITE, 'wrap/unwrap with AES-CBC', async () => {
   );
 });
 
+// Test 8: Wrap/unwrap with AES-OCB
+test(SUITE, 'wrap/unwrap with AES-OCB', async () => {
+  const keyToWrap = await subtle.generateKey(
+    { name: 'AES-GCM', length: 256 },
+    true,
+    ['encrypt', 'decrypt'],
+  );
+
+  const wrappingKey = await subtle.generateKey(
+    { name: 'AES-OCB', length: 256 } as any, // eslint-disable-line @typescript-eslint/no-explicit-any
+    true,
+    ['wrapKey', 'unwrapKey'],
+  );
+
+  const iv = getRandomValues(new Uint8Array(12));
+
+  const wrapped = await subtle.wrapKey(
+    'raw',
+    keyToWrap as CryptoKey,
+    wrappingKey as CryptoKey,
+    { name: 'AES-OCB', iv } as any, // eslint-disable-line @typescript-eslint/no-explicit-any
+  );
+
+  const unwrapped = await subtle.unwrapKey(
+    'raw',
+    wrapped,
+    wrappingKey as CryptoKey,
+    { name: 'AES-OCB', iv } as any, // eslint-disable-line @typescript-eslint/no-explicit-any
+    { name: 'AES-GCM', length: 256 },
+    true,
+    ['encrypt', 'decrypt'],
+  );
+
+  const plaintext = getRandomValues(new Uint8Array(32));
+  const gcmIv = getRandomValues(new Uint8Array(12));
+
+  const ct = await subtle.encrypt(
+    { name: 'AES-GCM', iv: gcmIv },
+    keyToWrap as CryptoKey,
+    plaintext,
+  );
+
+  const pt = await subtle.decrypt(
+    { name: 'AES-GCM', iv: gcmIv },
+    unwrapped as CryptoKey,
+    ct,
+  );
+
+  expect(Buffer.from(pt).toString('hex')).to.equal(
+    Buffer.from(plaintext).toString('hex'),
+  );
+});
+
 // Test 5: Wrap/unwrap with AES-CTR
 test(SUITE, 'wrap/unwrap with AES-CTR', async () => {
   const keyToWrap = await subtle.generateKey(

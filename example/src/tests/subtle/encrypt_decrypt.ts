@@ -1216,3 +1216,266 @@ async function testAESDecrypt({
     );
   });
 }
+
+// Test AES-OCB encrypt/decrypt
+test(SUITE, 'AES-OCB basic roundtrip', async () => {
+  const buf = getRandomValues(new Uint8Array(50));
+  const iv = getRandomValues(new Uint8Array(12));
+
+  const key = await subtle.generateKey(
+    { name: 'AES-OCB', length: 256 } as any, // eslint-disable-line @typescript-eslint/no-explicit-any
+    true,
+    ['encrypt', 'decrypt'],
+  );
+
+  const ciphertext = await subtle.encrypt(
+    { name: 'AES-OCB', iv } as any, // eslint-disable-line @typescript-eslint/no-explicit-any
+    key as CryptoKey,
+    buf,
+  );
+
+  const plaintext = await subtle.decrypt(
+    { name: 'AES-OCB', iv } as any, // eslint-disable-line @typescript-eslint/no-explicit-any
+    key as CryptoKey,
+    ciphertext,
+  );
+
+  expect(Buffer.from(plaintext).toString('hex')).to.equal(
+    Buffer.from(buf as Uint8Array).toString('hex'),
+  );
+});
+
+// Test AES-OCB with different key sizes
+for (const keySize of [128, 192, 256]) {
+  test(SUITE, `AES-OCB ${keySize}-bit key`, async () => {
+    const buf = getRandomValues(new Uint8Array(32));
+    const iv = getRandomValues(new Uint8Array(12));
+
+    const key = await subtle.generateKey(
+      { name: 'AES-OCB', length: keySize } as any, // eslint-disable-line @typescript-eslint/no-explicit-any
+      true,
+      ['encrypt', 'decrypt'],
+    );
+
+    const ciphertext = await subtle.encrypt(
+      { name: 'AES-OCB', iv } as any, // eslint-disable-line @typescript-eslint/no-explicit-any
+      key as CryptoKey,
+      buf,
+    );
+
+    // Ciphertext = plaintext + 16-byte tag (default 128-bit)
+    expect(ciphertext.byteLength).to.equal(buf.byteLength + 16);
+
+    const plaintext = await subtle.decrypt(
+      { name: 'AES-OCB', iv } as any, // eslint-disable-line @typescript-eslint/no-explicit-any
+      key as CryptoKey,
+      ciphertext,
+    );
+
+    expect(Buffer.from(plaintext).toString('hex')).to.equal(
+      Buffer.from(buf as Uint8Array).toString('hex'),
+    );
+  });
+}
+
+// Test AES-OCB with AAD
+test(SUITE, 'AES-OCB with AAD', async () => {
+  const plaintext = getRandomValues(new Uint8Array(32));
+  const iv = getRandomValues(new Uint8Array(12));
+  const aad = getRandomValues(new Uint8Array(16));
+
+  const key = await subtle.generateKey(
+    { name: 'AES-OCB', length: 256 } as any, // eslint-disable-line @typescript-eslint/no-explicit-any
+    true,
+    ['encrypt', 'decrypt'],
+  );
+
+  const ciphertext = await subtle.encrypt(
+    { name: 'AES-OCB', iv, additionalData: aad } as any, // eslint-disable-line @typescript-eslint/no-explicit-any
+    key as CryptoKey,
+    plaintext,
+  );
+
+  const decrypted = await subtle.decrypt(
+    { name: 'AES-OCB', iv, additionalData: aad } as any, // eslint-disable-line @typescript-eslint/no-explicit-any
+    key as CryptoKey,
+    ciphertext,
+  );
+
+  expect(Buffer.from(decrypted).toString('hex')).to.equal(
+    Buffer.from(plaintext as Uint8Array).toString('hex'),
+  );
+});
+
+// Test AES-OCB tag length variations
+for (const tagLength of [64, 96, 128]) {
+  test(SUITE, `AES-OCB tagLength ${tagLength}`, async () => {
+    const buf = getRandomValues(new Uint8Array(32));
+    const iv = getRandomValues(new Uint8Array(12));
+    const tagByteLength = tagLength / 8;
+
+    const key = await subtle.generateKey(
+      { name: 'AES-OCB', length: 256 } as any, // eslint-disable-line @typescript-eslint/no-explicit-any
+      true,
+      ['encrypt', 'decrypt'],
+    );
+
+    const ciphertext = await subtle.encrypt(
+      { name: 'AES-OCB', iv, tagLength } as any, // eslint-disable-line @typescript-eslint/no-explicit-any
+      key as CryptoKey,
+      buf,
+    );
+
+    expect(ciphertext.byteLength).to.equal(buf.byteLength + tagByteLength);
+
+    const plaintext = await subtle.decrypt(
+      { name: 'AES-OCB', iv, tagLength } as any, // eslint-disable-line @typescript-eslint/no-explicit-any
+      key as CryptoKey,
+      ciphertext,
+    );
+
+    expect(Buffer.from(plaintext).toString('hex')).to.equal(
+      Buffer.from(buf as Uint8Array).toString('hex'),
+    );
+  });
+}
+
+// Test AES-OCB empty plaintext
+test(SUITE, 'AES-OCB empty plaintext', async () => {
+  const key = await subtle.generateKey(
+    { name: 'AES-OCB', length: 256 } as any, // eslint-disable-line @typescript-eslint/no-explicit-any
+    true,
+    ['encrypt', 'decrypt'],
+  );
+
+  const iv = getRandomValues(new Uint8Array(12));
+  const plaintext = new Uint8Array(0);
+
+  const ciphertext = await subtle.encrypt(
+    { name: 'AES-OCB', iv } as any, // eslint-disable-line @typescript-eslint/no-explicit-any
+    key as CryptoKey,
+    plaintext,
+  );
+
+  // Should include auth tag (16 bytes)
+  expect(ciphertext.byteLength).to.equal(16);
+
+  const decrypted = await subtle.decrypt(
+    { name: 'AES-OCB', iv } as any, // eslint-disable-line @typescript-eslint/no-explicit-any
+    key as CryptoKey,
+    ciphertext,
+  );
+
+  expect(decrypted.byteLength).to.equal(0);
+});
+
+// Test AES-OCB key import/export
+test(SUITE, 'AES-OCB key import/export raw', async () => {
+  const keyMaterial = getRandomValues(new Uint8Array(32));
+
+  const key = await subtle.importKey(
+    'raw',
+    keyMaterial,
+    { name: 'AES-OCB' } as any, // eslint-disable-line @typescript-eslint/no-explicit-any
+    true,
+    ['encrypt', 'decrypt'],
+  );
+
+  const exported = await subtle.exportKey('raw', key as CryptoKey);
+
+  expect(Buffer.from(exported as ArrayBuffer).toString('hex')).to.equal(
+    Buffer.from(keyMaterial as Uint8Array).toString('hex'),
+  );
+});
+
+// Test AES-OCB tampered ciphertext
+test(SUITE, 'AES-OCB tampered ciphertext', async () => {
+  const key = await subtle.generateKey(
+    { name: 'AES-OCB', length: 256 } as any, // eslint-disable-line @typescript-eslint/no-explicit-any
+    true,
+    ['encrypt', 'decrypt'],
+  );
+
+  const iv = getRandomValues(new Uint8Array(12));
+  const plaintext = getRandomValues(new Uint8Array(32));
+
+  const ciphertext = await subtle.encrypt(
+    { name: 'AES-OCB', iv } as any, // eslint-disable-line @typescript-eslint/no-explicit-any
+    key as CryptoKey,
+    plaintext,
+  );
+
+  const tamperedCiphertext = new Uint8Array(ciphertext);
+  tamperedCiphertext[0]! ^= 1;
+
+  await assertThrowsAsync(
+    async () =>
+      await subtle.decrypt(
+        { name: 'AES-OCB', iv } as any, // eslint-disable-line @typescript-eslint/no-explicit-any
+        key as CryptoKey,
+        tamperedCiphertext,
+      ),
+    'Failed to finalize',
+  );
+});
+
+// Test AES-OCB tampered tag
+test(SUITE, 'AES-OCB tampered tag', async () => {
+  const key = await subtle.generateKey(
+    { name: 'AES-OCB', length: 256 } as any, // eslint-disable-line @typescript-eslint/no-explicit-any
+    true,
+    ['encrypt', 'decrypt'],
+  );
+
+  const iv = getRandomValues(new Uint8Array(12));
+  const plaintext = getRandomValues(new Uint8Array(32));
+
+  const ciphertext = await subtle.encrypt(
+    { name: 'AES-OCB', iv } as any, // eslint-disable-line @typescript-eslint/no-explicit-any
+    key as CryptoKey,
+    plaintext,
+  );
+
+  const tamperedCiphertext = new Uint8Array(ciphertext);
+  tamperedCiphertext[tamperedCiphertext.length - 1]! ^= 1;
+
+  await assertThrowsAsync(
+    async () =>
+      await subtle.decrypt(
+        { name: 'AES-OCB', iv } as any, // eslint-disable-line @typescript-eslint/no-explicit-any
+        key as CryptoKey,
+        tamperedCiphertext,
+      ),
+    'Failed to finalize',
+  );
+});
+
+// Test AES-OCB wrong AAD
+test(SUITE, 'AES-OCB wrong AAD', async () => {
+  const key = await subtle.generateKey(
+    { name: 'AES-OCB', length: 256 } as any, // eslint-disable-line @typescript-eslint/no-explicit-any
+    true,
+    ['encrypt', 'decrypt'],
+  );
+
+  const iv = getRandomValues(new Uint8Array(12));
+  const plaintext = getRandomValues(new Uint8Array(32));
+  const aad1 = getRandomValues(new Uint8Array(16));
+  const aad2 = getRandomValues(new Uint8Array(16));
+
+  const ciphertext = await subtle.encrypt(
+    { name: 'AES-OCB', iv, additionalData: aad1 } as any, // eslint-disable-line @typescript-eslint/no-explicit-any
+    key as CryptoKey,
+    plaintext,
+  );
+
+  await assertThrowsAsync(
+    async () =>
+      await subtle.decrypt(
+        { name: 'AES-OCB', iv, additionalData: aad2 } as any, // eslint-disable-line @typescript-eslint/no-explicit-any
+        key as CryptoKey,
+        ciphertext,
+      ),
+    'Failed to finalize',
+  );
+});
