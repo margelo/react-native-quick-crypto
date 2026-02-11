@@ -3,5 +3,4 @@
 	url = https://github.com/BLAKE3-team/BLAKE3.git
 [submodule "packages/react-native-quick-crypto/deps/ncrypto"]
 	path = packages/react-native-quick-crypto/deps/ncrypto
-	url = https://github.com/boorad/ncrypto.git
-	branch = fix/use-BN_GENCB_get_arg
+	url = https://github.com/nodejs/ncrypto.git

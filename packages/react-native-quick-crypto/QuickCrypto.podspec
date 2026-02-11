@@ -112,7 +112,7 @@ Pod::Spec.new do |s|
     # implementation (C++)
     "cpp/**/*.{hpp,cpp}",
     # dependencies (C++) - ncrypto
-    "deps/ncrypto/include/*.{h}",
+    "deps/ncrypto/include/**/*.{h}",
     "deps/ncrypto/src/*.{cpp}",
     # dependencies (C) - exclude BLAKE3 x86 SIMD files (only use portable + NEON for ARM)
     "deps/blake3/c/*.{h,c}",

@@ -435,39 +435,39 @@ These ciphers are **not available in Node.js** but are provided by RNQC via libs
 ### wrapping algorithms
 | Algorithm           | Status |
 | ------------------- | :----: |
-| `AES-CBC`           | ❌ |
-| `AES-CTR`           | ❌ |
+| `AES-CBC`           | ✅ |
+| `AES-CTR`           | ✅ |
 | `AES-GCM`           | ✅ |
 | `AES-KW`            | ✅ |
 | `AES-OCB`           | ❌ |
 | `ChaCha20-Poly1305` | ✅ |
-| `RSA-OAEP`          | ❌ |
+| `RSA-OAEP`          | ✅ |
 
 ### unwrapped key algorithms
 | Algorithm           | Status |
 | ---------           | :----: |
-| `AES-CBC`           | ❌ |
-| `AES-CTR`           | ❌ |
-| `AES-GCM`           | ❌ |
-| `AES-KW`            | ❌ |
+| `AES-CBC`           | ✅ |
+| `AES-CTR`           | ✅ |
+| `AES-GCM`           | ✅ |
+| `AES-KW`            | ✅ |
 | `AES-OCB`           | ❌ |
-| `ChaCha20-Poly1305` | ❌ |
-| `ECDH`              | ❌ |
-| `ECDSA`             | ❌ |
-| `Ed25519`           | ❌ |
-| `Ed448`             | ❌ |
-| `HMAC`              | ❌ |
-| `ML-DSA-44`         | ❌ |
-| `ML-DSA-65`         | ❌ |
-| `ML-DSA-87`         | ❌ |
+| `ChaCha20-Poly1305` | ✅ |
+| `ECDH`              | ✅ |
+| `ECDSA`             | ✅ |
+| `Ed25519`           | ✅ |
+| `Ed448`             | ✅ |
+| `HMAC`              | ✅ |
+| `ML-DSA-44`         | ✅ |
+| `ML-DSA-65`         | ✅ |
+| `ML-DSA-87`         | ✅ |
 | `ML-KEM-512`        | ❌ |
 | `ML-KEM-768`        | ❌ |
 | `ML-KEM-1024`       | ❌ |
-| `RSA-OAEP`          | ❌ |
-| `RSA-PSS`           | ❌ |
-| `RSASSA-PKCS1-v1_5` | ❌ |
-| `X25519`            | ❌ |
-| `X448`              | ❌ |
+| `RSA-OAEP`          | ✅ |
+| `RSA-PSS`           | ✅ |
+| `RSASSA-PKCS1-v1_5` | ✅ |
+| `X25519`            | ✅ |
+| `X448`              | ✅ |
 
 ## `subtle.verify`
 | Algorithm           | Status |
@@ -487,10 +487,10 @@ These ciphers are **not available in Node.js** but are provided by RNQC via libs
 ### wrapping algorithms
 | Algorithm           | Status |
 | ------------------- | :----: |
-| `AES-CBC`           | ❌ |
-| `AES-CTR`           | ❌ |
+| `AES-CBC`           | ✅ |
+| `AES-CTR`           | ✅ |
 | `AES-GCM`           | ✅ |
 | `AES-KW`            | ✅ |
 | `AES-OCB`           | ❌ |
 | `ChaCha20-Poly1305` | ✅ |
-| `RSA-OAEP`          | ❌ |
+| `RSA-OAEP`          | ✅ |
