@@ -83,14 +83,18 @@ jobs:
             ~/Library/Caches/CocoaPods
             packages/react-native-quick-crypto/ios/libsodium-stable
             packages/react-native-quick-crypto/deps
-          key: ${{ runner.os }}-pods
+          key: ${{ runner.os }}-pods-${{ github.run_id }}
+          restore-keys: |
+            ${{ runner.os }}-pods-
 
       - name: Restore DerivedData cache
         id: dd-cache
         uses: actions/cache/restore@v5
         with:
           path: ${{ env.DERIVED_DATA_PATH }}
-          key: ${{ runner.os }}-dd
+          key: ${{ runner.os }}-dd-${{ github.run_id }}
+          restore-keys: |
+            ${{ runner.os }}-dd-
 
       - name: Boot iOS Simulator (background)
         run: |
@@ -235,14 +239,14 @@ jobs:
             ~/Library/Caches/CocoaPods
             packages/react-native-quick-crypto/ios/libsodium-stable
             packages/react-native-quick-crypto/deps
-          key: ${{ runner.os }}-pods
+          key: ${{ runner.os }}-pods-${{ github.run_id }}
 
       - name: Save DerivedData cache
         if: always()
         uses: actions/cache/save@v5
         with:
           path: ${{ env.DERIVED_DATA_PATH }}
-          key: ${{ runner.os }}-dd
+          key: ${{ runner.os }}-dd-${{ github.run_id }}
 
       - name: Exit with Test Result
         if: always()

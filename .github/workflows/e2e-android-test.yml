@@ -87,7 +87,9 @@ jobs:
             packages/react-native-quick-crypto/android/build
             node_modules/.bun/react-native-nitro-modules*/node_modules/react-native-nitro-modules/android/.cxx
             node_modules/.bun/react-native-nitro-modules*/node_modules/react-native-nitro-modules/android/build
-          key: ${{ runner.os }}-gradle
+          key: ${{ runner.os }}-gradle-${{ github.run_id }}
+          restore-keys: |
+            ${{ runner.os }}-gradle-
 
       - name: Build Android App
         working-directory: ./example/android
@@ -139,7 +141,7 @@ jobs:
             packages/react-native-quick-crypto/android/build
             node_modules/.bun/react-native-nitro-modules*/node_modules/react-native-nitro-modules/android/.cxx
             node_modules/.bun/react-native-nitro-modules*/node_modules/react-native-nitro-modules/android/build
-          key: ${{ runner.os }}-gradle
+          key: ${{ runner.os }}-gradle-${{ github.run_id }}
 
   # ============================================================================
   # AVD Job - Create and cache emulator snapshot (runs in parallel with build)
@@ -165,7 +167,9 @@ jobs:
           path: |
             ~/.android/avd/*
             ~/.android/adb*
-          key: avd-pixel7pro-${{ env.EMULATOR_API_LEVEL }}
+          key: avd-pixel7pro-${{ env.EMULATOR_API_LEVEL }}-${{ github.run_id }}
+          restore-keys: |
+            avd-pixel7pro-${{ env.EMULATOR_API_LEVEL }}-
 
       - name: Create AVD and Generate Snapshot for Caching
         if: steps.avd-cache.outputs.cache-hit != 'true'
@@ -180,13 +184,13 @@ jobs:
           script: echo "Generated AVD snapshot for caching."
 
       - name: Save AVD cache
-        if: always()
+        if: steps.avd-cache.outputs.cache-hit != 'true'
         uses: actions/cache/save@v5
         with:
           path: |
             ~/.android/avd/*
             ~/.android/adb*
-          key: avd-pixel7pro-${{ env.EMULATOR_API_LEVEL }}
+          key: avd-pixel7pro-${{ env.EMULATOR_API_LEVEL }}-${{ github.run_id }}
 
   # ============================================================================
   # Test Job - Run E2E tests (needs both build and AVD)
@@ -222,7 +226,9 @@ jobs:
         uses: actions/cache/restore@v5
         with:
           path: node_modules
-          key: ${{ runner.os }}-node-modules
+          key: ${{ runner.os }}-node-modules-${{ github.run_id }}
+          restore-keys: |
+            ${{ runner.os }}-node-modules-
 
       - name: Install Dependencies
         run: bun install
@@ -231,7 +237,7 @@ jobs:
         uses: actions/cache/save@v5
         with:
           path: node_modules
-          key: ${{ runner.os }}-node-modules
+          key: ${{ runner.os }}-node-modules-${{ github.run_id }}
 
       - name: Download APK
         uses: actions/download-artifact@v4
@@ -257,7 +263,9 @@ jobs:
           path: |
             ~/.android/avd/*
             ~/.android/adb*
-          key: avd-pixel7pro-${{ env.EMULATOR_API_LEVEL }}
+          key: avd-pixel7pro-${{ env.EMULATOR_API_LEVEL }}-${{ github.run_id }}
+          restore-keys: |
+            avd-pixel7pro-${{ env.EMULATOR_API_LEVEL }}-
 
       - name: Run E2E Tests
         uses: reactivecircus/android-emulator-runner@v2

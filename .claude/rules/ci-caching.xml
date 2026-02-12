@@ -37,19 +37,24 @@
     </antipattern>
   </rule>
 
-  <rule severity="HIGH" enforcement="STRICT">
-    <name>Cache Key Design</name>
-    <description>Cache keys should be simple and stable</description>
+  <rule severity="CRITICAL" enforcement="BLOCKING">
+    <name>Cache Key Design — Immutable Keys</name>
+    <description>GitHub Actions caches are IMMUTABLE — cache/save fails if the key already exists</description>
+    <problem>
+      actions/cache/save cannot overwrite an existing cache entry. Using static keys
+      (e.g. runner.os-gradle) means the first save succeeds, but every subsequent save
+      fails with "Unable to reserve cache with key X, another job may be creating this cache."
+      Caches become permanently stale.
+    </problem>
     <guidelines>
-      <guideline>Don't use version suffixes (v2, v3) - just delete caches with gh cache delete --all</guideline>
-      <guideline>Use simple static keys (e.g. runner.os-gradle, runner.os-pods) — no hashFiles()</guideline>
-      <guideline>GitHub Actions cache/save overwrites same-key entries, so caches stay fresh automatically</guideline>
-      <guideline>When caches go stale, just purge with gh cache delete --all</guideline>
+      <guideline>Save key MUST be unique per run: prefix-${{ github.run_id }}</guideline>
+      <guideline>Restore uses exact key + restore-keys prefix fallback to get the latest</guideline>
+      <guideline>Don't use version suffixes (v2, v3) — purge with gh cache delete --all</guideline>
+      <guideline>Old cache entries are evicted automatically by GitHub's LRU policy</guideline>
     </guidelines>
     <example>
-      Pods: runner.os-pods
-      DD: runner.os-dd
-      Gradle: runner.os-gradle
+      Restore: key=runner.os-gradle-${{ github.run_id }}, restore-keys=runner.os-gradle-
+      Save:    key=runner.os-gradle-${{ github.run_id }}
     </example>
   </rule>
 
