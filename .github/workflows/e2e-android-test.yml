@@ -218,8 +218,20 @@ jobs:
       - name: Setup Android SDK
         uses: android-actions/setup-android@v3
 
+      - name: Restore node_modules cache
+        uses: actions/cache/restore@v5
+        with:
+          path: node_modules
+          key: ${{ runner.os }}-node-modules
+
       - name: Install Dependencies
         run: bun install
+
+      - name: Save node_modules cache
+        uses: actions/cache/save@v5
+        with:
+          path: node_modules
+          key: ${{ runner.os }}-node-modules
 
       - name: Download APK
         uses: actions/download-artifact@v4
