@@ -168,7 +168,11 @@ Pod::Spec.new do |s|
     "CLANG_CXX_LANGUAGE_STANDARD" => "c++20",
     "CLANG_ALLOW_NON_MODULAR_INCLUDES_IN_FRAMEWORK_MODULES" => "YES",
     # Exclude ARM NEON source when building x86_64 simulator (no NEON support).
-    "EXCLUDED_SOURCE_FILE_NAMES[sdk=iphonesimulator*][arch=x86_64]" => "deps/blake3/c/blake3_neon.c"
+    "EXCLUDED_SOURCE_FILE_NAMES[sdk=iphonesimulator*][arch=x86_64]" => "deps/blake3/c/blake3_neon.c",
+    # Disable x86 SIMD intrinsics on iOS simulator — the .c implementation files are already
+    # excluded above, but blake3_dispatch.c still references the symbols unless these macros
+    # are defined. Mirrors the Android CMakeLists.txt approach (line 18-22).
+    "GCC_PREPROCESSOR_DEFINITIONS[sdk=iphonesimulator*][arch=x86_64]" => "$(inherited) BLAKE3_NO_AVX512 BLAKE3_NO_AVX2 BLAKE3_NO_SSE41 BLAKE3_NO_SSE2"
   }
 
   # Add cpp subdirectories to header search paths
