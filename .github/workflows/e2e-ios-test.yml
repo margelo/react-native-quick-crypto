@@ -86,6 +86,7 @@ jobs:
             ~/Library/Caches/CocoaPods
             packages/react-native-quick-crypto/ios/libsodium-stable
             packages/react-native-quick-crypto/deps
+            packages/react-native-quick-crypto/OpenSSL.xcframework
           key: ${{ runner.os }}-pods-${{ hashFiles('example/ios/Podfile.lock', 'example/Gemfile.lock') }}
 
       - name: Restore DerivedData cache
@@ -103,7 +104,7 @@ jobs:
 
       - name: Install CocoaPods
         working-directory: ./example
-        run: bun pods
+        run: RCT_USE_RN_DEP=1 RCT_USE_PREBUILT_RNCORE=1 bundle exec pod install --project-directory=ios
 
       - name: Build iOS App
         working-directory: ./example
@@ -122,6 +123,13 @@ jobs:
             ONLY_ACTIVE_ARCH=YES \
             CODE_SIGNING_ALLOWED=NO \
             build 2>&1 | tee $HOME/output/ios-build.log | xcbeautify --renderer github-actions
+
+      - name: Show Build Timing Summary
+        if: always()
+        run: |
+          if [ -f "$HOME/output/ios-build.log" ]; then
+            sed -n '/Build Timing Summary/,/^\*\* BUILD/p' "$HOME/output/ios-build.log"
+          fi
 
       - name: Show ccache stats
         if: always()
