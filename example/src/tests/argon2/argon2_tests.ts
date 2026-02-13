@@ -1,7 +1,6 @@
 import { test } from '../util';
-import { argon2Sync, argon2 } from 'react-native-quick-crypto';
+import { argon2Sync, argon2, Buffer } from 'react-native-quick-crypto';
 import { assert } from 'chai';
-import { Buffer } from '@craftzdog/react-native-buffer';
 
 const SUITE = 'argon2';
 

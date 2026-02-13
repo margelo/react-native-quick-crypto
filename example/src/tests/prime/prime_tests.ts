@@ -53,7 +53,7 @@ test(SUITE, 'checkPrimeSync: verifies generated prime', () => {
 
 test(SUITE, 'generatePrime: async generates a prime', () => {
   return new Promise<void>((resolve, reject) => {
-    generatePrime(64, undefined, (err, prime) => {
+    generatePrime(64, (err, prime) => {
       try {
         assert.isNull(err);
         assert.isOk(prime);
@@ -69,7 +69,7 @@ test(SUITE, 'generatePrime: async generates a prime', () => {
 test(SUITE, 'checkPrime: async checks a prime', () => {
   return new Promise<void>((resolve, reject) => {
     const prime = generatePrimeSync(64);
-    checkPrime(prime as Buffer, undefined, (err, result) => {
+    checkPrime(prime as Buffer, (err, result) => {
       try {
         assert.isNull(err);
         assert.isTrue(result);
