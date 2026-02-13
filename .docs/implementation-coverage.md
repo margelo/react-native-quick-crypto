@@ -18,10 +18,10 @@ These algorithms provide quantum-resistant cryptography.
 
 # `Crypto`
 
-* ❌ Class: `Certificate`
-   * ❌ Static method: `Certificate.exportChallenge(spkac[, encoding])`
-   * ❌ Static method: `Certificate.exportPublicKey(spkac[, encoding])`
-   * ❌ Static method: `Certificate.verifySpkac(spkac[, encoding])`
+* ✅ Class: `Certificate`
+   * ✅ Static method: `Certificate.exportChallenge(spkac[, encoding])`
+   * ✅ Static method: `Certificate.exportPublicKey(spkac[, encoding])`
+   * ✅ Static method: `Certificate.verifySpkac(spkac[, encoding])`
 * ✅ Class: `Cipheriv`
   * ✅ `cipher.final([outputEncoding])`
   * ✅ `cipher.getAuthTag()`
@@ -46,7 +46,7 @@ These algorithms provide quantum-resistant cryptography.
   * ✅ `diffieHellman.verifyError`
 * ✅ Class: `DiffieHellmanGroup`
 * ✅ Class: `ECDH`
-  * ❌ static `ECDH.convertKey(key, curve[, inputEncoding[, outputEncoding[, format]]])`
+  * ✅ static `ECDH.convertKey(key, curve[, inputEncoding[, outputEncoding[, format]]])`
   * ✅ `ecdh.computeSecret(otherPublicKey[, inputEncoding][, outputEncoding])`
   * ✅ `ecdh.generateKeys([encoding[, format]])`
   * ✅ `ecdh.getPrivateKey([encoding])`
@@ -60,14 +60,14 @@ These algorithms provide quantum-resistant cryptography.
 * ✅ Class: `Hmac`
   * ✅ `hmac.digest([encoding])`
   * ✅ `hmac.update(data[, inputEncoding])`
-* 🚧 Class: `KeyObject`
-  * ❌ static `KeyObject.from(key)`
-  * ❌ `keyObject.asymmetricKeyDetails`
+* ✅ Class: `KeyObject`
+  * ✅ static `KeyObject.from(key)`
+  * ✅ `keyObject.asymmetricKeyDetails`
   * ✅ `keyObject.asymmetricKeyType`
   * ✅ `keyObject.export([options])`
   * ✅ `keyObject.equals(otherKeyObject)`
   * ✅ `keyObject.symmetricKeySize`
-  * ❌ `keyObject.toCryptoKey(algorithm, extractable, keyUsages)`
+  * ✅ `keyObject.toCryptoKey(algorithm, extractable, keyUsages)`
   * ✅ `keyObject.type`
 * ✅ Class: `Sign`
   * ✅ `sign.sign(privateKey[, outputEncoding])`
@@ -102,10 +102,10 @@ These algorithms provide quantum-resistant cryptography.
   * ❌ `x509.validTo`
   * ❌ `x509.verify(publicKey)`
 * 🚧 node:crypto module methods and properties
-  * ❌ `crypto.argon2(algorithm, parameters, callback)`
-  * ❌ `crypto.argon2Sync(algorithm, parameters)`
-  * ❌ `crypto.checkPrime(candidate[, options], callback)`
-  * ❌ `crypto.checkPrimeSync(candidate[, options])`
+  * ✅ `crypto.argon2(algorithm, parameters, callback)`
+  * ✅ `crypto.argon2Sync(algorithm, parameters)`
+  * ✅ `crypto.checkPrime(candidate[, options], callback)`
+  * ✅ `crypto.checkPrimeSync(candidate[, options])`
   * ✅ `crypto.constants`
   * ✅ `crypto.createCipheriv(algorithm, key, iv[, options])`
   * ✅ `crypto.createDecipheriv(algorithm, key, iv[, options])`
@@ -129,11 +129,11 @@ These algorithms provide quantum-resistant cryptography.
   * 🚧 `crypto.generateKeyPair(type, options, callback)`
   * 🚧 `crypto.generateKeyPairSync(type, options)`
   * 🚧 `crypto.generateKeySync(type, options)`
-  * ❌ `crypto.generatePrime(size[, options[, callback]])`
-  * ❌ `crypto.generatePrimeSync(size[, options])`
-  * ❌ `crypto.getCipherInfo(nameOrNid[, options])`
+  * ✅ `crypto.generatePrime(size[, options[, callback]])`
+  * ✅ `crypto.generatePrimeSync(size[, options])`
+  * ✅ `crypto.getCipherInfo(nameOrNid[, options])`
   * ✅ `crypto.getCiphers()`
-  * ❌ `crypto.getCurves()`
+  * ✅ `crypto.getCurves()`
   * ❌ `crypto.getFips()`
   * ✅ `crypto.getHashes()`
   * ✅ `crypto.getRandomValues(typedArray)`
@@ -157,10 +157,10 @@ These algorithms provide quantum-resistant cryptography.
   * ❌ `crypto.setEngine(engine[, flags])`
   * ❌ `crypto.setFips(bool)`
   * ✅ `crypto.sign(algorithm, data, key[, callback])`
-  * 🚧 `crypto.subtle` (see below)
+  * ✅ `crypto.subtle` (see below)
   * ✅ `crypto.timingSafeEqual(a, b)`
   * ✅ `crypto.verify(algorithm, data, key, signature[, callback])`
-  * 🚧 `crypto.webcrypto` (see below)
+  * ✅ `crypto.webcrypto` (see below)
 
 ## `crypto.diffieHellman`
 | type       | Status |
@@ -242,10 +242,10 @@ These ciphers are **not available in Node.js** but are provided by RNQC via libs
 
 # `WebCrypto`
 
-* ❌ Class: `Crypto`
-  * ❌ `crypto.subtle`
-  * ❌ `crypto.getRandomValues(typedArray)`
-  * ❌ `crypto.randomUUID()`
+* ✅ Class: `Crypto`
+  * ✅ `crypto.subtle`
+  * ✅ `crypto.getRandomValues(typedArray)`
+  * ✅ `crypto.randomUUID()`
 * ✅ Class: `CryptoKey`
   * ✅ `cryptoKey.algorithm`
   * ✅ `cryptoKey.extractable`
@@ -254,12 +254,12 @@ These ciphers are **not available in Node.js** but are provided by RNQC via libs
 * ✅ Class: `CryptoKeyPair`
   * ✅ `cryptoKeyPair.privateKey`
   * ✅ `cryptoKeyPair.publicKey`
-* ❌ Class: `CryptoSubtle`
+* 🚧 Class: `CryptoSubtle`
   * (see below)
 
 # `SubtleCrypto`
 
-* ❌ Class: `SubtleCrypto`
+* 🚧 Class: `SubtleCrypto`
   * ❌ static `supports(operation, algorithm[, lengthOrAdditionalAlgorithm])`
   * ❌ `subtle.decapsulateBits(decapsulationAlgorithm, decapsulationKey, ciphertext)`
   * ❌ `subtle.decapsulateKey(decapsulationAlgorithm, decapsulationKey, ciphertext, sharedKeyAlgorithm, extractable, usages)`
