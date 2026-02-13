@@ -2,6 +2,7 @@
 import { Buffer } from '@craftzdog/react-native-buffer';
 
 // API imports
+import * as argon2Module from './argon2';
 import * as keys from './keys';
 import * as blake3 from './blake3';
 import * as cipher from './cipher';
@@ -10,10 +11,12 @@ import { hashExports as hash } from './hash';
 import { hmacExports as hmac } from './hmac';
 import * as hkdf from './hkdf';
 import * as pbkdf2 from './pbkdf2';
+import * as prime from './prime';
 import * as scrypt from './scrypt';
 import * as random from './random';
 import * as ecdh from './ecdh';
 import * as dh from './diffie-hellman';
+import { Certificate } from './certificate';
 import { getCurves } from './ec';
 import { constants } from './constants';
 
@@ -26,6 +29,7 @@ import * as subtle from './subtle';
  * See `docs/implementation-coverage.md` for status.
  */
 const QuickCrypto = {
+  ...argon2Module,
   ...keys,
   ...blake3,
   ...cipher,
@@ -34,12 +38,14 @@ const QuickCrypto = {
   ...hmac,
   ...hkdf,
   ...pbkdf2,
+  ...prime,
   ...scrypt,
   ...random,
   ...ecdh,
   ...dh,
   ...utils,
   ...subtle,
+  Certificate,
   getCurves,
   constants,
   Buffer,
@@ -72,7 +78,9 @@ if (global.process.nextTick == null) {
 
 // exports
 export default QuickCrypto;
+export * from './argon2';
 export * from './blake3';
+export { Certificate } from './certificate';
 export * from './cipher';
 export * from './ed';
 export * from './keys';
@@ -80,6 +88,7 @@ export * from './hash';
 export * from './hmac';
 export * from './hkdf';
 export * from './pbkdf2';
+export * from './prime';
 export * from './scrypt';
 export * from './random';
 export * from './ecdh';

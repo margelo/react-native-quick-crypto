@@ -126,11 +126,22 @@ export class KeyObject {
     this.type = type as 'public' | 'secret' | 'private';
   }
 
-  // static from(key) {
-  //   if (!isCryptoKey(key))
-  //     throw new ERR_INVALID_ARG_TYPE('key', 'CryptoKey', key);
-  //   return key[kKeyObject];
-  // }
+  static from(key: CryptoKey): KeyObject {
+    if (!(key instanceof CryptoKey)) {
+      throw new TypeError(
+        `The "key" argument must be an instance of CryptoKey. Received ${typeof key}`,
+      );
+    }
+    return key.keyObject;
+  }
+
+  toCryptoKey(
+    algorithm: SubtleAlgorithm,
+    extractable: boolean,
+    keyUsages: KeyUsage[],
+  ): CryptoKey {
+    return new CryptoKey(this, algorithm, keyUsages, extractable);
+  }
 
   static createKeyObject(
     type: string,

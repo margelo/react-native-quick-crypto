@@ -125,6 +125,25 @@ std::shared_ptr<ArrayBuffer> HybridKeyObjectHandle::exportKey(std::optional<KFor
       }
     }
 
+    // For EC keys, handle raw format (uncompressed point)
+    if (!format.has_value() && !type.has_value() && keyId == EVP_PKEY_EC && keyType == KeyType::PUBLIC) {
+      const EC_KEY* ec_key = EVP_PKEY_get0_EC_KEY(pkey.get());
+      if (!ec_key)
+        throw std::runtime_error("Failed to get EC key");
+      const EC_GROUP* group = EC_KEY_get0_group(ec_key);
+      const EC_POINT* point = EC_KEY_get0_public_key(ec_key);
+      if (!group || !point)
+        throw std::runtime_error("Failed to get EC public key");
+      size_t len = EC_POINT_point2oct(group, point, POINT_CONVERSION_UNCOMPRESSED, nullptr, 0, nullptr);
+      if (len == 0)
+        throw std::runtime_error("Failed to get EC point size");
+      std::vector<uint8_t> buf(len);
+      if (EC_POINT_point2oct(group, point, POINT_CONVERSION_UNCOMPRESSED, buf.data(), len, nullptr) == 0) {
+        throw std::runtime_error("Failed to encode EC public key");
+      }
+      return ToNativeArrayBuffer(std::string(reinterpret_cast<const char*>(buf.data()), buf.size()));
+    }
+
     // Set default format and type if not provided
     auto exportFormat = format.value_or(KFormatType::DER);
     auto exportType = type.value_or(keyType == KeyType::PUBLIC ? KeyEncoding::SPKI : KeyEncoding::PKCS8);

@@ -113,12 +113,12 @@ function getAlgorithmName(name: string, length: number): string {
 function ecExportKey(key: CryptoKey, format: KWebCryptoKeyFormat): ArrayBuffer {
   const keyObject = key.keyObject;
 
-  if (format === KWebCryptoKeyFormat.kWebCryptoKeyFormatSPKI) {
-    // Export public key in SPKI format
+  if (format === KWebCryptoKeyFormat.kWebCryptoKeyFormatRaw) {
+    return bufferLikeToArrayBuffer(keyObject.handle.exportKey());
+  } else if (format === KWebCryptoKeyFormat.kWebCryptoKeyFormatSPKI) {
     const exported = keyObject.export({ format: 'der', type: 'spki' });
     return bufferLikeToArrayBuffer(exported);
   } else if (format === KWebCryptoKeyFormat.kWebCryptoKeyFormatPKCS8) {
-    // Export private key in PKCS8 format
     const exported = keyObject.export({ format: 'der', type: 'pkcs8' });
     return bufferLikeToArrayBuffer(exported);
   } else {

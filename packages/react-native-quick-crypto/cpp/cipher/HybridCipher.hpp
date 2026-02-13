@@ -8,6 +8,7 @@
 #include <string>
 #include <vector>
 
+#include "CipherInfo.hpp"
 #include "HybridCipherSpec.hpp"
 
 namespace margelo::nitro::crypto {
@@ -39,6 +40,9 @@ class HybridCipher : public HybridCipherSpec {
   std::shared_ptr<ArrayBuffer> getAuthTag() override;
 
   std::vector<std::string> getSupportedCiphers() override;
+
+  std::optional<CipherInfo> getCipherInfo(const std::string& name, std::optional<double> keyLength,
+                                          std::optional<double> ivLength) override;
 
  protected:
   // Protected enums for state management

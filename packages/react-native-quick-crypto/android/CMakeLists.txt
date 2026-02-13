@@ -25,7 +25,9 @@ endif()
 add_library(
   ${PACKAGE_NAME} SHARED
   src/main/cpp/cpp-adapter.cpp
+  ../cpp/argon2/HybridArgon2.cpp
   ../cpp/blake3/HybridBlake3.cpp
+  ../cpp/certificate/HybridCertificate.cpp
   ../cpp/cipher/CCMCipher.cpp
   ../cpp/cipher/GCMCipher.cpp
   ../cpp/cipher/HybridCipher.cpp
@@ -47,6 +49,7 @@ add_library(
   ../cpp/keys/KeyObjectData.cpp
   ../cpp/mldsa/HybridMlDsaKeyPair.cpp
   ../cpp/pbkdf2/HybridPbkdf2.cpp
+  ../cpp/prime/HybridPrime.cpp
   ../cpp/random/HybridRandom.cpp
   ../cpp/rsa/HybridRsaKeyPair.cpp
   ../cpp/scrypt/HybridScrypt.cpp
@@ -66,7 +69,9 @@ include(${CMAKE_SOURCE_DIR}/../nitrogen/generated/android/QuickCrypto+autolinkin
 # local includes
 include_directories(
   "src/main/cpp"
+  "../cpp/argon2"
   "../cpp/blake3"
+  "../cpp/certificate"
   "../cpp/cipher"
   "../cpp/dh"
   "../cpp/ec"
@@ -78,6 +83,7 @@ include_directories(
   "../cpp/keys"
   "../cpp/mldsa"
   "../cpp/pbkdf2"
+  "../cpp/prime"
   "../cpp/random"
   "../cpp/rsa"
   "../cpp/sign"

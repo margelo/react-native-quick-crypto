@@ -28,6 +28,7 @@ class HybridECDH : public HybridECDHSpec {
   void setPrivateKey(const std::shared_ptr<ArrayBuffer>& privateKey) override;
   std::shared_ptr<ArrayBuffer> getPublicKey() override;
   void setPublicKey(const std::shared_ptr<ArrayBuffer>& publicKey) override;
+  std::shared_ptr<ArrayBuffer> convertKey(const std::shared_ptr<ArrayBuffer>& key, const std::string& curve, double format) override;
 
  private:
   EVP_PKEY_ptr _pkey;

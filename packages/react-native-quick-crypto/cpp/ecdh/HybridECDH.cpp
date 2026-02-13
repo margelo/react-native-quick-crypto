@@ -284,6 +284,41 @@ void HybridECDH::setPublicKey(const std::shared_ptr<ArrayBuffer>& publicKey) {
   _pkey = std::move(pkey);
 }
 
+std::shared_ptr<ArrayBuffer> HybridECDH::convertKey(const std::shared_ptr<ArrayBuffer>& key, const std::string& curve, double format) {
+  int nid = getCurveNid(curve);
+  if (nid == NID_undef) {
+    throw std::runtime_error("ECDH: unknown curve: " + curve);
+  }
+
+  EC_GROUP_ptr group(EC_GROUP_new_by_curve_name(nid), EC_GROUP_free);
+  if (!group) {
+    throw std::runtime_error("ECDH: failed to create EC group for curve: " + curve);
+  }
+
+  EC_POINT_ptr point(EC_POINT_new(group.get()), EC_POINT_free);
+  if (!point) {
+    throw std::runtime_error("ECDH: failed to create EC point");
+  }
+
+  if (EC_POINT_oct2point(group.get(), point.get(), key->data(), key->size(), nullptr) != 1) {
+    throw std::runtime_error("ECDH: failed to decode public key");
+  }
+
+  auto form = static_cast<point_conversion_form_t>(static_cast<int>(format));
+
+  size_t len = EC_POINT_point2oct(group.get(), point.get(), form, nullptr, 0, nullptr);
+  if (len == 0) {
+    throw std::runtime_error("ECDH: failed to get converted key length");
+  }
+
+  std::vector<uint8_t> buf(len);
+  if (EC_POINT_point2oct(group.get(), point.get(), form, buf.data(), len, nullptr) == 0) {
+    throw std::runtime_error("ECDH: failed to convert key");
+  }
+
+  return ToNativeArrayBuffer(buf);
+}
+
 void HybridECDH::ensureInitialized() const {
   if (_curveNid == 0 || !_group) {
     throw std::runtime_error("ECDH: not initialized");

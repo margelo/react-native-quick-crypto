@@ -28,16 +28,40 @@ export type CipherOptions =
   | CipherGCMOptions
   | TransformOptions;
 
+export interface CipherInfoResult {
+  name: string;
+  nid: number;
+  mode: string;
+  keyLength: number;
+  blockSize?: number;
+  ivLength?: number;
+}
+
 class CipherUtils {
   private static native =
     NitroModules.createHybridObject<NativeCipher>('Cipher');
   public static getSupportedCiphers(): string[] {
     return this.native.getSupportedCiphers();
   }
+  public static getCipherInfo(
+    name: string,
+    keyLength?: number,
+    ivLength?: number,
+  ): CipherInfoResult | undefined {
+    return this.native.getCipherInfo(name, keyLength, ivLength);
+  }
 }
 
 export function getCiphers(): string[] {
   return CipherUtils.getSupportedCiphers();
+}
+
+export function getCipherInfo(
+  name: string,
+  options?: { keyLength?: number; ivLength?: number },
+): CipherInfoResult | undefined {
+  if (typeof name !== 'string' || name.length === 0) return undefined;
+  return CipherUtils.getCipherInfo(name, options?.keyLength, options?.ivLength);
 }
 
 interface CipherArgs {

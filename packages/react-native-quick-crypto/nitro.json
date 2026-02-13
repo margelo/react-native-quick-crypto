@@ -8,8 +8,14 @@
     "androidCxxLibName": "QuickCrypto"
   },
   "autolinking": {
+    "Argon2": {
+      "cpp": "HybridArgon2"
+    },
     "Blake3": {
       "cpp": "HybridBlake3"
+    },
+    "Certificate": {
+      "cpp": "HybridCertificate"
     },
     "Cipher": {
       "cpp": "HybridCipher"
@@ -46,6 +52,9 @@
     },
     "Pbkdf2": {
       "cpp": "HybridPbkdf2"
+    },
+    "Prime": {
+      "cpp": "HybridPrime"
     },
     "Random": {
       "cpp": "HybridRandom"
