@@ -4,18 +4,22 @@ import { assert } from 'chai';
 
 const SUITE = 'certificate';
 
-// Known valid SPKAC (Netscape Signed Public Key and Challenge)
-// Generated with: openssl spkac -key test.pem -challenge test
+// Node.js test fixture: 2048-bit RSA SPKAC with challenge "this-is-a-challenge"
 const validSpkac =
-  'MIIBXjCByDCBnzANBgkqhkiG9w0BAQEFAAOBjQAwgYkCgYEA3V' +
-  'OalmRSaIBk2fVEKEECNBbOJMFCMHBOBYhBjqRLNeGq8GOWQ6qn' +
-  'FJycJgbYxOWL/4y7FuyFdEiRm3lMiDl0FR2WzhqFDsT7LMfMaV' +
-  'Bv39JMmPOfUoqHaEYAN2Bvw9bMT0DHXpcFVGkDHFnYPFvKfBxKx' +
-  'mCYSiEkGrgK7yDiwl2kCAwEAARYEbm9uZTANBgkqhkiG9w0BAQQ' +
-  'FAAOBgQAwxfKEBHCCfQ4UMsBd0zmrU+ISi2VHDhj9VKZea2Sy3p' +
-  'A/wsjKQqZ4vX0LkbFezJR0RA+Nz1dm31GrKHloXYgqfUTfNOlBO' +
-  'UQOd2mMa8c4qRMGBfY+GSZVY34TFNJrQrcSHTmkOy3Hm6dMR0X' +
-  'qzRA/vGAZ0N0N2g+JFAFKYCBbQ==';
+  'MIICUzCCATswggEiMA0GCSqGSIb3DQEBAQUAA4IBDwAwggEKAoIBAQC33FiI' +
+  'iiexwLe/P8DZx5HsqFlmUO7/lvJ7necJVNwqdZ3ax5jpQB0p6uxfqeOvzcN3' +
+  'k5V7UFb/Am+nkSNZMAZhsWzCU2Z4Pjh50QYz3f0Hour7/yIGStOLyYY3hgLK' +
+  '2K8TbhgjQPhdkw9+QtKlpvbL8fLgONAoGrVOFnRQGcr70iFffsm79mgZhKVM' +
+  'gYiHPJqJgGHvCtkGg9zMgS7p63+Q3ZWedtFS2RhMX3uCBy/mH6EOlRCNBbRm' +
+  'A4xxNzyf5GQaki3T+Iz9tOMjdPP+CwV2LqEdylmBuik8vrfTb3qIHLKKBAI8l' +
+  'XN26wWtA3kN4L7NP+cbKlCRlqctvhmylLH1AgMBAAEWE3RoaXMtaXMtYS1jaG' +
+  'FsbGVuZ2UwDQYJKoZIhvcNAQEEBQADggEBAIozmeW1kfDfAVwRQKileZGLRGCD' +
+  '7AjdHLYEe16xTBPve8Af1bDOyuWsAm4qQLYA4FAFROiKeGqxCtIErEvm87/09' +
+  'tCfF1My/1Uj+INjAk39DK9J9alLlTsrwSgd1lb3YlXY7TyitCmh7iXLo4pVhA' +
+  '2chNA3njiMq3CUpSvGbpzrESL2dv97lv590gUD988wkTDVyYsf0T8+X0Kww3Ag' +
+  'PWGji+2f2i5/jTfD/s1lK1nqi7ZxFm0pGZoy1MJ51SCEy7Y82ajroI+5786nC0' +
+  '2mo9ak7samca4YDZOoxN4d3tax4B/HDF5dqJSm1/31xYLDTfujCM5FkSjRc4m6' +
+  'hnriEkc=';
 
 const invalidSpkac = 'not-a-valid-spkac';
 
@@ -47,10 +51,10 @@ test(SUITE, 'exportPublicKey returns empty buffer for invalid SPKAC', () => {
   assert.strictEqual(result.length, 0);
 });
 
-test(SUITE, 'exportChallenge returns Buffer', () => {
+test(SUITE, 'exportChallenge returns correct challenge string', () => {
   const result = Certificate.exportChallenge(validSpkac);
-  assert.isOk(result);
   assert.isTrue(Buffer.isBuffer(result));
+  assert.strictEqual(result.toString('utf8'), 'this-is-a-challenge');
 });
 
 test(SUITE, 'exportChallenge returns empty buffer for invalid SPKAC', () => {

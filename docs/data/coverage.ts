@@ -44,9 +44,9 @@ export const COVERAGE_DATA: CoverageCategory[] = [
       {
         name: 'Certificate',
         subItems: [
-          { name: 'exportChallenge', status: 'missing' },
-          { name: 'exportPublicKey', status: 'missing' },
-          { name: 'verifySpkac', status: 'missing' },
+          { name: 'exportChallenge', status: 'implemented' },
+          { name: 'exportPublicKey', status: 'implemented' },
+          { name: 'verifySpkac', status: 'implemented' },
         ],
       },
       {
@@ -76,8 +76,15 @@ export const COVERAGE_DATA: CoverageCategory[] = [
       },
       {
         name: 'ECDH',
-        status: 'implemented',
-        note: 'Use simple ECDH methods instead',
+        subItems: [
+          { name: 'convertKey', status: 'implemented', note: 'static' },
+          { name: 'computeSecret', status: 'implemented' },
+          { name: 'generateKeys', status: 'implemented' },
+          { name: 'getPrivateKey', status: 'implemented' },
+          { name: 'getPublicKey', status: 'implemented' },
+          { name: 'setPrivateKey', status: 'implemented' },
+          { name: 'setPublicKey', status: 'implemented' },
+        ],
       },
       {
         name: 'Hash',
@@ -114,11 +121,11 @@ export const COVERAGE_DATA: CoverageCategory[] = [
           { name: 'asymmetricKeyType', status: 'implemented' },
           { name: 'export', status: 'implemented' },
           { name: 'type', status: 'implemented' },
-          { name: 'asymmetricKeyDetails', status: 'missing' },
+          { name: 'asymmetricKeyDetails', status: 'implemented' },
           { name: 'equals', status: 'implemented' },
           { name: 'symmetricKeySize', status: 'implemented' },
-          { name: 'toCryptoKey', status: 'missing' },
-          { name: 'from', status: 'missing', note: 'static' },
+          { name: 'toCryptoKey', status: 'implemented' },
+          { name: 'from', status: 'implemented', note: 'static' },
         ],
       },
       {
@@ -130,8 +137,8 @@ export const COVERAGE_DATA: CoverageCategory[] = [
   {
     title: 'Crypto Methods',
     items: [
-      { name: 'argon2', status: 'missing' },
-      { name: 'checkPrime', status: 'missing' },
+      { name: 'argon2', status: 'implemented' },
+      { name: 'checkPrime', status: 'implemented' },
       { name: 'constants', status: 'implemented' },
       { name: 'createCipheriv', status: 'implemented' },
       { name: 'createDecipheriv', status: 'implemented' },
@@ -201,8 +208,8 @@ export const COVERAGE_DATA: CoverageCategory[] = [
           { name: 'hmac', status: 'implemented' },
         ],
       },
-      { name: 'generatePrime', status: 'missing' },
-      { name: 'getCipherInfo', status: 'missing' },
+      { name: 'generatePrime', status: 'implemented' },
+      { name: 'getCipherInfo', status: 'implemented' },
       { name: 'getCiphers', status: 'implemented' },
       { name: 'getCurves', status: 'implemented' },
       { name: 'getDiffieHellman', status: 'implemented' },
