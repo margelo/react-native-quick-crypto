@@ -57,18 +57,11 @@ export function getCiphers(): string[] {
 }
 
 export function getCipherInfo(
-  nameOrNid: string | number,
+  name: string,
   options?: { keyLength?: number; ivLength?: number },
 ): CipherInfoResult | undefined {
-  if (typeof nameOrNid === 'string') {
-    if (nameOrNid.length === 0) return undefined;
-    return CipherUtils.getCipherInfo(
-      nameOrNid,
-      options?.keyLength,
-      options?.ivLength,
-    );
-  }
-  throw new TypeError('nameOrNid must be a string');
+  if (typeof name !== 'string' || name.length === 0) return undefined;
+  return CipherUtils.getCipherInfo(name, options?.keyLength, options?.ivLength);
 }
 
 interface CipherArgs {

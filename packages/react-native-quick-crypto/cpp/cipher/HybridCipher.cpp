@@ -376,7 +376,7 @@ std::optional<CipherInfo> HybridCipher::getCipherInfo(const std::string& name, s
     }
   }
 
-  std::string name_str(name);
+  std::string name_str(cipher.getName());
   std::transform(name_str.begin(), name_str.end(), name_str.begin(), ::tolower);
 
   std::string mode_str(cipher.getModeLabel());

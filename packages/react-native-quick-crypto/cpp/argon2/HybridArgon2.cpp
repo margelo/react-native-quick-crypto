@@ -1,6 +1,7 @@
 #include <NitroModules/ArrayBuffer.hpp>
 #include <memory>
 #include <ncrypto.h>
+#include <openssl/err.h>
 #include <openssl/opensslv.h>
 #include <string>
 
@@ -50,7 +51,9 @@ static std::shared_ptr<ArrayBuffer> hashImpl(const std::string& algorithm, const
                       static_cast<uint32_t>(passes), static_cast<uint32_t>(version), secretBuf, adBuf, type);
 
   if (!result) {
-    throw std::runtime_error("Argon2 operation failed");
+    unsigned long err = ERR_peek_last_error();
+    const char* reason = err ? ERR_reason_error_string(err) : nullptr;
+    throw std::runtime_error(reason ? std::string("Argon2 operation failed: ") + reason : "Argon2 operation failed");
   }
 
   return ToNativeArrayBuffer(reinterpret_cast<const uint8_t*>(result.get()), result.size());

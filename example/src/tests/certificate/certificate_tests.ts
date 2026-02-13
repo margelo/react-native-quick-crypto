@@ -21,9 +21,7 @@ const invalidSpkac = 'not-a-valid-spkac';
 
 test(SUITE, 'verifySpkac returns true for valid SPKAC', () => {
   const result = Certificate.verifySpkac(validSpkac);
-  assert.isBoolean(result);
-  // Note: result may be false if OpenSSL version doesn't support the specific key format
-  // The important thing is that it doesn't throw
+  assert.isTrue(result);
 });
 
 test(SUITE, 'verifySpkac returns false for invalid SPKAC', () => {

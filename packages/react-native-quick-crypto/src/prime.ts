@@ -66,16 +66,18 @@ export function generatePrimeSync(
   return result;
 }
 
+type GeneratePrimeCallback = (
+  err: Error | null,
+  prime: Buffer | bigint,
+) => void;
+
 export function generatePrime(
   size: number,
-  options?: GeneratePrimeOptions,
-  callback?: (err: Error | null, prime: Buffer | bigint) => void,
+  options: GeneratePrimeOptions | GeneratePrimeCallback,
+  callback?: GeneratePrimeCallback,
 ): void {
   if (typeof options === 'function') {
-    callback = options as unknown as (
-      err: Error | null,
-      prime: Buffer | bigint,
-    ) => void;
+    callback = options;
     options = {};
   }
   const safe = options?.safe ?? false;
@@ -108,16 +110,18 @@ export function checkPrimeSync(
   return getNative().checkPrimeSync(buf, checks);
 }
 
+type CheckPrimeCallback = (err: Error | null, result: boolean) => void;
+
 export function checkPrime(
   candidate: BinaryLike | bigint,
-  options?: CheckPrimeOptions | ((err: Error | null, result: boolean) => void),
-  callback?: (err: Error | null, result: boolean) => void,
+  options: CheckPrimeOptions | CheckPrimeCallback,
+  callback?: CheckPrimeCallback,
 ): void {
   if (typeof options === 'function') {
     callback = options;
     options = {};
   }
-  const checks = (options as CheckPrimeOptions)?.checks ?? 0;
+  const checks = options.checks ?? 0;
   const buf =
     typeof candidate === 'bigint'
       ? bigIntToBuffer(candidate)
