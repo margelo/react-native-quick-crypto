@@ -38,23 +38,25 @@
   </rule>
 
   <rule severity="CRITICAL" enforcement="BLOCKING">
-    <name>Cache Key Design — Immutable Keys</name>
-    <description>GitHub Actions caches are IMMUTABLE — cache/save fails if the key already exists</description>
+    <name>Cache Key Design — Content-Addressed Keys</name>
+    <description>Use hashFiles() for cache keys so identical inputs produce cache hits</description>
     <problem>
-      actions/cache/save cannot overwrite an existing cache entry. Using static keys
-      (e.g. runner.os-gradle) means the first save succeeds, but every subsequent save
-      fails with "Unable to reserve cache with key X, another job may be creating this cache."
-      Caches become permanently stale.
+      GitHub Actions caches are immutable — once saved, a key cannot be overwritten.
+      Using github.run_id makes keys unique per run, so the primary key NEVER hits on
+      restore. Every build falls through to restore-keys and gets a stale cache that
+      xcodebuild/Gradle must then re-validate, which can be slower than a clean build.
     </problem>
     <guidelines>
-      <guideline>Save key MUST be unique per run: prefix-${{ github.run_id }}</guideline>
-      <guideline>Restore uses exact key + restore-keys prefix fallback to get the latest</guideline>
+      <guideline>Use hashFiles() of lock files for cache keys (Podfile.lock, Gemfile.lock, bun.lock)</guideline>
+      <guideline>Include Xcode version in DerivedData key suffix (e.g. -xcode26.2)</guideline>
+      <guideline>Use actions/cache@v5 (unified) instead of separate cache/restore + cache/save</guideline>
+      <guideline>Use restore-keys for DerivedData (partial hits useful), NOT for Pods (stale Pods break builds)</guideline>
       <guideline>Don't use version suffixes (v2, v3) — purge with gh cache delete --all</guideline>
       <guideline>Old cache entries are evicted automatically by GitHub's LRU policy</guideline>
     </guidelines>
     <example>
-      Restore: key=runner.os-gradle-${{ github.run_id }}, restore-keys=runner.os-gradle-
-      Save:    key=runner.os-gradle-${{ github.run_id }}
+      Pods: key=runner.os-pods-${{ hashFiles('example/ios/Podfile.lock', 'example/Gemfile.lock') }}
+      DD:   key=runner.os-dd-${{ hashFiles('...lockfiles...') }}-xcode26.2, restore-keys=runner.os-dd-
     </example>
   </rule>
 

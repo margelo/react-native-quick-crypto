@@ -25,7 +25,7 @@ on:
 
 jobs:
   e2e-tests-ios:
-    runs-on: macos-15
+    runs-on: macOS-26
     env:
       OUTPUT_DIR: ~/output
       USE_CCACHE: '1'
@@ -40,6 +40,9 @@ jobs:
         run: |
           sudo xcode-select -s "/Applications/Xcode_26.2.app/Contents/Developer"
           xcodebuild -version
+
+      - name: Install xcbeautify
+        run: brew install xcbeautify
 
       - name: Setup ccache
         uses: hendrikmuhs/ccache-action@v1.2
@@ -75,7 +78,7 @@ jobs:
 
       - name: Restore CocoaPods cache
         id: pods-cache
-        uses: actions/cache/restore@v5
+        uses: actions/cache@v5
         with:
           path: |
             example/ios/Pods
@@ -83,16 +86,15 @@ jobs:
             ~/Library/Caches/CocoaPods
             packages/react-native-quick-crypto/ios/libsodium-stable
             packages/react-native-quick-crypto/deps
-          key: ${{ runner.os }}-pods-${{ github.run_id }}
-          restore-keys: |
-            ${{ runner.os }}-pods-
+            packages/react-native-quick-crypto/OpenSSL.xcframework
+          key: ${{ runner.os }}-pods-${{ hashFiles('example/ios/Podfile.lock', 'example/Gemfile.lock') }}
 
       - name: Restore DerivedData cache
         id: dd-cache
-        uses: actions/cache/restore@v5
+        uses: actions/cache@v5
         with:
           path: ${{ env.DERIVED_DATA_PATH }}
-          key: ${{ runner.os }}-dd-${{ github.run_id }}
+          key: ${{ runner.os }}-dd-${{ hashFiles('example/ios/Podfile.lock', 'example/Gemfile.lock', 'bun.lock') }}-xcode26.2
           restore-keys: |
             ${{ runner.os }}-dd-
 
@@ -102,24 +104,32 @@ jobs:
 
       - name: Install CocoaPods
         working-directory: ./example
-        run: bun pods
+        run: RCT_USE_RN_DEP=1 RCT_USE_PREBUILT_RNCORE=1 bundle exec pod install --project-directory=ios
 
       - name: Build iOS App
         working-directory: ./example
         run: |
-          echo "Building iOS app with xcodebuild..."
           set -o pipefail
           xcodebuild \
             CC=clang CPLUSPLUS=clang++ LD=clang LDPLUSPLUS=clang++ \
             -derivedDataPath ios/build \
+            -UseModernBuildSystem=YES \
             -workspace ios/QuickCryptoExample.xcworkspace \
             -scheme QuickCryptoExample \
             -sdk iphonesimulator \
             -configuration Debug \
             -destination "platform=iOS Simulator,name=${{ env.DEVICE_NAME }}" \
+            -showBuildTimingSummary \
             ONLY_ACTIVE_ARCH=YES \
             CODE_SIGNING_ALLOWED=NO \
-            build > $HOME/output/ios-build.log 2>&1
+            build 2>&1 | tee $HOME/output/ios-build.log | xcbeautify --renderer github-actions
+
+      - name: Show Build Timing Summary
+        if: always()
+        run: |
+          if [ -f "$HOME/output/ios-build.log" ]; then
+            sed -n '/Build Timing Summary/,/^\*\* BUILD/p' "$HOME/output/ios-build.log"
+          fi
 
       - name: Show ccache stats
         if: always()
@@ -228,25 +238,6 @@ jobs:
             ${{ env.OUTPUT_DIR }}/*.log
             ${{ env.OUTPUT_DIR }}/screenshots/*.png
           retention-days: 5
-
-      - name: Save CocoaPods cache
-        if: always()
-        uses: actions/cache/save@v5
-        with:
-          path: |
-            example/ios/Pods
-            ~/.cocoapods/repos
-            ~/Library/Caches/CocoaPods
-            packages/react-native-quick-crypto/ios/libsodium-stable
-            packages/react-native-quick-crypto/deps
-          key: ${{ runner.os }}-pods-${{ github.run_id }}
-
-      - name: Save DerivedData cache
-        if: always()
-        uses: actions/cache/save@v5
-        with:
-          path: ${{ env.DERIVED_DATA_PATH }}
-          key: ${{ runner.os }}-dd-${{ github.run_id }}
 
       - name: Exit with Test Result
         if: always()
