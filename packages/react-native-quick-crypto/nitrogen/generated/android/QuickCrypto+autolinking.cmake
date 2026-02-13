@@ -33,7 +33,9 @@ target_sources(
   # Autolinking Setup
   ../nitrogen/generated/android/QuickCryptoOnLoad.cpp
   # Shared Nitrogen C++ sources
+  ../nitrogen/generated/shared/c++/HybridArgon2Spec.cpp
   ../nitrogen/generated/shared/c++/HybridBlake3Spec.cpp
+  ../nitrogen/generated/shared/c++/HybridCertificateSpec.cpp
   ../nitrogen/generated/shared/c++/HybridCipherSpec.cpp
   ../nitrogen/generated/shared/c++/HybridCipherFactorySpec.cpp
   ../nitrogen/generated/shared/c++/HybridDiffieHellmanSpec.cpp
@@ -46,6 +48,7 @@ target_sources(
   ../nitrogen/generated/shared/c++/HybridKeyObjectHandleSpec.cpp
   ../nitrogen/generated/shared/c++/HybridMlDsaKeyPairSpec.cpp
   ../nitrogen/generated/shared/c++/HybridPbkdf2Spec.cpp
+  ../nitrogen/generated/shared/c++/HybridPrimeSpec.cpp
   ../nitrogen/generated/shared/c++/HybridRandomSpec.cpp
   ../nitrogen/generated/shared/c++/HybridRsaCipherSpec.cpp
   ../nitrogen/generated/shared/c++/HybridRsaKeyPairSpec.cpp
