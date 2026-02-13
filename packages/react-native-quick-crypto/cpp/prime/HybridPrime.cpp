@@ -6,18 +6,15 @@ namespace margelo::nitro::crypto {
 
 using namespace ncrypto;
 
-static BignumPointer toBignum(
-    const std::optional<std::shared_ptr<ArrayBuffer>>& buf) {
+static BignumPointer toBignum(const std::optional<std::shared_ptr<ArrayBuffer>>& buf) {
   if (!buf.has_value() || buf.value()->size() == 0) {
     return BignumPointer();
   }
   return BignumPointer(buf.value()->data(), buf.value()->size());
 }
 
-static std::shared_ptr<ArrayBuffer> generatePrimeImpl(
-    double size, bool safe,
-    const std::optional<std::shared_ptr<ArrayBuffer>>& add,
-    const std::optional<std::shared_ptr<ArrayBuffer>>& rem) {
+static std::shared_ptr<ArrayBuffer> generatePrimeImpl(double size, bool safe, const std::optional<std::shared_ptr<ArrayBuffer>>& add,
+                                                      const std::optional<std::shared_ptr<ArrayBuffer>>& rem) {
   int bits = static_cast<int>(size);
 
   auto addBn = toBignum(add);
@@ -37,31 +34,23 @@ static std::shared_ptr<ArrayBuffer> generatePrimeImpl(
   return ToNativeArrayBuffer(encoded.get<uint8_t>(), encoded.size());
 }
 
-std::shared_ptr<Promise<std::shared_ptr<ArrayBuffer>>>
-HybridPrime::generatePrime(
-    double size, bool safe,
-    const std::optional<std::shared_ptr<ArrayBuffer>>& add,
-    const std::optional<std::shared_ptr<ArrayBuffer>>& rem) {
+std::shared_ptr<Promise<std::shared_ptr<ArrayBuffer>>> HybridPrime::generatePrime(double size, bool safe,
+                                                                                  const std::optional<std::shared_ptr<ArrayBuffer>>& add,
+                                                                                  const std::optional<std::shared_ptr<ArrayBuffer>>& rem) {
   auto addCopy = add.has_value() ? std::make_optional(ToNativeArrayBuffer(add.value())) : std::nullopt;
   auto remCopy = rem.has_value() ? std::make_optional(ToNativeArrayBuffer(rem.value())) : std::nullopt;
 
-  return Promise<std::shared_ptr<ArrayBuffer>>::async(
-      [size, safe,
-       addCopy = std::move(addCopy),
-       remCopy = std::move(remCopy)]() {
-        return generatePrimeImpl(size, safe, addCopy, remCopy);
-      });
+  return Promise<std::shared_ptr<ArrayBuffer>>::async([size, safe, addCopy = std::move(addCopy), remCopy = std::move(remCopy)]() {
+    return generatePrimeImpl(size, safe, addCopy, remCopy);
+  });
 }
 
-std::shared_ptr<ArrayBuffer> HybridPrime::generatePrimeSync(
-    double size, bool safe,
-    const std::optional<std::shared_ptr<ArrayBuffer>>& add,
-    const std::optional<std::shared_ptr<ArrayBuffer>>& rem) {
+std::shared_ptr<ArrayBuffer> HybridPrime::generatePrimeSync(double size, bool safe, const std::optional<std::shared_ptr<ArrayBuffer>>& add,
+                                                            const std::optional<std::shared_ptr<ArrayBuffer>>& rem) {
   return generatePrimeImpl(size, safe, add, rem);
 }
 
-bool HybridPrime::checkPrimeSync(
-    const std::shared_ptr<ArrayBuffer>& candidate, double checks) {
+bool HybridPrime::checkPrimeSync(const std::shared_ptr<ArrayBuffer>& candidate, double checks) {
   BignumPointer bn(candidate->data(), candidate->size());
   if (!bn) {
     throw std::runtime_error("Invalid candidate");
@@ -74,8 +63,7 @@ bool HybridPrime::checkPrimeSync(
   return result == 1;
 }
 
-std::shared_ptr<Promise<bool>> HybridPrime::checkPrime(
-    const std::shared_ptr<ArrayBuffer>& candidate, double checks) {
+std::shared_ptr<Promise<bool>> HybridPrime::checkPrime(const std::shared_ptr<ArrayBuffer>& candidate, double checks) {
   auto candidateCopy = ToNativeArrayBuffer(candidate);
   return Promise<bool>::async([candidateCopy, checks]() {
     BignumPointer bn(candidateCopy->data(), candidateCopy->size());

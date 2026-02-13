@@ -337,36 +337,40 @@ std::vector<std::string> HybridCipher::getSupportedCiphers() {
   return cipher_names;
 }
 
-std::optional<CipherInfo> HybridCipher::getCipherInfo(
-    const std::string& name,
-    std::optional<double> keyLength,
-    std::optional<double> ivLength) {
+std::optional<CipherInfo> HybridCipher::getCipherInfo(const std::string& name, std::optional<double> keyLength,
+                                                      std::optional<double> ivLength) {
   auto cipher = ncrypto::Cipher::FromName(name.c_str());
-  if (!cipher) return std::nullopt;
+  if (!cipher)
+    return std::nullopt;
 
   size_t iv_length = cipher.getIvLength();
   size_t key_length = cipher.getKeyLength();
 
   if (keyLength.has_value() || ivLength.has_value()) {
     auto ctx = ncrypto::CipherCtxPointer::New();
-    if (!ctx.init(cipher, true)) return std::nullopt;
+    if (!ctx.init(cipher, true))
+      return std::nullopt;
 
     if (keyLength.has_value()) {
       size_t check_len = static_cast<size_t>(keyLength.value());
-      if (!ctx.setKeyLength(check_len)) return std::nullopt;
+      if (!ctx.setKeyLength(check_len))
+        return std::nullopt;
       key_length = check_len;
     }
 
     if (ivLength.has_value()) {
       size_t check_len = static_cast<size_t>(ivLength.value());
       if (cipher.isCcmMode()) {
-        if (check_len < 7 || check_len > 13) return std::nullopt;
+        if (check_len < 7 || check_len > 13)
+          return std::nullopt;
       } else if (cipher.isGcmMode()) {
         // GCM accepts flexible IV lengths
       } else if (cipher.isOcbMode()) {
-        if (!ctx.setIvLength(check_len)) return std::nullopt;
+        if (!ctx.setIvLength(check_len))
+          return std::nullopt;
       } else {
-        if (check_len != iv_length) return std::nullopt;
+        if (check_len != iv_length)
+          return std::nullopt;
       }
       iv_length = check_len;
     }
@@ -387,14 +391,7 @@ std::optional<CipherInfo> HybridCipher::getCipherInfo(
     iv_len = static_cast<double>(iv_length);
   }
 
-  return CipherInfo{
-    name_str,
-    static_cast<double>(cipher.getNid()),
-    mode_str,
-    static_cast<double>(key_length),
-    block_size,
-    iv_len
-  };
+  return CipherInfo{name_str, static_cast<double>(cipher.getNid()), mode_str, static_cast<double>(key_length), block_size, iv_len};
 }
 
 } // namespace margelo::nitro::crypto
