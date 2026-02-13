@@ -18,7 +18,7 @@ test(SUITE, 'getCipherInfo: returns info for aes-256-cbc', () => {
 test(SUITE, 'getCipherInfo: returns info for aes-128-gcm', () => {
   const info = getCipherInfo('aes-128-gcm');
   assert.isOk(info);
-  assert.strictEqual(info!.name, 'aes-128-gcm');
+  assert.strictEqual(info!.name, 'id-aes128-gcm');
   assert.strictEqual(info!.keyLength, 16);
   assert.strictEqual(info!.ivLength, 12);
   assert.strictEqual(info!.mode, 'gcm');
