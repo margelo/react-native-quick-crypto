@@ -8,6 +8,15 @@ type CipherArgs = {
   authTagLen?: number;
 };
 
+interface CipherInfo {
+  name: string;
+  nid: number;
+  mode: string;
+  keyLength: number;
+  blockSize?: number;
+  ivLength?: number;
+}
+
 export interface Cipher extends HybridObject<{ ios: 'c++'; android: 'c++' }> {
   update(data: ArrayBuffer): ArrayBuffer;
   final(): ArrayBuffer;
@@ -17,6 +26,11 @@ export interface Cipher extends HybridObject<{ ios: 'c++'; android: 'c++' }> {
   setAuthTag(tag: ArrayBuffer): boolean;
   getAuthTag(): ArrayBuffer;
   getSupportedCiphers(): string[];
+  getCipherInfo(
+    name: string,
+    keyLength?: number,
+    ivLength?: number,
+  ): CipherInfo | undefined;
 }
 
 export interface CipherFactory

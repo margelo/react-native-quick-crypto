@@ -22,6 +22,7 @@ namespace margelo::nitro::crypto {
       prototype.registerHybridMethod("setAuthTag", &HybridCipherSpec::setAuthTag);
       prototype.registerHybridMethod("getAuthTag", &HybridCipherSpec::getAuthTag);
       prototype.registerHybridMethod("getSupportedCiphers", &HybridCipherSpec::getSupportedCiphers);
+      prototype.registerHybridMethod("getCipherInfo", &HybridCipherSpec::getCipherInfo);
     });
   }
 

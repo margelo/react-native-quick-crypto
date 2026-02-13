@@ -15,12 +15,15 @@
 
 // Forward declaration of `CipherArgs` to properly resolve imports.
 namespace margelo::nitro::crypto { struct CipherArgs; }
+// Forward declaration of `CipherInfo` to properly resolve imports.
+namespace margelo::nitro::crypto { struct CipherInfo; }
 
 #include <NitroModules/ArrayBuffer.hpp>
 #include "CipherArgs.hpp"
 #include <optional>
 #include <string>
 #include <vector>
+#include "CipherInfo.hpp"
 
 namespace margelo::nitro::crypto {
 
@@ -61,6 +64,7 @@ namespace margelo::nitro::crypto {
       virtual bool setAuthTag(const std::shared_ptr<ArrayBuffer>& tag) = 0;
       virtual std::shared_ptr<ArrayBuffer> getAuthTag() = 0;
       virtual std::vector<std::string> getSupportedCiphers() = 0;
+      virtual std::optional<CipherInfo> getCipherInfo(const std::string& name, std::optional<double> keyLength, std::optional<double> ivLength) = 0;
 
     protected:
       // Hybrid Setup
