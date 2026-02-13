@@ -8,4 +8,5 @@ export interface ECDH extends HybridObject<{ ios: 'c++'; android: 'c++' }> {
   setPrivateKey(privateKey: ArrayBuffer): void;
   getPublicKey(): ArrayBuffer;
   setPublicKey(publicKey: ArrayBuffer): void;
+  convertKey(key: ArrayBuffer, curve: string, format: number): ArrayBuffer;
 }

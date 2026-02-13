@@ -2,7 +2,20 @@ import { NitroModules } from 'react-native-nitro-modules';
 import type { ECDH as ECDHInterface } from './specs/ecdh.nitro';
 import { Buffer } from '@craftzdog/react-native-buffer';
 
+const POINT_CONVERSION_COMPRESSED = 2;
+const POINT_CONVERSION_UNCOMPRESSED = 4;
+const POINT_CONVERSION_HYBRID = 6;
+
 export class ECDH {
+  private static _convertKeyHybrid: ECDHInterface | undefined;
+  private static get convertKeyHybrid(): ECDHInterface {
+    if (!this._convertKeyHybrid) {
+      this._convertKeyHybrid =
+        NitroModules.createHybridObject<ECDHInterface>('ECDH');
+    }
+    return this._convertKeyHybrid;
+  }
+
   private _hybrid: ECDHInterface;
 
   constructor(curveName: string) {
@@ -68,6 +81,52 @@ export class ECDH {
       keyBuf = Buffer.from(publicKey, encoding);
     }
     this._hybrid.setPublicKey(keyBuf.buffer as ArrayBuffer);
+  }
+
+  static convertKey(
+    key: Buffer | string,
+    curve: string,
+    inputEncoding?: BufferEncoding,
+    outputEncoding?: BufferEncoding,
+    format?: 'uncompressed' | 'compressed' | 'hybrid',
+  ): Buffer | string {
+    let keyBuf: Buffer;
+    if (Buffer.isBuffer(key)) {
+      keyBuf = key;
+    } else {
+      keyBuf = Buffer.from(key, inputEncoding);
+    }
+
+    let formatNum: number;
+    switch (format) {
+      case 'compressed':
+        formatNum = POINT_CONVERSION_COMPRESSED;
+        break;
+      case 'hybrid':
+        formatNum = POINT_CONVERSION_HYBRID;
+        break;
+      case 'uncompressed':
+      case undefined:
+        formatNum = POINT_CONVERSION_UNCOMPRESSED;
+        break;
+      default:
+        throw new TypeError(
+          `Invalid point conversion format: ${format as string}`,
+        );
+    }
+
+    const result = Buffer.from(
+      ECDH.convertKeyHybrid.convertKey(
+        keyBuf.buffer as ArrayBuffer,
+        curve,
+        formatNum,
+      ),
+    );
+
+    if (outputEncoding) {
+      return result.toString(outputEncoding);
+    }
+    return result;
   }
 }
 
