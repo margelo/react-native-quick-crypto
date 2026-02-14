@@ -28,11 +28,12 @@ import {
 } from './keys';
 import type { CryptoKeyPair } from './utils/types';
 import { bufferLikeToArrayBuffer } from './utils/conversion';
+import { argon2Sync } from './argon2';
 import { lazyDOMException } from './utils/errors';
 import { normalizeHashName, HashContext } from './utils/hashnames';
 import { validateMaxBufferLength } from './utils/validation';
 import { asyncDigest } from './hash';
-import { createSecretKey } from './keys';
+import { createSecretKey, createPublicKey } from './keys';
 import { NitroModules } from 'react-native-nitro-modules';
 import type { KeyObjectHandle } from './specs/keyObjectHandle.nitro';
 import type { RsaCipher } from './specs/rsaCipher.nitro';
@@ -1364,6 +1365,45 @@ const checkCryptoKeyPairUsages = (pair: CryptoKeyPair) => {
   );
 };
 
+function argon2DeriveBits(
+  algorithm: SubtleAlgorithm,
+  baseKey: CryptoKey,
+  length: number,
+): ArrayBuffer {
+  if (length === 0 || length === null || length % 8 !== 0) {
+    throw lazyDOMException(
+      'Invalid Argon2 derived key length',
+      'OperationError',
+    );
+  }
+  if (length < 32) {
+    throw lazyDOMException(
+      'Argon2 derived key length must be at least 32 bits',
+      'OperationError',
+    );
+  }
+
+  const { nonce, parallelism, memory, passes, secretValue, associatedData } =
+    algorithm;
+  const tagLength = length / 8;
+  const message = baseKey.keyObject.export();
+  const algName = algorithm.name.toLowerCase();
+
+  const result = argon2Sync(algName, {
+    message,
+    nonce: nonce ?? new Uint8Array(0),
+    parallelism: parallelism ?? 1,
+    tagLength,
+    memory: memory ?? 65536,
+    passes: passes ?? 3,
+    secret: secretValue,
+    associatedData,
+    version: algorithm.version,
+  });
+
+  return bufferLikeToArrayBuffer(result);
+}
+
 // Type guard to check if result is CryptoKeyPair
 export function isCryptoKeyPair(
   result: CryptoKey | CryptoKeyPair,
@@ -1604,7 +1644,205 @@ const cipherOrWrap = async (
   }
 };
 
+const SUPPORTED_ALGORITHMS: Record<string, Set<string>> = {
+  encrypt: new Set([
+    'RSA-OAEP',
+    'AES-CTR',
+    'AES-CBC',
+    'AES-GCM',
+    'AES-OCB',
+    'ChaCha20-Poly1305',
+  ]),
+  decrypt: new Set([
+    'RSA-OAEP',
+    'AES-CTR',
+    'AES-CBC',
+    'AES-GCM',
+    'AES-OCB',
+    'ChaCha20-Poly1305',
+  ]),
+  sign: new Set([
+    'RSASSA-PKCS1-v1_5',
+    'RSA-PSS',
+    'ECDSA',
+    'HMAC',
+    'Ed25519',
+    'Ed448',
+    'ML-DSA-44',
+    'ML-DSA-65',
+    'ML-DSA-87',
+  ]),
+  verify: new Set([
+    'RSASSA-PKCS1-v1_5',
+    'RSA-PSS',
+    'ECDSA',
+    'HMAC',
+    'Ed25519',
+    'Ed448',
+    'ML-DSA-44',
+    'ML-DSA-65',
+    'ML-DSA-87',
+  ]),
+  digest: new Set(['SHA-1', 'SHA-256', 'SHA-384', 'SHA-512']),
+  generateKey: new Set([
+    'RSASSA-PKCS1-v1_5',
+    'RSA-PSS',
+    'RSA-OAEP',
+    'ECDSA',
+    'ECDH',
+    'Ed25519',
+    'Ed448',
+    'X25519',
+    'X448',
+    'AES-CTR',
+    'AES-CBC',
+    'AES-GCM',
+    'AES-KW',
+    'AES-OCB',
+    'ChaCha20-Poly1305',
+    'HMAC',
+    'ML-DSA-44',
+    'ML-DSA-65',
+    'ML-DSA-87',
+  ]),
+  importKey: new Set([
+    'RSASSA-PKCS1-v1_5',
+    'RSA-PSS',
+    'RSA-OAEP',
+    'ECDSA',
+    'ECDH',
+    'Ed25519',
+    'Ed448',
+    'X25519',
+    'X448',
+    'AES-CTR',
+    'AES-CBC',
+    'AES-GCM',
+    'AES-KW',
+    'AES-OCB',
+    'ChaCha20-Poly1305',
+    'HMAC',
+    'HKDF',
+    'PBKDF2',
+    'Argon2d',
+    'Argon2i',
+    'Argon2id',
+    'ML-DSA-44',
+    'ML-DSA-65',
+    'ML-DSA-87',
+  ]),
+  exportKey: new Set([
+    'RSASSA-PKCS1-v1_5',
+    'RSA-PSS',
+    'RSA-OAEP',
+    'ECDSA',
+    'ECDH',
+    'Ed25519',
+    'Ed448',
+    'X25519',
+    'X448',
+    'AES-CTR',
+    'AES-CBC',
+    'AES-GCM',
+    'AES-KW',
+    'AES-OCB',
+    'ChaCha20-Poly1305',
+    'HMAC',
+    'ML-DSA-44',
+    'ML-DSA-65',
+    'ML-DSA-87',
+  ]),
+  deriveBits: new Set([
+    'PBKDF2',
+    'HKDF',
+    'ECDH',
+    'X25519',
+    'X448',
+    'Argon2d',
+    'Argon2i',
+    'Argon2id',
+  ]),
+  wrapKey: new Set([
+    'AES-CTR',
+    'AES-CBC',
+    'AES-GCM',
+    'AES-KW',
+    'AES-OCB',
+    'ChaCha20-Poly1305',
+    'RSA-OAEP',
+  ]),
+  unwrapKey: new Set([
+    'AES-CTR',
+    'AES-CBC',
+    'AES-GCM',
+    'AES-KW',
+    'AES-OCB',
+    'ChaCha20-Poly1305',
+    'RSA-OAEP',
+  ]),
+};
+
+const ASYMMETRIC_ALGORITHMS = new Set([
+  'RSASSA-PKCS1-v1_5',
+  'RSA-PSS',
+  'RSA-OAEP',
+  'ECDSA',
+  'ECDH',
+  'Ed25519',
+  'Ed448',
+  'X25519',
+  'X448',
+  'ML-DSA-44',
+  'ML-DSA-65',
+  'ML-DSA-87',
+]);
+
 export class Subtle {
+  static supports(
+    operation: string,
+    algorithm: SubtleAlgorithm | AnyAlgorithm,
+    _lengthOrAdditionalAlgorithm?: unknown,
+  ): boolean {
+    let normalizedAlgorithm: SubtleAlgorithm;
+    try {
+      normalizedAlgorithm = normalizeAlgorithm(
+        algorithm,
+        (operation === 'getPublicKey' ? 'exportKey' : operation) as Operation,
+      );
+    } catch {
+      return false;
+    }
+
+    const name = normalizedAlgorithm.name;
+
+    if (operation === 'getPublicKey') {
+      return ASYMMETRIC_ALGORITHMS.has(name);
+    }
+
+    if (operation === 'deriveKey') {
+      // deriveKey decomposes to deriveBits + importKey of additional algorithm
+      if (!SUPPORTED_ALGORITHMS.deriveBits?.has(name)) return false;
+      if (_lengthOrAdditionalAlgorithm != null) {
+        try {
+          const additionalAlg = normalizeAlgorithm(
+            _lengthOrAdditionalAlgorithm as SubtleAlgorithm | AnyAlgorithm,
+            'importKey',
+          );
+          return (
+            SUPPORTED_ALGORITHMS.importKey?.has(additionalAlg.name) ?? false
+          );
+        } catch {
+          return false;
+        }
+      }
+      return true;
+    }
+
+    const supported = SUPPORTED_ALGORITHMS[operation];
+    if (!supported) return false;
+    return supported.has(name);
+  }
+
   async decrypt(
     algorithm: EncryptDecryptParams,
     key: CryptoKey,
@@ -1660,6 +1898,10 @@ export class Subtle {
           baseKey,
           length,
         );
+      case 'Argon2d':
+      case 'Argon2i':
+      case 'Argon2id':
+        return argon2DeriveBits(algorithm, baseKey, length);
     }
     throw new Error(
       `'subtle.deriveBits()' for ${algorithm.name} is not implemented.`,
@@ -1711,6 +1953,11 @@ export class Subtle {
           length,
         );
         break;
+      case 'Argon2d':
+      case 'Argon2i':
+      case 'Argon2id':
+        derivedBits = argon2DeriveBits(algorithm, baseKey, length);
+        break;
       default:
         throw new Error(
           `'subtle.deriveKey()' for ${algorithm.name} is not implemented.`,
@@ -1748,7 +1995,7 @@ export class Subtle {
   ): Promise<ArrayBuffer | JWK> {
     if (!key.extractable) throw new Error('key is not extractable');
 
-    if (format === 'raw-secret') format = 'raw';
+    if (format === 'raw-secret' || format === 'raw-public') format = 'raw';
 
     switch (format) {
       case 'spki':
@@ -1977,6 +2224,21 @@ export class Subtle {
     return result;
   }
 
+  async getPublicKey(
+    key: CryptoKey,
+    keyUsages: KeyUsage[],
+  ): Promise<CryptoKey> {
+    if (key.type === 'secret') {
+      throw lazyDOMException('key must be a private key', 'NotSupportedError');
+    }
+    if (key.type !== 'private') {
+      throw lazyDOMException('key must be a private key', 'InvalidAccessError');
+    }
+
+    const publicKeyObject = createPublicKey(key.keyObject);
+    return publicKeyObject.toCryptoKey(key.algorithm, true, keyUsages);
+  }
+
   async importKey(
     format: ImportFormat,
     data: BufferLike | BinaryLike | JWK,
@@ -1984,7 +2246,7 @@ export class Subtle {
     extractable: boolean,
     keyUsages: KeyUsage[],
   ): Promise<CryptoKey> {
-    if (format === 'raw-secret') format = 'raw';
+    if (format === 'raw-secret' || format === 'raw-public') format = 'raw';
     const normalizedAlgorithm = normalizeAlgorithm(algorithm, 'importKey');
     let result: CryptoKey;
     switch (normalizedAlgorithm.name) {
@@ -2041,6 +2303,9 @@ export class Subtle {
         );
         break;
       case 'PBKDF2':
+      case 'Argon2d':
+      case 'Argon2i':
+      case 'Argon2id':
         result = await importGenericSecretKey(
           normalizedAlgorithm,
           format,

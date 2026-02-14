@@ -261,7 +261,7 @@ These ciphers are **not available in Node.js** but are provided by RNQC via libs
 # `SubtleCrypto`
 
 * 🚧 Class: `SubtleCrypto`
-  * ❌ static `supports(operation, algorithm[, lengthOrAdditionalAlgorithm])`
+  * ✅ static `supports(operation, algorithm[, lengthOrAdditionalAlgorithm])`
   * ❌ `subtle.decapsulateBits(decapsulationAlgorithm, decapsulationKey, ciphertext)`
   * ❌ `subtle.decapsulateKey(decapsulationAlgorithm, decapsulationKey, ciphertext, sharedKeyAlgorithm, extractable, usages)`
   * ✅ `subtle.decrypt(algorithm, key, data)`
@@ -273,7 +273,7 @@ These ciphers are **not available in Node.js** but are provided by RNQC via libs
   * 🚧 `subtle.encrypt(algorithm, key, data)`
   * 🚧 `subtle.exportKey(format, key)`
   * 🚧 `subtle.generateKey(algorithm, extractable, keyUsages)`
-  * ❌ `subtle.getPublicKey(key, keyUsages)`
+  * ✅ `subtle.getPublicKey(key, keyUsages)`
   * 🚧 `subtle.importKey(format, keyData, algorithm, extractable, keyUsages)`
   * ✅ `subtle.sign(algorithm, key, data)`
   * ✅ `subtle.unwrapKey(format, wrappedKey, unwrappingKey, unwrapAlgo, unwrappedKeyAlgo, extractable, keyUsages)`
@@ -293,9 +293,9 @@ These ciphers are **not available in Node.js** but are provided by RNQC via libs
 ## `subtle.deriveBits`
 | Algorithm  | Status |
 | ---------  | :----: |
-| `Argon2d`  | ❌ |
-| `Argon2i`  | ❌ |
-| `Argon2id` | ❌ |
+| `Argon2d`  | ✅ |
+| `Argon2i`  | ✅ |
+| `Argon2id` | ✅ |
 | `ECDH`     | ✅ |
 | `X25519`   | ✅ |
 | `X448`     | ✅ |
@@ -305,9 +305,9 @@ These ciphers are **not available in Node.js** but are provided by RNQC via libs
 ## `subtle.deriveKey`
 | Algorithm  | Status |
 | ---------  | :----: |
-| `Argon2d`  | ❌ |
-| `Argon2i`  | ❌ |
-| `Argon2id` | ❌ |
+| `Argon2d`  | ✅ |
+| `Argon2i`  | ✅ |
+| `Argon2id` | ✅ |
 | `ECDH`     | ✅ |
 | `HKDF`     | ✅ |
 | `PBKDF2`   | ✅ |
@@ -348,8 +348,8 @@ These ciphers are **not available in Node.js** but are provided by RNQC via libs
 | `ChaCha20-Poly1305` |        |         | ✅    |       | ✅           |              |            |
 | `ECDH`              | ✅     | ✅      | ✅    | ✅    |              | ✅           |            |
 | `ECDSA`             | ✅     | ✅      | ✅    | ✅    |              | ✅           |            |
-| `Ed25519`           | ✅     | ✅      | ✅    | ✅    |              | ❌           |            |
-| `Ed448`             | ✅     | ✅      | ✅    | ✅    |              | ❌           |            |
+| `Ed25519`           | ✅     | ✅      | ✅    | ✅    |              | ✅           |            |
+| `Ed448`             | ✅     | ✅      | ✅    | ✅    |              | ✅           |            |
 | `HMAC`              |        |         | ✅    | ✅    | ✅           |              |            |
 | `ML-DSA-44`         | ✅     | ✅      | ✅    |       |              | ✅           | ✅         |
 | `ML-DSA-65`         | ✅     | ✅      | ✅    |       |              | ✅           | ✅         |
@@ -402,9 +402,9 @@ These ciphers are **not available in Node.js** but are provided by RNQC via libs
 ## `subtle.importKey`
 | Key Type            | `spki` | `pkcs8` | `jwk` | `raw` | `raw-secret` | `raw-public` | `raw-seed` |
 | ------------------- | :----: | :-----: | :---: | :---: | :----------: | :----------: | :--------: |
-| `Argon2d`           |        |         |       |       | ❌           |              |            |
-| `Argon2i`           |        |         |       |       | ❌           |              |            |
-| `Argon2id`          |        |         |       |       | ❌           |              |            |
+| `Argon2d`           |        |         |       |       | ✅           |              |            |
+| `Argon2i`           |        |         |       |       | ✅           |              |            |
+| `Argon2id`          |        |         |       |       | ✅           |              |            |
 | `AES-CBC`           |        |         | ✅    | ✅    | ✅           |              |            |
 | `AES-CTR`           |        |         | ✅    | ✅    | ✅           |              |            |
 | `AES-GCM`           |        |         | ✅    | ✅    | ✅           |              |            |
@@ -413,9 +413,9 @@ These ciphers are **not available in Node.js** but are provided by RNQC via libs
 | `ChaCha20-Poly1305` |        |         | ✅    |       | ✅           |              |            |
 | `ECDH`              | ✅     | ✅      | ✅    | ✅    |              | ✅           |            |
 | `ECDSA`             | ✅     | ✅      | ✅    | ✅    |              | ✅           |            |
-| `Ed25519`           | ✅     | ✅      | ✅    | ✅    |              | ❌           |            |
-| `Ed448`             | ✅     | ✅      | ✅    | ✅    |              | ❌           |            |
-| `HKDF`              |        |         |       | ✅    | ❌           |              |            |
+| `Ed25519`           | ✅     | ✅      | ✅    | ✅    |              | ✅           |            |
+| `Ed448`             | ✅     | ✅      | ✅    | ✅    |              | ✅           |            |
+| `HKDF`              |        |         |       | ✅    | ✅           |              |            |
 | `HMAC`              |        |         | ✅    | ✅    | ✅           |              |            |
 | `ML-DSA-44`         | ✅     | ✅      | ✅    |       |              | ✅           | ✅         |
 | `ML-DSA-65`         | ✅     | ✅      | ✅    |       |              | ✅           | ✅         |

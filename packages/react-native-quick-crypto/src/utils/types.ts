@@ -100,12 +100,15 @@ export type SignVerifyAlgorithm =
   | 'ML-DSA-65'
   | 'ML-DSA-87';
 
+export type Argon2Algorithm = 'Argon2d' | 'Argon2i' | 'Argon2id';
+
 export type DeriveBitsAlgorithm =
   | 'PBKDF2'
   | 'HKDF'
   | 'ECDH'
   | 'X25519'
-  | 'X448';
+  | 'X448'
+  | Argon2Algorithm;
 
 export type EncryptDecryptAlgorithm =
   | 'RSA-OAEP'
@@ -193,7 +196,7 @@ export type NamedCurve = 'P-256' | 'P-384' | 'P-521';
 
 export type SubtleAlgorithm = {
   name: AnyAlgorithm;
-  salt?: string;
+  salt?: string | BufferLike;
   iterations?: number;
   hash?: HashAlgorithm | { name: string };
   namedCurve?: NamedCurve;
@@ -202,6 +205,16 @@ export type SubtleAlgorithm = {
   publicExponent?: number | Uint8Array;
   saltLength?: number;
   public?: CryptoKey;
+  info?: BufferLike;
+  // Argon2 parameters
+  nonce?: BufferLike;
+  parallelism?: number;
+  tagLength?: number;
+  memory?: number;
+  passes?: number;
+  secretValue?: BufferLike;
+  associatedData?: BufferLike;
+  version?: number;
 };
 
 export type KeyPairType =
@@ -462,7 +475,13 @@ export type DiffieHellmanCallback = (
 // from @paulmillr/noble-curves
 export type Hex = string | Uint8Array;
 
-export type ImportFormat = 'raw' | 'raw-secret' | 'pkcs8' | 'spki' | 'jwk';
+export type ImportFormat =
+  | 'raw'
+  | 'raw-public'
+  | 'raw-secret'
+  | 'pkcs8'
+  | 'spki'
+  | 'jwk';
 
 export type Operation =
   | 'encrypt'
