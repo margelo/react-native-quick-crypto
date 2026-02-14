@@ -33,7 +33,7 @@ export const COVERAGE_DATA: CoverageCategory[] = [
       },
       {
         name: 'ML-KEM (Key Encapsulation)',
-        status: 'implemented',
+        status: 'missing',
         note: 'ML-KEM-512, 768, 1024',
       },
     ],
@@ -158,14 +158,18 @@ export const COVERAGE_DATA: CoverageCategory[] = [
       {
         name: 'diffieHellman',
         subItems: [
-          { name: 'dh', status: 'missing' },
-          { name: 'ec', status: 'missing' },
+          { name: 'dh', status: 'implemented' },
+          { name: 'ec', status: 'implemented' },
           { name: 'x448', status: 'implemented' },
           { name: 'x25519', status: 'implemented' },
         ],
       },
       { name: 'encapsulate', status: 'missing' },
-      { name: 'fips', status: 'missing' },
+      {
+        name: 'fips',
+        status: 'not-in-node',
+        note: 'Deprecated, not applicable to RN',
+      },
       {
         name: 'generateKey',
         subItems: [
@@ -213,7 +217,7 @@ export const COVERAGE_DATA: CoverageCategory[] = [
       { name: 'getCiphers', status: 'implemented' },
       { name: 'getCurves', status: 'implemented' },
       { name: 'getDiffieHellman', status: 'implemented' },
-      { name: 'getFips', status: 'missing' },
+      { name: 'getFips', status: 'not-in-node', note: 'Not applicable to RN' },
       { name: 'getHashes', status: 'implemented' },
       { name: 'getRandomValues', status: 'implemented' },
       { name: 'hash', status: 'implemented' },
@@ -226,9 +230,17 @@ export const COVERAGE_DATA: CoverageCategory[] = [
       { name: 'randomInt', status: 'implemented' },
       { name: 'randomUUID', status: 'implemented' },
       { name: 'scrypt', status: 'implemented' },
-      { name: 'secureHeapUsed', status: 'missing' },
-      { name: 'setEngine', status: 'missing' },
-      { name: 'setFips', status: 'missing' },
+      {
+        name: 'secureHeapUsed',
+        status: 'not-in-node',
+        note: 'Not applicable to RN',
+      },
+      {
+        name: 'setEngine',
+        status: 'not-in-node',
+        note: 'Not applicable to RN',
+      },
+      { name: 'setFips', status: 'not-in-node', note: 'Not applicable to RN' },
       {
         name: 'sign',
         subItems: [
@@ -282,6 +294,9 @@ export const COVERAGE_DATA: CoverageCategory[] = [
       {
         name: 'crypto.subtle.deriveBits',
         subItems: [
+          { name: 'Argon2d', status: 'missing' },
+          { name: 'Argon2i', status: 'missing' },
+          { name: 'Argon2id', status: 'missing' },
           { name: 'ECDH', status: 'implemented' },
           { name: 'X25519', status: 'implemented' },
           { name: 'X448', status: 'implemented' },
@@ -292,6 +307,9 @@ export const COVERAGE_DATA: CoverageCategory[] = [
       {
         name: 'crypto.subtle.deriveKey',
         subItems: [
+          { name: 'Argon2d', status: 'missing' },
+          { name: 'Argon2i', status: 'missing' },
+          { name: 'Argon2id', status: 'missing' },
           { name: 'ECDH', status: 'implemented' },
           { name: 'HKDF', status: 'implemented' },
           { name: 'PBKDF2', status: 'implemented' },
@@ -398,11 +416,16 @@ export const COVERAGE_DATA: CoverageCategory[] = [
           { name: 'AES-OCB', status: 'implemented' },
           { name: 'ChaCha20-Poly1305', status: 'implemented' },
           { name: 'HMAC', status: 'implemented' },
+          { name: 'KMAC128', status: 'missing' },
+          { name: 'KMAC256', status: 'missing' },
         ],
       },
       {
         name: 'crypto.subtle.importKey',
         subItems: [
+          { name: 'Argon2d', status: 'missing', note: 'raw-secret' },
+          { name: 'Argon2i', status: 'missing', note: 'raw-secret' },
+          { name: 'Argon2id', status: 'missing', note: 'raw-secret' },
           { name: 'AES-CBC', status: 'implemented' },
           { name: 'AES-CTR', status: 'implemented' },
           { name: 'AES-GCM', status: 'implemented' },
@@ -468,6 +491,8 @@ export const COVERAGE_DATA: CoverageCategory[] = [
           { name: 'Ed25519', status: 'implemented' },
           { name: 'Ed448', status: 'implemented' },
           { name: 'HMAC', status: 'implemented' },
+          { name: 'KMAC128', status: 'missing' },
+          { name: 'KMAC256', status: 'missing' },
           { name: 'ML-DSA-44', status: 'implemented' },
           { name: 'ML-DSA-65', status: 'implemented' },
           { name: 'ML-DSA-87', status: 'implemented' },
@@ -494,6 +519,8 @@ export const COVERAGE_DATA: CoverageCategory[] = [
           { name: 'Ed25519', status: 'implemented' },
           { name: 'Ed448', status: 'implemented' },
           { name: 'HMAC', status: 'implemented' },
+          { name: 'KMAC128', status: 'missing' },
+          { name: 'KMAC256', status: 'missing' },
           { name: 'ML-DSA-44', status: 'implemented' },
           { name: 'ML-DSA-65', status: 'implemented' },
           { name: 'ML-DSA-87', status: 'implemented' },
