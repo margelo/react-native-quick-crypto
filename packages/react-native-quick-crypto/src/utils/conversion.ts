@@ -132,14 +132,16 @@ export function binaryLikeToArrayBuffer(
   //   }
   // }
 
-  // KeyObject (use Symbol.toStringTag to avoid circular dependency with keys/)
+  // KeyObject — duck-typed via Symbol.toStringTag to avoid circular dependency
+  // with keys/classes. The type assertion must match KeyObjectHandle.exportKey().
   if (
     typeof input === 'object' &&
     input != null &&
-    'handle' in input &&
     Object.prototype.toString.call(input) === '[object KeyObject]'
   ) {
-    return (input.handle as { exportKey(): ArrayBuffer }).exportKey();
+    return (
+      input as { handle: { exportKey(): ArrayBuffer } }
+    ).handle.exportKey();
   }
 
   throw new Error(

@@ -86,6 +86,7 @@
     "@types/react": "18.3.3",
     "@types/readable-stream": "4.0.18",
     "del-cli": "7.0.0",
+    "dpdm": "^4.0.1",
     "expo": "^54.0.25",
     "expo-build-properties": "^1.0.0",
     "jest": "29.7.0",
