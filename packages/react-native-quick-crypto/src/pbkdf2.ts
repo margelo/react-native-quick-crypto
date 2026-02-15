@@ -79,12 +79,12 @@ export function pbkdf2Sync(
   salt: Salt,
   iterations: number,
   keylen: number,
-  digest?: string,
+  digest: string,
 ): Buffer {
   const sanitizedPassword = sanitizeInput(password, WRONG_PASS);
   const sanitizedSalt = sanitizeInput(salt, WRONG_SALT);
 
-  const algo = digest ? normalizeHashName(digest, HashContext.Node) : 'sha1';
+  const algo = normalizeHashName(digest, HashContext.Node);
   getNative();
   const result: ArrayBuffer = native.pbkdf2Sync(
     sanitizedPassword,

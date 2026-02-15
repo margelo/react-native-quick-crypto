@@ -5,7 +5,7 @@ import { test } from '../util';
 import { fixtures, type ValidFixture } from './fixtures';
 
 import crypto from 'react-native-quick-crypto';
-type BinaryLike = Parameters<typeof crypto.pbkdf2>[0];
+import type { BinaryLike } from 'react-native-quick-crypto';
 
 type TestFixture = [string, string, number, number, string];
 
@@ -68,7 +68,7 @@ const SUITE = 'pbkdf2';
 }
 
 test(SUITE, 'handles buffers', () => {
-  const resultSync = crypto.pbkdf2Sync('password', 'salt', 1, 32);
+  const resultSync = crypto.pbkdf2Sync('password', 'salt', 1, 32, 'sha1');
   expect(resultSync?.toString('hex')).to.equal(
     '0c60c80f961f0e71f3a9b524af6012062fe037a6e0f0eb94fe8fc46bdc637164',
   );
