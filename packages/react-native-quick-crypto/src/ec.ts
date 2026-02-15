@@ -76,7 +76,7 @@ export class Ec {
   }
 }
 
-// Node API
+// WebCrypto API - only P-256, P-384, P-521 allowed per spec
 export function ecImportKey(
   format: ImportFormat,
   keyData: BufferLike | BinaryLike | JWK,
@@ -289,7 +289,7 @@ export const ecdsaSignVerify = (
   }
 };
 
-// Node API
+// WebCrypto API - only P-256, P-384, P-521 allowed per spec
 
 export async function ec_generateKeyPair(
   name: string,
@@ -388,11 +388,8 @@ function ec_prepareKeyGenParams(
 
   const { namedCurve } = options as { namedCurve?: string };
 
-  if (
-    !namedCurve ||
-    !kNamedCurveAliases[namedCurve as keyof typeof kNamedCurveAliases]
-  ) {
-    throw new Error(`Invalid or unsupported named curve: ${namedCurve}`);
+  if (!namedCurve) {
+    throw new Error('namedCurve is required for EC key generation');
   }
 
   return new Ec(namedCurve);

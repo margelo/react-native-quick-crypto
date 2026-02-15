@@ -10,3 +10,9 @@ export interface TestSuite {
 export interface Tests {
   [key: string]: () => void | Promise<void>;
 }
+
+export interface SuiteEntry {
+  name: string;
+  suite: TestSuite;
+  count: number;
+}

@@ -3,13 +3,13 @@ import { View, FlatList, StyleSheet } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Button } from '../../components/Button';
 import { TestItem } from '../../components/TestItem';
-import { useTestsList } from '../../hooks/useTestsList';
+import { useStressList } from '../../hooks/useStressList';
 import { useTestsRun } from '../../hooks/useTestsRun';
 import type { SuiteEntry } from '../../types/tests';
 import { colors } from '../../styles/colors';
 
-export const TestSuitesScreen = () => {
-  const [suites, toggle, clearAll, checkAll] = useTestsList();
+export const StressSuitesScreen = () => {
+  const [suites, toggle, clearAll, checkAll] = useStressList();
   const [results, runTests, stats] = useTestsRun();
 
   const suiteEntries = useMemo(() => {
@@ -33,6 +33,7 @@ export const TestSuitesScreen = () => {
       count={item.count}
       results={results[item.name]?.results || []}
       onToggle={toggle}
+      detailsScreen="StressDetailsScreen"
     />
   );
 
@@ -43,7 +44,7 @@ export const TestSuitesScreen = () => {
           data={suiteEntries}
           renderItem={renderItem}
           keyExtractor={(_item, index) => index.toString()}
-          testID="test-suites-list"
+          testID="stress-suites-list"
         />
       </View>
       <TestItem
@@ -66,12 +67,12 @@ export const TestSuitesScreen = () => {
         <Button
           title="Check All"
           onPress={checkAll}
-          testID="check-all-button"
+          testID="stress-check-all-button"
         />
         <Button
           title="Clear All"
           onPress={clearAll}
-          testID="clear-all-button"
+          testID="stress-clear-all-button"
         />
         <Button
           title="Run"
@@ -79,7 +80,7 @@ export const TestSuitesScreen = () => {
             runTests(suites);
           }}
           color="green"
-          testID="run-tests-button"
+          testID="stress-run-button"
         />
       </View>
     </SafeAreaView>

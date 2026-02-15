@@ -3,6 +3,7 @@ import { NavigationContainer } from '@react-navigation/native';
 import { enableFreeze } from 'react-native-screens';
 import { TestStack } from './children/TestStack';
 import { BenchmarkStack } from './children/BenchmarkStack';
+import { StressStack } from './children/StressStack';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import Icon from 'react-native-vector-icons/MaterialCommunityIcons';
 
@@ -30,6 +31,16 @@ export const Root: React.FC = () => {
             headerShown: false,
             tabBarIcon: ({ color }) => (
               <Icon name="timer" size={24} color={color} />
+            ),
+          }}
+        />
+        <Tab.Screen
+          name="Stress"
+          component={StressStack}
+          options={{
+            headerShown: false,
+            tabBarIcon: ({ color }) => (
+              <Icon name="repeat" size={24} color={color} />
             ),
           }}
         />

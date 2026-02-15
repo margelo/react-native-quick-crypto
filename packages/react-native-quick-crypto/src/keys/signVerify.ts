@@ -119,12 +119,7 @@ function prepareKey(key: KeyInput, isPublic: boolean): PreparedKey {
 
     const keyType = isPublic ? 'public' : 'private';
     // Always convert to ArrayBuffer to avoid Nitro bridge string truncation bug
-    const originalLength =
-      typeof data === 'string' ? data.length : data.byteLength;
     const keyData = toAB(data);
-    console.log(
-      `[prepareKey KeyInputObject] ${keyType} key, original length: ${originalLength}, ArrayBuffer size: ${keyData.byteLength}`,
-    );
     const keyObject = KeyObject.createKeyObject(
       keyType,
       keyData,
