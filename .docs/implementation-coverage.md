@@ -129,7 +129,7 @@ These algorithms provide quantum-resistant cryptography.
   * ✅ `crypto.generateKey(type, options, callback)`
   * ✅ `crypto.generateKeyPair(type, options, callback)`
   * ✅ `crypto.generateKeyPairSync(type, options)`
-  * 🚧 `crypto.generateKeySync(type, options)`
+  * ✅ `crypto.generateKeySync(type, options)`
   * ✅ `crypto.generatePrime(size[, options[, callback]])`
   * ✅ `crypto.generatePrimeSync(size[, options])`
   * ✅ `crypto.getCipherInfo(nameOrNid[, options])`
