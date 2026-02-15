@@ -195,34 +195,8 @@ algos.forEach(function (algorithm) {
     });
   });
 
-  // // TODO: fix the 'invalid' tests
-  // fixtures.invalid.forEach(function (f) {
-  //   const description = algorithm + ' should throw ' + f.exception;
-
-  //   test(SUITE, ' async w/ ' + description, function () {
-  //     function noop() {}
-  //     expect(() => {
-  //       crypto.pbkdf2(
-  //         f.key as BinaryLike,
-  //         f.salt as BinaryLike,
-  //         f.iterations as number,
-  //         f.dkLen as number,
-  //         algorithm,
-  //         noop
-  //       )
-  //     }).to.throw(f.exception);
-  //   });
-
-  //   test(SUITE, ' sync w/' + description, function () {
-  //     expect(() => {
-  //       crypto.pbkdf2Sync(
-  //         f.key as BinaryLike,
-  //         f.salt as BinaryLike,
-  //         f.iterations as number,
-  //         f.dkLen as number,
-  //         algorithm,
-  //       )
-  //     }).to.throw(f.exception);
-  //   });
-  // });
+  // TODO(#931): enable invalid fixture tests once JS-side validation is added
+  // for iterations/keylen. Currently invalid values (negative, NaN, Infinity)
+  // reach the native C layer and trigger assert()/abort() instead of throwing.
+  // See: fixtures.invalid
 });
