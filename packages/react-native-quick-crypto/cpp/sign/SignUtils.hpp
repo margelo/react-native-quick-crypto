@@ -8,35 +8,14 @@
 #include <openssl/evp.h>
 #include <string>
 
+#include "../utils/QuickCryptoUtils.hpp"
+
 namespace margelo::nitro::crypto {
 
 enum DSASigEnc {
   kSigEncDER = 0,
   kSigEncP1363 = 1,
 };
-
-inline const EVP_MD* getDigestByName(const std::string& algorithm) {
-  if (algorithm == "SHA1" || algorithm == "sha1" || algorithm == "SHA-1" || algorithm == "sha-1") {
-    return EVP_sha1();
-  } else if (algorithm == "SHA224" || algorithm == "sha224" || algorithm == "SHA-224" || algorithm == "sha-224") {
-    return EVP_sha224();
-  } else if (algorithm == "SHA256" || algorithm == "sha256" || algorithm == "SHA-256" || algorithm == "sha-256") {
-    return EVP_sha256();
-  } else if (algorithm == "SHA384" || algorithm == "sha384" || algorithm == "SHA-384" || algorithm == "sha-384") {
-    return EVP_sha384();
-  } else if (algorithm == "SHA512" || algorithm == "sha512" || algorithm == "SHA-512" || algorithm == "sha-512") {
-    return EVP_sha512();
-  } else if (algorithm == "SHA3-224" || algorithm == "sha3-224") {
-    return EVP_sha3_224();
-  } else if (algorithm == "SHA3-256" || algorithm == "sha3-256") {
-    return EVP_sha3_256();
-  } else if (algorithm == "SHA3-384" || algorithm == "sha3-384") {
-    return EVP_sha3_384();
-  } else if (algorithm == "SHA3-512" || algorithm == "sha3-512") {
-    return EVP_sha3_512();
-  }
-  throw std::runtime_error("Unsupported hash algorithm: " + algorithm);
-}
 
 inline unsigned int getBytesOfRS(EVP_PKEY* pkey) {
   int bits;

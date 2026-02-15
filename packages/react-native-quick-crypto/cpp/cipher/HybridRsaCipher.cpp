@@ -14,19 +14,6 @@ using margelo::nitro::NativeArrayBuffer;
 constexpr int kRsaPkcs1Padding = 1;
 constexpr int kRsaOaepPadding = 4;
 
-const EVP_MD* getDigestByName(const std::string& hashAlgorithm) {
-  if (hashAlgorithm == "SHA-1" || hashAlgorithm == "SHA1" || hashAlgorithm == "sha1" || hashAlgorithm == "sha-1") {
-    return EVP_sha1();
-  } else if (hashAlgorithm == "SHA-256" || hashAlgorithm == "SHA256" || hashAlgorithm == "sha256" || hashAlgorithm == "sha-256") {
-    return EVP_sha256();
-  } else if (hashAlgorithm == "SHA-384" || hashAlgorithm == "SHA384" || hashAlgorithm == "sha384" || hashAlgorithm == "sha-384") {
-    return EVP_sha384();
-  } else if (hashAlgorithm == "SHA-512" || hashAlgorithm == "SHA512" || hashAlgorithm == "sha512" || hashAlgorithm == "sha-512") {
-    return EVP_sha512();
-  }
-  throw std::runtime_error("Unsupported hash algorithm: " + hashAlgorithm);
-}
-
 int toOpenSSLPadding(int padding) {
   switch (padding) {
     case kRsaPkcs1Padding:
