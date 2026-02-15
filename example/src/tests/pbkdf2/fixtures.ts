@@ -1,5 +1,5 @@
 // copied from https://github.com/crypto-browserify/pbkdf2/blob/master/test/fixtures.json
-export type Fixture = {
+interface FixtureBase {
   description?: string;
   key?: string;
   keyHex?: string;
@@ -11,15 +11,26 @@ export type Fixture = {
   saltUint8Array?: number[];
   saltInt32Array?: number[];
   saltFloat64Array?: number[];
+}
+
+export interface ValidFixture extends FixtureBase {
+  iterations: number;
+  dkLen: number;
+  results: Record<string, string>;
+}
+
+export interface InvalidFixture extends FixtureBase {
   iterations: number | string;
   dkLen: number | string;
-  results?: Record<string, string>;
-  exception?: string;
-};
-type Fixtures = {
-  valid: Fixture[];
-  invalid: Fixture[];
-};
+  exception: string;
+}
+
+export type Fixture = ValidFixture | InvalidFixture;
+
+interface Fixtures {
+  valid: ValidFixture[];
+  invalid: InvalidFixture[];
+}
 export const fixtures: Fixtures = {
   valid: [
     {

@@ -2,10 +2,10 @@
 import { Buffer } from 'safe-buffer';
 import { expect } from 'chai';
 import { test } from '../util';
-import { fixtures, type Fixture } from './fixtures';
+import { fixtures, type ValidFixture } from './fixtures';
 
 import crypto from 'react-native-quick-crypto';
-import type { BinaryLike, HashAlgorithm } from 'react-native-quick-crypto';
+type BinaryLike = Parameters<typeof crypto.pbkdf2>[0];
 
 type TestFixture = [string, string, number, number, string];
 
@@ -27,18 +27,11 @@ const SUITE = 'pbkdf2';
     length: number,
     expected: string,
   ) => {
-    crypto.pbkdf2(
-      pass,
-      salt,
-      iterations,
-      length,
-      hash as HashAlgorithm,
-      function (err, result) {
-        expect(err).to.be.null;
-        expect(result).not.to.be.null;
-        expect(result?.toString('hex')).to.equal(expected);
-      },
-    );
+    crypto.pbkdf2(pass, salt, iterations, length, hash, function (err, result) {
+      expect(err).to.be.null;
+      expect(result).not.to.be.null;
+      expect(result?.toString('hex')).to.equal(expected);
+    });
   };
 
   const kTests: TestFixture[] = [
@@ -125,8 +118,7 @@ test(
 
 const algos = ['sha1', 'sha224', 'sha256', 'sha384', 'sha512', 'ripemd160'];
 algos.forEach(function (algorithm) {
-  fixtures.valid.forEach(function (f: Fixture) {
-    // TODO: check these types once nitro port is done
+  fixtures.valid.forEach(function (f: ValidFixture) {
     let key: BinaryLike, keyType: string, salt: BinaryLike, saltType: string;
     if (f.keyUint8Array) {
       key = new Uint8Array(f.keyUint8Array);
@@ -160,7 +152,7 @@ algos.forEach(function (algorithm) {
       salt = f.salt as BinaryLike;
       saltType = 'string';
     }
-    const expected = f.results ? f.results[algorithm] : undefined;
+    const expected = f.results[algorithm];
     const description =
       algorithm +
       ' encodes "' +
@@ -180,9 +172,9 @@ algos.forEach(function (algorithm) {
       crypto.pbkdf2(
         key,
         salt,
-        f.iterations as number,
-        f.dkLen as number,
-        algorithm as HashAlgorithm,
+        f.iterations,
+        f.dkLen,
+        algorithm,
         function (err, result) {
           expect(err).to.be.null;
           expect(result).not.to.be.null;
@@ -195,16 +187,16 @@ algos.forEach(function (algorithm) {
       const result = crypto.pbkdf2Sync(
         key,
         salt,
-        f.iterations as number,
-        f.dkLen as number,
-        algorithm as HashAlgorithm,
+        f.iterations,
+        f.dkLen,
+        algorithm,
       );
       expect(result?.toString('hex')).to.equal(expected);
     });
   });
 
   // // TODO: fix the 'invalid' tests
-  // fixtures.invalid.forEach(function (f: Fixture) {
+  // fixtures.invalid.forEach(function (f) {
   //   const description = algorithm + ' should throw ' + f.exception;
 
   //   test(SUITE, ' async w/ ' + description, function () {
@@ -215,7 +207,7 @@ algos.forEach(function (algorithm) {
   //         f.salt as BinaryLike,
   //         f.iterations as number,
   //         f.dkLen as number,
-  //         algorithm as HashAlgorithm,
+  //         algorithm,
   //         noop
   //       )
   //     }).to.throw(f.exception);
@@ -228,7 +220,7 @@ algos.forEach(function (algorithm) {
   //         f.salt as BinaryLike,
   //         f.iterations as number,
   //         f.dkLen as number,
-  //         algorithm as HashAlgorithm,
+  //         algorithm,
   //       )
   //     }).to.throw(f.exception);
   //   });
