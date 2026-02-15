@@ -15,6 +15,7 @@ type TestItemProps = {
   isFooter?: boolean;
   passCount?: number;
   failCount?: number;
+  detailsScreen?: string;
 };
 
 export const TestItem: React.FC<TestItemProps> = ({
@@ -27,6 +28,7 @@ export const TestItem: React.FC<TestItemProps> = ({
   isFooter = false,
   passCount,
   failCount,
+  detailsScreen = 'TestDetailsScreen',
 }: TestItemProps) => {
   const navigation = useNavigation();
 
@@ -65,7 +67,7 @@ export const TestItem: React.FC<TestItemProps> = ({
         onPress={() => {
           if (!isFooter) {
             // @ts-expect-error - not dealing with navigation types rn
-            navigation.navigate('TestDetailsScreen', {
+            navigation.navigate(detailsScreen, {
               results,
               suiteName: description,
             });

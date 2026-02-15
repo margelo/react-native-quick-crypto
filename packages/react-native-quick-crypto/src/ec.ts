@@ -388,11 +388,8 @@ function ec_prepareKeyGenParams(
 
   const { namedCurve } = options as { namedCurve?: string };
 
-  if (
-    !namedCurve ||
-    !kNamedCurveAliases[namedCurve as keyof typeof kNamedCurveAliases]
-  ) {
-    throw new Error(`Invalid or unsupported named curve: ${namedCurve}`);
+  if (!namedCurve) {
+    throw new Error('namedCurve is required for EC key generation');
   }
 
   return new Ec(namedCurve);
