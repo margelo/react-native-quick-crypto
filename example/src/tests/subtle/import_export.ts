@@ -2329,3 +2329,124 @@ test(SUITE, 'AES-OCB import/export raw-secret', async () => {
     Buffer.from(keyData as Uint8Array).toString('hex'),
   );
 });
+
+// --- raw-public format tests ---
+
+test(SUITE, 'Ed25519 import/export raw-public format', async () => {
+  const keyPair = (await subtle.generateKey({ name: 'Ed25519' }, true, [
+    'sign',
+    'verify',
+  ])) as CryptoKeyPair;
+
+  const exported = await subtle.exportKey(
+    'raw-public',
+    keyPair.publicKey as CryptoKey,
+  );
+  expect(exported).to.be.instanceOf(ArrayBuffer);
+  expect((exported as ArrayBuffer).byteLength).to.equal(32);
+
+  const imported = await subtle.importKey(
+    'raw-public',
+    exported as ArrayBuffer,
+    { name: 'Ed25519' },
+    true,
+    ['verify'],
+  );
+  expect(imported.type).to.equal('public');
+
+  const reExported = await subtle.exportKey('raw-public', imported);
+  expect(Buffer.from(reExported as ArrayBuffer).toString('hex')).to.equal(
+    Buffer.from(exported as ArrayBuffer).toString('hex'),
+  );
+});
+
+test(SUITE, 'Ed448 import/export raw-public format', async () => {
+  const keyPair = (await subtle.generateKey({ name: 'Ed448' }, true, [
+    'sign',
+    'verify',
+  ])) as CryptoKeyPair;
+
+  const exported = await subtle.exportKey(
+    'raw-public',
+    keyPair.publicKey as CryptoKey,
+  );
+  expect(exported).to.be.instanceOf(ArrayBuffer);
+  expect((exported as ArrayBuffer).byteLength).to.equal(57);
+
+  const imported = await subtle.importKey(
+    'raw-public',
+    exported as ArrayBuffer,
+    { name: 'Ed448' },
+    true,
+    ['verify'],
+  );
+  expect(imported.type).to.equal('public');
+
+  const reExported = await subtle.exportKey('raw', imported);
+  expect(Buffer.from(reExported as ArrayBuffer).toString('hex')).to.equal(
+    Buffer.from(exported as ArrayBuffer).toString('hex'),
+  );
+});
+
+test(SUITE, 'ECDH P-256 import/export raw-public format', async () => {
+  const keyPair = (await subtle.generateKey(
+    { name: 'ECDH', namedCurve: 'P-256' },
+    true,
+    ['deriveKey', 'deriveBits'],
+  )) as CryptoKeyPair;
+
+  const exported = await subtle.exportKey(
+    'raw-public',
+    keyPair.publicKey as CryptoKey,
+  );
+  expect(exported).to.be.instanceOf(ArrayBuffer);
+
+  const imported = await subtle.importKey(
+    'raw-public',
+    exported as ArrayBuffer,
+    { name: 'ECDH', namedCurve: 'P-256' },
+    true,
+    [],
+  );
+  expect(imported.type).to.equal('public');
+
+  const reExported = await subtle.exportKey('raw-public', imported);
+  expect(Buffer.from(reExported as ArrayBuffer).toString('hex')).to.equal(
+    Buffer.from(exported as ArrayBuffer).toString('hex'),
+  );
+});
+
+// --- HKDF raw-secret import test ---
+
+test(SUITE, 'HKDF import raw-secret format and deriveBits', async () => {
+  const ikm = new Uint8Array([
+    0x0b, 0x0b, 0x0b, 0x0b, 0x0b, 0x0b, 0x0b, 0x0b, 0x0b, 0x0b, 0x0b, 0x0b,
+    0x0b, 0x0b, 0x0b, 0x0b, 0x0b, 0x0b, 0x0b, 0x0b, 0x0b, 0x0b,
+  ]);
+
+  const key = await subtle.importKey(
+    'raw-secret',
+    ikm,
+    { name: 'HKDF' },
+    false,
+    ['deriveBits'],
+  );
+
+  expect(key.algorithm.name).to.equal('HKDF');
+  expect(key.type).to.equal('secret');
+  expect(key.extractable).to.equal(false);
+
+  const derived = await subtle.deriveBits(
+    {
+      name: 'HKDF',
+      hash: 'SHA-256',
+      salt: new Uint8Array(0),
+      info: new Uint8Array(0),
+    },
+    key,
+    256,
+  );
+
+  expect(derived).to.be.instanceOf(ArrayBuffer);
+  expect(derived.byteLength).to.equal(32);
+});

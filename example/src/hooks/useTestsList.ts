@@ -29,6 +29,7 @@ import '../tests/pbkdf2/pbkdf2_tests';
 import '../tests/prime/prime_tests';
 import '../tests/random/random_tests';
 import '../tests/scrypt/scrypt_tests';
+import '../tests/subtle/argon2_deriveBits';
 import '../tests/subtle/deriveBits';
 import '../tests/subtle/derive_key';
 import '../tests/subtle/digest';
@@ -37,6 +38,8 @@ import '../tests/subtle/generateKey';
 import '../tests/subtle/import_export';
 import '../tests/subtle/jwk_rfc7517_tests';
 import '../tests/subtle/sign_verify';
+import '../tests/subtle/supports';
+import '../tests/subtle/getPublicKey';
 import '../tests/subtle/wrap_unwrap';
 import '../tests/utils/utils_tests';
 
