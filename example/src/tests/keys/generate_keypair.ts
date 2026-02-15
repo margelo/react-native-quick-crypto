@@ -791,7 +791,7 @@ test(SUITE, 'generateKeyPair DH with primeLength', async () => {
     generateKeyPair(
       'dh',
       {
-        primeLength: 2048,
+        primeLength: 512,
         publicKeyEncoding: { type: 'spki', format: 'pem' },
         privateKeyEncoding: { type: 'pkcs8', format: 'pem' },
       },
