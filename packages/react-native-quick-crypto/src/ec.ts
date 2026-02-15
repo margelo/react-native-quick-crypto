@@ -76,7 +76,7 @@ export class Ec {
   }
 }
 
-// Node API
+// WebCrypto API — only P-256, P-384, P-521 allowed per spec
 export function ecImportKey(
   format: ImportFormat,
   keyData: BufferLike | BinaryLike | JWK,
@@ -289,7 +289,7 @@ export const ecdsaSignVerify = (
   }
 };
 
-// Node API
+// WebCrypto API — only P-256, P-384, P-521 allowed per spec
 
 export async function ec_generateKeyPair(
   name: string,

@@ -5,13 +5,8 @@ import { Button } from '../../components/Button';
 import { TestItem } from '../../components/TestItem';
 import { useStressList } from '../../hooks/useStressList';
 import { useTestsRun } from '../../hooks/useTestsRun';
+import type { SuiteEntry } from '../../types/tests';
 import { colors } from '../../styles/colors';
-
-type SuiteEntry = {
-  name: string;
-  suite: { value: boolean; tests: Record<string, () => void | Promise<void>> };
-  count: number;
-};
 
 export const StressSuitesScreen = () => {
   const [suites, toggle, clearAll, checkAll] = useStressList();

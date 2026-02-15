@@ -82,6 +82,106 @@ stress(SUITE, `P-256 IEEE-P1363 sign/verify x${ITERATIONS}`, async () => {
   }
 });
 
+stress(SUITE, `P-384 DER sign/verify x${ITERATIONS}`, async () => {
+  const { privateKey, publicKey } = await generateECKeyPair('P-384');
+
+  for (let i = 0; i < ITERATIONS; i++) {
+    const sign = createSign('SHA384');
+    sign.update(testData);
+    const signature = sign.sign({ key: privateKey, dsaEncoding: 'der' });
+
+    const verify = createVerify('SHA384');
+    verify.update(testData);
+    const isValid = verify.verify(
+      { key: publicKey, dsaEncoding: 'der' },
+      signature,
+    );
+
+    expect(isValid, `P-384 DER iteration ${i + 1}/${ITERATIONS}`).to.equal(
+      true,
+    );
+  }
+});
+
+stress(SUITE, `P-384 IEEE-P1363 sign/verify x${ITERATIONS}`, async () => {
+  const { privateKey, publicKey } = await generateECKeyPair('P-384');
+
+  for (let i = 0; i < ITERATIONS; i++) {
+    const sign = createSign('SHA384');
+    sign.update(testData);
+    const signature = sign.sign({
+      key: privateKey,
+      dsaEncoding: 'ieee-p1363',
+    });
+
+    expect(signature.length, `P-384 P1363 sig length iter ${i + 1}`).to.equal(
+      96,
+    );
+
+    const verify = createVerify('SHA384');
+    verify.update(testData);
+    const isValid = verify.verify(
+      { key: publicKey, dsaEncoding: 'ieee-p1363' },
+      signature,
+    );
+
+    expect(
+      isValid,
+      `P-384 IEEE-P1363 iteration ${i + 1}/${ITERATIONS}`,
+    ).to.equal(true);
+  }
+});
+
+stress(SUITE, `P-521 DER sign/verify x${ITERATIONS}`, async () => {
+  const { privateKey, publicKey } = await generateECKeyPair('P-521');
+
+  for (let i = 0; i < ITERATIONS; i++) {
+    const sign = createSign('SHA512');
+    sign.update(testData);
+    const signature = sign.sign({ key: privateKey, dsaEncoding: 'der' });
+
+    const verify = createVerify('SHA512');
+    verify.update(testData);
+    const isValid = verify.verify(
+      { key: publicKey, dsaEncoding: 'der' },
+      signature,
+    );
+
+    expect(isValid, `P-521 DER iteration ${i + 1}/${ITERATIONS}`).to.equal(
+      true,
+    );
+  }
+});
+
+stress(SUITE, `P-521 IEEE-P1363 sign/verify x${ITERATIONS}`, async () => {
+  const { privateKey, publicKey } = await generateECKeyPair('P-521');
+
+  for (let i = 0; i < ITERATIONS; i++) {
+    const sign = createSign('SHA512');
+    sign.update(testData);
+    const signature = sign.sign({
+      key: privateKey,
+      dsaEncoding: 'ieee-p1363',
+    });
+
+    expect(signature.length, `P-521 P1363 sig length iter ${i + 1}`).to.equal(
+      132,
+    );
+
+    const verify = createVerify('SHA512');
+    verify.update(testData);
+    const isValid = verify.verify(
+      { key: publicKey, dsaEncoding: 'ieee-p1363' },
+      signature,
+    );
+
+    expect(
+      isValid,
+      `P-521 IEEE-P1363 iteration ${i + 1}/${ITERATIONS}`,
+    ).to.equal(true);
+  }
+});
+
 stress(SUITE, `secp256k1 DER sign/verify x${ITERATIONS}`, async () => {
   const { privateKey, publicKey } = await generateECKeyPair('secp256k1');
 
