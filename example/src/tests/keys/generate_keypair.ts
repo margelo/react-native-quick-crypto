@@ -783,7 +783,7 @@ test(SUITE, 'generateKeyPair DH with named group modp14', async () => {
   expect(publicKey).to.match(/^-----BEGIN PUBLIC KEY-----/);
 });
 
-test(SUITE, 'generateKeyPair DH with PEM encoding', async () => {
+test(SUITE, 'generateKeyPair DH with primeLength', async () => {
   const { privateKey, publicKey } = await new Promise<{
     privateKey: string;
     publicKey: string;
@@ -791,7 +791,7 @@ test(SUITE, 'generateKeyPair DH with PEM encoding', async () => {
     generateKeyPair(
       'dh',
       {
-        groupName: 'modp14',
+        primeLength: 2048,
         publicKeyEncoding: { type: 'spki', format: 'pem' },
         privateKeyEncoding: { type: 'pkcs8', format: 'pem' },
       },

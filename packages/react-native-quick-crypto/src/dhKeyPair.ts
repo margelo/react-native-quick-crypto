@@ -75,14 +75,7 @@ function dh_formatKeyPairOutput(
   publicKey: PublicKeyObject | Buffer | string | ArrayBuffer;
   privateKey: PrivateKeyObject | Buffer | string | ArrayBuffer;
 } {
-  const {
-    publicFormat,
-    publicType,
-    privateFormat,
-    privateType,
-    cipher,
-    passphrase,
-  } = encoding;
+  const { publicFormat, privateFormat, cipher, passphrase } = encoding;
 
   const publicKeyData = dh.native.getPublicKey();
   const privateKeyData = dh.native.getPrivateKey();
@@ -109,9 +102,7 @@ function dh_formatKeyPairOutput(
   } else {
     const format =
       publicFormat === KFormatType.PEM ? KFormatType.PEM : KFormatType.DER;
-    const keyEncoding =
-      publicType === KeyEncoding.SPKI ? KeyEncoding.SPKI : KeyEncoding.SPKI;
-    const exported = pub.handle.exportKey(format, keyEncoding);
+    const exported = pub.handle.exportKey(format, KeyEncoding.SPKI);
     if (format === KFormatType.PEM) {
       publicKey = Buffer.from(new Uint8Array(exported)).toString('utf-8');
     } else {
@@ -124,11 +115,9 @@ function dh_formatKeyPairOutput(
   } else {
     const format =
       privateFormat === KFormatType.PEM ? KFormatType.PEM : KFormatType.DER;
-    const keyEncoding =
-      privateType === KeyEncoding.PKCS8 ? KeyEncoding.PKCS8 : KeyEncoding.PKCS8;
     const exported = priv.handle.exportKey(
       format,
-      keyEncoding,
+      KeyEncoding.PKCS8,
       cipher,
       passphrase,
     );

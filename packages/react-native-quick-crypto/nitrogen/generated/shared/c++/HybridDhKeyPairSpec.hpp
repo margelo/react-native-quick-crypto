@@ -17,7 +17,6 @@
 
 #include <NitroModules/Promise.hpp>
 #include <NitroModules/ArrayBuffer.hpp>
-#include <string>
 
 namespace margelo::nitro::crypto {
 
@@ -55,7 +54,6 @@ namespace margelo::nitro::crypto {
       virtual void setPrimeLength(double primeLength) = 0;
       virtual void setPrime(const std::shared_ptr<ArrayBuffer>& prime) = 0;
       virtual void setGenerator(double generator) = 0;
-      virtual void setGroupName(const std::string& groupName) = 0;
       virtual std::shared_ptr<ArrayBuffer> getPublicKey() = 0;
       virtual std::shared_ptr<ArrayBuffer> getPrivateKey() = 0;
 

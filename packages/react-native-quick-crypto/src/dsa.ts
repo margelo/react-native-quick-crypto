@@ -34,7 +34,7 @@ function dsa_prepareKeyGenParams(
 
   const { modulusLength, divisorLength } = options;
 
-  if (!modulusLength || modulusLength < 1024) {
+  if (!modulusLength || modulusLength <= 0) {
     throw new Error('Invalid or missing modulusLength for DSA key generation');
   }
 
@@ -48,14 +48,7 @@ function dsa_formatKeyPairOutput(
   publicKey: PublicKeyObject | Buffer | string | ArrayBuffer;
   privateKey: PrivateKeyObject | Buffer | string | ArrayBuffer;
 } {
-  const {
-    publicFormat,
-    publicType,
-    privateFormat,
-    privateType,
-    cipher,
-    passphrase,
-  } = encoding;
+  const { publicFormat, privateFormat, cipher, passphrase } = encoding;
 
   const publicKeyData = dsa.native.getPublicKey();
   const privateKeyData = dsa.native.getPrivateKey();
@@ -82,9 +75,7 @@ function dsa_formatKeyPairOutput(
   } else {
     const format =
       publicFormat === KFormatType.PEM ? KFormatType.PEM : KFormatType.DER;
-    const keyEncoding =
-      publicType === KeyEncoding.SPKI ? KeyEncoding.SPKI : KeyEncoding.SPKI;
-    const exported = pub.handle.exportKey(format, keyEncoding);
+    const exported = pub.handle.exportKey(format, KeyEncoding.SPKI);
     if (format === KFormatType.PEM) {
       publicKey = Buffer.from(new Uint8Array(exported)).toString('utf-8');
     } else {
@@ -97,11 +88,9 @@ function dsa_formatKeyPairOutput(
   } else {
     const format =
       privateFormat === KFormatType.PEM ? KFormatType.PEM : KFormatType.DER;
-    const keyEncoding =
-      privateType === KeyEncoding.PKCS8 ? KeyEncoding.PKCS8 : KeyEncoding.PKCS8;
     const exported = priv.handle.exportKey(
       format,
-      keyEncoding,
+      KeyEncoding.PKCS8,
       cipher,
       passphrase,
     );

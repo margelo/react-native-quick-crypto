@@ -30,10 +30,7 @@ void HybridDsaKeyPair::generateKeyPairSync() {
     throw std::runtime_error("DSA modulusLength must be set before generating key pair");
   }
 
-  if (pkey != nullptr) {
-    EVP_PKEY_free(pkey);
-    pkey = nullptr;
-  }
+  pkey_.reset();
 
   // Step 1: Generate DSA parameters
   std::unique_ptr<EVP_PKEY_CTX, decltype(&EVP_PKEY_CTX_free)> param_ctx(EVP_PKEY_CTX_new_id(EVP_PKEY_DSA, nullptr), EVP_PKEY_CTX_free);
@@ -79,11 +76,11 @@ void HybridDsaKeyPair::generateKeyPairSync() {
     throw std::runtime_error("DSA: failed to generate key pair");
   }
 
-  pkey = raw_pkey;
+  pkey_.reset(raw_pkey);
 }
 
 std::shared_ptr<ArrayBuffer> HybridDsaKeyPair::getPublicKey() {
-  if (pkey == nullptr) {
+  if (!pkey_) {
     throw std::runtime_error("DSA: no key pair generated");
   }
 
@@ -92,7 +89,7 @@ std::shared_ptr<ArrayBuffer> HybridDsaKeyPair::getPublicKey() {
     throw std::runtime_error("DSA: failed to create BIO for public key export");
   }
 
-  if (i2d_PUBKEY_bio(bio, pkey) != 1) {
+  if (i2d_PUBKEY_bio(bio, pkey_.get()) != 1) {
     BIO_free(bio);
     throw std::runtime_error("DSA: failed to export public key");
   }
@@ -106,7 +103,7 @@ std::shared_ptr<ArrayBuffer> HybridDsaKeyPair::getPublicKey() {
 }
 
 std::shared_ptr<ArrayBuffer> HybridDsaKeyPair::getPrivateKey() {
-  if (pkey == nullptr) {
+  if (!pkey_) {
     throw std::runtime_error("DSA: no key pair generated");
   }
 
@@ -115,7 +112,7 @@ std::shared_ptr<ArrayBuffer> HybridDsaKeyPair::getPrivateKey() {
     throw std::runtime_error("DSA: failed to create BIO for private key export");
   }
 
-  if (i2d_PKCS8PrivateKey_bio(bio, pkey, nullptr, nullptr, 0, nullptr, nullptr) != 1) {
+  if (i2d_PKCS8PrivateKey_bio(bio, pkey_.get(), nullptr, nullptr, 0, nullptr, nullptr) != 1) {
     BIO_free(bio);
     throw std::runtime_error("DSA: failed to export private key");
   }

@@ -19,7 +19,6 @@ namespace margelo::nitro::crypto {
       prototype.registerHybridMethod("setPrimeLength", &HybridDhKeyPairSpec::setPrimeLength);
       prototype.registerHybridMethod("setPrime", &HybridDhKeyPairSpec::setPrime);
       prototype.registerHybridMethod("setGenerator", &HybridDhKeyPairSpec::setGenerator);
-      prototype.registerHybridMethod("setGroupName", &HybridDhKeyPairSpec::setGroupName);
       prototype.registerHybridMethod("getPublicKey", &HybridDhKeyPairSpec::getPublicKey);
       prototype.registerHybridMethod("getPrivateKey", &HybridDhKeyPairSpec::getPrivateKey);
     });

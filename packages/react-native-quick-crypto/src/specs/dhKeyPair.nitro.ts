@@ -8,7 +8,6 @@ export interface DhKeyPair
   setPrimeLength(primeLength: number): void;
   setPrime(prime: ArrayBuffer): void;
   setGenerator(generator: number): void;
-  setGroupName(groupName: string): void;
 
   getPublicKey(): ArrayBuffer;
   getPrivateKey(): ArrayBuffer;

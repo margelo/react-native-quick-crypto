@@ -36,10 +36,6 @@ void HybridDhKeyPair::setGenerator(double generator) {
   generator_ = static_cast<int>(generator);
 }
 
-void HybridDhKeyPair::setGroupName(const std::string& groupName) {
-  groupName_ = groupName;
-}
-
 std::shared_ptr<Promise<void>> HybridDhKeyPair::generateKeyPair() {
   return Promise<void>::async([this]() { this->generateKeyPairSync(); });
 }
@@ -109,7 +105,7 @@ void HybridDhKeyPair::generateKeyPairSync() {
       throw std::runtime_error("DH: failed to generate parameters");
     }
   } else {
-    throw std::runtime_error("DH: either prime, primeLength, or groupName must be set");
+    throw std::runtime_error("DH: either prime or primeLength must be set");
   }
 
   std::unique_ptr<EVP_PKEY, decltype(&EVP_PKEY_free)> params_guard(params, EVP_PKEY_free);

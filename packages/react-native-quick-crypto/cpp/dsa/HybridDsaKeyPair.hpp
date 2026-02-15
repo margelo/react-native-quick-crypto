@@ -11,12 +11,7 @@ namespace margelo::nitro::crypto {
 class HybridDsaKeyPair : public HybridDsaKeyPairSpec {
  public:
   HybridDsaKeyPair() : HybridObject(TAG) {}
-  ~HybridDsaKeyPair() override {
-    if (pkey != nullptr) {
-      EVP_PKEY_free(pkey);
-      pkey = nullptr;
-    }
-  }
+  ~HybridDsaKeyPair() override = default;
 
  public:
   std::shared_ptr<Promise<void>> generateKeyPair() override;
@@ -29,7 +24,9 @@ class HybridDsaKeyPair : public HybridDsaKeyPairSpec {
  private:
   int modulusLength_ = 0;
   int divisorLength_ = -1;
-  EVP_PKEY* pkey = nullptr;
+
+  using EVP_PKEY_ptr = std::unique_ptr<EVP_PKEY, decltype(&EVP_PKEY_free)>;
+  EVP_PKEY_ptr pkey_{nullptr, EVP_PKEY_free};
 };
 
 } // namespace margelo::nitro::crypto
