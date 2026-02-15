@@ -1,6 +1,6 @@
 import { NitroModules } from 'react-native-nitro-modules';
 import { Buffer } from '@craftzdog/react-native-buffer';
-import { KeyObject, PublicKeyObject, PrivateKeyObject } from './keys';
+import { KeyObject, PublicKeyObject, PrivateKeyObject } from './keys/classes';
 import type { DhKeyPair } from './specs/dhKeyPair.nitro';
 import type { GenerateKeyPairOptions, KeyPairGenConfig } from './utils/types';
 import { KFormatType, KeyEncoding } from './utils';

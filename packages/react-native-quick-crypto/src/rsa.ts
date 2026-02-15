@@ -4,7 +4,7 @@ import {
   KeyObject,
   PrivateKeyObject,
   PublicKeyObject,
-} from './keys';
+} from './keys/classes';
 import {
   getUsagesUnion,
   hasAnyNotIn,

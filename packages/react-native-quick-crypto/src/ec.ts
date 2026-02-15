@@ -6,7 +6,7 @@ import {
   KeyObject,
   PublicKeyObject,
   PrivateKeyObject,
-} from './keys';
+} from './keys/classes';
 import type {
   CryptoKeyPair,
   KeyPairOptions,
