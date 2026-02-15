@@ -23,6 +23,7 @@ import '../tests/keys/generate_key';
 import '../tests/keys/generate_keypair';
 import '../tests/keys/keyobject_from_tocryptokey_tests';
 import '../tests/keys/public_cipher';
+import '../tests/keys/sign_verify_error_queue';
 import '../tests/keys/sign_verify_oneshot';
 import '../tests/keys/sign_verify_streaming';
 import '../tests/pbkdf2/pbkdf2_tests';
