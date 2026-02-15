@@ -8,7 +8,7 @@ import {
   lazyDOMException,
   normalizeHashName,
 } from './utils';
-import type { HashAlgorithm, SubtleAlgorithm } from './utils';
+import type { SubtleAlgorithm } from './utils';
 import type { Pbkdf2 } from './specs/pbkdf2.nitro';
 import { promisify } from 'util';
 import type { CryptoKey } from './keys';
@@ -79,12 +79,12 @@ export function pbkdf2Sync(
   salt: Salt,
   iterations: number,
   keylen: number,
-  digest?: HashAlgorithm,
+  digest: string,
 ): Buffer {
   const sanitizedPassword = sanitizeInput(password, WRONG_PASS);
   const sanitizedSalt = sanitizeInput(salt, WRONG_SALT);
 
-  const algo = digest ? normalizeHashName(digest, HashContext.Node) : 'sha1';
+  const algo = normalizeHashName(digest, HashContext.Node);
   getNative();
   const result: ArrayBuffer = native.pbkdf2Sync(
     sanitizedPassword,
@@ -104,7 +104,7 @@ const pbkdf2WithDigest = (
   salt: Salt,
   iterations: number,
   keylen: number,
-  digest: HashAlgorithm,
+  digest: string,
   callback: Pbkdf2Callback,
 ) => pbkdf2(password, salt, iterations, keylen, digest, callback);
 
@@ -142,7 +142,7 @@ export async function pbkdf2DeriveBits(
     sanitizedSalt,
     iterations,
     length / 8,
-    normalizedHash as HashAlgorithm,
+    normalizedHash,
   );
   if (!result) {
     throw lazyDOMException(

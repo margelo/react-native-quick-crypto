@@ -2,10 +2,10 @@
 import { Buffer } from 'safe-buffer';
 import { expect } from 'chai';
 import { test } from '../util';
-import { fixtures, type Fixture } from './fixtures';
+import { fixtures, type ValidFixture } from './fixtures';
 
 import crypto from 'react-native-quick-crypto';
-import type { BinaryLike, HashAlgorithm } from 'react-native-quick-crypto';
+import type { BinaryLike } from 'react-native-quick-crypto';
 
 type TestFixture = [string, string, number, number, string];
 
@@ -27,18 +27,11 @@ const SUITE = 'pbkdf2';
     length: number,
     expected: string,
   ) => {
-    crypto.pbkdf2(
-      pass,
-      salt,
-      iterations,
-      length,
-      hash as HashAlgorithm,
-      function (err, result) {
-        expect(err).to.be.null;
-        expect(result).not.to.be.null;
-        expect(result?.toString('hex')).to.equal(expected);
-      },
-    );
+    crypto.pbkdf2(pass, salt, iterations, length, hash, function (err, result) {
+      expect(err).to.be.null;
+      expect(result).not.to.be.null;
+      expect(result?.toString('hex')).to.equal(expected);
+    });
   };
 
   const kTests: TestFixture[] = [
@@ -75,7 +68,7 @@ const SUITE = 'pbkdf2';
 }
 
 test(SUITE, 'handles buffers', () => {
-  const resultSync = crypto.pbkdf2Sync('password', 'salt', 1, 32);
+  const resultSync = crypto.pbkdf2Sync('password', 'salt', 1, 32, 'sha1');
   expect(resultSync?.toString('hex')).to.equal(
     '0c60c80f961f0e71f3a9b524af6012062fe037a6e0f0eb94fe8fc46bdc637164',
   );
@@ -125,8 +118,7 @@ test(
 
 const algos = ['sha1', 'sha224', 'sha256', 'sha384', 'sha512', 'ripemd160'];
 algos.forEach(function (algorithm) {
-  fixtures.valid.forEach(function (f: Fixture) {
-    // TODO: check these types once nitro port is done
+  fixtures.valid.forEach(function (f: ValidFixture) {
     let key: BinaryLike, keyType: string, salt: BinaryLike, saltType: string;
     if (f.keyUint8Array) {
       key = new Uint8Array(f.keyUint8Array);
@@ -160,7 +152,7 @@ algos.forEach(function (algorithm) {
       salt = f.salt as BinaryLike;
       saltType = 'string';
     }
-    const expected = f.results ? f.results[algorithm] : undefined;
+    const expected = f.results[algorithm];
     const description =
       algorithm +
       ' encodes "' +
@@ -180,9 +172,9 @@ algos.forEach(function (algorithm) {
       crypto.pbkdf2(
         key,
         salt,
-        f.iterations as number,
-        f.dkLen as number,
-        algorithm as HashAlgorithm,
+        f.iterations,
+        f.dkLen,
+        algorithm,
         function (err, result) {
           expect(err).to.be.null;
           expect(result).not.to.be.null;
@@ -195,42 +187,16 @@ algos.forEach(function (algorithm) {
       const result = crypto.pbkdf2Sync(
         key,
         salt,
-        f.iterations as number,
-        f.dkLen as number,
-        algorithm as HashAlgorithm,
+        f.iterations,
+        f.dkLen,
+        algorithm,
       );
       expect(result?.toString('hex')).to.equal(expected);
     });
   });
 
-  // // TODO: fix the 'invalid' tests
-  // fixtures.invalid.forEach(function (f: Fixture) {
-  //   const description = algorithm + ' should throw ' + f.exception;
-
-  //   test(SUITE, ' async w/ ' + description, function () {
-  //     function noop() {}
-  //     expect(() => {
-  //       crypto.pbkdf2(
-  //         f.key as BinaryLike,
-  //         f.salt as BinaryLike,
-  //         f.iterations as number,
-  //         f.dkLen as number,
-  //         algorithm as HashAlgorithm,
-  //         noop
-  //       )
-  //     }).to.throw(f.exception);
-  //   });
-
-  //   test(SUITE, ' sync w/' + description, function () {
-  //     expect(() => {
-  //       crypto.pbkdf2Sync(
-  //         f.key as BinaryLike,
-  //         f.salt as BinaryLike,
-  //         f.iterations as number,
-  //         f.dkLen as number,
-  //         algorithm as HashAlgorithm,
-  //       )
-  //     }).to.throw(f.exception);
-  //   });
-  // });
+  // TODO(#931): enable invalid fixture tests once JS-side validation is added
+  // for iterations/keylen. Currently invalid values (negative, NaN, Infinity)
+  // reach the native C layer and trigger assert()/abort() instead of throwing.
+  // See: fixtures.invalid
 });
