@@ -8,41 +8,14 @@
 #include <openssl/evp.h>
 #include <string>
 
+#include "../utils/QuickCryptoUtils.hpp"
+
 namespace margelo::nitro::crypto {
 
 enum DSASigEnc {
   kSigEncDER = 0,
   kSigEncP1363 = 1,
 };
-
-inline const EVP_MD* getDigestByName(const std::string& algorithm) {
-  // Strip legacy RSA- prefix (e.g. RSA-SHA256 -> SHA256) for Node.js compat
-  std::string algo = algorithm;
-  if (algo.size() > 4 && (algo.compare(0, 4, "RSA-") == 0 || algo.compare(0, 4, "rsa-") == 0)) {
-    algo = algo.substr(4);
-  }
-
-  if (algo == "SHA1" || algo == "sha1" || algo == "SHA-1" || algo == "sha-1") {
-    return EVP_sha1();
-  } else if (algo == "SHA224" || algo == "sha224" || algo == "SHA-224" || algo == "sha-224") {
-    return EVP_sha224();
-  } else if (algo == "SHA256" || algo == "sha256" || algo == "SHA-256" || algo == "sha-256") {
-    return EVP_sha256();
-  } else if (algo == "SHA384" || algo == "sha384" || algo == "SHA-384" || algo == "sha-384") {
-    return EVP_sha384();
-  } else if (algo == "SHA512" || algo == "sha512" || algo == "SHA-512" || algo == "sha-512") {
-    return EVP_sha512();
-  } else if (algo == "SHA3-224" || algo == "sha3-224") {
-    return EVP_sha3_224();
-  } else if (algo == "SHA3-256" || algo == "sha3-256") {
-    return EVP_sha3_256();
-  } else if (algo == "SHA3-384" || algo == "sha3-384") {
-    return EVP_sha3_384();
-  } else if (algo == "SHA3-512" || algo == "sha3-512") {
-    return EVP_sha3_512();
-  }
-  throw std::runtime_error("Unsupported hash algorithm: " + algorithm);
-}
 
 inline unsigned int getBytesOfRS(EVP_PKEY* pkey) {
   int bits;

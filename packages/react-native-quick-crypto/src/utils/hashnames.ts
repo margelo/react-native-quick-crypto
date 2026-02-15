@@ -80,7 +80,7 @@ const kHashNames: HashNames = {
   // Add OpenSSL legacy RSA-* aliases (e.g. RSA-SHA256 -> sha256)
   for (let n: number = 0; n < keys.length; n++) {
     const key = keys[n]!;
-    if (key.startsWith('sha')) {
+    if (key.startsWith('sha') || key === 'ripemd160') {
       const rsaAlias = 'rsa-' + key;
       if (kHashNames[rsaAlias] === undefined) {
         kHashNames[rsaAlias] = kHashNames[key]!;
