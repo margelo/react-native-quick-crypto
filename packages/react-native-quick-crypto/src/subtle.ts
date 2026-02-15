@@ -57,12 +57,6 @@ import {
 } from './ed';
 import { mldsa_generateKeyPairWebCrypto, type MlDsaVariant } from './mldsa';
 import { hkdfDeriveBits, type HkdfAlgorithm } from './hkdf';
-// import { pbkdf2DeriveBits } from './pbkdf2';
-// import { aesCipher, aesGenerateKey, aesImportKey, getAlgorithmName } from './aes';
-// import { rsaCipher, rsaExportKey, rsaImportKey, rsaKeyGenerate } from './rsa';
-// import { normalizeAlgorithm, type Operation } from './algorithms';
-// import { hmacImportKey } from './mac';
-
 // Temporary enums that need to be defined
 
 enum KWebCryptoKeyFormat {
@@ -1370,7 +1364,7 @@ function argon2DeriveBits(
   baseKey: CryptoKey,
   length: number,
 ): ArrayBuffer {
-  if (length === 0 || length === null || length % 8 !== 0) {
+  if (length === 0 || length % 8 !== 0) {
     throw lazyDOMException(
       'Invalid Argon2 derived key length',
       'OperationError',

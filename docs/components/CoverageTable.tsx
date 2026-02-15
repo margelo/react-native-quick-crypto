@@ -36,34 +36,7 @@ export function CoverageTable() {
     return 'partial';
   };
 
-  const filterItems = (items: CoverageItem[]): CoverageItem[] => {
-    return items
-      .map(item => {
-        const matches = item.name.toLowerCase().includes(search.toLowerCase());
-        const subMatches = item.subItems ? filterItems(item.subItems) : [];
-
-        if (matches || subMatches.length > 0) {
-          const newItem = { ...item, subItems: subMatches };
-          // If we have sub-items (either filtered or original if matches), recalculate status
-          if (newItem.subItems && newItem.subItems.length > 0) {
-            newItem.status = deriveStatus(newItem);
-          } else if (item.subItems && item.subItems.length > 0) {
-            // If it matched by name but sub-items were filtered out (shouldn't happen with logic above but for safety)
-            // Actually, if matches is true, we want to keep all subitems?
-            // The user simply wants the Parent status to reflect its Children.
-            // However, filter logic creates a new subset. The status should logically reflect the *visible* items?
-            // Or should it reflect the *absolute* status?
-            // "unwrapKey" status should be "Partial" regardless of search.
-            // So we should probably preprocess the data with derived statuses *before* filtering.
-          }
-          return newItem;
-        }
-        return null;
-      })
-      .filter(Boolean) as CoverageItem[];
-  };
-
-  // Better approach: Pre-process data to derive statuses, THEN filter.
+  // Pre-process data to derive statuses, THEN filter.
   const processedData = COVERAGE_DATA.map(category => ({
     ...category,
     items: category.items.map(function processItem(item): CoverageItem {
