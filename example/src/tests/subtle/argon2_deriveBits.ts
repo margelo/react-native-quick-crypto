@@ -2,7 +2,7 @@ import { expect } from 'chai';
 import { subtle, Buffer } from 'react-native-quick-crypto';
 import { test } from '../util';
 
-const SUITE = 'subtle.deriveBits(Argon2)';
+const SUITE = 'subtle.deriveBits';
 
 // RFC 9106 test vectors — same password, nonce, secret, and associated data
 // across all three variants, with variant-specific expected outputs.
