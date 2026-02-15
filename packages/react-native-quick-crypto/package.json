@@ -19,6 +19,7 @@
     "prepare": "bun clean && bun tsc && bob build",
     "release": "release-it",
     "specs": "nitrogen",
+    "circular": "dpdm --circular --no-tree --no-warning --exit-code circular:1 --transform src/index.ts",
     "test": "jest"
   },
   "files": [

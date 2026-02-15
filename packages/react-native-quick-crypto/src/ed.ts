@@ -1,12 +1,12 @@
 import { NitroModules } from 'react-native-nitro-modules';
 import { Buffer } from '@craftzdog/react-native-buffer';
-import type { AsymmetricKeyObject, PrivateKeyObject } from './keys';
+import type { AsymmetricKeyObject, PrivateKeyObject } from './keys/classes';
 import {
   CryptoKey,
   KeyObject,
   PublicKeyObject,
   PrivateKeyObject as PrivateKeyObjectClass,
-} from './keys';
+} from './keys/classes';
 import type { EdKeyPair } from './specs/edKeyPair.nitro';
 import type {
   BinaryLike,
