@@ -39,6 +39,8 @@ add_library(
   ../cpp/cipher/ChaCha20Cipher.cpp
   ../cpp/cipher/ChaCha20Poly1305Cipher.cpp
   ../cpp/dh/HybridDiffieHellman.cpp
+  ../cpp/dh/HybridDhKeyPair.cpp
+  ../cpp/dsa/HybridDsaKeyPair.cpp
   ../cpp/ec/HybridEcKeyPair.cpp
   ../cpp/ecdh/HybridECDH.cpp
   ../cpp/ed25519/HybridEdKeyPair.cpp
@@ -74,6 +76,7 @@ include_directories(
   "../cpp/certificate"
   "../cpp/cipher"
   "../cpp/dh"
+  "../cpp/dsa"
   "../cpp/ec"
   "../cpp/ecdh"
   "../cpp/ed25519"

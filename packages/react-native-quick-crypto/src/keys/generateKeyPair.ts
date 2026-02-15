@@ -1,6 +1,11 @@
 import { ed_generateKeyPair } from '../ed';
 import { rsa_generateKeyPairNode, rsa_generateKeyPairNodeSync } from '../rsa';
 import { ec_generateKeyPairNode, ec_generateKeyPairNodeSync } from '../ec';
+import { dsa_generateKeyPairNode, dsa_generateKeyPairNodeSync } from '../dsa';
+import {
+  dh_generateKeyPairNode,
+  dh_generateKeyPairNodeSync,
+} from '../dhKeyPair';
 import {
   kEmptyObject,
   validateFunction,
@@ -139,6 +144,7 @@ function internalGenerateKeyPair(
     case 'rsa-pss':
     case 'dsa':
     case 'ec':
+    case 'dh':
       break;
     default: {
       const err = new Error(`
@@ -158,6 +164,10 @@ function internalGenerateKeyPair(
           result = await rsa_generateKeyPairNode(type, options, encoding);
         } else if (type === 'ec') {
           result = await ec_generateKeyPairNode(options, encoding);
+        } else if (type === 'dsa') {
+          result = await dsa_generateKeyPairNode(options, encoding);
+        } else if (type === 'dh') {
+          result = await dh_generateKeyPairNode(options, encoding);
         } else {
           throw new Error(`Unsupported key type: ${type}`);
         }
@@ -184,6 +194,10 @@ function internalGenerateKeyPair(
       result = rsa_generateKeyPairNodeSync(type, options, encoding);
     } else if (type === 'ec') {
       result = ec_generateKeyPairNodeSync(options, encoding);
+    } else if (type === 'dsa') {
+      result = dsa_generateKeyPairNodeSync(options, encoding);
+    } else if (type === 'dh') {
+      result = dh_generateKeyPairNodeSync(options, encoding);
     } else {
       throw new Error(`Unsupported key type: ${type}`);
     }

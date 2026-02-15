@@ -38,7 +38,9 @@ target_sources(
   ../nitrogen/generated/shared/c++/HybridCertificateSpec.cpp
   ../nitrogen/generated/shared/c++/HybridCipherSpec.cpp
   ../nitrogen/generated/shared/c++/HybridCipherFactorySpec.cpp
+  ../nitrogen/generated/shared/c++/HybridDhKeyPairSpec.cpp
   ../nitrogen/generated/shared/c++/HybridDiffieHellmanSpec.cpp
+  ../nitrogen/generated/shared/c++/HybridDsaKeyPairSpec.cpp
   ../nitrogen/generated/shared/c++/HybridECDHSpec.cpp
   ../nitrogen/generated/shared/c++/HybridEcKeyPairSpec.cpp
   ../nitrogen/generated/shared/c++/HybridEdKeyPairSpec.cpp

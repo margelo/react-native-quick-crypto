@@ -15,7 +15,9 @@
 #include "HybridCertificate.hpp"
 #include "HybridCipher.hpp"
 #include "HybridCipherFactory.hpp"
+#include "HybridDhKeyPair.hpp"
 #include "HybridDiffieHellman.hpp"
+#include "HybridDsaKeyPair.hpp"
 #include "HybridECDH.hpp"
 #include "HybridEcKeyPair.hpp"
 #include "HybridEdKeyPair.hpp"
@@ -89,12 +91,30 @@
     }
   );
   HybridObjectRegistry::registerHybridObjectConstructor(
+    "DhKeyPair",
+    []() -> std::shared_ptr<HybridObject> {
+      static_assert(std::is_default_constructible_v<HybridDhKeyPair>,
+                    "The HybridObject \"HybridDhKeyPair\" is not default-constructible! "
+                    "Create a public constructor that takes zero arguments to be able to autolink this HybridObject.");
+      return std::make_shared<HybridDhKeyPair>();
+    }
+  );
+  HybridObjectRegistry::registerHybridObjectConstructor(
     "DiffieHellman",
     []() -> std::shared_ptr<HybridObject> {
       static_assert(std::is_default_constructible_v<HybridDiffieHellman>,
                     "The HybridObject \"HybridDiffieHellman\" is not default-constructible! "
                     "Create a public constructor that takes zero arguments to be able to autolink this HybridObject.");
       return std::make_shared<HybridDiffieHellman>();
+    }
+  );
+  HybridObjectRegistry::registerHybridObjectConstructor(
+    "DsaKeyPair",
+    []() -> std::shared_ptr<HybridObject> {
+      static_assert(std::is_default_constructible_v<HybridDsaKeyPair>,
+                    "The HybridObject \"HybridDsaKeyPair\" is not default-constructible! "
+                    "Create a public constructor that takes zero arguments to be able to autolink this HybridObject.");
+      return std::make_shared<HybridDsaKeyPair>();
     }
   );
   HybridObjectRegistry::registerHybridObjectConstructor(

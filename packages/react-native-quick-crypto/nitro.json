@@ -23,8 +23,14 @@
     "CipherFactory": {
       "cpp": "HybridCipherFactory"
     },
+    "DhKeyPair": {
+      "cpp": "HybridDhKeyPair"
+    },
     "DiffieHellman": {
       "cpp": "HybridDiffieHellman"
+    },
+    "DsaKeyPair": {
+      "cpp": "HybridDsaKeyPair"
     },
     "ECDH": {
       "cpp": "HybridECDH"

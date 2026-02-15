@@ -127,8 +127,8 @@ These algorithms provide quantum-resistant cryptography.
   * ❌ `crypto.encapsulate(key[, callback])`
   * `-` `crypto.fips` deprecated, not applicable to RN
   * ✅ `crypto.generateKey(type, options, callback)`
-  * 🚧 `crypto.generateKeyPair(type, options, callback)`
-  * 🚧 `crypto.generateKeyPairSync(type, options)`
+  * ✅ `crypto.generateKeyPair(type, options, callback)`
+  * ✅ `crypto.generateKeyPairSync(type, options)`
   * 🚧 `crypto.generateKeySync(type, options)`
   * ✅ `crypto.generatePrime(size[, options[, callback]])`
   * ✅ `crypto.generatePrimeSync(size[, options])`
@@ -182,26 +182,26 @@ These algorithms provide quantum-resistant cryptography.
 | --------- | :----: |
 | `rsa`     | ✅ |
 | `rsa-pss` | ✅ |
-| `dsa`     | ❌ |
+| `dsa`     | ✅ |
 | `ec`      | ✅ |
 | `ed25519` | ✅ |
 | `ed448`   | ✅ |
 | `x25519`  | ✅ |
 | `x448`    | ✅ |
-| `dh`      | ❌ |
+| `dh`      | ✅ |
 
 ## `crypto.generateKeyPairSync`
 | type      | Status |
 | --------- | :----: |
 | `rsa`     | ✅ |
 | `rsa-pss` | ✅ |
-| `dsa`     | ❌ |
+| `dsa`     | ✅ |
 | `ec`      | ✅ |
 | `ed25519` | ✅ |
 | `ed448`   | ✅ |
 | `x25519`  | ✅ |
 | `x448`    | ✅ |
-| `dh`      | ❌ |
+| `dh`      | ✅ |
 
 ## `crypto.generateKeySync`
 | type       | Status |
