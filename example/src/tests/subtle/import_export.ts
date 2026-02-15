@@ -2450,3 +2450,48 @@ test(SUITE, 'HKDF import raw-secret format and deriveBits', async () => {
   expect(derived).to.be.instanceOf(ArrayBuffer);
   expect(derived.byteLength).to.equal(32);
 });
+
+// Regression test for #645: exportKey('raw') intermittently returns corrupted
+// key data with trailing zeros due to JSI ArrayBuffer lifetime issues.
+test(SUITE, '#645 AES-CBC generateKey/exportKey/importKey stress', async () => {
+  const iterations = 200;
+  for (let i = 0; i < iterations; i++) {
+    const key = (await subtle.generateKey(
+      { name: 'AES-CBC', length: 256 },
+      true,
+      ['encrypt', 'decrypt'],
+    )) as CryptoKey;
+
+    const exported = (await subtle.exportKey('raw', key)) as ArrayBuffer;
+    const exportedBytes = new Uint8Array(exported);
+
+    expect(exportedBytes.byteLength).to.equal(32);
+
+    // Round-trip: import the exported key and use it
+    const imported = await subtle.importKey('raw', exported, 'AES-CBC', true, [
+      'encrypt',
+      'decrypt',
+    ]);
+
+    const iv = getRandomValues(new Uint8Array(16));
+    const plaintext = getRandomValues(new Uint8Array(64));
+
+    const encrypted = await subtle.encrypt(
+      { name: 'AES-CBC', iv },
+      key,
+      plaintext,
+    );
+
+    const decrypted = await subtle.decrypt(
+      { name: 'AES-CBC', iv },
+      imported,
+      encrypted,
+    );
+
+    const decryptedBytes = new Uint8Array(decrypted);
+    expect(decryptedBytes).to.deep.equal(
+      plaintext,
+      `iteration ${i}: decrypt with re-imported key failed`,
+    );
+  }
+});
