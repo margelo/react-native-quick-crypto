@@ -6,21 +6,18 @@ export const useSuiteList = (
 ): [TestSuites, (description: string) => void, () => void, () => void] => {
   const [suites, setSuites] = useState<TestSuites>(initialContext);
 
-  const toggle = useCallback(
-    (description: string) => {
-      setSuites(prevSuites => {
-        const newSuites = { ...prevSuites };
-        if (newSuites[description]) {
-          newSuites[description] = {
-            ...newSuites[description],
-            value: !newSuites[description].value,
-          };
-        }
-        return newSuites;
-      });
-    },
-    [setSuites],
-  );
+  const toggle = useCallback((description: string) => {
+    setSuites(prevSuites => {
+      const newSuites = { ...prevSuites };
+      if (newSuites[description]) {
+        newSuites[description] = {
+          ...newSuites[description],
+          value: !newSuites[description].value,
+        };
+      }
+      return newSuites;
+    });
+  }, []);
 
   const clearAll = useCallback(() => {
     setSuites(
@@ -32,7 +29,7 @@ export const useSuiteList = (
           ]),
         ) as TestSuites,
     );
-  }, [setSuites]);
+  }, []);
 
   const checkAll = useCallback(() => {
     setSuites(
@@ -44,7 +41,7 @@ export const useSuiteList = (
           ]),
         ) as TestSuites,
     );
-  }, [setSuites]);
+  }, []);
 
   return [suites, toggle, clearAll, checkAll];
 };

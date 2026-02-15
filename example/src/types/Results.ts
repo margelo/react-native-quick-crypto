@@ -25,3 +25,8 @@ export type Stats = {
   pending: number;
   failures: number;
 };
+
+export interface RouteParams {
+  results: TestResult[];
+  suiteName: string;
+}

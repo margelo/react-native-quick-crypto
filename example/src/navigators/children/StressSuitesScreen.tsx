@@ -44,6 +44,7 @@ export const StressSuitesScreen = () => {
           data={suiteEntries}
           renderItem={renderItem}
           keyExtractor={(_item, index) => index.toString()}
+          testID="stress-suites-list"
         />
       </View>
       <TestItem
@@ -63,14 +64,23 @@ export const StressSuitesScreen = () => {
         )}
       />
       <View style={styles.menu}>
-        <Button title="Check All" onPress={checkAll} />
-        <Button title="Clear All" onPress={clearAll} />
+        <Button
+          title="Check All"
+          onPress={checkAll}
+          testID="stress-check-all-button"
+        />
+        <Button
+          title="Clear All"
+          onPress={clearAll}
+          testID="stress-clear-all-button"
+        />
         <Button
           title="Run"
           onPress={() => {
             runTests(suites);
           }}
           color="green"
+          testID="stress-run-button"
         />
       </View>
     </SafeAreaView>

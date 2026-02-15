@@ -5,13 +5,8 @@ import BouncyCheckbox from 'react-native-bouncy-checkbox';
 import { CorrectResultItem } from '../../components/CorrectResultItem';
 import { IncorrectResultItem } from '../../components/IncorrectResultItem';
 import { Suite } from '../../components/Suite';
-import type { TestResult } from '../../types/Results';
+import type { RouteParams } from '../../types/Results';
 import { colors } from '../../styles/colors';
-
-type RouteParams = {
-  results: TestResult[];
-  suiteName: string;
-};
 
 interface DetailsScreenProps {
   titlePrefix: string;
