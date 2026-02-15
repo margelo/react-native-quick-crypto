@@ -230,7 +230,7 @@ export class SecretKeyObject extends KeyObject {
       );
     }
     const key = this.handle.exportKey();
-    return Buffer.from(key);
+    return Buffer.from(new Uint8Array(key));
   }
 }
 

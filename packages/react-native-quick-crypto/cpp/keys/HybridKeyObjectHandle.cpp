@@ -91,9 +91,11 @@ std::shared_ptr<ArrayBuffer> HybridKeyObjectHandle::exportKey(std::optional<KFor
                                                               const std::optional<std::shared_ptr<ArrayBuffer>>& passphrase) {
   auto keyType = data_.GetKeyType();
 
-  // Handle secret keys
+  // Handle secret keys - always return a copy to prevent JSI ArrayBuffer
+  // lifetime issues (GC can free the JSI wrapper while JS holds a view)
+  // and to protect internal key material from mutation. See #645.
   if (keyType == KeyType::SECRET) {
-    return data_.GetSymmetricKey();
+    return ToNativeArrayBuffer(data_.GetSymmetricKey());
   }
 
   // Handle asymmetric keys (public/private)
