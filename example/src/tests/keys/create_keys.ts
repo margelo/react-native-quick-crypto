@@ -5,7 +5,10 @@ import {
   createPublicKey,
   generateKeyPair,
   randomBytes,
+  sign,
+  verify,
 } from 'react-native-quick-crypto';
+import type { JWK } from 'react-native-quick-crypto';
 import { expect } from 'chai';
 import { test, assertThrowsAsync, decodeHex } from '../util';
 import { rsaPrivateKeyPem, rsaPublicKeyPem } from './fixtures';
@@ -383,6 +386,105 @@ test(
     expect(key2.asymmetricKeyType).to.equal('ec');
   },
 );
+
+// --- JWK EC Round-Trip Tests ---
+
+const EC_CURVES = [
+  { namedCurve: 'P-256', crv: 'P-256', hash: 'SHA256' },
+  { namedCurve: 'P-384', crv: 'P-384', hash: 'SHA384' },
+  { namedCurve: 'P-521', crv: 'P-521', hash: 'SHA512' },
+] as const;
+
+for (const { namedCurve, crv, hash } of EC_CURVES) {
+  test(
+    SUITE,
+    `JWK EC ${crv} private key round-trip: generate -> export JWK -> import JWK -> sign/verify`,
+    async () => {
+      const { privateKey: privPem, publicKey: pubPem } = await new Promise<{
+        privateKey: string;
+        publicKey: string;
+      }>((resolve, reject) => {
+        generateKeyPair(
+          'ec',
+          {
+            namedCurve,
+            publicKeyEncoding: { type: 'spki', format: 'pem' },
+            privateKeyEncoding: { type: 'pkcs8', format: 'pem' },
+          },
+          (err, pubKey, privKey) => {
+            if (err) reject(err);
+            else
+              resolve({
+                privateKey: privKey as string,
+                publicKey: pubKey as string,
+              });
+          },
+        );
+      });
+
+      const privKey = createPrivateKey(privPem);
+      const jwk = privKey.export({ format: 'jwk' }) as JWK;
+
+      expect(jwk.kty).to.equal('EC');
+      expect(jwk.crv).to.equal(crv);
+      expect(jwk.x).to.match(/^[A-Za-z0-9_-]+$/);
+      expect(jwk.y).to.match(/^[A-Za-z0-9_-]+$/);
+      expect(jwk.d).to.match(/^[A-Za-z0-9_-]+$/);
+
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const reimported = createPrivateKey({ key: jwk as any, format: 'jwk' });
+      expect(reimported.type).to.equal('private');
+      expect(reimported.asymmetricKeyType).to.equal('ec');
+
+      const sig = sign(hash, 'test data', reimported);
+      const pubKey = createPublicKey(pubPem);
+      const valid = verify(hash, 'test data', pubKey, sig);
+      expect(valid).to.equal(true);
+    },
+  );
+
+  test(
+    SUITE,
+    `JWK EC ${crv} public key round-trip: generate -> export JWK -> import JWK`,
+    async () => {
+      const { publicKey: pubPem } = await new Promise<{
+        privateKey: string;
+        publicKey: string;
+      }>((resolve, reject) => {
+        generateKeyPair(
+          'ec',
+          {
+            namedCurve,
+            publicKeyEncoding: { type: 'spki', format: 'pem' },
+            privateKeyEncoding: { type: 'pkcs8', format: 'pem' },
+          },
+          (err, pubKey, privKey) => {
+            if (err) reject(err);
+            else
+              resolve({
+                privateKey: privKey as string,
+                publicKey: pubKey as string,
+              });
+          },
+        );
+      });
+
+      const pubKey = createPublicKey(pubPem);
+      const jwk = pubKey.export({ format: 'jwk' }) as JWK;
+
+      expect(jwk.kty).to.equal('EC');
+      expect(jwk.crv).to.equal(crv);
+      expect(jwk.x).to.match(/^[A-Za-z0-9_-]+$/);
+      expect(jwk.y).to.match(/^[A-Za-z0-9_-]+$/);
+      expect(jwk.d).to.equal(undefined);
+
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const reimported = createPublicKey({ key: jwk as any, format: 'jwk' });
+      expect(reimported.type).to.equal('public');
+      expect(reimported.asymmetricKeyType).to.equal('ec');
+    },
+  );
+}
 
 // --- Error Cases ---
 

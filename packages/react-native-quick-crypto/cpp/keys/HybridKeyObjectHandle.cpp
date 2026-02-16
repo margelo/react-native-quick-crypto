@@ -10,7 +10,6 @@
 #include <openssl/ec.h>
 #include <openssl/evp.h>
 #include <openssl/obj_mac.h>
-#include <openssl/param_build.h>
 #include <openssl/rsa.h>
 
 namespace margelo::nitro::crypto {
@@ -283,11 +282,14 @@ JWK HybridKeyObjectHandle::exportJwk(const JWK& key, bool handleRsaPss) {
 
     BIGNUM* x_bn = nullptr;
     BIGNUM* y_bn = nullptr;
-    if (EVP_PKEY_get_bn_param(pkey.get(), OSSL_PKEY_PARAM_EC_PUB_X, &x_bn) == 1 &&
-        EVP_PKEY_get_bn_param(pkey.get(), OSSL_PKEY_PARAM_EC_PUB_Y, &y_bn) == 1) {
-      result.x = bn_to_base64url(x_bn, field_size);
-      result.y = bn_to_base64url(y_bn, field_size);
+    if (EVP_PKEY_get_bn_param(pkey.get(), OSSL_PKEY_PARAM_EC_PUB_X, &x_bn) != 1 ||
+        EVP_PKEY_get_bn_param(pkey.get(), OSSL_PKEY_PARAM_EC_PUB_Y, &y_bn) != 1) {
+      BN_free(x_bn);
+      BN_free(y_bn);
+      throw std::runtime_error("Failed to get EC public key coordinates");
     }
+    result.x = bn_to_base64url(x_bn, field_size);
+    result.y = bn_to_base64url(y_bn, field_size);
     BN_free(x_bn);
     BN_free(y_bn);
 
@@ -602,7 +604,6 @@ std::optional<KeyType> HybridKeyObjectHandle::initJwk(const JWK& keyData, std::o
     BN_free(x_bn);
     BN_free(y_bn);
 
-    // Decode private key if present
     BIGNUM* d_bn = nullptr;
     if (isPrivate) {
       d_bn = base64url_to_bn(keyData.d.value());
@@ -610,41 +611,14 @@ std::optional<KeyType> HybridKeyObjectHandle::initJwk(const JWK& keyData, std::o
         throw std::runtime_error("Failed to decode EC private key");
     }
 
-    // Build EVP_PKEY via OSSL_PARAM_BLD + EVP_PKEY_fromdata
-    OSSL_PARAM_BLD* bld = OSSL_PARAM_BLD_new();
-    if (!bld) {
-      BN_free(d_bn);
-      throw std::runtime_error("Failed to create OSSL_PARAM_BLD");
-    }
-
-    OSSL_PARAM_BLD_push_utf8_string(bld, OSSL_PKEY_PARAM_GROUP_NAME, group_name, 0);
-    OSSL_PARAM_BLD_push_octet_string(bld, OSSL_PKEY_PARAM_PUB_KEY, pub_oct.data(), pub_oct.size());
-    if (d_bn)
-      OSSL_PARAM_BLD_push_BN(bld, OSSL_PKEY_PARAM_PRIV_KEY, d_bn);
-
-    OSSL_PARAM* params = OSSL_PARAM_BLD_to_param(bld);
-    OSSL_PARAM_BLD_free(bld);
-    BN_free(d_bn);
-
-    if (!params)
-      throw std::runtime_error("Failed to build EC key parameters");
-
-    EVP_PKEY_CTX* ctx = EVP_PKEY_CTX_new_from_name(nullptr, "EC", nullptr);
-    if (!ctx) {
-      OSSL_PARAM_free(params);
-      throw std::runtime_error("Failed to create EVP_PKEY_CTX for EC");
-    }
-
-    int selection = isPrivate ? EVP_PKEY_KEYPAIR : EVP_PKEY_PUBLIC_KEY;
     EVP_PKEY* pkey = nullptr;
-    if (EVP_PKEY_fromdata_init(ctx) <= 0 || EVP_PKEY_fromdata(ctx, &pkey, selection, params) <= 0) {
-      EVP_PKEY_CTX_free(ctx);
-      OSSL_PARAM_free(params);
-      throw std::runtime_error("Failed to create EVP_PKEY from EC parameters");
+    try {
+      pkey = createEcEvpPkey(group_name, pub_oct.data(), pub_oct.size(), d_bn);
+    } catch (...) {
+      BN_free(d_bn);
+      throw;
     }
-
-    EVP_PKEY_CTX_free(ctx);
-    OSSL_PARAM_free(params);
+    BN_free(d_bn);
 
     KeyType type = isPrivate ? KeyType::PRIVATE : KeyType::PUBLIC;
     data_ = KeyObjectData::CreateAsymmetric(type, ncrypto::EVPKeyPointer(pkey));
@@ -805,37 +779,8 @@ bool HybridKeyObjectHandle::initECRaw(const std::string& namedCurve, const std::
     throw std::runtime_error("Failed to get curve name for NID");
   }
 
-  // Build EVP_PKEY from raw public key octets via OSSL_PARAM_BLD
-  OSSL_PARAM_BLD* bld = OSSL_PARAM_BLD_new();
-  if (!bld)
-    throw std::runtime_error("Failed to create OSSL_PARAM_BLD");
-
-  OSSL_PARAM_BLD_push_utf8_string(bld, OSSL_PKEY_PARAM_GROUP_NAME, group_name, 0);
-  OSSL_PARAM_BLD_push_octet_string(bld, OSSL_PKEY_PARAM_PUB_KEY, keyData->data(), keyData->size());
-
-  OSSL_PARAM* params = OSSL_PARAM_BLD_to_param(bld);
-  OSSL_PARAM_BLD_free(bld);
-  if (!params)
-    throw std::runtime_error("Failed to build EC parameters");
-
-  EVP_PKEY_CTX* ctx = EVP_PKEY_CTX_new_from_name(nullptr, "EC", nullptr);
-  if (!ctx) {
-    OSSL_PARAM_free(params);
-    throw std::runtime_error("Failed to create EVP_PKEY_CTX for EC");
-  }
-
-  EVP_PKEY* pkey_raw = nullptr;
-  if (EVP_PKEY_fromdata_init(ctx) <= 0 || EVP_PKEY_fromdata(ctx, &pkey_raw, EVP_PKEY_PUBLIC_KEY, params) <= 0) {
-    EVP_PKEY_CTX_free(ctx);
-    OSSL_PARAM_free(params);
-    throw std::runtime_error("Failed to create EVP_PKEY from EC parameters");
-  }
-
-  EVP_PKEY_CTX_free(ctx);
-  OSSL_PARAM_free(params);
-
-  // Store as public key
-  this->data_ = KeyObjectData::CreateAsymmetric(KeyType::PUBLIC, ncrypto::EVPKeyPointer(pkey_raw));
+  EVP_PKEY* pkey = createEcEvpPkey(group_name, keyData->data(), keyData->size());
+  this->data_ = KeyObjectData::CreateAsymmetric(KeyType::PUBLIC, ncrypto::EVPKeyPointer(pkey));
   return true;
 }
 

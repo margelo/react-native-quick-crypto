@@ -199,6 +199,92 @@ test(SUITE, 'ECDSA P-256 with IEEE-P1363 encoding', async () => {
   expect(isValid).to.equal(true);
 });
 
+test(SUITE, 'ECDSA P-384 with IEEE-P1363 encoding', async () => {
+  const { privateKey, publicKey } = await new Promise<{
+    privateKey: string;
+    publicKey: string;
+  }>((resolve, reject) => {
+    generateKeyPair(
+      'ec',
+      {
+        namedCurve: 'P-384',
+        publicKeyEncoding: { type: 'spki', format: 'pem' },
+        privateKeyEncoding: { type: 'pkcs8', format: 'pem' },
+      },
+      (err, pubKey, privKey) => {
+        if (err) reject(err);
+        else
+          resolve({
+            privateKey: privKey as string,
+            publicKey: pubKey as string,
+          });
+      },
+    );
+  });
+
+  const signature = sign('SHA384', testData, {
+    key: privateKey,
+    dsaEncoding: 'ieee-p1363',
+  });
+
+  expect(signature.length).to.equal(96);
+
+  const isValid = verify(
+    'SHA384',
+    testData,
+    {
+      key: publicKey,
+      dsaEncoding: 'ieee-p1363',
+    },
+    signature,
+  );
+
+  expect(isValid).to.equal(true);
+});
+
+test(SUITE, 'ECDSA P-521 with IEEE-P1363 encoding', async () => {
+  const { privateKey, publicKey } = await new Promise<{
+    privateKey: string;
+    publicKey: string;
+  }>((resolve, reject) => {
+    generateKeyPair(
+      'ec',
+      {
+        namedCurve: 'P-521',
+        publicKeyEncoding: { type: 'spki', format: 'pem' },
+        privateKeyEncoding: { type: 'pkcs8', format: 'pem' },
+      },
+      (err, pubKey, privKey) => {
+        if (err) reject(err);
+        else
+          resolve({
+            privateKey: privKey as string,
+            publicKey: pubKey as string,
+          });
+      },
+    );
+  });
+
+  const signature = sign('SHA512', testData, {
+    key: privateKey,
+    dsaEncoding: 'ieee-p1363',
+  });
+
+  expect(signature.length).to.equal(132);
+
+  const isValid = verify(
+    'SHA512',
+    testData,
+    {
+      key: publicKey,
+      dsaEncoding: 'ieee-p1363',
+    },
+    signature,
+  );
+
+  expect(isValid).to.equal(true);
+});
+
 // --- Ed25519 Tests ---
 
 test(SUITE, 'Ed25519 sign and verify', async () => {

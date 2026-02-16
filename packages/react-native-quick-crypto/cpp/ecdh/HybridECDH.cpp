@@ -7,7 +7,6 @@
 #include <openssl/err.h>
 #include <openssl/evp.h>
 #include <openssl/obj_mac.h>
-#include <openssl/param_build.h>
 #include <stdexcept>
 
 namespace margelo::nitro::crypto {
@@ -16,41 +15,6 @@ namespace margelo::nitro::crypto {
 using EVP_PKEY_CTX_ptr = std::unique_ptr<EVP_PKEY_CTX, decltype(&EVP_PKEY_CTX_free)>;
 using EC_POINT_ptr = std::unique_ptr<EC_POINT, decltype(&EC_POINT_free)>;
 using BN_ptr = std::unique_ptr<BIGNUM, decltype(&BN_free)>;
-
-// Build an EVP_PKEY from EC parameters using OSSL_PARAM_BLD + EVP_PKEY_fromdata
-static EVP_PKEY* createEcEvpPkey(const char* group_name, const uint8_t* pub_oct, size_t pub_len, const BIGNUM* priv_bn = nullptr) {
-  OSSL_PARAM_BLD* bld = OSSL_PARAM_BLD_new();
-  if (!bld)
-    throw std::runtime_error("ECDH: failed to create OSSL_PARAM_BLD");
-
-  OSSL_PARAM_BLD_push_utf8_string(bld, OSSL_PKEY_PARAM_GROUP_NAME, group_name, 0);
-  OSSL_PARAM_BLD_push_octet_string(bld, OSSL_PKEY_PARAM_PUB_KEY, pub_oct, pub_len);
-  if (priv_bn)
-    OSSL_PARAM_BLD_push_BN(bld, OSSL_PKEY_PARAM_PRIV_KEY, priv_bn);
-
-  OSSL_PARAM* params = OSSL_PARAM_BLD_to_param(bld);
-  OSSL_PARAM_BLD_free(bld);
-  if (!params)
-    throw std::runtime_error("ECDH: failed to build EC parameters");
-
-  EVP_PKEY_CTX* ctx = EVP_PKEY_CTX_new_from_name(nullptr, "EC", nullptr);
-  if (!ctx) {
-    OSSL_PARAM_free(params);
-    throw std::runtime_error("ECDH: failed to create EVP_PKEY_CTX");
-  }
-
-  int selection = priv_bn ? EVP_PKEY_KEYPAIR : EVP_PKEY_PUBLIC_KEY;
-  EVP_PKEY* pkey = nullptr;
-  if (EVP_PKEY_fromdata_init(ctx) <= 0 || EVP_PKEY_fromdata(ctx, &pkey, selection, params) <= 0) {
-    EVP_PKEY_CTX_free(ctx);
-    OSSL_PARAM_free(params);
-    throw std::runtime_error("ECDH: failed to create EVP_PKEY from parameters");
-  }
-
-  EVP_PKEY_CTX_free(ctx);
-  OSSL_PARAM_free(params);
-  return pkey;
-}
 
 void HybridECDH::init(const std::string& curveName) {
   int nid = getCurveNid(curveName);
@@ -162,7 +126,6 @@ void HybridECDH::setPrivateKey(const std::shared_ptr<ArrayBuffer>& privateKey) {
     throw std::runtime_error("ECDH: failed to convert private key");
   }
 
-  // Calculate public key from private key (EC_POINT_mul is not deprecated)
   EC_POINT_ptr pubPoint(EC_POINT_new(_group.get()), EC_POINT_free);
   if (!pubPoint) {
     throw std::runtime_error("ECDH: failed to create EC point");
@@ -172,13 +135,14 @@ void HybridECDH::setPrivateKey(const std::shared_ptr<ArrayBuffer>& privateKey) {
     throw std::runtime_error("ECDH: failed to compute public key from private key");
   }
 
-  // Serialize public key to uncompressed point
   size_t pubLen = EC_POINT_point2oct(_group.get(), pubPoint.get(), POINT_CONVERSION_UNCOMPRESSED, nullptr, 0, nullptr);
   if (pubLen == 0) {
     throw std::runtime_error("ECDH: failed to get public key length");
   }
   std::vector<uint8_t> pubOct(pubLen);
-  EC_POINT_point2oct(_group.get(), pubPoint.get(), POINT_CONVERSION_UNCOMPRESSED, pubOct.data(), pubLen, nullptr);
+  if (EC_POINT_point2oct(_group.get(), pubPoint.get(), POINT_CONVERSION_UNCOMPRESSED, pubOct.data(), pubLen, nullptr) == 0) {
+    throw std::runtime_error("ECDH: failed to serialize public key");
+  }
 
   // Build EVP_PKEY via OSSL_PARAM_BLD
   _pkey.reset(createEcEvpPkey(_curveName.c_str(), pubOct.data(), pubOct.size(), privBn.get()));
