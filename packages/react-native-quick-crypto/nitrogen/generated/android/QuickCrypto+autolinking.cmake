@@ -58,6 +58,7 @@ target_sources(
   ../nitrogen/generated/shared/c++/HybridSignHandleSpec.cpp
   ../nitrogen/generated/shared/c++/HybridVerifyHandleSpec.cpp
   ../nitrogen/generated/shared/c++/HybridUtilsSpec.cpp
+  ../nitrogen/generated/shared/c++/HybridX509CertificateHandleSpec.cpp
   # Android-specific Nitrogen C++ sources
   
 )

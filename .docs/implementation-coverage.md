@@ -76,32 +76,33 @@ These algorithms provide quantum-resistant cryptography.
 * ✅ Class: `Verify`
   * ✅ `verify.update(data[, inputEncoding])`
   * ✅ `verify.verify(object, signature[, signatureEncoding])`
-* ❌ Class: `X509Certificate`
-  * ❌ `new X509Certificate(buffer)`
-  * ❌ `x509.ca`
-  * ❌ `x509.checkEmail(email[, options])`
-  * ❌ `x509.checkHost(name[, options])`
-  * ❌ `x509.checkIP(ip)`
-  * ❌ `x509.checkIssued(otherCert)`
-  * ❌ `x509.checkPrivateKey(privateKey)`
-  * ❌ `x509.fingerprint`
-  * ❌ `x509.fingerprint256`
-  * ❌ `x509.fingerprint512`
-  * ❌ `x509.infoAccess`
-  * ❌ `x509.issuer`
-  * ❌ `x509.issuerCertificate`
-  * ❌ `x509.extKeyUsage`
-  * ❌ `x509.publicKey`
-  * ❌ `x509.raw`
-  * ❌ `x509.serialNumber`
-  * ❌ `x509.subject`
-  * ❌ `x509.subjectAltName`
-  * ❌ `x509.toJSON()`
-  * ❌ `x509.toLegacyObject()`
-  * ❌ `x509.toString()`
-  * ❌ `x509.validFrom`
-  * ❌ `x509.validTo`
-  * ❌ `x509.verify(publicKey)`
+* ✅ Class: `X509Certificate`
+  * ✅ `new X509Certificate(buffer)`
+  * ✅ `x509.ca`
+  * ✅ `x509.checkEmail(email[, options])`
+  * ✅ `x509.checkHost(name[, options])`
+  * ✅ `x509.checkIP(ip)`
+  * ✅ `x509.checkIssued(otherCert)`
+  * ✅ `x509.checkPrivateKey(privateKey)`
+  * ✅ `x509.fingerprint`
+  * ✅ `x509.fingerprint256`
+  * ✅ `x509.fingerprint512`
+  * ✅ `x509.infoAccess`
+  * ✅ `x509.issuer`
+  * ✅ `x509.issuerCertificate`
+  * ✅ `x509.extKeyUsage`
+  * ✅ `x509.keyUsage`
+  * ✅ `x509.publicKey`
+  * ✅ `x509.raw`
+  * ✅ `x509.serialNumber`
+  * ✅ `x509.subject`
+  * ✅ `x509.subjectAltName`
+  * ✅ `x509.toJSON()`
+  * ✅ `x509.toLegacyObject()`
+  * ✅ `x509.toString()`
+  * ✅ `x509.validFrom`
+  * ✅ `x509.validTo`
+  * ✅ `x509.verify(publicKey)`
 * 🚧 node:crypto module methods and properties
   * ✅ `crypto.argon2(algorithm, parameters, callback)`
   * ✅ `crypto.argon2Sync(algorithm, parameters)`

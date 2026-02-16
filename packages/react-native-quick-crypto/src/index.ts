@@ -17,6 +17,7 @@ import * as random from './random';
 import * as ecdh from './ecdh';
 import * as dh from './diffie-hellman';
 import { Certificate } from './certificate';
+import { X509Certificate } from './x509certificate';
 import { getCurves } from './ec';
 import { constants } from './constants';
 
@@ -46,6 +47,7 @@ const QuickCrypto = {
   ...utils,
   ...subtle,
   Certificate,
+  X509Certificate,
   getCurves,
   constants,
   Buffer,
@@ -81,6 +83,7 @@ export default QuickCrypto;
 export * from './argon2';
 export * from './blake3';
 export { Certificate } from './certificate';
+export { X509Certificate } from './x509certificate';
 export * from './cipher';
 export * from './ed';
 export * from './keys';
