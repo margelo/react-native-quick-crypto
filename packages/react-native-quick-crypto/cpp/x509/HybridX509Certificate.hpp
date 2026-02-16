@@ -43,10 +43,6 @@ class HybridX509Certificate : public HybridX509CertificateHandleSpec {
   std::optional<std::string> checkEmail(const std::string& email, double flags) override;
   std::optional<std::string> checkIP(const std::string& ip) override;
 
-  const ncrypto::X509Pointer& getCert() const {
-    return cert_;
-  }
-
  private:
   ncrypto::X509Pointer cert_;
   std::string bioToString(ncrypto::BIOPointer bio) const;

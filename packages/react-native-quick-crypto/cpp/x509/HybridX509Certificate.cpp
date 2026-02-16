@@ -105,7 +105,7 @@ std::shared_ptr<HybridKeyObjectHandleSpec> HybridX509Certificate::publicKey() {
     throw std::runtime_error("Failed to extract public key from certificate");
   }
   auto handle = std::make_shared<HybridKeyObjectHandle>();
-  handle->getKeyObjectData() = KeyObjectData::CreateAsymmetric(KeyType::PUBLIC, std::move(result.value));
+  handle->setKeyObjectData(KeyObjectData::CreateAsymmetric(KeyType::PUBLIC, std::move(result.value)));
   return handle;
 }
 

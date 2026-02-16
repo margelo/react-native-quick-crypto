@@ -125,12 +125,16 @@ test(SUITE, 'infoAccess contains OCSP URI', () => {
 
 test(SUITE, 'validFrom is a date string', () => {
   const x509 = new X509Certificate(certPem);
+  assert.include(x509.validFrom, 'Feb 16');
   assert.include(x509.validFrom, '2026');
+  assert.include(x509.validFrom, 'GMT');
 });
 
 test(SUITE, 'validTo is a date string', () => {
   const x509 = new X509Certificate(certPem);
+  assert.include(x509.validTo, 'Jan 23');
   assert.include(x509.validTo, '2126');
+  assert.include(x509.validTo, 'GMT');
 });
 
 test(SUITE, 'serialNumber is hex string', () => {
@@ -224,7 +228,7 @@ test(SUITE, 'checkHost matches exact hostname', () => {
 
 test(SUITE, 'checkHost returns undefined for non-matching', () => {
   const x509 = new X509Certificate(certPem);
-  assert.isUndefined(x509.checkHost('wrong.example.com'));
+  assert.isUndefined(x509.checkHost('other.domain.com'));
 });
 
 test(SUITE, 'checkHost matches wildcard', () => {

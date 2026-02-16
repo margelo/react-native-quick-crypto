@@ -84,6 +84,7 @@ export * from './argon2';
 export * from './blake3';
 export { Certificate } from './certificate';
 export { X509Certificate } from './x509certificate';
+export type { CheckOptions, X509LegacyObject } from './x509certificate';
 export * from './cipher';
 export * from './ed';
 export * from './keys';

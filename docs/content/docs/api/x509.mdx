@@ -81,7 +81,7 @@ All properties are lazily computed and cached on first access.
 | `fingerprint`           | `string`    | SHA-1 fingerprint (colon-separated hex)                    |
 | `fingerprint256`        | `string`    | SHA-256 fingerprint (colon-separated hex)                  |
 | `fingerprint512`        | `string`    | SHA-512 fingerprint (colon-separated hex)                  |
-| `keyUsage`              | `string[]`  | Extended key usage OIDs                                    |
+| `extKeyUsage`           | `string[]`  | Extended key usage OIDs (also available as `keyUsage`)     |
 | `ca`                    | `boolean`   | Whether this is a CA certificate                           |
 | `raw`                   | `Buffer`    | Raw DER-encoded certificate bytes                          |
 | `publicKey`             | `KeyObject` | The certificate's public key as a KeyObject                |

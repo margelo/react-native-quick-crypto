@@ -12,6 +12,25 @@ const X509_CHECK_FLAG_MULTI_LABEL_WILDCARDS = 0x8;
 const X509_CHECK_FLAG_SINGLE_LABEL_SUBDOMAINS = 0x10;
 const X509_CHECK_FLAG_NEVER_CHECK_SUBJECT = 0x20;
 
+export interface X509LegacyObject {
+  subject: string;
+  issuer: string;
+  subjectaltname: string;
+  infoAccess: string;
+  ca: boolean;
+  modulus: undefined;
+  bits: undefined;
+  exponent: undefined;
+  valid_from: string;
+  valid_to: string;
+  fingerprint: string;
+  fingerprint256: string;
+  fingerprint512: string;
+  ext_key_usage: string[];
+  serialNumber: string;
+  raw: Buffer;
+}
+
 export interface CheckOptions {
   subject?: 'default' | 'always' | 'never';
   wildcards?: boolean;
@@ -128,12 +147,12 @@ export class X509Certificate {
     return this.cached('fingerprint512', () => this.handle.fingerprint512());
   }
 
-  get keyUsage(): string[] {
-    return this.cached('keyUsage', () => this.handle.keyUsage());
+  get extKeyUsage(): string[] {
+    return this.cached('extKeyUsage', () => this.handle.keyUsage());
   }
 
-  get extKeyUsage(): string[] {
-    return this.keyUsage;
+  get keyUsage(): string[] {
+    return this.extKeyUsage;
   }
 
   get serialNumber(): string {
@@ -220,7 +239,9 @@ export class X509Certificate {
       );
     }
     if (pkey.type !== 'public') {
-      throw new TypeError('The "pkey" argument must be a public key');
+      throw new TypeError(
+        `The "pkey" argument must be a public key, got '${pkey.type}'`,
+      );
     }
     return this.handle.verify(pkey.handle);
   }
@@ -233,7 +254,7 @@ export class X509Certificate {
     return this.toString();
   }
 
-  toLegacyObject(): Record<string, unknown> {
+  toLegacyObject(): X509LegacyObject {
     return {
       subject: this.subject,
       issuer: this.issuer,
