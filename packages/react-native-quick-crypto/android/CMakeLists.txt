@@ -57,6 +57,7 @@ add_library(
   ../cpp/scrypt/HybridScrypt.cpp
   ../cpp/sign/HybridSignHandle.cpp
   ../cpp/sign/HybridVerifyHandle.cpp
+  ../cpp/x509/HybridX509Certificate.cpp
   ../cpp/utils/HybridUtils.cpp
   ../cpp/utils/QuickCryptoUtils.cpp
   ${BLAKE3_SOURCES}
@@ -93,6 +94,7 @@ include_directories(
   "../cpp/sign"
   "../cpp/scrypt"
   "../cpp/utils"
+  "../cpp/x509"
   "../deps/blake3/c"
   "../deps/fastpbkdf2"
   "../deps/ncrypto/include"

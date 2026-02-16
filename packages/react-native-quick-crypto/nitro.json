@@ -82,6 +82,9 @@
     },
     "VerifyHandle": {
       "cpp": "HybridVerifyHandle"
+    },
+    "X509CertificateHandle": {
+      "cpp": "HybridX509Certificate"
     }
   },
   "ignorePaths": ["node_modules", "lib"]

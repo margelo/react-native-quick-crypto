@@ -39,11 +39,12 @@ class HybridKeyObjectHandle : public HybridKeyObjectHandleSpec {
 
   double getSymmetricKeySize() override;
 
-  KeyObjectData& getKeyObjectData() {
-    return data_;
-  }
   const KeyObjectData& getKeyObjectData() const {
     return data_;
+  }
+
+  void setKeyObjectData(KeyObjectData data) {
+    data_ = std::move(data);
   }
 
  private:

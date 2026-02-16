@@ -1,0 +1,297 @@
+---
+title: X509 Certificates
+description: Parse, inspect, and validate X.509 certificates
+---
+
+import { Callout } from 'fumadocs-ui/components/callout';
+import { TypeTable } from 'fumadocs-ui/components/type-table';
+
+The `X509Certificate` class provides a complete implementation for working with X.509 certificates — the standard format used in TLS/SSL, code signing, and PKI systems. Parse certificates, extract properties, validate hostnames, and verify signatures.
+
+<Callout type="info" title="Common Use Cases">
+  **Certificate pinning** in mobile apps, **mTLS client certificate**
+  validation, **certificate chain verification**, **hostname matching** for
+  custom TLS implementations, and **extracting public keys** from certificates.
+</Callout>
+
+## Table of Contents
+
+- [Theory](#theory)
+- [Class: X509Certificate](#class-x509certificate)
+- [Properties](#properties)
+- [Methods](#methods)
+- [Real-World Examples](#real-world-examples)
+
+## Theory
+
+X.509 is the standard format for public key certificates. A certificate binds an identity (subject) to a public key, signed by a Certificate Authority (CA).
+
+Key concepts:
+
+1. **Subject / Issuer**: Distinguished Names identifying the certificate holder and signer.
+2. **Validity Period**: Time window during which the certificate is valid.
+3. **Subject Alternative Name (SAN)**: Additional identities (DNS names, IPs, emails) the certificate is valid for.
+4. **Fingerprint**: A hash of the certificate used for identification (not security).
+5. **CA flag**: Whether the certificate can sign other certificates.
+
+---
+
+## Class: X509Certificate
+
+### Constructor
+
+```ts
+import { X509Certificate } from 'react-native-quick-crypto';
+
+const cert = new X509Certificate(pemString);
+```
+
+**Parameters:**
+
+<TypeTable
+  type={{
+    buffer: {
+      description: 'PEM or DER encoded certificate data.',
+      type: 'string | Buffer | TypedArray | DataView',
+    },
+  }}
+/>
+
+Accepts both PEM-encoded strings (beginning with `-----BEGIN CERTIFICATE-----`) and DER-encoded binary data.
+
+---
+
+## Properties
+
+All properties are lazily computed and cached on first access.
+
+| Property                | Type        | Description                                                |
+| :---------------------- | :---------- | :--------------------------------------------------------- |
+| `subject`               | `string`    | Distinguished name of the certificate subject              |
+| `issuer`                | `string`    | Distinguished name of the issuing CA                       |
+| `subjectAltName`        | `string`    | Subject Alternative Name extension                         |
+| `infoAccess`            | `string`    | Authority Information Access extension                     |
+| `validFrom`             | `string`    | "Not Before" date as a string                              |
+| `validTo`               | `string`    | "Not After" date as a string                               |
+| `validFromDate`         | `Date`      | "Not Before" as a JavaScript Date object                   |
+| `validToDate`           | `Date`      | "Not After" as a JavaScript Date object                    |
+| `serialNumber`          | `string`    | Certificate serial number (uppercase hex)                  |
+| `signatureAlgorithm`    | `string`    | Signature algorithm name (e.g., `sha256WithRSAEncryption`) |
+| `signatureAlgorithmOid` | `string`    | Signature algorithm OID                                    |
+| `fingerprint`           | `string`    | SHA-1 fingerprint (colon-separated hex)                    |
+| `fingerprint256`        | `string`    | SHA-256 fingerprint (colon-separated hex)                  |
+| `fingerprint512`        | `string`    | SHA-512 fingerprint (colon-separated hex)                  |
+| `extKeyUsage`           | `string[]`  | Extended key usage OIDs (also available as `keyUsage`)     |
+| `ca`                    | `boolean`   | Whether this is a CA certificate                           |
+| `raw`                   | `Buffer`    | Raw DER-encoded certificate bytes                          |
+| `publicKey`             | `KeyObject` | The certificate's public key as a KeyObject                |
+| `issuerCertificate`     | `undefined` | Always `undefined` (no TLS context in React Native)        |
+
+```ts
+const cert = new X509Certificate(pemString);
+
+console.log(cert.subject);
+// C=US\nST=California\nO=Example\nCN=example.com
+
+console.log(cert.fingerprint256);
+// AB:CD:EF:12:34:...
+
+console.log(cert.ca);
+// true
+
+console.log(cert.publicKey.type);
+// 'public'
+```
+
+---
+
+## Methods
+
+### x509.checkHost(name[, options])
+
+Checks whether the certificate matches the given hostname.
+
+<TypeTable
+  type={{
+    name: { description: 'The hostname to check.', type: 'string' },
+    options: {
+      description: 'Optional check configuration.',
+      type: 'CheckOptions',
+    },
+  }}
+/>
+
+**Returns:** `string | undefined` — The matched hostname, or `undefined` if no match.
+
+```ts
+const cert = new X509Certificate(pemString);
+
+cert.checkHost('example.com'); // 'example.com'
+cert.checkHost('wrong.com'); // undefined
+
+// Disable wildcard matching
+cert.checkHost('sub.example.com', { wildcards: false });
+```
+
+#### CheckOptions
+
+| Option                  | Type                               | Default     | Description                         |
+| :---------------------- | :--------------------------------- | :---------- | :---------------------------------- |
+| `subject`               | `'default' \| 'always' \| 'never'` | `'default'` | When to check the subject CN        |
+| `wildcards`             | `boolean`                          | `true`      | Allow wildcard certificate matching |
+| `partialWildcards`      | `boolean`                          | `true`      | Allow partial wildcard matching     |
+| `multiLabelWildcards`   | `boolean`                          | `false`     | Allow multi-label wildcard matching |
+| `singleLabelSubdomains` | `boolean`                          | `false`     | Match single-label subdomains       |
+
+### x509.checkEmail(email[, options])
+
+Checks whether the certificate matches the given email address.
+
+**Returns:** `string | undefined` — The matched email, or `undefined` if no match.
+
+```ts
+cert.checkEmail('user@example.com'); // 'user@example.com' or undefined
+```
+
+### x509.checkIP(ip)
+
+Checks whether the certificate matches the given IP address.
+
+**Returns:** `string | undefined` — The matched IP, or `undefined` if no match.
+
+```ts
+cert.checkIP('127.0.0.1'); // '127.0.0.1'
+cert.checkIP('192.168.1.1'); // undefined
+```
+
+### x509.checkIssued(otherCert)
+
+Checks whether this certificate was issued by `otherCert`.
+
+**Returns:** `boolean`
+
+```ts
+// Self-signed certificate
+cert.checkIssued(cert); // true
+
+// Chain validation
+rootCert.checkIssued(intermediateCert); // true or false
+```
+
+### x509.checkPrivateKey(privateKey)
+
+Checks whether the given private key matches this certificate's public key.
+
+**Returns:** `boolean`
+
+```ts
+import { createPrivateKey } from 'react-native-quick-crypto';
+
+const privKey = createPrivateKey(privateKeyPem);
+cert.checkPrivateKey(privKey); // true
+```
+
+### x509.verify(publicKey)
+
+Verifies that the certificate was signed with the given public key.
+
+**Returns:** `boolean`
+
+```ts
+// For self-signed certificates
+cert.verify(cert.publicKey); // true
+```
+
+### x509.toString()
+
+Returns the PEM-encoded certificate string.
+
+**Returns:** `string`
+
+### x509.toJSON()
+
+Returns the PEM-encoded certificate string (same as `toString()`).
+
+**Returns:** `string`
+
+### x509.toLegacyObject()
+
+Returns a plain object with legacy certificate fields.
+
+**Returns:** `object`
+
+---
+
+## Real-World Examples
+
+### Certificate Pinning
+
+```ts
+import { X509Certificate } from 'react-native-quick-crypto';
+
+const PINNED_FINGERPRINT = 'AB:CD:EF:...';
+
+function validateServerCert(pemCert: string): boolean {
+  const cert = new X509Certificate(pemCert);
+
+  // Check fingerprint
+  if (cert.fingerprint256 !== PINNED_FINGERPRINT) {
+    return false;
+  }
+
+  // Check validity
+  const now = new Date();
+  if (now < cert.validFromDate || now > cert.validToDate) {
+    return false;
+  }
+
+  return true;
+}
+```
+
+### Hostname Verification
+
+```ts
+import { X509Certificate } from 'react-native-quick-crypto';
+
+function verifyHostname(pemCert: string, hostname: string): boolean {
+  const cert = new X509Certificate(pemCert);
+  return cert.checkHost(hostname) !== undefined;
+}
+```
+
+### Extract Public Key from Certificate
+
+```ts
+import { X509Certificate } from 'react-native-quick-crypto';
+
+const cert = new X509Certificate(pemCert);
+const publicKey = cert.publicKey;
+
+// Use the public key for encryption or verification
+console.log(publicKey.type); // 'public'
+console.log(publicKey.asymmetricKeyType); // 'rsa'
+```
+
+### Validate Certificate Chain
+
+```ts
+import { X509Certificate } from 'react-native-quick-crypto';
+
+function validateChain(leafPem: string, issuerPem: string): boolean {
+  const leaf = new X509Certificate(leafPem);
+  const issuerCert = new X509Certificate(issuerPem);
+
+  // Check the leaf was issued by the issuer
+  if (!issuerCert.checkIssued(leaf)) {
+    return false;
+  }
+
+  // Verify the leaf's signature with issuer's public key
+  if (!leaf.verify(issuerCert.publicKey)) {
+    return false;
+  }
+
+  return true;
+}
+```

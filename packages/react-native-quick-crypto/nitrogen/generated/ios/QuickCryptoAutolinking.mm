@@ -35,6 +35,7 @@
 #include "HybridSignHandle.hpp"
 #include "HybridUtils.hpp"
 #include "HybridVerifyHandle.hpp"
+#include "HybridX509Certificate.hpp"
 
 @interface QuickCryptoAutolinking : NSObject
 @end
@@ -268,6 +269,15 @@
                     "The HybridObject \"HybridVerifyHandle\" is not default-constructible! "
                     "Create a public constructor that takes zero arguments to be able to autolink this HybridObject.");
       return std::make_shared<HybridVerifyHandle>();
+    }
+  );
+  HybridObjectRegistry::registerHybridObjectConstructor(
+    "X509CertificateHandle",
+    []() -> std::shared_ptr<HybridObject> {
+      static_assert(std::is_default_constructible_v<HybridX509Certificate>,
+                    "The HybridObject \"HybridX509Certificate\" is not default-constructible! "
+                    "Create a public constructor that takes zero arguments to be able to autolink this HybridObject.");
+      return std::make_shared<HybridX509Certificate>();
     }
   );
 }
