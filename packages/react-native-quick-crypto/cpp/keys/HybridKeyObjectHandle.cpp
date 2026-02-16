@@ -258,14 +258,10 @@ JWK HybridKeyObjectHandle::exportJwk(const JWK& key, bool handleRsaPss) {
 
     std::string curve_name(curve_name_buf, name_len);
 
-    int nid = OBJ_txt2nid(curve_name.c_str());
-    EC_GROUP* group = EC_GROUP_new_by_curve_name(nid);
-    if (!group)
-      throw std::runtime_error("Unknown curve");
-
-    // Get the field size in bytes for proper padding
-    size_t field_size = (EC_GROUP_get_degree(group) + 7) / 8;
-    EC_GROUP_free(group);
+    int bits = EVP_PKEY_bits(pkey.get());
+    if (bits <= 0)
+      throw std::runtime_error("Failed to get EC key size");
+    size_t field_size = (static_cast<size_t>(bits) + 7) / 8;
 
     result.kty = JWKkty::EC;
 
@@ -567,25 +563,21 @@ std::optional<KeyType> HybridKeyObjectHandle::initJwk(const JWK& keyData, std::o
 
     std::string crv = keyData.crv.value();
 
-    // Map JWK curve names to OpenSSL group names
+    // Map JWK curve names to OpenSSL group names and field sizes
     const char* group_name;
+    size_t field_size;
     if (crv == "P-256") {
       group_name = "prime256v1";
+      field_size = 32;
     } else if (crv == "P-384") {
       group_name = "secp384r1";
+      field_size = 48;
     } else if (crv == "P-521") {
       group_name = "secp521r1";
+      field_size = 66;
     } else {
       throw std::runtime_error("Unsupported EC curve: " + crv);
     }
-
-    // Get field size from curve to properly pad coordinates
-    int nid = OBJ_txt2nid(group_name);
-    EC_GROUP* group = EC_GROUP_new_by_curve_name(nid);
-    if (!group)
-      throw std::runtime_error("Failed to create EC group");
-    size_t field_size = (EC_GROUP_get_degree(group) + 7) / 8;
-    EC_GROUP_free(group);
 
     // Decode public key coordinates
     BIGNUM* x_bn = base64url_to_bn(keyData.x.value());

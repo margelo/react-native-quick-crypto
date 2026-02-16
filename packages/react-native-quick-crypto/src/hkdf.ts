@@ -3,6 +3,7 @@ import { NitroModules } from 'react-native-nitro-modules';
 import type { Hkdf as HkdfNative } from './specs/hkdf.nitro';
 import { binaryLikeToArrayBuffer, normalizeHashName } from './utils';
 import type { BinaryLike } from './utils';
+import type { CryptoKey } from './keys';
 
 type KeyMaterial = BinaryLike;
 type Salt = BinaryLike;
@@ -13,13 +14,6 @@ export interface HkdfAlgorithm {
   hash: string | { name: string };
   salt: BinaryLike;
   info: BinaryLike;
-}
-
-export interface CryptoKeyInternal {
-  keyObject: {
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    export: (...args: any[]) => any;
-  };
 }
 
 export interface HkdfCallback {
@@ -123,7 +117,7 @@ export function hkdfSync(
 
 export function hkdfDeriveBits(
   algorithm: HkdfAlgorithm,
-  baseKey: CryptoKeyInternal,
+  baseKey: CryptoKey,
   length: number,
 ): ArrayBuffer {
   const hash = algorithm.hash;

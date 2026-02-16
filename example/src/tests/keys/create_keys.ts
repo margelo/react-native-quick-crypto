@@ -431,8 +431,7 @@ for (const { namedCurve, crv, hash } of EC_CURVES) {
       expect(jwk.y).to.match(/^[A-Za-z0-9_-]+$/);
       expect(jwk.d).to.match(/^[A-Za-z0-9_-]+$/);
 
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      const reimported = createPrivateKey({ key: jwk as any, format: 'jwk' });
+      const reimported = createPrivateKey({ key: jwk, format: 'jwk' });
       expect(reimported.type).to.equal('private');
       expect(reimported.asymmetricKeyType).to.equal('ec');
 
@@ -478,8 +477,7 @@ for (const { namedCurve, crv, hash } of EC_CURVES) {
       expect(jwk.y).to.match(/^[A-Za-z0-9_-]+$/);
       expect(jwk.d).to.equal(undefined);
 
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      const reimported = createPublicKey({ key: jwk as any, format: 'jwk' });
+      const reimported = createPublicKey({ key: jwk, format: 'jwk' });
       expect(reimported.type).to.equal('public');
       expect(reimported.asymmetricKeyType).to.equal('ec');
     },
