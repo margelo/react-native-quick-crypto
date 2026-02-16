@@ -195,8 +195,21 @@ algos.forEach(function (algorithm) {
     });
   });
 
-  // TODO(#931): enable invalid fixture tests once JS-side validation is added
-  // for iterations/keylen. Currently invalid values (negative, NaN, Infinity)
-  // reach the native C layer and trigger assert()/abort() instead of throwing.
-  // See: fixtures.invalid
+  fixtures.invalid.forEach(function (f) {
+    test(
+      SUITE,
+      `invalid: ${algorithm} throws "${f.exception}" for iterations=${f.iterations} keylen=${f.dkLen}`,
+      () => {
+        expect(() => {
+          crypto.pbkdf2Sync(
+            f.key as string,
+            f.salt as string,
+            f.iterations as number,
+            f.dkLen as number,
+            algorithm,
+          );
+        }).to.throw(f.exception);
+      },
+    );
+  });
 });

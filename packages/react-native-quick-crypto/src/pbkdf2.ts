@@ -31,6 +31,33 @@ function getNative(): Pbkdf2 {
   return native;
 }
 
+const MAX_INT32 = 2147483647;
+
+function validateParameters(iterations: number, keylen: number): void {
+  if (typeof iterations !== 'number') {
+    throw new TypeError('Iterations not a number');
+  }
+  if (typeof keylen !== 'number') {
+    throw new TypeError('Key length not a number');
+  }
+  if (
+    iterations < 1 ||
+    !Number.isFinite(iterations) ||
+    !Number.isInteger(iterations) ||
+    iterations > MAX_INT32
+  ) {
+    throw new TypeError('Bad iterations');
+  }
+  if (
+    keylen < 0 ||
+    !Number.isFinite(keylen) ||
+    !Number.isInteger(keylen) ||
+    keylen > MAX_INT32
+  ) {
+    throw new TypeError('Bad key length');
+  }
+}
+
 function sanitizeInput(input: BinaryLike, errorMsg: string): ArrayBuffer {
   try {
     return binaryLikeToArrayBuffer(input);
@@ -51,6 +78,7 @@ export function pbkdf2(
   if (callback === undefined || typeof callback !== 'function') {
     throw new Error('No callback provided to pbkdf2');
   }
+  validateParameters(iterations, keylen);
   const sanitizedPassword = sanitizeInput(password, WRONG_PASS);
   const sanitizedSalt = sanitizeInput(salt, WRONG_SALT);
   const normalizedDigest = normalizeHashName(digest, HashContext.Node);
@@ -81,6 +109,7 @@ export function pbkdf2Sync(
   keylen: number,
   digest: string,
 ): Buffer {
+  validateParameters(iterations, keylen);
   const sanitizedPassword = sanitizeInput(password, WRONG_PASS);
   const sanitizedSalt = sanitizeInput(salt, WRONG_SALT);
 
