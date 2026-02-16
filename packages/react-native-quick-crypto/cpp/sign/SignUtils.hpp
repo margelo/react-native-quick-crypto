@@ -2,10 +2,12 @@
 
 #include <cstring>
 #include <memory>
+#include <openssl/core_names.h>
 #include <openssl/dsa.h>
 #include <openssl/ec.h>
 #include <openssl/ecdsa.h>
 #include <openssl/evp.h>
+#include <openssl/obj_mac.h>
 #include <string>
 
 #include "../utils/QuickCryptoUtils.hpp"
@@ -25,9 +27,16 @@ inline unsigned int getBytesOfRS(EVP_PKEY* pkey) {
     const DSA* dsa_key = EVP_PKEY_get0_DSA(pkey);
     bits = BN_num_bits(DSA_get0_q(dsa_key));
   } else if (base_id == EVP_PKEY_EC) {
-    const EC_KEY* ec_key = EVP_PKEY_get0_EC_KEY(pkey);
-    const EC_GROUP* ec_group = EC_KEY_get0_group(ec_key);
-    bits = EC_GROUP_order_bits(ec_group);
+    char curve_name[64];
+    size_t name_len = 0;
+    if (EVP_PKEY_get_utf8_string_param(pkey, OSSL_PKEY_PARAM_GROUP_NAME, curve_name, sizeof(curve_name), &name_len) != 1)
+      return 0;
+    int nid = OBJ_txt2nid(curve_name);
+    EC_GROUP* group = EC_GROUP_new_by_curve_name(nid);
+    if (!group)
+      return 0;
+    bits = EC_GROUP_order_bits(group);
+    EC_GROUP_free(group);
   } else {
     return 0;
   }
