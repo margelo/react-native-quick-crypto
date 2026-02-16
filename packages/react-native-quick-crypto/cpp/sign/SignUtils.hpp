@@ -2,6 +2,8 @@
 
 #include <cstring>
 #include <memory>
+#include <openssl/bn.h>
+#include <openssl/core_names.h>
 #include <openssl/dsa.h>
 #include <openssl/ec.h>
 #include <openssl/ecdsa.h>
@@ -25,9 +27,11 @@ inline unsigned int getBytesOfRS(EVP_PKEY* pkey) {
     const DSA* dsa_key = EVP_PKEY_get0_DSA(pkey);
     bits = BN_num_bits(DSA_get0_q(dsa_key));
   } else if (base_id == EVP_PKEY_EC) {
-    const EC_KEY* ec_key = EVP_PKEY_get0_EC_KEY(pkey);
-    const EC_GROUP* ec_group = EC_KEY_get0_group(ec_key);
-    bits = EC_GROUP_order_bits(ec_group);
+    BIGNUM* order = nullptr;
+    if (EVP_PKEY_get_bn_param(pkey, OSSL_PKEY_PARAM_EC_ORDER, &order) != 1 || !order)
+      return 0;
+    bits = BN_num_bits(order);
+    BN_free(order);
   } else {
     return 0;
   }

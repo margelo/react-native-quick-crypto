@@ -3,6 +3,7 @@
 #include <algorithm>
 #include <cctype>
 #include <limits>
+#include <openssl/bn.h>
 #include <openssl/err.h>
 #include <openssl/evp.h>
 #include <string>
@@ -104,5 +105,10 @@ inline const EVP_MD* getDigestByName(const std::string& algorithm) {
   }
   throw std::runtime_error("Unsupported hash algorithm: " + algorithm);
 }
+
+// Build an EVP_PKEY from EC curve name + public key octets + optional private key BIGNUM.
+// Uses OSSL_PARAM_BLD + EVP_PKEY_fromdata (OpenSSL 3.x, no deprecated EC_KEY APIs).
+// Caller owns the returned EVP_PKEY*.
+EVP_PKEY* createEcEvpPkey(const char* group_name, const uint8_t* pub_oct, size_t pub_len, const BIGNUM* priv_bn = nullptr);
 
 } // namespace margelo::nitro::crypto

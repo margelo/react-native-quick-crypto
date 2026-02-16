@@ -3,6 +3,7 @@ import { NitroModules } from 'react-native-nitro-modules';
 import type {
   AsymmetricKeyType,
   EncodingOptions,
+  JWK,
   KeyDetail,
   KeyObjectHandle,
   KeyUsage,
@@ -81,10 +82,10 @@ export class KeyObject {
 
   export(options: { format: 'pem' } & EncodingOptions): string | Buffer;
   export(options?: { format: 'der' } & EncodingOptions): Buffer;
-  export(options?: { format: 'jwk' } & EncodingOptions): never;
-  export(options?: EncodingOptions): string | Buffer;
+  export(options?: { format: 'jwk' } & EncodingOptions): JWK;
+  export(options?: EncodingOptions): string | Buffer | JWK;
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  export(_options?: EncodingOptions): string | Buffer {
+  export(_options?: EncodingOptions): string | Buffer | JWK {
     // This is a placeholder and should be overridden by subclasses.
     throw new Error('export() must be implemented by subclasses');
   }
@@ -284,10 +285,10 @@ export class PublicKeyObject extends AsymmetricKeyObject {
 
   export(options: { format: 'pem' } & EncodingOptions): string;
   export(options: { format: 'der' } & EncodingOptions): Buffer;
-  export(options: { format: 'jwk' } & EncodingOptions): never;
-  export(options: EncodingOptions): string | Buffer {
+  export(options: { format: 'jwk' } & EncodingOptions): JWK;
+  export(options: EncodingOptions): string | Buffer | JWK {
     if (options?.format === 'jwk') {
-      throw new Error('PublicKey export for jwk is not implemented');
+      return this.handle.exportJwk({}, false);
     }
     const { format, type } = parsePublicKeyEncoding(
       options,
@@ -309,13 +310,13 @@ export class PrivateKeyObject extends AsymmetricKeyObject {
 
   export(options: { format: 'pem' } & EncodingOptions): string;
   export(options: { format: 'der' } & EncodingOptions): Buffer;
-  export(options: { format: 'jwk' } & EncodingOptions): never;
-  export(options: EncodingOptions): string | Buffer {
+  export(options: { format: 'jwk' } & EncodingOptions): JWK;
+  export(options: EncodingOptions): string | Buffer | JWK {
     if (options?.format === 'jwk') {
       if (options.passphrase !== undefined) {
         throw new Error('jwk does not support encryption');
       }
-      throw new Error('PrivateKey export for jwk is not implemented');
+      return this.handle.exportJwk({}, false);
     }
     const { format, type, cipher, passphrase } = parsePrivateKeyEncoding(
       options,

@@ -69,6 +69,69 @@ test(SUITE, 'should work with string input', () => {
   assert.isOk(secret);
 });
 
+test(SUITE, 'should set private key and compute secret for P-384', () => {
+  const alice = crypto.createECDH('secp384r1');
+  alice.generateKeys();
+  const priv = alice.getPrivateKey();
+
+  const alice2 = crypto.createECDH('secp384r1');
+  alice2.setPrivateKey(priv);
+
+  assert.strictEqual(
+    alice.getPublicKey().toString('hex'),
+    alice2.getPublicKey().toString('hex'),
+  );
+
+  const bob = crypto.createECDH('secp384r1');
+  bob.generateKeys();
+
+  const secret1 = alice.computeSecret(bob.getPublicKey());
+  const secret2 = alice2.computeSecret(bob.getPublicKey());
+  assert.strictEqual(secret1.toString('hex'), secret2.toString('hex'));
+});
+
+test(SUITE, 'should set private key and compute secret for P-521', () => {
+  const alice = crypto.createECDH('secp521r1');
+  alice.generateKeys();
+  const priv = alice.getPrivateKey();
+
+  const alice2 = crypto.createECDH('secp521r1');
+  alice2.setPrivateKey(priv);
+
+  assert.strictEqual(
+    alice.getPublicKey().toString('hex'),
+    alice2.getPublicKey().toString('hex'),
+  );
+
+  const bob = crypto.createECDH('secp521r1');
+  bob.generateKeys();
+
+  const secret1 = alice.computeSecret(bob.getPublicKey());
+  const secret2 = alice2.computeSecret(bob.getPublicKey());
+  assert.strictEqual(secret1.toString('hex'), secret2.toString('hex'));
+});
+
+test(SUITE, 'should set private key and compute secret for secp256k1', () => {
+  const alice = crypto.createECDH('secp256k1');
+  alice.generateKeys();
+  const priv = alice.getPrivateKey();
+
+  const alice2 = crypto.createECDH('secp256k1');
+  alice2.setPrivateKey(priv);
+
+  assert.strictEqual(
+    alice.getPublicKey().toString('hex'),
+    alice2.getPublicKey().toString('hex'),
+  );
+
+  const bob = crypto.createECDH('secp256k1');
+  bob.generateKeys();
+
+  const secret1 = alice.computeSecret(bob.getPublicKey());
+  const secret2 = alice2.computeSecret(bob.getPublicKey());
+  assert.strictEqual(secret1.toString('hex'), secret2.toString('hex'));
+});
+
 test(SUITE, 'getCurves - should return array of supported curves', () => {
   const curves = getCurves();
   assert.isArray(curves);

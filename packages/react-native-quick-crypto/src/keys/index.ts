@@ -27,17 +27,19 @@ import {
   parsePrivateKeyEncoding,
   parsePublicKeyEncoding,
 } from './utils';
-import type { BinaryLike } from '../utils';
+import { NitroModules } from 'react-native-nitro-modules';
+import type { BinaryLike, JWK, KeyObjectHandle } from '../utils';
 import {
   binaryLikeToArrayBuffer as toAB,
   isStringOrBuffer,
   KFormatType,
   KeyEncoding,
+  KeyType,
 } from '../utils';
 import { randomBytes } from '../random';
 
 interface KeyInputObject {
-  key: BinaryLike | KeyObject | CryptoKey;
+  key: BinaryLike | KeyObject | CryptoKey | JWK;
   format?: 'pem' | 'der' | 'jwk';
   type?: 'pkcs1' | 'pkcs8' | 'spki' | 'sec1';
   passphrase?: BinaryLike;
@@ -123,6 +125,29 @@ function prepareAsymmetricKey(
 }
 
 function createPublicKey(key: KeyInput): PublicKeyObject {
+  if (typeof key === 'object' && 'key' in key && key.format === 'jwk') {
+    const handle =
+      NitroModules.createHybridObject<KeyObjectHandle>('KeyObjectHandle');
+    const keyType = handle.initJwk(key.key as JWK);
+    if (keyType === undefined) {
+      throw new Error('Failed to import JWK');
+    }
+    if (keyType === KeyType.PRIVATE) {
+      // Extract public from private
+      const exported = handle.exportKey(KFormatType.DER, KeyEncoding.SPKI);
+      const pubHandle =
+        NitroModules.createHybridObject<KeyObjectHandle>('KeyObjectHandle');
+      pubHandle.init(
+        KeyType.PUBLIC,
+        exported,
+        KFormatType.DER,
+        KeyEncoding.SPKI,
+      );
+      return new PublicKeyObject(pubHandle);
+    }
+    return new PublicKeyObject(handle);
+  }
+
   const { data, format, type } = prepareAsymmetricKey(key, true);
 
   // Map format string to KFormatType enum
@@ -144,6 +169,16 @@ function createPublicKey(key: KeyInput): PublicKeyObject {
 }
 
 function createPrivateKey(key: KeyInput): PrivateKeyObject {
+  if (typeof key === 'object' && 'key' in key && key.format === 'jwk') {
+    const handle =
+      NitroModules.createHybridObject<KeyObjectHandle>('KeyObjectHandle');
+    const keyType = handle.initJwk(key.key as JWK);
+    if (keyType === undefined || keyType !== KeyType.PRIVATE) {
+      throw new Error('Failed to import private key from JWK');
+    }
+    return new PrivateKeyObject(handle);
+  }
+
   const { data, format, type } = prepareAsymmetricKey(key, false);
 
   // Map format string to KFormatType enum

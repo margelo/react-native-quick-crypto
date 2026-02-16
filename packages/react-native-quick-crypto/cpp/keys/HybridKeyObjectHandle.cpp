@@ -5,6 +5,7 @@
 #include "HybridKeyObjectHandle.hpp"
 #include "QuickCryptoUtils.hpp"
 #include <openssl/bn.h>
+#include <openssl/core_names.h>
 #include <openssl/crypto.h>
 #include <openssl/ec.h>
 #include <openssl/evp.h>
@@ -127,21 +128,13 @@ std::shared_ptr<ArrayBuffer> HybridKeyObjectHandle::exportKey(std::optional<KFor
 
     // For EC keys, handle raw format (uncompressed point)
     if (!format.has_value() && !type.has_value() && keyId == EVP_PKEY_EC && keyType == KeyType::PUBLIC) {
-      const EC_KEY* ec_key = EVP_PKEY_get0_EC_KEY(pkey.get());
-      if (!ec_key)
-        throw std::runtime_error("Failed to get EC key");
-      const EC_GROUP* group = EC_KEY_get0_group(ec_key);
-      const EC_POINT* point = EC_KEY_get0_public_key(ec_key);
-      if (!group || !point)
-        throw std::runtime_error("Failed to get EC public key");
-      size_t len = EC_POINT_point2oct(group, point, POINT_CONVERSION_UNCOMPRESSED, nullptr, 0, nullptr);
-      if (len == 0)
-        throw std::runtime_error("Failed to get EC point size");
+      size_t len = 0;
+      if (EVP_PKEY_get_octet_string_param(pkey.get(), OSSL_PKEY_PARAM_PUB_KEY, nullptr, 0, &len) != 1 || len == 0)
+        throw std::runtime_error("Failed to get EC public key size");
       std::vector<uint8_t> buf(len);
-      if (EC_POINT_point2oct(group, point, POINT_CONVERSION_UNCOMPRESSED, buf.data(), len, nullptr) == 0) {
-        throw std::runtime_error("Failed to encode EC public key");
-      }
-      return ToNativeArrayBuffer(std::string(reinterpret_cast<const char*>(buf.data()), buf.size()));
+      if (EVP_PKEY_get_octet_string_param(pkey.get(), OSSL_PKEY_PARAM_PUB_KEY, buf.data(), buf.size(), &len) != 1)
+        throw std::runtime_error("Failed to get EC public key");
+      return ToNativeArrayBuffer(std::string(reinterpret_cast<const char*>(buf.data()), len));
     }
 
     // Set default format and type if not provided
@@ -258,54 +251,50 @@ JWK HybridKeyObjectHandle::exportJwk(const JWK& key, bool handleRsaPss) {
 
   // Export EC keys
   if (keyId == EVP_PKEY_EC) {
-    const EC_KEY* ec = EVP_PKEY_get0_EC_KEY(pkey.get());
-    if (!ec)
-      throw std::runtime_error("Failed to get EC key");
+    char curve_name_buf[64];
+    size_t name_len = 0;
+    if (EVP_PKEY_get_utf8_string_param(pkey.get(), OSSL_PKEY_PARAM_GROUP_NAME, curve_name_buf, sizeof(curve_name_buf), &name_len) != 1)
+      throw std::runtime_error("Failed to get EC group name");
 
-    const EC_GROUP* group = EC_KEY_get0_group(ec);
-    if (!group)
-      throw std::runtime_error("Failed to get EC group");
+    std::string curve_name(curve_name_buf, name_len);
 
-    int nid = EC_GROUP_get_curve_name(group);
-    const char* curve_name = OBJ_nid2sn(nid);
-    if (!curve_name)
-      throw std::runtime_error("Unknown curve");
-
-    // Get the field size in bytes for proper padding
-    size_t field_size = (EC_GROUP_get_degree(group) + 7) / 8;
+    int bits = EVP_PKEY_bits(pkey.get());
+    if (bits <= 0)
+      throw std::runtime_error("Failed to get EC key size");
+    size_t field_size = (static_cast<size_t>(bits) + 7) / 8;
 
     result.kty = JWKkty::EC;
 
     // Map OpenSSL curve names to JWK curve names
-    if (strcmp(curve_name, "prime256v1") == 0) {
+    if (curve_name == "prime256v1") {
       result.crv = "P-256";
-    } else if (strcmp(curve_name, "secp384r1") == 0) {
+    } else if (curve_name == "secp384r1") {
       result.crv = "P-384";
-    } else if (strcmp(curve_name, "secp521r1") == 0) {
+    } else if (curve_name == "secp521r1") {
       result.crv = "P-521";
     } else {
       result.crv = curve_name;
     }
 
-    const EC_POINT* pub_key = EC_KEY_get0_public_key(ec);
-    if (pub_key) {
-      BIGNUM* x_bn = BN_new();
-      BIGNUM* y_bn = BN_new();
-
-      if (EC_POINT_get_affine_coordinates(group, pub_key, x_bn, y_bn, nullptr) == 1) {
-        result.x = bn_to_base64url(x_bn, field_size);
-        result.y = bn_to_base64url(y_bn, field_size);
-      }
-
+    BIGNUM* x_bn = nullptr;
+    BIGNUM* y_bn = nullptr;
+    if (EVP_PKEY_get_bn_param(pkey.get(), OSSL_PKEY_PARAM_EC_PUB_X, &x_bn) != 1 ||
+        EVP_PKEY_get_bn_param(pkey.get(), OSSL_PKEY_PARAM_EC_PUB_Y, &y_bn) != 1) {
       BN_free(x_bn);
       BN_free(y_bn);
+      throw std::runtime_error("Failed to get EC public key coordinates");
     }
+    result.x = bn_to_base64url(x_bn, field_size);
+    result.y = bn_to_base64url(y_bn, field_size);
+    BN_free(x_bn);
+    BN_free(y_bn);
 
     // Export private key if this is a private key
     if (keyType == KeyType::PRIVATE) {
-      const BIGNUM* priv_key = EC_KEY_get0_private_key(ec);
-      if (priv_key) {
-        result.d = bn_to_base64url(priv_key, field_size);
+      BIGNUM* priv_bn = nullptr;
+      if (EVP_PKEY_get_bn_param(pkey.get(), OSSL_PKEY_PARAM_PRIV_KEY, &priv_bn) == 1 && priv_bn) {
+        result.d = bn_to_base64url(priv_bn, field_size);
+        BN_free(priv_bn);
       }
     }
 
@@ -574,81 +563,54 @@ std::optional<KeyType> HybridKeyObjectHandle::initJwk(const JWK& keyData, std::o
 
     std::string crv = keyData.crv.value();
 
-    // Map JWK curve names to OpenSSL NIDs
-    int nid;
+    // Map JWK curve names to OpenSSL group names and field sizes
+    const char* group_name;
+    size_t field_size;
     if (crv == "P-256") {
-      nid = NID_X9_62_prime256v1;
+      group_name = "prime256v1";
+      field_size = 32;
     } else if (crv == "P-384") {
-      nid = NID_secp384r1;
+      group_name = "secp384r1";
+      field_size = 48;
     } else if (crv == "P-521") {
-      nid = NID_secp521r1;
+      group_name = "secp521r1";
+      field_size = 66;
     } else {
       throw std::runtime_error("Unsupported EC curve: " + crv);
     }
 
-    // Create EC_KEY
-    EC_KEY* ec = EC_KEY_new_by_curve_name(nid);
-    if (!ec)
-      throw std::runtime_error("Failed to create EC key");
-
-    const EC_GROUP* group = EC_KEY_get0_group(ec);
-
     // Decode public key coordinates
     BIGNUM* x_bn = base64url_to_bn(keyData.x.value());
     BIGNUM* y_bn = base64url_to_bn(keyData.y.value());
-
     if (!x_bn || !y_bn) {
-      EC_KEY_free(ec);
+      BN_free(x_bn);
+      BN_free(y_bn);
       throw std::runtime_error("Failed to decode EC public key coordinates");
     }
 
-    // Set public key
-    EC_POINT* pub_key = EC_POINT_new(group);
-    if (!pub_key || EC_POINT_set_affine_coordinates(group, pub_key, x_bn, y_bn, nullptr) != 1) {
-      BN_free(x_bn);
-      BN_free(y_bn);
-      if (pub_key)
-        EC_POINT_free(pub_key);
-      EC_KEY_free(ec);
-      throw std::runtime_error("Failed to set EC public key");
-    }
-
+    // Build uncompressed point: 0x04 || x_padded || y_padded
+    std::vector<uint8_t> pub_oct(1 + 2 * field_size, 0);
+    pub_oct[0] = 0x04;
+    BN_bn2binpad(x_bn, pub_oct.data() + 1, static_cast<int>(field_size));
+    BN_bn2binpad(y_bn, pub_oct.data() + 1 + field_size, static_cast<int>(field_size));
     BN_free(x_bn);
     BN_free(y_bn);
 
-    if (EC_KEY_set_public_key(ec, pub_key) != 1) {
-      EC_POINT_free(pub_key);
-      EC_KEY_free(ec);
-      throw std::runtime_error("Failed to set EC public key on EC_KEY");
-    }
-
-    EC_POINT_free(pub_key);
-
-    // Set private key if present
+    BIGNUM* d_bn = nullptr;
     if (isPrivate) {
-      BIGNUM* d_bn = base64url_to_bn(keyData.d.value());
-      if (!d_bn) {
-        EC_KEY_free(ec);
+      d_bn = base64url_to_bn(keyData.d.value());
+      if (!d_bn)
         throw std::runtime_error("Failed to decode EC private key");
-      }
+    }
 
-      if (EC_KEY_set_private_key(ec, d_bn) != 1) {
-        BN_free(d_bn);
-        EC_KEY_free(ec);
-        throw std::runtime_error("Failed to set EC private key");
-      }
-
+    EVP_PKEY* pkey = nullptr;
+    try {
+      pkey = createEcEvpPkey(group_name, pub_oct.data(), pub_oct.size(), d_bn);
+    } catch (...) {
       BN_free(d_bn);
+      throw;
     }
-
-    // Create EVP_PKEY from EC_KEY
-    EVP_PKEY* pkey = EVP_PKEY_new();
-    if (!pkey || EVP_PKEY_assign_EC_KEY(pkey, ec) != 1) {
-      EC_KEY_free(ec);
-      if (pkey)
-        EVP_PKEY_free(pkey);
-      throw std::runtime_error("Failed to create EVP_PKEY from EC_KEY");
-    }
+    BN_free(d_bn);
 
     KeyType type = isPrivate ? KeyType::PRIVATE : KeyType::PUBLIC;
     data_ = KeyObjectData::CreateAsymmetric(type, ncrypto::EVPKeyPointer(pkey));
@@ -733,20 +695,11 @@ KeyDetail HybridKeyObjectHandle::keyDetail() {
   }
 
   if (keyType == EVP_PKEY_EC) {
-    // Extract EC curve name
-    EC_KEY* ec_key = EVP_PKEY_get1_EC_KEY(pkey);
-    if (ec_key) {
-      const EC_GROUP* group = EC_KEY_get0_group(ec_key);
-      if (group) {
-        int nid = EC_GROUP_get_curve_name(group);
-        const char* curve_name = OBJ_nid2sn(nid);
-        if (curve_name) {
-          std::string namedCurve(curve_name);
-          EC_KEY_free(ec_key);
-          return KeyDetail(std::nullopt, std::nullopt, std::nullopt, std::nullopt, std::nullopt, std::nullopt, namedCurve);
-        }
-      }
-      EC_KEY_free(ec_key);
+    char curve_name[64];
+    size_t name_len = 0;
+    if (EVP_PKEY_get_utf8_string_param(pkey, OSSL_PKEY_PARAM_GROUP_NAME, curve_name, sizeof(curve_name), &name_len) == 1) {
+      return KeyDetail(std::nullopt, std::nullopt, std::nullopt, std::nullopt, std::nullopt, std::nullopt,
+                       std::string(curve_name, name_len));
     }
   }
 
@@ -812,47 +765,14 @@ bool HybridKeyObjectHandle::initECRaw(const std::string& namedCurve, const std::
     throw std::runtime_error("Unknown curve: " + namedCurve);
   }
 
-  // Create EC_GROUP for the curve
-  ncrypto::ECGroupPointer group = ncrypto::ECGroupPointer::NewByCurveName(nid);
-  if (!group) {
-    throw std::runtime_error("Failed to create EC_GROUP for curve");
+  // Get the OpenSSL group name for this curve
+  const char* group_name = OBJ_nid2sn(nid);
+  if (!group_name) {
+    throw std::runtime_error("Failed to get curve name for NID");
   }
 
-  // Create EC_POINT from raw bytes
-  ncrypto::ECPointPointer point = ncrypto::ECPointPointer::New(group.get());
-  if (!point) {
-    throw std::runtime_error("Failed to create EC_POINT");
-  }
-
-  // Convert raw bytes to EC_POINT
-  ncrypto::Buffer<const unsigned char> buffer{.data = reinterpret_cast<const unsigned char*>(keyData->data()), .len = keyData->size()};
-
-  if (!point.setFromBuffer(buffer, group.get())) {
-    throw std::runtime_error("Failed to read DER asymmetric key");
-  }
-
-  // Create EC_KEY and set the public key
-  ncrypto::ECKeyPointer ec = ncrypto::ECKeyPointer::New(group.get());
-  if (!ec) {
-    throw std::runtime_error("Failed to create EC_KEY");
-  }
-
-  if (!ec.setPublicKey(point)) {
-    throw std::runtime_error("Failed to set public key on EC_KEY");
-  }
-
-  // Create EVP_PKEY from EC_KEY
-  ncrypto::EVPKeyPointer pkey = ncrypto::EVPKeyPointer::New();
-  if (!pkey) {
-    throw std::runtime_error("Failed to create EVP_PKEY");
-  }
-
-  if (!pkey.set(ec)) {
-    throw std::runtime_error("Failed to assign EC_KEY to EVP_PKEY");
-  }
-
-  // Store as public key
-  this->data_ = KeyObjectData::CreateAsymmetric(KeyType::PUBLIC, std::move(pkey));
+  EVP_PKEY* pkey = createEcEvpPkey(group_name, keyData->data(), keyData->size());
+  this->data_ = KeyObjectData::CreateAsymmetric(KeyType::PUBLIC, ncrypto::EVPKeyPointer(pkey));
   return true;
 }
 
