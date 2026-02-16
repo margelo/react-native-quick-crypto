@@ -17,7 +17,8 @@ export interface HkdfAlgorithm {
 
 export interface CryptoKeyInternal {
   keyObject: {
-    export: () => Buffer;
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    export: (...args: any[]) => any;
   };
 }
 
