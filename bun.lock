@@ -29,7 +29,7 @@
     },
     "example": {
       "name": "react-native-quick-crypto-example",
-      "version": "1.0.11",
+      "version": "1.0.12",
       "dependencies": {
         "@noble/ciphers": "2.0.1",
         "@noble/curves": "1.7.0",
@@ -86,12 +86,13 @@
     },
     "packages/react-native-quick-crypto": {
       "name": "react-native-quick-crypto",
-      "version": "1.0.11",
+      "version": "1.0.12",
       "dependencies": {
         "@craftzdog/react-native-buffer": "6.1.0",
         "events": "3.3.0",
         "readable-stream": "4.5.2",
         "safe-buffer": "^5.2.1",
+        "string_decoder": "^1.3.0",
         "util": "0.12.5",
       },
       "devDependencies": {
