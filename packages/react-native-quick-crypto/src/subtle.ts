@@ -1755,7 +1755,17 @@ const SUPPORTED_ALGORITHMS: Record<string, Set<string>> = {
     'ML-DSA-65',
     'ML-DSA-87',
   ]),
-  digest: new Set(['SHA-1', 'SHA-256', 'SHA-384', 'SHA-512']),
+  digest: new Set([
+    'SHA-1',
+    'SHA-256',
+    'SHA-384',
+    'SHA-512',
+    'SHA3-256',
+    'SHA3-384',
+    'SHA3-512',
+    'cSHAKE128',
+    'cSHAKE256',
+  ]),
   generateKey: new Set([
     'RSASSA-PKCS1-v1_5',
     'RSA-PSS',

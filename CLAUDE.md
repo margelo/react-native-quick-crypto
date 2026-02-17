@@ -12,7 +12,9 @@ This project uses the **4-Layer Orchestra Architecture** for efficient multi-age
 ## Critical Principles
 
 ### 1. API Priority Order (NON-NEGOTIABLE)
+
 When implementing features, favor in this order:
+
 1. **WebCrypto API** - Modern standard, best for `subtle.*` methods
 2. **Node.js Implementation** - Use `$REPOS/node/deps/ncrypto` as reference
 3. **ncrypto** - submodule code reference at `$REPOS/ncrypto` (do work w/ OpenSSL)
@@ -20,6 +22,7 @@ When implementing features, favor in this order:
 **Always check Node.js `deps/ncrypto` before implementing new features.**
 
 ### 2. Modern Stack Required
+
 - **React Native** - Mobile framework
 - **TypeScript** - Type system (strict mode, no `any`)
 - **Nitro Modules** - Native bridging
@@ -28,12 +31,21 @@ When implementing features, favor in this order:
 - **Bun 1.3+** - TypeScript package manager
 
 ### 3. Code Philosophy
+
 - Minimize code rather than add more
 - Prefer iteration and modularization over duplication
 - No comments unless code is sufficiently complex
 - Code should be self-documenting
 
-### 4. Security is Critical
+### 4. Never Commit to Main
+
+- **ALWAYS** create a feature branch before the first commit
+- Branch naming: `feat/<name>`, `fix/<name>`, `refactor/<name>`
+- All changes go through PRs — never push directly to main
+- If you find yourself on main, create a branch before committing
+
+### 5. Security is Critical
+
 - Constant-time comparisons for authentication tags
 - Cryptographically secure randomness (RAND_bytes)
 - AEAD modes preferred (AES-GCM)
@@ -45,6 +57,7 @@ When implementing features, favor in this order:
 For full details, see `.claude/rules/*.xml`:
 
 ### architecture.xml
+
 - Project context and goals
 - API priority order (WebCrypto → Node.js → ncrypto)
 - Tech stack requirements
@@ -53,6 +66,7 @@ For full details, see `.claude/rules/*.xml`:
 - Local codebase references
 
 ### code-typescript.xml
+
 - No `any` or `unknown` casts
 - Interfaces over types
 - Named exports only (no default)
@@ -62,6 +76,7 @@ For full details, see `.claude/rules/*.xml`:
 - React best practices (minimal useEffect)
 
 ### code-cpp.xml
+
 - C++20 minimum with modern features
 - Smart pointers for all ownership
 - OpenSSL 3.6+ EVP APIs only (no deprecated)
@@ -70,6 +85,7 @@ For full details, see `.claude/rules/*.xml`:
 - Memory safety (no leaks, no raw ownership)
 
 ### crypto-security.xml
+
 - Cryptographic correctness (match specs)
 - No timing attacks (CRYPTO_memcmp)
 - Secure RNG (RAND_bytes)
@@ -79,6 +95,7 @@ For full details, see `.claude/rules/*.xml`:
 - No key material in errors
 
 ### ci-caching.xml
+
 - iOS Pods/DerivedData cache consistency (exact-match Pods, no restore-keys)
 - Cache key design (no version suffixes, use hashFiles)
 - Android Maestro patterns (don't launch app before Maestro)
@@ -87,12 +104,14 @@ For full details, see `.claude/rules/*.xml`:
 ## When to Use Orchestration
 
 ### Use Orchestrator For:
+
 - ✅ Tasks touching 3+ files
 - ✅ Cross-language changes (TypeScript + C++)
 - ✅ New crypto features (API + implementation)
 - ✅ Complex refactoring
 
 ### Work Directly For:
+
 - ✅ Single file changes
 - ✅ Simple bug fixes
 - ✅ Type updates
@@ -111,14 +130,17 @@ For full details, see `.claude/rules/*.xml`:
 Use these instead of web searches:
 
 - **Node.js**: `$REPOS/node`
+
   - `deps/ncrypto` - Use as bible for crypto operations
   - May need updating to OpenSSL 3.6+ patterns
 
 - **ncrypto**: `$REPOS/ncrypto`
+
   - separate crypto lib broken out from Node.js
   - Patterns and tools to access OpenSSL
 
 - **Nitro**: `$REPOS/nitro`
+
   - iOS CI caching patterns (super-fast builds)
   - Nitro Modules bridging examples
 
@@ -128,7 +150,7 @@ Use these instead of web searches:
 
 ## Testing
 
-Tests run in the React Native example app environment, not standard Node.js test runners. 
+Tests run in the React Native example app environment, not standard Node.js test runners.
 
 Don't ask to run tests - they must be executed in the example React Native application.
 
@@ -139,6 +161,7 @@ Metro output is tee'd to `/tmp/rnqc-metro.log`. When debugging test failures, re
 ## Quality Checks
 
 Before committing:
+
 - [ ] Type safety (no `any`, proper interfaces)
 - [ ] Memory safety (smart pointers, RAII)
 - [ ] Cryptographic correctness (test vectors)

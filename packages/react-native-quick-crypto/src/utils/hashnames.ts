@@ -63,6 +63,26 @@ const kHashNames: HashNames = {
     [HashContext.Node]: 'ripemd160',
     [HashContext.WebCrypto]: 'RIPEMD-160',
   },
+  'sha3-256': {
+    [HashContext.Node]: 'sha3-256',
+    [HashContext.WebCrypto]: 'SHA3-256',
+  },
+  'sha3-384': {
+    [HashContext.Node]: 'sha3-384',
+    [HashContext.WebCrypto]: 'SHA3-384',
+  },
+  'sha3-512': {
+    [HashContext.Node]: 'sha3-512',
+    [HashContext.WebCrypto]: 'SHA3-512',
+  },
+  shake128: {
+    [HashContext.Node]: 'shake128',
+    [HashContext.WebCrypto]: 'cSHAKE128',
+  },
+  shake256: {
+    [HashContext.Node]: 'shake256',
+    [HashContext.WebCrypto]: 'cSHAKE256',
+  },
 };
 
 {
@@ -92,13 +112,13 @@ const kHashNames: HashNames = {
 export function normalizeHashName(
   algo: string | HashAlgorithm | { name: string } | undefined,
   context: HashContext = HashContext.Node,
-): HashAlgorithm {
+): string {
   if (typeof algo !== 'undefined') {
     const hashName =
       typeof algo === 'string' ? algo : algo.name || algo.toString();
     const normAlgo = hashName.toLowerCase();
     try {
-      const alias = kHashNames[normAlgo]![context] as HashAlgorithm;
+      const alias = kHashNames[normAlgo]![context];
       if (alias) return alias;
       // eslint-disable-next-line @typescript-eslint/no-unused-vars
     } catch (_e) {

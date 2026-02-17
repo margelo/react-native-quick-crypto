@@ -241,19 +241,38 @@ export const asyncDigest = async (
 ): Promise<ArrayBuffer> => {
   validateMaxBufferLength(data, 'data');
 
-  switch (algorithm.name) {
-    case 'SHA-1':
-    // Fall through
-    case 'SHA-256':
-    // Fall through
-    case 'SHA-384':
-    // Fall through
-    case 'SHA-512':
-      return internalDigest(algorithm, data);
+  const name = algorithm.name;
+
+  if (
+    name === 'SHA-1' ||
+    name === 'SHA-256' ||
+    name === 'SHA-384' ||
+    name === 'SHA-512' ||
+    name === 'SHA3-256' ||
+    name === 'SHA3-384' ||
+    name === 'SHA3-512'
+  ) {
+    return internalDigest(algorithm, data);
+  }
+
+  if (name === 'cSHAKE128' || name === 'cSHAKE256') {
+    if (typeof algorithm.length !== 'number' || algorithm.length <= 0) {
+      throw lazyDOMException(
+        'cSHAKE requires a length parameter',
+        'OperationError',
+      );
+    }
+    if (algorithm.length % 8) {
+      throw lazyDOMException(
+        'Unsupported CShakeParams length',
+        'NotSupportedError',
+      );
+    }
+    return internalDigest(algorithm, data, algorithm.length);
   }
 
   throw lazyDOMException(
-    `Unrecognized algorithm name: ${algorithm.name}`,
+    `Unrecognized algorithm name: ${name}`,
     'NotSupportedError',
   );
 };
@@ -261,9 +280,13 @@ export const asyncDigest = async (
 const internalDigest = (
   algorithm: SubtleAlgorithm,
   data: BufferLike,
+  outputLength?: number,
 ): ArrayBuffer => {
   const normalizedHashName = normalizeHashName(algorithm.name);
-  const hash = createHash(normalizedHashName);
+  const hash = createHash(
+    normalizedHashName,
+    outputLength ? { outputLength } : undefined,
+  );
   hash.update(bufferLikeToArrayBuffer(data));
   const result = hash.digest();
   const arrayBuffer = new ArrayBuffer(result.length);
