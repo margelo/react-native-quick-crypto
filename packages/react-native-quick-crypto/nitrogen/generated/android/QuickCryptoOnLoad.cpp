@@ -29,6 +29,7 @@
 #include "HybridHash.hpp"
 #include "HybridHkdf.hpp"
 #include "HybridHmac.hpp"
+#include "HybridKmac.hpp"
 #include "HybridKeyObjectHandle.hpp"
 #include "HybridMlDsaKeyPair.hpp"
 #include "HybridMlKemKeyPair.hpp"
@@ -179,6 +180,15 @@ int initialize(JavaVM* vm) {
                       "The HybridObject \"HybridHmac\" is not default-constructible! "
                       "Create a public constructor that takes zero arguments to be able to autolink this HybridObject.");
         return std::make_shared<HybridHmac>();
+      }
+    );
+    HybridObjectRegistry::registerHybridObjectConstructor(
+      "Kmac",
+      []() -> std::shared_ptr<HybridObject> {
+        static_assert(std::is_default_constructible_v<HybridKmac>,
+                      "The HybridObject \"HybridKmac\" is not default-constructible! "
+                      "Create a public constructor that takes zero arguments to be able to autolink this HybridObject.");
+        return std::make_shared<HybridKmac>();
       }
     );
     HybridObjectRegistry::registerHybridObjectConstructor(

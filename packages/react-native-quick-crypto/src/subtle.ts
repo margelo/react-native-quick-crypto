@@ -48,6 +48,7 @@ import {
 import { rsa_generateKeyPair } from './rsa';
 import { getRandomValues } from './random';
 import { createHmac } from './hmac';
+import type { Kmac } from './specs/kmac.nitro';
 import { createSign, createVerify } from './keys/signVerify';
 import {
   ed_generateKeyPairWebCrypto,
@@ -705,6 +706,162 @@ async function hmacGenerateKey(
   return new CryptoKey(keyObject, keyAlgorithm, keyUsages, extractable);
 }
 
+async function kmacGenerateKey(
+  algorithm: SubtleAlgorithm,
+  extractable: boolean,
+  keyUsages: KeyUsage[],
+): Promise<CryptoKey> {
+  const { name } = algorithm;
+
+  if (hasAnyNotIn(keyUsages, ['sign', 'verify'])) {
+    throw lazyDOMException(
+      `Unsupported key usage for ${name} key`,
+      'SyntaxError',
+    );
+  }
+
+  const defaultLength = name === 'KMAC128' ? 128 : 256;
+  const length = algorithm.length ?? defaultLength;
+
+  if (length === 0) {
+    throw lazyDOMException(
+      'Zero-length key is not supported',
+      'OperationError',
+    );
+  }
+
+  const keyBytes = new Uint8Array(Math.ceil(length / 8));
+  getRandomValues(keyBytes);
+
+  const keyObject = createSecretKey(keyBytes);
+
+  const keyAlgorithm: SubtleAlgorithm = { name: name as AnyAlgorithm, length };
+
+  return new CryptoKey(keyObject, keyAlgorithm, keyUsages, extractable);
+}
+
+function kmacSignVerify(
+  key: CryptoKey,
+  data: BufferLike,
+  algorithm: SubtleAlgorithm,
+  signature?: BufferLike,
+): ArrayBuffer | boolean {
+  const { name } = algorithm;
+
+  const defaultLength = name === 'KMAC128' ? 256 : 512;
+  const outputLengthBits = algorithm.length ?? defaultLength;
+  const outputLengthBytes = outputLengthBits / 8;
+
+  const keyData = key.keyObject.export();
+
+  const kmac = NitroModules.createHybridObject<Kmac>('Kmac');
+
+  let customizationBuffer: ArrayBuffer | undefined;
+  if (algorithm.customization !== undefined) {
+    customizationBuffer = bufferLikeToArrayBuffer(algorithm.customization);
+  }
+
+  kmac.createKmac(
+    name,
+    bufferLikeToArrayBuffer(keyData),
+    outputLengthBytes,
+    customizationBuffer,
+  );
+  kmac.update(bufferLikeToArrayBuffer(data));
+  const computed = kmac.digest();
+
+  if (signature === undefined) {
+    return computed;
+  }
+
+  const sigBytes = new Uint8Array(bufferLikeToArrayBuffer(signature));
+  const computedBytes = new Uint8Array(computed);
+
+  if (computedBytes.length !== sigBytes.length) {
+    return false;
+  }
+
+  let result = 0;
+  for (let i = 0; i < computedBytes.length; i++) {
+    result |= computedBytes[i]! ^ sigBytes[i]!;
+  }
+  return result === 0;
+}
+
+async function kmacImportKey(
+  algorithm: SubtleAlgorithm,
+  format: ImportFormat,
+  data: BufferLike | JWK,
+  extractable: boolean,
+  keyUsages: KeyUsage[],
+): Promise<CryptoKey> {
+  const { name } = algorithm;
+
+  if (hasAnyNotIn(keyUsages, ['sign', 'verify'])) {
+    throw lazyDOMException(
+      `Unsupported key usage for ${name} key`,
+      'SyntaxError',
+    );
+  }
+
+  let keyObject: KeyObject;
+
+  if (format === 'jwk') {
+    const jwk = data as JWK;
+
+    if (!jwk || typeof jwk !== 'object') {
+      throw lazyDOMException('Invalid keyData', 'DataError');
+    }
+
+    if (jwk.kty !== 'oct') {
+      throw lazyDOMException('Invalid JWK format for KMAC key', 'DataError');
+    }
+
+    const expectedAlg = name === 'KMAC128' ? 'K128' : 'K256';
+    if (jwk.alg !== undefined && jwk.alg !== expectedAlg) {
+      throw lazyDOMException(
+        'JWK "alg" does not match the requested algorithm',
+        'DataError',
+      );
+    }
+
+    const handle =
+      NitroModules.createHybridObject<KeyObjectHandle>('KeyObjectHandle');
+    const keyType = handle.initJwk(jwk, undefined);
+
+    if (keyType === undefined || keyType !== 0) {
+      throw lazyDOMException('Failed to import KMAC JWK', 'DataError');
+    }
+
+    keyObject = new SecretKeyObject(handle);
+  } else if (format === 'raw' || format === 'raw-secret') {
+    keyObject = createSecretKey(data as BinaryLike);
+  } else {
+    throw lazyDOMException(
+      `Unable to import ${name} key with format ${format}`,
+      'NotSupportedError',
+    );
+  }
+
+  const exported = keyObject.export();
+  const keyLength = exported.byteLength * 8;
+
+  if (keyLength === 0) {
+    throw lazyDOMException('Zero-length key is not supported', 'DataError');
+  }
+
+  if (algorithm.length !== undefined && algorithm.length !== keyLength) {
+    throw lazyDOMException('Invalid key length', 'DataError');
+  }
+
+  const keyAlgorithm: SubtleAlgorithm = {
+    name: name as AnyAlgorithm,
+    length: keyLength,
+  };
+
+  return new CryptoKey(keyObject, keyAlgorithm, keyUsages, extractable);
+}
+
 function rsaImportKey(
   format: ImportFormat,
   data: BufferLike | JWK,
@@ -1294,7 +1451,11 @@ const exportKeyRaw = (key: CryptoKey): ArrayBuffer | unknown => {
     // Fall through
     case 'ChaCha20-Poly1305':
     // Fall through
-    case 'HMAC': {
+    case 'HMAC':
+    // Fall through
+    case 'KMAC128':
+    // Fall through
+    case 'KMAC256': {
       const exported = key.keyObject.export();
       // Convert Buffer to ArrayBuffer
       return exported.buffer.slice(
@@ -1330,6 +1491,12 @@ const exportKeyJWK = (key: CryptoKey): ArrayBuffer | unknown => {
       return jwk;
     case 'HMAC':
       jwk.alg = normalizeHashName(key.algorithm.hash, HashContext.JwkHmac);
+      return jwk;
+    case 'KMAC128':
+      jwk.alg = 'K128';
+      return jwk;
+    case 'KMAC256':
+      jwk.alg = 'K256';
       return jwk;
     case 'ECDSA':
     // Fall through
@@ -1677,6 +1844,9 @@ const signVerify = (
     case 'ML-DSA-65':
     case 'ML-DSA-87':
       return mldsaSignVerify(key, data, signature);
+    case 'KMAC128':
+    case 'KMAC256':
+      return kmacSignVerify(key, data, algorithm, signature);
   }
   throw lazyDOMException(
     `Unrecognized algorithm name '${algorithm.name}' for '${usage}'`,
@@ -1748,6 +1918,8 @@ const SUPPORTED_ALGORITHMS: Record<string, Set<string>> = {
     'RSA-PSS',
     'ECDSA',
     'HMAC',
+    'KMAC128',
+    'KMAC256',
     'Ed25519',
     'Ed448',
     'ML-DSA-44',
@@ -1759,6 +1931,8 @@ const SUPPORTED_ALGORITHMS: Record<string, Set<string>> = {
     'RSA-PSS',
     'ECDSA',
     'HMAC',
+    'KMAC128',
+    'KMAC256',
     'Ed25519',
     'Ed448',
     'ML-DSA-44',
@@ -1793,6 +1967,8 @@ const SUPPORTED_ALGORITHMS: Record<string, Set<string>> = {
     'AES-OCB',
     'ChaCha20-Poly1305',
     'HMAC',
+    'KMAC128',
+    'KMAC256',
     'ML-DSA-44',
     'ML-DSA-65',
     'ML-DSA-87',
@@ -1817,6 +1993,8 @@ const SUPPORTED_ALGORITHMS: Record<string, Set<string>> = {
     'AES-OCB',
     'ChaCha20-Poly1305',
     'HMAC',
+    'KMAC128',
+    'KMAC256',
     'HKDF',
     'PBKDF2',
     'Argon2d',
@@ -1846,6 +2024,8 @@ const SUPPORTED_ALGORITHMS: Record<string, Set<string>> = {
     'AES-OCB',
     'ChaCha20-Poly1305',
     'HMAC',
+    'KMAC128',
+    'KMAC256',
     'ML-DSA-44',
     'ML-DSA-65',
     'ML-DSA-87',
@@ -2315,6 +2495,11 @@ export class Subtle {
       case 'HMAC':
         result = await hmacGenerateKey(algorithm, extractable, keyUsages);
         break;
+      case 'KMAC128':
+      // Fall through
+      case 'KMAC256':
+        result = await kmacGenerateKey(algorithm, extractable, keyUsages);
+        break;
       case 'Ed25519':
       // Fall through
       case 'Ed448':
@@ -2422,6 +2607,17 @@ export class Subtle {
         break;
       case 'HMAC':
         result = await hmacImportKey(
+          normalizedAlgorithm,
+          format,
+          data as BufferLike | JWK,
+          extractable,
+          keyUsages,
+        );
+        break;
+      case 'KMAC128':
+      // Fall through
+      case 'KMAC256':
+        result = await kmacImportKey(
           normalizedAlgorithm,
           format,
           data as BufferLike | JWK,
@@ -2569,6 +2765,25 @@ export class Subtle {
       return bufferLikeToArrayBuffer(hmac.digest());
     }
 
+    if (
+      normalizedAlgorithm.name === 'KMAC128' ||
+      normalizedAlgorithm.name === 'KMAC256'
+    ) {
+      if (!key.usages.includes('sign')) {
+        throw lazyDOMException(
+          'Key does not have sign usage',
+          'InvalidAccessError',
+        );
+      }
+      if (normalizedAlgorithm.name !== key.algorithm.name) {
+        throw lazyDOMException(
+          'Unable to use this key to sign',
+          'InvalidAccessError',
+        );
+      }
+      return kmacSignVerify(key, data, normalizedAlgorithm) as ArrayBuffer;
+    }
+
     return signVerify(normalizedAlgorithm, key, data) as ArrayBuffer;
   }
 
@@ -2627,6 +2842,30 @@ export class Subtle {
         result |= expected[i]! ^ signatureArray[i]!;
       }
       return result === 0;
+    }
+
+    if (
+      normalizedAlgorithm.name === 'KMAC128' ||
+      normalizedAlgorithm.name === 'KMAC256'
+    ) {
+      if (!key.usages.includes('verify')) {
+        throw lazyDOMException(
+          'Key does not have verify usage',
+          'InvalidAccessError',
+        );
+      }
+      if (normalizedAlgorithm.name !== key.algorithm.name) {
+        throw lazyDOMException(
+          'Unable to use this key to verify',
+          'InvalidAccessError',
+        );
+      }
+      return kmacSignVerify(
+        key,
+        data,
+        normalizedAlgorithm,
+        signature,
+      ) as boolean;
     }
 
     return signVerify(normalizedAlgorithm, key, data, signature) as boolean;
@@ -2790,6 +3029,11 @@ function getKeyLength(algorithm: SubtleAlgorithm): number {
       const hmacAlg = algorithm as { length?: number };
       return hmacAlg.length || 256;
     }
+
+    case 'KMAC128':
+      return algorithm.length || 128;
+    case 'KMAC256':
+      return algorithm.length || 256;
 
     default:
       throw lazyDOMException(

@@ -265,12 +265,12 @@ These ciphers are **not available in Node.js** but are provided by RNQC via libs
 - ✅ Class: `CryptoKeyPair`
   - ✅ `cryptoKeyPair.privateKey`
   - ✅ `cryptoKeyPair.publicKey`
-- 🚧 Class: `CryptoSubtle`
+- ✅ Class: `CryptoSubtle`
   - (see below)
 
 # `SubtleCrypto`
 
-- 🚧 Class: `SubtleCrypto`
+- ✅ Class: `SubtleCrypto`
   - ✅ static `supports(operation, algorithm[, lengthOrAdditionalAlgorithm])`
   - ✅ `subtle.decapsulateBits(decapsulationAlgorithm, decapsulationKey, ciphertext)`
   - ✅ `subtle.decapsulateKey(decapsulationAlgorithm, decapsulationKey, ciphertext, sharedKeyAlgorithm, extractable, usages)`
@@ -282,12 +282,12 @@ These ciphers are **not available in Node.js** but are provided by RNQC via libs
   - ✅ `subtle.encapsulateKey(encapsulationAlgorithm, encapsulationKey, sharedKeyAlgorithm, extractable, usages)`
   - ✅ `subtle.encrypt(algorithm, key, data)`
   - ✅ `subtle.exportKey(format, key)`
-  - 🚧 `subtle.generateKey(algorithm, extractable, keyUsages)`
+  - ✅ `subtle.generateKey(algorithm, extractable, keyUsages)`
   - ✅ `subtle.getPublicKey(key, keyUsages)`
   - ✅ `subtle.importKey(format, keyData, algorithm, extractable, keyUsages)`
-  - 🚧 `subtle.sign(algorithm, key, data)`
+  - ✅ `subtle.sign(algorithm, key, data)`
   - ✅ `subtle.unwrapKey(format, wrappedKey, unwrappingKey, unwrapAlgo, unwrappedKeyAlgo, extractable, keyUsages)`
-  - 🚧 `subtle.verify(algorithm, key, signature, data)`
+  - ✅ `subtle.verify(algorithm, key, signature, data)`
   - ✅ `subtle.wrapKey(format, key, wrappingKey, wrapAlgo)`
 
 ## `subtle.decrypt`
@@ -369,6 +369,8 @@ These ciphers are **not available in Node.js** but are provided by RNQC via libs
 | `Ed25519`           |   ✅   |   ✅    |  ✅   |  ✅   |              |      ✅      |            |
 | `Ed448`             |   ✅   |   ✅    |  ✅   |  ✅   |              |      ✅      |            |
 | `HMAC`              |        |         |  ✅   |  ✅   |      ✅      |              |            |
+| `KMAC128`           |        |         |  ✅   |  ✅   |      ✅      |              |            |
+| `KMAC256`           |        |         |  ✅   |  ✅   |      ✅      |              |            |
 | `ML-DSA-44`         |   ✅   |   ✅    |  ✅   |       |              |      ✅      |     ✅     |
 | `ML-DSA-65`         |   ✅   |   ✅    |  ✅   |       |              |      ✅      |     ✅     |
 | `ML-DSA-87`         |   ✅   |   ✅    |  ✅   |       |              |      ✅      |     ✅     |
@@ -416,8 +418,8 @@ These ciphers are **not available in Node.js** but are provided by RNQC via libs
 | `AES-OCB`           |   ✅   |
 | `ChaCha20-Poly1305` |   ✅   |
 | `HMAC`              |   ✅   |
-| `KMAC128`           |   ❌   |
-| `KMAC256`           |   ❌   |
+| `KMAC128`           |   ✅   |
+| `KMAC256`           |   ✅   |
 
 ## `subtle.importKey`
 
@@ -438,6 +440,8 @@ These ciphers are **not available in Node.js** but are provided by RNQC via libs
 | `Ed448`             |   ✅   |   ✅    |  ✅   |  ✅   |              |      ✅      |            |
 | `HKDF`              |        |         |       |  ✅   |      ✅      |              |            |
 | `HMAC`              |        |         |  ✅   |  ✅   |      ✅      |              |            |
+| `KMAC128`           |        |         |  ✅   |  ✅   |      ✅      |              |            |
+| `KMAC256`           |        |         |  ✅   |  ✅   |      ✅      |              |            |
 | `ML-DSA-44`         |   ✅   |   ✅    |  ✅   |       |              |      ✅      |     ✅     |
 | `ML-DSA-65`         |   ✅   |   ✅    |  ✅   |       |              |      ✅      |     ✅     |
 | `ML-DSA-87`         |   ✅   |   ✅    |  ✅   |       |              |      ✅      |     ✅     |
@@ -459,8 +463,8 @@ These ciphers are **not available in Node.js** but are provided by RNQC via libs
 | `Ed25519`           |   ✅   |
 | `Ed448`             |   ✅   |
 | `HMAC`              |   ✅   |
-| `KMAC128`           |   ❌   |
-| `KMAC256`           |   ❌   |
+| `KMAC128`           |   ✅   |
+| `KMAC256`           |   ✅   |
 | `ML-DSA-44`         |   ✅   |
 | `ML-DSA-65`         |   ✅   |
 | `ML-DSA-87`         |   ✅   |
@@ -516,8 +520,8 @@ These ciphers are **not available in Node.js** but are provided by RNQC via libs
 | `Ed25519`           |   ✅   |
 | `Ed448`             |   ✅   |
 | `HMAC`              |   ✅   |
-| `KMAC128`           |   ❌   |
-| `KMAC256`           |   ❌   |
+| `KMAC128`           |   ✅   |
+| `KMAC256`           |   ✅   |
 | `ML-DSA-44`         |   ✅   |
 | `ML-DSA-65`         |   ✅   |
 | `ML-DSA-87`         |   ✅   |
