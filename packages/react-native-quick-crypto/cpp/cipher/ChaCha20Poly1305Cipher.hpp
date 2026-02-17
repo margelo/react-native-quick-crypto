@@ -6,7 +6,7 @@ namespace margelo::nitro::crypto {
 
 class ChaCha20Poly1305Cipher : public HybridCipher {
  public:
-  ChaCha20Poly1305Cipher() : HybridObject(TAG), final_called(false) {}
+  ChaCha20Poly1305Cipher() : HybridObject(TAG) {}
   ~ChaCha20Poly1305Cipher() {
     // Let parent destructor free the context
     ctx = nullptr;
@@ -24,7 +24,6 @@ class ChaCha20Poly1305Cipher : public HybridCipher {
   static constexpr int kKeySize = 32;
   static constexpr int kNonceSize = 12;
   static constexpr int kTagSize = 16; // Poly1305 tag is always 16 bytes
-  bool final_called;
 };
 
 } // namespace margelo::nitro::crypto

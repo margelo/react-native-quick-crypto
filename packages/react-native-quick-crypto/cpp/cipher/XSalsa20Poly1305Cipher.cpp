@@ -40,10 +40,11 @@ void XSalsa20Poly1305Cipher::init(const std::shared_ptr<ArrayBuffer> cipher_key,
   std::memcpy(nonce_, native_iv->data(), kNonceSize);
 
   data_buffer_.clear();
-  final_called_ = false;
+  is_finalized = false;
 }
 
 std::shared_ptr<ArrayBuffer> XSalsa20Poly1305Cipher::update(const std::shared_ptr<ArrayBuffer>& data) {
+  checkNotFinalized();
 #ifndef BLSALLOC_SODIUM
   throw std::runtime_error("XSalsa20Poly1305Cipher: libsodium must be enabled (BLSALLOC_SODIUM)");
 #else
@@ -59,6 +60,7 @@ std::shared_ptr<ArrayBuffer> XSalsa20Poly1305Cipher::update(const std::shared_pt
 }
 
 std::shared_ptr<ArrayBuffer> XSalsa20Poly1305Cipher::final() {
+  checkNotFinalized();
 #ifndef BLSALLOC_SODIUM
   throw std::runtime_error("XSalsa20Poly1305Cipher: libsodium must be enabled (BLSALLOC_SODIUM)");
 #else
@@ -73,12 +75,12 @@ std::shared_ptr<ArrayBuffer> XSalsa20Poly1305Cipher::final() {
       throw std::runtime_error("XSalsa20Poly1305Cipher: encryption failed");
     }
 
-    final_called_ = true;
+    is_finalized = true;
     size_t ct_len = data_buffer_.size();
     return std::make_shared<NativeArrayBuffer>(ciphertext, ct_len, [=]() { delete[] ciphertext; });
   } else {
     if (data_buffer_.empty()) {
-      final_called_ = true;
+      is_finalized = true;
       return std::make_shared<NativeArrayBuffer>(nullptr, 0, nullptr);
     }
 
@@ -92,7 +94,7 @@ std::shared_ptr<ArrayBuffer> XSalsa20Poly1305Cipher::final() {
       throw std::runtime_error("XSalsa20Poly1305Cipher: decryption failed - authentication tag mismatch");
     }
 
-    final_called_ = true;
+    is_finalized = true;
     size_t pt_len = data_buffer_.size();
     return std::make_shared<NativeArrayBuffer>(plaintext, pt_len, [=]() { delete[] plaintext; });
   }
@@ -110,7 +112,7 @@ std::shared_ptr<ArrayBuffer> XSalsa20Poly1305Cipher::getAuthTag() {
   if (!is_cipher) {
     throw std::runtime_error("getAuthTag can only be called during encryption");
   }
-  if (!final_called_) {
+  if (!is_finalized) {
     throw std::runtime_error("getAuthTag must be called after final()");
   }
 

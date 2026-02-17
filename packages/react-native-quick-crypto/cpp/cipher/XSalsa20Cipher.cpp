@@ -28,12 +28,14 @@ void XSalsa20Cipher::init(const std::shared_ptr<ArrayBuffer> cipher_key, const s
   // Copy key and nonce data
   std::memcpy(key, native_key->data(), crypto_stream_KEYBYTES);
   std::memcpy(nonce, native_iv->data(), crypto_stream_NONCEBYTES);
+  is_finalized = false;
 }
 
 /**
  * xsalsa20 call to sodium implementation
  */
 std::shared_ptr<ArrayBuffer> XSalsa20Cipher::update(const std::shared_ptr<ArrayBuffer>& data) {
+  checkNotFinalized();
 #ifndef BLSALLOC_SODIUM
   throw std::runtime_error("XSalsa20Cipher: libsodium must be enabled to use this cipher (BLSALLOC_SODIUM is not defined).");
 #else
@@ -51,9 +53,11 @@ std::shared_ptr<ArrayBuffer> XSalsa20Cipher::update(const std::shared_ptr<ArrayB
  * xsalsa20 does not have a final step, returns empty buffer
  */
 std::shared_ptr<ArrayBuffer> XSalsa20Cipher::final() {
+  checkNotFinalized();
 #ifndef BLSALLOC_SODIUM
   throw std::runtime_error("XSalsa20Cipher: libsodium must be enabled to use this cipher (BLSALLOC_SODIUM is not defined).");
 #else
+  is_finalized = true;
   return std::make_shared<NativeArrayBuffer>(nullptr, 0, nullptr);
 #endif
 }

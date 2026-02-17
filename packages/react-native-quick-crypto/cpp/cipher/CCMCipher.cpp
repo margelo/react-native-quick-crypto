@@ -54,6 +54,7 @@ void CCMCipher::init(const std::shared_ptr<ArrayBuffer> cipher_key, const std::s
 
 std::shared_ptr<ArrayBuffer> CCMCipher::update(const std::shared_ptr<ArrayBuffer>& data) {
   checkCtx();
+  checkNotFinalized();
   auto native_data = ToNativeArrayBuffer(data);
   size_t in_len = native_data->size();
   if (in_len < 0 || in_len > INT_MAX) {
@@ -104,10 +105,11 @@ std::shared_ptr<ArrayBuffer> CCMCipher::update(const std::shared_ptr<ArrayBuffer
 
 std::shared_ptr<ArrayBuffer> CCMCipher::final() {
   checkCtx();
+  checkNotFinalized();
 
   // CCM decryption does not use final. Verification happens in the last update call.
   if (!is_cipher) {
-    // Return an empty buffer, matching Node.js behavior
+    is_finalized = true;
     unsigned char* empty_output = new unsigned char[0];
     return std::make_shared<NativeArrayBuffer>(empty_output, 0, [=]() { delete[] empty_output; });
   }
@@ -138,6 +140,7 @@ std::shared_ptr<ArrayBuffer> CCMCipher::final() {
     throw std::runtime_error("Failed to get auth tag after finalization: " + std::string(err_buf));
   }
   auth_tag_state = kAuthTagKnown;
+  is_finalized = true;
 
   unsigned char* final_output = out_buf.release();
   return std::make_shared<NativeArrayBuffer>(final_output, out_len, [=]() { delete[] final_output; });

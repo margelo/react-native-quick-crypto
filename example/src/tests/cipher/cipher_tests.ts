@@ -165,6 +165,130 @@ test(SUITE, 'GCM wrong key throws error (issue #798)', () => {
   expect(() => decipher.final()).to.throw();
 });
 
+// --- String encoding tests (issue #945) ---
+
+test(SUITE, 'Buffer concat vs string concat produce same result', () => {
+  const testKey = Buffer.from(
+    'KTnGEDonslhj/qGvf6rj4HSnO32T7dvjAs5PntTDB0s=',
+    'base64',
+  );
+  const testIv = Buffer.from('2pXx2krk1wU8RI6AQjuPUg==', 'base64');
+  const text = 'this is a test.';
+
+  // Buffer concat approach
+  const cipher1 = createCipheriv('aes-256-cbc', testKey, testIv);
+  const bufResult = Buffer.concat([
+    cipher1.update(Buffer.from(text, 'utf8')),
+    cipher1.final(),
+  ]).toString('base64');
+
+  // String concat approach (fresh cipher)
+  const cipher2 = createCipheriv('aes-256-cbc', testKey, testIv);
+  const strResult =
+    cipher2.update(text, 'utf8', 'base64') + cipher2.final('base64');
+
+  expect(bufResult).to.equal(strResult);
+});
+
+test(SUITE, 'update with hex input and output encoding', () => {
+  const cipher1 = createCipheriv('aes-128-cbc', key16, iv);
+  const bufResult = Buffer.concat([
+    cipher1.update(plaintextBuffer),
+    cipher1.final(),
+  ]).toString('hex');
+
+  const cipher2 = createCipheriv('aes-128-cbc', key16, iv);
+  const hexResult =
+    cipher2.update(plaintext, 'utf8', 'hex') + cipher2.final('hex');
+
+  expect(bufResult).to.equal(hexResult);
+});
+
+test(SUITE, 'update with hex input decryption', () => {
+  // Encrypt
+  const cipher = createCipheriv('aes-128-cbc', key16, iv);
+  const encrypted =
+    cipher.update(plaintext, 'utf8', 'hex') + cipher.final('hex');
+
+  // Decrypt using hex input encoding
+  const decipher = createDecipheriv('aes-128-cbc', key16, iv);
+  const decrypted =
+    decipher.update(encrypted, 'hex', 'utf8') + decipher.final('utf8');
+
+  expect(decrypted).to.equal(plaintext);
+});
+
+test(SUITE, 'update with hex encoding roundtrip (aes-256-cbc)', () => {
+  // Encrypt
+  const cipher = createCipheriv('aes-256-cbc', key32, iv);
+  const encrypted =
+    cipher.update(plaintext, 'utf8', 'hex') + cipher.final('hex');
+
+  // Decrypt
+  const decipher = createDecipheriv('aes-256-cbc', key32, iv);
+  const decrypted =
+    decipher.update(encrypted, 'hex', 'utf8') + decipher.final('utf8');
+
+  expect(decrypted).to.equal(plaintext);
+});
+
+// --- Cipher state violation tests ---
+
+test(SUITE, 'update after final throws', () => {
+  const cipher = createCipheriv('aes-128-cbc', key16, iv);
+  cipher.update(plaintextBuffer);
+  cipher.final();
+
+  expect(() => cipher.update(plaintextBuffer)).to.throw();
+});
+
+test(SUITE, 'final called twice throws', () => {
+  const cipher = createCipheriv('aes-128-cbc', key16, iv);
+  cipher.update(plaintextBuffer);
+  cipher.final();
+
+  expect(() => cipher.final()).to.throw();
+});
+
+test(SUITE, 'decipher update after final throws', () => {
+  // First encrypt something
+  const cipher = createCipheriv('aes-128-cbc', key16, iv);
+  const encrypted = Buffer.concat([
+    cipher.update(plaintextBuffer),
+    cipher.final(),
+  ]);
+
+  // Decrypt and then try to reuse
+  const decipher = createDecipheriv('aes-128-cbc', key16, iv);
+  decipher.update(encrypted);
+  decipher.final();
+
+  expect(() => decipher.update(encrypted)).to.throw();
+});
+
+test(SUITE, 'cipher works after re-init (createCipheriv)', () => {
+  // First use
+  const cipher1 = createCipheriv('aes-128-cbc', key16, iv);
+  const enc1 = Buffer.concat([
+    cipher1.update(plaintextBuffer),
+    cipher1.final(),
+  ]);
+
+  // Second use with same params should produce identical result
+  const cipher2 = createCipheriv('aes-128-cbc', key16, iv);
+  const enc2 = Buffer.concat([
+    cipher2.update(plaintextBuffer),
+    cipher2.final(),
+  ]);
+
+  expect(enc1.toString('hex')).to.equal(enc2.toString('hex'));
+
+  // Verify decryption still works
+  const decipher = createDecipheriv('aes-128-cbc', key16, iv);
+  const decrypted = Buffer.concat([decipher.update(enc2), decipher.final()]);
+  expect(decrypted.toString('utf8')).to.equal(plaintext);
+});
+
 test(SUITE, 'GCM tampered ciphertext throws error', () => {
   const testKey = Buffer.from(randomFillSync(new Uint8Array(32)));
   const testIv = randomFillSync(new Uint8Array(12));

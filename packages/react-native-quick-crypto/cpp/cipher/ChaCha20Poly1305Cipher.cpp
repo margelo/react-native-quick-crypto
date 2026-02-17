@@ -60,13 +60,12 @@ void ChaCha20Poly1305Cipher::init(const std::shared_ptr<ArrayBuffer> cipher_key,
     ctx = nullptr;
     throw std::runtime_error("ChaCha20Poly1305Cipher: Failed to set key/IV: " + std::string(err_buf));
   }
-
-  // Reset final_called flag
-  final_called = false;
+  is_finalized = false;
 }
 
 std::shared_ptr<ArrayBuffer> ChaCha20Poly1305Cipher::update(const std::shared_ptr<ArrayBuffer>& data) {
   checkCtx();
+  checkNotFinalized();
   auto native_data = ToNativeArrayBuffer(data);
   size_t in_len = native_data->size();
   if (in_len > INT_MAX) {
@@ -92,6 +91,7 @@ std::shared_ptr<ArrayBuffer> ChaCha20Poly1305Cipher::update(const std::shared_pt
 
 std::shared_ptr<ArrayBuffer> ChaCha20Poly1305Cipher::final() {
   checkCtx();
+  checkNotFinalized();
 
   // For ChaCha20-Poly1305, we need to call final to generate the tag
   int out_len = 0;
@@ -105,7 +105,7 @@ std::shared_ptr<ArrayBuffer> ChaCha20Poly1305Cipher::final() {
     throw std::runtime_error("ChaCha20Poly1305Cipher: Failed to finalize: " + std::string(err_buf));
   }
 
-  final_called = true;
+  is_finalized = true;
   return std::make_shared<NativeArrayBuffer>(out, out_len, [=]() { delete[] out; });
 }
 
@@ -130,7 +130,7 @@ std::shared_ptr<ArrayBuffer> ChaCha20Poly1305Cipher::getAuthTag() {
   if (!is_cipher) {
     throw std::runtime_error("getAuthTag can only be called during encryption");
   }
-  if (!final_called) {
+  if (!is_finalized) {
     throw std::runtime_error("getAuthTag must be called after final()");
   }
 

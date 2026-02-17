@@ -16,7 +16,7 @@ namespace margelo::nitro::crypto {
 
 class XSalsa20Poly1305Cipher : public HybridCipher {
  public:
-  XSalsa20Poly1305Cipher() : HybridObject(TAG), final_called_(false) {}
+  XSalsa20Poly1305Cipher() : HybridObject(TAG) {}
   ~XSalsa20Poly1305Cipher();
 
   void init(const std::shared_ptr<ArrayBuffer> cipher_key, const std::shared_ptr<ArrayBuffer> iv) override;
@@ -36,7 +36,6 @@ class XSalsa20Poly1305Cipher : public HybridCipher {
   uint8_t nonce_[kNonceSize];
   std::vector<uint8_t> data_buffer_;
   uint8_t auth_tag_[kTagSize];
-  bool final_called_;
 };
 
 } // namespace margelo::nitro::crypto

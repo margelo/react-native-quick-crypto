@@ -64,6 +64,7 @@ void ChaCha20Cipher::init(const std::shared_ptr<ArrayBuffer> cipher_key, const s
 
 std::shared_ptr<ArrayBuffer> ChaCha20Cipher::update(const std::shared_ptr<ArrayBuffer>& data) {
   checkCtx();
+  checkNotFinalized();
   auto native_data = ToNativeArrayBuffer(data);
   size_t in_len = native_data->size();
   if (in_len > INT_MAX) {
@@ -89,7 +90,8 @@ std::shared_ptr<ArrayBuffer> ChaCha20Cipher::update(const std::shared_ptr<ArrayB
 
 std::shared_ptr<ArrayBuffer> ChaCha20Cipher::final() {
   checkCtx();
-  // For ChaCha20, final() should return an empty buffer since it's a stream cipher
+  checkNotFinalized();
+  is_finalized = true;
   unsigned char* empty_output = new unsigned char[0];
   return std::make_shared<NativeArrayBuffer>(empty_output, 0, [=]() { delete[] empty_output; });
 }
