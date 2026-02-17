@@ -41,6 +41,9 @@ namespace margelo::nitro::crypto {
     ML_DSA_44      SWIFT_NAME(mlDsa44) = 9,
     ML_DSA_65      SWIFT_NAME(mlDsa65) = 10,
     ML_DSA_87      SWIFT_NAME(mlDsa87) = 11,
+    ML_KEM_512      SWIFT_NAME(mlKem512) = 12,
+    ML_KEM_768      SWIFT_NAME(mlKem768) = 13,
+    ML_KEM_1024      SWIFT_NAME(mlKem1024) = 14,
   } CLOSED_ENUM;
 
 } // namespace margelo::nitro::crypto
@@ -65,6 +68,9 @@ namespace margelo::nitro {
         case hashString("ml-dsa-44"): return margelo::nitro::crypto::AsymmetricKeyType::ML_DSA_44;
         case hashString("ml-dsa-65"): return margelo::nitro::crypto::AsymmetricKeyType::ML_DSA_65;
         case hashString("ml-dsa-87"): return margelo::nitro::crypto::AsymmetricKeyType::ML_DSA_87;
+        case hashString("ml-kem-512"): return margelo::nitro::crypto::AsymmetricKeyType::ML_KEM_512;
+        case hashString("ml-kem-768"): return margelo::nitro::crypto::AsymmetricKeyType::ML_KEM_768;
+        case hashString("ml-kem-1024"): return margelo::nitro::crypto::AsymmetricKeyType::ML_KEM_1024;
         default: [[unlikely]]
           throw std::invalid_argument("Cannot convert \"" + unionValue + "\" to enum AsymmetricKeyType - invalid value!");
       }
@@ -83,6 +89,9 @@ namespace margelo::nitro {
         case margelo::nitro::crypto::AsymmetricKeyType::ML_DSA_44: return JSIConverter<std::string>::toJSI(runtime, "ml-dsa-44");
         case margelo::nitro::crypto::AsymmetricKeyType::ML_DSA_65: return JSIConverter<std::string>::toJSI(runtime, "ml-dsa-65");
         case margelo::nitro::crypto::AsymmetricKeyType::ML_DSA_87: return JSIConverter<std::string>::toJSI(runtime, "ml-dsa-87");
+        case margelo::nitro::crypto::AsymmetricKeyType::ML_KEM_512: return JSIConverter<std::string>::toJSI(runtime, "ml-kem-512");
+        case margelo::nitro::crypto::AsymmetricKeyType::ML_KEM_768: return JSIConverter<std::string>::toJSI(runtime, "ml-kem-768");
+        case margelo::nitro::crypto::AsymmetricKeyType::ML_KEM_1024: return JSIConverter<std::string>::toJSI(runtime, "ml-kem-1024");
         default: [[unlikely]]
           throw std::invalid_argument("Cannot convert AsymmetricKeyType to JS - invalid value: "
                                     + std::to_string(static_cast<int>(arg)) + "!");
@@ -106,6 +115,9 @@ namespace margelo::nitro {
         case hashString("ml-dsa-44"):
         case hashString("ml-dsa-65"):
         case hashString("ml-dsa-87"):
+        case hashString("ml-kem-512"):
+        case hashString("ml-kem-768"):
+        case hashString("ml-kem-1024"):
           return true;
         default:
           return false;

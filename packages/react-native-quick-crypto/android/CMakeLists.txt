@@ -50,6 +50,7 @@ add_library(
   ../cpp/keys/HybridKeyObjectHandle.cpp
   ../cpp/keys/KeyObjectData.cpp
   ../cpp/mldsa/HybridMlDsaKeyPair.cpp
+  ../cpp/mlkem/HybridMlKemKeyPair.cpp
   ../cpp/pbkdf2/HybridPbkdf2.cpp
   ../cpp/prime/HybridPrime.cpp
   ../cpp/random/HybridRandom.cpp
@@ -87,6 +88,7 @@ include_directories(
   "../cpp/hmac"
   "../cpp/keys"
   "../cpp/mldsa"
+  "../cpp/mlkem"
   "../cpp/pbkdf2"
   "../cpp/prime"
   "../cpp/random"

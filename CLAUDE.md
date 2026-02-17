@@ -132,6 +132,10 @@ Tests run in the React Native example app environment, not standard Node.js test
 
 Don't ask to run tests - they must be executed in the example React Native application.
 
+### Metro Logs
+
+Metro output is tee'd to `/tmp/rnqc-metro.log`. When debugging test failures, read this file to see console output including test pass/fail results. Use `grep -E "FAIL|❌|failed" /tmp/rnqc-metro.log | tail -20` to quickly find failures.
+
 ## Quality Checks
 
 Before committing:

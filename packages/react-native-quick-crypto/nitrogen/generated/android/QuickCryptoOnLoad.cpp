@@ -31,6 +31,7 @@
 #include "HybridHmac.hpp"
 #include "HybridKeyObjectHandle.hpp"
 #include "HybridMlDsaKeyPair.hpp"
+#include "HybridMlKemKeyPair.hpp"
 #include "HybridPbkdf2.hpp"
 #include "HybridPrime.hpp"
 #include "HybridRandom.hpp"
@@ -196,6 +197,15 @@ int initialize(JavaVM* vm) {
                       "The HybridObject \"HybridMlDsaKeyPair\" is not default-constructible! "
                       "Create a public constructor that takes zero arguments to be able to autolink this HybridObject.");
         return std::make_shared<HybridMlDsaKeyPair>();
+      }
+    );
+    HybridObjectRegistry::registerHybridObjectConstructor(
+      "MlKemKeyPair",
+      []() -> std::shared_ptr<HybridObject> {
+        static_assert(std::is_default_constructible_v<HybridMlKemKeyPair>,
+                      "The HybridObject \"HybridMlKemKeyPair\" is not default-constructible! "
+                      "Create a public constructor that takes zero arguments to be able to autolink this HybridObject.");
+        return std::make_shared<HybridMlKemKeyPair>();
       }
     );
     HybridObjectRegistry::registerHybridObjectConstructor(

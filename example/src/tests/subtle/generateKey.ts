@@ -597,6 +597,59 @@ test(SUITE, 'ML-DSA bad usages', async () => {
   );
 });
 
+// --- ML-KEM Key Generation Tests ---
+
+type MlKemVariant = 'ML-KEM-512' | 'ML-KEM-768' | 'ML-KEM-1024';
+const MLKEM_VARIANTS: MlKemVariant[] = [
+  'ML-KEM-512',
+  'ML-KEM-768',
+  'ML-KEM-1024',
+];
+
+for (const variant of MLKEM_VARIANTS) {
+  test(SUITE, `ML-KEM keygen: ${variant}`, async () => {
+    const keyPair = await subtle.generateKey({ name: variant }, true, [
+      'encapsulateBits',
+      'decapsulateBits',
+    ]);
+
+    const { publicKey, privateKey } = keyPair as TestCryptoKeyPair;
+
+    expect(publicKey.type).to.equal('public');
+    expect(privateKey.type).to.equal('private');
+    expect(publicKey.algorithm.name).to.equal(variant);
+    expect(privateKey.algorithm.name).to.equal(variant);
+    expect(publicKey.extractable).to.equal(true);
+  });
+
+  test(SUITE, `ML-KEM keygen non-extractable: ${variant}`, async () => {
+    const keyPair = await subtle.generateKey({ name: variant }, false, [
+      'encapsulateBits',
+      'decapsulateBits',
+    ]);
+
+    const { publicKey, privateKey } = keyPair as TestCryptoKeyPair;
+
+    expect(publicKey.extractable).to.equal(true);
+    expect(privateKey.extractable).to.equal(false);
+  });
+}
+
+test(SUITE, 'ML-KEM bad usages', async () => {
+  await assertThrowsAsync(
+    async () => await subtle.generateKey({ name: 'ML-KEM-768' }, true, []),
+    'Usages cannot be empty',
+  );
+
+  await assertThrowsAsync(
+    async () =>
+      await subtle.generateKey({ name: 'ML-KEM-768' }, true, [
+        'sign',
+      ] as KeyUsage[]),
+    'Unsupported key usage',
+  );
+});
+
 /*
 // Test AES Key Generation
 type AESArgs = [AESAlgorithm, AESLength, KeyUsage[]];

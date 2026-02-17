@@ -56,6 +56,12 @@ import {
   Ed,
 } from './ed';
 import { mldsa_generateKeyPairWebCrypto, type MlDsaVariant } from './mldsa';
+import {
+  mlkem_generateKeyPairWebCrypto,
+  type MlKemVariant,
+  MlKem,
+} from './mlkem';
+import type { EncapsulateResult } from './utils';
 import { hkdfDeriveBits, type HkdfAlgorithm } from './hkdf';
 // Temporary enums that need to be defined
 
@@ -1066,6 +1072,56 @@ function mldsaImportKey(
   return new CryptoKey(keyObject, { name }, keyUsages, extractable);
 }
 
+function mlkemImportKey(
+  format: ImportFormat,
+  data: BufferLike,
+  algorithm: SubtleAlgorithm,
+  extractable: boolean,
+  keyUsages: KeyUsage[],
+): CryptoKey {
+  const { name } = algorithm;
+
+  // Valid usages for ML-KEM
+  const isPublicFormat = format === 'spki';
+  const allowedUsages: KeyUsage[] = isPublicFormat
+    ? ['encapsulateBits', 'encapsulateKey']
+    : ['decapsulateBits', 'decapsulateKey'];
+
+  if (hasAnyNotIn(keyUsages, allowedUsages)) {
+    throw lazyDOMException(
+      `Unsupported key usage for ${name} key`,
+      'SyntaxError',
+    );
+  }
+
+  let keyObject: KeyObject;
+
+  if (format === 'spki') {
+    const keyData = bufferLikeToArrayBuffer(data);
+    keyObject = KeyObject.createKeyObject(
+      'public',
+      keyData,
+      KFormatType.DER,
+      KeyEncoding.SPKI,
+    );
+  } else if (format === 'pkcs8') {
+    const keyData = bufferLikeToArrayBuffer(data);
+    keyObject = KeyObject.createKeyObject(
+      'private',
+      keyData,
+      KFormatType.DER,
+      KeyEncoding.PKCS8,
+    );
+  } else {
+    throw lazyDOMException(
+      `Unsupported format for ${name} import: ${format}`,
+      'NotSupportedError',
+    );
+  }
+
+  return new CryptoKey(keyObject, { name }, keyUsages, extractable);
+}
+
 const exportKeySpki = async (
   key: CryptoKey,
 ): Promise<ArrayBuffer | unknown> => {
@@ -1107,6 +1163,17 @@ const exportKeySpki = async (
     case 'ML-DSA-87':
       if (key.type === 'public') {
         // Export ML-DSA key in SPKI DER format
+        return bufferLikeToArrayBuffer(
+          key.keyObject.handle.exportKey(KFormatType.DER, KeyEncoding.SPKI),
+        );
+      }
+      break;
+    case 'ML-KEM-512':
+    // Fall through
+    case 'ML-KEM-768':
+    // Fall through
+    case 'ML-KEM-1024':
+      if (key.type === 'public') {
         return bufferLikeToArrayBuffer(
           key.keyObject.handle.exportKey(KFormatType.DER, KeyEncoding.SPKI),
         );
@@ -1160,6 +1227,17 @@ const exportKeyPkcs8 = async (
     case 'ML-DSA-87':
       if (key.type === 'private') {
         // Export ML-DSA key in PKCS8 DER format
+        return bufferLikeToArrayBuffer(
+          key.keyObject.handle.exportKey(KFormatType.DER, KeyEncoding.PKCS8),
+        );
+      }
+      break;
+    case 'ML-KEM-512':
+    // Fall through
+    case 'ML-KEM-768':
+    // Fall through
+    case 'ML-KEM-1024':
+      if (key.type === 'private') {
         return bufferLikeToArrayBuffer(
           key.keyObject.handle.exportKey(KFormatType.DER, KeyEncoding.PKCS8),
         );
@@ -1698,6 +1776,9 @@ const SUPPORTED_ALGORITHMS: Record<string, Set<string>> = {
     'ML-DSA-44',
     'ML-DSA-65',
     'ML-DSA-87',
+    'ML-KEM-512',
+    'ML-KEM-768',
+    'ML-KEM-1024',
   ]),
   importKey: new Set([
     'RSASSA-PKCS1-v1_5',
@@ -1724,6 +1805,9 @@ const SUPPORTED_ALGORITHMS: Record<string, Set<string>> = {
     'ML-DSA-44',
     'ML-DSA-65',
     'ML-DSA-87',
+    'ML-KEM-512',
+    'ML-KEM-768',
+    'ML-KEM-1024',
   ]),
   exportKey: new Set([
     'RSASSA-PKCS1-v1_5',
@@ -1745,6 +1829,9 @@ const SUPPORTED_ALGORITHMS: Record<string, Set<string>> = {
     'ML-DSA-44',
     'ML-DSA-65',
     'ML-DSA-87',
+    'ML-KEM-512',
+    'ML-KEM-768',
+    'ML-KEM-1024',
   ]),
   deriveBits: new Set([
     'PBKDF2',
@@ -1774,6 +1861,10 @@ const SUPPORTED_ALGORITHMS: Record<string, Set<string>> = {
     'ChaCha20-Poly1305',
     'RSA-OAEP',
   ]),
+  encapsulateBits: new Set(['ML-KEM-512', 'ML-KEM-768', 'ML-KEM-1024']),
+  decapsulateBits: new Set(['ML-KEM-512', 'ML-KEM-768', 'ML-KEM-1024']),
+  encapsulateKey: new Set(['ML-KEM-512', 'ML-KEM-768', 'ML-KEM-1024']),
+  decapsulateKey: new Set(['ML-KEM-512', 'ML-KEM-768', 'ML-KEM-1024']),
 };
 
 const ASYMMETRIC_ALGORITHMS = new Set([
@@ -1789,6 +1880,9 @@ const ASYMMETRIC_ALGORITHMS = new Set([
   'ML-DSA-44',
   'ML-DSA-65',
   'ML-DSA-87',
+  'ML-KEM-512',
+  'ML-KEM-768',
+  'ML-KEM-1024',
 ]);
 
 export class Subtle {
@@ -2208,6 +2302,18 @@ export class Subtle {
         );
         checkCryptoKeyPairUsages(result as CryptoKeyPair);
         break;
+      case 'ML-KEM-512':
+      // Fall through
+      case 'ML-KEM-768':
+      // Fall through
+      case 'ML-KEM-1024':
+        result = await mlkem_generateKeyPairWebCrypto(
+          algorithm.name as MlKemVariant,
+          extractable,
+          keyUsages,
+        );
+        checkCryptoKeyPairUsages(result as CryptoKeyPair);
+        break;
       default:
         throw new Error(
           `'subtle.generateKey()' is not implemented for ${algorithm.name}.
@@ -2345,6 +2451,19 @@ export class Subtle {
           keyUsages,
         );
         break;
+      case 'ML-KEM-512':
+      // Fall through
+      case 'ML-KEM-768':
+      // Fall through
+      case 'ML-KEM-1024':
+        result = mlkemImportKey(
+          format,
+          data as BufferLike,
+          normalizedAlgorithm,
+          extractable,
+          keyUsages,
+        );
+        break;
       default:
         throw new Error(
           `"subtle.importKey()" is not implemented for ${normalizedAlgorithm.name}`,
@@ -2465,6 +2584,145 @@ export class Subtle {
     }
 
     return signVerify(normalizedAlgorithm, key, data, signature) as boolean;
+  }
+
+  private _encapsulateCore(
+    algorithm: SubtleAlgorithm,
+    key: CryptoKey,
+  ): EncapsulateResult {
+    const normalizedAlgorithm = normalizeAlgorithm(
+      algorithm,
+      'encapsulateBits' as Operation,
+    );
+
+    if (key.algorithm.name !== normalizedAlgorithm.name) {
+      throw lazyDOMException('Key algorithm mismatch', 'InvalidAccessError');
+    }
+
+    const variant = normalizedAlgorithm.name as MlKemVariant;
+    const mlkem = new MlKem(variant);
+
+    const keyData = key.keyObject.handle.exportKey(
+      KFormatType.DER,
+      KeyEncoding.SPKI,
+    );
+    mlkem.setPublicKey(
+      bufferLikeToArrayBuffer(keyData),
+      KFormatType.DER,
+      KeyEncoding.SPKI,
+    );
+
+    return mlkem.encapsulateSync();
+  }
+
+  private _decapsulateCore(
+    algorithm: SubtleAlgorithm,
+    key: CryptoKey,
+    ciphertext: BufferLike,
+  ): ArrayBuffer {
+    const normalizedAlgorithm = normalizeAlgorithm(
+      algorithm,
+      'decapsulateBits' as Operation,
+    );
+
+    if (key.algorithm.name !== normalizedAlgorithm.name) {
+      throw lazyDOMException('Key algorithm mismatch', 'InvalidAccessError');
+    }
+
+    const variant = normalizedAlgorithm.name as MlKemVariant;
+    const mlkem = new MlKem(variant);
+
+    const keyData = key.keyObject.handle.exportKey(
+      KFormatType.DER,
+      KeyEncoding.PKCS8,
+    );
+    mlkem.setPrivateKey(
+      bufferLikeToArrayBuffer(keyData),
+      KFormatType.DER,
+      KeyEncoding.PKCS8,
+    );
+
+    return mlkem.decapsulateSync(bufferLikeToArrayBuffer(ciphertext));
+  }
+
+  async encapsulateBits(
+    algorithm: SubtleAlgorithm,
+    key: CryptoKey,
+  ): Promise<EncapsulateResult> {
+    if (!key.usages.includes('encapsulateBits')) {
+      throw lazyDOMException(
+        'Key does not have encapsulateBits usage',
+        'InvalidAccessError',
+      );
+    }
+
+    return this._encapsulateCore(algorithm, key);
+  }
+
+  async encapsulateKey(
+    algorithm: SubtleAlgorithm,
+    key: CryptoKey,
+    sharedKeyAlgorithm: SubtleAlgorithm | AnyAlgorithm,
+    extractable: boolean,
+    usages: KeyUsage[],
+  ): Promise<{ key: CryptoKey; ciphertext: ArrayBuffer }> {
+    if (!key.usages.includes('encapsulateKey')) {
+      throw lazyDOMException(
+        'Key does not have encapsulateKey usage',
+        'InvalidAccessError',
+      );
+    }
+
+    const { sharedKey, ciphertext } = this._encapsulateCore(algorithm, key);
+    const importedKey = await this.importKey(
+      'raw',
+      sharedKey,
+      sharedKeyAlgorithm,
+      extractable,
+      usages,
+    );
+
+    return { key: importedKey, ciphertext };
+  }
+
+  async decapsulateBits(
+    algorithm: SubtleAlgorithm,
+    key: CryptoKey,
+    ciphertext: BufferLike,
+  ): Promise<ArrayBuffer> {
+    if (!key.usages.includes('decapsulateBits')) {
+      throw lazyDOMException(
+        'Key does not have decapsulateBits usage',
+        'InvalidAccessError',
+      );
+    }
+
+    return this._decapsulateCore(algorithm, key, ciphertext);
+  }
+
+  async decapsulateKey(
+    algorithm: SubtleAlgorithm,
+    key: CryptoKey,
+    ciphertext: BufferLike,
+    sharedKeyAlgorithm: SubtleAlgorithm | AnyAlgorithm,
+    extractable: boolean,
+    usages: KeyUsage[],
+  ): Promise<CryptoKey> {
+    if (!key.usages.includes('decapsulateKey')) {
+      throw lazyDOMException(
+        'Key does not have decapsulateKey usage',
+        'InvalidAccessError',
+      );
+    }
+
+    const sharedKey = this._decapsulateCore(algorithm, key, ciphertext);
+    return this.importKey(
+      'raw',
+      sharedKey,
+      sharedKeyAlgorithm,
+      extractable,
+      usages,
+    );
   }
 }
 

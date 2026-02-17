@@ -378,8 +378,31 @@ AsymmetricKeyType HybridKeyObjectHandle::getAsymmetricKeyType() {
       return AsymmetricKeyType::ML_DSA_87;
 #endif
     default:
-      throw std::runtime_error("Unsupported asymmetric key type");
+      break;
   }
+
+#if OPENSSL_VERSION_NUMBER >= 0x30500000L
+  // EVP_PKEY_id returns -1 for provider-only key types (e.g. ML-KEM)
+  // Fall back to string-based type name comparison
+  const char* typeName = EVP_PKEY_get0_type_name(pkey.get());
+  if (typeName != nullptr) {
+    std::string name(typeName);
+    if (name == "ML-KEM-512")
+      return AsymmetricKeyType::ML_KEM_512;
+    if (name == "ML-KEM-768")
+      return AsymmetricKeyType::ML_KEM_768;
+    if (name == "ML-KEM-1024")
+      return AsymmetricKeyType::ML_KEM_1024;
+    if (name == "ML-DSA-44")
+      return AsymmetricKeyType::ML_DSA_44;
+    if (name == "ML-DSA-65")
+      return AsymmetricKeyType::ML_DSA_65;
+    if (name == "ML-DSA-87")
+      return AsymmetricKeyType::ML_DSA_87;
+  }
+#endif
+
+  throw std::runtime_error("Unsupported asymmetric key type");
 }
 
 bool HybridKeyObjectHandle::init(KeyType keyType, const std::variant<std::shared_ptr<ArrayBuffer>, std::string>& key,
