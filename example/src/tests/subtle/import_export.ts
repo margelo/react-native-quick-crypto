@@ -2243,17 +2243,17 @@ for (const variant of MLKEM_VARIANTS) {
   });
 }
 
-test(SUITE, 'ML-KEM-768 importKey rejects invalid format', async () => {
+test(SUITE, 'ML-KEM-768 importKey raw rejects bad usages', async () => {
   await assertThrowsAsync(
     async () =>
       await subtle.importKey(
         'raw',
-        new Uint8Array(32),
+        new Uint8Array(1184),
         { name: 'ML-KEM-768' },
         true,
         ['decapsulateBits'],
       ),
-    'Unsupported format',
+    'Unsupported key usage',
   );
 });
 
@@ -2557,4 +2557,207 @@ test(SUITE, '#645 AES-CBC generateKey/exportKey/importKey stress', async () => {
       `iteration ${i}: decrypt with re-imported key failed`,
     );
   }
+});
+
+// --- ML-KEM raw-public and raw-seed export/import tests ---
+
+const MLKEM_PUBLIC_KEY_SIZES: Record<(typeof MLKEM_VARIANTS)[number], number> =
+  {
+    'ML-KEM-512': 800,
+    'ML-KEM-768': 1184,
+    'ML-KEM-1024': 1568,
+  };
+
+const MLKEM_SEED_SIZE = 64;
+
+for (const variant of MLKEM_VARIANTS) {
+  test(SUITE, `${variant} export raw-public - correct size`, async () => {
+    const keyPair = (await subtle.generateKey({ name: variant }, true, [
+      'encapsulateBits',
+      'decapsulateBits',
+    ])) as CryptoKeyPair;
+
+    const rawPub = (await subtle.exportKey(
+      'raw-public',
+      keyPair.publicKey as CryptoKey,
+    )) as ArrayBuffer;
+
+    expect(rawPub).to.be.instanceOf(ArrayBuffer);
+    expect(rawPub.byteLength).to.equal(MLKEM_PUBLIC_KEY_SIZES[variant]);
+  });
+
+  test(SUITE, `${variant} export raw-seed - 64 bytes`, async () => {
+    const keyPair = (await subtle.generateKey({ name: variant }, true, [
+      'encapsulateBits',
+      'decapsulateBits',
+    ])) as CryptoKeyPair;
+
+    const seed = (await subtle.exportKey(
+      'raw-seed',
+      keyPair.privateKey as CryptoKey,
+    )) as ArrayBuffer;
+
+    expect(seed).to.be.instanceOf(ArrayBuffer);
+    expect(seed.byteLength).to.equal(MLKEM_SEED_SIZE);
+  });
+
+  test(
+    SUITE,
+    `${variant} roundtrip: export raw-public -> import -> encapsulate`,
+    async () => {
+      const keyPair = (await subtle.generateKey({ name: variant }, true, [
+        'encapsulateBits',
+        'decapsulateBits',
+      ])) as CryptoKeyPair;
+
+      const rawPub = (await subtle.exportKey(
+        'raw-public',
+        keyPair.publicKey as CryptoKey,
+      )) as ArrayBuffer;
+
+      const imported = await subtle.importKey(
+        'raw-public',
+        rawPub,
+        { name: variant },
+        true,
+        ['encapsulateBits'],
+      );
+      expect(imported.type).to.equal('public');
+      expect(imported.algorithm.name).to.equal(variant);
+
+      const { sharedKey, ciphertext } = await subtle.encapsulateBits(
+        { name: variant },
+        imported,
+      );
+      expect(sharedKey.byteLength).to.equal(32);
+      expect(ciphertext.byteLength).to.be.greaterThan(0);
+
+      const decapsulated = await subtle.decapsulateBits(
+        { name: variant },
+        keyPair.privateKey as CryptoKey,
+        ciphertext,
+      );
+      expect(new Uint8Array(decapsulated)).to.deep.equal(
+        new Uint8Array(sharedKey),
+      );
+    },
+  );
+
+  test(
+    SUITE,
+    `${variant} roundtrip: export raw-seed -> import -> decapsulate`,
+    async () => {
+      const keyPair = (await subtle.generateKey({ name: variant }, true, [
+        'encapsulateBits',
+        'decapsulateBits',
+      ])) as CryptoKeyPair;
+
+      const { sharedKey, ciphertext } = await subtle.encapsulateBits(
+        { name: variant },
+        keyPair.publicKey as CryptoKey,
+      );
+
+      const seed = (await subtle.exportKey(
+        'raw-seed',
+        keyPair.privateKey as CryptoKey,
+      )) as ArrayBuffer;
+
+      const importedPrivate = await subtle.importKey(
+        'raw-seed',
+        seed,
+        { name: variant },
+        true,
+        ['decapsulateBits'],
+      );
+      expect(importedPrivate.type).to.equal('private');
+      expect(importedPrivate.algorithm.name).to.equal(variant);
+
+      const decapsulated = await subtle.decapsulateBits(
+        { name: variant },
+        importedPrivate,
+        ciphertext,
+      );
+      expect(new Uint8Array(decapsulated)).to.deep.equal(
+        new Uint8Array(sharedKey),
+      );
+    },
+  );
+
+  test(SUITE, `${variant} raw-public re-export matches original`, async () => {
+    const keyPair = (await subtle.generateKey({ name: variant }, true, [
+      'encapsulateBits',
+      'decapsulateBits',
+    ])) as CryptoKeyPair;
+
+    const rawPub1 = (await subtle.exportKey(
+      'raw-public',
+      keyPair.publicKey as CryptoKey,
+    )) as ArrayBuffer;
+
+    const imported = await subtle.importKey(
+      'raw-public',
+      rawPub1,
+      { name: variant },
+      true,
+      ['encapsulateBits'],
+    );
+
+    const rawPub2 = (await subtle.exportKey(
+      'raw-public',
+      imported,
+    )) as ArrayBuffer;
+
+    expect(Buffer.from(rawPub2).toString('hex')).to.equal(
+      Buffer.from(rawPub1).toString('hex'),
+    );
+  });
+}
+
+// --- ML-KEM unwrapKey test ---
+
+test(SUITE, 'ML-KEM-768 unwrapKey with AES-KW', async () => {
+  const wrapKey = (await subtle.generateKey(
+    { name: 'AES-KW', length: 256 },
+    true,
+    ['wrapKey', 'unwrapKey'],
+  )) as CryptoKey;
+
+  const mlkemKeyPair = (await subtle.generateKey({ name: 'ML-KEM-768' }, true, [
+    'encapsulateBits',
+    'decapsulateBits',
+  ])) as CryptoKeyPair;
+
+  const wrapped = await subtle.wrapKey(
+    'spki',
+    mlkemKeyPair.publicKey as CryptoKey,
+    wrapKey,
+    { name: 'AES-KW' },
+  );
+  expect(wrapped).to.be.instanceOf(ArrayBuffer);
+  expect(wrapped.byteLength).to.be.greaterThan(0);
+
+  const unwrapped = await subtle.unwrapKey(
+    'spki',
+    wrapped,
+    wrapKey,
+    { name: 'AES-KW' },
+    { name: 'ML-KEM-768' },
+    true,
+    ['encapsulateBits'],
+  );
+  expect(unwrapped.type).to.equal('public');
+  expect(unwrapped.algorithm.name).to.equal('ML-KEM-768');
+
+  const { sharedKey, ciphertext } = await subtle.encapsulateBits(
+    { name: 'ML-KEM-768' },
+    unwrapped,
+  );
+  expect(sharedKey.byteLength).to.equal(32);
+
+  const decapsulated = await subtle.decapsulateBits(
+    { name: 'ML-KEM-768' },
+    mlkemKeyPair.privateKey as CryptoKey,
+    ciphertext,
+  );
+  expect(new Uint8Array(decapsulated)).to.deep.equal(new Uint8Array(sharedKey));
 });

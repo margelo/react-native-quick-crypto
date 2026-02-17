@@ -372,9 +372,9 @@ These ciphers are **not available in Node.js** but are provided by RNQC via libs
 | `ML-DSA-44`         |   ✅   |   ✅    |  ✅   |       |              |      ✅      |     ✅     |
 | `ML-DSA-65`         |   ✅   |   ✅    |  ✅   |       |              |      ✅      |     ✅     |
 | `ML-DSA-87`         |   ✅   |   ✅    |  ✅   |       |              |      ✅      |     ✅     |
-| `ML-KEM-512`        |   ✅   |   ✅    |       |       |              |      ❌      |     ❌     |
-| `ML-KEM-768`        |   ✅   |   ✅    |       |       |              |      ❌      |     ❌     |
-| `ML-KEM-1024`       |   ✅   |   ✅    |       |       |              |      ❌      |     ❌     |
+| `ML-KEM-512`        |   ✅   |   ✅    |       |       |              |      ✅      |     ✅     |
+| `ML-KEM-768`        |   ✅   |   ✅    |       |       |              |      ✅      |     ✅     |
+| `ML-KEM-1024`       |   ✅   |   ✅    |       |       |              |      ✅      |     ✅     |
 | `RSA-OAEP`          |   ✅   |   ✅    |  ✅   |       |              |              |            |
 | `RSA-PSS`           |   ✅   |   ✅    |  ✅   |       |              |              |            |
 | `RSASSA-PKCS1-v1_5` |   ✅   |   ✅    |  ✅   |       |              |              |            |
@@ -441,9 +441,9 @@ These ciphers are **not available in Node.js** but are provided by RNQC via libs
 | `ML-DSA-44`         |   ✅   |   ✅    |  ✅   |       |              |      ✅      |     ✅     |
 | `ML-DSA-65`         |   ✅   |   ✅    |  ✅   |       |              |      ✅      |     ✅     |
 | `ML-DSA-87`         |   ✅   |   ✅    |  ✅   |       |              |      ✅      |     ✅     |
-| `ML-KEM-512`        |   ✅   |   ✅    |       |       |              |      ❌      |     ❌     |
-| `ML-KEM-768`        |   ✅   |   ✅    |       |       |              |      ❌      |     ❌     |
-| `ML-KEM-1024`       |   ✅   |   ✅    |       |       |              |      ❌      |     ❌     |
+| `ML-KEM-512`        |   ✅   |   ✅    |       |       |              |      ✅      |     ✅     |
+| `ML-KEM-768`        |   ✅   |   ✅    |       |       |              |      ✅      |     ✅     |
+| `ML-KEM-1024`       |   ✅   |   ✅    |       |       |              |      ✅      |     ✅     |
 | `PBKDF2`            |        |         |       |  ✅   |      ✅      |              |            |
 | `RSA-OAEP`          |   ✅   |   ✅    |  ✅   |       |              |              |            |
 | `RSA-PSS`           |   ✅   |   ✅    |  ✅   |       |              |              |            |
@@ -499,9 +499,9 @@ These ciphers are **not available in Node.js** but are provided by RNQC via libs
 | `ML-DSA-44`         |   ✅   |
 | `ML-DSA-65`         |   ✅   |
 | `ML-DSA-87`         |   ✅   |
-| `ML-KEM-512`        |   ❌   |
-| `ML-KEM-768`        |   ❌   |
-| `ML-KEM-1024`       |   ❌   |
+| `ML-KEM-512`        |   ✅   |
+| `ML-KEM-768`        |   ✅   |
+| `ML-KEM-1024`       |   ✅   |
 | `RSA-OAEP`          |   ✅   |
 | `RSA-PSS`           |   ✅   |
 | `RSASSA-PKCS1-v1_5` |   ✅   |

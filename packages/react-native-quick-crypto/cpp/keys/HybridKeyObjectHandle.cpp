@@ -137,6 +137,31 @@ std::shared_ptr<ArrayBuffer> HybridKeyObjectHandle::exportKey(std::optional<KFor
       return ToNativeArrayBuffer(std::string(reinterpret_cast<const char*>(buf.data()), len));
     }
 
+#if OPENSSL_VERSION_NUMBER >= 0x30500000L
+    if (!format.has_value() && !type.has_value()) {
+      const char* typeName = EVP_PKEY_get0_type_name(pkey.get());
+      if (typeName != nullptr) {
+        std::string name(typeName);
+        bool isPqcKey = (name.starts_with("ML-KEM-") || name.starts_with("ML-DSA-"));
+        if (isPqcKey) {
+          if (keyType == KeyType::PUBLIC) {
+            auto rawData = pkey.rawPublicKey();
+            if (!rawData) {
+              throw std::runtime_error("Failed to get raw PQC public key");
+            }
+            return ToNativeArrayBuffer(std::string(reinterpret_cast<const char*>(rawData.get()), rawData.size()));
+          } else {
+            auto rawData = pkey.rawSeed();
+            if (!rawData) {
+              throw std::runtime_error("Failed to get raw PQC seed");
+            }
+            return ToNativeArrayBuffer(std::string(reinterpret_cast<const char*>(rawData.get()), rawData.size()));
+          }
+        }
+      }
+    }
+#endif
+
     // Set default format and type if not provided
     auto exportFormat = format.value_or(KFormatType::DER);
     auto exportType = type.value_or(keyType == KeyType::PUBLIC ? KeyEncoding::SPKI : KeyEncoding::PKCS8);
@@ -791,6 +816,47 @@ bool HybridKeyObjectHandle::initECRaw(const std::string& namedCurve, const std::
   EVP_PKEY* pkey = createEcEvpPkey(group_name, keyData->data(), keyData->size());
   this->data_ = KeyObjectData::CreateAsymmetric(KeyType::PUBLIC, ncrypto::EVPKeyPointer(pkey));
   return true;
+}
+
+bool HybridKeyObjectHandle::initPqcRaw(const std::string& algorithmName, const std::shared_ptr<ArrayBuffer>& keyData, bool isPublic) {
+#if OPENSSL_VERSION_NUMBER >= 0x30500000L
+  data_ = KeyObjectData();
+
+  int nid = 0;
+  if (algorithmName == "ML-KEM-512")
+    nid = EVP_PKEY_ML_KEM_512;
+  else if (algorithmName == "ML-KEM-768")
+    nid = EVP_PKEY_ML_KEM_768;
+  else if (algorithmName == "ML-KEM-1024")
+    nid = EVP_PKEY_ML_KEM_1024;
+  else if (algorithmName == "ML-DSA-44")
+    nid = EVP_PKEY_ML_DSA_44;
+  else if (algorithmName == "ML-DSA-65")
+    nid = EVP_PKEY_ML_DSA_65;
+  else if (algorithmName == "ML-DSA-87")
+    nid = EVP_PKEY_ML_DSA_87;
+  else
+    throw std::runtime_error("Unknown PQC algorithm: " + algorithmName);
+
+  ncrypto::Buffer<const unsigned char> buffer{.data = reinterpret_cast<const unsigned char*>(keyData->data()), .len = keyData->size()};
+
+  ncrypto::EVPKeyPointer pkey;
+  if (isPublic) {
+    pkey = ncrypto::EVPKeyPointer::NewRawPublic(nid, buffer);
+  } else {
+    pkey = ncrypto::EVPKeyPointer::NewRawSeed(nid, buffer);
+  }
+
+  if (!pkey) {
+    return false;
+  }
+
+  auto keyType = isPublic ? KeyType::PUBLIC : KeyType::PRIVATE;
+  this->data_ = KeyObjectData::CreateAsymmetric(keyType, std::move(pkey));
+  return true;
+#else
+  throw std::runtime_error("PQC raw key import requires OpenSSL 3.5+");
+#endif
 }
 
 bool HybridKeyObjectHandle::keyEquals(const std::shared_ptr<HybridKeyObjectHandleSpec>& other) {

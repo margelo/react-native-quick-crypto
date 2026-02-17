@@ -507,6 +507,7 @@ export type ImportFormat =
   | 'raw'
   | 'raw-public'
   | 'raw-secret'
+  | 'raw-seed'
   | 'pkcs8'
   | 'spki'
   | 'jwk';

@@ -1034,8 +1034,8 @@ function mldsaImportKey(
 ): CryptoKey {
   const { name } = algorithm;
 
-  // Validate usages
-  if (hasAnyNotIn(keyUsages, ['sign', 'verify'])) {
+  const isPublicFormat = format === 'spki' || format === 'raw';
+  if (hasAnyNotIn(keyUsages, isPublicFormat ? ['verify'] : ['sign'])) {
     throw lazyDOMException(
       `Unsupported key usage for ${name} key`,
       'SyntaxError',
@@ -1045,7 +1045,6 @@ function mldsaImportKey(
   let keyObject: KeyObject;
 
   if (format === 'spki') {
-    // Import public key
     const keyData = bufferLikeToArrayBuffer(data);
     keyObject = KeyObject.createKeyObject(
       'public',
@@ -1054,7 +1053,6 @@ function mldsaImportKey(
       KeyEncoding.SPKI,
     );
   } else if (format === 'pkcs8') {
-    // Import private key
     const keyData = bufferLikeToArrayBuffer(data);
     keyObject = KeyObject.createKeyObject(
       'private',
@@ -1062,6 +1060,25 @@ function mldsaImportKey(
       KFormatType.DER,
       KeyEncoding.PKCS8,
     );
+  } else if (format === 'raw') {
+    const keyData = bufferLikeToArrayBuffer(data);
+    const handle =
+      NitroModules.createHybridObject<KeyObjectHandle>('KeyObjectHandle');
+    if (!handle.initPqcRaw(name, keyData, true)) {
+      throw lazyDOMException(
+        `Failed to import ${name} raw public key`,
+        'DataError',
+      );
+    }
+    keyObject = new PublicKeyObject(handle);
+  } else if (format === 'raw-seed') {
+    const keyData = bufferLikeToArrayBuffer(data);
+    const handle =
+      NitroModules.createHybridObject<KeyObjectHandle>('KeyObjectHandle');
+    if (!handle.initPqcRaw(name, keyData, false)) {
+      throw lazyDOMException(`Failed to import ${name} raw seed`, 'DataError');
+    }
+    keyObject = new PrivateKeyObject(handle);
   } else {
     throw lazyDOMException(
       `Unsupported format for ${name} import: ${format}`,
@@ -1081,8 +1098,7 @@ function mlkemImportKey(
 ): CryptoKey {
   const { name } = algorithm;
 
-  // Valid usages for ML-KEM
-  const isPublicFormat = format === 'spki';
+  const isPublicFormat = format === 'spki' || format === 'raw';
   const allowedUsages: KeyUsage[] = isPublicFormat
     ? ['encapsulateBits', 'encapsulateKey']
     : ['decapsulateBits', 'decapsulateKey'];
@@ -1112,6 +1128,25 @@ function mlkemImportKey(
       KFormatType.DER,
       KeyEncoding.PKCS8,
     );
+  } else if (format === 'raw') {
+    const keyData = bufferLikeToArrayBuffer(data);
+    const handle =
+      NitroModules.createHybridObject<KeyObjectHandle>('KeyObjectHandle');
+    if (!handle.initPqcRaw(name, keyData, true)) {
+      throw lazyDOMException(
+        `Failed to import ${name} raw public key`,
+        'DataError',
+      );
+    }
+    keyObject = new PublicKeyObject(handle);
+  } else if (format === 'raw-seed') {
+    const keyData = bufferLikeToArrayBuffer(data);
+    const handle =
+      NitroModules.createHybridObject<KeyObjectHandle>('KeyObjectHandle');
+    if (!handle.initPqcRaw(name, keyData, false)) {
+      throw lazyDOMException(`Failed to import ${name} raw seed`, 'DataError');
+    }
+    keyObject = new PrivateKeyObject(handle);
   } else {
     throw lazyDOMException(
       `Unsupported format for ${name} import: ${format}`,
@@ -1267,7 +1302,22 @@ const exportKeyRaw = (key: CryptoKey): ArrayBuffer | unknown => {
     // Fall through
     case 'X448':
       if (key.type === 'public') {
-        // Export raw public key
+        const exported = key.keyObject.handle.exportKey();
+        return bufferLikeToArrayBuffer(exported);
+      }
+      break;
+    case 'ML-KEM-512':
+    // Fall through
+    case 'ML-KEM-768':
+    // Fall through
+    case 'ML-KEM-1024':
+    // Fall through
+    case 'ML-DSA-44':
+    // Fall through
+    case 'ML-DSA-65':
+    // Fall through
+    case 'ML-DSA-87':
+      if (key.type === 'public') {
         const exported = key.keyObject.handle.exportKey();
         return bufferLikeToArrayBuffer(exported);
       }
@@ -2092,6 +2142,30 @@ export class Subtle {
     key: CryptoKey,
   ): Promise<ArrayBuffer | JWK> {
     if (!key.extractable) throw new Error('key is not extractable');
+
+    if (format === 'raw-seed') {
+      const pqcAlgos = [
+        'ML-KEM-512',
+        'ML-KEM-768',
+        'ML-KEM-1024',
+        'ML-DSA-44',
+        'ML-DSA-65',
+        'ML-DSA-87',
+      ];
+      if (!pqcAlgos.includes(key.algorithm.name)) {
+        throw lazyDOMException(
+          'raw-seed export only supported for PQC keys',
+          'NotSupportedError',
+        );
+      }
+      if (key.type !== 'private') {
+        throw lazyDOMException(
+          'raw-seed export requires a private key',
+          'InvalidAccessError',
+        );
+      }
+      return bufferLikeToArrayBuffer(key.keyObject.handle.exportKey());
+    }
 
     if (format === 'raw-secret' || format === 'raw-public') format = 'raw';
 
