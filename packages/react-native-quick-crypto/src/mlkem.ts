@@ -20,7 +20,6 @@ import {
   getUsagesUnion,
   KFormatType,
   KeyEncoding,
-  bufferLikeToArrayBuffer,
   isStringOrBuffer,
   binaryLikeToArrayBuffer as toAB,
 } from './utils';
@@ -264,9 +263,7 @@ export function decapsulate(
     );
     mlkem.setPrivateKey(keyData, KFormatType.DER, KeyEncoding.PKCS8);
 
-    const ciphertextBuffer = bufferLikeToArrayBuffer(
-      toAB(ciphertext) as ArrayBuffer,
-    );
+    const ciphertextBuffer = toAB(ciphertext) as ArrayBuffer;
     return mlkem.decapsulateSync(ciphertextBuffer);
   };
 

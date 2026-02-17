@@ -5,13 +5,14 @@
 #include <string>
 
 #include "HybridMlKemKeyPairSpec.hpp"
+#include "QuickCryptoUtils.hpp"
 
 namespace margelo::nitro::crypto {
 
 class HybridMlKemKeyPair : public HybridMlKemKeyPairSpec {
  public:
   HybridMlKemKeyPair() : HybridObject(TAG) {}
-  ~HybridMlKemKeyPair();
+  ~HybridMlKemKeyPair() override = default;
 
   void setVariant(const std::string& variant) override;
 
@@ -32,7 +33,9 @@ class HybridMlKemKeyPair : public HybridMlKemKeyPairSpec {
 
  private:
   std::string variant_;
-  EVP_PKEY* pkey_ = nullptr;
+
+  using EVP_PKEY_ptr = std::unique_ptr<EVP_PKEY, decltype(&EVP_PKEY_free)>;
+  EVP_PKEY_ptr pkey_{nullptr, EVP_PKEY_free};
 
   int publicFormat_ = -1;
   int publicType_ = -1;

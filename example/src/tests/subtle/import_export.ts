@@ -30,6 +30,7 @@ import {
   getRandomValues,
   subtle,
 } from 'react-native-quick-crypto';
+import { MLKEM_VARIANTS } from './mlkem_constants';
 import { assertThrowsAsync, test } from '../util';
 
 // TODO: for 'bad usages' test
@@ -2195,13 +2196,6 @@ test(SUITE, 'ML-DSA-44 importKey rejects invalid format', async () => {
 });
 
 // --- ML-KEM Import/Export Tests ---
-
-type MlKemVariant = 'ML-KEM-512' | 'ML-KEM-768' | 'ML-KEM-1024';
-const MLKEM_VARIANTS: MlKemVariant[] = [
-  'ML-KEM-512',
-  'ML-KEM-768',
-  'ML-KEM-1024',
-];
 
 for (const variant of MLKEM_VARIANTS) {
   test(SUITE, `${variant} spki export/import`, async () => {

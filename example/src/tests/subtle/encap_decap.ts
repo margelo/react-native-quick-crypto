@@ -2,25 +2,15 @@ import { expect } from 'chai';
 import { test } from '../util';
 import crypto from 'react-native-quick-crypto';
 import type { WebCryptoKeyPair } from 'react-native-quick-crypto';
+import {
+  MLKEM_VARIANTS,
+  MLKEM_CIPHERTEXT_SIZES,
+  SHARED_SECRET_SIZE,
+} from './mlkem_constants';
 
 const { subtle } = crypto;
 
 const SUITE = 'subtle.encapsulate/decapsulate';
-
-type MlKemVariant = 'ML-KEM-512' | 'ML-KEM-768' | 'ML-KEM-1024';
-const MLKEM_VARIANTS: MlKemVariant[] = [
-  'ML-KEM-512',
-  'ML-KEM-768',
-  'ML-KEM-1024',
-];
-
-const MLKEM_CIPHERTEXT_SIZES: Record<MlKemVariant, number> = {
-  'ML-KEM-512': 768,
-  'ML-KEM-768': 1088,
-  'ML-KEM-1024': 1568,
-};
-
-const SHARED_SECRET_SIZE = 32;
 
 // --- encapsulateBits / decapsulateBits ---
 

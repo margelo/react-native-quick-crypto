@@ -393,12 +393,6 @@ AsymmetricKeyType HybridKeyObjectHandle::getAsymmetricKeyType() {
       return AsymmetricKeyType::ML_KEM_768;
     if (name == "ML-KEM-1024")
       return AsymmetricKeyType::ML_KEM_1024;
-    if (name == "ML-DSA-44")
-      return AsymmetricKeyType::ML_DSA_44;
-    if (name == "ML-DSA-65")
-      return AsymmetricKeyType::ML_DSA_65;
-    if (name == "ML-DSA-87")
-      return AsymmetricKeyType::ML_DSA_87;
   }
 #endif
 

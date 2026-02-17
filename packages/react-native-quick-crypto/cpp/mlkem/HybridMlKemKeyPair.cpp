@@ -15,13 +15,6 @@
 
 namespace margelo::nitro::crypto {
 
-HybridMlKemKeyPair::~HybridMlKemKeyPair() {
-  if (pkey_ != nullptr) {
-    EVP_PKEY_free(pkey_);
-    pkey_ = nullptr;
-  }
-}
-
 void HybridMlKemKeyPair::setVariant(const std::string& variant) {
 #if !RNQC_HAS_ML_KEM
   throw std::runtime_error("ML-KEM requires OpenSSL 3.5+");
@@ -54,10 +47,7 @@ void HybridMlKemKeyPair::generateKeyPairSync(double publicFormat, double publicT
   privateFormat_ = static_cast<int>(privateFormat);
   privateType_ = static_cast<int>(privateType);
 
-  if (pkey_ != nullptr) {
-    EVP_PKEY_free(pkey_);
-    pkey_ = nullptr;
-  }
+  pkey_.reset();
 
   EVP_PKEY_CTX* pctx = EVP_PKEY_CTX_new_from_name(nullptr, variant_.c_str(), nullptr);
   if (pctx == nullptr) {
@@ -69,11 +59,13 @@ void HybridMlKemKeyPair::generateKeyPairSync(double publicFormat, double publicT
     throw std::runtime_error("Failed to initialize keygen: " + getOpenSSLError());
   }
 
-  if (EVP_PKEY_keygen(pctx, &pkey_) <= 0) {
+  EVP_PKEY* raw = nullptr;
+  if (EVP_PKEY_keygen(pctx, &raw) <= 0) {
     EVP_PKEY_CTX_free(pctx);
     throw std::runtime_error("Failed to generate ML-KEM key pair: " + getOpenSSLError());
   }
 
+  pkey_.reset(raw);
   EVP_PKEY_CTX_free(pctx);
 #endif
 }
@@ -91,9 +83,9 @@ std::shared_ptr<ArrayBuffer> HybridMlKemKeyPair::getPublicKey() {
 
   int result;
   if (publicFormat_ == 1) {
-    result = PEM_write_bio_PUBKEY(bio, pkey_);
+    result = PEM_write_bio_PUBKEY(bio, pkey_.get());
   } else {
-    result = i2d_PUBKEY_bio(bio, pkey_);
+    result = i2d_PUBKEY_bio(bio, pkey_.get());
   }
 
   if (result != 1) {
@@ -127,9 +119,9 @@ std::shared_ptr<ArrayBuffer> HybridMlKemKeyPair::getPrivateKey() {
 
   int result;
   if (privateFormat_ == 1) {
-    result = PEM_write_bio_PrivateKey(bio, pkey_, nullptr, nullptr, 0, nullptr, nullptr);
+    result = PEM_write_bio_PrivateKey(bio, pkey_.get(), nullptr, nullptr, 0, nullptr, nullptr);
   } else {
-    result = i2d_PKCS8PrivateKey_bio(bio, pkey_, nullptr, nullptr, 0, nullptr, nullptr);
+    result = i2d_PKCS8PrivateKey_bio(bio, pkey_.get(), nullptr, nullptr, 0, nullptr, nullptr);
   }
 
   if (result != 1) {
@@ -181,10 +173,7 @@ void HybridMlKemKeyPair::setPublicKey(const std::shared_ptr<ArrayBuffer>& keyDat
     throw std::runtime_error("Failed to import public key: " + getOpenSSLError());
   }
 
-  if (pkey_ != nullptr) {
-    EVP_PKEY_free(pkey_);
-  }
-  pkey_ = importedKey;
+  pkey_.reset(importedKey);
 #endif
 }
 
@@ -219,10 +208,7 @@ void HybridMlKemKeyPair::setPrivateKey(const std::shared_ptr<ArrayBuffer>& keyDa
     throw std::runtime_error("Failed to import private key: " + getOpenSSLError());
   }
 
-  if (pkey_ != nullptr) {
-    EVP_PKEY_free(pkey_);
-  }
-  pkey_ = importedKey;
+  pkey_.reset(importedKey);
 #endif
 }
 
@@ -237,7 +223,7 @@ std::shared_ptr<ArrayBuffer> HybridMlKemKeyPair::encapsulateSync() {
   clearOpenSSLErrors();
   checkKeyPair();
 
-  EVP_PKEY_CTX* ctx = EVP_PKEY_CTX_new(pkey_, nullptr);
+  EVP_PKEY_CTX* ctx = EVP_PKEY_CTX_new(pkey_.get(), nullptr);
   if (ctx == nullptr) {
     throw std::runtime_error("Failed to create encapsulation context: " + getOpenSSLError());
   }
@@ -291,7 +277,7 @@ std::shared_ptr<ArrayBuffer> HybridMlKemKeyPair::decapsulateSync(const std::shar
   clearOpenSSLErrors();
   checkKeyPair();
 
-  EVP_PKEY_CTX* ctx = EVP_PKEY_CTX_new(pkey_, nullptr);
+  EVP_PKEY_CTX* ctx = EVP_PKEY_CTX_new(pkey_.get(), nullptr);
   if (ctx == nullptr) {
     throw std::runtime_error("Failed to create decapsulation context: " + getOpenSSLError());
   }
@@ -325,7 +311,7 @@ std::shared_ptr<ArrayBuffer> HybridMlKemKeyPair::decapsulateSync(const std::shar
 }
 
 void HybridMlKemKeyPair::checkKeyPair() {
-  if (pkey_ == nullptr) {
+  if (!pkey_) {
     throw std::runtime_error("Key pair not initialized");
   }
 }

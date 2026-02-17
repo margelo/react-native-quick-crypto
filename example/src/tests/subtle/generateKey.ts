@@ -14,6 +14,7 @@ interface TestCryptoKeyPair {
   publicKey: CryptoKey;
   privateKey: CryptoKey;
 }
+import { MLKEM_VARIANTS } from './mlkem_constants';
 import { test, assertThrowsAsync } from '../util';
 
 const SUITE = 'subtle.generateKey';
@@ -598,13 +599,6 @@ test(SUITE, 'ML-DSA bad usages', async () => {
 });
 
 // --- ML-KEM Key Generation Tests ---
-
-type MlKemVariant = 'ML-KEM-512' | 'ML-KEM-768' | 'ML-KEM-1024';
-const MLKEM_VARIANTS: MlKemVariant[] = [
-  'ML-KEM-512',
-  'ML-KEM-768',
-  'ML-KEM-1024',
-];
 
 for (const variant of MLKEM_VARIANTS) {
   test(SUITE, `ML-KEM keygen: ${variant}`, async () => {
