@@ -547,7 +547,10 @@ export function ecDeriveBits(
   // If length is specified, truncate
   const byteLength = Math.ceil(length / 8);
   if (secretBuf.byteLength >= byteLength) {
-    return secretBuf.subarray(0, byteLength).buffer as ArrayBuffer;
+    return secretBuf.buffer.slice(
+      secretBuf.byteOffset,
+      secretBuf.byteOffset + byteLength,
+    ) as ArrayBuffer;
   }
 
   throw new Error('Derived key is shorter than requested length');

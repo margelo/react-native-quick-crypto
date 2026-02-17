@@ -275,6 +275,61 @@ for (const { curve, bitLen } of ecdhCurves) {
   });
 }
 
+// --- ECDH deriveBits truncation tests (regression for #946) ---
+// When the curve's shared secret is larger than the requested bit length,
+// the result must be properly truncated (not return the full backing buffer).
+const truncationTests: Array<{
+  curve: NamedCurve;
+  fullBitLen: number;
+  requestBitLen: number;
+}> = [
+  { curve: 'P-384', fullBitLen: 384, requestBitLen: 256 },
+  { curve: 'P-384', fullBitLen: 384, requestBitLen: 128 },
+  { curve: 'P-521', fullBitLen: 528, requestBitLen: 256 },
+  { curve: 'P-521', fullBitLen: 528, requestBitLen: 128 },
+];
+
+for (const { curve, fullBitLen, requestBitLen } of truncationTests) {
+  test(
+    SUITE,
+    `ECDH deriveBits truncation - ${curve} ${requestBitLen} bits`,
+    async () => {
+      const alice = (await subtle.generateKey(
+        { name: 'ECDH', namedCurve: curve },
+        true,
+        ['deriveBits'],
+      )) as WebCryptoKeyPair;
+      const bob = (await subtle.generateKey(
+        { name: 'ECDH', namedCurve: curve },
+        true,
+        ['deriveBits'],
+      )) as WebCryptoKeyPair;
+
+      // Get full-length secret
+      const fullBits = await subtle.deriveBits(
+        { name: 'ECDH', public: bob.publicKey },
+        alice.privateKey,
+        fullBitLen,
+      );
+
+      // Get truncated secret
+      const truncBits = await subtle.deriveBits(
+        { name: 'ECDH', public: bob.publicKey },
+        alice.privateKey,
+        requestBitLen,
+      );
+
+      expect(truncBits.byteLength).to.equal(requestBitLen / 8);
+
+      // Truncated result must be a prefix of the full result
+      const fullPrefix = Buffer.from(fullBits).subarray(0, requestBitLen / 8);
+      expect(Buffer.from(truncBits).toString('hex')).to.equal(
+        fullPrefix.toString('hex'),
+      );
+    },
+  );
+}
+
 // --- X448 diffieHellman Tests ---
 
 test(SUITE, 'x448 - shared secret', () => {
