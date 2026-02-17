@@ -45,6 +45,7 @@ void XChaCha20Poly1305Cipher::init(const std::shared_ptr<ArrayBuffer> cipher_key
 
   data_buffer_.clear();
   aad_.clear();
+  is_finalized = false;
 }
 
 std::shared_ptr<ArrayBuffer> XChaCha20Poly1305Cipher::update(const std::shared_ptr<ArrayBuffer>& data) {

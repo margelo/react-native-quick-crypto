@@ -266,6 +266,29 @@ test(SUITE, 'decipher update after final throws', () => {
   expect(() => decipher.update(encrypted)).to.throw();
 });
 
+test(SUITE, 'cipher works after re-init (createCipheriv)', () => {
+  // First use
+  const cipher1 = createCipheriv('aes-128-cbc', key16, iv);
+  const enc1 = Buffer.concat([
+    cipher1.update(plaintextBuffer),
+    cipher1.final(),
+  ]);
+
+  // Second use with same params should produce identical result
+  const cipher2 = createCipheriv('aes-128-cbc', key16, iv);
+  const enc2 = Buffer.concat([
+    cipher2.update(plaintextBuffer),
+    cipher2.final(),
+  ]);
+
+  expect(enc1.toString('hex')).to.equal(enc2.toString('hex'));
+
+  // Verify decryption still works
+  const decipher = createDecipheriv('aes-128-cbc', key16, iv);
+  const decrypted = Buffer.concat([decipher.update(enc2), decipher.final()]);
+  expect(decrypted.toString('utf8')).to.equal(plaintext);
+});
+
 test(SUITE, 'GCM tampered ciphertext throws error', () => {
   const testKey = Buffer.from(randomFillSync(new Uint8Array(32)));
   const testIv = randomFillSync(new Uint8Array(12));

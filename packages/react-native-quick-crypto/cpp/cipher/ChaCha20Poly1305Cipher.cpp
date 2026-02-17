@@ -60,6 +60,7 @@ void ChaCha20Poly1305Cipher::init(const std::shared_ptr<ArrayBuffer> cipher_key,
     ctx = nullptr;
     throw std::runtime_error("ChaCha20Poly1305Cipher: Failed to set key/IV: " + std::string(err_buf));
   }
+  is_finalized = false;
 }
 
 std::shared_ptr<ArrayBuffer> ChaCha20Poly1305Cipher::update(const std::shared_ptr<ArrayBuffer>& data) {
