@@ -99,7 +99,7 @@ test(SUITE, 'X25519 deriveKey to AES-GCM', async () => {
   );
 });
 
-// Test 3: ECDH deriveKey
+// Test 3: ECDH P-256 deriveKey
 test(SUITE, 'ECDH P-256 deriveKey to AES-GCM', async () => {
   const aliceKeyPair = await subtle.generateKey(
     { name: 'ECDH', namedCurve: 'P-256' },
@@ -143,6 +143,134 @@ test(SUITE, 'ECDH P-256 deriveKey to AES-GCM', async () => {
   );
 
   // Verify key works for encrypt/decrypt
+  const plaintext = new Uint8Array([1, 2, 3, 4]);
+  const iv = getRandomValues(new Uint8Array(12));
+
+  const ciphertext = await subtle.encrypt(
+    { name: 'AES-GCM', iv },
+    aliceDerivedKey as CryptoKey,
+    plaintext,
+  );
+
+  const decrypted = await subtle.decrypt(
+    { name: 'AES-GCM', iv },
+    bobDerivedKey as CryptoKey,
+    ciphertext,
+  );
+
+  expect(Buffer.from(decrypted).toString('hex')).to.equal(
+    Buffer.from(plaintext).toString('hex'),
+  );
+});
+
+// Test 4: ECDH P-384 deriveKey (regression: shared secret > 256 bits must be truncated)
+test(SUITE, 'ECDH P-384 deriveKey to AES-GCM-256', async () => {
+  const aliceKeyPair = await subtle.generateKey(
+    { name: 'ECDH', namedCurve: 'P-384' },
+    false,
+    ['deriveKey', 'deriveBits'],
+  );
+
+  const bobKeyPair = await subtle.generateKey(
+    { name: 'ECDH', namedCurve: 'P-384' },
+    false,
+    ['deriveKey', 'deriveBits'],
+  );
+
+  const aliceDerivedKey = await subtleAny.deriveKey(
+    {
+      name: 'ECDH',
+      public: (aliceKeyPair as CryptoKeyPair).publicKey,
+    },
+    (bobKeyPair as CryptoKeyPair).privateKey,
+    { name: 'AES-GCM', length: 256 },
+    true,
+    ['encrypt', 'decrypt'],
+  );
+
+  const bobDerivedKey = await subtleAny.deriveKey(
+    {
+      name: 'ECDH',
+      public: (bobKeyPair as CryptoKeyPair).publicKey,
+    },
+    (aliceKeyPair as CryptoKeyPair).privateKey,
+    { name: 'AES-GCM', length: 256 },
+    true,
+    ['encrypt', 'decrypt'],
+  );
+
+  const aliceRaw = await subtle.exportKey('raw', aliceDerivedKey as CryptoKey);
+  const bobRaw = await subtle.exportKey('raw', bobDerivedKey as CryptoKey);
+
+  expect(Buffer.from(aliceRaw as ArrayBuffer).byteLength).to.equal(32);
+  expect(Buffer.from(aliceRaw as ArrayBuffer).toString('hex')).to.equal(
+    Buffer.from(bobRaw as ArrayBuffer).toString('hex'),
+  );
+
+  const plaintext = new Uint8Array([1, 2, 3, 4]);
+  const iv = getRandomValues(new Uint8Array(12));
+
+  const ciphertext = await subtle.encrypt(
+    { name: 'AES-GCM', iv },
+    aliceDerivedKey as CryptoKey,
+    plaintext,
+  );
+
+  const decrypted = await subtle.decrypt(
+    { name: 'AES-GCM', iv },
+    bobDerivedKey as CryptoKey,
+    ciphertext,
+  );
+
+  expect(Buffer.from(decrypted).toString('hex')).to.equal(
+    Buffer.from(plaintext).toString('hex'),
+  );
+});
+
+// Test 5: ECDH P-521 deriveKey (regression: shared secret > 256 bits must be truncated)
+test(SUITE, 'ECDH P-521 deriveKey to AES-GCM-256', async () => {
+  const aliceKeyPair = await subtle.generateKey(
+    { name: 'ECDH', namedCurve: 'P-521' },
+    false,
+    ['deriveKey', 'deriveBits'],
+  );
+
+  const bobKeyPair = await subtle.generateKey(
+    { name: 'ECDH', namedCurve: 'P-521' },
+    false,
+    ['deriveKey', 'deriveBits'],
+  );
+
+  const aliceDerivedKey = await subtleAny.deriveKey(
+    {
+      name: 'ECDH',
+      public: (aliceKeyPair as CryptoKeyPair).publicKey,
+    },
+    (bobKeyPair as CryptoKeyPair).privateKey,
+    { name: 'AES-GCM', length: 256 },
+    true,
+    ['encrypt', 'decrypt'],
+  );
+
+  const bobDerivedKey = await subtleAny.deriveKey(
+    {
+      name: 'ECDH',
+      public: (bobKeyPair as CryptoKeyPair).publicKey,
+    },
+    (aliceKeyPair as CryptoKeyPair).privateKey,
+    { name: 'AES-GCM', length: 256 },
+    true,
+    ['encrypt', 'decrypt'],
+  );
+
+  const aliceRaw = await subtle.exportKey('raw', aliceDerivedKey as CryptoKey);
+  const bobRaw = await subtle.exportKey('raw', bobDerivedKey as CryptoKey);
+
+  expect(Buffer.from(aliceRaw as ArrayBuffer).byteLength).to.equal(32);
+  expect(Buffer.from(aliceRaw as ArrayBuffer).toString('hex')).to.equal(
+    Buffer.from(bobRaw as ArrayBuffer).toString('hex'),
+  );
+
   const plaintext = new Uint8Array([1, 2, 3, 4]);
   const iv = getRandomValues(new Uint8Array(12));
 
