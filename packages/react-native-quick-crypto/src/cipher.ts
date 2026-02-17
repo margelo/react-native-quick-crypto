@@ -76,6 +76,7 @@ interface CipherArgs {
 class CipherCommon extends Stream.Transform {
   private native: NativeCipher;
   private _decoder: StringDecoder | null = null;
+  private _decoderEncoding: string | undefined = undefined;
 
   constructor({ isCipher, cipherType, cipherKey, iv, options }: CipherArgs) {
     // Explicitly create TransformOptions for super()
@@ -123,8 +124,12 @@ class CipherCommon extends Stream.Transform {
   }
 
   private getDecoder(encoding: string): StringDecoder {
+    const normalized = normalizeEncoding(encoding);
     if (!this._decoder) {
       this._decoder = new StringDecoder(encoding as BufferEncoding);
+      this._decoderEncoding = normalized;
+    } else if (this._decoderEncoding !== normalized) {
+      throw new Error('Cannot change encoding');
     }
     return this._decoder;
   }
