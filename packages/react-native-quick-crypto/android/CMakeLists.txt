@@ -47,6 +47,7 @@ add_library(
   ../cpp/hash/HybridHash.cpp
   ../cpp/hmac/HybridHmac.cpp
   ../cpp/hkdf/HybridHkdf.cpp
+  ../cpp/kmac/HybridKmac.cpp
   ../cpp/keys/HybridKeyObjectHandle.cpp
   ../cpp/keys/KeyObjectData.cpp
   ../cpp/mldsa/HybridMlDsaKeyPair.cpp
@@ -86,6 +87,7 @@ include_directories(
   "../cpp/hash"
   "../cpp/hkdf"
   "../cpp/hmac"
+  "../cpp/kmac"
   "../cpp/keys"
   "../cpp/mldsa"
   "../cpp/mlkem"

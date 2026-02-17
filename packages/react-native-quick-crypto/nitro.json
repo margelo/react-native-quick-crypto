@@ -50,6 +50,9 @@
     "Hmac": {
       "cpp": "HybridHmac"
     },
+    "Kmac": {
+      "cpp": "HybridKmac"
+    },
     "KeyObjectHandle": {
       "cpp": "HybridKeyObjectHandle"
     },

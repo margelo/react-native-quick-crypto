@@ -122,6 +122,8 @@ export type SignVerifyAlgorithm =
   | 'RSA-PSS'
   | 'ECDSA'
   | 'HMAC'
+  | 'KMAC128'
+  | 'KMAC256'
   | 'Ed25519'
   | 'Ed448'
   | 'ML-DSA-44'
@@ -243,6 +245,8 @@ export type SubtleAlgorithm = {
   secretValue?: BufferLike;
   associatedData?: BufferLike;
   version?: number;
+  // KMAC parameters
+  customization?: BufferLike;
 };
 
 export type KeyPairType =
