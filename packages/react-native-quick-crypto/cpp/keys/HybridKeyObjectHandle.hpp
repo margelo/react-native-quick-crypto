@@ -31,6 +31,8 @@ class HybridKeyObjectHandle : public HybridKeyObjectHandleSpec {
 
   bool initECRaw(const std::string& namedCurve, const std::shared_ptr<ArrayBuffer>& keyData) override;
 
+  bool initPqcRaw(const std::string& algorithmName, const std::shared_ptr<ArrayBuffer>& keyData, bool isPublic) override;
+
   std::optional<KeyType> initJwk(const JWK& keyData, std::optional<NamedCurve> namedCurve) override;
 
   KeyDetail keyDetail() override;

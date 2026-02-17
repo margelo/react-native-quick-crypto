@@ -1,0 +1,40 @@
+<rules category="git">
+  <rule severity="CRITICAL" enforcement="BLOCKING">
+    <name>Never bypass pre-commit hooks</name>
+    <description>NEVER use --no-verify on git commit or git push</description>
+    <requirements>
+      <requirement>NEVER pass --no-verify or -n to git commit</requirement>
+      <requirement>NEVER pass --no-verify to git push</requirement>
+      <requirement>If pre-commit hooks fail, fix the underlying issue</requirement>
+      <requirement>Use 120000ms timeout for git commit — hooks run lint-staged, clang-format, tsc, and bob build</requirement>
+    </requirements>
+    <rationale>
+      Pre-commit hooks enforce code quality (formatting, linting, type checking, build).
+      Bypassing them hides errors that will surface later in CI or code review.
+    </rationale>
+    <mustAcknowledge>true</mustAcknowledge>
+  </rule>
+
+  <rule severity="CRITICAL" enforcement="BLOCKING">
+    <name>Never commit to main</name>
+    <description>Always create a feature branch before committing</description>
+    <requirements>
+      <requirement>Check current branch before committing</requirement>
+      <requirement>Create feat/, fix/, or refactor/ branch if on main</requirement>
+    </requirements>
+  </rule>
+
+  <rule severity="HIGH" enforcement="STRICT">
+    <name>Pre-commit code quality</name>
+    <description>Run formatters on changed files before committing</description>
+    <requirements>
+      <requirement>Run clang-format -i on all modified .cpp/.hpp/.h files before staging</requirement>
+      <requirement>Run npx prettier --write on all modified .ts/.tsx files before staging</requirement>
+      <requirement>Run tsc --noEmit to verify types compile</requirement>
+    </requirements>
+    <rationale>
+      Running formatters proactively prevents pre-commit hook failures
+      and avoids the need to amend commits.
+    </rationale>
+  </rule>
+</rules>

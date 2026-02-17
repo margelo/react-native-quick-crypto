@@ -27,6 +27,11 @@ export interface KeyObjectHandle
     passphrase?: ArrayBuffer,
   ): boolean;
   initECRaw(namedCurve: string, keyData: ArrayBuffer): boolean;
+  initPqcRaw(
+    algorithmName: string,
+    keyData: ArrayBuffer,
+    isPublic: boolean,
+  ): boolean;
   initJwk(keyData: JWK, namedCurve?: NamedCurve): KeyType | undefined;
   keyDetail(): KeyDetail;
   keyEquals(other: KeyObjectHandle): boolean;

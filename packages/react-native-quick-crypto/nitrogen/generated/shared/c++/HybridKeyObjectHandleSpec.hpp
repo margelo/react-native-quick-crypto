@@ -80,6 +80,7 @@ namespace margelo::nitro::crypto {
       virtual AsymmetricKeyType getAsymmetricKeyType() = 0;
       virtual bool init(KeyType keyType, const std::variant<std::shared_ptr<ArrayBuffer>, std::string>& key, std::optional<KFormatType> format, std::optional<KeyEncoding> type, const std::optional<std::shared_ptr<ArrayBuffer>>& passphrase) = 0;
       virtual bool initECRaw(const std::string& namedCurve, const std::shared_ptr<ArrayBuffer>& keyData) = 0;
+      virtual bool initPqcRaw(const std::string& algorithmName, const std::shared_ptr<ArrayBuffer>& keyData, bool isPublic) = 0;
       virtual std::optional<KeyType> initJwk(const JWK& keyData, std::optional<NamedCurve> namedCurve) = 0;
       virtual KeyDetail keyDetail() = 0;
       virtual bool keyEquals(const std::shared_ptr<HybridKeyObjectHandleSpec>& other) = 0;

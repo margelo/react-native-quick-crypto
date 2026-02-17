@@ -1025,6 +1025,49 @@ function edImportKey(
   return new CryptoKey(keyObject, { name }, keyUsages, extractable);
 }
 
+function pqcImportKeyObject(
+  format: ImportFormat,
+  data: BufferLike,
+  name: string,
+): KeyObject {
+  if (format === 'spki') {
+    return KeyObject.createKeyObject(
+      'public',
+      bufferLikeToArrayBuffer(data),
+      KFormatType.DER,
+      KeyEncoding.SPKI,
+    );
+  } else if (format === 'pkcs8') {
+    return KeyObject.createKeyObject(
+      'private',
+      bufferLikeToArrayBuffer(data),
+      KFormatType.DER,
+      KeyEncoding.PKCS8,
+    );
+  } else if (format === 'raw') {
+    const handle =
+      NitroModules.createHybridObject<KeyObjectHandle>('KeyObjectHandle');
+    if (!handle.initPqcRaw(name, bufferLikeToArrayBuffer(data), true)) {
+      throw lazyDOMException(
+        `Failed to import ${name} raw public key`,
+        'DataError',
+      );
+    }
+    return new PublicKeyObject(handle);
+  } else if (format === 'raw-seed') {
+    const handle =
+      NitroModules.createHybridObject<KeyObjectHandle>('KeyObjectHandle');
+    if (!handle.initPqcRaw(name, bufferLikeToArrayBuffer(data), false)) {
+      throw lazyDOMException(`Failed to import ${name} raw seed`, 'DataError');
+    }
+    return new PrivateKeyObject(handle);
+  }
+  throw lazyDOMException(
+    `Unsupported format for ${name} import: ${format}`,
+    'NotSupportedError',
+  );
+}
+
 function mldsaImportKey(
   format: ImportFormat,
   data: BufferLike,
@@ -1033,43 +1076,19 @@ function mldsaImportKey(
   keyUsages: KeyUsage[],
 ): CryptoKey {
   const { name } = algorithm;
-
-  // Validate usages
-  if (hasAnyNotIn(keyUsages, ['sign', 'verify'])) {
+  const isPublicFormat = format === 'spki' || format === 'raw';
+  if (hasAnyNotIn(keyUsages, isPublicFormat ? ['verify'] : ['sign'])) {
     throw lazyDOMException(
       `Unsupported key usage for ${name} key`,
       'SyntaxError',
     );
   }
-
-  let keyObject: KeyObject;
-
-  if (format === 'spki') {
-    // Import public key
-    const keyData = bufferLikeToArrayBuffer(data);
-    keyObject = KeyObject.createKeyObject(
-      'public',
-      keyData,
-      KFormatType.DER,
-      KeyEncoding.SPKI,
-    );
-  } else if (format === 'pkcs8') {
-    // Import private key
-    const keyData = bufferLikeToArrayBuffer(data);
-    keyObject = KeyObject.createKeyObject(
-      'private',
-      keyData,
-      KFormatType.DER,
-      KeyEncoding.PKCS8,
-    );
-  } else {
-    throw lazyDOMException(
-      `Unsupported format for ${name} import: ${format}`,
-      'NotSupportedError',
-    );
-  }
-
-  return new CryptoKey(keyObject, { name }, keyUsages, extractable);
+  return new CryptoKey(
+    pqcImportKeyObject(format, data, name),
+    { name },
+    keyUsages,
+    extractable,
+  );
 }
 
 function mlkemImportKey(
@@ -1080,46 +1099,22 @@ function mlkemImportKey(
   keyUsages: KeyUsage[],
 ): CryptoKey {
   const { name } = algorithm;
-
-  // Valid usages for ML-KEM
-  const isPublicFormat = format === 'spki';
+  const isPublicFormat = format === 'spki' || format === 'raw';
   const allowedUsages: KeyUsage[] = isPublicFormat
     ? ['encapsulateBits', 'encapsulateKey']
     : ['decapsulateBits', 'decapsulateKey'];
-
   if (hasAnyNotIn(keyUsages, allowedUsages)) {
     throw lazyDOMException(
       `Unsupported key usage for ${name} key`,
       'SyntaxError',
     );
   }
-
-  let keyObject: KeyObject;
-
-  if (format === 'spki') {
-    const keyData = bufferLikeToArrayBuffer(data);
-    keyObject = KeyObject.createKeyObject(
-      'public',
-      keyData,
-      KFormatType.DER,
-      KeyEncoding.SPKI,
-    );
-  } else if (format === 'pkcs8') {
-    const keyData = bufferLikeToArrayBuffer(data);
-    keyObject = KeyObject.createKeyObject(
-      'private',
-      keyData,
-      KFormatType.DER,
-      KeyEncoding.PKCS8,
-    );
-  } else {
-    throw lazyDOMException(
-      `Unsupported format for ${name} import: ${format}`,
-      'NotSupportedError',
-    );
-  }
-
-  return new CryptoKey(keyObject, { name }, keyUsages, extractable);
+  return new CryptoKey(
+    pqcImportKeyObject(format, data, name),
+    { name },
+    keyUsages,
+    extractable,
+  );
 }
 
 const exportKeySpki = async (
@@ -1267,7 +1262,22 @@ const exportKeyRaw = (key: CryptoKey): ArrayBuffer | unknown => {
     // Fall through
     case 'X448':
       if (key.type === 'public') {
-        // Export raw public key
+        const exported = key.keyObject.handle.exportKey();
+        return bufferLikeToArrayBuffer(exported);
+      }
+      break;
+    case 'ML-KEM-512':
+    // Fall through
+    case 'ML-KEM-768':
+    // Fall through
+    case 'ML-KEM-1024':
+    // Fall through
+    case 'ML-DSA-44':
+    // Fall through
+    case 'ML-DSA-65':
+    // Fall through
+    case 'ML-DSA-87':
+      if (key.type === 'public') {
         const exported = key.keyObject.handle.exportKey();
         return bufferLikeToArrayBuffer(exported);
       }
@@ -2093,6 +2103,31 @@ export class Subtle {
   ): Promise<ArrayBuffer | JWK> {
     if (!key.extractable) throw new Error('key is not extractable');
 
+    if (format === 'raw-seed') {
+      const pqcAlgos = [
+        'ML-KEM-512',
+        'ML-KEM-768',
+        'ML-KEM-1024',
+        'ML-DSA-44',
+        'ML-DSA-65',
+        'ML-DSA-87',
+      ];
+      if (!pqcAlgos.includes(key.algorithm.name)) {
+        throw lazyDOMException(
+          'raw-seed export only supported for PQC keys',
+          'NotSupportedError',
+        );
+      }
+      if (key.type !== 'private') {
+        throw lazyDOMException(
+          'raw-seed export requires a private key',
+          'InvalidAccessError',
+        );
+      }
+      return bufferLikeToArrayBuffer(key.keyObject.handle.exportKey());
+    }
+
+    // Note: 'raw-seed' is handled above; do NOT normalize it here
     if (format === 'raw-secret' || format === 'raw-public') format = 'raw';
 
     switch (format) {
@@ -2356,6 +2391,7 @@ export class Subtle {
     extractable: boolean,
     keyUsages: KeyUsage[],
   ): Promise<CryptoKey> {
+    // Note: 'raw-seed' is NOT normalized — PQC import functions handle it directly
     if (format === 'raw-secret' || format === 'raw-public') format = 'raw';
     const normalizedAlgorithm = normalizeAlgorithm(algorithm, 'importKey');
     let result: CryptoKey;

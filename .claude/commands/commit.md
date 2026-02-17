@@ -23,18 +23,32 @@ When activated, commit the current working tree changes:
    - If nothing is staged, run `git add -A` to stage everything
    - Run `git diff --staged --stat` to confirm what will be committed
 
-4. **Generate commit message**:
+4. **Run code quality checks before committing**:
+   - **C++ files**: If any `.cpp`/`.hpp`/`.h` files are staged, run:
+     ```bash
+     clang-format -i <files>
+     ```
+     Then re-stage them with `git add`.
+   - **TypeScript files**: If any `.ts`/`.tsx` files are staged, run:
+     ```bash
+     npx prettier --write <files>
+     ```
+     Then re-stage them with `git add`.
+   - **Type check**: Run `cd packages/react-native-quick-crypto && bun tsc --noEmit` to verify types.
+
+5. **Generate commit message**:
    - Use conventional commit format: `type: short description`
    - Types: `feat`, `fix`, `refactor`, `chore`, `docs`, `test`
    - If the change is substantial, add a body paragraph separated by a blank line
    - Body should explain **what** changed and **why**, not how (the diff shows how)
    - Keep the subject line under 72 characters
 
-5. **Commit**:
+6. **Commit** (with 120000ms timeout — pre-commit hooks run lint-staged, clang-format, tsc, and bob build):
    ```bash
    git commit -m "<message>"
    ```
+   **NEVER use `--no-verify`.** Pre-commit hooks exist to catch errors. If they fail, fix the issue.
 
-6. **Report** the commit hash and summary to the user
+7. **Report** the commit hash and summary to the user
 
 If the user provides arguments (e.g., `/commit "fix: resolve race condition"`), use that as the commit message instead of generating one.
