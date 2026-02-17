@@ -11,10 +11,11 @@ namespace margelo::nitro::crypto {
 
 using namespace facebook;
 
+using EVP_MAC_CTX_ptr = std::unique_ptr<EVP_MAC_CTX, decltype(&EVP_MAC_CTX_free)>;
+
 class HybridKmac : public HybridKmacSpec {
  public:
   HybridKmac() : HybridObject(TAG) {}
-  ~HybridKmac();
 
  public:
   void createKmac(const std::string& algorithm, const std::shared_ptr<ArrayBuffer>& key, double outputLength,
@@ -23,7 +24,7 @@ class HybridKmac : public HybridKmacSpec {
   std::shared_ptr<ArrayBuffer> digest() override;
 
  private:
-  EVP_MAC_CTX* ctx = nullptr;
+  EVP_MAC_CTX_ptr ctx{nullptr, EVP_MAC_CTX_free};
   size_t outputLen = 0;
 };
 

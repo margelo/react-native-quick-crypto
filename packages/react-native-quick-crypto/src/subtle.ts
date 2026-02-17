@@ -49,6 +49,7 @@ import { rsa_generateKeyPair } from './rsa';
 import { getRandomValues } from './random';
 import { createHmac } from './hmac';
 import type { Kmac } from './specs/kmac.nitro';
+import { timingSafeEqual } from './utils/timingSafeEqual';
 import { createSign, createVerify } from './keys/signVerify';
 import {
   ed_generateKeyPairWebCrypto,
@@ -750,6 +751,14 @@ function kmacSignVerify(
 
   const defaultLength = name === 'KMAC128' ? 256 : 512;
   const outputLengthBits = algorithm.length ?? defaultLength;
+
+  if (outputLengthBits % 8 !== 0) {
+    throw lazyDOMException(
+      'KMAC output length must be a multiple of 8',
+      'OperationError',
+    );
+  }
+
   const outputLengthBytes = outputLengthBits / 8;
 
   const keyData = key.keyObject.export();
@@ -774,18 +783,12 @@ function kmacSignVerify(
     return computed;
   }
 
-  const sigBytes = new Uint8Array(bufferLikeToArrayBuffer(signature));
-  const computedBytes = new Uint8Array(computed);
-
-  if (computedBytes.length !== sigBytes.length) {
+  const sigBuffer = bufferLikeToArrayBuffer(signature);
+  if (computed.byteLength !== sigBuffer.byteLength) {
     return false;
   }
 
-  let result = 0;
-  for (let i = 0; i < computedBytes.length; i++) {
-    result |= computedBytes[i]! ^ sigBytes[i]!;
-  }
-  return result === 0;
+  return timingSafeEqual(new Uint8Array(computed), new Uint8Array(sigBuffer));
 }
 
 async function kmacImportKey(
@@ -1684,24 +1687,20 @@ function hmacSignVerify(
     );
   }
 
-  // Verify operation - compare computed HMAC with provided signature
-  const sigBytes = new Uint8Array(bufferLikeToArrayBuffer(signature));
-  const computedBytes = new Uint8Array(
-    computed.buffer,
+  const sigBuffer = bufferLikeToArrayBuffer(signature);
+  const computedBuffer = computed.buffer.slice(
     computed.byteOffset,
-    computed.byteLength,
+    computed.byteOffset + computed.byteLength,
   );
 
-  if (computedBytes.length !== sigBytes.length) {
+  if (computedBuffer.byteLength !== sigBuffer.byteLength) {
     return false;
   }
 
-  // Constant-time comparison to prevent timing attacks
-  let result = 0;
-  for (let i = 0; i < computedBytes.length; i++) {
-    result |= computedBytes[i]! ^ sigBytes[i]!;
-  }
-  return result === 0;
+  return timingSafeEqual(
+    new Uint8Array(computedBuffer),
+    new Uint8Array(sigBuffer),
+  );
 }
 
 function rsaSignVerify(
@@ -2729,62 +2728,11 @@ export class Subtle {
     key: CryptoKey,
     data: BufferLike,
   ): Promise<ArrayBuffer> {
-    const normalizedAlgorithm = normalizeAlgorithm(algorithm, 'sign');
-
-    if (normalizedAlgorithm.name === 'HMAC') {
-      // Validate key usage
-      if (!key.usages.includes('sign')) {
-        throw lazyDOMException(
-          'Key does not have sign usage',
-          'InvalidAccessError',
-        );
-      }
-
-      // Get hash algorithm from key or algorithm params
-      // Hash can be either a string or an object with name property
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      const alg = normalizedAlgorithm as any;
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      const keyAlg = key.algorithm as any;
-      let hashAlgorithm = 'SHA-256';
-
-      if (typeof alg.hash === 'string') {
-        hashAlgorithm = alg.hash;
-      } else if (alg.hash?.name) {
-        hashAlgorithm = alg.hash.name;
-      } else if (typeof keyAlg.hash === 'string') {
-        hashAlgorithm = keyAlg.hash;
-      } else if (keyAlg.hash?.name) {
-        hashAlgorithm = keyAlg.hash.name;
-      }
-
-      // Create HMAC and sign
-      const keyData = key.keyObject.export();
-      const hmac = createHmac(hashAlgorithm, keyData);
-      hmac.update(bufferLikeToArrayBuffer(data));
-      return bufferLikeToArrayBuffer(hmac.digest());
-    }
-
-    if (
-      normalizedAlgorithm.name === 'KMAC128' ||
-      normalizedAlgorithm.name === 'KMAC256'
-    ) {
-      if (!key.usages.includes('sign')) {
-        throw lazyDOMException(
-          'Key does not have sign usage',
-          'InvalidAccessError',
-        );
-      }
-      if (normalizedAlgorithm.name !== key.algorithm.name) {
-        throw lazyDOMException(
-          'Unable to use this key to sign',
-          'InvalidAccessError',
-        );
-      }
-      return kmacSignVerify(key, data, normalizedAlgorithm) as ArrayBuffer;
-    }
-
-    return signVerify(normalizedAlgorithm, key, data) as ArrayBuffer;
+    return signVerify(
+      normalizeAlgorithm(algorithm, 'sign'),
+      key,
+      data,
+    ) as ArrayBuffer;
   }
 
   async verify(
@@ -2793,82 +2741,12 @@ export class Subtle {
     signature: BufferLike,
     data: BufferLike,
   ): Promise<boolean> {
-    const normalizedAlgorithm = normalizeAlgorithm(algorithm, 'verify');
-
-    if (normalizedAlgorithm.name === 'HMAC') {
-      // Validate key usage
-      if (!key.usages.includes('verify')) {
-        throw lazyDOMException(
-          'Key does not have verify usage',
-          'InvalidAccessError',
-        );
-      }
-
-      // Get hash algorithm
-      // Hash can be either a string or an object with name property
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      const alg = normalizedAlgorithm as any;
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      const keyAlg = key.algorithm as any;
-      let hashAlgorithm = 'SHA-256';
-
-      if (typeof alg.hash === 'string') {
-        hashAlgorithm = alg.hash;
-      } else if (alg.hash?.name) {
-        hashAlgorithm = alg.hash.name;
-      } else if (typeof keyAlg.hash === 'string') {
-        hashAlgorithm = keyAlg.hash;
-      } else if (keyAlg.hash?.name) {
-        hashAlgorithm = keyAlg.hash.name;
-      }
-
-      // Create HMAC and compute expected signature
-      const keyData = key.keyObject.export();
-      const hmac = createHmac(hashAlgorithm, keyData);
-      const dataBuffer = bufferLikeToArrayBuffer(data);
-      hmac.update(dataBuffer);
-      const expectedDigest = hmac.digest();
-      const expected = new Uint8Array(bufferLikeToArrayBuffer(expectedDigest));
-
-      // Constant-time comparison
-      const signatureArray = new Uint8Array(bufferLikeToArrayBuffer(signature));
-      if (expected.length !== signatureArray.length) {
-        return false;
-      }
-
-      // Manual constant-time comparison
-      let result = 0;
-      for (let i = 0; i < expected.length; i++) {
-        result |= expected[i]! ^ signatureArray[i]!;
-      }
-      return result === 0;
-    }
-
-    if (
-      normalizedAlgorithm.name === 'KMAC128' ||
-      normalizedAlgorithm.name === 'KMAC256'
-    ) {
-      if (!key.usages.includes('verify')) {
-        throw lazyDOMException(
-          'Key does not have verify usage',
-          'InvalidAccessError',
-        );
-      }
-      if (normalizedAlgorithm.name !== key.algorithm.name) {
-        throw lazyDOMException(
-          'Unable to use this key to verify',
-          'InvalidAccessError',
-        );
-      }
-      return kmacSignVerify(
-        key,
-        data,
-        normalizedAlgorithm,
-        signature,
-      ) as boolean;
-    }
-
-    return signVerify(normalizedAlgorithm, key, data, signature) as boolean;
+    return signVerify(
+      normalizeAlgorithm(algorithm, 'verify'),
+      key,
+      data,
+      signature,
+    ) as boolean;
   }
 
   private _encapsulateCore(
