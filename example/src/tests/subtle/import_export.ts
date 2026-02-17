@@ -2893,3 +2893,58 @@ test(SUITE, 'ML-KEM-768 unwrapKey with AES-GCM', async () => {
   );
   expect(new Uint8Array(decapsulated)).to.deep.equal(new Uint8Array(sharedKey));
 });
+
+// --- KMAC Import/Export Tests ---
+
+for (const algorithm of ['KMAC128', 'KMAC256'] as const) {
+  test(SUITE, `KMAC import/export raw (${algorithm})`, async () => {
+    const keyBytes = new Uint8Array(32);
+    globalThis.crypto.getRandomValues(keyBytes);
+
+    const key = await subtle.importKey(
+      'raw',
+      keyBytes,
+      { name: algorithm },
+      true,
+      ['sign', 'verify'],
+    );
+
+    const exported = await subtle.exportKey('raw', key);
+    expect(ab2str(exported as ArrayBuffer, 'hex')).to.equal(
+      ab2str(keyBytes.buffer as ArrayBuffer, 'hex'),
+    );
+  });
+}
+
+for (const algorithm of ['KMAC128', 'KMAC256'] as const) {
+  test(SUITE, `KMAC import/export jwk (${algorithm})`, async () => {
+    const key = await subtle.generateKey({ name: algorithm }, true, [
+      'sign',
+      'verify',
+    ]);
+
+    const jwk = await subtle.exportKey('jwk', key as CryptoKey);
+    const jwkObj = jwk as Record<string, unknown>;
+    expect(jwkObj.alg).to.equal(algorithm === 'KMAC128' ? 'K128' : 'K256');
+    expect(jwkObj.kty).to.equal('oct');
+
+    const imported = await subtle.importKey(
+      'jwk',
+      jwk,
+      { name: algorithm },
+      true,
+      ['sign', 'verify'],
+    );
+
+    const data = new TextEncoder().encode('jwk round-trip test');
+    const length = algorithm === 'KMAC128' ? 256 : 512;
+
+    const sig1 = await subtle.sign(
+      { name: algorithm, length },
+      key as CryptoKey,
+      data,
+    );
+    const sig2 = await subtle.sign({ name: algorithm, length }, imported, data);
+    expect(ab2str(sig1, 'hex')).to.equal(ab2str(sig2, 'hex'));
+  });
+}
