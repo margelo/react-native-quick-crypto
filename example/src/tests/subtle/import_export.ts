@@ -2181,19 +2181,144 @@ for (const variant of MLDSA_VARIANTS) {
 }
 
 // ML-DSA error handling tests
-test(SUITE, 'ML-DSA-44 importKey rejects invalid format', async () => {
+test(SUITE, 'ML-DSA-44 importKey rejects jwk format', async () => {
   await assertThrowsAsync(
     async () =>
       await subtle.importKey(
-        'raw',
-        new Uint8Array(32),
+        'jwk',
+        { kty: 'OKP', alg: 'ML-DSA-44' },
         { name: 'ML-DSA-44' },
         true,
-        ['verify'],
+        ['sign'],
       ),
     'NotSupportedError',
   );
 });
+
+// --- ML-DSA raw-public and raw-seed export/import tests ---
+// 'raw-public' is normalized to 'raw' internally (public key bytes)
+// 'raw-seed' passes through directly (64-byte private seed)
+
+const MLDSA_PUBLIC_KEY_SIZES: Record<(typeof MLDSA_VARIANTS)[number], number> =
+  {
+    'ML-DSA-44': 1312,
+    'ML-DSA-65': 1952,
+    'ML-DSA-87': 2592,
+  };
+
+const MLDSA_SEED_SIZE = 32;
+
+for (const variant of MLDSA_VARIANTS) {
+  test(SUITE, `${variant} export raw-public - correct size`, async () => {
+    const keyPair = (await subtle.generateKey({ name: variant }, true, [
+      'sign',
+      'verify',
+    ])) as CryptoKeyPair;
+
+    const rawPub = (await subtle.exportKey(
+      'raw-public',
+      keyPair.publicKey as CryptoKey,
+    )) as ArrayBuffer;
+
+    expect(rawPub).to.be.instanceOf(ArrayBuffer);
+    expect(rawPub.byteLength).to.equal(MLDSA_PUBLIC_KEY_SIZES[variant]);
+  });
+
+  test(SUITE, `${variant} export raw-seed - 32 bytes`, async () => {
+    const keyPair = (await subtle.generateKey({ name: variant }, true, [
+      'sign',
+      'verify',
+    ])) as CryptoKeyPair;
+
+    const seed = (await subtle.exportKey(
+      'raw-seed',
+      keyPair.privateKey as CryptoKey,
+    )) as ArrayBuffer;
+
+    expect(seed).to.be.instanceOf(ArrayBuffer);
+    expect(seed.byteLength).to.equal(MLDSA_SEED_SIZE);
+  });
+
+  test(
+    SUITE,
+    `${variant} roundtrip: export raw-public -> import -> verify`,
+    async () => {
+      const keyPair = (await subtle.generateKey({ name: variant }, true, [
+        'sign',
+        'verify',
+      ])) as CryptoKeyPair;
+
+      const rawPub = (await subtle.exportKey(
+        'raw-public',
+        keyPair.publicKey as CryptoKey,
+      )) as ArrayBuffer;
+
+      const imported = await subtle.importKey(
+        'raw-public',
+        rawPub,
+        { name: variant },
+        true,
+        ['verify'],
+      );
+      expect(imported.type).to.equal('public');
+      expect(imported.algorithm.name).to.equal(variant);
+
+      const testData = new TextEncoder().encode('ML-DSA raw import test');
+      const signature = await subtle.sign(
+        { name: variant },
+        keyPair.privateKey as CryptoKey,
+        testData,
+      );
+      const isValid = await subtle.verify(
+        { name: variant },
+        imported,
+        signature,
+        testData,
+      );
+      expect(isValid).to.equal(true);
+    },
+  );
+
+  test(
+    SUITE,
+    `${variant} roundtrip: export raw-seed -> import -> sign`,
+    async () => {
+      const keyPair = (await subtle.generateKey({ name: variant }, true, [
+        'sign',
+        'verify',
+      ])) as CryptoKeyPair;
+
+      const seed = (await subtle.exportKey(
+        'raw-seed',
+        keyPair.privateKey as CryptoKey,
+      )) as ArrayBuffer;
+
+      const importedPrivate = await subtle.importKey(
+        'raw-seed',
+        seed,
+        { name: variant },
+        true,
+        ['sign'],
+      );
+      expect(importedPrivate.type).to.equal('private');
+      expect(importedPrivate.algorithm.name).to.equal(variant);
+
+      const testData = new TextEncoder().encode('ML-DSA seed import test');
+      const signature = await subtle.sign(
+        { name: variant },
+        importedPrivate,
+        testData,
+      );
+      const isValid = await subtle.verify(
+        { name: variant },
+        keyPair.publicKey as CryptoKey,
+        signature,
+        testData,
+      );
+      expect(isValid).to.equal(true);
+    },
+  );
+}
 
 // --- ML-KEM Import/Export Tests ---
 
@@ -2560,6 +2685,8 @@ test(SUITE, '#645 AES-CBC generateKey/exportKey/importKey stress', async () => {
 });
 
 // --- ML-KEM raw-public and raw-seed export/import tests ---
+// 'raw-public' is normalized to 'raw' internally (encapsulation key bytes)
+// 'raw-seed' passes through directly (64-byte decapsulation seed)
 
 const MLKEM_PUBLIC_KEY_SIZES: Record<(typeof MLKEM_VARIANTS)[number], number> =
   {
@@ -2714,10 +2841,12 @@ for (const variant of MLKEM_VARIANTS) {
 }
 
 // --- ML-KEM unwrapKey test ---
+// AES-KW requires input length to be a multiple of 8 bytes (RFC 3394).
+// ML-KEM SPKI encodings are not 8-byte aligned, so we use AES-GCM instead.
 
-test(SUITE, 'ML-KEM-768 unwrapKey with AES-KW', async () => {
+test(SUITE, 'ML-KEM-768 unwrapKey with AES-GCM', async () => {
   const wrapKey = (await subtle.generateKey(
-    { name: 'AES-KW', length: 256 },
+    { name: 'AES-GCM', length: 256 },
     true,
     ['wrapKey', 'unwrapKey'],
   )) as CryptoKey;
@@ -2727,11 +2856,14 @@ test(SUITE, 'ML-KEM-768 unwrapKey with AES-KW', async () => {
     'decapsulateBits',
   ])) as CryptoKeyPair;
 
+  const iv = getRandomValues(new Uint8Array(12));
+  const wrapAlgo = { name: 'AES-GCM' as const, iv };
+
   const wrapped = await subtle.wrapKey(
     'spki',
     mlkemKeyPair.publicKey as CryptoKey,
     wrapKey,
-    { name: 'AES-KW' },
+    wrapAlgo,
   );
   expect(wrapped).to.be.instanceOf(ArrayBuffer);
   expect(wrapped.byteLength).to.be.greaterThan(0);
@@ -2740,7 +2872,7 @@ test(SUITE, 'ML-KEM-768 unwrapKey with AES-KW', async () => {
     'spki',
     wrapped,
     wrapKey,
-    { name: 'AES-KW' },
+    wrapAlgo,
     { name: 'ML-KEM-768' },
     true,
     ['encapsulateBits'],

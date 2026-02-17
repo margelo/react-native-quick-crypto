@@ -280,14 +280,14 @@ These ciphers are **not available in Node.js** but are provided by RNQC via libs
   - ✅ `subtle.digest(algorithm, data)`
   - ✅ `subtle.encapsulateBits(encapsulationAlgorithm, encapsulationKey)`
   - ✅ `subtle.encapsulateKey(encapsulationAlgorithm, encapsulationKey, sharedKeyAlgorithm, extractable, usages)`
-  - 🚧 `subtle.encrypt(algorithm, key, data)`
-  - 🚧 `subtle.exportKey(format, key)`
+  - ✅ `subtle.encrypt(algorithm, key, data)`
+  - ✅ `subtle.exportKey(format, key)`
   - 🚧 `subtle.generateKey(algorithm, extractable, keyUsages)`
   - ✅ `subtle.getPublicKey(key, keyUsages)`
-  - 🚧 `subtle.importKey(format, keyData, algorithm, extractable, keyUsages)`
-  - ✅ `subtle.sign(algorithm, key, data)`
+  - ✅ `subtle.importKey(format, keyData, algorithm, extractable, keyUsages)`
+  - 🚧 `subtle.sign(algorithm, key, data)`
   - ✅ `subtle.unwrapKey(format, wrappedKey, unwrappingKey, unwrapAlgo, unwrappedKeyAlgo, extractable, keyUsages)`
-  - ✅ `subtle.verify(algorithm, key, signature, data)`
+  - 🚧 `subtle.verify(algorithm, key, signature, data)`
   - ✅ `subtle.wrapKey(format, key, wrappingKey, wrapAlgo)`
 
 ## `subtle.decrypt`
