@@ -40,7 +40,16 @@ export type BinaryLike =
 
 export type BinaryLikeNode = CipherKey | BinaryLike | KeyObject;
 
-export type DigestAlgorithm = 'SHA-1' | 'SHA-256' | 'SHA-384' | 'SHA-512';
+export type DigestAlgorithm =
+  | 'SHA-1'
+  | 'SHA-256'
+  | 'SHA-384'
+  | 'SHA-512'
+  | 'SHA3-256'
+  | 'SHA3-384'
+  | 'SHA3-512'
+  | 'cSHAKE128'
+  | 'cSHAKE256';
 
 export type HashAlgorithm = DigestAlgorithm | 'SHA-224' | 'RIPEMD-160';
 
@@ -217,7 +226,7 @@ export type SubtleAlgorithm = {
   name: AnyAlgorithm;
   salt?: string | BufferLike;
   iterations?: number;
-  hash?: HashAlgorithm | { name: string };
+  hash?: HashAlgorithm | string | { name: string };
   namedCurve?: NamedCurve;
   length?: number;
   modulusLength?: number;

@@ -105,7 +105,7 @@ These algorithms provide quantum-resistant cryptography.
   - ✅ `x509.validFrom`
   - ✅ `x509.validTo`
   - ✅ `x509.verify(publicKey)`
-- 🚧 node:crypto module methods and properties
+- ✅ node:crypto module methods and properties
   - ✅ `crypto.argon2(algorithm, parameters, callback)`
   - ✅ `crypto.argon2Sync(algorithm, parameters)`
   - ✅ `crypto.checkPrime(candidate[, options], callback)`
@@ -277,7 +277,7 @@ These ciphers are **not available in Node.js** but are provided by RNQC via libs
   - ✅ `subtle.decrypt(algorithm, key, data)`
   - ✅ `subtle.deriveBits(algorithm, baseKey, length)`
   - ✅ `subtle.deriveKey(algorithm, baseKey, derivedKeyAlgorithm, extractable, keyUsages)`
-  - 🚧 `subtle.digest(algorithm, data)`
+  - ✅ `subtle.digest(algorithm, data)`
   - ✅ `subtle.encapsulateBits(encapsulationAlgorithm, encapsulationKey)`
   - ✅ `subtle.encapsulateKey(encapsulationAlgorithm, encapsulationKey, sharedKeyAlgorithm, extractable, usages)`
   - 🚧 `subtle.encrypt(algorithm, key, data)`
@@ -331,15 +331,17 @@ These ciphers are **not available in Node.js** but are provided by RNQC via libs
 
 | Algorithm   | Status |
 | ----------- | :----: |
-| `cSHAKE128` |   ❌   |
-| `cSHAKE256` |   ❌   |
+| `cSHAKE128` |   ✅   |
+| `cSHAKE256` |   ✅   |
 | `SHA-1`     |   ✅   |
 | `SHA-256`   |   ✅   |
 | `SHA-384`   |   ✅   |
 | `SHA-512`   |   ✅   |
-| `SHA3-256`  |   ❌   |
-| `SHA3-384`  |   ❌   |
-| `SHA3-512`  |   ❌   |
+| `SHA3-256`  |   ✅   |
+| `SHA3-384`  |   ✅   |
+| `SHA3-512`  |   ✅   |
+
+> **Note:** `cSHAKE128` and `cSHAKE256` provide SHAKE128/SHAKE256 (XOF) functionality with empty customization, matching Node.js behavior. The `length` parameter (in bytes, must be a multiple of 8) is required to specify the output length.
 
 ## `subtle.encrypt`
 

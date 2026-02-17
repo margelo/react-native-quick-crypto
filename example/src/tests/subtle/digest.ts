@@ -21,6 +21,9 @@ const kTests: Test[] = [
   ['SHA-256', 'sha256', 256],
   ['SHA-384', 'sha384', 384],
   ['SHA-512', 'sha512', 512],
+  ['SHA3-256', 'sha3-256', 256],
+  ['SHA3-384', 'sha3-384', 384],
+  ['SHA3-512', 'sha3-512', 512],
 ];
 
 const kData = toArrayBuffer(Buffer.from('hello'));
@@ -45,4 +48,33 @@ kTests.forEach(([algorithm, legacyName, bitLength]) => {
       expect(ab2str(v)).to.equal(checkValue);
     });
   });
+});
+
+// cSHAKE tests (XOF - extendable output functions)
+test(SUITE, 'hash: cSHAKE128', async () => {
+  const outputLength = 32;
+  const checkValue = createHash('shake128', { outputLength })
+    .update(kData)
+    .digest()
+    .toString('hex');
+
+  const result = await subtle.digest(
+    { name: 'cSHAKE128', length: outputLength },
+    kData,
+  );
+  expect(ab2str(result)).to.equal(checkValue);
+});
+
+test(SUITE, 'hash: cSHAKE256', async () => {
+  const outputLength = 64;
+  const checkValue = createHash('shake256', { outputLength })
+    .update(kData)
+    .digest()
+    .toString('hex');
+
+  const result = await subtle.digest(
+    { name: 'cSHAKE256', length: outputLength },
+    kData,
+  );
+  expect(ab2str(result)).to.equal(checkValue);
 });

@@ -349,15 +349,15 @@ export const COVERAGE_DATA: CoverageCategory[] = [
       {
         name: 'crypto.subtle.digest',
         subItems: [
-          { name: 'cSHAKE128', status: 'missing' },
-          { name: 'cSHAKE256', status: 'missing' },
+          { name: 'cSHAKE128', status: 'implemented' },
+          { name: 'cSHAKE256', status: 'implemented' },
           { name: 'SHA-1', status: 'implemented' },
           { name: 'SHA-256', status: 'implemented' },
           { name: 'SHA-384', status: 'implemented' },
           { name: 'SHA-512', status: 'implemented' },
-          { name: 'SHA3-256', status: 'missing' },
-          { name: 'SHA3-384', status: 'missing' },
-          { name: 'SHA3-512', status: 'missing' },
+          { name: 'SHA3-256', status: 'implemented' },
+          { name: 'SHA3-384', status: 'implemented' },
+          { name: 'SHA3-512', status: 'implemented' },
         ],
       },
       {
