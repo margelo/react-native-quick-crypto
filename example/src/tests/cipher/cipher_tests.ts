@@ -190,6 +190,59 @@ test(SUITE, 'Buffer concat vs string concat produce same result', () => {
   expect(bufResult).to.equal(strResult);
 });
 
+test(SUITE, 'base64 string encoding with multi-block plaintext', () => {
+  const testKey = Buffer.from(
+    'KTnGEDonslhj/qGvf6rj4HSnO32T7dvjAs5PntTDB0s=',
+    'base64',
+  );
+  const testIv = Buffer.from('2pXx2krk1wU8RI6AQjuPUg==', 'base64');
+  // 32 bytes = 2 AES blocks; update() returns 32 bytes, 32 % 3 = 2 remainder
+  const text = 'A'.repeat(32);
+
+  const cipher1 = createCipheriv('aes-256-cbc', testKey, testIv);
+  const bufResult = Buffer.concat([
+    cipher1.update(Buffer.from(text, 'utf8')),
+    cipher1.final(),
+  ]).toString('base64');
+
+  const cipher2 = createCipheriv('aes-256-cbc', testKey, testIv);
+  const strResult =
+    cipher2.update(text, 'utf8', 'base64') + cipher2.final('base64');
+
+  expect(bufResult).to.equal(strResult);
+});
+
+test(SUITE, 'base64 encoding at exactly one block boundary', () => {
+  // 16 bytes = exactly one AES block; update() returns 16 bytes, 16 % 3 = 1
+  const text = 'A'.repeat(16);
+
+  const cipher1 = createCipheriv('aes-128-cbc', key16, iv);
+  const bufResult = Buffer.concat([
+    cipher1.update(Buffer.from(text, 'utf8')),
+    cipher1.final(),
+  ]).toString('base64');
+
+  const cipher2 = createCipheriv('aes-128-cbc', key16, iv);
+  const strResult =
+    cipher2.update(text, 'utf8', 'base64') + cipher2.final('base64');
+
+  expect(bufResult).to.equal(strResult);
+});
+
+test(SUITE, 'base64 encoding encrypt/decrypt roundtrip with long input', () => {
+  const longText = 'The quick brown fox jumps over the lazy dog. '.repeat(5);
+
+  const cipher = createCipheriv('aes-256-cbc', key32, iv);
+  const encrypted =
+    cipher.update(longText, 'utf8', 'base64') + cipher.final('base64');
+
+  const decipher = createDecipheriv('aes-256-cbc', key32, iv);
+  const decrypted =
+    decipher.update(encrypted, 'base64', 'utf8') + decipher.final('utf8');
+
+  expect(decrypted).to.equal(longText);
+});
+
 test(SUITE, 'update with hex input and output encoding', () => {
   const cipher1 = createCipheriv('aes-128-cbc', key16, iv);
   const bufResult = Buffer.concat([
