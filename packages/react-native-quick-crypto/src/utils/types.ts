@@ -65,8 +65,27 @@ export type ECKeyPairAlgorithm = 'ECDSA' | 'ECDH';
 export type CFRGKeyPairAlgorithm = 'Ed25519' | 'Ed448' | 'X25519' | 'X448';
 export type CFRGKeyPairType = 'ed25519' | 'ed448' | 'x25519' | 'x448';
 
-export type PQCKeyPairAlgorithm = 'ML-DSA-44' | 'ML-DSA-65' | 'ML-DSA-87';
-export type PQCKeyPairType = 'ml-dsa-44' | 'ml-dsa-65' | 'ml-dsa-87';
+export type PQCKeyPairAlgorithm =
+  | 'ML-DSA-44'
+  | 'ML-DSA-65'
+  | 'ML-DSA-87'
+  | 'ML-KEM-512'
+  | 'ML-KEM-768'
+  | 'ML-KEM-1024';
+export type PQCKeyPairType =
+  | 'ml-dsa-44'
+  | 'ml-dsa-65'
+  | 'ml-dsa-87'
+  | 'ml-kem-512'
+  | 'ml-kem-768'
+  | 'ml-kem-1024';
+
+export type MlKemAlgorithm = 'ML-KEM-512' | 'ML-KEM-768' | 'ML-KEM-1024';
+
+export interface EncapsulateResult {
+  sharedKey: ArrayBuffer;
+  ciphertext: ArrayBuffer;
+}
 
 // Node.js style key pair types (lowercase)
 export type RSAKeyPairType = 'rsa' | 'rsa-pss';
@@ -493,7 +512,11 @@ export type Operation =
   | 'exportKey'
   | 'deriveBits'
   | 'wrapKey'
-  | 'unwrapKey';
+  | 'unwrapKey'
+  | 'encapsulateBits'
+  | 'decapsulateBits'
+  | 'encapsulateKey'
+  | 'decapsulateKey';
 
 export interface KeyPairOptions {
   namedCurve: string;

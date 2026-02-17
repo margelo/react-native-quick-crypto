@@ -30,6 +30,7 @@ import {
   getRandomValues,
   subtle,
 } from 'react-native-quick-crypto';
+import { MLKEM_VARIANTS } from './mlkem_constants';
 import { assertThrowsAsync, test } from '../util';
 
 // TODO: for 'bad usages' test
@@ -2191,6 +2192,68 @@ test(SUITE, 'ML-DSA-44 importKey rejects invalid format', async () => {
         ['verify'],
       ),
     'NotSupportedError',
+  );
+});
+
+// --- ML-KEM Import/Export Tests ---
+
+for (const variant of MLKEM_VARIANTS) {
+  test(SUITE, `${variant} spki export/import`, async () => {
+    const generated = await subtle.generateKey({ name: variant }, true, [
+      'encapsulateBits',
+      'decapsulateBits',
+    ]);
+    const { publicKey } = generated as CryptoKeyPair;
+
+    const exported = await subtle.exportKey('spki', publicKey as CryptoKey);
+    expect(exported).to.be.instanceOf(ArrayBuffer);
+    expect((exported as ArrayBuffer).byteLength).to.be.greaterThan(0);
+
+    const imported = await subtle.importKey(
+      'spki',
+      exported as ArrayBuffer,
+      { name: variant },
+      true,
+      ['encapsulateBits'],
+    );
+    expect(imported.type).to.equal('public');
+    expect(imported.algorithm.name).to.equal(variant);
+  });
+
+  test(SUITE, `${variant} pkcs8 export/import`, async () => {
+    const generated = await subtle.generateKey({ name: variant }, true, [
+      'encapsulateBits',
+      'decapsulateBits',
+    ]);
+    const { privateKey } = generated as CryptoKeyPair;
+
+    const exported = await subtle.exportKey('pkcs8', privateKey as CryptoKey);
+    expect(exported).to.be.instanceOf(ArrayBuffer);
+    expect((exported as ArrayBuffer).byteLength).to.be.greaterThan(0);
+
+    const imported = await subtle.importKey(
+      'pkcs8',
+      exported as ArrayBuffer,
+      { name: variant },
+      true,
+      ['decapsulateBits'],
+    );
+    expect(imported.type).to.equal('private');
+    expect(imported.algorithm.name).to.equal(variant);
+  });
+}
+
+test(SUITE, 'ML-KEM-768 importKey rejects invalid format', async () => {
+  await assertThrowsAsync(
+    async () =>
+      await subtle.importKey(
+        'raw',
+        new Uint8Array(32),
+        { name: 'ML-KEM-768' },
+        true,
+        ['decapsulateBits'],
+      ),
+    'Unsupported format',
   );
 });
 

@@ -16,6 +16,7 @@ import * as scrypt from './scrypt';
 import * as random from './random';
 import * as ecdh from './ecdh';
 import * as dh from './diffie-hellman';
+import * as mlkem from './mlkem';
 import { Certificate } from './certificate';
 import { X509Certificate } from './x509certificate';
 import { getCurves } from './ec';
@@ -44,6 +45,7 @@ const QuickCrypto = {
   ...random,
   ...ecdh,
   ...dh,
+  ...mlkem,
   ...utils,
   ...subtle,
   Certificate,
@@ -98,6 +100,7 @@ export * from './random';
 export * from './ecdh';
 export { getCurves } from './ec';
 export * from './diffie-hellman';
+export * from './mlkem';
 export * from './utils';
 export * from './subtle';
 export { subtle, isCryptoKeyPair } from './subtle';

@@ -56,6 +56,9 @@
     "MlDsaKeyPair": {
       "cpp": "HybridMlDsaKeyPair"
     },
+    "MlKemKeyPair": {
+      "cpp": "HybridMlKemKeyPair"
+    },
     "Pbkdf2": {
       "cpp": "HybridPbkdf2"
     },

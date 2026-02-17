@@ -11,7 +11,7 @@ namespace margelo::nitro::crypto {
 class HybridMlDsaKeyPair : public HybridMlDsaKeyPairSpec {
  public:
   HybridMlDsaKeyPair() : HybridObject(TAG) {}
-  ~HybridMlDsaKeyPair();
+  ~HybridMlDsaKeyPair() override = default;
 
   std::shared_ptr<Promise<void>> generateKeyPair(double publicFormat, double publicType, double privateFormat, double privateType) override;
 
@@ -32,8 +32,10 @@ class HybridMlDsaKeyPair : public HybridMlDsaKeyPairSpec {
   void setVariant(const std::string& variant) override;
 
  private:
+  using EVP_PKEY_ptr = std::unique_ptr<EVP_PKEY, decltype(&EVP_PKEY_free)>;
+
   std::string variant_;
-  EVP_PKEY* pkey_ = nullptr;
+  EVP_PKEY_ptr pkey_{nullptr, EVP_PKEY_free};
 
   int publicFormat_ = -1;
   int publicType_ = -1;

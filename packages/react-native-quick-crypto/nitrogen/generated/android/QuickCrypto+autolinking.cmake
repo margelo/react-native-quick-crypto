@@ -49,6 +49,7 @@ target_sources(
   ../nitrogen/generated/shared/c++/HybridHmacSpec.cpp
   ../nitrogen/generated/shared/c++/HybridKeyObjectHandleSpec.cpp
   ../nitrogen/generated/shared/c++/HybridMlDsaKeyPairSpec.cpp
+  ../nitrogen/generated/shared/c++/HybridMlKemKeyPairSpec.cpp
   ../nitrogen/generated/shared/c++/HybridPbkdf2Spec.cpp
   ../nitrogen/generated/shared/c++/HybridPrimeSpec.cpp
   ../nitrogen/generated/shared/c++/HybridRandomSpec.cpp

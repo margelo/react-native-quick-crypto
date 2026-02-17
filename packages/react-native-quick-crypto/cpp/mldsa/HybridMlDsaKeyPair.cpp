@@ -15,13 +15,6 @@
 
 namespace margelo::nitro::crypto {
 
-HybridMlDsaKeyPair::~HybridMlDsaKeyPair() {
-  if (pkey_ != nullptr) {
-    EVP_PKEY_free(pkey_);
-    pkey_ = nullptr;
-  }
-}
-
 int HybridMlDsaKeyPair::getEvpPkeyType() const {
 #if RNQC_HAS_ML_DSA
   if (variant_ == "ML-DSA-44")
@@ -66,10 +59,7 @@ void HybridMlDsaKeyPair::generateKeyPairSync(double publicFormat, double publicT
   privateFormat_ = static_cast<int>(privateFormat);
   privateType_ = static_cast<int>(privateType);
 
-  if (pkey_ != nullptr) {
-    EVP_PKEY_free(pkey_);
-    pkey_ = nullptr;
-  }
+  pkey_.reset();
 
   EVP_PKEY_CTX* pctx = EVP_PKEY_CTX_new_from_name(nullptr, variant_.c_str(), nullptr);
   if (pctx == nullptr) {
@@ -81,10 +71,12 @@ void HybridMlDsaKeyPair::generateKeyPairSync(double publicFormat, double publicT
     throw std::runtime_error("Failed to initialize keygen: " + getOpenSSLError());
   }
 
-  if (EVP_PKEY_keygen(pctx, &pkey_) <= 0) {
+  EVP_PKEY* raw = nullptr;
+  if (EVP_PKEY_keygen(pctx, &raw) <= 0) {
     EVP_PKEY_CTX_free(pctx);
     throw std::runtime_error("Failed to generate ML-DSA key pair: " + getOpenSSLError());
   }
+  pkey_.reset(raw);
 
   EVP_PKEY_CTX_free(pctx);
 #endif
@@ -103,9 +95,9 @@ std::shared_ptr<ArrayBuffer> HybridMlDsaKeyPair::getPublicKey() {
 
   int result;
   if (publicFormat_ == 1) {
-    result = PEM_write_bio_PUBKEY(bio, pkey_);
+    result = PEM_write_bio_PUBKEY(bio, pkey_.get());
   } else {
-    result = i2d_PUBKEY_bio(bio, pkey_);
+    result = i2d_PUBKEY_bio(bio, pkey_.get());
   }
 
   if (result != 1) {
@@ -139,10 +131,9 @@ std::shared_ptr<ArrayBuffer> HybridMlDsaKeyPair::getPrivateKey() {
 
   int result;
   if (privateFormat_ == 1) {
-    result = PEM_write_bio_PrivateKey(bio, pkey_, nullptr, nullptr, 0, nullptr, nullptr);
+    result = PEM_write_bio_PrivateKey(bio, pkey_.get(), nullptr, nullptr, 0, nullptr, nullptr);
   } else {
-    // Use PKCS8 format for DER export (not raw private key format)
-    result = i2d_PKCS8PrivateKey_bio(bio, pkey_, nullptr, nullptr, 0, nullptr, nullptr);
+    result = i2d_PKCS8PrivateKey_bio(bio, pkey_.get(), nullptr, nullptr, 0, nullptr, nullptr);
   }
 
   if (result != 1) {
@@ -186,7 +177,7 @@ std::shared_ptr<ArrayBuffer> HybridMlDsaKeyPair::signSync(const std::shared_ptr<
     throw std::runtime_error("Failed to create signing context for " + variant_);
   }
 
-  if (EVP_DigestSignInit(md_ctx, &pkey_ctx, nullptr, nullptr, pkey_) <= 0) {
+  if (EVP_DigestSignInit(md_ctx, &pkey_ctx, nullptr, nullptr, pkey_.get()) <= 0) {
     EVP_MD_CTX_free(md_ctx);
     EVP_PKEY_CTX_free(pkey_ctx);
     throw std::runtime_error("Failed to initialize signing: " + getOpenSSLError());
@@ -237,7 +228,7 @@ bool HybridMlDsaKeyPair::verifySync(const std::shared_ptr<ArrayBuffer>& signatur
     throw std::runtime_error("Failed to create verify context for " + variant_);
   }
 
-  if (EVP_DigestVerifyInit(md_ctx, &pkey_ctx, nullptr, nullptr, pkey_) <= 0) {
+  if (EVP_DigestVerifyInit(md_ctx, &pkey_ctx, nullptr, nullptr, pkey_.get()) <= 0) {
     EVP_MD_CTX_free(md_ctx);
     EVP_PKEY_CTX_free(pkey_ctx);
     throw std::runtime_error("Failed to initialize verification: " + getOpenSSLError());
@@ -256,7 +247,7 @@ bool HybridMlDsaKeyPair::verifySync(const std::shared_ptr<ArrayBuffer>& signatur
 }
 
 void HybridMlDsaKeyPair::checkKeyPair() {
-  if (pkey_ == nullptr) {
+  if (!pkey_) {
     throw std::runtime_error("Key pair not initialized");
   }
 }

@@ -125,9 +125,9 @@ These algorithms provide quantum-resistant cryptography.
   - ✅ `crypto.createSecretKey(key[, encoding])`
   - ✅ `crypto.createSign(algorithm[, options])`
   - ✅ `crypto.createVerify(algorithm[, options])`
-  - ❌ `crypto.decapsulate(key, ciphertext[, callback])`
+  - ✅ `crypto.decapsulate(key, ciphertext[, callback])`
   - ✅ `crypto.diffieHellman(options[, callback])`
-  - ❌ `crypto.encapsulate(key[, callback])`
+  - ✅ `crypto.encapsulate(key[, callback])`
   - `-` `crypto.fips` deprecated, not applicable to RN
   - ✅ `crypto.generateKey(type, options, callback)`
   - ✅ `crypto.generateKeyPair(type, options, callback)`
@@ -272,14 +272,14 @@ These ciphers are **not available in Node.js** but are provided by RNQC via libs
 
 - 🚧 Class: `SubtleCrypto`
   - ✅ static `supports(operation, algorithm[, lengthOrAdditionalAlgorithm])`
-  - ❌ `subtle.decapsulateBits(decapsulationAlgorithm, decapsulationKey, ciphertext)`
-  - ❌ `subtle.decapsulateKey(decapsulationAlgorithm, decapsulationKey, ciphertext, sharedKeyAlgorithm, extractable, usages)`
+  - ✅ `subtle.decapsulateBits(decapsulationAlgorithm, decapsulationKey, ciphertext)`
+  - ✅ `subtle.decapsulateKey(decapsulationAlgorithm, decapsulationKey, ciphertext, sharedKeyAlgorithm, extractable, usages)`
   - ✅ `subtle.decrypt(algorithm, key, data)`
   - ✅ `subtle.deriveBits(algorithm, baseKey, length)`
   - ✅ `subtle.deriveKey(algorithm, baseKey, derivedKeyAlgorithm, extractable, keyUsages)`
   - 🚧 `subtle.digest(algorithm, data)`
-  - ❌ `subtle.encapsulateBits(encapsulationAlgorithm, encapsulationKey)`
-  - ❌ `subtle.encapsulateKey(encapsulationAlgorithm, encapsulationKey, sharedKeyAlgorithm, extractable, usages)`
+  - ✅ `subtle.encapsulateBits(encapsulationAlgorithm, encapsulationKey)`
+  - ✅ `subtle.encapsulateKey(encapsulationAlgorithm, encapsulationKey, sharedKeyAlgorithm, extractable, usages)`
   - 🚧 `subtle.encrypt(algorithm, key, data)`
   - 🚧 `subtle.exportKey(format, key)`
   - 🚧 `subtle.generateKey(algorithm, extractable, keyUsages)`
@@ -370,9 +370,9 @@ These ciphers are **not available in Node.js** but are provided by RNQC via libs
 | `ML-DSA-44`         |   ✅   |   ✅    |  ✅   |       |              |      ✅      |     ✅     |
 | `ML-DSA-65`         |   ✅   |   ✅    |  ✅   |       |              |      ✅      |     ✅     |
 | `ML-DSA-87`         |   ✅   |   ✅    |  ✅   |       |              |      ✅      |     ✅     |
-| `ML-KEM-512`        |   ❌   |   ❌    |       |       |              |      ❌      |     ❌     |
-| `ML-KEM-768`        |   ❌   |   ❌    |       |       |              |      ❌      |     ❌     |
-| `ML-KEM-1024`       |   ❌   |   ❌    |       |       |              |      ❌      |     ❌     |
+| `ML-KEM-512`        |   ✅   |   ✅    |       |       |              |      ❌      |     ❌     |
+| `ML-KEM-768`        |   ✅   |   ✅    |       |       |              |      ❌      |     ❌     |
+| `ML-KEM-1024`       |   ✅   |   ✅    |       |       |              |      ❌      |     ❌     |
 | `RSA-OAEP`          |   ✅   |   ✅    |  ✅   |       |              |              |            |
 | `RSA-PSS`           |   ✅   |   ✅    |  ✅   |       |              |              |            |
 | `RSASSA-PKCS1-v1_5` |   ✅   |   ✅    |  ✅   |       |              |              |            |
@@ -394,9 +394,9 @@ These ciphers are **not available in Node.js** but are provided by RNQC via libs
 | `ML-DSA-44`         |   ✅   |
 | `ML-DSA-65`         |   ✅   |
 | `ML-DSA-87`         |   ✅   |
-| `ML-KEM-512`        |   ❌   |
-| `ML-KEM-768`        |   ❌   |
-| `ML-KEM-1024`       |   ❌   |
+| `ML-KEM-512`        |   ✅   |
+| `ML-KEM-768`        |   ✅   |
+| `ML-KEM-1024`       |   ✅   |
 | `RSA-OAEP`          |   ✅   |
 | `RSA-PSS`           |   ✅   |
 | `RSASSA-PKCS1-v1_5` |   ✅   |
@@ -439,9 +439,9 @@ These ciphers are **not available in Node.js** but are provided by RNQC via libs
 | `ML-DSA-44`         |   ✅   |   ✅    |  ✅   |       |              |      ✅      |     ✅     |
 | `ML-DSA-65`         |   ✅   |   ✅    |  ✅   |       |              |      ✅      |     ✅     |
 | `ML-DSA-87`         |   ✅   |   ✅    |  ✅   |       |              |      ✅      |     ✅     |
-| `ML-KEM-512`        |   ❌   |   ❌    |       |       |              |      ❌      |     ❌     |
-| `ML-KEM-768`        |   ❌   |   ❌    |       |       |              |      ❌      |     ❌     |
-| `ML-KEM-1024`       |   ❌   |   ❌    |       |       |              |      ❌      |     ❌     |
+| `ML-KEM-512`        |   ✅   |   ✅    |       |       |              |      ❌      |     ❌     |
+| `ML-KEM-768`        |   ✅   |   ✅    |       |       |              |      ❌      |     ❌     |
+| `ML-KEM-1024`       |   ✅   |   ✅    |       |       |              |      ❌      |     ❌     |
 | `PBKDF2`            |        |         |       |  ✅   |      ✅      |              |            |
 | `RSA-OAEP`          |   ✅   |   ✅    |  ✅   |       |              |              |            |
 | `RSA-PSS`           |   ✅   |   ✅    |  ✅   |       |              |              |            |
