@@ -34,6 +34,7 @@ void XSalsa20Cipher::init(const std::shared_ptr<ArrayBuffer> cipher_key, const s
  * xsalsa20 call to sodium implementation
  */
 std::shared_ptr<ArrayBuffer> XSalsa20Cipher::update(const std::shared_ptr<ArrayBuffer>& data) {
+  checkNotFinalized();
 #ifndef BLSALLOC_SODIUM
   throw std::runtime_error("XSalsa20Cipher: libsodium must be enabled to use this cipher (BLSALLOC_SODIUM is not defined).");
 #else
@@ -51,6 +52,8 @@ std::shared_ptr<ArrayBuffer> XSalsa20Cipher::update(const std::shared_ptr<ArrayB
  * xsalsa20 does not have a final step, returns empty buffer
  */
 std::shared_ptr<ArrayBuffer> XSalsa20Cipher::final() {
+  checkNotFinalized();
+  is_finalized = true;
 #ifndef BLSALLOC_SODIUM
   throw std::runtime_error("XSalsa20Cipher: libsodium must be enabled to use this cipher (BLSALLOC_SODIUM is not defined).");
 #else

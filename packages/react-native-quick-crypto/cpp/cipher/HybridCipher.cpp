@@ -27,6 +27,12 @@ void HybridCipher::checkCtx() const {
   }
 }
 
+void HybridCipher::checkNotFinalized() const {
+  if (is_finalized) {
+    throw std::runtime_error("Unsupported state or unable to authenticate data");
+  }
+}
+
 bool HybridCipher::maybePassAuthTagToOpenSSL() {
   if (auth_tag_state == kAuthTagKnown) {
     OSSL_PARAM params[] = {OSSL_PARAM_construct_octet_string(OSSL_CIPHER_PARAM_AEAD_TAG, auth_tag, auth_tag_len),
@@ -48,6 +54,7 @@ void HybridCipher::init(const std::shared_ptr<ArrayBuffer> cipher_key, const std
     EVP_CIPHER_CTX_free(ctx);
     ctx = nullptr;
   }
+  is_finalized = false;
 
   // 1. Get cipher implementation by name
   const EVP_CIPHER* cipher = EVP_get_cipherbyname(cipher_type.c_str());
@@ -100,6 +107,7 @@ void HybridCipher::init(const std::shared_ptr<ArrayBuffer> cipher_key, const std
 std::shared_ptr<ArrayBuffer> HybridCipher::update(const std::shared_ptr<ArrayBuffer>& data) {
   auto native_data = ToNativeArrayBuffer(data);
   checkCtx();
+  checkNotFinalized();
   size_t in_len = native_data->size();
   if (in_len > INT_MAX) {
     throw std::runtime_error("Message too long");
@@ -125,6 +133,7 @@ std::shared_ptr<ArrayBuffer> HybridCipher::update(const std::shared_ptr<ArrayBuf
 
 std::shared_ptr<ArrayBuffer> HybridCipher::final() {
   checkCtx();
+  checkNotFinalized();
   // Block size is max output size for final, unless EVP_CIPH_NO_PADDING is set
   int block_size = EVP_CIPHER_CTX_block_size(ctx);
   if (block_size <= 0)
@@ -149,8 +158,8 @@ std::shared_ptr<ArrayBuffer> HybridCipher::final() {
 
   // Context should NOT be freed here. It might be needed for getAuthTag() for GCM/OCB.
   // The context will be freed by the destructor (~HybridCipher) when the object goes out of scope.
+  is_finalized = true;
 
-  // Return the shared_ptr<NativeArrayBuffer> (implicit upcast to shared_ptr<ArrayBuffer>)
   return native_final_chunk;
 }
 

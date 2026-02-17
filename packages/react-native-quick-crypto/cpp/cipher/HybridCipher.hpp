@@ -53,6 +53,7 @@ class HybridCipher : public HybridCipherSpec {
  protected:
   // Properties
   bool is_cipher = true;
+  bool is_finalized = false;
   std::string cipher_type;
   EVP_CIPHER_CTX* ctx = nullptr;
   bool pending_auth_failed = false;
@@ -66,6 +67,7 @@ class HybridCipher : public HybridCipherSpec {
   // Methods
   int getMode();
   void checkCtx() const;
+  void checkNotFinalized() const;
   bool maybePassAuthTagToOpenSSL();
 };
 
