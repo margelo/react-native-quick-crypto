@@ -1,5 +1,6 @@
 import { NitroModules } from 'react-native-nitro-modules';
 import Stream, { type TransformOptions } from 'readable-stream';
+import { StringDecoder } from 'string_decoder';
 import { Buffer } from '@craftzdog/react-native-buffer';
 import type { BinaryLike, BinaryLikeNode, Encoding } from './utils';
 import type {
@@ -14,7 +15,7 @@ import type {
   Cipher as NativeCipher,
   CipherFactory,
 } from './specs/cipher.nitro';
-import { ab2str, binaryLikeToArrayBuffer } from './utils';
+import { binaryLikeToArrayBuffer } from './utils';
 import {
   getDefaultEncoding,
   getUIntOption,
@@ -74,6 +75,7 @@ interface CipherArgs {
 
 class CipherCommon extends Stream.Transform {
   private native: NativeCipher;
+  private _decoder: StringDecoder | null = null;
 
   constructor({ isCipher, cipherType, cipherKey, iv, options }: CipherArgs) {
     // Explicitly create TransformOptions for super()
@@ -120,6 +122,13 @@ class CipherCommon extends Stream.Transform {
     });
   }
 
+  private getDecoder(encoding: string): StringDecoder {
+    if (!this._decoder) {
+      this._decoder = new StringDecoder(encoding as BufferEncoding);
+    }
+    return this._decoder;
+  }
+
   update(data: Buffer): Buffer;
   update(data: BinaryLike, inputEncoding?: Encoding): Buffer;
   update(
@@ -147,7 +156,7 @@ class CipherCommon extends Stream.Transform {
     );
 
     if (outputEncoding && outputEncoding !== 'buffer') {
-      return ab2str(ret, outputEncoding);
+      return this.getDecoder(outputEncoding).write(Buffer.from(ret));
     }
 
     return Buffer.from(ret);
@@ -159,7 +168,7 @@ class CipherCommon extends Stream.Transform {
     const ret = this.native.final();
 
     if (outputEncoding && outputEncoding !== 'buffer') {
-      return ab2str(ret, outputEncoding);
+      return this.getDecoder(outputEncoding).end(Buffer.from(ret));
     }
 
     return Buffer.from(ret);
