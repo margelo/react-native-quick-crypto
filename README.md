@@ -153,7 +153,7 @@ Not all cryptographic algorithms are supported yet. See the [implementation cove
 
 ## Adopting at scale
 
-`react-native-quick-crypto` was built at Margelo, an elite app development agency. For enterprise support or other business inquiries, contact us at <a href="mailto:hello@margelo.io?subject=Adopting react-native-quick-crypto at scale">hello@margelo.io</a>!
+`react-native-quick-crypto` was built at Margelo, an elite app development agency. For enterprise support or other business inquiries, contact us at <a href="mailto:hello@margelo.com?subject=Adopting react-native-quick-crypto at scale">hello@margelo.com</a>!
 
 ## Contributing
 
