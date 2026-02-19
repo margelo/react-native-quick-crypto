@@ -110,7 +110,7 @@ export function publicEncrypt(
   const rsaCipher: RsaCipher = NitroModules.createHybridObject('RsaCipher');
   const data = toAB(buffer);
   const paddingMode = padding ?? constants.RSA_PKCS1_OAEP_PADDING;
-  const hashAlgorithm = oaepHash || 'SHA-256';
+  const hashAlgorithm = oaepHash || 'sha1';
 
   try {
     const encrypted = rsaCipher.encrypt(
@@ -232,7 +232,7 @@ export function privateDecrypt(
   const rsaCipher: RsaCipher = NitroModules.createHybridObject('RsaCipher');
   const data = toAB(buffer);
   const paddingMode = padding ?? constants.RSA_PKCS1_OAEP_PADDING;
-  const hashAlgorithm = oaepHash || 'SHA-256';
+  const hashAlgorithm = oaepHash || 'sha1';
 
   try {
     const decrypted = rsaCipher.privateDecrypt(
