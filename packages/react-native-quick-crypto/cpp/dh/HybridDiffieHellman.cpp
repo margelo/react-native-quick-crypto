@@ -101,9 +101,8 @@ void HybridDiffieHellman::initWithSize(double primeLength, double generator) {
 std::shared_ptr<ArrayBuffer> HybridDiffieHellman::generateKeys() {
   ensureInitialized();
 
-  // EVP_PKEY_get0_DH may return a provider-cached copy in OpenSSL 3.x,
-  // so we must detach the DH, generate keys on it directly (like ncrypto),
-  // then re-wrap in a fresh EVP_PKEY.
+  // EVP_PKEY_get1_DH returns a mutable, ref-counted DH copy so we can
+  // generate keys on it directly, then re-wrap in a fresh EVP_PKEY.
   DH* dh = EVP_PKEY_get1_DH(_pkey.get());
   if (!dh) {
     throw std::runtime_error("DiffieHellman: failed to get DH key");

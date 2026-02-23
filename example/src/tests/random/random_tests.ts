@@ -601,3 +601,64 @@ test(SUITE, 'crypto.getRandomValues', () => {
   const r = crypto.getRandomValues(new Uint8Array(10));
   expect(r.length).to.equal(10);
 });
+
+// Issue #953: TypedArray views over larger ArrayBuffers
+// getRandomValues / randomFillSync should only fill the view, not the entire
+// underlying ArrayBuffer.
+
+test(
+  SUITE,
+  'getRandomValues - view over larger buffer preserves surrounding data',
+  () => {
+    const heap = new ArrayBuffer(1024);
+    const full = new Uint8Array(heap);
+    full.fill(42);
+
+    const view = new Uint8Array(heap, 100, 32);
+    crypto.getRandomValues(view);
+
+    // Bytes before the view must be untouched
+    expect(full[0]).to.equal(42);
+    expect(full[99]).to.equal(42);
+    // Bytes after the view must be untouched
+    expect(full[132]).to.equal(42);
+    expect(full[1023]).to.equal(42);
+  },
+);
+
+test(
+  SUITE,
+  'randomFillSync - view over larger buffer preserves surrounding data',
+  () => {
+    const heap = new ArrayBuffer(1024);
+    const full = new Uint8Array(heap);
+    full.fill(42);
+
+    const view = new Uint8Array(heap, 200, 64);
+    crypto.randomFillSync(view);
+
+    expect(full[0]).to.equal(42);
+    expect(full[199]).to.equal(42);
+    expect(full[264]).to.equal(42);
+    expect(full[1023]).to.equal(42);
+  },
+);
+
+test(SUITE, 'randomFillSync - view with offset and size params', () => {
+  const heap = new ArrayBuffer(512);
+  const full = new Uint8Array(heap);
+  full.fill(42);
+
+  // View starts at byte 100, length 64
+  // randomFillSync offset=10, size=20 → should fill view bytes 10-29,
+  // i.e. heap bytes 110-129 only
+  const view = new Uint8Array(heap, 100, 64);
+  crypto.randomFillSync(view, 10, 20);
+
+  // Within the view but before the offset — these must stay 42
+  // With the bug, offset is applied to the underlying buffer (byte 10)
+  // instead of relative to the view (byte 110), so byte 10 gets randomized
+  // while bytes 100-109 stay 42 by accident. Check byte 10 to catch this.
+  expect(full[10]).to.equal(42);
+  expect(full[29]).to.equal(42);
+});
