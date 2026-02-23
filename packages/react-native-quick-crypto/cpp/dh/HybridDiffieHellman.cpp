@@ -101,14 +101,29 @@ void HybridDiffieHellman::initWithSize(double primeLength, double generator) {
 std::shared_ptr<ArrayBuffer> HybridDiffieHellman::generateKeys() {
   ensureInitialized();
 
+  // EVP_PKEY_get0_DH may return a provider-cached copy in OpenSSL 3.x,
+  // so we must detach the DH, generate keys on it directly (like ncrypto),
+  // then re-wrap in a fresh EVP_PKEY.
+  DH* dh = EVP_PKEY_get1_DH(_pkey.get());
+  if (!dh) {
+    throw std::runtime_error("DiffieHellman: failed to get DH key");
+  }
+
   // DH_generate_key preserves an existing private key and only computes the
-  // public key from it.  When no private key is set it generates both.
-  // This matches Node.js / ncrypto behavior.
-  DH* dh = const_cast<DH*>(getDH());
+  // public key.  When no private key is set it generates both.
   if (!DH_generate_key(dh)) {
+    DH_free(dh);
     throw std::runtime_error("DiffieHellman: failed to generate key pair");
   }
 
+  EVP_PKEY_ptr newPkey(EVP_PKEY_new(), EVP_PKEY_free);
+  if (!newPkey || EVP_PKEY_assign_DH(newPkey.get(), dh) != 1) {
+    DH_free(dh);
+    throw std::runtime_error("DiffieHellman: failed to assign DH to EVP_PKEY");
+  }
+  // EVP_PKEY_assign_DH took ownership of dh
+
+  _pkey = std::move(newPkey);
   return getPublicKey();
 }
 
