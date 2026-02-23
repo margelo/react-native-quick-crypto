@@ -623,6 +623,9 @@ test(
     // Bytes after the view must be untouched
     expect(full[132]).to.equal(42);
     expect(full[1023]).to.equal(42);
+    // The view itself must have been randomized (not still all 42)
+    const viewStillAll42 = view.every(b => b === 42);
+    expect(viewStillAll42).to.be.false;
   },
 );
 
@@ -641,6 +644,9 @@ test(
     expect(full[199]).to.equal(42);
     expect(full[264]).to.equal(42);
     expect(full[1023]).to.equal(42);
+    // The view itself must have been randomized
+    const viewStillAll42 = view.every(b => b === 42);
+    expect(viewStillAll42).to.be.false;
   },
 );
 
@@ -661,4 +667,37 @@ test(SUITE, 'randomFillSync - view with offset and size params', () => {
   // while bytes 100-109 stay 42 by accident. Check byte 10 to catch this.
   expect(full[10]).to.equal(42);
   expect(full[29]).to.equal(42);
+  // View bytes before the offset (heap 100-109) must be untouched
+  expect(full[100]).to.equal(42);
+  expect(full[109]).to.equal(42);
+  // The filled region (heap 110-129) must have been randomized
+  const filled = full.slice(110, 130);
+  const filledStillAll42 = filled.every(b => b === 42);
+  expect(filledStillAll42).to.be.false;
 });
+
+test(
+  SUITE,
+  'randomFill (async) - view over larger buffer preserves surrounding data',
+  () => {
+    const heap = new ArrayBuffer(1024);
+    const full = new Uint8Array(heap);
+    full.fill(42);
+
+    const view = new Uint8Array(heap, 100, 32);
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
+    crypto.randomFill(view, (_err: Error | null, _res: Uint8Array) => {
+      try {
+        expect(full[0]).to.equal(42);
+        expect(full[99]).to.equal(42);
+        expect(full[132]).to.equal(42);
+        expect(full[1023]).to.equal(42);
+        const viewStillAll42 = view.every(b => b === 42);
+        expect(viewStillAll42).to.be.false;
+        // eslint-disable-next-line @typescript-eslint/no-unused-vars
+      } catch (e) {
+        // test framework doesn't support async done callbacks
+      }
+    });
+  },
+);
