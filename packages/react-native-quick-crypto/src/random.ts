@@ -42,8 +42,11 @@ export function randomFill(buffer: ABV, ...rest: unknown[]): void {
     buf?: ArrayBuffer,
   ) => void;
 
+  const viewOffset = ArrayBuffer.isView(buffer) ? buffer.byteOffset : 0;
+  const viewLength = buffer.byteLength;
+
   let offset: number = 0;
-  let size: number = buffer.byteLength;
+  let size: number = viewLength;
 
   if (typeof rest[2] === 'function') {
     offset = rest[0] as number;
@@ -52,10 +55,11 @@ export function randomFill(buffer: ABV, ...rest: unknown[]): void {
 
   if (typeof rest[1] === 'function') {
     offset = rest[0] as number;
+    size = viewLength - offset;
   }
 
   getNative();
-  random.randomFill(abvToArrayBuffer(buffer), offset, size).then(
+  random.randomFill(abvToArrayBuffer(buffer), viewOffset + offset, size).then(
     (res: ArrayBuffer) => {
       callback(null, res);
     },
@@ -73,9 +77,14 @@ export function randomFillSync<T extends ABV>(
 
 export function randomFillSync(buffer: ABV, offset: number = 0, size?: number) {
   getNative();
-  buffer = abvToArrayBuffer(buffer);
-  const res = random.randomFillSync(buffer, offset, size ?? buffer.byteLength);
-  buffer = res;
+  const viewOffset = ArrayBuffer.isView(buffer) ? buffer.byteOffset : 0;
+  const viewLength = buffer.byteLength;
+  const arrayBuffer = abvToArrayBuffer(buffer);
+  random.randomFillSync(
+    arrayBuffer,
+    viewOffset + offset,
+    size ?? viewLength - offset,
+  );
   return buffer;
 }
 
