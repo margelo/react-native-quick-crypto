@@ -101,22 +101,13 @@ void HybridDiffieHellman::initWithSize(double primeLength, double generator) {
 std::shared_ptr<ArrayBuffer> HybridDiffieHellman::generateKeys() {
   ensureInitialized();
 
-  EVP_PKEY_CTX_ptr kctx(EVP_PKEY_CTX_new(_pkey.get(), nullptr), EVP_PKEY_CTX_free);
-  if (!kctx) {
-    throw std::runtime_error("DiffieHellman: failed to create keygen context");
-  }
-
-  if (EVP_PKEY_keygen_init(kctx.get()) <= 0) {
-    throw std::runtime_error("DiffieHellman: failed to initialize key generation");
-  }
-
-  EVP_PKEY* newKey = nullptr;
-  if (EVP_PKEY_keygen(kctx.get(), &newKey) <= 0) {
+  // DH_generate_key preserves an existing private key and only computes the
+  // public key from it.  When no private key is set it generates both.
+  // This matches Node.js / ncrypto behavior.
+  DH* dh = const_cast<DH*>(getDH());
+  if (!DH_generate_key(dh)) {
     throw std::runtime_error("DiffieHellman: failed to generate key pair");
   }
-
-  // Replace parameters-only key with full key (which includes parameters)
-  _pkey.reset(newKey);
 
   return getPublicKey();
 }

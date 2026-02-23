@@ -74,6 +74,31 @@ test(SUITE, 'should set keys', () => {
   assert.strictEqual(bob.getPrivateKey('hex'), alice.getPrivateKey('hex'));
 });
 
+test(SUITE, 'generateKeys should preserve a previously set private key', () => {
+  const dh1 = crypto.getDiffieHellman('modp14');
+  dh1.generateKeys();
+
+  const dh2 = crypto.createDiffieHellman(dh1.getPrime(), dh1.getGenerator());
+  dh2.setPrivateKey(dh1.getPrivateKey());
+  dh2.generateKeys();
+
+  assert.strictEqual(dh2.getPrivateKey('hex'), dh1.getPrivateKey('hex'));
+  assert.strictEqual(dh2.getPublicKey('hex'), dh1.getPublicKey('hex'));
+});
+
+test(SUITE, 'generateKeys should not regenerate keys on second call', () => {
+  const dh = crypto.getDiffieHellman('modp14');
+  dh.generateKeys();
+
+  const privKey = dh.getPrivateKey('hex');
+  const pubKey = dh.getPublicKey('hex');
+
+  dh.generateKeys();
+
+  assert.strictEqual(dh.getPrivateKey('hex'), privKey);
+  assert.strictEqual(dh.getPublicKey('hex'), pubKey);
+});
+
 test(SUITE, 'should create DiffieHellman from standard group', () => {
   const dh = crypto.getDiffieHellman('modp14');
   assert.isOk(dh);
