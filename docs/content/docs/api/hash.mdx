@@ -163,26 +163,7 @@ input.pipe(hash).pipe(process.stdout);
 
 ### hash(algorithm, data[, outputEncoding])
 
-One-shot hashing function. Computes a digest in a single call without creating a `Hash` object.
-
-**Parameters:**
-
-<TypeTable
-  type={{
-    algorithm: { description: 'Hash algorithm (e.g. "sha256", "sha512").', type: 'string' },
-    data: { description: 'Data to hash.', type: 'string | Buffer | TypedArray | DataView' },
-    outputEncoding: { description: 'Output encoding. If omitted, returns Buffer.', type: '"hex" | "base64" | "base64url"' }
-  }}
-/>
-
-**Returns:** `string | Buffer`
-
-```ts
-import { hash } from 'react-native-quick-crypto';
-
-const hex = hash('sha256', 'hello world', 'hex');
-const buf = hash('sha512', Buffer.from([1, 2, 3]));
-```
+One-shot hashing — see [Utilities](/docs/api/utilities#one-shot-hashing) for full details.
 
 ---
 

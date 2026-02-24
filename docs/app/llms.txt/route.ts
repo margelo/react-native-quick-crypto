@@ -1,6 +1,9 @@
+import { basePath } from '@/lib/basePath';
 import { getLLMSummary, source } from '@/lib/source';
 
 export const revalidate = false;
+
+const origin = 'https://margelo.github.io';
 
 export async function GET() {
   const pages = source.getPages().map(getLLMSummary);
@@ -14,7 +17,9 @@ export async function GET() {
     '',
     '## Docs',
     '',
-    ...pages.map(p => `- [${p.title}](${p.url}): ${p.description}`),
+    ...pages.map(
+      p => `- [${p.title}](${origin}${basePath}${p.url}): ${p.description}`,
+    ),
   ];
 
   return new Response(lines.join('\n'), {
