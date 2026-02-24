@@ -103,6 +103,10 @@ Encrypts data.
 
 Returns any remaining encrypted data.
 
+<Callout type="warn" title="Single Use">
+  Cipher instances are single-use. Calling `update()` or `final()` after `final()` throws an error. Create a new cipher instance for each encryption operation. When using string output encoding (e.g. `'base64'`), the encoding must be consistent between `update()` and `final()` calls.
+</Callout>
+
 ### cipher.getAuthTag()
 
 For AEAD modes (GCM, CCM, Poly1305), returns the authentication tag. **Must be called after `final()`.**

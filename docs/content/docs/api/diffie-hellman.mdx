@@ -56,6 +56,10 @@ The `DiffieHellman` class implements the Diffie-Hellman key agreement protocol. 
 
 Generates private and public Diffie-Hellman key values. Must be called before `computeSecret()`.
 
+<Callout type="info" title="Key Preservation">
+  If a private key was previously set via `setPrivateKey()`, `generateKeys()` preserves it and only computes the corresponding public key. Subsequent calls are idempotent — they won't regenerate the key pair.
+</Callout>
+
 **Parameters:**
 
 | Name | Type | Description |
@@ -249,6 +253,43 @@ const dh3072 = getDiffieHellman('modp15');
 // 4096-bit group (high security)
 const dh4096 = getDiffieHellman('modp16');
 ```
+
+---
+
+### diffieHellman(options)
+
+Computes a shared secret using a private key and the other party's public key. This is the modern API that works with `KeyObject`s and supports EC, X25519, X448, and DH key types.
+
+**Parameters:**
+
+| Name | Type | Description |
+|:-----|:-----|:------------|
+| `options.privateKey` | `KeyObject` | Your private key |
+| `options.publicKey` | `KeyObject` | The other party's public key |
+
+**Returns:** `Buffer` — the computed shared secret.
+
+```ts
+import { generateKeyPairSync, diffieHellman } from 'react-native-quick-crypto';
+
+// X25519 key exchange
+const alice = generateKeyPairSync('x25519');
+const bob = generateKeyPairSync('x25519');
+
+const aliceSecret = diffieHellman({
+  privateKey: alice.privateKey,
+  publicKey: bob.publicKey
+});
+
+const bobSecret = diffieHellman({
+  privateKey: bob.privateKey,
+  publicKey: alice.publicKey
+});
+
+console.log(aliceSecret.equals(bobSecret)); // true
+```
+
+**Supported key types:** `dh`, `ec`, `x25519`, `x448`
 
 ---
 

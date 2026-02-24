@@ -1,0 +1,129 @@
+---
+title: KMAC
+description: Keccak Message Authentication Code (KMAC128/KMAC256)
+---
+
+import { Callout } from 'fumadocs-ui/components/callout';
+import { TypeTable } from 'fumadocs-ui/components/type-table';
+
+**KMAC** (Keccak Message Authentication Code) is a MAC function based on the Keccak (SHA-3) permutation. Unlike HMAC, KMAC is a purpose-built MAC that doesn't need a nested hash construction, making it simpler and more efficient.
+
+<Callout type="info" title="KMAC vs HMAC">
+  HMAC wraps a hash function in a nested construction. KMAC uses Keccak's sponge directly as a MAC, avoiding length-extension attacks by design. KMAC also supports customization strings for domain separation.
+</Callout>
+
+## Table of Contents
+
+- [Variants](#variants)
+- [WebCrypto API](#webcrypto-api)
+- [Real-World Examples](#real-world-examples)
+
+## Variants
+
+| Algorithm | Security Level | Based On | Output Size |
+|:----------|:-------------|:---------|:-----------|
+| `KMAC128` | 128-bit | Keccak-256 | Variable (default 256 bits) |
+| `KMAC256` | 256-bit | Keccak-512 | Variable (default 512 bits) |
+
+---
+
+## WebCrypto API
+
+KMAC is available through the SubtleCrypto interface for key generation, signing, and verification.
+
+### Generate a KMAC Key
+
+```ts
+import { subtle } from 'react-native-quick-crypto';
+
+const key = await subtle.generateKey(
+  { name: 'KMAC256', length: 256 },
+  true,
+  ['sign', 'verify']
+);
+```
+
+### Sign (MAC)
+
+```ts
+const data = new TextEncoder().encode('message to authenticate');
+
+const mac = await subtle.sign(
+  { name: 'KMAC256' },
+  key,
+  data
+);
+```
+
+### Verify
+
+```ts
+const isValid = await subtle.verify(
+  { name: 'KMAC256' },
+  key,
+  mac,
+  data
+);
+
+console.log(isValid); // true
+```
+
+### Import/Export Keys
+
+```ts
+// Export as JWK
+const jwk = await subtle.exportKey('jwk', key);
+
+// Export as raw bytes
+const raw = await subtle.exportKey('raw', key);
+
+// Import from raw
+const imported = await subtle.importKey(
+  'raw',
+  raw,
+  { name: 'KMAC256', length: 256 },
+  true,
+  ['sign', 'verify']
+);
+```
+
+---
+
+## Real-World Examples
+
+### API Request Authentication
+
+Use KMAC to authenticate API requests with a shared secret:
+
+```ts
+import { subtle } from 'react-native-quick-crypto';
+
+async function signApiRequest(
+  key: CryptoKey,
+  method: string,
+  path: string,
+  body: string,
+  timestamp: number
+): Promise<string> {
+  const canonical = `${method}\n${path}\n${timestamp}\n${body}`;
+  const data = new TextEncoder().encode(canonical);
+
+  const mac = await subtle.sign({ name: 'KMAC256' }, key, data);
+  return Buffer.from(mac).toString('base64');
+}
+
+async function verifyApiRequest(
+  key: CryptoKey,
+  method: string,
+  path: string,
+  body: string,
+  timestamp: number,
+  signature: string
+): Promise<boolean> {
+  const canonical = `${method}\n${path}\n${timestamp}\n${body}`;
+  const data = new TextEncoder().encode(canonical);
+  const sig = Buffer.from(signature, 'base64');
+
+  return subtle.verify({ name: 'KMAC256' }, key, sig, data);
+}
+```

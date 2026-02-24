@@ -43,6 +43,44 @@ ECDH (Elliptic Curve Diffie-Hellman) is the elliptic curve variant of the Diffie
 
 The `ECDH` class implements the Elliptic Curve Diffie-Hellman protocol. Instances are created using the `createECDH()` function.
 
+### Static: ECDH.convertKey(key, curve[, inputEncoding[, outputEncoding[, format]]])
+
+Converts an ECDH public key between formats (compressed, uncompressed, hybrid).
+
+**Parameters:**
+
+| Name | Type | Description |
+|:-----|:-----|:------------|
+| `key` | `string \| Buffer` | The public key to convert |
+| `curve` | `string` | The curve name (e.g., `'prime256v1'`) |
+| `inputEncoding` | `string` | Encoding of `key` if string: `'hex'`, `'base64'` |
+| `outputEncoding` | `string` | Encoding for return value |
+| `format` | `string` | Output format: `'uncompressed'` (default), `'compressed'`, `'hybrid'` |
+
+**Returns:** `Buffer | string`
+
+```ts
+import { createECDH, ECDH } from 'react-native-quick-crypto';
+
+const ecdh = createECDH('prime256v1');
+ecdh.generateKeys();
+
+// Get uncompressed public key (65 bytes for P-256)
+const uncompressed = ecdh.getPublicKey('hex');
+
+// Convert to compressed format (33 bytes)
+const compressed = ECDH.convertKey(
+  uncompressed, 'prime256v1', 'hex', 'hex', 'compressed'
+);
+
+// Convert back to uncompressed
+const back = ECDH.convertKey(
+  compressed, 'prime256v1', 'hex', 'hex', 'uncompressed'
+);
+```
+
+---
+
 ### ecdh.generateKeys()
 
 Generates private and public ECDH key pair. Must be called before `computeSecret()`.

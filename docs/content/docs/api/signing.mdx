@@ -356,6 +356,60 @@ const isValid = verify.verify({
 
 ## Module Methods
 
+### sign(algorithm, data, key[, callback])
+
+One-shot signing function. Signs data without creating a `Sign` object. Required for Ed25519/Ed448 which hash internally.
+
+**Parameters:**
+
+| Name | Type | Description |
+|:-----|:-----|:------------|
+| `algorithm` | `string \| null` | Hash algorithm, or `null` for Ed25519/Ed448 |
+| `data` | `Buffer \| TypedArray \| DataView` | Data to sign |
+| `key` | `KeyObject \| string \| Buffer \| Object` | Private key |
+| `callback` | `Function` | Optional `(err, signature)` callback |
+
+**Returns:** `Buffer` (sync) or `void` (with callback)
+
+```ts
+import { sign, verify, generateKeyPairSync } from 'react-native-quick-crypto';
+
+// Ed25519 (must use null algorithm)
+const { publicKey, privateKey } = generateKeyPairSync('ed25519');
+const data = Buffer.from('message');
+
+const signature = sign(null, data, privateKey);
+const isValid = verify(null, data, publicKey, signature);
+```
+
+```ts
+// RSA with one-shot API
+const { publicKey, privateKey } = generateKeyPairSync('rsa', {
+  modulusLength: 2048,
+});
+
+const signature = sign('sha256', Buffer.from('data'), privateKey);
+const isValid = verify('sha256', Buffer.from('data'), publicKey, signature);
+```
+
+### verify(algorithm, data, key, signature[, callback])
+
+One-shot verification function. Pairs with `sign()`.
+
+**Parameters:**
+
+| Name | Type | Description |
+|:-----|:-----|:------------|
+| `algorithm` | `string \| null` | Hash algorithm, or `null` for Ed25519/Ed448 |
+| `data` | `Buffer \| TypedArray \| DataView` | Data that was signed |
+| `key` | `KeyObject \| string \| Buffer \| Object` | Public key |
+| `signature` | `Buffer \| TypedArray \| DataView` | Signature to verify |
+| `callback` | `Function` | Optional `(err, result)` callback |
+
+**Returns:** `boolean`
+
+---
+
 ### createSign(algorithm)
 
 Creates and returns a `Sign` object that uses the given algorithm.
@@ -821,7 +875,7 @@ console.log('All signatures valid:', allValid);
 
 ### Hash Algorithms
 
-The algorithm string passed to `createSign()` and `createVerify()` determines the hash function used. Supported algorithms:
+The algorithm string passed to `createSign()` and `createVerify()` determines the hash function used. Both standard names and legacy OpenSSL `RSA-*` prefixed names are supported (e.g. `RSA-SHA256` is treated as `SHA256`). Algorithm names are case-insensitive.
 
 | Algorithm | Output Size | Security Level | Recommended Use |
 |:----------|:------------|:---------------|:----------------|
@@ -854,7 +908,7 @@ sign.sign({
 
 #### ECDSA Keys (Elliptic Curve)
 
-- Supported curves: `P-256`, `P-384`, `P-521`, `secp256k1`
+- Supported curves: Any OpenSSL-supported curve name (`prime256v1`, `secp384r1`, `secp521r1`, `secp256k1`, etc.)
 - Signature encodings: DER (default) or IEEE-P1363
 
 ```ts

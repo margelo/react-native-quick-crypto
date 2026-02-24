@@ -17,8 +17,13 @@
     "pbkdf2",
     "scrypt",
     "hkdf",
+    "argon2",
     "blake3",
+    "kmac",
+    "pqc",
+    "certificate",
     "x509",
+    "utilities",
     "subtle"
   ]
 }

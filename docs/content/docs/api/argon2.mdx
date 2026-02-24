@@ -1,0 +1,264 @@
+---
+title: Argon2
+description: Memory-hard password hashing (PHC winner)
+---
+
+import { Callout } from 'fumadocs-ui/components/callout';
+import { TypeTable } from 'fumadocs-ui/components/type-table';
+
+**Argon2** is the winner of the Password Hashing Competition (PHC) and the recommended algorithm for password hashing and key derivation. It is designed to resist GPU, ASIC, and side-channel attacks.
+
+<Callout type="info" title="When to use Argon2 vs PBKDF2/Scrypt">
+  **Argon2** is the modern choice for password hashing. Use **PBKDF2** only for FIPS compliance, and **scrypt** when Argon2 is unavailable. Argon2 offers the best resistance to hardware-accelerated attacks.
+</Callout>
+
+## Table of Contents
+
+- [Theory](#theory)
+- [Variants](#variants)
+- [Module Methods](#module-methods)
+- [WebCrypto API](#webcrypto-api)
+- [Real-World Examples](#real-world-examples)
+
+## Theory
+
+Argon2 fills a large block of memory with pseudorandom data derived from the password and salt, then performs multiple passes over it. This makes brute-force attacks expensive on both time and memory dimensions.
+
+Key parameters:
+
+| Parameter | Description | Typical Value |
+|:----------|:-----------|:-------------|
+| `memoryCost` | Memory in KiB | 65536 (64 MB) |
+| `timeCost` | Number of passes | 3 |
+| `parallelism` | Parallel threads | 4 |
+
+## Variants
+
+| Variant | Best For | Properties |
+|:--------|:---------|:-----------|
+| `argon2d` | Cryptocurrency mining | Fastest, data-dependent memory access (vulnerable to side-channel) |
+| `argon2i` | Password hashing | Data-independent memory access (side-channel resistant) |
+| `argon2id` | **Recommended default** | Hybrid of argon2d and argon2i |
+
+---
+
+## Module Methods
+
+### argon2(algorithm, parameters, callback)
+
+Asynchronous Argon2 hashing.
+
+**Parameters:**
+
+<TypeTable
+  type={{
+    algorithm: { description: '"argon2d", "argon2i", or "argon2id".', type: 'string' },
+    parameters: { description: 'Configuration object.', type: 'Object' },
+    'parameters.pass': { description: 'Password to hash.', type: 'Buffer | string' },
+    'parameters.salt': { description: 'Salt (16+ bytes recommended).', type: 'Buffer' },
+    'parameters.memoryCost': { description: 'Memory in KiB.', type: 'number' },
+    'parameters.timeCost': { description: 'Number of iterations.', type: 'number' },
+    'parameters.parallelism': { description: 'Degree of parallelism.', type: 'number' },
+    'parameters.hashLength': { description: 'Output length in bytes (default: 32).', type: 'number' },
+    callback: { description: '`(err, hash)`.', type: 'Function' }
+  }}
+/>
+
+**Example:**
+
+```ts
+import { argon2, randomBytes } from 'react-native-quick-crypto';
+
+const password = 'user-password';
+const salt = randomBytes(16);
+
+argon2('argon2id', {
+  pass: password,
+  salt,
+  memoryCost: 65536,  // 64 MB
+  timeCost: 3,
+  parallelism: 4,
+  hashLength: 32
+}, (err, hash) => {
+  if (err) throw err;
+  console.log(hash.toString('hex'));
+});
+```
+
+### argon2Sync(algorithm, parameters)
+
+Synchronous version. Returns `Buffer`.
+
+<Callout type="warn">
+  The synchronous version blocks the JS thread. Use the async version for UI-facing operations.
+</Callout>
+
+```ts
+import { argon2Sync, randomBytes } from 'react-native-quick-crypto';
+
+const hash = argon2Sync('argon2id', {
+  pass: 'password',
+  salt: randomBytes(16),
+  memoryCost: 65536,
+  timeCost: 3,
+  parallelism: 4,
+  hashLength: 32
+});
+```
+
+---
+
+## WebCrypto API
+
+Argon2 is available through `subtle.deriveBits()` and `subtle.deriveKey()`.
+
+### Import a Password Key
+
+```ts
+import { subtle } from 'react-native-quick-crypto';
+
+const passwordKey = await subtle.importKey(
+  'raw-secret',
+  new TextEncoder().encode('user-password'),
+  { name: 'Argon2id' },
+  false,
+  ['deriveBits', 'deriveKey']
+);
+```
+
+### deriveBits
+
+```ts
+const salt = crypto.getRandomValues(new Uint8Array(16));
+
+const bits = await subtle.deriveBits(
+  {
+    name: 'Argon2id',
+    salt,
+    memoryCost: 65536,
+    timeCost: 3,
+    parallelism: 4
+  },
+  passwordKey,
+  256 // bits
+);
+```
+
+### deriveKey
+
+Derive an AES key directly from a password:
+
+```ts
+const aesKey = await subtle.deriveKey(
+  {
+    name: 'Argon2id',
+    salt: crypto.getRandomValues(new Uint8Array(16)),
+    memoryCost: 65536,
+    timeCost: 3,
+    parallelism: 4
+  },
+  passwordKey,
+  { name: 'AES-GCM', length: 256 },
+  true,
+  ['encrypt', 'decrypt']
+);
+```
+
+---
+
+## Real-World Examples
+
+### Secure Password Storage
+
+```ts
+import { argon2, randomBytes, timingSafeEqual } from 'react-native-quick-crypto';
+
+interface StoredPassword {
+  hash: string;
+  salt: string;
+  algorithm: string;
+  memoryCost: number;
+  timeCost: number;
+  parallelism: number;
+}
+
+function hashPassword(password: string): Promise<StoredPassword> {
+  return new Promise((resolve, reject) => {
+    const salt = randomBytes(16);
+    const params = {
+      pass: password,
+      salt,
+      memoryCost: 65536,
+      timeCost: 3,
+      parallelism: 4,
+      hashLength: 32
+    };
+
+    argon2('argon2id', params, (err, hash) => {
+      if (err) return reject(err);
+      resolve({
+        hash: hash.toString('hex'),
+        salt: salt.toString('hex'),
+        algorithm: 'argon2id',
+        memoryCost: 65536,
+        timeCost: 3,
+        parallelism: 4
+      });
+    });
+  });
+}
+
+function verifyPassword(password: string, stored: StoredPassword): Promise<boolean> {
+  return new Promise((resolve, reject) => {
+    argon2(stored.algorithm, {
+      pass: password,
+      salt: Buffer.from(stored.salt, 'hex'),
+      memoryCost: stored.memoryCost,
+      timeCost: stored.timeCost,
+      parallelism: stored.parallelism,
+      hashLength: 32
+    }, (err, hash) => {
+      if (err) return reject(err);
+      const expected = Buffer.from(stored.hash, 'hex');
+      resolve(timingSafeEqual(hash, expected));
+    });
+  });
+}
+```
+
+### Deriving an Encryption Key from a Password
+
+```ts
+import {
+  argon2Sync,
+  randomBytes,
+  createCipheriv,
+  createDecipheriv
+} from 'react-native-quick-crypto';
+
+function encryptWithPassword(plaintext: string, password: string) {
+  const salt = randomBytes(16);
+  const iv = randomBytes(12);
+
+  const key = argon2Sync('argon2id', {
+    pass: password,
+    salt,
+    memoryCost: 65536,
+    timeCost: 3,
+    parallelism: 4,
+    hashLength: 32
+  });
+
+  const cipher = createCipheriv('aes-256-gcm', key, iv);
+  let encrypted = cipher.update(plaintext, 'utf8', 'base64');
+  encrypted += cipher.final('base64');
+  const tag = cipher.getAuthTag();
+
+  return {
+    encrypted,
+    salt: salt.toString('base64'),
+    iv: iv.toString('base64'),
+    tag: tag.toString('base64')
+  };
+}
+```

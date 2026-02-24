@@ -60,7 +60,7 @@ When `key` is an object, it may contain:
         type: 'number'
     },
     oaepHash: {
-        description: 'Hash function for OAEP padding (default: "sha1", recommended: "sha256")',
+        description: 'Hash function for OAEP padding. Default: "sha1" (matching Node.js / RFC 8017). Use "sha256" for new applications.',
         type: 'string'
     },
     oaepLabel: {

@@ -161,6 +161,31 @@ input.pipe(hash).pipe(process.stdout);
 
 ## Module Methods
 
+### hash(algorithm, data[, outputEncoding])
+
+One-shot hashing function. Computes a digest in a single call without creating a `Hash` object.
+
+**Parameters:**
+
+<TypeTable
+  type={{
+    algorithm: { description: 'Hash algorithm (e.g. "sha256", "sha512").', type: 'string' },
+    data: { description: 'Data to hash.', type: 'string | Buffer | TypedArray | DataView' },
+    outputEncoding: { description: 'Output encoding. If omitted, returns Buffer.', type: '"hex" | "base64" | "base64url"' }
+  }}
+/>
+
+**Returns:** `string | Buffer`
+
+```ts
+import { hash } from 'react-native-quick-crypto';
+
+const hex = hash('sha256', 'hello world', 'hex');
+const buf = hash('sha512', Buffer.from([1, 2, 3]));
+```
+
+---
+
 ### createHash(algorithm[, options])
 
 Creates and returns a `Hash` object that can be used to generate hash digests using the given `algorithm`.
@@ -195,6 +220,8 @@ Support depends on the version of OpenSSL bundled with the OS (iOS/Android), but
 | **SHA-256** | 256 bits | ✅ **Secure** | Industry standard. |
 | **SHA-512** | 512 bits | ✅ **Secure** | Faster on 64-bit CPUs. |
 | **SHA-3** | Variable | ✅ **Secure** | NIST standard (Keccak). |
+| **SHA3-256/384/512** | 256/384/512 bits | ✅ **Secure** | Fixed-output SHA-3 variants. |
+| **SHAKE128/256** | Variable | ✅ **Secure** | XOF (Extendable Output) via cSHAKE in WebCrypto. |
 | **BLAKE2b** | 512 bits | ✅ **Secure** | High speed. |
 
 ---
