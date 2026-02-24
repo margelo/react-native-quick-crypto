@@ -1,0 +1,113 @@
+---
+title: Certificate (SPKAC)
+description: Signed Public Key and Challenge (Netscape SPKAC)
+---
+
+import { TypeTable } from 'fumadocs-ui/components/type-table';
+
+The `Certificate` class provides static methods for working with **SPKAC** (Signed Public Key and Challenge) data, a format originally created by Netscape for certificate request generation.
+
+## Table of Contents
+
+- [Theory](#theory)
+- [Static Methods](#static-methods)
+- [Real-World Examples](#real-world-examples)
+
+## Theory
+
+SPKAC is a certificate signing request mechanism that bundles a public key with a challenge string, signed by the corresponding private key. While largely superseded by PKCS#10 CSRs, SPKAC is still used in some legacy systems and the HTML `<keygen>` element.
+
+---
+
+## Static Methods
+
+### Certificate.exportChallenge(spkac[, encoding])
+
+Extracts the challenge string from the SPKAC data.
+
+**Parameters:**
+
+<TypeTable
+  type={{
+    spkac: { description: 'The SPKAC data.', type: 'string | Buffer | TypedArray | DataView' },
+    encoding: { description: 'Encoding of the spkac string.', type: 'string' }
+  }}
+/>
+
+**Returns:** `Buffer` containing the challenge component.
+
+```ts
+import { Certificate } from 'react-native-quick-crypto';
+
+const challenge = Certificate.exportChallenge(spkacData);
+console.log(challenge.toString()); // the challenge string
+```
+
+### Certificate.exportPublicKey(spkac[, encoding])
+
+Extracts the public key from the SPKAC data, returned as a PEM-encoded SubjectPublicKeyInfo.
+
+**Parameters:**
+
+<TypeTable
+  type={{
+    spkac: { description: 'The SPKAC data.', type: 'string | Buffer | TypedArray | DataView' },
+    encoding: { description: 'Encoding of the spkac string.', type: 'string' }
+  }}
+/>
+
+**Returns:** `Buffer` containing the PEM-encoded public key.
+
+```ts
+const publicKey = Certificate.exportPublicKey(spkacData);
+console.log(publicKey.toString());
+// -----BEGIN PUBLIC KEY-----
+// ...
+// -----END PUBLIC KEY-----
+```
+
+### Certificate.verifySpkac(spkac[, encoding])
+
+Verifies the signature on the SPKAC data, confirming that the data was signed by the corresponding private key.
+
+**Parameters:**
+
+<TypeTable
+  type={{
+    spkac: { description: 'The SPKAC data.', type: 'string | Buffer | TypedArray | DataView' },
+    encoding: { description: 'Encoding of the spkac string.', type: 'string' }
+  }}
+/>
+
+**Returns:** `boolean` — `true` if the SPKAC signature is valid.
+
+```ts
+const isValid = Certificate.verifySpkac(spkacData);
+console.log(isValid); // true or false
+```
+
+---
+
+## Real-World Examples
+
+### Validating a Certificate Request
+
+```ts
+import { Certificate } from 'react-native-quick-crypto';
+
+function processCertificateRequest(spkac: Buffer) {
+  // Verify the SPKAC signature
+  if (!Certificate.verifySpkac(spkac)) {
+    throw new Error('Invalid SPKAC signature');
+  }
+
+  // Extract the public key and challenge
+  const publicKey = Certificate.exportPublicKey(spkac);
+  const challenge = Certificate.exportChallenge(spkac);
+
+  return {
+    publicKey: publicKey.toString(),
+    challenge: challenge.toString()
+  };
+}
+```

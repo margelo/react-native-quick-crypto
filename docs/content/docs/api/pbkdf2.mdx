@@ -48,7 +48,7 @@ Asynchronous key derivation.
     salt: { description: 'Salt.', type: 'string | Buffer | TypedArray' },
     iterations: { description: 'Number of iterations (e.g. 600000).', type: 'number' },
     keylen: { description: 'Output key length.', type: 'number' },
-    digest: { description: '"sha1", "sha256", "sha512".', type: 'string' },
+    digest: { description: 'Hash algorithm: "sha1", "sha256", "sha512", etc. Required.', type: 'string' },
     callback: { description: '`(err, key)`.', type: 'Function' }
   }}
 />
@@ -71,7 +71,11 @@ pbkdf2(pass, salt, 600000, 64, 'sha512', (err, derivedKey) => {
 
 ### pbkdf2Sync(password, salt, iterations, keylen, digest)
 
-Synchronous version.
+Synchronous version. The `digest` parameter is required (unlike some older Node.js versions that defaulted to `'sha1'`).
+
+<Callout type="info" title="Parameter Validation">
+  `iterations` must be a positive integer (`>= 1`), and `keylen` must be a non-negative integer. Non-numeric, `NaN`, `Infinity`, or out-of-range values throw a `TypeError` rather than crashing.
+</Callout>
 
 **Returns:** `Buffer`
 

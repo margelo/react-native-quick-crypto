@@ -1,28 +1,38 @@
 ---
-title: Ed25519 & X25519
-description: High-performance signatures and key exchange
+title: Edwards & Montgomery Curves
+description: Ed25519, Ed448, X25519, X448 — signatures and key exchange
 ---
 
 import { Callout } from 'fumadocs-ui/components/callout';
 
-# Ed25519 & X25519
+# Edwards & Montgomery Curves
 
 ## Table of Contents
 
 - [Theory](#theory)
+- [Algorithm Comparison](#algorithm-comparison)
 - [Node.js Compatible API](#nodejs-compatible-api)
 - [Ed Class (Noble-style API)](#ed-class-noble-style-api)
 - [Best Practices](#best-practices)
 
 ## Theory
 
-**Ed25519** (Edwards-curve Digital Signature Algorithm) and **X25519** (Elliptic Curve Diffie-Hellman on Curve25519) are state-of-the-art cryptographic primitives that offer high security, high performance, and small key sizes.
+**Edwards curves** (Ed25519, Ed448) provide digital signatures. **Montgomery curves** (X25519, X448) provide key exchange (ECDH). These are state-of-the-art cryptographic primitives that offer high security, high performance, and small key sizes.
 
 <Callout type="info" title="Why use them?">
   **Ed25519** is the gold standard for signatures (used in SSH, TLS 1.3, Signal).
   **X25519** is the gold standard for key exchange (ECDH).
-  They are faster and safer than RSA and older NIST curves.
+  **Ed448/X448** provide higher security (224-bit vs 128-bit) at the cost of larger keys and slightly slower operations.
 </Callout>
+
+## Algorithm Comparison
+
+| Algorithm | Type | Security | Key Size | Signature/Secret | Use Case |
+|:----------|:-----|:---------|:---------|:----------------|:---------|
+| `Ed25519` | Signature | 128-bit | 32 B | 64 B | **Recommended** for most apps |
+| `Ed448` | Signature | 224-bit | 57 B | 114 B | High security requirements |
+| `X25519` | Key Exchange | 128-bit | 32 B | 32 B | **Recommended** ECDH |
+| `X448` | Key Exchange | 224-bit | 56 B | 56 B | High security ECDH |
 
 ## Node.js Compatible API
 
@@ -80,6 +90,43 @@ const bobSecret = diffieHellman({
 });
 
 // aliceSecret and bobSecret are identical
+```
+
+### Ed448 Signatures (Node.js API)
+
+Ed448 provides 224-bit security (vs 128-bit for Ed25519). The API is identical:
+
+```ts
+import { generateKeyPairSync, sign, verify } from 'react-native-quick-crypto';
+
+const { publicKey, privateKey } = generateKeyPairSync('ed448');
+const message = Buffer.from('high-security message');
+
+const signature = sign(null, message, privateKey);
+const isValid = verify(null, message, publicKey, signature);
+```
+
+### X448 Key Exchange (Node.js API)
+
+X448 provides 224-bit security for key exchange:
+
+```ts
+import { generateKeyPairSync, diffieHellman } from 'react-native-quick-crypto';
+
+const alice = generateKeyPairSync('x448');
+const bob = generateKeyPairSync('x448');
+
+const aliceSecret = diffieHellman({
+  privateKey: alice.privateKey,
+  publicKey: bob.publicKey
+});
+
+const bobSecret = diffieHellman({
+  privateKey: bob.privateKey,
+  publicKey: alice.publicKey
+});
+
+console.log(aliceSecret.equals(bobSecret)); // true
 ```
 
 ---

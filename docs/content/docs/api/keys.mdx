@@ -37,17 +37,61 @@ Keys are stored in various container formats:
 
 The `KeyObject` class is a handle to a native C++ key. It allows the JavaScript layer to refer to keys without copying the key material (which might be sensitive) into the JS garbage-collected heap.
 
+### Static Methods
+
+#### KeyObject.from(key)
+
+Creates a `KeyObject` from a WebCrypto `CryptoKey`.
+
+```ts
+import { KeyObject, subtle } from 'react-native-quick-crypto';
+
+const cryptoKey = await subtle.generateKey(
+  { name: 'AES-GCM', length: 256 },
+  true,
+  ['encrypt', 'decrypt']
+);
+
+const keyObject = KeyObject.from(cryptoKey);
+console.log(keyObject.type); // 'secret'
+```
+
 ### Properties
 
 | Property | Type | Description |
 | :--- | :--- | :--- |
 | `type` | `'secret' \| 'public' \| 'private'` | The type of the key. |
 | `asymmetricKeyType` | `string` | The algorithm name (e.g., `'rsa'`, `'ec'`, `'ed25519'`). `undefined` if symmetric. |
-| `symmetricKeySize` | `number` | Key size in bytes (search only for secret keys). |
+| `asymmetricKeyDetails` | `Object` | Algorithm-specific key details (e.g., `modulusLength` for RSA, `namedCurve` for EC). |
+| `symmetricKeySize` | `number` | Key size in bytes (for secret keys only). |
+
+### keyObject.equals(otherKeyObject)
+
+Returns `true` if the underlying key material is identical.
+
+```ts
+const key1 = createSecretKey(randomBytes(32));
+const key2 = createSecretKey(key1.export());
+
+console.log(key1.equals(key2)); // true
+```
+
+### keyObject.toCryptoKey(algorithm, extractable, keyUsages)
+
+Converts a `KeyObject` to a WebCrypto `CryptoKey`.
+
+```ts
+const keyObject = createSecretKey(randomBytes(32));
+const cryptoKey = keyObject.toCryptoKey(
+  { name: 'AES-GCM', length: 256 },
+  true,
+  ['encrypt', 'decrypt']
+);
+```
 
 ### keyObject.export(options)
 
-Exports the key to a `Buffer` or `string`.
+Exports the key to a `Buffer` or `string`. Symmetric key exports return a safe copy of the key material, so the returned buffer won't be affected by garbage collection.
 
 **Parameters:**
 

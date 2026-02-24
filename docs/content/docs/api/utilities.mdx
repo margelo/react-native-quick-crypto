@@ -1,0 +1,252 @@
+---
+title: Utilities
+description: One-shot hashing, timing-safe comparison, primes, and introspection
+---
+
+import { Callout } from 'fumadocs-ui/components/callout';
+import { TypeTable } from 'fumadocs-ui/components/type-table';
+
+Utility functions for common crypto operations that don't fit neatly into a single class.
+
+## Table of Contents
+
+- [One-Shot Hashing](#one-shot-hashing)
+- [Timing-Safe Comparison](#timing-safe-comparison)
+- [Prime Numbers](#prime-numbers)
+- [Introspection](#introspection)
+- [Constants](#constants)
+
+## One-Shot Hashing
+
+### hash(algorithm, data[, outputEncoding])
+
+Computes a hash digest in a single call without creating a `Hash` object. More convenient and slightly faster for small inputs.
+
+**Parameters:**
+
+<TypeTable
+  type={{
+    algorithm: { description: 'Hash algorithm (e.g. "sha256", "sha512").', type: 'string' },
+    data: { description: 'Data to hash.', type: 'string | Buffer | TypedArray | DataView' },
+    outputEncoding: { description: 'Output encoding. If omitted, returns Buffer.', type: '"hex" | "base64" | "base64url"' }
+  }}
+/>
+
+**Returns:** `string | Buffer`
+
+```ts
+import { hash } from 'react-native-quick-crypto';
+
+// Get hex digest
+const hex = hash('sha256', 'hello world', 'hex');
+
+// Get Buffer
+const buf = hash('sha256', 'hello world');
+
+// Hash binary data
+const digest = hash('sha512', Buffer.from([1, 2, 3]), 'base64');
+```
+
+<Callout type="info">
+  For repeated hashing or streaming data, use `createHash()` instead. The one-shot `hash()` is best for hashing a single value.
+</Callout>
+
+---
+
+## Timing-Safe Comparison
+
+### timingSafeEqual(a, b)
+
+Compares two buffers in constant time, preventing timing attacks. Both buffers must have the same byte length.
+
+**Parameters:**
+
+<TypeTable
+  type={{
+    a: { description: 'First buffer.', type: 'Buffer | TypedArray | DataView' },
+    b: { description: 'Second buffer.', type: 'Buffer | TypedArray | DataView' }
+  }}
+/>
+
+**Returns:** `boolean`
+
+<Callout type="warn">
+  Always use `timingSafeEqual` when comparing MACs, signatures, hashes, or tokens. Regular `===` comparison leaks timing information that attackers can exploit.
+</Callout>
+
+```ts
+import { timingSafeEqual, createHmac } from 'react-native-quick-crypto';
+
+function verifyWebhook(payload: string, receivedSig: string, secret: string): boolean {
+  const expected = createHmac('sha256', secret)
+    .update(payload)
+    .digest();
+
+  const received = Buffer.from(receivedSig, 'hex');
+
+  if (expected.length !== received.length) return false;
+
+  return timingSafeEqual(expected, received);
+}
+```
+
+---
+
+## Prime Numbers
+
+### generatePrime(size[, options[, callback]])
+
+Generates a cryptographic prime number.
+
+**Parameters:**
+
+<TypeTable
+  type={{
+    size: { description: 'Size of the prime in bits.', type: 'number' },
+    options: { description: 'Configuration.', type: 'Object' },
+    'options.bigint': { description: 'Return as BigInt instead of Buffer.', type: 'boolean' },
+    'options.safe': { description: 'Generate a safe prime (p where (p-1)/2 is also prime).', type: 'boolean' },
+    callback: { description: '`(err, prime)`. If omitted, returns a Promise.', type: 'Function' }
+  }}
+/>
+
+```ts
+import { generatePrime, generatePrimeSync } from 'react-native-quick-crypto';
+
+// Async
+generatePrime(256, (err, prime) => {
+  console.log(prime.toString('hex'));
+});
+
+// Sync
+const prime = generatePrimeSync(256);
+
+// As BigInt
+const bigPrime = generatePrimeSync(256, { bigint: true });
+
+// Safe prime (slower)
+const safePrime = generatePrimeSync(256, { safe: true });
+```
+
+### checkPrime(candidate[, options], callback)
+
+Tests whether a number is prime using Miller-Rabin probabilistic primality testing.
+
+**Parameters:**
+
+<TypeTable
+  type={{
+    candidate: { description: 'Number to test.', type: 'Buffer | bigint | number' },
+    options: { description: 'Configuration.', type: 'Object' },
+    'options.checks': { description: 'Number of Miller-Rabin iterations (default: platform-specific).', type: 'number' },
+    callback: { description: '`(err, result)`.', type: 'Function' }
+  }}
+/>
+
+```ts
+import { checkPrime, checkPrimeSync, generatePrimeSync } from 'react-native-quick-crypto';
+
+const prime = generatePrimeSync(256);
+
+// Async
+checkPrime(prime, (err, result) => {
+  console.log(result); // true
+});
+
+// Sync
+const isPrime = checkPrimeSync(prime);
+console.log(isPrime); // true
+
+// Test a specific number
+checkPrimeSync(7n); // true
+checkPrimeSync(4n); // false
+```
+
+---
+
+## Introspection
+
+### getCiphers()
+
+Returns an array of supported cipher algorithm names.
+
+```ts
+import { getCiphers } from 'react-native-quick-crypto';
+
+const ciphers = getCiphers();
+// ['aes-128-cbc', 'aes-128-gcm', 'aes-256-gcm', 'chacha20-poly1305', ...]
+```
+
+### getHashes()
+
+Returns an array of supported hash algorithm names.
+
+```ts
+import { getHashes } from 'react-native-quick-crypto';
+
+const hashes = getHashes();
+// ['sha1', 'sha256', 'sha512', 'sha3-256', 'blake2b512', ...]
+```
+
+### getCurves()
+
+Returns an array of supported elliptic curve names.
+
+```ts
+import { getCurves } from 'react-native-quick-crypto';
+
+const curves = getCurves();
+// ['prime256v1', 'secp384r1', 'secp521r1', 'secp256k1', ...]
+```
+
+### getCipherInfo(nameOrNid[, options])
+
+Returns details about a cipher algorithm.
+
+**Parameters:**
+
+<TypeTable
+  type={{
+    nameOrNid: { description: 'Cipher name or NID.', type: 'string | number' },
+    options: { description: 'Options.', type: 'Object' },
+    'options.keyLength': { description: 'Override key length to test.', type: 'number' },
+    'options.ivLength': { description: 'Override IV length to test.', type: 'number' }
+  }}
+/>
+
+**Returns:** `Object | undefined`
+
+```ts
+import { getCipherInfo } from 'react-native-quick-crypto';
+
+const info = getCipherInfo('aes-256-gcm');
+// {
+//   name: 'aes-256-gcm',
+//   nid: 901,
+//   blockSize: 1,
+//   ivLength: 12,
+//   keyLength: 32,
+//   mode: 'gcm'
+// }
+```
+
+---
+
+## Constants
+
+The `crypto.constants` object provides numeric constants used with other crypto functions (padding modes, DH check flags, etc.).
+
+```ts
+import { constants } from 'react-native-quick-crypto';
+
+// RSA padding modes
+constants.RSA_PKCS1_PADDING;
+constants.RSA_PKCS1_OAEP_PADDING;
+constants.RSA_PKCS1_PSS_PADDING;
+constants.RSA_NO_PADDING;
+
+// RSA-PSS salt lengths
+constants.RSA_PSS_SALTLEN_DIGEST;
+constants.RSA_PSS_SALTLEN_MAX_SIGN;
+constants.RSA_PSS_SALTLEN_AUTO;
+```

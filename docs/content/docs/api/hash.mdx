@@ -161,6 +161,12 @@ input.pipe(hash).pipe(process.stdout);
 
 ## Module Methods
 
+### hash(algorithm, data[, outputEncoding])
+
+One-shot hashing — see [Utilities](/docs/api/utilities#one-shot-hashing) for full details.
+
+---
+
 ### createHash(algorithm[, options])
 
 Creates and returns a `Hash` object that can be used to generate hash digests using the given `algorithm`.
@@ -195,6 +201,8 @@ Support depends on the version of OpenSSL bundled with the OS (iOS/Android), but
 | **SHA-256** | 256 bits | ✅ **Secure** | Industry standard. |
 | **SHA-512** | 512 bits | ✅ **Secure** | Faster on 64-bit CPUs. |
 | **SHA-3** | Variable | ✅ **Secure** | NIST standard (Keccak). |
+| **SHA3-256/384/512** | 256/384/512 bits | ✅ **Secure** | Fixed-output SHA-3 variants. |
+| **SHAKE128/256** | Variable | ✅ **Secure** | XOF (Extendable Output) via cSHAKE in WebCrypto. |
 | **BLAKE2b** | 512 bits | ✅ **Secure** | High speed. |
 
 ---

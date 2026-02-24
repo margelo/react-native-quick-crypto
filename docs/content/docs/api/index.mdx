@@ -10,11 +10,11 @@ RNQC mirrors the Node.js `crypto` API while adding specialized high-performance 
 ## Core Modules
 
 <Cards>
-  <Card title="install()" href="/docs/api/install">
+  <Card title="Install Polyfills" href="/docs/api/install">
     Global polyfill injection for drop-in compatibility.
   </Card>
   <Card title="Cipher" href="/docs/api/cipher">
-    Symmetric encryption (AES, ChaCha20).
+    Symmetric encryption (AES, ChaCha20, XChaCha20).
   </Card>
   <Card title="Hash" href="/docs/api/hash">
     Message digests (SHA-2, SHA-3, MD5).
@@ -26,16 +26,36 @@ RNQC mirrors the Node.js `crypto` API while adding specialized high-performance 
     CSPRNG, UUIDs, and random integers.
   </Card>
   <Card title="Keys" href="/docs/api/keys">
-    Key generation (RSA, EC) and conversion.
+    Key generation (RSA, EC) and KeyObject management.
+  </Card>
+  <Card title="Signing" href="/docs/api/signing">
+    Digital signatures (RSA, ECDSA, Ed25519).
+  </Card>
+  <Card title="Public Cipher" href="/docs/api/public-cipher">
+    RSA asymmetric encryption/decryption.
+  </Card>
+  <Card title="Utilities" href="/docs/api/utilities">
+    One-shot hashing, timing-safe comparison, primes, introspection.
   </Card>
 </Cards>
 
-## Specialized Modules
+## Key Exchange
 
 <Cards>
-  <Card title="BLAKE3" href="/docs/api/blake3">
-    Next-gen high-performance hashing.
+  <Card title="DiffieHellman" href="/docs/api/diffie-hellman">
+    Classic DH key exchange with standard groups.
   </Card>
+  <Card title="ECDH" href="/docs/api/ecdh">
+    Elliptic Curve Diffie-Hellman (P-256, secp256k1).
+  </Card>
+  <Card title="Edwards & Montgomery" href="/docs/api/ed25519">
+    Ed25519, Ed448, X25519, X448 signatures and key exchange.
+  </Card>
+</Cards>
+
+## Key Derivation
+
+<Cards>
   <Card title="PBKDF2" href="/docs/api/pbkdf2">
     Password-based key derivation (RFC 2898).
   </Card>
@@ -44,6 +64,29 @@ RNQC mirrors the Node.js `crypto` API while adding specialized high-performance 
   </Card>
   <Card title="HKDF" href="/docs/api/hkdf">
     Extract-and-Expand KDF (RFC 5869).
+  </Card>
+  <Card title="Argon2" href="/docs/api/argon2">
+    Memory-hard password hashing (PHC winner).
+  </Card>
+  <Card title="BLAKE3" href="/docs/api/blake3">
+    Next-gen high-performance hashing and KDF.
+  </Card>
+</Cards>
+
+## Advanced
+
+<Cards>
+  <Card title="Post-Quantum (PQC)" href="/docs/api/pqc">
+    ML-DSA signatures and ML-KEM key encapsulation.
+  </Card>
+  <Card title="KMAC" href="/docs/api/kmac">
+    Keccak Message Authentication Code (KMAC128/KMAC256).
+  </Card>
+  <Card title="Certificate" href="/docs/api/certificate">
+    SPKAC certificate request processing.
+  </Card>
+  <Card title="X.509" href="/docs/api/x509">
+    X.509 certificate parsing and validation.
   </Card>
   <Card title="Subtle (WebCrypto)" href="/docs/api/subtle">
     W3C Web Cryptography API implementation.

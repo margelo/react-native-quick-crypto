@@ -68,15 +68,15 @@ randomBytes(256, (err, buf) => {
 ### randomFill(buffer[, offset][, size], callback)
 ### randomFillSync(buffer[, offset][, size])
 
-Populates an *existing* buffer with random data.
+Populates an *existing* buffer with random data. Works correctly with TypedArray views over larger ArrayBuffers — `offset` and `size` are relative to the view, not the underlying buffer.
 
 **Parameters:**
 
 <TypeTable
   type={{
-    buffer: { description: 'Buffer to fill.', type: 'Buffer | TypedArray' },
-    offset: { description: 'Start position. Default: 0', type: 'number' },
-    size: { description: 'Bytes to fill. Default: buffer.length - offset', type: 'number' }
+    buffer: { description: 'Buffer or TypedArray view to fill.', type: 'Buffer | TypedArray' },
+    offset: { description: 'Start position within the view. Default: 0', type: 'number' },
+    size: { description: 'Bytes to fill. Default: buffer.byteLength - offset', type: 'number' }
   }}
 />
 

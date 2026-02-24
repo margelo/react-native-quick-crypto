@@ -1,0 +1,313 @@
+---
+title: Post-Quantum Cryptography
+description: Quantum-resistant algorithms (ML-DSA, ML-KEM)
+---
+
+import { Callout } from 'fumadocs-ui/components/callout';
+import { TypeTable } from 'fumadocs-ui/components/type-table';
+
+**Post-Quantum Cryptography (PQC)** provides cryptographic algorithms that are secure against both classical and quantum computers. RNQC implements the NIST standardized lattice-based algorithms via OpenSSL 3.6+.
+
+<Callout type="info" title="Why Post-Quantum?">
+  Quantum computers threaten RSA, ECDSA, and ECDH. The PQC algorithms below are NIST-standardized replacements designed to resist quantum attacks while running efficiently on classical hardware.
+</Callout>
+
+## Table of Contents
+
+- [Algorithms](#algorithms)
+- [ML-DSA (Digital Signatures)](#ml-dsa-digital-signatures)
+- [ML-KEM (Key Encapsulation)](#ml-kem-key-encapsulation)
+- [WebCrypto API](#webcrypto-api)
+- [Real-World Examples](#real-world-examples)
+
+## Algorithms
+
+### ML-DSA (FIPS 204)
+
+Module Lattice Digital Signature Algorithm. Replacement for RSA and ECDSA signatures.
+
+| Parameter Set | Security Level | Public Key | Signature | Use Case |
+|:-------------|:--------------|:-----------|:----------|:---------|
+| `ML-DSA-44` | NIST Level 2 | 1,312 B | 2,420 B | General purpose |
+| `ML-DSA-65` | NIST Level 3 | 1,952 B | 3,309 B | Recommended |
+| `ML-DSA-87` | NIST Level 5 | 2,592 B | 4,627 B | Maximum security |
+
+### ML-KEM (FIPS 203)
+
+Module Lattice Key Encapsulation Mechanism. Replacement for ECDH key exchange.
+
+| Parameter Set | Security Level | Public Key | Ciphertext | Shared Secret |
+|:-------------|:--------------|:-----------|:-----------|:-------------|
+| `ML-KEM-512` | NIST Level 1 | 800 B | 768 B | 32 B |
+| `ML-KEM-768` | NIST Level 3 | 1,184 B | 1,088 B | 32 B |
+| `ML-KEM-1024` | NIST Level 5 | 1,568 B | 1,568 B | 32 B |
+
+---
+
+## ML-DSA (Digital Signatures)
+
+### Node.js API
+
+Generate ML-DSA key pairs and sign/verify using the standard `crypto` API:
+
+```ts
+import {
+  generateKeyPairSync,
+  sign,
+  verify
+} from 'react-native-quick-crypto';
+
+// Generate ML-DSA-65 key pair
+const { publicKey, privateKey } = generateKeyPairSync('ml-dsa-65');
+
+// Sign
+const message = Buffer.from('quantum-safe message');
+const signature = sign(null, message, privateKey);
+
+// Verify
+const isValid = verify(null, message, publicKey, signature);
+console.log('Valid:', isValid); // true
+```
+
+### Key Export/Import
+
+ML-DSA keys support multiple export formats:
+
+```ts
+// Export as PEM
+const pubPem = publicKey.export({ type: 'spki', format: 'pem' });
+const privPem = privateKey.export({ type: 'pkcs8', format: 'pem' });
+
+// Export as DER
+const pubDer = publicKey.export({ type: 'spki', format: 'der' });
+
+// Re-import
+import { createPublicKey, createPrivateKey } from 'react-native-quick-crypto';
+
+const imported = createPublicKey({
+  key: pubDer,
+  format: 'der',
+  type: 'spki'
+});
+```
+
+---
+
+## ML-KEM (Key Encapsulation)
+
+ML-KEM uses **encapsulation** rather than key exchange. One party encapsulates a shared secret using the other's public key, producing a ciphertext. The other party decapsulates the ciphertext with their private key to recover the same shared secret.
+
+### Node.js API
+
+```ts
+import {
+  generateKeyPairSync,
+  encapsulate,
+  decapsulate
+} from 'react-native-quick-crypto';
+
+// Generate ML-KEM-768 key pair
+const { publicKey, privateKey } = generateKeyPairSync('ml-kem-768');
+
+// Encapsulate: produces shared secret + ciphertext
+const { sharedSecret, ciphertext } = encapsulate(publicKey);
+
+// Decapsulate: recovers the same shared secret
+const recovered = decapsulate(privateKey, ciphertext);
+
+console.log(sharedSecret.equals(recovered)); // true
+```
+
+---
+
+## WebCrypto API
+
+PQC algorithms are fully supported through the SubtleCrypto interface.
+
+### ML-DSA via SubtleCrypto
+
+```ts
+import { subtle } from 'react-native-quick-crypto';
+
+// Generate key pair
+const keyPair = await subtle.generateKey(
+  { name: 'ML-DSA-65' },
+  true,
+  ['sign', 'verify']
+);
+
+// Sign
+const data = new TextEncoder().encode('quantum-safe data');
+const signature = await subtle.sign(
+  { name: 'ML-DSA-65' },
+  keyPair.privateKey,
+  data
+);
+
+// Verify
+const isValid = await subtle.verify(
+  { name: 'ML-DSA-65' },
+  keyPair.publicKey,
+  signature,
+  data
+);
+```
+
+### ML-KEM via SubtleCrypto
+
+```ts
+import { subtle } from 'react-native-quick-crypto';
+
+// Generate encapsulation key pair
+const keyPair = await subtle.generateKey(
+  { name: 'ML-KEM-768' },
+  true,
+  ['deriveBits', 'deriveKey']
+);
+
+// Encapsulate: get shared secret bits + ciphertext
+const { sharedSecret, ciphertext } = await subtle.encapsulateBits(
+  { name: 'ML-KEM-768' },
+  keyPair.publicKey
+);
+
+// Decapsulate: recover shared secret
+const recovered = await subtle.decapsulateBits(
+  { name: 'ML-KEM-768' },
+  keyPair.privateKey,
+  ciphertext
+);
+
+// Or derive a key directly from encapsulation
+const { key: aesKey, ciphertext: ct } = await subtle.encapsulateKey(
+  { name: 'ML-KEM-768' },
+  keyPair.publicKey,
+  { name: 'AES-GCM', length: 256 },
+  true,
+  ['encrypt', 'decrypt']
+);
+
+// Decapsulate to get the same AES key
+const recoveredKey = await subtle.decapsulateKey(
+  { name: 'ML-KEM-768' },
+  keyPair.privateKey,
+  ct,
+  { name: 'AES-GCM', length: 256 },
+  true,
+  ['encrypt', 'decrypt']
+);
+```
+
+### Key Export Formats
+
+| Algorithm | `spki` | `pkcs8` | `jwk` | `raw-public` | `raw-seed` |
+|:----------|:------:|:-------:|:-----:|:------------:|:----------:|
+| ML-DSA-44/65/87 | ✅ | ✅ | ✅ | ✅ | ✅ |
+| ML-KEM-512/768/1024 | ✅ | ✅ | | ✅ | ✅ |
+
+```ts
+// Export ML-DSA public key as JWK
+const jwk = await subtle.exportKey('jwk', keyPair.publicKey);
+
+// Export raw public key bytes
+const rawPub = await subtle.exportKey('raw-public', keyPair.publicKey);
+
+// Export seed (deterministic private key material)
+const seed = await subtle.exportKey('raw-seed', keyPair.privateKey);
+
+// Import from raw-public
+const imported = await subtle.importKey(
+  'raw-public',
+  rawPub,
+  { name: 'ML-DSA-65' },
+  true,
+  ['verify']
+);
+```
+
+---
+
+## Real-World Examples
+
+### Hybrid Signature (Classical + PQC)
+
+Combine Ed25519 with ML-DSA for defense-in-depth during the quantum transition:
+
+```ts
+import {
+  generateKeyPairSync,
+  sign,
+  verify
+} from 'react-native-quick-crypto';
+
+function hybridSign(message: Buffer) {
+  const ed = generateKeyPairSync('ed25519');
+  const pqc = generateKeyPairSync('ml-dsa-65');
+
+  const edSig = sign(null, message, ed.privateKey);
+  const pqcSig = sign(null, message, pqc.privateKey);
+
+  return {
+    message,
+    signatures: { ed25519: edSig, mlDsa65: pqcSig },
+    publicKeys: { ed25519: ed.publicKey, mlDsa65: pqc.publicKey }
+  };
+}
+
+function hybridVerify(signed: ReturnType<typeof hybridSign>): boolean {
+  const edValid = verify(
+    null, signed.message,
+    signed.publicKeys.ed25519, signed.signatures.ed25519
+  );
+  const pqcValid = verify(
+    null, signed.message,
+    signed.publicKeys.mlDsa65, signed.signatures.mlDsa65
+  );
+
+  // Both must pass
+  return edValid && pqcValid;
+}
+```
+
+### Quantum-Safe Key Exchange
+
+Use ML-KEM to establish a shared secret for symmetric encryption:
+
+```ts
+import {
+  generateKeyPairSync,
+  encapsulate,
+  decapsulate,
+  createCipheriv,
+  createDecipheriv,
+  createHash,
+  randomBytes
+} from 'react-native-quick-crypto';
+
+// Server publishes its ML-KEM public key
+const server = generateKeyPairSync('ml-kem-768');
+
+// Client encapsulates a shared secret
+const { sharedSecret, ciphertext } = encapsulate(server.publicKey);
+
+// Derive AES key from shared secret
+const aesKey = createHash('sha256').update(sharedSecret).digest();
+const iv = randomBytes(12);
+
+// Encrypt with AES-GCM
+const cipher = createCipheriv('aes-256-gcm', aesKey, iv);
+let encrypted = cipher.update('secret message', 'utf8', 'base64');
+encrypted += cipher.final('base64');
+const tag = cipher.getAuthTag();
+
+// Server decapsulates to get the same shared secret
+const serverSecret = decapsulate(server.privateKey, ciphertext);
+const serverKey = createHash('sha256').update(serverSecret).digest();
+
+// Server decrypts
+const decipher = createDecipheriv('aes-256-gcm', serverKey, iv);
+decipher.setAuthTag(tag);
+let decrypted = decipher.update(encrypted, 'base64', 'utf8');
+decrypted += decipher.final('utf8');
+console.log(decrypted); // "secret message"
+```
