@@ -14,13 +14,8 @@ export const withSodiumIos: ConfigPlugin<ConfigProps> = config => {
       );
       let contents = fs.readFileSync(podfilePath, 'utf-8');
 
-      // Check if SODIUM_ENABLED is already set
       if (!contents.includes("ENV['SODIUM_ENABLED']")) {
-        // Add it right after the RCT_NEW_ARCH_ENABLED ENV variable
-        contents = contents.replace(
-          /^(ENV\['RCT_NEW_ARCH_ENABLED'\].*$)/m,
-          `$1\nENV['SODIUM_ENABLED'] = '1'`,
-        );
+        contents = `ENV['SODIUM_ENABLED'] = '1'\n${contents}`;
         fs.writeFileSync(podfilePath, contents);
       }
 
