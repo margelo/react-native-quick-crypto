@@ -219,6 +219,7 @@ test(SUITE, 'x25519 - error handling', () => {
 // --- ECDH subtle.deriveBits Tests ---
 
 import type { NamedCurve } from 'react-native-quick-crypto';
+import { createPrivateKey, createPublicKey } from 'react-native-quick-crypto';
 
 const ecdhCurves: Array<{ curve: NamedCurve; bitLen: number }> = [
   { curve: 'P-256', bitLen: 256 },
@@ -460,4 +461,110 @@ test(SUITE, 'x448 - error handling', () => {
       publicKey: {} as KeyObject,
     });
   }).to.throw();
+});
+
+// --- EC diffieHellman Tests (regression for #959) ---
+
+const ecDhCurves: Array<{ curve: string; secretLen: number }> = [
+  { curve: 'P-256', secretLen: 32 },
+  { curve: 'P-384', secretLen: 48 },
+  { curve: 'P-521', secretLen: 66 },
+];
+
+function generateEcKeyObjects(curve: string) {
+  const { privateKey, publicKey } = crypto.generateKeyPairSync('ec', {
+    namedCurve: curve,
+    publicKeyEncoding: { type: 'spki', format: 'pem' },
+    privateKeyEncoding: { type: 'pkcs8', format: 'pem' },
+  });
+  return {
+    privateKey: createPrivateKey(privateKey as string),
+    publicKey: createPublicKey(publicKey as string),
+  };
+}
+
+for (const { curve, secretLen } of ecDhCurves) {
+  test(SUITE, `EC diffieHellman - ${curve} shared secret`, () => {
+    const alice = generateEcKeyObjects(curve);
+    const bob = generateEcKeyObjects(curve);
+
+    const secret = crypto.diffieHellman({
+      privateKey: alice.privateKey,
+      publicKey: bob.publicKey,
+    }) as Buffer;
+
+    expect(Buffer.isBuffer(secret)).to.equal(true);
+    expect(secret.length).to.equal(secretLen);
+
+    const allZeros = Buffer.alloc(secretLen, 0);
+    expect(secret.equals(allZeros)).to.equal(false);
+  });
+
+  test(SUITE, `EC diffieHellman - ${curve} symmetry`, () => {
+    const alice = generateEcKeyObjects(curve);
+    const bob = generateEcKeyObjects(curve);
+
+    const secretAlice = crypto.diffieHellman({
+      privateKey: alice.privateKey,
+      publicKey: bob.publicKey,
+    }) as Buffer;
+
+    const secretBob = crypto.diffieHellman({
+      privateKey: bob.privateKey,
+      publicKey: alice.publicKey,
+    }) as Buffer;
+
+    expect(secretAlice.equals(secretBob)).to.equal(true);
+  });
+
+  test(SUITE, `EC diffieHellman - ${curve} deterministic`, () => {
+    const alice = generateEcKeyObjects(curve);
+    const bob = generateEcKeyObjects(curve);
+
+    const secret1 = crypto.diffieHellman({
+      privateKey: alice.privateKey,
+      publicKey: bob.publicKey,
+    }) as Buffer;
+
+    const secret2 = crypto.diffieHellman({
+      privateKey: alice.privateKey,
+      publicKey: bob.publicKey,
+    }) as Buffer;
+
+    expect(secret1.equals(secret2)).to.equal(true);
+  });
+
+  test(
+    SUITE,
+    `EC diffieHellman - ${curve} different pairs produce different secrets`,
+    () => {
+      const alice = generateEcKeyObjects(curve);
+      const bob = generateEcKeyObjects(curve);
+      const charlie = generateEcKeyObjects(curve);
+
+      const secretBob = crypto.diffieHellman({
+        privateKey: alice.privateKey,
+        publicKey: bob.publicKey,
+      }) as Buffer;
+
+      const secretCharlie = crypto.diffieHellman({
+        privateKey: alice.privateKey,
+        publicKey: charlie.publicKey,
+      }) as Buffer;
+
+      expect(secretBob.equals(secretCharlie)).to.equal(false);
+    },
+  );
+}
+
+test(SUITE, 'EC diffieHellman - curve mismatch throws', () => {
+  const alice = generateEcKeyObjects('P-256');
+  const bob = generateEcKeyObjects('P-384');
+
+  expect(() => {
+    crypto.diffieHellman({
+      privateKey: alice.privateKey,
+      publicKey: bob.publicKey,
+    });
+  }).to.throw('Private and public key curves do not match');
 });

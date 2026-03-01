@@ -29,6 +29,7 @@ import {
   KFormatType,
   KeyEncoding,
 } from './utils';
+import { ECDH } from './ecdh';
 
 export class Ed {
   type: CFRGKeyPairType;
@@ -57,19 +58,6 @@ export class Ed {
     options: DiffieHellmanOptions,
     callback?: DiffieHellmanCallback,
   ): Buffer | void {
-    checkDiffieHellmanOptions(options);
-
-    // key types must be of certain type
-    const keyType = (options.privateKey as AsymmetricKeyObject)
-      .asymmetricKeyType;
-    switch (keyType) {
-      case 'x25519':
-      case 'x448':
-        break;
-      default:
-        throw new Error(`Unsupported or unimplemented curve type: ${keyType}`);
-    }
-
     // extract the private and public keys as ArrayBuffers
     const privateKey = toAB(options.privateKey);
     const publicKey = toAB(options.publicKey);
@@ -176,8 +164,16 @@ export function diffieHellman(
   options: DiffieHellmanOptions,
   callback?: DiffieHellmanCallback,
 ): Buffer | void {
+  checkDiffieHellmanOptions(options);
+
   const privateKey = options.privateKey as PrivateKeyObject;
-  const type = privateKey.asymmetricKeyType as CFRGKeyPairType;
+  const keyType = privateKey.asymmetricKeyType;
+
+  if (keyType === 'ec') {
+    return ecDiffieHellman(options, callback);
+  }
+
+  const type = keyType as CFRGKeyPairType;
   const ed = new Ed(type, {});
   return ed.diffieHellman(options, callback);
 }
@@ -254,6 +250,47 @@ export function ed_generateKeyPair(
   return [err, publicKey, privateKey];
 }
 
+function ecDiffieHellman(
+  options: DiffieHellmanOptions,
+  callback?: DiffieHellmanCallback,
+): Buffer | void {
+  const privateKey = options.privateKey as PrivateKeyObject;
+  const publicKey = options.publicKey as AsymmetricKeyObject;
+
+  const curveName = privateKey.namedCurve;
+  if (!curveName) {
+    throw new Error('Unable to determine EC curve name from private key');
+  }
+
+  const ecdh = new ECDH(curveName);
+
+  const jwkPrivate = privateKey.handle.exportJwk({}, false);
+  if (!jwkPrivate.d) throw new Error('Invalid private key');
+  ecdh.setPrivateKey(Buffer.from(jwkPrivate.d, 'base64url'));
+
+  const jwkPublic = publicKey.handle.exportJwk({}, false);
+  if (!jwkPublic.x || !jwkPublic.y) throw new Error('Invalid public key');
+  const x = Buffer.from(jwkPublic.x, 'base64url');
+  const y = Buffer.from(jwkPublic.y, 'base64url');
+  const publicBytes = Buffer.concat([Buffer.from([0x04]), x, y]);
+
+  try {
+    const secret = ecdh.computeSecret(publicBytes);
+    if (callback) {
+      callback(null, secret);
+    } else {
+      return secret;
+    }
+  } catch (e: unknown) {
+    const err = e as Error;
+    if (callback) {
+      callback(err, undefined);
+    } else {
+      throw err;
+    }
+  }
+}
+
 function checkDiffieHellmanOptions(options: DiffieHellmanOptions): void {
   const { privateKey, publicKey } = options;
 
@@ -292,6 +329,14 @@ function checkDiffieHellmanOptions(options: DiffieHellmanOptions): void {
 
   switch (privateKeyAsym.asymmetricKeyType) {
     // case 'dh': // TODO: uncomment when implemented
+    case 'ec': {
+      const privateCurve = privateKeyAsym.namedCurve;
+      const publicCurve = publicKeyAsym.namedCurve;
+      if (privateCurve && publicCurve && privateCurve !== publicCurve) {
+        throw new Error('Private and public key curves do not match');
+      }
+      break;
+    }
     case 'x25519':
     case 'x448':
       break;
