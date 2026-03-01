@@ -329,7 +329,14 @@ function checkDiffieHellmanOptions(options: DiffieHellmanOptions): void {
 
   switch (privateKeyAsym.asymmetricKeyType) {
     // case 'dh': // TODO: uncomment when implemented
-    case 'ec':
+    case 'ec': {
+      const privateCurve = privateKeyAsym.namedCurve;
+      const publicCurve = publicKeyAsym.namedCurve;
+      if (privateCurve && publicCurve && privateCurve !== publicCurve) {
+        throw new Error('Private and public key curves do not match');
+      }
+      break;
+    }
     case 'x25519':
     case 'x448':
       break;

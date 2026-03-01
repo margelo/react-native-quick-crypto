@@ -527,13 +527,13 @@ export function ecDeriveBits(
 
   const jwkPrivate = baseKey.keyObject.handle.exportJwk({}, false);
   if (!jwkPrivate.d) throw new Error('Invalid private key');
-  const privateBytes = Buffer.from(jwkPrivate.d, 'base64');
+  const privateBytes = Buffer.from(jwkPrivate.d, 'base64url');
   ecdh.setPrivateKey(privateBytes);
 
   const jwkPublic = publicKey.keyObject.handle.exportJwk({}, false);
   if (!jwkPublic.x || !jwkPublic.y) throw new Error('Invalid public key');
-  const x = Buffer.from(jwkPublic.x, 'base64');
-  const y = Buffer.from(jwkPublic.y, 'base64');
+  const x = Buffer.from(jwkPublic.x, 'base64url');
+  const y = Buffer.from(jwkPublic.y, 'base64url');
   const publicBytes = Buffer.concat([Buffer.from([0x04]), x, y]);
 
   const secret = ecdh.computeSecret(publicBytes);
