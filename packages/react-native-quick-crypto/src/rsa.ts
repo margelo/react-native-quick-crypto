@@ -1,4 +1,5 @@
 import { NitroModules } from 'react-native-nitro-modules';
+import { Buffer } from '@craftzdog/react-native-buffer';
 import {
   CryptoKey,
   KeyObject,
