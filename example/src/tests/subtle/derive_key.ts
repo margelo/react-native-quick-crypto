@@ -1,8 +1,7 @@
 import { test } from '../util';
 import { expect } from 'chai';
-import { subtle, getRandomValues } from 'react-native-quick-crypto';
-import { CryptoKey } from 'react-native-quick-crypto';
-import type { CryptoKeyPair } from 'react-native-quick-crypto';
+import { subtle, getRandomValues, Buffer } from 'react-native-quick-crypto';
+import type { CryptoKey, CryptoKeyPair } from 'react-native-quick-crypto';
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 const subtleAny = subtle as any;

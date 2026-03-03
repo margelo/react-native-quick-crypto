@@ -1,6 +1,6 @@
 import { test } from '../util';
 import { expect } from 'chai';
-import { subtle, getRandomValues } from 'react-native-quick-crypto';
+import { subtle, getRandomValues, Buffer } from 'react-native-quick-crypto';
 import type {
   AesOcbParams,
   CryptoKey,

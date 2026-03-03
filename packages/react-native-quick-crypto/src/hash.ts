@@ -1,6 +1,7 @@
 import { Stream } from 'readable-stream';
 import { NitroModules } from 'react-native-nitro-modules';
 import type { TransformOptions } from 'readable-stream';
+import { Buffer } from '@craftzdog/react-native-buffer';
 import type { Hash as NativeHash } from './specs/hash.nitro';
 import type {
   BinaryLike,
