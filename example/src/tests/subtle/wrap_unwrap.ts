@@ -41,7 +41,7 @@ test(SUITE, 'wrap/unwrap AES-256 with AES-KW', async () => {
   );
 
   // Verify keys are functionally identical
-  const plaintext = getRandomValues(new Uint8Array(32));
+  const plaintext = getRandomValues(new Uint8Array(32)) as Uint8Array;
   const iv = getRandomValues(new Uint8Array(12));
 
   const ct1 = await subtle.encrypt(
@@ -184,7 +184,7 @@ test(SUITE, 'wrap/unwrap with AES-CBC', async () => {
     ['encrypt', 'decrypt'],
   );
 
-  const plaintext = getRandomValues(new Uint8Array(32));
+  const plaintext = getRandomValues(new Uint8Array(32)) as Uint8Array;
   const gcmIv = getRandomValues(new Uint8Array(12));
 
   const ct = await subtle.encrypt(
@@ -237,7 +237,7 @@ test(SUITE, 'wrap/unwrap with AES-OCB', async () => {
     ['encrypt', 'decrypt'],
   );
 
-  const plaintext = getRandomValues(new Uint8Array(32));
+  const plaintext = getRandomValues(new Uint8Array(32)) as Uint8Array;
   const gcmIv = getRandomValues(new Uint8Array(12));
 
   const ct = await subtle.encrypt(
@@ -343,7 +343,7 @@ test(SUITE, 'wrap/unwrap with RSA-OAEP', async () => {
     ['encrypt', 'decrypt'],
   );
 
-  const plaintext = getRandomValues(new Uint8Array(32));
+  const plaintext = getRandomValues(new Uint8Array(32)) as Uint8Array;
   const iv = getRandomValues(new Uint8Array(12));
 
   const ct = await subtle.encrypt(
@@ -396,7 +396,7 @@ test(SUITE, 'wrap/unwrap with ChaCha20-Poly1305', async () => {
     ['encrypt', 'decrypt'],
   );
 
-  const plaintext = getRandomValues(new Uint8Array(32));
+  const plaintext = getRandomValues(new Uint8Array(32)) as Uint8Array;
   const gcmIv = getRandomValues(new Uint8Array(12));
 
   const ct = await subtle.encrypt(
