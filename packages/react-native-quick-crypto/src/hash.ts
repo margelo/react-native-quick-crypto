@@ -120,7 +120,7 @@ class Hash extends Stream.Transform {
    * @param encoding The `encoding` of the return value.
    */
   digest(): Buffer;
-  digest(encoding: Encoding): Buffer;
+  digest(encoding: Encoding): string;
   digest(encoding?: Encoding): Buffer | string {
     const nativeDigest = this.native.digest(encoding);
 
