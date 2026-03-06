@@ -299,6 +299,12 @@ const internalDigest = (
 export function hash(
   algorithm: string,
   data: BinaryLike,
+  outputEncoding: Encoding,
+): string;
+export function hash(algorithm: string, data: BinaryLike): Buffer;
+export function hash(
+  algorithm: string,
+  data: BinaryLike,
   outputEncoding?: Encoding,
 ): string | Buffer {
   const h = createHash(algorithm);
