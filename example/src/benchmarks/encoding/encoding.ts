@@ -1,5 +1,8 @@
-import { bufferToString, stringToBuffer } from 'react-native-quick-crypto';
-import { Buffer as CraftzdogBuffer } from '@craftzdog/react-native-buffer';
+import {
+  bufferToString,
+  stringToBuffer,
+  Buffer as CraftzdogBuffer,
+} from 'react-native-quick-crypto';
 import type { BenchFn } from '../../types/benchmarks';
 import { Bench } from 'tinybench';
 
