@@ -11,6 +11,7 @@ import ecdh from '../benchmarks/ecdh/ecdh';
 import dh from '../benchmarks/dh/dh';
 import random from '../benchmarks/random/randomBytes';
 import scrypt from '../benchmarks/scrypt/scrypt';
+import encoding from '../benchmarks/encoding/encoding';
 import xsalsa20 from '../benchmarks/cipher/xsalsa20';
 
 export const useBenchmarks = (): [
@@ -43,6 +44,11 @@ export const useBenchmarks = (): [
       }),
     );
     newSuites.push(new BenchmarkSuite('scrypt', scrypt));
+    newSuites.push(
+      new BenchmarkSuite('encoding', encoding, {
+        'Buffer polyfill': 'old CraftzdogBuffer.from/toString path',
+      }),
+    );
     setSuites(newSuites);
   }, []);
 

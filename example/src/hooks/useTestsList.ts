@@ -44,6 +44,7 @@ import '../tests/subtle/supports';
 import '../tests/subtle/getPublicKey';
 import '../tests/subtle/wrap_unwrap';
 import '../tests/utils/utils_tests';
+import '../tests/utils/encoding_tests';
 import '../tests/x509/x509_tests';
 
 export const useTestsList = (): [

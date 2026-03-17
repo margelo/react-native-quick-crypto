@@ -1,6 +1,10 @@
 import { Buffer as CraftzdogBuffer } from '@craftzdog/react-native-buffer';
 import { Buffer as SafeBuffer } from 'safe-buffer';
+import { NitroModules } from 'react-native-nitro-modules';
+import type { Utils } from '../specs/utils.nitro';
 import type { ABV, BinaryLikeNode, BufferLike } from './types';
+
+const utils = NitroModules.createHybridObject<Utils>('Utils');
 
 /**
  * Converts supplied argument to an ArrayBuffer.  Note this does not copy the
@@ -93,8 +97,10 @@ export function binaryLikeToArrayBuffer(
       );
     }
 
+    if (nativeEncodings.has(encoding)) {
+      return utils.stringToBuffer(input, encoding);
+    }
     const buffer = CraftzdogBuffer.from(input, encoding);
-
     return buffer.buffer.slice(
       buffer.byteOffset,
       buffer.byteOffset + buffer.byteLength,
@@ -149,8 +155,38 @@ export function binaryLikeToArrayBuffer(
   );
 }
 
-export function ab2str(buf: ArrayBuffer, encoding: string = 'hex') {
+const nativeEncodings = new Set([
+  'hex',
+  'base64',
+  'base64url',
+  'utf8',
+  'utf-8',
+  'latin1',
+  'binary',
+  'ascii',
+]);
+
+export function ab2str(buf: ArrayBuffer, encoding: string = 'hex'): string {
+  if (nativeEncodings.has(encoding)) {
+    return utils.bufferToString(buf, encoding);
+  }
   return CraftzdogBuffer.from(buf).toString(encoding);
+}
+
+/** Native C++ buffer-to-string — exposed for benchmarking */
+export function bufferToString(
+  buf: ArrayBuffer,
+  encoding: string = 'hex',
+): string {
+  return utils.bufferToString(buf, encoding);
+}
+
+/** Native C++ string-to-buffer — exposed for benchmarking */
+export function stringToBuffer(
+  str: string,
+  encoding: string = 'utf-8',
+): ArrayBuffer {
+  return utils.stringToBuffer(str, encoding);
 }
 
 export const kEmptyObject = Object.freeze(Object.create(null));
