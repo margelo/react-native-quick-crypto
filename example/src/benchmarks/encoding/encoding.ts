@@ -1,11 +1,22 @@
-import {
-  bufferToString,
-  stringToBuffer,
-  ab2str_old,
-  stringToBuffer_old,
-} from 'react-native-quick-crypto';
+import { bufferToString, stringToBuffer } from 'react-native-quick-crypto';
+import { Buffer as CraftzdogBuffer } from '@craftzdog/react-native-buffer';
 import type { BenchFn } from '../../types/benchmarks';
 import { Bench } from 'tinybench';
+
+function ab2str_old(buf: ArrayBuffer, encoding: string = 'hex'): string {
+  return CraftzdogBuffer.from(buf).toString(encoding);
+}
+
+function stringToBuffer_old(
+  input: string,
+  encoding: string = 'utf-8',
+): ArrayBuffer {
+  const buffer = CraftzdogBuffer.from(input, encoding);
+  return buffer.buffer.slice(
+    buffer.byteOffset,
+    buffer.byteOffset + buffer.byteLength,
+  );
+}
 
 // Generate test data
 const generate1MB = (): ArrayBuffer => {

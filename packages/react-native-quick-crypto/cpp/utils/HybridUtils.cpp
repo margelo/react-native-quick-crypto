@@ -1,5 +1,6 @@
 #include "HybridUtils.hpp"
 
+#include <limits>
 #include <openssl/crypto.h>
 #include <openssl/evp.h>
 #include <stdexcept>
@@ -51,6 +52,9 @@ namespace {
   }
 
   std::string encodeBase64(const uint8_t* data, size_t len) {
+    if (len > static_cast<size_t>(std::numeric_limits<int>::max())) {
+      throw std::runtime_error("Input too large for base64 encoding");
+    }
     size_t encodedLen = ((len + 2) / 3) * 4;
     std::string result(encodedLen + 1, '\0');
     int written = EVP_EncodeBlock(reinterpret_cast<unsigned char*>(result.data()), data, static_cast<int>(len));
@@ -62,6 +66,9 @@ namespace {
   }
 
   std::vector<uint8_t> decodeBase64(const std::string& b64) {
+    if (b64.length() > static_cast<size_t>(std::numeric_limits<int>::max())) {
+      throw std::runtime_error("Input too large for base64 decoding");
+    }
     size_t maxLen = ((b64.length() + 3) / 4) * 3;
     std::vector<uint8_t> result(maxLen);
     int written = EVP_DecodeBlock(result.data(), reinterpret_cast<const unsigned char*>(b64.data()), static_cast<int>(b64.length()));
@@ -106,6 +113,35 @@ namespace {
       b64.push_back('=');
     }
     return decodeBase64(b64);
+  }
+
+  std::vector<uint8_t> decodeLatin1(const std::string& str) {
+    std::vector<uint8_t> result;
+    result.reserve(str.size());
+    size_t i = 0;
+    while (i < str.size()) {
+      auto byte = static_cast<uint8_t>(str[i]);
+      uint32_t cp;
+      if (byte < 0x80) {
+        cp = byte;
+        i += 1;
+      } else if ((byte & 0xE0) == 0xC0 && i + 1 < str.size()) {
+        cp = ((byte & 0x1F) << 6) | (static_cast<uint8_t>(str[i + 1]) & 0x3F);
+        i += 2;
+      } else if ((byte & 0xF0) == 0xE0 && i + 2 < str.size()) {
+        cp = ((byte & 0x0F) << 12) | ((static_cast<uint8_t>(str[i + 1]) & 0x3F) << 6) | (static_cast<uint8_t>(str[i + 2]) & 0x3F);
+        i += 3;
+      } else if ((byte & 0xF8) == 0xF0 && i + 3 < str.size()) {
+        cp = ((byte & 0x07) << 18) | ((static_cast<uint8_t>(str[i + 1]) & 0x3F) << 12) | ((static_cast<uint8_t>(str[i + 2]) & 0x3F) << 6) |
+             (static_cast<uint8_t>(str[i + 3]) & 0x3F);
+        i += 4;
+      } else {
+        cp = byte;
+        i += 1;
+      }
+      result.push_back(static_cast<uint8_t>(cp & 0xFF));
+    }
+    return result;
   }
 
   std::string encodeLatin1(const uint8_t* data, size_t len) {
@@ -183,14 +219,15 @@ std::shared_ptr<ArrayBuffer> HybridUtils::stringToBuffer(const std::string& str,
     return ToNativeArrayBuffer(str);
   }
   if (encoding == "latin1" || encoding == "binary") {
-    return ToNativeArrayBuffer(str);
+    auto decoded = decodeLatin1(str);
+    return ToNativeArrayBuffer(decoded);
   }
   if (encoding == "ascii") {
-    std::string ascii = str;
-    for (auto& c : ascii) {
-      c &= 0x7F;
+    auto decoded = decodeLatin1(str);
+    for (auto& b : decoded) {
+      b &= 0x7F;
     }
-    return ToNativeArrayBuffer(ascii);
+    return ToNativeArrayBuffer(decoded);
   }
   throw std::runtime_error("Unsupported encoding: " + encoding);
 }

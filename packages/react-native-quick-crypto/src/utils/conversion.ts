@@ -189,23 +189,6 @@ export function stringToBuffer(
   return utils.stringToBuffer(str, encoding);
 }
 
-/** Old Buffer-polyfill implementation — kept for benchmarking comparison */
-export function ab2str_old(buf: ArrayBuffer, encoding: string = 'hex'): string {
-  return CraftzdogBuffer.from(buf).toString(encoding);
-}
-
-/** Old Buffer-polyfill implementation — kept for benchmarking comparison */
-export function stringToBuffer_old(
-  input: string,
-  encoding: string = 'utf-8',
-): ArrayBuffer {
-  const buffer = CraftzdogBuffer.from(input, encoding);
-  return buffer.buffer.slice(
-    buffer.byteOffset,
-    buffer.byteOffset + buffer.byteLength,
-  );
-}
-
 export const kEmptyObject = Object.freeze(Object.create(null));
 
 export * from './noble';
