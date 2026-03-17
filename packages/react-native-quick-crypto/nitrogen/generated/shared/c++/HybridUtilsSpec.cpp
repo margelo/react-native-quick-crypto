@@ -15,6 +15,8 @@ namespace margelo::nitro::crypto {
     // load custom methods/properties
     registerHybrids(this, [](Prototype& prototype) {
       prototype.registerHybridMethod("timingSafeEqual", &HybridUtilsSpec::timingSafeEqual);
+      prototype.registerHybridMethod("bufferToString", &HybridUtilsSpec::bufferToString);
+      prototype.registerHybridMethod("stringToBuffer", &HybridUtilsSpec::stringToBuffer);
     });
   }
 
