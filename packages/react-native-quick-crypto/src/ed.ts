@@ -58,9 +58,11 @@ export class Ed {
     options: DiffieHellmanOptions,
     callback?: DiffieHellmanCallback,
   ): Buffer | void {
-    // extract the private and public keys as ArrayBuffers
-    const privateKey = toAB(options.privateKey);
-    const publicKey = toAB(options.publicKey);
+    // extract raw key bytes from KeyObject instances
+    const privKeyObj = options.privateKey as AsymmetricKeyObject;
+    const pubKeyObj = options.publicKey as AsymmetricKeyObject;
+    const privateKey = privKeyObj.handle.exportKey();
+    const publicKey = pubKeyObj.handle.exportKey();
 
     try {
       const ret = this.native.diffieHellman(privateKey, publicKey);

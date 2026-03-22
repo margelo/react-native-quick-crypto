@@ -82,19 +82,9 @@ test(SUITE, 'x25519 - shared secret', () => {
   const alice = crypto.generateKeyPairSync('x25519', {});
   const bob = crypto.generateKeyPairSync('x25519', {});
 
-  if (!alice.privateKey || !(alice.privateKey instanceof ArrayBuffer)) {
-    throw new Error('Failed to generate private key for Alice');
-  }
-  if (!bob.publicKey || !(bob.publicKey instanceof ArrayBuffer)) {
-    throw new Error('Failed to generate public key for Bob');
-  }
-
-  const privateKey = KeyObject.createKeyObject('private', alice.privateKey);
-  const publicKey = KeyObject.createKeyObject('public', bob.publicKey);
-
   const sharedSecret = crypto.diffieHellman({
-    privateKey,
-    publicKey,
+    privateKey: alice.privateKey as KeyObject,
+    publicKey: bob.publicKey as KeyObject,
   });
   expect(Buffer.isBuffer(sharedSecret)).to.equal(true);
 });
@@ -103,31 +93,14 @@ test(SUITE, 'x25519 - shared secret symmetry', () => {
   const alice = crypto.generateKeyPairSync('x25519', {});
   const bob = crypto.generateKeyPairSync('x25519', {});
 
-  const alicePrivate = KeyObject.createKeyObject(
-    'private',
-    alice.privateKey as ArrayBuffer,
-  );
-  const alicePublic = KeyObject.createKeyObject(
-    'public',
-    alice.publicKey as ArrayBuffer,
-  );
-  const bobPrivate = KeyObject.createKeyObject(
-    'private',
-    bob.privateKey as ArrayBuffer,
-  );
-  const bobPublic = KeyObject.createKeyObject(
-    'public',
-    bob.publicKey as ArrayBuffer,
-  );
-
   const sharedSecretAlice = crypto.diffieHellman({
-    privateKey: alicePrivate,
-    publicKey: bobPublic,
+    privateKey: alice.privateKey as KeyObject,
+    publicKey: bob.publicKey as KeyObject,
   }) as Buffer;
 
   const sharedSecretBob = crypto.diffieHellman({
-    privateKey: bobPrivate,
-    publicKey: alicePublic,
+    privateKey: bob.privateKey as KeyObject,
+    publicKey: alice.publicKey as KeyObject,
   }) as Buffer;
 
   expect(Buffer.isBuffer(sharedSecretAlice)).to.equal(true);
@@ -139,18 +112,9 @@ test(SUITE, 'x25519 - shared secret properties', () => {
   const alice = crypto.generateKeyPairSync('x25519', {});
   const bob = crypto.generateKeyPairSync('x25519', {});
 
-  const alicePrivate = KeyObject.createKeyObject(
-    'private',
-    alice.privateKey as ArrayBuffer,
-  );
-  const bobPublic = KeyObject.createKeyObject(
-    'public',
-    bob.publicKey as ArrayBuffer,
-  );
-
   const sharedSecret = crypto.diffieHellman({
-    privateKey: alicePrivate,
-    publicKey: bobPublic,
+    privateKey: alice.privateKey as KeyObject,
+    publicKey: bob.publicKey as KeyObject,
   }) as Buffer;
 
   expect(sharedSecret.length).to.equal(32);
@@ -159,8 +123,8 @@ test(SUITE, 'x25519 - shared secret properties', () => {
   expect(sharedSecret.equals(allZeros)).to.equal(false);
 
   const sharedSecret2 = crypto.diffieHellman({
-    privateKey: alicePrivate,
-    publicKey: bobPublic,
+    privateKey: alice.privateKey as KeyObject,
+    publicKey: bob.publicKey as KeyObject,
   }) as Buffer;
   expect(sharedSecret.equals(sharedSecret2)).to.equal(true);
 });
@@ -170,27 +134,14 @@ test(SUITE, 'x25519 - different key pairs produce different secrets', () => {
   const bob = crypto.generateKeyPairSync('x25519', {});
   const charlie = crypto.generateKeyPairSync('x25519', {});
 
-  const alicePrivate = KeyObject.createKeyObject(
-    'private',
-    alice.privateKey as ArrayBuffer,
-  );
-  const bobPublic = KeyObject.createKeyObject(
-    'public',
-    bob.publicKey as ArrayBuffer,
-  );
-  const charliePublic = KeyObject.createKeyObject(
-    'public',
-    charlie.publicKey as ArrayBuffer,
-  );
-
   const secretAliceBob = crypto.diffieHellman({
-    privateKey: alicePrivate,
-    publicKey: bobPublic,
+    privateKey: alice.privateKey as KeyObject,
+    publicKey: bob.publicKey as KeyObject,
   }) as Buffer;
 
   const secretAliceCharlie = crypto.diffieHellman({
-    privateKey: alicePrivate,
-    publicKey: charliePublic,
+    privateKey: alice.privateKey as KeyObject,
+    publicKey: charlie.publicKey as KeyObject,
   }) as Buffer;
 
   expect(secretAliceBob.equals(secretAliceCharlie)).to.equal(false);
@@ -199,18 +150,9 @@ test(SUITE, 'x25519 - different key pairs produce different secrets', () => {
 test(SUITE, 'x25519 - error handling', () => {
   const alice = crypto.generateKeyPairSync('x25519', {});
 
-  const alicePrivate = KeyObject.createKeyObject(
-    'private',
-    alice.privateKey as ArrayBuffer,
-  );
-
-  expect(() => {
-    KeyObject.createKeyObject('public', new ArrayBuffer(16));
-  }).to.throw();
-
   expect(() => {
     crypto.diffieHellman({
-      privateKey: alicePrivate,
+      privateKey: alice.privateKey as KeyObject,
       publicKey: {} as KeyObject,
     });
   }).to.throw();
@@ -337,16 +279,10 @@ test(SUITE, 'x448 - shared secret', () => {
   const alice = crypto.generateKeyPairSync('x448', {});
   const bob = crypto.generateKeyPairSync('x448', {});
 
-  const privateKey = KeyObject.createKeyObject(
-    'private',
-    alice.privateKey as ArrayBuffer,
-  );
-  const publicKey = KeyObject.createKeyObject(
-    'public',
-    bob.publicKey as ArrayBuffer,
-  );
-
-  const sharedSecret = crypto.diffieHellman({ privateKey, publicKey });
+  const sharedSecret = crypto.diffieHellman({
+    privateKey: alice.privateKey as KeyObject,
+    publicKey: bob.publicKey as KeyObject,
+  });
   expect(Buffer.isBuffer(sharedSecret)).to.equal(true);
 });
 
@@ -354,31 +290,14 @@ test(SUITE, 'x448 - shared secret symmetry', () => {
   const alice = crypto.generateKeyPairSync('x448', {});
   const bob = crypto.generateKeyPairSync('x448', {});
 
-  const alicePrivate = KeyObject.createKeyObject(
-    'private',
-    alice.privateKey as ArrayBuffer,
-  );
-  const alicePublic = KeyObject.createKeyObject(
-    'public',
-    alice.publicKey as ArrayBuffer,
-  );
-  const bobPrivate = KeyObject.createKeyObject(
-    'private',
-    bob.privateKey as ArrayBuffer,
-  );
-  const bobPublic = KeyObject.createKeyObject(
-    'public',
-    bob.publicKey as ArrayBuffer,
-  );
-
   const sharedSecretAlice = crypto.diffieHellman({
-    privateKey: alicePrivate,
-    publicKey: bobPublic,
+    privateKey: alice.privateKey as KeyObject,
+    publicKey: bob.publicKey as KeyObject,
   }) as Buffer;
 
   const sharedSecretBob = crypto.diffieHellman({
-    privateKey: bobPrivate,
-    publicKey: alicePublic,
+    privateKey: bob.privateKey as KeyObject,
+    publicKey: alice.publicKey as KeyObject,
   }) as Buffer;
 
   expect(Buffer.isBuffer(sharedSecretAlice)).to.equal(true);
@@ -390,18 +309,9 @@ test(SUITE, 'x448 - shared secret properties', () => {
   const alice = crypto.generateKeyPairSync('x448', {});
   const bob = crypto.generateKeyPairSync('x448', {});
 
-  const alicePrivate = KeyObject.createKeyObject(
-    'private',
-    alice.privateKey as ArrayBuffer,
-  );
-  const bobPublic = KeyObject.createKeyObject(
-    'public',
-    bob.publicKey as ArrayBuffer,
-  );
-
   const sharedSecret = crypto.diffieHellman({
-    privateKey: alicePrivate,
-    publicKey: bobPublic,
+    privateKey: alice.privateKey as KeyObject,
+    publicKey: bob.publicKey as KeyObject,
   }) as Buffer;
 
   expect(sharedSecret.length).to.equal(56);
@@ -410,8 +320,8 @@ test(SUITE, 'x448 - shared secret properties', () => {
   expect(sharedSecret.equals(allZeros)).to.equal(false);
 
   const sharedSecret2 = crypto.diffieHellman({
-    privateKey: alicePrivate,
-    publicKey: bobPublic,
+    privateKey: alice.privateKey as KeyObject,
+    publicKey: bob.publicKey as KeyObject,
   }) as Buffer;
   expect(sharedSecret.equals(sharedSecret2)).to.equal(true);
 });
@@ -421,27 +331,14 @@ test(SUITE, 'x448 - different key pairs produce different secrets', () => {
   const bob = crypto.generateKeyPairSync('x448', {});
   const charlie = crypto.generateKeyPairSync('x448', {});
 
-  const alicePrivate = KeyObject.createKeyObject(
-    'private',
-    alice.privateKey as ArrayBuffer,
-  );
-  const bobPublic = KeyObject.createKeyObject(
-    'public',
-    bob.publicKey as ArrayBuffer,
-  );
-  const charliePublic = KeyObject.createKeyObject(
-    'public',
-    charlie.publicKey as ArrayBuffer,
-  );
-
   const secretAliceBob = crypto.diffieHellman({
-    privateKey: alicePrivate,
-    publicKey: bobPublic,
+    privateKey: alice.privateKey as KeyObject,
+    publicKey: bob.publicKey as KeyObject,
   }) as Buffer;
 
   const secretAliceCharlie = crypto.diffieHellman({
-    privateKey: alicePrivate,
-    publicKey: charliePublic,
+    privateKey: alice.privateKey as KeyObject,
+    publicKey: charlie.publicKey as KeyObject,
   }) as Buffer;
 
   expect(secretAliceBob.equals(secretAliceCharlie)).to.equal(false);
@@ -450,14 +347,9 @@ test(SUITE, 'x448 - different key pairs produce different secrets', () => {
 test(SUITE, 'x448 - error handling', () => {
   const alice = crypto.generateKeyPairSync('x448', {});
 
-  const alicePrivate = KeyObject.createKeyObject(
-    'private',
-    alice.privateKey as ArrayBuffer,
-  );
-
   expect(() => {
     crypto.diffieHellman({
-      privateKey: alicePrivate,
+      privateKey: alice.privateKey as KeyObject,
       publicKey: {} as KeyObject,
     });
   }).to.throw();
