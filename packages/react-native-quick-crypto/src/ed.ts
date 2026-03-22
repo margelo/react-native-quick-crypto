@@ -178,6 +178,27 @@ export function diffieHellman(
   return ed.diffieHellman(options, callback);
 }
 
+function ed_createKeyObjects(ed: Ed): {
+  pub: PublicKeyObject;
+  priv: PrivateKeyObjectClass;
+} {
+  const publicKeyData = ed.getPublicKey();
+  const privateKeyData = ed.getPrivateKey();
+  const pub = KeyObject.createKeyObject(
+    'public',
+    publicKeyData,
+    KFormatType.DER,
+    KeyEncoding.SPKI,
+  ) as PublicKeyObject;
+  const priv = KeyObject.createKeyObject(
+    'private',
+    privateKeyData,
+    KFormatType.DER,
+    KeyEncoding.PKCS8,
+  ) as PrivateKeyObjectClass;
+  return { pub, priv };
+}
+
 // Node API
 function ed_formatKeyPairOutput(
   ed: Ed,
@@ -187,28 +208,12 @@ function ed_formatKeyPairOutput(
   privateKey: PrivateKeyObjectClass | string | ArrayBuffer;
 } {
   const { publicFormat, privateFormat, cipher, passphrase } = encoding;
-
-  const publicKeyData = ed.getPublicKey();
-  const privateKeyData = ed.getPrivateKey();
-
-  const pub = KeyObject.createKeyObject(
-    'public',
-    publicKeyData,
-    KFormatType.DER,
-    KeyEncoding.SPKI,
-  ) as PublicKeyObject;
-
-  const priv = KeyObject.createKeyObject(
-    'private',
-    privateKeyData,
-    KFormatType.DER,
-    KeyEncoding.PKCS8,
-  ) as PrivateKeyObjectClass;
+  const { pub, priv } = ed_createKeyObjects(ed);
 
   let publicKey: PublicKeyObject | string | ArrayBuffer;
   let privateKey: PrivateKeyObjectClass | string | ArrayBuffer;
 
-  if (publicFormat === -1) {
+  if (publicFormat == null || publicFormat === -1) {
     publicKey = pub;
   } else {
     const format =
@@ -221,7 +226,7 @@ function ed_formatKeyPairOutput(
     }
   }
 
-  if (privateFormat === -1) {
+  if (privateFormat == null || privateFormat === -1) {
     privateKey = priv;
   } else {
     const format =
@@ -414,29 +419,14 @@ export async function ed_generateKeyPairWebCrypto(
   await ed.generateKeyPair();
 
   const algorithmName = type === 'ed25519' ? 'Ed25519' : 'Ed448';
+  const { pub, priv } = ed_createKeyObjects(ed);
 
-  const publicKeyData = ed.getPublicKey();
-  const privateKeyData = ed.getPrivateKey();
-
-  const pub = KeyObject.createKeyObject(
-    'public',
-    publicKeyData,
-    KFormatType.DER,
-    KeyEncoding.SPKI,
-  ) as PublicKeyObject;
   const publicKey = new CryptoKey(
     pub,
     { name: algorithmName } as SubtleAlgorithm,
     publicUsages,
     true,
   );
-
-  const priv = KeyObject.createKeyObject(
-    'private',
-    privateKeyData,
-    KFormatType.DER,
-    KeyEncoding.PKCS8,
-  ) as PrivateKeyObjectClass;
   const privateKey = new CryptoKey(
     priv,
     { name: algorithmName } as SubtleAlgorithm,
@@ -474,29 +464,14 @@ export async function x_generateKeyPairWebCrypto(
   await ed.generateKeyPair();
 
   const algorithmName = type === 'x25519' ? 'X25519' : 'X448';
+  const { pub, priv } = ed_createKeyObjects(ed);
 
-  const publicKeyData = ed.getPublicKey();
-  const privateKeyData = ed.getPrivateKey();
-
-  const pub = KeyObject.createKeyObject(
-    'public',
-    publicKeyData,
-    KFormatType.DER,
-    KeyEncoding.SPKI,
-  ) as PublicKeyObject;
   const publicKey = new CryptoKey(
     pub,
     { name: algorithmName } as SubtleAlgorithm,
     publicUsages,
     true,
   );
-
-  const priv = KeyObject.createKeyObject(
-    'private',
-    privateKeyData,
-    KFormatType.DER,
-    KeyEncoding.PKCS8,
-  ) as PrivateKeyObjectClass;
   const privateKey = new CryptoKey(
     priv,
     { name: algorithmName } as SubtleAlgorithm,

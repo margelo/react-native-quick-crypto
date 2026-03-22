@@ -16,8 +16,8 @@ const SUITE = 'keys.edKeyObject';
 
 test(SUITE, 'generateKeyPairSync ed25519 returns KeyObjects', () => {
   const result = generateKeyPairSync('ed25519');
-  const pub = result.publicKey as InstanceType<typeof AsymmetricKeyObject>;
-  const priv = result.privateKey as InstanceType<typeof AsymmetricKeyObject>;
+  const pub = result.publicKey as AsymmetricKeyObject;
+  const priv = result.privateKey as AsymmetricKeyObject;
 
   expect(pub).to.be.an.instanceOf(KeyObject);
   expect(priv).to.be.an.instanceOf(KeyObject);
@@ -29,8 +29,8 @@ test(SUITE, 'generateKeyPairSync ed25519 returns KeyObjects', () => {
 
 test(SUITE, 'ed25519 KeyObject.export() works for PEM', () => {
   const result = generateKeyPairSync('ed25519');
-  const pub = result.publicKey as InstanceType<typeof AsymmetricKeyObject>;
-  const priv = result.privateKey as InstanceType<typeof AsymmetricKeyObject>;
+  const pub = result.publicKey as AsymmetricKeyObject;
+  const priv = result.privateKey as AsymmetricKeyObject;
 
   const pubPem = pub.export({ type: 'spki', format: 'pem' });
   const privPem = priv.export({ type: 'pkcs8', format: 'pem' });
@@ -43,8 +43,8 @@ test(SUITE, 'ed25519 KeyObject.export() works for PEM', () => {
 
 test(SUITE, 'ed25519 KeyObject.export() works for DER', () => {
   const result = generateKeyPairSync('ed25519');
-  const pub = result.publicKey as InstanceType<typeof AsymmetricKeyObject>;
-  const priv = result.privateKey as InstanceType<typeof AsymmetricKeyObject>;
+  const pub = result.publicKey as AsymmetricKeyObject;
+  const priv = result.privateKey as AsymmetricKeyObject;
 
   const pubDer = pub.export({ type: 'spki', format: 'der' });
   const privDer = priv.export({ type: 'pkcs8', format: 'der' });
@@ -84,8 +84,8 @@ test(
   'ed25519 round-trip: KeyObject -> export DER -> createKey -> export',
   () => {
     const result = generateKeyPairSync('ed25519');
-    const pub = result.publicKey as InstanceType<typeof AsymmetricKeyObject>;
-    const priv = result.privateKey as InstanceType<typeof AsymmetricKeyObject>;
+    const pub = result.publicKey as AsymmetricKeyObject;
+    const priv = result.privateKey as AsymmetricKeyObject;
 
     const privDer = priv.export({ type: 'pkcs8', format: 'der' });
     const pubDer = pub.export({ type: 'spki', format: 'der' });
@@ -112,8 +112,12 @@ test(
     });
     const reExportedPub = recreatedPub.export({ type: 'spki', format: 'der' });
 
-    expect(Buffer.compare(privDer, reExportedPriv)).to.equal(0);
-    expect(Buffer.compare(pubDer, reExportedPub)).to.equal(0);
+    expect(
+      Buffer.compare(Buffer.from(privDer), Buffer.from(reExportedPriv)),
+    ).to.equal(0);
+    expect(
+      Buffer.compare(Buffer.from(pubDer), Buffer.from(reExportedPub)),
+    ).to.equal(0);
   },
 );
 
@@ -122,8 +126,8 @@ test(
   'ed25519 round-trip: KeyObject -> export PEM -> createKey -> export',
   () => {
     const result = generateKeyPairSync('ed25519');
-    const pub = result.publicKey as InstanceType<typeof AsymmetricKeyObject>;
-    const priv = result.privateKey as InstanceType<typeof AsymmetricKeyObject>;
+    const pub = result.publicKey as AsymmetricKeyObject;
+    const priv = result.privateKey as AsymmetricKeyObject;
 
     const privPem = priv.export({
       type: 'pkcs8',
@@ -155,8 +159,8 @@ test(
 
 test(SUITE, 'generateKeyPairSync ed448 returns KeyObjects', () => {
   const result = generateKeyPairSync('ed448');
-  const pub = result.publicKey as InstanceType<typeof AsymmetricKeyObject>;
-  const priv = result.privateKey as InstanceType<typeof AsymmetricKeyObject>;
+  const pub = result.publicKey as AsymmetricKeyObject;
+  const priv = result.privateKey as AsymmetricKeyObject;
 
   expect(pub).to.be.an.instanceOf(KeyObject);
   expect(priv).to.be.an.instanceOf(KeyObject);
@@ -166,8 +170,8 @@ test(SUITE, 'generateKeyPairSync ed448 returns KeyObjects', () => {
 
 test(SUITE, 'ed448 round-trip: KeyObject -> export -> recreate', () => {
   const result = generateKeyPairSync('ed448');
-  const pub = result.publicKey as InstanceType<typeof AsymmetricKeyObject>;
-  const priv = result.privateKey as InstanceType<typeof AsymmetricKeyObject>;
+  const pub = result.publicKey as AsymmetricKeyObject;
+  const priv = result.privateKey as AsymmetricKeyObject;
 
   const privDer = priv.export({ type: 'pkcs8', format: 'der' });
   const pubDer = pub.export({ type: 'spki', format: 'der' });
@@ -191,8 +195,8 @@ test(SUITE, 'ed448 round-trip: KeyObject -> export -> recreate', () => {
 
 test(SUITE, 'generateKeyPairSync x25519 returns KeyObjects', () => {
   const result = generateKeyPairSync('x25519');
-  const pub = result.publicKey as InstanceType<typeof AsymmetricKeyObject>;
-  const priv = result.privateKey as InstanceType<typeof AsymmetricKeyObject>;
+  const pub = result.publicKey as AsymmetricKeyObject;
+  const priv = result.privateKey as AsymmetricKeyObject;
 
   expect(pub).to.be.an.instanceOf(KeyObject);
   expect(priv).to.be.an.instanceOf(KeyObject);
@@ -202,8 +206,8 @@ test(SUITE, 'generateKeyPairSync x25519 returns KeyObjects', () => {
 
 test(SUITE, 'x25519 round-trip: KeyObject -> export -> recreate', () => {
   const result = generateKeyPairSync('x25519');
-  const pub = result.publicKey as InstanceType<typeof AsymmetricKeyObject>;
-  const priv = result.privateKey as InstanceType<typeof AsymmetricKeyObject>;
+  const pub = result.publicKey as AsymmetricKeyObject;
+  const priv = result.privateKey as AsymmetricKeyObject;
 
   const privDer = priv.export({ type: 'pkcs8', format: 'der' });
   const pubDer = pub.export({ type: 'spki', format: 'der' });
@@ -227,8 +231,8 @@ test(SUITE, 'x25519 round-trip: KeyObject -> export -> recreate', () => {
 
 test(SUITE, 'generateKeyPairSync x448 returns KeyObjects', () => {
   const result = generateKeyPairSync('x448');
-  const pub = result.publicKey as InstanceType<typeof AsymmetricKeyObject>;
-  const priv = result.privateKey as InstanceType<typeof AsymmetricKeyObject>;
+  const pub = result.publicKey as AsymmetricKeyObject;
+  const priv = result.privateKey as AsymmetricKeyObject;
 
   expect(pub).to.be.an.instanceOf(KeyObject);
   expect(priv).to.be.an.instanceOf(KeyObject);
@@ -238,8 +242,8 @@ test(SUITE, 'generateKeyPairSync x448 returns KeyObjects', () => {
 
 test(SUITE, 'x448 round-trip: KeyObject -> export -> recreate', () => {
   const result = generateKeyPairSync('x448');
-  const pub = result.publicKey as InstanceType<typeof AsymmetricKeyObject>;
-  const priv = result.privateKey as InstanceType<typeof AsymmetricKeyObject>;
+  const pub = result.publicKey as AsymmetricKeyObject;
+  const priv = result.privateKey as AsymmetricKeyObject;
 
   const privDer = priv.export({ type: 'pkcs8', format: 'der' });
   const pubDer = pub.export({ type: 'spki', format: 'der' });
@@ -263,15 +267,15 @@ test(SUITE, 'x448 round-trip: KeyObject -> export -> recreate', () => {
 
 test(SUITE, 'generateKeyPair ed25519 async returns KeyObjects', async () => {
   const result = await new Promise<{
-    publicKey: InstanceType<typeof AsymmetricKeyObject>;
-    privateKey: InstanceType<typeof AsymmetricKeyObject>;
+    publicKey: AsymmetricKeyObject;
+    privateKey: AsymmetricKeyObject;
   }>((resolve, reject) => {
     generateKeyPair('ed25519', {}, (err, pubKey, privKey) => {
       if (err) reject(err);
       else
         resolve({
-          publicKey: pubKey as InstanceType<typeof AsymmetricKeyObject>,
-          privateKey: privKey as InstanceType<typeof AsymmetricKeyObject>,
+          publicKey: pubKey as AsymmetricKeyObject,
+          privateKey: privKey as AsymmetricKeyObject,
         });
     });
   });
