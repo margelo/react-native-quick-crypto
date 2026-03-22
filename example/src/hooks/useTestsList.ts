@@ -19,6 +19,7 @@ import '../tests/hkdf/hkdf_tests';
 import '../tests/hmac/hmac_tests';
 import '../tests/jose/jose';
 import '../tests/keys/create_keys';
+import '../tests/keys/ed_keyobject';
 import '../tests/keys/generate_key';
 import '../tests/keys/generate_keypair';
 import '../tests/keys/keyobject_from_tocryptokey_tests';

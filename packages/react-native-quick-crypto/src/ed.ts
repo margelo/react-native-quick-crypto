@@ -179,50 +179,91 @@ export function diffieHellman(
 }
 
 // Node API
+function ed_formatKeyPairOutput(
+  ed: Ed,
+  encoding: KeyPairGenConfig,
+): {
+  publicKey: PublicKeyObject | string | ArrayBuffer;
+  privateKey: PrivateKeyObjectClass | string | ArrayBuffer;
+} {
+  const { publicFormat, privateFormat, cipher, passphrase } = encoding;
+
+  const publicKeyData = ed.getPublicKey();
+  const privateKeyData = ed.getPrivateKey();
+
+  const pub = KeyObject.createKeyObject(
+    'public',
+    publicKeyData,
+    KFormatType.DER,
+    KeyEncoding.SPKI,
+  ) as PublicKeyObject;
+
+  const priv = KeyObject.createKeyObject(
+    'private',
+    privateKeyData,
+    KFormatType.DER,
+    KeyEncoding.PKCS8,
+  ) as PrivateKeyObjectClass;
+
+  let publicKey: PublicKeyObject | string | ArrayBuffer;
+  let privateKey: PrivateKeyObjectClass | string | ArrayBuffer;
+
+  if (publicFormat === -1) {
+    publicKey = pub;
+  } else {
+    const format =
+      publicFormat === KFormatType.PEM ? KFormatType.PEM : KFormatType.DER;
+    const exported = pub.handle.exportKey(format, KeyEncoding.SPKI);
+    if (format === KFormatType.PEM) {
+      publicKey = Buffer.from(new Uint8Array(exported)).toString('utf-8');
+    } else {
+      publicKey = exported;
+    }
+  }
+
+  if (privateFormat === -1) {
+    privateKey = priv;
+  } else {
+    const format =
+      privateFormat === KFormatType.PEM ? KFormatType.PEM : KFormatType.DER;
+    const exported = priv.handle.exportKey(
+      format,
+      KeyEncoding.PKCS8,
+      cipher,
+      passphrase,
+    );
+    if (format === KFormatType.PEM) {
+      privateKey = Buffer.from(new Uint8Array(exported)).toString('utf-8');
+    } else {
+      privateKey = exported;
+    }
+  }
+
+  return { publicKey, privateKey };
+}
+
 export function ed_generateKeyPair(
   isAsync: boolean,
   type: CFRGKeyPairType,
   encoding: KeyPairGenConfig,
   callback: GenerateKeyPairCallback | undefined,
 ): GenerateKeyPairReturn | void {
-  const ed = new Ed(type, encoding);
-
-  // Helper to convert keys to proper output format
-  const formatKeys = (): {
-    publicKey: string | ArrayBuffer;
-    privateKey: string | ArrayBuffer;
-  } => {
-    const publicKeyRaw = ed.getPublicKey();
-    const privateKeyRaw = ed.getPrivateKey();
-
-    // Check if PEM format was requested (KFormatType.PEM = 1)
-    const isPemPublic = encoding.publicFormat === KFormatType.PEM;
-    const isPemPrivate = encoding.privateFormat === KFormatType.PEM;
-
-    // Convert ArrayBuffer to string for PEM format
-    const arrayBufferToString = (ab: ArrayBuffer): string => {
-      return Buffer.from(new Uint8Array(ab)).toString('utf-8');
-    };
-
-    const publicKey = isPemPublic
-      ? arrayBufferToString(publicKeyRaw)
-      : publicKeyRaw;
-    const privateKey = isPemPrivate
-      ? arrayBufferToString(privateKeyRaw)
-      : privateKeyRaw;
-
-    return { publicKey, privateKey };
+  const derConfig: KeyPairGenConfig = {
+    ...encoding,
+    publicFormat: KFormatType.DER,
+    publicType: KeyEncoding.SPKI,
+    privateFormat: KFormatType.DER,
+    privateType: KeyEncoding.PKCS8,
   };
+  const ed = new Ed(type, derConfig);
 
-  // Async path
   if (isAsync) {
     if (!callback) {
-      // This should not happen if called from public API
       throw new Error('A callback is required for async key generation.');
     }
     ed.generateKeyPair()
       .then(() => {
-        const { publicKey, privateKey } = formatKeys();
+        const { publicKey, privateKey } = ed_formatKeyPairOutput(ed, encoding);
         callback(undefined, publicKey, privateKey);
       })
       .catch(err => {
@@ -231,7 +272,6 @@ export function ed_generateKeyPair(
     return;
   }
 
-  // Sync path
   let err: Error | undefined;
   try {
     ed.generateKeyPairSync();
@@ -241,7 +281,7 @@ export function ed_generateKeyPair(
 
   const { publicKey, privateKey } = err
     ? { publicKey: undefined, privateKey: undefined }
-    : formatKeys();
+    : ed_formatKeyPairOutput(ed, encoding);
 
   if (callback) {
     callback(err, publicKey, privateKey);
