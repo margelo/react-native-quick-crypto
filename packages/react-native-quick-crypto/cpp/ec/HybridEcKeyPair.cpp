@@ -13,6 +13,8 @@
 #include <stdexcept>
 #include <string>
 
+#include "../sign/SignUtils.hpp"
+
 // OpenSSL EC parameter encoding constants
 #ifndef OPENSSL_EC_EXPLICIT_CURVE
 #define OPENSSL_EC_EXPLICIT_CURVE 0x000
@@ -23,6 +25,8 @@
 
 #include "HybridEcKeyPair.hpp"
 #include "QuickCryptoUtils.hpp"
+
+using margelo::nitro::NativeArrayBuffer;
 
 namespace margelo::nitro::crypto {
 
@@ -372,8 +376,18 @@ std::shared_ptr<ArrayBuffer> HybridEcKeyPair::sign(const std::shared_ptr<ArrayBu
   // Resize to actual signature length
   signature.resize(sig_len);
 
-  // Convert to ArrayBuffer
-  return ToNativeArrayBuffer(std::string(signature.begin(), signature.end()));
+  // Web Crypto API requires IEEE P1363 format for ECDSA signatures
+  unsigned int n = getBytesOfRS(this->pkey);
+  if (n == 0) {
+    throw std::runtime_error("Failed to determine EC key order size for P1363 conversion");
+  }
+  auto p1363_buf = std::make_unique<uint8_t[]>(2 * n);
+  std::memset(p1363_buf.get(), 0, 2 * n);
+  if (!convertSignatureToP1363(signature.data(), sig_len, p1363_buf.get(), n)) {
+    throw std::runtime_error("Failed to convert ECDSA signature from DER to P1363 format");
+  }
+  uint8_t* raw_ptr = p1363_buf.get();
+  return std::make_shared<NativeArrayBuffer>(p1363_buf.release(), 2 * n, [raw_ptr]() { delete[] raw_ptr; });
 }
 
 bool HybridEcKeyPair::verify(const std::shared_ptr<ArrayBuffer>& data, const std::shared_ptr<ArrayBuffer>& signature,
@@ -410,8 +424,24 @@ bool HybridEcKeyPair::verify(const std::shared_ptr<ArrayBuffer>& data, const std
     throw std::runtime_error("Failed to update ECDSA verification with data");
   }
 
-  // Verify signature
-  int result = EVP_DigestVerifyFinal(md_ctx.get(), static_cast<const unsigned char*>(signature->data()), signature->size());
+  // Web Crypto API passes IEEE P1363 format, OpenSSL expects DER
+  const unsigned char* sig_data = static_cast<const unsigned char*>(signature->data());
+  size_t sig_len = signature->size();
+  std::unique_ptr<uint8_t[]> der_sig_buf;
+
+  unsigned int n = getBytesOfRS(this->pkey);
+  if (n == 0) {
+    throw std::runtime_error("Failed to determine EC key order size for DER conversion");
+  }
+  size_t der_len = 0;
+  der_sig_buf = convertSignatureToDER(sig_data, sig_len, n, &der_len);
+  if (!der_sig_buf) {
+    throw std::runtime_error("Failed to convert ECDSA signature from P1363 to DER format");
+  }
+  sig_data = der_sig_buf.get();
+  sig_len = der_len;
+
+  int result = EVP_DigestVerifyFinal(md_ctx.get(), sig_data, sig_len);
 
   if (result < 0) {
     throw std::runtime_error("ECDSA verification failed with error");

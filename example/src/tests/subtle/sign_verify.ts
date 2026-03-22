@@ -354,6 +354,9 @@ test(SUITE, 'ECDSA P-256 with SHA-256 sign/verify', async () => {
     testData,
   );
 
+  // IEEE P1363 format: r (32 bytes) || s (32 bytes) = 64 bytes
+  expect(signature.byteLength).to.equal(64);
+
   const isValid = await subtle.verify(
     { name: 'ECDSA', hash: 'SHA-256' },
     keyPair.publicKey,
@@ -380,6 +383,9 @@ test(SUITE, 'ECDSA P-384 with SHA-384 sign/verify', async () => {
     testData,
   );
 
+  // IEEE P1363 format: r (48 bytes) || s (48 bytes) = 96 bytes
+  expect(signature.byteLength).to.equal(96);
+
   const isValid = await subtle.verify(
     { name: 'ECDSA', hash: 'SHA-384' },
     keyPair.publicKey,
@@ -405,6 +411,9 @@ test(SUITE, 'ECDSA P-521 with SHA-512 sign/verify', async () => {
     keyPair.privateKey,
     testData,
   );
+
+  // IEEE P1363 format: r (66 bytes) || s (66 bytes) = 132 bytes
+  expect(signature.byteLength).to.equal(132);
 
   const isValid = await subtle.verify(
     { name: 'ECDSA', hash: 'SHA-512' },
