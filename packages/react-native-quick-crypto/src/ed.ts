@@ -58,9 +58,11 @@ export class Ed {
     options: DiffieHellmanOptions,
     callback?: DiffieHellmanCallback,
   ): Buffer | void {
-    // extract the private and public keys as ArrayBuffers
-    const privateKey = toAB(options.privateKey);
-    const publicKey = toAB(options.publicKey);
+    // extract raw key bytes from KeyObject instances
+    const privKeyObj = options.privateKey as AsymmetricKeyObject;
+    const pubKeyObj = options.publicKey as AsymmetricKeyObject;
+    const privateKey = privKeyObj.handle.exportKey();
+    const publicKey = pubKeyObj.handle.exportKey();
 
     try {
       const ret = this.native.diffieHellman(privateKey, publicKey);
@@ -178,51 +180,97 @@ export function diffieHellman(
   return ed.diffieHellman(options, callback);
 }
 
+function ed_createKeyObjects(ed: Ed): {
+  pub: PublicKeyObject;
+  priv: PrivateKeyObjectClass;
+} {
+  const publicKeyData = ed.getPublicKey();
+  const privateKeyData = ed.getPrivateKey();
+  const pub = KeyObject.createKeyObject(
+    'public',
+    publicKeyData,
+    KFormatType.DER,
+    KeyEncoding.SPKI,
+  ) as PublicKeyObject;
+  const priv = KeyObject.createKeyObject(
+    'private',
+    privateKeyData,
+    KFormatType.DER,
+    KeyEncoding.PKCS8,
+  ) as PrivateKeyObjectClass;
+  return { pub, priv };
+}
+
 // Node API
+function ed_formatKeyPairOutput(
+  ed: Ed,
+  encoding: KeyPairGenConfig,
+): {
+  publicKey: PublicKeyObject | string | ArrayBuffer;
+  privateKey: PrivateKeyObjectClass | string | ArrayBuffer;
+} {
+  const { publicFormat, privateFormat, cipher, passphrase } = encoding;
+  const { pub, priv } = ed_createKeyObjects(ed);
+
+  let publicKey: PublicKeyObject | string | ArrayBuffer;
+  let privateKey: PrivateKeyObjectClass | string | ArrayBuffer;
+
+  if (publicFormat == null || publicFormat === -1) {
+    publicKey = pub;
+  } else {
+    const format =
+      publicFormat === KFormatType.PEM ? KFormatType.PEM : KFormatType.DER;
+    const exported = pub.handle.exportKey(format, KeyEncoding.SPKI);
+    if (format === KFormatType.PEM) {
+      publicKey = Buffer.from(new Uint8Array(exported)).toString('utf-8');
+    } else {
+      publicKey = exported;
+    }
+  }
+
+  if (privateFormat == null || privateFormat === -1) {
+    privateKey = priv;
+  } else {
+    const format =
+      privateFormat === KFormatType.PEM ? KFormatType.PEM : KFormatType.DER;
+    const exported = priv.handle.exportKey(
+      format,
+      KeyEncoding.PKCS8,
+      cipher,
+      passphrase,
+    );
+    if (format === KFormatType.PEM) {
+      privateKey = Buffer.from(new Uint8Array(exported)).toString('utf-8');
+    } else {
+      privateKey = exported;
+    }
+  }
+
+  return { publicKey, privateKey };
+}
+
 export function ed_generateKeyPair(
   isAsync: boolean,
   type: CFRGKeyPairType,
   encoding: KeyPairGenConfig,
   callback: GenerateKeyPairCallback | undefined,
 ): GenerateKeyPairReturn | void {
-  const ed = new Ed(type, encoding);
-
-  // Helper to convert keys to proper output format
-  const formatKeys = (): {
-    publicKey: string | ArrayBuffer;
-    privateKey: string | ArrayBuffer;
-  } => {
-    const publicKeyRaw = ed.getPublicKey();
-    const privateKeyRaw = ed.getPrivateKey();
-
-    // Check if PEM format was requested (KFormatType.PEM = 1)
-    const isPemPublic = encoding.publicFormat === KFormatType.PEM;
-    const isPemPrivate = encoding.privateFormat === KFormatType.PEM;
-
-    // Convert ArrayBuffer to string for PEM format
-    const arrayBufferToString = (ab: ArrayBuffer): string => {
-      return Buffer.from(new Uint8Array(ab)).toString('utf-8');
-    };
-
-    const publicKey = isPemPublic
-      ? arrayBufferToString(publicKeyRaw)
-      : publicKeyRaw;
-    const privateKey = isPemPrivate
-      ? arrayBufferToString(privateKeyRaw)
-      : privateKeyRaw;
-
-    return { publicKey, privateKey };
+  const derConfig: KeyPairGenConfig = {
+    ...encoding,
+    publicFormat: KFormatType.DER,
+    publicType: KeyEncoding.SPKI,
+    privateFormat: KFormatType.DER,
+    privateType: KeyEncoding.PKCS8,
   };
+  const ed = new Ed(type, derConfig);
 
-  // Async path
   if (isAsync) {
     if (!callback) {
-      // This should not happen if called from public API
       throw new Error('A callback is required for async key generation.');
     }
     ed.generateKeyPair()
       .then(() => {
-        const { publicKey, privateKey } = formatKeys();
+        const { publicKey, privateKey } = ed_formatKeyPairOutput(ed, encoding);
         callback(undefined, publicKey, privateKey);
       })
       .catch(err => {
@@ -231,7 +279,6 @@ export function ed_generateKeyPair(
     return;
   }
 
-  // Sync path
   let err: Error | undefined;
   try {
     ed.generateKeyPairSync();
@@ -241,7 +288,7 @@ export function ed_generateKeyPair(
 
   const { publicKey, privateKey } = err
     ? { publicKey: undefined, privateKey: undefined }
-    : formatKeys();
+    : ed_formatKeyPairOutput(ed, encoding);
 
   if (callback) {
     callback(err, publicKey, privateKey);
@@ -374,29 +421,14 @@ export async function ed_generateKeyPairWebCrypto(
   await ed.generateKeyPair();
 
   const algorithmName = type === 'ed25519' ? 'Ed25519' : 'Ed448';
+  const { pub, priv } = ed_createKeyObjects(ed);
 
-  const publicKeyData = ed.getPublicKey();
-  const privateKeyData = ed.getPrivateKey();
-
-  const pub = KeyObject.createKeyObject(
-    'public',
-    publicKeyData,
-    KFormatType.DER,
-    KeyEncoding.SPKI,
-  ) as PublicKeyObject;
   const publicKey = new CryptoKey(
     pub,
     { name: algorithmName } as SubtleAlgorithm,
     publicUsages,
     true,
   );
-
-  const priv = KeyObject.createKeyObject(
-    'private',
-    privateKeyData,
-    KFormatType.DER,
-    KeyEncoding.PKCS8,
-  ) as PrivateKeyObjectClass;
   const privateKey = new CryptoKey(
     priv,
     { name: algorithmName } as SubtleAlgorithm,
@@ -434,29 +466,14 @@ export async function x_generateKeyPairWebCrypto(
   await ed.generateKeyPair();
 
   const algorithmName = type === 'x25519' ? 'X25519' : 'X448';
+  const { pub, priv } = ed_createKeyObjects(ed);
 
-  const publicKeyData = ed.getPublicKey();
-  const privateKeyData = ed.getPrivateKey();
-
-  const pub = KeyObject.createKeyObject(
-    'public',
-    publicKeyData,
-    KFormatType.DER,
-    KeyEncoding.SPKI,
-  ) as PublicKeyObject;
   const publicKey = new CryptoKey(
     pub,
     { name: algorithmName } as SubtleAlgorithm,
     publicUsages,
     true,
   );
-
-  const priv = KeyObject.createKeyObject(
-    'private',
-    privateKeyData,
-    KFormatType.DER,
-    KeyEncoding.PKCS8,
-  ) as PrivateKeyObjectClass;
   const privateKey = new CryptoKey(
     priv,
     { name: algorithmName } as SubtleAlgorithm,
