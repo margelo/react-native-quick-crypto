@@ -1,7 +1,7 @@
 import { NitroModules } from 'react-native-nitro-modules';
 import type { ECDH as ECDHInterface } from './specs/ecdh.nitro';
 import { Buffer } from '@craftzdog/react-native-buffer';
-import { toArrayBuffer as toArrayBufferExact } from './utils/conversion';
+import { toArrayBuffer } from './utils/conversion';
 
 const POINT_CONVERSION_COMPRESSED = 2;
 const POINT_CONVERSION_UNCOMPRESSED = 4;
@@ -44,7 +44,7 @@ export class ECDH {
     }
 
     // ECDH.computeSecret in Node.js returns Buffer
-    const secret = this._hybrid.computeSecret(toArrayBufferExact(keyBuf));
+    const secret = this._hybrid.computeSecret(toArrayBuffer(keyBuf));
     return Buffer.from(secret);
   }
 
@@ -59,7 +59,7 @@ export class ECDH {
     } else {
       keyBuf = Buffer.from(privateKey, encoding);
     }
-    this._hybrid.setPrivateKey(toArrayBufferExact(keyBuf));
+    this._hybrid.setPrivateKey(toArrayBuffer(keyBuf));
   }
 
   getPublicKey(encoding?: BufferEncoding): Buffer | string {
@@ -81,7 +81,7 @@ export class ECDH {
     } else {
       keyBuf = Buffer.from(publicKey, encoding);
     }
-    this._hybrid.setPublicKey(toArrayBufferExact(keyBuf));
+    this._hybrid.setPublicKey(toArrayBuffer(keyBuf));
   }
 
   static convertKey(
@@ -117,11 +117,7 @@ export class ECDH {
     }
 
     const result = Buffer.from(
-      ECDH.convertKeyHybrid.convertKey(
-        toArrayBufferExact(keyBuf),
-        curve,
-        formatNum,
-      ),
+      ECDH.convertKeyHybrid.convertKey(toArrayBuffer(keyBuf), curve, formatNum),
     );
 
     if (outputEncoding) {
