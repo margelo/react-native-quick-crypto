@@ -6,6 +6,13 @@ const POINT_CONVERSION_COMPRESSED = 2;
 const POINT_CONVERSION_UNCOMPRESSED = 4;
 const POINT_CONVERSION_HYBRID = 6;
 
+function toArrayBufferExact(buf: Buffer): ArrayBuffer {
+  return buf.buffer.slice(
+    buf.byteOffset,
+    buf.byteOffset + buf.byteLength,
+  ) as ArrayBuffer;
+}
+
 export class ECDH {
   private static _convertKeyHybrid: ECDHInterface | undefined;
   private static get convertKeyHybrid(): ECDHInterface {
@@ -43,7 +50,7 @@ export class ECDH {
     }
 
     // ECDH.computeSecret in Node.js returns Buffer
-    const secret = this._hybrid.computeSecret(keyBuf.buffer as ArrayBuffer);
+    const secret = this._hybrid.computeSecret(toArrayBufferExact(keyBuf));
     return Buffer.from(secret);
   }
 
@@ -58,7 +65,7 @@ export class ECDH {
     } else {
       keyBuf = Buffer.from(privateKey, encoding);
     }
-    this._hybrid.setPrivateKey(keyBuf.buffer as ArrayBuffer);
+    this._hybrid.setPrivateKey(toArrayBufferExact(keyBuf));
   }
 
   getPublicKey(encoding?: BufferEncoding): Buffer | string {
@@ -80,7 +87,7 @@ export class ECDH {
     } else {
       keyBuf = Buffer.from(publicKey, encoding);
     }
-    this._hybrid.setPublicKey(keyBuf.buffer as ArrayBuffer);
+    this._hybrid.setPublicKey(toArrayBufferExact(keyBuf));
   }
 
   static convertKey(
@@ -117,7 +124,7 @@ export class ECDH {
 
     const result = Buffer.from(
       ECDH.convertKeyHybrid.convertKey(
-        keyBuf.buffer as ArrayBuffer,
+        toArrayBufferExact(keyBuf),
         curve,
         formatNum,
       ),

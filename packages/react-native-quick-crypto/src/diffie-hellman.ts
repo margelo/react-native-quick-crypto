@@ -3,6 +3,13 @@ import type { DiffieHellman as DiffieHellmanInterface } from './specs/diffie-hel
 import { Buffer } from '@craftzdog/react-native-buffer';
 import { DH_GROUPS } from './dh-groups';
 
+function toArrayBufferExact(buf: Buffer): ArrayBuffer {
+  return buf.buffer.slice(
+    buf.byteOffset,
+    buf.byteOffset + buf.byteLength,
+  ) as ArrayBuffer;
+}
+
 export class DiffieHellman {
   private _hybrid: DiffieHellmanInterface;
 
@@ -37,8 +44,8 @@ export class DiffieHellman {
       }
 
       this._hybrid.init(
-        primeBuf.buffer as ArrayBuffer,
-        genBuf.buffer as ArrayBuffer,
+        toArrayBufferExact(primeBuf),
+        toArrayBufferExact(genBuf),
       );
     }
   }
@@ -62,7 +69,7 @@ export class DiffieHellman {
     }
 
     const secret = Buffer.from(
-      this._hybrid.computeSecret(keyBuf.buffer as ArrayBuffer),
+      this._hybrid.computeSecret(toArrayBufferExact(keyBuf)),
     );
     if (outputEncoding) return secret.toString(outputEncoding);
     return secret;
@@ -99,7 +106,7 @@ export class DiffieHellman {
     } else {
       keyBuf = Buffer.from(publicKey, encoding);
     }
-    this._hybrid.setPublicKey(keyBuf.buffer as ArrayBuffer);
+    this._hybrid.setPublicKey(toArrayBufferExact(keyBuf));
   }
 
   setPrivateKey(privateKey: Buffer | string, encoding?: BufferEncoding): void {
@@ -109,7 +116,7 @@ export class DiffieHellman {
     } else {
       keyBuf = Buffer.from(privateKey, encoding);
     }
-    this._hybrid.setPrivateKey(keyBuf.buffer as ArrayBuffer);
+    this._hybrid.setPrivateKey(toArrayBufferExact(keyBuf));
   }
 
   get verifyError(): number {
