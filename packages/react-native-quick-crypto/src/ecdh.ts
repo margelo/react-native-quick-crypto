@@ -1,17 +1,11 @@
 import { NitroModules } from 'react-native-nitro-modules';
 import type { ECDH as ECDHInterface } from './specs/ecdh.nitro';
 import { Buffer } from '@craftzdog/react-native-buffer';
+import { toArrayBuffer as toArrayBufferExact } from './utils/conversion';
 
 const POINT_CONVERSION_COMPRESSED = 2;
 const POINT_CONVERSION_UNCOMPRESSED = 4;
 const POINT_CONVERSION_HYBRID = 6;
-
-function toArrayBufferExact(buf: Buffer): ArrayBuffer {
-  return buf.buffer.slice(
-    buf.byteOffset,
-    buf.byteOffset + buf.byteLength,
-  ) as ArrayBuffer;
-}
 
 export class ECDH {
   private static _convertKeyHybrid: ECDHInterface | undefined;

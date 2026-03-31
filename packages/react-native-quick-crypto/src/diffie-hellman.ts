@@ -2,13 +2,7 @@ import { NitroModules } from 'react-native-nitro-modules';
 import type { DiffieHellman as DiffieHellmanInterface } from './specs/diffie-hellman.nitro';
 import { Buffer } from '@craftzdog/react-native-buffer';
 import { DH_GROUPS } from './dh-groups';
-
-function toArrayBufferExact(buf: Buffer): ArrayBuffer {
-  return buf.buffer.slice(
-    buf.byteOffset,
-    buf.byteOffset + buf.byteLength,
-  ) as ArrayBuffer;
-}
+import { toArrayBuffer as toArrayBufferExact } from './utils/conversion';
 
 export class DiffieHellman {
   private _hybrid: DiffieHellmanInterface;
