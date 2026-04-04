@@ -2,6 +2,7 @@ import { NitroModules } from 'react-native-nitro-modules';
 import type { DiffieHellman as DiffieHellmanInterface } from './specs/diffie-hellman.nitro';
 import { Buffer } from '@craftzdog/react-native-buffer';
 import { DH_GROUPS } from './dh-groups';
+import { toArrayBuffer } from './utils/conversion';
 
 export class DiffieHellman {
   private _hybrid: DiffieHellmanInterface;
@@ -36,10 +37,7 @@ export class DiffieHellman {
         genBuf = Buffer.from(generator, encoding as BufferEncoding);
       }
 
-      this._hybrid.init(
-        primeBuf.buffer as ArrayBuffer,
-        genBuf.buffer as ArrayBuffer,
-      );
+      this._hybrid.init(toArrayBuffer(primeBuf), toArrayBuffer(genBuf));
     }
   }
 
@@ -62,7 +60,7 @@ export class DiffieHellman {
     }
 
     const secret = Buffer.from(
-      this._hybrid.computeSecret(keyBuf.buffer as ArrayBuffer),
+      this._hybrid.computeSecret(toArrayBuffer(keyBuf)),
     );
     if (outputEncoding) return secret.toString(outputEncoding);
     return secret;
@@ -99,7 +97,7 @@ export class DiffieHellman {
     } else {
       keyBuf = Buffer.from(publicKey, encoding);
     }
-    this._hybrid.setPublicKey(keyBuf.buffer as ArrayBuffer);
+    this._hybrid.setPublicKey(toArrayBuffer(keyBuf));
   }
 
   setPrivateKey(privateKey: Buffer | string, encoding?: BufferEncoding): void {
@@ -109,7 +107,7 @@ export class DiffieHellman {
     } else {
       keyBuf = Buffer.from(privateKey, encoding);
     }
-    this._hybrid.setPrivateKey(keyBuf.buffer as ArrayBuffer);
+    this._hybrid.setPrivateKey(toArrayBuffer(keyBuf));
   }
 
   get verifyError(): number {

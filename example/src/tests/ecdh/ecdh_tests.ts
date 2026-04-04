@@ -132,6 +132,44 @@ test(SUITE, 'should set private key and compute secret for secp256k1', () => {
   assert.strictEqual(secret1.toString('hex'), secret2.toString('hex'));
 });
 
+test(SUITE, 'should compute secret with sliced public key buffer', () => {
+  const alice = crypto.createECDH('secp256k1');
+  alice.generateKeys();
+
+  const bob = crypto.createECDH('secp256k1');
+  bob.generateKeys();
+
+  const bobPub = bob.getPublicKey() as Buffer;
+  assert.isTrue(Buffer.isBuffer(bobPub), 'public key should be a Buffer');
+
+  // Force non-zero byteOffset by slicing from a larger packet.
+  const packet = Buffer.concat([
+    Buffer.from([0xaa, 0xbb]),
+    bobPub,
+    Buffer.from([0xcc]),
+  ]);
+  const bobPubSlice = packet.slice(2, 2 + bobPub.length);
+  assert.strictEqual(
+    bobPubSlice.length,
+    bobPub.length,
+    'slice length should match key length',
+  );
+  assert.isAbove(
+    bobPubSlice.byteOffset,
+    0,
+    'slice should have non-zero byteOffset',
+  );
+
+  const secretFromOriginal = alice.computeSecret(bobPub);
+  const secretFromSlice = alice.computeSecret(bobPubSlice);
+
+  assert.strictEqual(
+    secretFromSlice.toString('hex'),
+    secretFromOriginal.toString('hex'),
+    'sliced public key should derive the same shared secret',
+  );
+});
+
 test(SUITE, 'getCurves - should return array of supported curves', () => {
   const curves = getCurves();
   assert.isArray(curves);
