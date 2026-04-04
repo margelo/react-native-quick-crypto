@@ -3,6 +3,7 @@ import { Buffer } from '@craftzdog/react-native-buffer';
 import type { Blake3 as NativeBlake3 } from './specs/blake3.nitro';
 import type { BinaryLike, Encoding } from './utils';
 import { binaryLikeToArrayBuffer, ab2str } from './utils';
+import { toArrayBuffer } from './utils/conversion';
 
 const BLAKE3_KEY_LEN = 32;
 const BLAKE3_OUT_LEN = 32;
@@ -34,7 +35,7 @@ export class Blake3 {
       }
       this.mode = 'keyed';
       this.keyData = opts.key;
-      this.native.initKeyed(opts.key.buffer as ArrayBuffer);
+      this.native.initKeyed(toArrayBuffer(opts.key));
     } else if (opts?.context !== undefined) {
       if (typeof opts.context !== 'string' || opts.context.length === 0) {
         throw new Error('BLAKE3: context must be a non-empty string');
