@@ -177,25 +177,25 @@ std::string HybridUtils::bufferToString(const std::shared_ptr<ArrayBuffer>& buff
 std::shared_ptr<ArrayBuffer> HybridUtils::stringToBuffer(const std::string& str, const std::string& encoding) {
   if (encoding == "hex") {
     auto decoded = decodeHex(str);
-    return ToNativeArrayBuffer(decoded);
+    return ArrayBuffer::move(std::move(decoded));
   }
   if (encoding == "base64" || encoding == "base64url") {
     auto decoded = decodeBase64(str);
-    return ToNativeArrayBuffer(decoded);
+    return ArrayBuffer::move(std::move(decoded));
   }
   if (encoding == "utf8" || encoding == "utf-8") {
-    return ToNativeArrayBuffer(str);
+    return ArrayBuffer::copy(reinterpret_cast<const uint8_t*>(str.data()), str.size());
   }
   if (encoding == "latin1" || encoding == "binary") {
     auto decoded = decodeLatin1(str);
-    return ToNativeArrayBuffer(decoded);
+    return ArrayBuffer::move(std::move(decoded));
   }
   if (encoding == "ascii") {
     auto decoded = decodeLatin1(str);
     for (auto& b : decoded) {
       b &= 0x7F;
     }
-    return ToNativeArrayBuffer(decoded);
+    return ArrayBuffer::move(std::move(decoded));
   }
   throw std::runtime_error("Unsupported encoding: " + encoding);
 }
