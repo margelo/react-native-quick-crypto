@@ -1,10 +1,9 @@
 #include "HybridUtils.hpp"
 
-#include <limits>
 #include <openssl/crypto.h>
-#include <openssl/evp.h>
 #include <stdexcept>
 #include <string>
+#include <vector>
 
 #include "QuickCryptoUtils.hpp"
 #include "simdutf.h"
@@ -64,22 +63,17 @@ namespace {
   }
 
   std::vector<uint8_t> decodeBase64(const std::string& b64) {
-    if (b64.length() > static_cast<size_t>(std::numeric_limits<int>::max())) {
-      throw std::runtime_error("Input too large for base64 decoding");
+    if (b64.empty()) {
+      return {};
     }
-    size_t maxLen = ((b64.length() + 3) / 4) * 3;
+
+    size_t maxLen = simdutf::maximal_binary_length_from_base64(b64.data(), b64.length());
     std::vector<uint8_t> result(maxLen);
-    int written = EVP_DecodeBlock(result.data(), reinterpret_cast<const unsigned char*>(b64.data()), static_cast<int>(b64.length()));
-    if (written < 0) {
+    auto decodeResult = simdutf::base64_to_binary(b64.data(), b64.size(), reinterpret_cast<char*>(result.data()), simdutf::base64_default);
+    if (decodeResult.error != simdutf::error_code::SUCCESS) {
       throw std::runtime_error("Base64 decoding failed");
     }
-    // EVP_DecodeBlock doesn't account for padding — trim trailing zeros from padding
-    size_t padding = 0;
-    if (b64.length() >= 1 && b64[b64.length() - 1] == '=')
-      padding++;
-    if (b64.length() >= 2 && b64[b64.length() - 2] == '=')
-      padding++;
-    result.resize(static_cast<size_t>(written) - padding);
+    result.resize(decodeResult.count);
     return result;
   }
 
@@ -95,18 +89,18 @@ namespace {
   }
 
   std::vector<uint8_t> decodeBase64Url(const std::string& b64url) {
-    std::string b64 = b64url;
-    for (auto& c : b64) {
-      if (c == '-')
-        c = '+';
-      else if (c == '_')
-        c = '/';
+    if (b64url.empty()) {
+      return {};
     }
-    // Add back padding
-    while (b64.length() % 4 != 0) {
-      b64.push_back('=');
+
+    size_t maxLen = simdutf::maximal_binary_length_from_base64(b64url.data(), b64url.length());
+    std::vector<uint8_t> result(maxLen);
+    auto decodeResult = simdutf::base64_to_binary(b64url.data(), b64url.size(), reinterpret_cast<char*>(result.data()), simdutf::base64_url);
+    if (decodeResult.error != simdutf::error_code::SUCCESS) {
+      throw std::runtime_error("Base64 decoding failed");
     }
-    return decodeBase64(b64);
+    result.resize(decodeResult.count);
+    return result;
   }
 
   std::vector<uint8_t> decodeLatin1(const std::string& str) {
