@@ -47,6 +47,9 @@ Pod::Spec.new do |s|
     # CocoaPods packages are outdated (1.0.12) and SPM causes module conflicts
     s.prepare_command = <<-CMD
       set -e
+      # Clean up vendored OpenSSL.xcframework from pre-1.0.20 installs
+      rm -rf OpenSSL.xcframework
+      rm -f OpenSSL.xcframework.zip
       # Build libsodium
       mkdir -p ios
       curl -L -o ios/libsodium.tar.gz https://download.libsodium.org/libsodium/releases/libsodium-1.0.20-stable.tar.gz
@@ -63,6 +66,9 @@ Pod::Spec.new do |s|
       # Clean up libsodium if previously built
       rm -rf ios/libsodium-stable
       rm -f ios/libsodium.tar.gz
+      # Clean up vendored OpenSSL.xcframework from pre-1.0.20 installs
+      rm -rf OpenSSL.xcframework
+      rm -f OpenSSL.xcframework.zip
     CMD
   end
 
@@ -172,7 +178,7 @@ Pod::Spec.new do |s|
   load "nitrogen/generated/ios/QuickCrypto+autolinking.rb"
   add_nitrogen_files(s)
 
-  s.dependency "OpenSSL-Universal", ">= 3.6"
+  s.dependency "OpenSSL-Universal", "~> 3.6"
   s.dependency "React-jsi"
   s.dependency "React-callinvoker"
 
