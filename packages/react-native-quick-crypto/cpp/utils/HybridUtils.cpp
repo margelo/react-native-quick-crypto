@@ -69,7 +69,7 @@ namespace {
 
     size_t maxLen = simdutf::maximal_binary_length_from_base64(b64.data(), b64.length());
     std::vector<uint8_t> result(maxLen);
-    auto decodeResult = simdutf::base64_to_binary(b64.data(), b64.size(), reinterpret_cast<char*>(result.data()), simdutf::base64_default);
+    auto decodeResult = simdutf::base64_to_binary(b64.data(), b64.size(), reinterpret_cast<char*>(result.data()), simdutf::base64_default_or_url);
     if (decodeResult.error != simdutf::error_code::SUCCESS) {
       throw std::runtime_error("Base64 decoding failed");
     }
@@ -85,21 +85,6 @@ namespace {
     size_t encodedLen = simdutf::base64_length_from_binary(len, simdutf::base64_url);
     std::string result(encodedLen, '\0');
     simdutf::binary_to_base64(reinterpret_cast<const char*>(data), len, result.data(), simdutf::base64_url);
-    return result;
-  }
-
-  std::vector<uint8_t> decodeBase64Url(const std::string& b64url) {
-    if (b64url.empty()) {
-      return {};
-    }
-
-    size_t maxLen = simdutf::maximal_binary_length_from_base64(b64url.data(), b64url.length());
-    std::vector<uint8_t> result(maxLen);
-    auto decodeResult = simdutf::base64_to_binary(b64url.data(), b64url.size(), reinterpret_cast<char*>(result.data()), simdutf::base64_url);
-    if (decodeResult.error != simdutf::error_code::SUCCESS) {
-      throw std::runtime_error("Base64 decoding failed");
-    }
-    result.resize(decodeResult.count);
     return result;
   }
 
@@ -193,12 +178,8 @@ std::shared_ptr<ArrayBuffer> HybridUtils::stringToBuffer(const std::string& str,
     auto decoded = decodeHex(str);
     return ToNativeArrayBuffer(decoded);
   }
-  if (encoding == "base64") {
+  if (encoding == "base64" || encoding == "base64url") {
     auto decoded = decodeBase64(str);
-    return ToNativeArrayBuffer(decoded);
-  }
-  if (encoding == "base64url") {
-    auto decoded = decodeBase64Url(str);
     return ToNativeArrayBuffer(decoded);
   }
   if (encoding == "utf8" || encoding == "utf-8") {
