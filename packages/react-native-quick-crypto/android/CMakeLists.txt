@@ -62,6 +62,7 @@ add_library(
   ../cpp/x509/HybridX509Certificate.cpp
   ../cpp/utils/HybridUtils.cpp
   ../cpp/utils/QuickCryptoUtils.cpp
+  ../deps/simdutf/simdutf.cpp
   ${BLAKE3_SOURCES}
   ../deps/fastpbkdf2/fastpbkdf2.c
   ../deps/ncrypto/src/aead.cpp
@@ -102,6 +103,7 @@ include_directories(
   "../deps/blake3/c"
   "../deps/fastpbkdf2"
   "../deps/ncrypto/include"
+  "../deps/simdutf"
 )
 
 # Third party libraries (Prefabs)

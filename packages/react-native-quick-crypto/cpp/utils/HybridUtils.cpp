@@ -7,6 +7,7 @@
 #include <string>
 
 #include "QuickCryptoUtils.hpp"
+#include "simdutf.h"
 
 namespace margelo::nitro::crypto {
 
@@ -145,18 +146,14 @@ namespace {
   }
 
   std::string encodeLatin1(const uint8_t* data, size_t len) {
-    std::string result;
-    result.reserve(len * 2);
-    for (size_t i = 0; i < len; i++) {
-      uint8_t byte = data[i];
-      if (byte < 0x80) {
-        result.push_back(static_cast<char>(byte));
-      } else {
-        // Latin1 byte 0x80-0xFF → UTF-8 two-byte sequence
-        result.push_back(static_cast<char>(0xC0 | (byte >> 6)));
-        result.push_back(static_cast<char>(0x80 | (byte & 0x3F)));
-      }
+    if (len == 0) {
+      return {};
     }
+
+    size_t utf8Len = simdutf::utf8_length_from_latin1(reinterpret_cast<const char*>(data), len);
+    std::string result(utf8Len, '\0');
+    size_t written = simdutf::convert_latin1_to_utf8(reinterpret_cast<const char*>(data), len, result.data());
+    result.resize(written);
     return result;
   }
 

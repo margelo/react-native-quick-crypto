@@ -114,6 +114,8 @@ Pod::Spec.new do |s|
     # dependencies (C++) - ncrypto
     "deps/ncrypto/include/**/*.{h}",
     "deps/ncrypto/src/*.{cpp}",
+    # dependencies (C++) - simdutf
+    "deps/simdutf/*.{h,cpp}",
     # dependencies (C) - exclude BLAKE3 x86 SIMD files (only use portable + NEON for ARM)
     "deps/blake3/c/*.{h,c}",
     "deps/fastpbkdf2/*.{h,c}",
@@ -183,6 +185,7 @@ Pod::Spec.new do |s|
     "\"$(PODS_TARGET_SRCROOT)/cpp/ecdh\"",
     "\"$(PODS_TARGET_SRCROOT)/nitrogen/generated/shared/c++\"",
     "\"$(PODS_TARGET_SRCROOT)/deps/ncrypto/include\"",
+    "\"$(PODS_TARGET_SRCROOT)/deps/simdutf\"",
     "\"$(PODS_TARGET_SRCROOT)/deps/blake3/c\"",
     "\"$(PODS_TARGET_SRCROOT)/deps/fastpbkdf2\""
   ]
