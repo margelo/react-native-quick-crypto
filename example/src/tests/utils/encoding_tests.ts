@@ -91,6 +91,12 @@ test(SUITE, 'base64 roundtrip binary data', () => {
   expect(toU8(stringToBuffer(b64, 'base64'))).to.deep.equal(bytes);
 });
 
+test(SUITE, 'base64 decode accepts URL-safe base64 input', () => {
+  expect(toU8(stringToBuffer('-_8', 'base64'))).to.deep.equal(
+    new Uint8Array([0xfb, 0xff]),
+  );
+});
+
 // --- Base64url ---
 
 test(SUITE, 'base64url encode produces URL-safe characters', () => {
@@ -108,6 +114,12 @@ test(SUITE, 'base64url roundtrip', () => {
   const ab = bytes.buffer as ArrayBuffer;
   const encoded = bufferToString(ab, 'base64url');
   expect(toU8(stringToBuffer(encoded, 'base64url'))).to.deep.equal(bytes);
+});
+
+test(SUITE, 'base64url decode accepts standard base64 input', () => {
+  expect(toU8(stringToBuffer('+/8=', 'base64url'))).to.deep.equal(
+    new Uint8Array([0xfb, 0xff]),
+  );
 });
 
 // --- UTF-8 ---
