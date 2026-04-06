@@ -57,9 +57,9 @@ namespace {
       return {};
     }
 
-    size_t encodedLen = simdutf::base64_length_from_binary(len);
+    size_t encodedLen = simdutf::base64_length_from_binary(len, simdutf::base64_default);
     std::string result(encodedLen, '\0');
-    simdutf::binary_to_base64(reinterpret_cast<const char*>(data), len, result.data());
+    simdutf::binary_to_base64(reinterpret_cast<const char*>(data), len, result.data(), simdutf::base64_default);
     return result;
   }
 
@@ -84,18 +84,14 @@ namespace {
   }
 
   std::string encodeBase64Url(const uint8_t* data, size_t len) {
-    std::string b64 = encodeBase64(data, len);
-    for (auto& c : b64) {
-      if (c == '+')
-        c = '-';
-      else if (c == '/')
-        c = '_';
+    if (len == 0) {
+      return {};
     }
-    // Remove trailing '=' padding
-    while (!b64.empty() && b64.back() == '=') {
-      b64.pop_back();
-    }
-    return b64;
+
+    size_t encodedLen = simdutf::base64_length_from_binary(len, simdutf::base64_url);
+    std::string result(encodedLen, '\0');
+    simdutf::binary_to_base64(reinterpret_cast<const char*>(data), len, result.data(), simdutf::base64_url);
+    return result;
   }
 
   std::vector<uint8_t> decodeBase64Url(const std::string& b64url) {
