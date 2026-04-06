@@ -53,16 +53,13 @@ namespace {
   }
 
   std::string encodeBase64(const uint8_t* data, size_t len) {
-    if (len > static_cast<size_t>(std::numeric_limits<int>::max())) {
-      throw std::runtime_error("Input too large for base64 encoding");
+    if (len == 0) {
+      return {};
     }
-    size_t encodedLen = ((len + 2) / 3) * 4;
-    std::string result(encodedLen + 1, '\0');
-    int written = EVP_EncodeBlock(reinterpret_cast<unsigned char*>(result.data()), data, static_cast<int>(len));
-    if (written < 0) {
-      throw std::runtime_error("Base64 encoding failed");
-    }
-    result.resize(static_cast<size_t>(written));
+
+    size_t encodedLen = simdutf::base64_length_from_binary(len);
+    std::string result(encodedLen, '\0');
+    simdutf::binary_to_base64(reinterpret_cast<const char*>(data), len, result.data());
     return result;
   }
 
