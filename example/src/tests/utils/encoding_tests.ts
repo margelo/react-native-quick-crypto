@@ -97,6 +97,15 @@ test(SUITE, 'base64 decode accepts URL-safe base64 input', () => {
   );
 });
 
+test(SUITE, 'base64 decode stops at first padding and ignores trailing data', () => {
+  expect(toU8(stringToBuffer('Zm9v=QUJD', 'base64'))).to.deep.equal(
+    new Uint8Array([0x66, 0x6f, 0x6f]),
+  );
+  expect(toU8(stringToBuffer('AA==BB', 'base64'))).to.deep.equal(
+    new Uint8Array([0x00]),
+  );
+});
+
 // --- Base64url ---
 
 test(SUITE, 'base64url encode produces URL-safe characters', () => {
@@ -119,6 +128,25 @@ test(SUITE, 'base64url roundtrip', () => {
 test(SUITE, 'base64url decode accepts standard base64 input', () => {
   expect(toU8(stringToBuffer('+/8=', 'base64url'))).to.deep.equal(
     new Uint8Array([0xfb, 0xff]),
+  );
+});
+
+test(
+  SUITE,
+  'base64url decode stops at first padding and ignores trailing data',
+  () => {
+    expect(toU8(stringToBuffer('Zm9v==QUJD', 'base64url'))).to.deep.equal(
+      new Uint8Array([0x66, 0x6f, 0x6f]),
+    );
+    expect(toU8(stringToBuffer('TQ==QQ==', 'base64url'))).to.deep.equal(
+      new Uint8Array([0x4d]),
+    );
+  },
+);
+
+test(SUITE, 'base64url decode accepts multiple trailing padding', () => {
+  expect(toU8(stringToBuffer('TQQQ==', 'base64url'))).to.deep.equal(
+    new Uint8Array([0x4d, 0x04, 0x10]),
   );
 });
 
