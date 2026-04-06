@@ -42,41 +42,11 @@ Pod::Spec.new do |s|
     end
   end
 
-  # OpenSSL 3.6+ vendored xcframework (not yet on CocoaPods trunk)
-  openssl_version = "3.6.0001"
-  openssl_url = "https://github.com/krzyzanowskim/OpenSSL/releases/download/#{openssl_version}/OpenSSL.xcframework.zip"
-
-  # Ensure OpenSSL.xcframework is present during podspec evaluation.
-  # This is necessary because prepare_command is skipped for :path pods,
-  # which is how React Native native modules are installed.
-  # See: https://github.com/margelo/react-native-quick-crypto/issues/882
-  openssl_dir = File.join(__dir__, "OpenSSL.xcframework")
-  openssl_plist = File.join(openssl_dir, "Info.plist")
-  unless File.exist?(openssl_plist)
-    # Clean up any partial download
-    FileUtils.rm_rf(openssl_dir) if File.directory?(openssl_dir)
-    FileUtils.rm_f(File.join(__dir__, "OpenSSL.xcframework.zip"))
-
-    Pod::UI.puts "[QuickCrypto] ⬇️  Downloading OpenSSL.xcframework..."
-    Dir.chdir(__dir__) do
-      system("curl -sSfL --connect-timeout 30 --max-time 300 -o OpenSSL.xcframework.zip #{openssl_url}") || raise("Failed to download OpenSSL")
-      system("unzip -q -o OpenSSL.xcframework.zip") || raise("Failed to unzip OpenSSL")
-      File.delete("OpenSSL.xcframework.zip") if File.exist?("OpenSSL.xcframework.zip")
-    end
-    Pod::UI.puts "[QuickCrypto] ✅ OpenSSL.xcframework downloaded successfully"
-  end
-
   if sodium_enabled
     # Build libsodium from source for XSalsa20 cipher support
     # CocoaPods packages are outdated (1.0.12) and SPM causes module conflicts
     s.prepare_command = <<-CMD
       set -e
-      # Download OpenSSL.xcframework
-      if [ ! -d "OpenSSL.xcframework" ]; then
-        curl -L -o OpenSSL.xcframework.zip #{openssl_url}
-        unzip -o OpenSSL.xcframework.zip
-        rm -f OpenSSL.xcframework.zip
-      fi
       # Build libsodium
       mkdir -p ios
       curl -L -o ios/libsodium.tar.gz https://download.libsodium.org/libsodium/releases/libsodium-1.0.20-stable.tar.gz
@@ -90,19 +60,11 @@ Pod::Spec.new do |s|
   else
     s.prepare_command = <<-CMD
       set -e
-      # Download OpenSSL.xcframework
-      if [ ! -d "OpenSSL.xcframework" ]; then
-        curl -L -o OpenSSL.xcframework.zip #{openssl_url}
-        unzip -o OpenSSL.xcframework.zip
-        rm -f OpenSSL.xcframework.zip
-      fi
       # Clean up libsodium if previously built
       rm -rf ios/libsodium-stable
       rm -f ios/libsodium.tar.gz
     CMD
   end
-
-  s.vendored_frameworks = "OpenSSL.xcframework"
 
   base_source_files = [
     # implementation (Swift)
@@ -210,6 +172,7 @@ Pod::Spec.new do |s|
   load "nitrogen/generated/ios/QuickCrypto+autolinking.rb"
   add_nitrogen_files(s)
 
+  s.dependency "OpenSSL-Universal", ">= 3.6"
   s.dependency "React-jsi"
   s.dependency "React-callinvoker"
 
