@@ -153,7 +153,9 @@ namespace {
     size_t utf8Len = simdutf::utf8_length_from_latin1(reinterpret_cast<const char*>(data), len);
     std::string result(utf8Len, '\0');
     size_t written = simdutf::convert_latin1_to_utf8(reinterpret_cast<const char*>(data), len, result.data());
-    result.resize(written);
+    if (written == 0) {
+      throw std::runtime_error("Latin1 encoding failed");
+    }
     return result;
   }
 
