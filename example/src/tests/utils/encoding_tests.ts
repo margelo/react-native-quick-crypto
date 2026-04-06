@@ -97,14 +97,18 @@ test(SUITE, 'base64 decode accepts URL-safe base64 input', () => {
   );
 });
 
-test(SUITE, 'base64 decode stops at first padding and ignores trailing data', () => {
-  expect(toU8(stringToBuffer('Zm9v=QUJD', 'base64'))).to.deep.equal(
-    new Uint8Array([0x66, 0x6f, 0x6f]),
-  );
-  expect(toU8(stringToBuffer('AA==BB', 'base64'))).to.deep.equal(
-    new Uint8Array([0x00]),
-  );
-});
+test(
+  SUITE,
+  'base64 decode stops at first padding and ignores trailing data',
+  () => {
+    expect(toU8(stringToBuffer('Zm9v=QUJD', 'base64'))).to.deep.equal(
+      new Uint8Array([0x66, 0x6f, 0x6f]),
+    );
+    expect(toU8(stringToBuffer('AA==BB', 'base64'))).to.deep.equal(
+      new Uint8Array([0x00]),
+    );
+  },
+);
 
 // --- Base64url ---
 

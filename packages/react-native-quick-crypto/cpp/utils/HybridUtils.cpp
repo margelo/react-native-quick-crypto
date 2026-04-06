@@ -69,7 +69,8 @@ namespace {
 
     size_t maxLen = simdutf::maximal_binary_length_from_base64(b64.data(), b64.length());
     std::vector<uint8_t> result(maxLen);
-    auto decodeResult = simdutf::base64_to_binary(b64.data(), b64.size(), reinterpret_cast<char*>(result.data()), simdutf::base64_default_or_url_accept_garbage);
+    auto decodeResult = simdutf::base64_to_binary(b64.data(), b64.size(), reinterpret_cast<char*>(result.data()),
+                                                  simdutf::base64_default_or_url_accept_garbage);
     if (decodeResult.error != simdutf::error_code::SUCCESS) {
       throw std::runtime_error("Base64 decoding failed");
     }
