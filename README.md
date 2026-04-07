@@ -143,6 +143,8 @@ const hashed = QuickCrypto.createHash('sha256')
   .digest('hex');
 ```
 
+More details can be found on the [documentation](https://margelo.github.io/react-native-quick-crypto/).
+
 ## Limitations
 
 Not all cryptographic algorithms are supported yet. See the [implementation coverage](./.docs/implementation-coverage.md) document for more details. If you need a specific algorithm, please open a `feature request` issue and we'll see what we can do.
