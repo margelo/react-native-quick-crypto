@@ -1,4 +1,4 @@
-cmake_minimum_required(VERSION 3.10.0)
+cmake_minimum_required(VERSION 3.15)
 project(QuickCrypto)
 
 set(PACKAGE_NAME QuickCrypto)
@@ -62,7 +62,6 @@ add_library(
   ../cpp/x509/HybridX509Certificate.cpp
   ../cpp/utils/HybridUtils.cpp
   ../cpp/utils/QuickCryptoUtils.cpp
-  ../deps/simdutf/simdutf.cpp
   ${BLAKE3_SOURCES}
   ../deps/fastpbkdf2/fastpbkdf2.c
   ../deps/ncrypto/src/aead.cpp
@@ -103,7 +102,6 @@ include_directories(
   "../deps/blake3/c"
   "../deps/fastpbkdf2"
   "../deps/ncrypto/include"
-  "../deps/simdutf"
 )
 
 # Third party libraries (Prefabs)
@@ -141,3 +139,19 @@ else()
     ReactAndroid::turbomodulejsijni        # <-- RN: TurboModules utils (e.g. CallInvokerHolder)
   )
 endif()
+
+# simdutf
+set(SIMDUTF_TESTS OFF CACHE BOOL "" FORCE)
+set(SIMDUTF_TOOLS OFF CACHE BOOL "" FORCE)
+set(SIMDUTF_ICONV OFF CACHE BOOL "" FORCE)
+
+add_subdirectory(
+  ${CMAKE_CURRENT_SOURCE_DIR}/../deps/simdutf
+  ${CMAKE_CURRENT_BINARY_DIR}/simdutf-build
+  EXCLUDE_FROM_ALL
+)
+
+target_link_libraries(
+  ${PACKAGE_NAME}
+  simdutf::simdutf
+)
