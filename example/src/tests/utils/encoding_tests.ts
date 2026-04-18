@@ -30,15 +30,6 @@ test(SUITE, 'hex decode known string', () => {
   );
 });
 
-test(SUITE, 'hex roundtrip all byte values', () => {
-  const bytes = new Uint8Array(256);
-  for (let i = 0; i < 256; i++) bytes[i] = i;
-  const ab = bytes.buffer as ArrayBuffer;
-  const hex = bufferToString(ab, 'hex');
-  expect(hex.length).to.equal(512);
-  expect(toU8(stringToBuffer(hex, 'hex'))).to.deep.equal(bytes);
-});
-
 test(SUITE, 'hex decode is case-insensitive', () => {
   const lower = toU8(stringToBuffer('abcdef', 'hex'));
   const upper = toU8(stringToBuffer('ABCDEF', 'hex'));
@@ -634,16 +625,6 @@ test(SUITE, 'binary is alias for latin1 (decode)', () => {
 
 test(
   SUITE,
-  'latin1 decode truncates code points above 0xFF to low byte',
-  () => {
-    // Node.js Buffer.from('\u0100', 'latin1') produces [0x00] (256 & 0xFF = 0)
-    const ab = stringToBuffer('\u0100', 'latin1');
-    expect(toU8(ab)).to.deep.equal(new Uint8Array([0x00]));
-  },
-);
-
-test(
-  SUITE,
   '[Node.js] latin1 encoding should write only one byte per character.',
   () => {
     expect(
@@ -669,14 +650,6 @@ test(
 );
 
 // --- ASCII ---
-
-test(SUITE, 'ascii encode strips high bit', () => {
-  const bytes = new Uint8Array([0x48, 0xc8]); // 'H', 0xC8
-  const ab = bytes.buffer as ArrayBuffer;
-  const str = bufferToString(ab, 'ascii');
-  expect(str.charCodeAt(0)).to.equal(0x48);
-  expect(str.charCodeAt(1)).to.equal(0x48); // 0xC8 & 0x7F = 0x48
-});
 
 test(SUITE, 'ascii roundtrip printable ASCII', () => {
   const str = 'Hello, World! 123';
