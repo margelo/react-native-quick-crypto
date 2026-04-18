@@ -4,3 +4,6 @@
 [submodule "packages/react-native-quick-crypto/deps/ncrypto"]
 	path = packages/react-native-quick-crypto/deps/ncrypto
 	url = https://github.com/nodejs/ncrypto.git
+[submodule "packages/react-native-quick-crypto/deps/simdutf"]
+	path = packages/react-native-quick-crypto/deps/simdutf
+	url = https://github.com/simdutf/simdutf.git

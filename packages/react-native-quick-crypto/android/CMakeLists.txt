@@ -67,6 +67,7 @@ add_library(
   ../deps/ncrypto/src/aead.cpp
   ../deps/ncrypto/src/engine.cpp
   ../deps/ncrypto/src/ncrypto.cpp
+  ../deps/simdutf/src/simdutf.cpp
 )
 
 # add Nitrogen specs
@@ -102,6 +103,8 @@ include_directories(
   "../deps/blake3/c"
   "../deps/fastpbkdf2"
   "../deps/ncrypto/include"
+  "../deps/simdutf/include"
+  "../deps/simdutf/src"
 )
 
 # Third party libraries (Prefabs)

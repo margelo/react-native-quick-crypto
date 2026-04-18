@@ -1,12 +1,12 @@
 #include "HybridUtils.hpp"
 
-#include <limits>
 #include <openssl/crypto.h>
-#include <openssl/evp.h>
 #include <stdexcept>
 #include <string>
+#include <vector>
 
 #include "QuickCryptoUtils.hpp"
+#include "simdutf.h"
 
 namespace margelo::nitro::crypto {
 
@@ -35,16 +35,13 @@ namespace {
   }
 
   std::vector<uint8_t> decodeHex(const std::string& hex) {
-    if (hex.length() % 2 != 0) {
-      throw std::runtime_error("Invalid hex string length");
-    }
     std::vector<uint8_t> result;
     result.reserve(hex.length() / 2);
-    for (size_t i = 0; i < hex.length(); i += 2) {
+    for (size_t i = 0; i + 1 < hex.length(); i += 2) {
       int hi = hexCharToVal(hex[i]);
       int lo = hexCharToVal(hex[i + 1]);
       if (hi < 0 || lo < 0) {
-        throw std::runtime_error("Invalid hex character");
+        break;
       }
       result.push_back(static_cast<uint8_t>((hi << 4) | lo));
     }
@@ -52,67 +49,41 @@ namespace {
   }
 
   std::string encodeBase64(const uint8_t* data, size_t len) {
-    if (len > static_cast<size_t>(std::numeric_limits<int>::max())) {
-      throw std::runtime_error("Input too large for base64 encoding");
+    if (len == 0) {
+      return {};
     }
-    size_t encodedLen = ((len + 2) / 3) * 4;
-    std::string result(encodedLen + 1, '\0');
-    int written = EVP_EncodeBlock(reinterpret_cast<unsigned char*>(result.data()), data, static_cast<int>(len));
-    if (written < 0) {
-      throw std::runtime_error("Base64 encoding failed");
-    }
-    result.resize(static_cast<size_t>(written));
+
+    size_t encodedLen = simdutf::base64_length_from_binary(len, simdutf::base64_default);
+    std::string result(encodedLen, '\0');
+    simdutf::binary_to_base64(reinterpret_cast<const char*>(data), len, result.data(), simdutf::base64_default);
     return result;
   }
 
   std::vector<uint8_t> decodeBase64(const std::string& b64) {
-    if (b64.length() > static_cast<size_t>(std::numeric_limits<int>::max())) {
-      throw std::runtime_error("Input too large for base64 decoding");
+    if (b64.empty()) {
+      return {};
     }
-    size_t maxLen = ((b64.length() + 3) / 4) * 3;
+
+    size_t maxLen = simdutf::maximal_binary_length_from_base64(b64.data(), b64.length());
     std::vector<uint8_t> result(maxLen);
-    int written = EVP_DecodeBlock(result.data(), reinterpret_cast<const unsigned char*>(b64.data()), static_cast<int>(b64.length()));
-    if (written < 0) {
+    auto decodeResult = simdutf::base64_to_binary(b64.data(), b64.size(), reinterpret_cast<char*>(result.data()),
+                                                  simdutf::base64_default_or_url_accept_garbage);
+    if (decodeResult.error != simdutf::error_code::SUCCESS) {
       throw std::runtime_error("Base64 decoding failed");
     }
-    // EVP_DecodeBlock doesn't account for padding — trim trailing zeros from padding
-    size_t padding = 0;
-    if (b64.length() >= 1 && b64[b64.length() - 1] == '=')
-      padding++;
-    if (b64.length() >= 2 && b64[b64.length() - 2] == '=')
-      padding++;
-    result.resize(static_cast<size_t>(written) - padding);
+    result.resize(decodeResult.count);
     return result;
   }
 
   std::string encodeBase64Url(const uint8_t* data, size_t len) {
-    std::string b64 = encodeBase64(data, len);
-    for (auto& c : b64) {
-      if (c == '+')
-        c = '-';
-      else if (c == '/')
-        c = '_';
+    if (len == 0) {
+      return {};
     }
-    // Remove trailing '=' padding
-    while (!b64.empty() && b64.back() == '=') {
-      b64.pop_back();
-    }
-    return b64;
-  }
 
-  std::vector<uint8_t> decodeBase64Url(const std::string& b64url) {
-    std::string b64 = b64url;
-    for (auto& c : b64) {
-      if (c == '-')
-        c = '+';
-      else if (c == '_')
-        c = '/';
-    }
-    // Add back padding
-    while (b64.length() % 4 != 0) {
-      b64.push_back('=');
-    }
-    return decodeBase64(b64);
+    size_t encodedLen = simdutf::base64_length_from_binary(len, simdutf::base64_url);
+    std::string result(encodedLen, '\0');
+    simdutf::binary_to_base64(reinterpret_cast<const char*>(data), len, result.data(), simdutf::base64_url);
+    return result;
   }
 
   std::vector<uint8_t> decodeLatin1(const std::string& str) {
@@ -145,17 +116,15 @@ namespace {
   }
 
   std::string encodeLatin1(const uint8_t* data, size_t len) {
-    std::string result;
-    result.reserve(len * 2);
-    for (size_t i = 0; i < len; i++) {
-      uint8_t byte = data[i];
-      if (byte < 0x80) {
-        result.push_back(static_cast<char>(byte));
-      } else {
-        // Latin1 byte 0x80-0xFF → UTF-8 two-byte sequence
-        result.push_back(static_cast<char>(0xC0 | (byte >> 6)));
-        result.push_back(static_cast<char>(0x80 | (byte & 0x3F)));
-      }
+    if (len == 0) {
+      return {};
+    }
+
+    size_t utf8Len = simdutf::utf8_length_from_latin1(reinterpret_cast<const char*>(data), len);
+    std::string result(utf8Len, '\0');
+    size_t written = simdutf::convert_latin1_to_utf8(reinterpret_cast<const char*>(data), len, result.data());
+    if (written == 0) {
+      throw std::runtime_error("Latin1 encoding failed");
     }
     return result;
   }
@@ -205,29 +174,22 @@ std::string HybridUtils::bufferToString(const std::shared_ptr<ArrayBuffer>& buff
 std::shared_ptr<ArrayBuffer> HybridUtils::stringToBuffer(const std::string& str, const std::string& encoding) {
   if (encoding == "hex") {
     auto decoded = decodeHex(str);
-    return ToNativeArrayBuffer(decoded);
+    return ArrayBuffer::move(std::move(decoded));
   }
-  if (encoding == "base64") {
+  if (encoding == "base64" || encoding == "base64url") {
     auto decoded = decodeBase64(str);
-    return ToNativeArrayBuffer(decoded);
-  }
-  if (encoding == "base64url") {
-    auto decoded = decodeBase64Url(str);
-    return ToNativeArrayBuffer(decoded);
+    return ArrayBuffer::move(std::move(decoded));
   }
   if (encoding == "utf8" || encoding == "utf-8") {
-    return ToNativeArrayBuffer(str);
+    return ArrayBuffer::copy(reinterpret_cast<const uint8_t*>(str.data()), str.size());
   }
   if (encoding == "latin1" || encoding == "binary") {
     auto decoded = decodeLatin1(str);
-    return ToNativeArrayBuffer(decoded);
+    return ArrayBuffer::move(std::move(decoded));
   }
   if (encoding == "ascii") {
     auto decoded = decodeLatin1(str);
-    for (auto& b : decoded) {
-      b &= 0x7F;
-    }
-    return ToNativeArrayBuffer(decoded);
+    return ArrayBuffer::move(std::move(decoded));
   }
   throw std::runtime_error("Unsupported encoding: " + encoding);
 }
