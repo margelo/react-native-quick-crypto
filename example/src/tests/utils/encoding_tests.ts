@@ -45,12 +45,44 @@ test(SUITE, 'hex decode is case-insensitive', () => {
   expect(lower).to.deep.equal(upper);
 });
 
-test(SUITE, 'hex decode rejects odd-length string', () => {
-  expect(() => stringToBuffer('abc', 'hex')).to.throw();
+test(SUITE, '[Node.js] Test single hex character is discarded.', () => {
+  expect(toU8(stringToBuffer('A', 'hex'))).to.deep.equal(new Uint8Array([]));
 });
 
-test(SUITE, 'hex decode rejects invalid characters', () => {
-  expect(() => stringToBuffer('zzzz', 'hex')).to.throw();
+test(
+  SUITE,
+  '[Node.js] Test that if a trailing character is discarded, rest of string is processed.',
+  () => {
+    expect(toU8(stringToBuffer('Abx', 'hex'))).to.deep.equal(
+      new Uint8Array([0xab]),
+    );
+    expect(toU8(stringToBuffer('abc', 'hex'))).to.deep.equal(
+      new Uint8Array([0xab]),
+    );
+  },
+);
+
+test(SUITE, '[Node.js] Test hex strings and bad hex strings', () => {
+  expect(toU8(stringToBuffer('abcdxx', 'hex'))).to.deep.equal(
+    new Uint8Array([0xab, 0xcd]),
+  );
+  expect(toU8(stringToBuffer('xxabcd', 'hex'))).to.deep.equal(
+    new Uint8Array([]),
+  );
+  expect(toU8(stringToBuffer('cdxxab', 'hex'))).to.deep.equal(
+    new Uint8Array([0xcd]),
+  );
+
+  const bytes = new Uint8Array(256);
+  for (let i = 0; i < 256; i++) {
+    bytes[i] = i;
+  }
+
+  const hex = bufferToString(bytes.buffer as ArrayBuffer, 'hex');
+  const badHex = `${hex.slice(0, 256)}xx${hex.slice(256, 510)}`;
+  expect(toU8(stringToBuffer(badHex, 'hex'))).to.deep.equal(
+    bytes.slice(0, 128),
+  );
 });
 
 // --- Base64 ---
@@ -658,17 +690,21 @@ test(SUITE, 'ascii encode strips high bit', () => {
   expect(str.charCodeAt(1)).to.equal(0x48); // 0xC8 & 0x7F = 0x48
 });
 
-test(SUITE, 'ascii decode strips high bit', () => {
-  const str = String.fromCharCode(0xc8); // above 0x7F
-  const ab = stringToBuffer(str, 'ascii');
-  expect(toU8(ab)[0]).to.equal(0x48); // 0xC8 & 0x7F = 0x48
-});
-
 test(SUITE, 'ascii roundtrip printable ASCII', () => {
   const str = 'Hello, World! 123';
   const ab = stringToBuffer(str, 'ascii');
   expect(bufferToString(ab, 'ascii')).to.equal(str);
 });
+
+test(
+  SUITE,
+  '[Node.js] Test for proper ascii Encoding, length should be 4',
+  () => {
+    expect(toU8(stringToBuffer('\u00fcber', 'ascii'))).to.deep.equal(
+      new Uint8Array([252, 98, 101, 114]),
+    );
+  },
+);
 
 test(
   SUITE,

@@ -35,16 +35,13 @@ namespace {
   }
 
   std::vector<uint8_t> decodeHex(const std::string& hex) {
-    if (hex.length() % 2 != 0) {
-      throw std::runtime_error("Invalid hex string length");
-    }
     std::vector<uint8_t> result;
     result.reserve(hex.length() / 2);
-    for (size_t i = 0; i < hex.length(); i += 2) {
+    for (size_t i = 0; i + 1 < hex.length(); i += 2) {
       int hi = hexCharToVal(hex[i]);
       int lo = hexCharToVal(hex[i + 1]);
       if (hi < 0 || lo < 0) {
-        throw std::runtime_error("Invalid hex character");
+        break;
       }
       result.push_back(static_cast<uint8_t>((hi << 4) | lo));
     }
@@ -192,9 +189,6 @@ std::shared_ptr<ArrayBuffer> HybridUtils::stringToBuffer(const std::string& str,
   }
   if (encoding == "ascii") {
     auto decoded = decodeLatin1(str);
-    for (auto& b : decoded) {
-      b &= 0x7F;
-    }
     return ArrayBuffer::move(std::move(decoded));
   }
   throw std::runtime_error("Unsupported encoding: " + encoding);
