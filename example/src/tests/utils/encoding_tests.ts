@@ -110,6 +110,355 @@ test(
   },
 );
 
+test(SUITE, "[Node.js] Test toString('base64')", () => {
+  expect(bufferToString(stringToBuffer('Man', 'utf8'), 'base64')).to.equal(
+    'TWFu',
+  );
+  expect(bufferToString(stringToBuffer('Woman', 'utf8'), 'base64')).to.equal(
+    'V29tYW4=',
+  );
+});
+
+test(
+  SUITE,
+  '[Node.js] Test that regular and URL-safe base64 both work both ways',
+  () => {
+    const expected = new Uint8Array([
+      0xff, 0xff, 0xbe, 0xff, 0xef, 0xbf, 0xfb, 0xef, 0xff,
+    ]);
+
+    expect(toU8(stringToBuffer('//++/++/++//', 'base64'))).to.deep.equal(
+      expected,
+    );
+    expect(toU8(stringToBuffer('__--_--_--__', 'base64'))).to.deep.equal(
+      expected,
+    );
+    expect(toU8(stringToBuffer('//++/++/++//', 'base64url'))).to.deep.equal(
+      expected,
+    );
+    expect(toU8(stringToBuffer('__--_--_--__', 'base64url'))).to.deep.equal(
+      expected,
+    );
+  },
+);
+
+test(
+  SUITE,
+  '[Node.js] Test that regular and URL-safe base64 both work both ways with padding',
+  () => {
+    const expected = new Uint8Array([
+      0xff, 0xff, 0xbe, 0xff, 0xef, 0xbf, 0xfb, 0xef, 0xff, 0xfb,
+    ]);
+
+    expect(toU8(stringToBuffer('//++/++/++//+w==', 'base64'))).to.deep.equal(
+      expected,
+    );
+    expect(toU8(stringToBuffer('//++/++/++//+w==', 'base64url'))).to.deep.equal(
+      expected,
+    );
+  },
+);
+
+test(
+  SUITE,
+  '[Node.js] Check that the base64 decoder ignores whitespace',
+  () => {
+    const quote =
+      'Man is distinguished, not only by his reason, but by this ' +
+      'singular passion from other animals, which is a lust ' +
+      'of the mind, that by a perseverance of delight in the ' +
+      'continued and indefatigable generation of knowledge, ' +
+      'exceeds the short vehemence of any carnal pleasure.';
+    const expected =
+      'TWFuIGlzIGRpc3Rpbmd1aXNoZWQsIG5vdCBvbmx5IGJ5IGhpcyByZWFzb24sIGJ1dCBi' +
+      'eSB0aGlzIHNpbmd1bGFyIHBhc3Npb24gZnJvbSBvdGhlciBhbmltYWxzLCB3aGljaCBp' +
+      'cyBhIGx1c3Qgb2YgdGhlIG1pbmQsIHRoYXQgYnkgYSBwZXJzZXZlcmFuY2Ugb2YgZGVs' +
+      'aWdodCBpbiB0aGUgY29udGludWVkIGFuZCBpbmRlZmF0aWdhYmxlIGdlbmVyYXRpb24g' +
+      'b2Yga25vd2xlZGdlLCBleGNlZWRzIHRoZSBzaG9ydCB2ZWhlbWVuY2Ugb2YgYW55IGNh' +
+      'cm5hbCBwbGVhc3VyZS4=';
+    const base64flavors = ['base64', 'base64url'] as const;
+
+    base64flavors.forEach(encoding => {
+      const expectedWhite =
+        `${expected.slice(0, 60)} \n` +
+        `${expected.slice(60, 120)} \n` +
+        `${expected.slice(120, 180)} \n` +
+        `${expected.slice(180, 240)} \n` +
+        `${expected.slice(240, 300)}\n` +
+        `${expected.slice(300, 360)}\n`;
+      const decoded = bufferToString(
+        stringToBuffer(expectedWhite, encoding),
+        'utf8',
+      );
+      expect(decoded).to.equal(quote);
+    });
+  },
+);
+
+test(
+  SUITE,
+  '[Node.js] Check that the base64 decoder ignores illegal chars',
+  () => {
+    const quote =
+      'Man is distinguished, not only by his reason, but by this ' +
+      'singular passion from other animals, which is a lust ' +
+      'of the mind, that by a perseverance of delight in the ' +
+      'continued and indefatigable generation of knowledge, ' +
+      'exceeds the short vehemence of any carnal pleasure.';
+    const expected =
+      'TWFuIGlzIGRpc3Rpbmd1aXNoZWQsIG5vdCBvbmx5IGJ5IGhpcyByZWFzb24sIGJ1dCBi' +
+      'eSB0aGlzIHNpbmd1bGFyIHBhc3Npb24gZnJvbSBvdGhlciBhbmltYWxzLCB3aGljaCBp' +
+      'cyBhIGx1c3Qgb2YgdGhlIG1pbmQsIHRoYXQgYnkgYSBwZXJzZXZlcmFuY2Ugb2YgZGVs' +
+      'aWdodCBpbiB0aGUgY29udGludWVkIGFuZCBpbmRlZmF0aWdhYmxlIGdlbmVyYXRpb24g' +
+      'b2Yga25vd2xlZGdlLCBleGNlZWRzIHRoZSBzaG9ydCB2ZWhlbWVuY2Ugb2YgYW55IGNh' +
+      'cm5hbCBwbGVhc3VyZS4=';
+    const base64flavors = ['base64', 'base64url'] as const;
+
+    base64flavors.forEach(encoding => {
+      const expectedIllegal =
+        expected.slice(0, 60) +
+        ' \x80' +
+        expected.slice(60, 120) +
+        ' \xff' +
+        expected.slice(120, 180) +
+        ' \x00' +
+        expected.slice(180, 240) +
+        ' \x98' +
+        expected.slice(240, 300) +
+        '\x03' +
+        expected.slice(300, 360);
+      const decoded = bufferToString(
+        stringToBuffer(expectedIllegal, encoding),
+        'utf8',
+      );
+      expect(decoded).to.equal(quote);
+    });
+  },
+);
+
+test(SUITE, '[Node.js] Handle padding graciously, multiple-of-4 or not', () => {
+  const base64flavors = ['base64', 'base64url'] as const;
+
+  base64flavors.forEach(encoding => {
+    expect(bufferToString(stringToBuffer('', encoding), 'utf8')).to.equal('');
+    expect(bufferToString(stringToBuffer('K', encoding), 'utf8')).to.equal('');
+
+    expect(bufferToString(stringToBuffer('Kg==', encoding), 'utf8')).to.equal(
+      '*',
+    );
+    expect(bufferToString(stringToBuffer('Kio=', encoding), 'utf8')).to.equal(
+      '*'.repeat(2),
+    );
+    expect(bufferToString(stringToBuffer('Kioq', encoding), 'utf8')).to.equal(
+      '*'.repeat(3),
+    );
+    expect(
+      bufferToString(stringToBuffer('KioqKg==', encoding), 'utf8'),
+    ).to.equal('*'.repeat(4));
+    expect(
+      bufferToString(stringToBuffer('KioqKio=', encoding), 'utf8'),
+    ).to.equal('*'.repeat(5));
+    expect(
+      bufferToString(stringToBuffer('KioqKioq', encoding), 'utf8'),
+    ).to.equal('*'.repeat(6));
+    expect(
+      bufferToString(stringToBuffer('KioqKioqKg==', encoding), 'utf8'),
+    ).to.equal('*'.repeat(7));
+    expect(
+      bufferToString(stringToBuffer('KioqKioqKio=', encoding), 'utf8'),
+    ).to.equal('*'.repeat(8));
+    expect(
+      bufferToString(stringToBuffer('KioqKioqKioq', encoding), 'utf8'),
+    ).to.equal('*'.repeat(9));
+    expect(
+      bufferToString(stringToBuffer('KioqKioqKioqKg==', encoding), 'utf8'),
+    ).to.equal('*'.repeat(10));
+    expect(
+      bufferToString(stringToBuffer('KioqKioqKioqKio=', encoding), 'utf8'),
+    ).to.equal('*'.repeat(11));
+    expect(
+      bufferToString(stringToBuffer('KioqKioqKioqKioq', encoding), 'utf8'),
+    ).to.equal('*'.repeat(12));
+    expect(
+      bufferToString(stringToBuffer('KioqKioqKioqKioqKg==', encoding), 'utf8'),
+    ).to.equal('*'.repeat(13));
+    expect(
+      bufferToString(stringToBuffer('KioqKioqKioqKioqKio=', encoding), 'utf8'),
+    ).to.equal('*'.repeat(14));
+    expect(
+      bufferToString(stringToBuffer('KioqKioqKioqKioqKioq', encoding), 'utf8'),
+    ).to.equal('*'.repeat(15));
+    expect(
+      bufferToString(
+        stringToBuffer('KioqKioqKioqKioqKioqKg==', encoding),
+        'utf8',
+      ),
+    ).to.equal('*'.repeat(16));
+    expect(
+      bufferToString(
+        stringToBuffer('KioqKioqKioqKioqKioqKio=', encoding),
+        'utf8',
+      ),
+    ).to.equal('*'.repeat(17));
+    expect(
+      bufferToString(
+        stringToBuffer('KioqKioqKioqKioqKioqKioq', encoding),
+        'utf8',
+      ),
+    ).to.equal('*'.repeat(18));
+    expect(
+      bufferToString(
+        stringToBuffer('KioqKioqKioqKioqKioqKioqKg==', encoding),
+        'utf8',
+      ),
+    ).to.equal('*'.repeat(19));
+    expect(
+      bufferToString(
+        stringToBuffer('KioqKioqKioqKioqKioqKioqKio=', encoding),
+        'utf8',
+      ),
+    ).to.equal('*'.repeat(20));
+
+    expect(bufferToString(stringToBuffer('Kg', encoding), 'utf8')).to.equal(
+      '*',
+    );
+    expect(bufferToString(stringToBuffer('Kio', encoding), 'utf8')).to.equal(
+      '*'.repeat(2),
+    );
+    expect(bufferToString(stringToBuffer('KioqKg', encoding), 'utf8')).to.equal(
+      '*'.repeat(4),
+    );
+    expect(
+      bufferToString(stringToBuffer('KioqKio', encoding), 'utf8'),
+    ).to.equal('*'.repeat(5));
+    expect(
+      bufferToString(stringToBuffer('KioqKioqKg', encoding), 'utf8'),
+    ).to.equal('*'.repeat(7));
+    expect(
+      bufferToString(stringToBuffer('KioqKioqKio', encoding), 'utf8'),
+    ).to.equal('*'.repeat(8));
+    expect(
+      bufferToString(stringToBuffer('KioqKioqKioqKg', encoding), 'utf8'),
+    ).to.equal('*'.repeat(10));
+    expect(
+      bufferToString(stringToBuffer('KioqKioqKioqKio', encoding), 'utf8'),
+    ).to.equal('*'.repeat(11));
+    expect(
+      bufferToString(stringToBuffer('KioqKioqKioqKioqKg', encoding), 'utf8'),
+    ).to.equal('*'.repeat(13));
+    expect(
+      bufferToString(stringToBuffer('KioqKioqKioqKioqKio', encoding), 'utf8'),
+    ).to.equal('*'.repeat(14));
+    expect(
+      bufferToString(
+        stringToBuffer('KioqKioqKioqKioqKioqKg', encoding),
+        'utf8',
+      ),
+    ).to.equal('*'.repeat(16));
+    expect(
+      bufferToString(
+        stringToBuffer('KioqKioqKioqKioqKioqKio', encoding),
+        'utf8',
+      ),
+    ).to.equal('*'.repeat(17));
+    expect(
+      bufferToString(
+        stringToBuffer('KioqKioqKioqKioqKioqKioqKg', encoding),
+        'utf8',
+      ),
+    ).to.equal('*'.repeat(19));
+    expect(
+      bufferToString(
+        stringToBuffer('KioqKioqKioqKioqKioqKioqKio', encoding),
+        'utf8',
+      ),
+    ).to.equal('*'.repeat(20));
+  });
+
+  expect(
+    stringToBuffer('72INjkR5fchcxk9+VgdGPFJDxUBFR5/rMFsghgxADiw==', 'base64')
+      .byteLength,
+  ).to.equal(32);
+  expect(
+    stringToBuffer('72INjkR5fchcxk9-VgdGPFJDxUBFR5_rMFsghgxADiw==', 'base64url')
+      .byteLength,
+  ).to.equal(32);
+  expect(
+    stringToBuffer('72INjkR5fchcxk9+VgdGPFJDxUBFR5/rMFsghgxADiw=', 'base64')
+      .byteLength,
+  ).to.equal(32);
+  expect(
+    stringToBuffer('72INjkR5fchcxk9-VgdGPFJDxUBFR5_rMFsghgxADiw=', 'base64url')
+      .byteLength,
+  ).to.equal(32);
+  expect(
+    stringToBuffer('72INjkR5fchcxk9+VgdGPFJDxUBFR5/rMFsghgxADiw', 'base64')
+      .byteLength,
+  ).to.equal(32);
+  expect(
+    stringToBuffer('72INjkR5fchcxk9-VgdGPFJDxUBFR5_rMFsghgxADiw', 'base64url')
+      .byteLength,
+  ).to.equal(32);
+  expect(
+    stringToBuffer('w69jACy6BgZmaFvv96HG6MYksWytuZu3T1FvGnulPg==', 'base64')
+      .byteLength,
+  ).to.equal(31);
+  expect(
+    stringToBuffer('w69jACy6BgZmaFvv96HG6MYksWytuZu3T1FvGnulPg==', 'base64url')
+      .byteLength,
+  ).to.equal(31);
+  expect(
+    stringToBuffer('w69jACy6BgZmaFvv96HG6MYksWytuZu3T1FvGnulPg=', 'base64')
+      .byteLength,
+  ).to.equal(31);
+  expect(
+    stringToBuffer('w69jACy6BgZmaFvv96HG6MYksWytuZu3T1FvGnulPg=', 'base64url')
+      .byteLength,
+  ).to.equal(31);
+  expect(
+    stringToBuffer('w69jACy6BgZmaFvv96HG6MYksWytuZu3T1FvGnulPg', 'base64')
+      .byteLength,
+  ).to.equal(31);
+  expect(
+    stringToBuffer('w69jACy6BgZmaFvv96HG6MYksWytuZu3T1FvGnulPg', 'base64url')
+      .byteLength,
+  ).to.equal(31);
+});
+
+test(SUITE, '[Node.js] Test single base64 char encodes as 0.', () => {
+  expect(toU8(stringToBuffer('A', 'base64'))).to.deep.equal(new Uint8Array([]));
+});
+
+test(
+  SUITE,
+  '[Node.js] Return empty output for invalid base64 with repeated leading padding (nodejs/#3496)',
+  () => {
+    expect(toU8(stringToBuffer('=bad'.repeat(1e4), 'base64'))).to.deep.equal(
+      new Uint8Array([]),
+    );
+  },
+);
+
+test(
+  SUITE,
+  '[Node.js] Ignore trailing whitespace in base64 input (nodejs/#11987)',
+  () => {
+    expect(toU8(stringToBuffer('w0  ', 'base64'))).to.deep.equal(
+      toU8(stringToBuffer('w0', 'base64')),
+    );
+  },
+);
+
+test(
+  SUITE,
+  '[Node.js] Ignore leading whitespace in base64 input (nodejs/#13657)',
+  () => {
+    expect(toU8(stringToBuffer(' YWJvcnVtLg', 'base64'))).to.deep.equal(
+      toU8(stringToBuffer('YWJvcnVtLg', 'base64')),
+    );
+  },
+);
+
 // --- Base64url ---
 
 test(SUITE, 'base64url encode produces URL-safe characters', () => {
@@ -154,6 +503,25 @@ test(SUITE, 'base64url decode accepts multiple trailing padding', () => {
   );
 });
 
+test(SUITE, "[Node.js] Test toString('base64url')", () => {
+  expect(bufferToString(stringToBuffer('Man', 'utf8'), 'base64url')).to.equal(
+    'TWFu',
+  );
+  expect(bufferToString(stringToBuffer('Woman', 'utf8'), 'base64url')).to.equal(
+    'V29tYW4',
+  );
+});
+
+test(
+  SUITE,
+  "[Node.js] This string encodes single '.' character in UTF-16",
+  () => {
+    const dot = new Uint8Array([0xff, 0xfe, 0x2e, 0x00]).buffer as ArrayBuffer;
+    expect(bufferToString(dot, 'base64')).to.equal('//4uAA==');
+    expect(bufferToString(dot, 'base64url')).to.equal('__4uAA');
+  },
+);
+
 // --- UTF-8 ---
 
 test(SUITE, 'utf8 encode/decode ASCII', () => {
@@ -173,6 +541,31 @@ test(SUITE, 'utf8 alias "utf8" works', () => {
   const ab = stringToBuffer(str, 'utf8');
   expect(bufferToString(ab, 'utf8')).to.equal(str);
 });
+
+test(SUITE, '[Node.js] Test for proper UTF-8 Encoding', () => {
+  expect(toU8(stringToBuffer('\u00fcber', 'utf8'))).to.deep.equal(
+    new Uint8Array([195, 188, 98, 101, 114]),
+  );
+});
+
+test(SUITE, '[Node.js] Test UTF-8 string includes null character', () => {
+  expect(toU8(stringToBuffer('\0', 'utf8'))).to.deep.equal(
+    new Uint8Array([0x00]),
+  );
+  expect(toU8(stringToBuffer('\0\0', 'utf8'))).to.deep.equal(
+    new Uint8Array([0x00, 0x00]),
+  );
+});
+
+test(
+  SUITE,
+  '[Node.js] Test unmatched surrogates not producing invalid utf8 output',
+  () => {
+    expect(toU8(stringToBuffer('ab\ud800cd', 'utf8'))).to.deep.equal(
+      new Uint8Array([0x61, 0x62, 0xef, 0xbf, 0xbd, 0x63, 0x64]),
+    );
+  },
+);
 
 // --- Latin1 / Binary ---
 
@@ -229,6 +622,32 @@ test(
   },
 );
 
+test(
+  SUITE,
+  '[Node.js] latin1 encoding should write only one byte per character.',
+  () => {
+    expect(
+      toU8(stringToBuffer(String.fromCharCode(0xffff), 'latin1')),
+    ).to.deep.equal(new Uint8Array([0xff]));
+    expect(
+      toU8(stringToBuffer(String.fromCharCode(0xaaee), 'latin1')),
+    ).to.deep.equal(new Uint8Array([0xee]));
+  },
+);
+
+test(
+  SUITE,
+  '[Node.js] Binary encoding should write only one byte per character.',
+  () => {
+    expect(
+      toU8(stringToBuffer(String.fromCharCode(0xffff), 'binary')),
+    ).to.deep.equal(new Uint8Array([0xff]));
+    expect(
+      toU8(stringToBuffer(String.fromCharCode(0xaaee), 'binary')),
+    ).to.deep.equal(new Uint8Array([0xee]));
+  },
+);
+
 // --- ASCII ---
 
 test(SUITE, 'ascii encode strips high bit', () => {
@@ -250,6 +669,40 @@ test(SUITE, 'ascii roundtrip printable ASCII', () => {
   const ab = stringToBuffer(str, 'ascii');
   expect(bufferToString(ab, 'ascii')).to.equal(str);
 });
+
+test(
+  SUITE,
+  "[Node.js] ASCII conversion in node.js simply masks off the high bits, it doesn't do transliteration.",
+  () => {
+    expect(
+      bufferToString(stringToBuffer('h\u00e9rit\u00e9', 'utf8'), 'ascii'),
+    ).to.equal('hC)ritC)');
+  },
+);
+
+test(
+  SUITE,
+  '[Node.js] Test ASCII decoding of UTF-8 multibyte characters at every byte offset.',
+  () => {
+    const input =
+      'C\u2019est, graphiquement, la r\u00e9union d\u2019un accent aigu ' +
+      'et d\u2019un accent grave.';
+
+    const expected =
+      'Cb\u0000\u0019est, graphiquement, la rC)union ' +
+      'db\u0000\u0019un accent aigu et db\u0000\u0019un ' +
+      'accent grave.';
+
+    const bytes = toU8(stringToBuffer(input, 'utf8'));
+
+    for (let i = 0; i < expected.length; ++i) {
+      const slice = bytes.slice(i);
+      expect(bufferToString(slice.buffer as ArrayBuffer, 'ascii')).to.equal(
+        expected.slice(i),
+      );
+    }
+  },
+);
 
 // --- Unsupported encoding ---
 
