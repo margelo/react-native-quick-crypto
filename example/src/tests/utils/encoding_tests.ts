@@ -431,7 +431,7 @@ test(SUITE, '[Node.js] Test single base64 char encodes as 0.', () => {
 
 test(
   SUITE,
-  '[Node.js] Return empty output for invalid base64 with repeated leading padding (nodejs/#3496)',
+  '[Node.js] Return empty output for invalid base64 with repeated leading padding (nodejs/node#3496)',
   () => {
     expect(toU8(stringToBuffer('=bad'.repeat(1e4), 'base64'))).to.deep.equal(
       new Uint8Array([]),
@@ -441,7 +441,7 @@ test(
 
 test(
   SUITE,
-  '[Node.js] Ignore trailing whitespace in base64 input (nodejs/#11987)',
+  '[Node.js] Ignore trailing whitespace in base64 input (nodejs/node#11987)',
   () => {
     expect(toU8(stringToBuffer('w0  ', 'base64'))).to.deep.equal(
       toU8(stringToBuffer('w0', 'base64')),
@@ -451,7 +451,7 @@ test(
 
 test(
   SUITE,
-  '[Node.js] Ignore leading whitespace in base64 input (nodejs/#13657)',
+  '[Node.js] Ignore leading whitespace in base64 input (nodejs/node#13657)',
   () => {
     expect(toU8(stringToBuffer(' YWJvcnVtLg', 'base64'))).to.deep.equal(
       toU8(stringToBuffer('YWJvcnVtLg', 'base64')),
