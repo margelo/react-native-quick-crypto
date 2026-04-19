@@ -183,11 +183,7 @@ std::shared_ptr<ArrayBuffer> HybridUtils::stringToBuffer(const std::string& str,
   if (encoding == "utf8" || encoding == "utf-8") {
     return ArrayBuffer::copy(reinterpret_cast<const uint8_t*>(str.data()), str.size());
   }
-  if (encoding == "latin1" || encoding == "binary") {
-    auto decoded = decodeLatin1(str);
-    return ArrayBuffer::move(std::move(decoded));
-  }
-  if (encoding == "ascii") {
+  if (encoding == "latin1" || encoding == "binary" || encoding == "ascii") {
     auto decoded = decodeLatin1(str);
     return ArrayBuffer::move(std::move(decoded));
   }
