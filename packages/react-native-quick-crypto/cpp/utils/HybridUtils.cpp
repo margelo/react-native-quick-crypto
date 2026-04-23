@@ -1,6 +1,8 @@
 #include "HybridUtils.hpp"
 
 #include <NitroModules/JSIConverter+ArrayBuffer.hpp>
+#include <bit>
+#include <cstring>
 #include <openssl/crypto.h>
 #include <stdexcept>
 #include <string>
@@ -107,6 +109,42 @@ namespace {
     size_t encodedLen = simdutf::base64_length_from_binary(len, simdutf::base64_url);
     std::string result(encodedLen, '\0');
     simdutf::binary_to_base64(reinterpret_cast<const char*>(data), len, result.data(), simdutf::base64_url);
+    return result;
+  }
+
+  std::vector<uint8_t> decodeUtf16Le(facebook::jsi::Runtime& runtime, const facebook::jsi::String& str) {
+    std::vector<uint8_t> result;
+
+    auto chunkCallback = [&result](bool isAscii, const void* data, size_t num) {
+      if (num == 0) {
+        return;
+      }
+
+      size_t offset = result.size();
+      result.resize(offset + (num * 2));
+
+      auto* dst = result.data() + offset;
+      if (isAscii) {
+        const auto* asciiSrc = reinterpret_cast<const char*>(data);
+        for (size_t i = 0; i < num; i++, dst += 2) {
+          *dst = asciiSrc[i];
+        }
+        return;
+      }
+
+      const auto* utf16Src = reinterpret_cast<const char16_t*>(data);
+      if constexpr (std::endian::native == std::endian::little && sizeof(char16_t) == 2) {
+        std::memcpy(dst, utf16Src, num * 2);
+        return;
+      }
+      for (size_t i = 0; i < num; i++) {
+        const uint16_t codeUnit = static_cast<uint16_t>(utf16Src[i]);
+        dst[i * 2 + 0] = static_cast<uint8_t>(codeUnit & 0xFFu);
+        dst[i * 2 + 1] = static_cast<uint8_t>(codeUnit >> 8);
+      }
+    };
+
+    str.getStringData(runtime, chunkCallback);
     return result;
   }
 
@@ -243,6 +281,10 @@ facebook::jsi::Value HybridUtils::JsiStringToBuffer(facebook::jsi::Runtime& runt
     }
     if (encoding == "latin1" || encoding == "binary" || encoding == "ascii") {
       auto decoded = decodeLatin1(str.utf8(runtime));
+      return JSIConverter<std::shared_ptr<ArrayBuffer>>::toJSI(runtime, ArrayBuffer::move(std::move(decoded)));
+    }
+    if (encoding == "utf16le") {
+      auto decoded = decodeUtf16Le(runtime, str);
       return JSIConverter<std::shared_ptr<ArrayBuffer>>::toJSI(runtime, ArrayBuffer::move(std::move(decoded)));
     }
     throw std::runtime_error("Unsupported encoding: " + encoding);
