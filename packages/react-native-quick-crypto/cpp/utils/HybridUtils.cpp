@@ -60,7 +60,30 @@ namespace {
     return result;
   }
 
-  std::vector<uint8_t> decodeBase64(const std::string& b64) {
+  std::vector<uint8_t> decodeBase64(facebook::jsi::Runtime& runtime, const facebook::jsi::String& str) {
+    std::string b64;
+
+    auto chunkCallback = [&b64](bool isAscii, const void* data, size_t num) {
+      if (num == 0) {
+        return;
+      }
+
+      if (isAscii) {
+        b64.append(reinterpret_cast<const char*>(data), num);
+        return;
+      }
+
+      size_t offset = b64.size();
+      b64.resize(offset + num);
+      const auto* src = reinterpret_cast<const char16_t*>(data);
+      auto* dst = b64.data() + offset;
+      for (size_t i = 0; i < num; i++) {
+        dst[i] = static_cast<char>(src[i] & 0xFFu);
+      }
+    };
+
+    str.getStringData(runtime, chunkCallback);
+
     if (b64.empty()) {
       return {};
     }
@@ -202,23 +225,24 @@ facebook::jsi::Value HybridUtils::JsiStringToBuffer(facebook::jsi::Runtime& runt
   // Exception wrapper from react-native-nitro-modules/cpp/core/HybridFunction.hpp
   try {
     // stringToBuffer(str: string, encoding: string): ArrayBuffer; Defined in utils/conversion.ts
-    auto str = JSIConverter<std::string>::fromJSI(runtime, args[0]);
+    auto str = args[0].asString(runtime);
     std::string encoding = JSIConverter<std::string>::fromJSI(runtime, args[1]);
 
     if (encoding == "hex") {
-      auto decoded = decodeHex(str);
+      auto decoded = decodeHex(str.utf8(runtime));
       return JSIConverter<std::shared_ptr<ArrayBuffer>>::toJSI(runtime, ArrayBuffer::move(std::move(decoded)));
     }
     if (encoding == "base64" || encoding == "base64url") {
-      auto decoded = decodeBase64(str);
+      auto decoded = decodeBase64(runtime, str);
       return JSIConverter<std::shared_ptr<ArrayBuffer>>::toJSI(runtime, ArrayBuffer::move(std::move(decoded)));
     }
     if (encoding == "utf8" || encoding == "utf-8") {
+      auto utf8Str = str.utf8(runtime);
       return JSIConverter<std::shared_ptr<ArrayBuffer>>::toJSI(runtime,
-                                                               ArrayBuffer::copy(reinterpret_cast<const uint8_t*>(str.data()), str.size()));
+                                                               ArrayBuffer::copy(reinterpret_cast<const uint8_t*>(utf8Str.data()), utf8Str.size()));
     }
     if (encoding == "latin1" || encoding == "binary" || encoding == "ascii") {
-      auto decoded = decodeLatin1(str);
+      auto decoded = decodeLatin1(str.utf8(runtime));
       return JSIConverter<std::shared_ptr<ArrayBuffer>>::toJSI(runtime, ArrayBuffer::move(std::move(decoded)));
     }
     throw std::runtime_error("Unsupported encoding: " + encoding);
