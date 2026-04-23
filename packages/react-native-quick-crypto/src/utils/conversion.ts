@@ -4,7 +4,13 @@ import { NitroModules } from 'react-native-nitro-modules';
 import type { Utils } from '../specs/utils.nitro';
 import type { ABV, BinaryLikeNode, BufferLike } from './types';
 
-const utils = NitroModules.createHybridObject<Utils>('Utils');
+type UtilsWithStringConverter = Utils & {
+  bufferToString(buffer: ArrayBuffer, encoding: string): string;
+  stringToBuffer(str: string, encoding: string): ArrayBuffer;
+};
+
+const utils =
+  NitroModules.createHybridObject<UtilsWithStringConverter>('Utils');
 
 /**
  * Converts supplied argument to an ArrayBuffer.  Note this does not copy the

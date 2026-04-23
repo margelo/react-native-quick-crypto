@@ -10,8 +10,15 @@ class HybridUtils : public HybridUtilsSpec {
 
  public:
   bool timingSafeEqual(const std::shared_ptr<ArrayBuffer>& a, const std::shared_ptr<ArrayBuffer>& b) override;
-  std::string bufferToString(const std::shared_ptr<ArrayBuffer>& buffer, const std::string& encoding) override;
-  std::shared_ptr<ArrayBuffer> stringToBuffer(const std::string& str, const std::string& encoding) override;
+
+ protected:
+  void loadHybridMethods() override;
+
+ private:
+  facebook::jsi::Value bufferToJsiString(facebook::jsi::Runtime& runtime, const facebook::jsi::Value& thisArg,
+                                         const facebook::jsi::Value* args, size_t argCount);
+  facebook::jsi::Value JsiStringToBuffer(facebook::jsi::Runtime& runtime, const facebook::jsi::Value& thisArg,
+                                         const facebook::jsi::Value* args, size_t argCount);
 };
 
 } // namespace margelo::nitro::crypto

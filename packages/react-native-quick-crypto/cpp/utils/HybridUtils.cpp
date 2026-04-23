@@ -1,5 +1,6 @@
 #include "HybridUtils.hpp"
 
+#include <NitroModules/JSIConverter+ArrayBuffer.hpp>
 #include <openssl/crypto.h>
 #include <stdexcept>
 #include <string>
@@ -142,52 +143,71 @@ bool HybridUtils::timingSafeEqual(const std::shared_ptr<ArrayBuffer>& a, const s
   return CRYPTO_memcmp(a->data(), b->data(), aLen) == 0;
 }
 
-std::string HybridUtils::bufferToString(const std::shared_ptr<ArrayBuffer>& buffer, const std::string& encoding) {
+facebook::jsi::Value HybridUtils::bufferToJsiString(facebook::jsi::Runtime& runtime, const facebook::jsi::Value&,
+                                                    const facebook::jsi::Value* args, size_t) {
+  // bufferToString(buffer: ArrayBuffer, encoding: string): string; Defined in utils/conversion.ts
+  auto buffer = JSIConverter<std::shared_ptr<ArrayBuffer>>::fromJSI(runtime, args[0]);
+  std::string encoding = JSIConverter<std::string>::fromJSI(runtime, args[1]);
+
   const auto* data = reinterpret_cast<const uint8_t*>(buffer->data());
   size_t len = buffer->size();
 
   if (encoding == "hex") {
-    return encodeHex(data, len);
+    return facebook::jsi::String::createFromUtf8(runtime, encodeHex(data, len));
   }
   if (encoding == "base64") {
-    return encodeBase64(data, len);
+    return facebook::jsi::String::createFromUtf8(runtime, encodeBase64(data, len));
   }
   if (encoding == "base64url") {
-    return encodeBase64Url(data, len);
+    return facebook::jsi::String::createFromUtf8(runtime, encodeBase64Url(data, len));
   }
   if (encoding == "utf8" || encoding == "utf-8") {
-    return std::string(reinterpret_cast<const char*>(data), len);
+    return facebook::jsi::String::createFromUtf8(runtime, std::string(reinterpret_cast<const char*>(data), len));
   }
   if (encoding == "latin1" || encoding == "binary") {
-    return encodeLatin1(data, len);
+    return facebook::jsi::String::createFromUtf8(runtime, encodeLatin1(data, len));
   }
   if (encoding == "ascii") {
     std::string result(reinterpret_cast<const char*>(data), len);
     for (auto& c : result) {
       c &= 0x7F;
     }
-    return result;
+    return facebook::jsi::String::createFromUtf8(runtime, result);
   }
   throw std::runtime_error("Unsupported encoding: " + encoding);
 }
 
-std::shared_ptr<ArrayBuffer> HybridUtils::stringToBuffer(const std::string& str, const std::string& encoding) {
+facebook::jsi::Value HybridUtils::JsiStringToBuffer(facebook::jsi::Runtime& runtime, const facebook::jsi::Value&,
+                                                    const facebook::jsi::Value* args, size_t) {
+  // stringToBuffer(str: string, encoding: string): ArrayBuffer; Defined in utils/conversion.ts
+  auto str = JSIConverter<std::string>::fromJSI(runtime, args[0]);
+  std::string encoding = JSIConverter<std::string>::fromJSI(runtime, args[1]);
+
   if (encoding == "hex") {
     auto decoded = decodeHex(str);
-    return ArrayBuffer::move(std::move(decoded));
+    return JSIConverter<std::shared_ptr<ArrayBuffer>>::toJSI(runtime, ArrayBuffer::move(std::move(decoded)));
   }
   if (encoding == "base64" || encoding == "base64url") {
     auto decoded = decodeBase64(str);
-    return ArrayBuffer::move(std::move(decoded));
+    return JSIConverter<std::shared_ptr<ArrayBuffer>>::toJSI(runtime, ArrayBuffer::move(std::move(decoded)));
   }
   if (encoding == "utf8" || encoding == "utf-8") {
-    return ArrayBuffer::copy(reinterpret_cast<const uint8_t*>(str.data()), str.size());
+    return JSIConverter<std::shared_ptr<ArrayBuffer>>::toJSI(runtime,
+                                                             ArrayBuffer::copy(reinterpret_cast<const uint8_t*>(str.data()), str.size()));
   }
   if (encoding == "latin1" || encoding == "binary" || encoding == "ascii") {
     auto decoded = decodeLatin1(str);
-    return ArrayBuffer::move(std::move(decoded));
+    return JSIConverter<std::shared_ptr<ArrayBuffer>>::toJSI(runtime, ArrayBuffer::move(std::move(decoded)));
   }
   throw std::runtime_error("Unsupported encoding: " + encoding);
+}
+
+void HybridUtils::loadHybridMethods() {
+  HybridUtilsSpec::loadHybridMethods();
+  registerHybrids(this, [](Prototype& prototype) {
+    prototype.registerRawHybridMethod("bufferToString", 2, &HybridUtils::bufferToJsiString);
+    prototype.registerRawHybridMethod("stringToBuffer", 2, &HybridUtils::JsiStringToBuffer);
+  });
 }
 
 } // namespace margelo::nitro::crypto
