@@ -3,6 +3,7 @@ import { Buffer as SafeBuffer } from 'safe-buffer';
 import { NitroModules } from 'react-native-nitro-modules';
 import type { Utils } from '../specs/utils.nitro';
 import type { ABV, BinaryLikeNode, BufferLike } from './types';
+import { Platform } from 'react-native';
 
 type UtilsWithStringConverter = Utils & {
   bufferToString(buffer: ArrayBuffer, encoding: string): string;
@@ -11,6 +12,50 @@ type UtilsWithStringConverter = Utils & {
 
 const utils =
   NitroModules.createHybridObject<UtilsWithStringConverter>('Utils');
+
+const isHermes =
+  (global as { HermesInternal?: unknown }).HermesInternal != null;
+
+// v0.77.0, https://github.com/facebook/react-native/commit/6ab7b70241fe65e4138dffc4590ed60d46454e5d
+const canGetU16StringFromJsiString = !(
+  Platform.constants.reactNativeVersion.major == 0 &&
+  Platform.constants.reactNativeVersion.minor < 77
+);
+
+// v0.79.0, https://github.com/facebook/react-native/commit/d9d824055e9f24614abd5657f9fc89a6ab3f2da2
+const canCreateJsiStringFromUtf16 = !(
+  Platform.constants.reactNativeVersion.major == 0 &&
+  Platform.constants.reactNativeVersion.minor < 79
+);
+
+const baseNativeEncodings = ['hex', 'base64', 'base64url'];
+const textNativeEncodings = ['utf8', 'utf-8', 'latin1', 'binary', 'ascii'];
+
+// Only enable native string -> buffer conversions on Hermes
+// On non-Hermes runtimes, extracting string data can go through runtime-specific fallback paths which handle invalid UTF-16 strings differently.
+// For example, JSStringGetUTF8CString() of JSC truncates JS strings when meets unpaired surrogates.
+//
+// utf16le is only valid when fast jsi::String.utf16() is available.
+const nativeStringToBufferEncodings = new Set<string>(
+  isHermes
+    ? [
+        ...baseNativeEncodings,
+        ...textNativeEncodings,
+        ...(canGetU16StringFromJsiString ? ['utf16le'] : []),
+      ]
+    : [],
+);
+
+// JSStringCreateWithUTF8CString() of JSC only accepts null-terminated UTF-8 strings without length argument
+// baseNativeEncodings doesn't produce outputs with embedded '\0' so they are always enabled.
+// For textNativeEncodings, the behavior of native buffer -> string conversions can be inconsistent across Hermes/JSC/V8, so they are disabled for non-Hermes runtimes.
+//
+// utf16le is only valid when fast jsi::String::createFromUtf16() is available.
+const nativeBufferToStringEncodings = new Set<string>([
+  ...baseNativeEncodings,
+  ...(isHermes ? textNativeEncodings : []),
+  ...(isHermes && canCreateJsiStringFromUtf16 ? ['utf16le'] : []),
+]);
 
 /**
  * Converts supplied argument to an ArrayBuffer.  Note this does not copy the
@@ -103,7 +148,7 @@ export function binaryLikeToArrayBuffer(
       );
     }
 
-    if (nativeEncodings.has(encoding)) {
+    if (nativeStringToBufferEncodings.has(encoding)) {
       return utils.stringToBuffer(input, encoding);
     }
     const buffer = CraftzdogBuffer.from(input, encoding);
@@ -161,19 +206,8 @@ export function binaryLikeToArrayBuffer(
   );
 }
 
-const nativeEncodings = new Set([
-  'hex',
-  'base64',
-  'base64url',
-  'utf8',
-  'utf-8',
-  'latin1',
-  'binary',
-  'ascii',
-]);
-
 export function ab2str(buf: ArrayBuffer, encoding: string = 'hex'): string {
-  if (nativeEncodings.has(encoding)) {
+  if (nativeBufferToStringEncodings.has(encoding)) {
     return utils.bufferToString(buf, encoding);
   }
   return CraftzdogBuffer.from(buf).toString(encoding);
