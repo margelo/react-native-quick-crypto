@@ -10,14 +10,31 @@
 
 #if __has_include(<cxxreact/ReactNativeVersion.h>)
 #include <cxxreact/ReactNativeVersion.h>
+
+// jsi::String::createFromUtf16() is available in v0.79.0:
+// https://github.com/facebook/react-native/commit/d9d824055e9f24614abd5657f9fc89a6ab3f2da2
 #if (REACT_NATIVE_VERSION_MAJOR == 0 && REACT_NATIVE_VERSION_MINOR < 79)
+#pragma message("QuickCrypto: Native bufferToString('utf16le') is disabled.")
 #define RNQC_HAS_NATIVE_CREATE_STRING_FROM_UTF16 0
 #else // (REACT_NATIVE_VERSION_MAJOR == 0 && REACT_NATIVE_VERSION_MINOR < 79)
+#pragma message("QuickCrypto: Native bufferToString('utf16le') is enabled.")
 #define RNQC_HAS_NATIVE_CREATE_STRING_FROM_UTF16 1
 #endif // (REACT_NATIVE_VERSION_MAJOR == 0 && REACT_NATIVE_VERSION_MINOR < 79)
-#else  // __has_include(<cxxreact/ReactNativeVersion.h>)
-#pragma message("QuickCrypto: <cxxreact/ReactNativeVersion.h> was not found, native bufferToString('utf16le') is disabled.")
+
+// jsi::String::getStringData() is available in v0.78.0:
+// https://github.com/facebook/react-native/commit/c6f12254d16d87978383c08065a626d437e60450
+#if (REACT_NATIVE_VERSION_MAJOR == 0 && REACT_NATIVE_VERSION_MINOR < 78)
+#pragma message("QuickCrypto: Native getStringData() fast path is disabled.")
+#define RNQC_NATIVE_GET_STRING_DATA 0
+#else // (REACT_NATIVE_VERSION_MAJOR == 0 && REACT_NATIVE_VERSION_MINOR < 78)
+#pragma message("QuickCrypto: Native getStringData() fast path is enabled.")
+#define RNQC_NATIVE_GET_STRING_DATA 1
+#endif // (REACT_NATIVE_VERSION_MAJOR == 0 && REACT_NATIVE_VERSION_MINOR < 78)
+
+#else // __has_include(<cxxreact/ReactNativeVersion.h>)
+#pragma message("QuickCrypto: <cxxreact/ReactNativeVersion.h> was not found, The faster native path and native utf16 support are disabled.")
 #define RNQC_HAS_NATIVE_CREATE_STRING_FROM_UTF16 0
+#define RNQC_NATIVE_GET_STRING_DATA 0
 #endif // __has_include(<cxxreact/ReactNativeVersion.h>)
 
 #include "QuickCryptoUtils.hpp"
@@ -75,6 +92,8 @@ namespace {
   }
 
   std::vector<uint8_t> decodeBase64(facebook::jsi::Runtime& runtime, const facebook::jsi::String& str) {
+
+#if RNQC_NATIVE_GET_STRING_DATA
     std::string b64;
 
     auto chunkCallback = [&b64](bool isAscii, const void* data, size_t num) {
@@ -97,6 +116,9 @@ namespace {
     };
 
     str.getStringData(runtime, chunkCallback);
+#else // RNQC_NATIVE_GET_STRING_DATA
+    std::string b64 = str.utf8(runtime);
+#endif
 
     if (b64.empty()) {
       return {};
@@ -124,6 +146,7 @@ namespace {
     return result;
   }
 
+#if RNQC_HAS_NATIVE_CREATE_STRING_FROM_UTF16
   std::u16string encodeUtf16(const uint8_t* data, size_t len) {
     // For !(std::endian::native == std::endian::little && sizeof(char16_t) == 2)
     const size_t codeUnitCount = len / 2;
@@ -137,7 +160,10 @@ namespace {
     }
     return result;
   }
+#endif // RNQC_HAS_NATIVE_CREATE_STRING_FROM_UTF16
 
+#if RNQC_NATIVE_GET_STRING_DATA
+  // decodeUtf16Le() is not available for jsi::String::utf8()
   std::vector<uint8_t> decodeUtf16Le(facebook::jsi::Runtime& runtime, const facebook::jsi::String& str) {
     std::vector<uint8_t> result;
 
@@ -173,6 +199,7 @@ namespace {
     str.getStringData(runtime, chunkCallback);
     return result;
   }
+#endif // RNQC_NATIVE_GET_STRING_DATA
 
   std::vector<uint8_t> decodeLatin1(const std::string& str) {
     std::vector<uint8_t> result;
@@ -278,7 +305,7 @@ facebook::jsi::Value HybridUtils::bufferToJsiString(facebook::jsi::Runtime& runt
       auto encoded = encodeUtf16(data, len);
       return facebook::jsi::String::createFromUtf16(runtime, encoded);
     }
-#endif
+#endif // RNQC_HAS_NATIVE_CREATE_STRING_FROM_UTF16
     throw std::runtime_error("Unsupported encoding: " + encoding);
   } catch (const std::exception& exception) {
     throw facebook::jsi::JSError(runtime, "Utils.bufferToString(...): " + std::string(exception.what()));
@@ -319,10 +346,12 @@ facebook::jsi::Value HybridUtils::JsiStringToBuffer(facebook::jsi::Runtime& runt
       auto decoded = decodeLatin1(str.utf8(runtime));
       return JSIConverter<std::shared_ptr<ArrayBuffer>>::toJSI(runtime, ArrayBuffer::move(std::move(decoded)));
     }
+#if RNQC_NATIVE_GET_STRING_DATA
     if (encoding == "utf16le") {
       auto decoded = decodeUtf16Le(runtime, str);
       return JSIConverter<std::shared_ptr<ArrayBuffer>>::toJSI(runtime, ArrayBuffer::move(std::move(decoded)));
     }
+#endif // RNQC_NATIVE_GET_STRING_DATA
     throw std::runtime_error("Unsupported encoding: " + encoding);
   } catch (const std::exception& exception) {
     throw facebook::jsi::JSError(runtime, "Utils.stringToBuffer(...): " + std::string(exception.what()));
