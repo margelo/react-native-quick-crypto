@@ -8,6 +8,18 @@
 #include <string>
 #include <vector>
 
+#if __has_include(<cxxreact/ReactNativeVersion.h>)
+#include <cxxreact/ReactNativeVersion.h>
+#if (REACT_NATIVE_VERSION_MAJOR == 0 && REACT_NATIVE_VERSION_MINOR < 79)
+#define RNQC_HAS_NATIVE_CREATE_STRING_FROM_UTF16 0
+#else // (REACT_NATIVE_VERSION_MAJOR == 0 && REACT_NATIVE_VERSION_MINOR < 79)
+#define RNQC_HAS_NATIVE_CREATE_STRING_FROM_UTF16 1
+#endif // (REACT_NATIVE_VERSION_MAJOR == 0 && REACT_NATIVE_VERSION_MINOR < 79)
+#else  // __has_include(<cxxreact/ReactNativeVersion.h>)
+#pragma message("QuickCrypto: <cxxreact/ReactNativeVersion.h> was not found, native bufferToString('utf16le') is disabled.")
+#define RNQC_HAS_NATIVE_CREATE_STRING_FROM_UTF16 0
+#endif // __has_include(<cxxreact/ReactNativeVersion.h>)
+
 #include "QuickCryptoUtils.hpp"
 #include "simdutf.h"
 
@@ -109,6 +121,20 @@ namespace {
     size_t encodedLen = simdutf::base64_length_from_binary(len, simdutf::base64_url);
     std::string result(encodedLen, '\0');
     simdutf::binary_to_base64(reinterpret_cast<const char*>(data), len, result.data(), simdutf::base64_url);
+    return result;
+  }
+
+  std::u16string encodeUtf16(const uint8_t* data, size_t len) {
+    // For !(std::endian::native == std::endian::little && sizeof(char16_t) == 2)
+    const size_t codeUnitCount = len / 2;
+    std::u16string result(codeUnitCount, u'\0');
+    if (codeUnitCount == 0) {
+      return result;
+    }
+
+    for (size_t i = 0; i < codeUnitCount; i++) {
+      result[i] = static_cast<char16_t>(static_cast<uint16_t>(data[i * 2]) | (static_cast<uint16_t>(data[i * 2 + 1]) << 8));
+    }
     return result;
   }
 
@@ -231,7 +257,7 @@ facebook::jsi::Value HybridUtils::bufferToJsiString(facebook::jsi::Runtime& runt
       return facebook::jsi::String::createFromUtf8(runtime, encodeBase64Url(data, len));
     }
     if (encoding == "utf8" || encoding == "utf-8") {
-      return facebook::jsi::String::createFromUtf8(runtime, std::string(reinterpret_cast<const char*>(data), len));
+      return facebook::jsi::String::createFromUtf8(runtime, data, len);
     }
     if (encoding == "latin1" || encoding == "binary") {
       return facebook::jsi::String::createFromUtf8(runtime, encodeLatin1(data, len));
@@ -243,6 +269,16 @@ facebook::jsi::Value HybridUtils::bufferToJsiString(facebook::jsi::Runtime& runt
       }
       return facebook::jsi::String::createFromUtf8(runtime, result);
     }
+#if RNQC_HAS_NATIVE_CREATE_STRING_FROM_UTF16
+    // facebook::jsi::String::createFromUtf16() is available in React Native v0.79.0 and later
+    if (encoding == "utf16le") {
+      if constexpr (std::endian::native == std::endian::little && sizeof(char16_t) == 2) {
+        return facebook::jsi::String::createFromUtf16(runtime, reinterpret_cast<const char16_t*>(data), len / 2);
+      }
+      auto encoded = encodeUtf16(data, len);
+      return facebook::jsi::String::createFromUtf16(runtime, encoded);
+    }
+#endif
     throw std::runtime_error("Unsupported encoding: " + encoding);
   } catch (const std::exception& exception) {
     throw facebook::jsi::JSError(runtime, "Utils.bufferToString(...): " + std::string(exception.what()));
@@ -276,8 +312,8 @@ facebook::jsi::Value HybridUtils::JsiStringToBuffer(facebook::jsi::Runtime& runt
     }
     if (encoding == "utf8" || encoding == "utf-8") {
       auto utf8Str = str.utf8(runtime);
-      return JSIConverter<std::shared_ptr<ArrayBuffer>>::toJSI(runtime,
-                                                               ArrayBuffer::copy(reinterpret_cast<const uint8_t*>(utf8Str.data()), utf8Str.size()));
+      return JSIConverter<std::shared_ptr<ArrayBuffer>>::toJSI(
+          runtime, ArrayBuffer::copy(reinterpret_cast<const uint8_t*>(utf8Str.data()), utf8Str.size()));
     }
     if (encoding == "latin1" || encoding == "binary" || encoding == "ascii") {
       auto decoded = decodeLatin1(str.utf8(runtime));
