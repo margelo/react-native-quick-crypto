@@ -49,18 +49,10 @@ const hex_1MB = bufferToString(ab1MB, 'hex');
 const hex_32B = bufferToString(ab32B, 'hex');
 const base64_1MB = bufferToString(ab1MB, 'base64');
 const base64_32B = bufferToString(ab32B, 'base64');
-const latin1_1MB_ascii = bufferToString(ab1MB_ascii, 'latin1');
-const latin1_32B_ascii = bufferToString(ab32B_ascii, 'latin1');
-const latin1_1MB_non_ascii = bufferToString(ab1MB, 'latin1');
-const latin1_32B_non_ascii = bufferToString(ab32B, 'latin1');
 const utf16le_1MB_ascii = bufferToString(ab1MB_ascii, 'utf16le');
 const utf16le_32B_ascii = bufferToString(ab32B_ascii, 'utf16le');
 const utf16le_1MB_non_ascii = bufferToString(ab1MB, 'utf16le');
 const utf16le_32B_non_ascii = bufferToString(ab32B, 'utf16le');
-const utf8_1MB_ascii = bufferToString(ab1MB_ascii, 'utf8');
-const utf8_32B_ascii = bufferToString(ab32B_ascii, 'utf8');
-const utf8_1MB_non_ascii = bufferToString(ab1MB, 'utf8');
-const utf8_32B_non_ascii = bufferToString(ab32B, 'utf8');
 
 // --- Encode benchmarks (ArrayBuffer → string) ---
 
@@ -135,158 +127,6 @@ const encode_base64_1mb: BenchFn = () => {
     })
     .add('Buffer polyfill', () => {
       ab2str_old(ab1MB, 'base64');
-    });
-
-  return bench;
-};
-
-const encode_latin1_32b: BenchFn = () => {
-  const bench = new Bench({
-    name: 'latin1 encode 32B',
-    iterations: 100,
-    warmupIterations: 10,
-    time: 0,
-  });
-
-  bench
-    .add('rnqc', () => {
-      bufferToString(ab32B, 'latin1');
-    })
-    .add('Buffer polyfill', () => {
-      ab2str_old(ab32B, 'latin1');
-    });
-
-  return bench;
-};
-
-const encode_latin1_1mb: BenchFn = () => {
-  const bench = new Bench({
-    name: 'latin1 encode 1MB',
-    iterations: 10,
-    warmupIterations: 2,
-    time: 0,
-  });
-
-  bench
-    .add('rnqc', () => {
-      bufferToString(ab1MB, 'latin1');
-    })
-    .add('Buffer polyfill', () => {
-      ab2str_old(ab1MB, 'latin1');
-    });
-
-  return bench;
-};
-
-const encode_latin1_32b_ascii: BenchFn = () => {
-  const bench = new Bench({
-    name: 'latin1 encode 32B (ASCII only)',
-    iterations: 100,
-    warmupIterations: 10,
-    time: 0,
-  });
-
-  bench
-    .add('rnqc', () => {
-      bufferToString(ab32B_ascii, 'latin1');
-    })
-    .add('Buffer polyfill', () => {
-      ab2str_old(ab32B_ascii, 'latin1');
-    });
-
-  return bench;
-};
-
-const encode_latin1_1mb_ascii: BenchFn = () => {
-  const bench = new Bench({
-    name: 'latin1 encode 1MB (ASCII only)',
-    iterations: 10,
-    warmupIterations: 2,
-    time: 0,
-  });
-
-  bench
-    .add('rnqc', () => {
-      bufferToString(ab1MB_ascii, 'latin1');
-    })
-    .add('Buffer polyfill', () => {
-      ab2str_old(ab1MB_ascii, 'latin1');
-    });
-
-  return bench;
-};
-
-const encode_utf8_32b: BenchFn = () => {
-  const bench = new Bench({
-    name: 'utf8 encode 32B',
-    iterations: 100,
-    warmupIterations: 10,
-    time: 0,
-  });
-
-  bench
-    .add('rnqc', () => {
-      bufferToString(ab32B, 'utf8');
-    })
-    .add('Buffer polyfill', () => {
-      ab2str_old(ab32B, 'utf8');
-    });
-
-  return bench;
-};
-
-const encode_utf8_1mb: BenchFn = () => {
-  const bench = new Bench({
-    name: 'utf8 encode 1MB',
-    iterations: 10,
-    warmupIterations: 2,
-    time: 0,
-  });
-
-  bench
-    .add('rnqc', () => {
-      bufferToString(ab1MB, 'utf8');
-    })
-    .add('Buffer polyfill', () => {
-      ab2str_old(ab1MB, 'utf8');
-    });
-
-  return bench;
-};
-
-const encode_utf8_32b_ascii: BenchFn = () => {
-  const bench = new Bench({
-    name: 'utf8 encode 32B (ASCII only)',
-    iterations: 100,
-    warmupIterations: 10,
-    time: 0,
-  });
-
-  bench
-    .add('rnqc', () => {
-      bufferToString(ab32B_ascii, 'utf8');
-    })
-    .add('Buffer polyfill', () => {
-      ab2str_old(ab32B_ascii, 'utf8');
-    });
-
-  return bench;
-};
-
-const encode_utf8_1mb_ascii: BenchFn = () => {
-  const bench = new Bench({
-    name: 'utf8 encode 1MB (ASCII only)',
-    iterations: 10,
-    warmupIterations: 2,
-    time: 0,
-  });
-
-  bench
-    .add('rnqc', () => {
-      bufferToString(ab1MB_ascii, 'utf8');
-    })
-    .add('Buffer polyfill', () => {
-      ab2str_old(ab1MB_ascii, 'utf8');
     });
 
   return bench;
@@ -446,158 +286,6 @@ const decode_base64_1mb: BenchFn = () => {
   return bench;
 };
 
-const decode_latin1_32b: BenchFn = () => {
-  const bench = new Bench({
-    name: 'latin1 decode 32B',
-    iterations: 100,
-    warmupIterations: 10,
-    time: 0,
-  });
-
-  bench
-    .add('rnqc', () => {
-      stringToBuffer(latin1_32B_non_ascii, 'latin1');
-    })
-    .add('Buffer polyfill', () => {
-      stringToBuffer_old(latin1_32B_non_ascii, 'latin1');
-    });
-
-  return bench;
-};
-
-const decode_latin1_1mb: BenchFn = () => {
-  const bench = new Bench({
-    name: 'latin1 decode 1MB',
-    iterations: 10,
-    warmupIterations: 2,
-    time: 0,
-  });
-
-  bench
-    .add('rnqc', () => {
-      stringToBuffer(latin1_1MB_non_ascii, 'latin1');
-    })
-    .add('Buffer polyfill', () => {
-      stringToBuffer_old(latin1_1MB_non_ascii, 'latin1');
-    });
-
-  return bench;
-};
-
-const decode_latin1_32b_ascii: BenchFn = () => {
-  const bench = new Bench({
-    name: 'latin1 decode 32B (ASCII only)',
-    iterations: 100,
-    warmupIterations: 10,
-    time: 0,
-  });
-
-  bench
-    .add('rnqc', () => {
-      stringToBuffer(latin1_32B_ascii, 'latin1');
-    })
-    .add('Buffer polyfill', () => {
-      stringToBuffer_old(latin1_32B_ascii, 'latin1');
-    });
-
-  return bench;
-};
-
-const decode_latin1_1mb_ascii: BenchFn = () => {
-  const bench = new Bench({
-    name: 'latin1 decode 1MB (ASCII only)',
-    iterations: 10,
-    warmupIterations: 2,
-    time: 0,
-  });
-
-  bench
-    .add('rnqc', () => {
-      stringToBuffer(latin1_1MB_ascii, 'latin1');
-    })
-    .add('Buffer polyfill', () => {
-      stringToBuffer_old(latin1_1MB_ascii, 'latin1');
-    });
-
-  return bench;
-};
-
-const decode_utf8_32b: BenchFn = () => {
-  const bench = new Bench({
-    name: 'utf8 decode 32B',
-    iterations: 100,
-    warmupIterations: 10,
-    time: 0,
-  });
-
-  bench
-    .add('rnqc', () => {
-      stringToBuffer(utf8_32B_non_ascii, 'utf8');
-    })
-    .add('Buffer polyfill', () => {
-      stringToBuffer_old(utf8_32B_non_ascii, 'utf8');
-    });
-
-  return bench;
-};
-
-const decode_utf8_1mb: BenchFn = () => {
-  const bench = new Bench({
-    name: 'utf8 decode 1MB',
-    iterations: 10,
-    warmupIterations: 2,
-    time: 0,
-  });
-
-  bench
-    .add('rnqc', () => {
-      stringToBuffer(utf8_1MB_non_ascii, 'utf8');
-    })
-    .add('Buffer polyfill', () => {
-      stringToBuffer_old(utf8_1MB_non_ascii, 'utf8');
-    });
-
-  return bench;
-};
-
-const decode_utf8_32b_ascii: BenchFn = () => {
-  const bench = new Bench({
-    name: 'utf8 decode 32B (ASCII only)',
-    iterations: 100,
-    warmupIterations: 10,
-    time: 0,
-  });
-
-  bench
-    .add('rnqc', () => {
-      stringToBuffer(utf8_32B_ascii, 'utf8');
-    })
-    .add('Buffer polyfill', () => {
-      stringToBuffer_old(utf8_32B_ascii, 'utf8');
-    });
-
-  return bench;
-};
-
-const decode_utf8_1mb_ascii: BenchFn = () => {
-  const bench = new Bench({
-    name: 'utf8 decode 1MB (ASCII only)',
-    iterations: 10,
-    warmupIterations: 2,
-    time: 0,
-  });
-
-  bench
-    .add('rnqc', () => {
-      stringToBuffer(utf8_1MB_ascii, 'utf8');
-    })
-    .add('Buffer polyfill', () => {
-      stringToBuffer_old(utf8_1MB_ascii, 'utf8');
-    });
-
-  return bench;
-};
-
 const decode_utf16le_32b: BenchFn = () => {
   const bench = new Bench({
     name: 'utf16le decode 32B',
@@ -679,14 +367,6 @@ export default [
   encode_hex_1mb,
   encode_base64_32b,
   encode_base64_1mb,
-  encode_latin1_32b,
-  encode_latin1_1mb,
-  encode_latin1_32b_ascii,
-  encode_latin1_1mb_ascii,
-  encode_utf8_32b,
-  encode_utf8_1mb,
-  encode_utf8_32b_ascii,
-  encode_utf8_1mb_ascii,
   encode_utf16le_32b,
   encode_utf16le_1mb,
   encode_utf16le_32b_ascii,
@@ -695,14 +375,6 @@ export default [
   decode_hex_1mb,
   decode_base64_32b,
   decode_base64_1mb,
-  decode_latin1_32b,
-  decode_latin1_1mb,
-  decode_latin1_32b_ascii,
-  decode_latin1_1mb_ascii,
-  decode_utf8_32b,
-  decode_utf8_1mb,
-  decode_utf8_32b_ascii,
-  decode_utf8_1mb_ascii,
   decode_utf16le_32b,
   decode_utf16le_1mb,
   decode_utf16le_32b_ascii,

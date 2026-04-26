@@ -29,30 +29,28 @@ const canCreateJsiStringFromUtf16 = !(
   Platform.constants.reactNativeVersion.minor < 79
 );
 
-const baseNativeEncodings = ['hex', 'base64', 'base64url'];
-const textNativeEncodings = ['utf8', 'utf-8', 'latin1', 'binary', 'ascii'];
+const baseNativeEncodings = [
+  'hex',
+  'base64',
+  'base64url',
+  'utf8',
+  'utf-8',
+  'latin1',
+  'binary',
+  'ascii',
+];
+const nativeStringToBufferEncodings = new Set<string>(baseNativeEncodings);
+const nativeBufferToStringEncodings = new Set<string>(baseNativeEncodings);
 
-// Only enable native string -> buffer conversions on Hermes
-// On non-Hermes runtimes, extracting string data can go through runtime-specific fallback paths which handle invalid UTF-16 strings differently.
-// For example, JSStringGetUTF8CString() of JSC truncates JS strings when meets unpaired surrogates.
-const nativeStringToBufferEncodings = new Set<string>(
-  isHermes
-    ? [
-        ...baseNativeEncodings,
-        ...textNativeEncodings,
-        ...(canGetU16StringFromJsiString ? ['utf16le'] : []),
-      ]
-    : [],
-);
-
-// JSStringCreateWithUTF8CString() of JSC only accepts null-terminated UTF-8 strings without length argument
-// baseNativeEncodings doesn't produce outputs with embedded '\0' so they are always enabled.
-// For textNativeEncodings, the behavior of native buffer -> string conversions can be inconsistent across Hermes/JSC/V8, so they are disabled for non-Hermes runtimes.
-const nativeBufferToStringEncodings = new Set<string>([
-  ...baseNativeEncodings,
-  ...(isHermes ? textNativeEncodings : []),
-  ...(isHermes && canCreateJsiStringFromUtf16 ? ['utf16le'] : []),
-]);
+// The fast and lossless paths for utf16le are only available on Hermes
+if (isHermes) {
+  if (canGetU16StringFromJsiString) {
+    nativeStringToBufferEncodings.add('utf16le');
+  }
+  if (canCreateJsiStringFromUtf16) {
+    nativeBufferToStringEncodings.add('utf16le');
+  }
+}
 
 /**
  * Converts supplied argument to an ArrayBuffer.  Note this does not copy the
