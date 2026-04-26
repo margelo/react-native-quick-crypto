@@ -3,6 +3,9 @@ import {
   stringToBuffer,
   Buffer as CraftzdogBuffer,
 } from 'react-native-quick-crypto';
+// For utf16le, the native implementation could be disabled for non-Hermes runtimes or older versions of RN.
+// Use the fallbacks to meature the performance without causing errors, even if it could use Buffer polyfill.
+import { ab2str, binaryLikeToArrayBuffer } from 'react-native-quick-crypto';
 import type { BenchFn } from '../../types/benchmarks';
 import { Bench } from 'tinybench';
 
@@ -142,7 +145,7 @@ const encode_utf16le_32b: BenchFn = () => {
 
   bench
     .add('rnqc', () => {
-      bufferToString(ab32B, 'utf16le');
+      ab2str(ab32B, 'utf16le');
     })
     .add('Buffer polyfill', () => {
       ab2str_old(ab32B, 'utf16le');
@@ -161,7 +164,7 @@ const encode_utf16le_1mb: BenchFn = () => {
 
   bench
     .add('rnqc', () => {
-      bufferToString(ab1MB, 'utf16le');
+      ab2str(ab1MB, 'utf16le');
     })
     .add('Buffer polyfill', () => {
       ab2str_old(ab1MB, 'utf16le');
@@ -180,7 +183,7 @@ const encode_utf16le_32b_ascii: BenchFn = () => {
 
   bench
     .add('rnqc', () => {
-      bufferToString(ab32B_ascii, 'utf16le');
+      ab2str(ab32B_ascii, 'utf16le');
     })
     .add('Buffer polyfill', () => {
       ab2str_old(ab32B_ascii, 'utf16le');
@@ -199,7 +202,7 @@ const encode_utf16le_1mb_ascii: BenchFn = () => {
 
   bench
     .add('rnqc', () => {
-      bufferToString(ab1MB_ascii, 'utf16le');
+      ab2str(ab1MB_ascii, 'utf16le');
     })
     .add('Buffer polyfill', () => {
       ab2str_old(ab1MB_ascii, 'utf16le');
@@ -296,7 +299,7 @@ const decode_utf16le_32b: BenchFn = () => {
 
   bench
     .add('rnqc', () => {
-      stringToBuffer(utf16le_32B_non_ascii, 'utf16le');
+      binaryLikeToArrayBuffer(utf16le_32B_non_ascii, 'utf16le');
     })
     .add('Buffer polyfill', () => {
       stringToBuffer_old(utf16le_32B_non_ascii, 'utf16le');
@@ -315,7 +318,7 @@ const decode_utf16le_1mb: BenchFn = () => {
 
   bench
     .add('rnqc', () => {
-      stringToBuffer(utf16le_1MB_non_ascii, 'utf16le');
+      binaryLikeToArrayBuffer(utf16le_1MB_non_ascii, 'utf16le');
     })
     .add('Buffer polyfill', () => {
       stringToBuffer_old(utf16le_1MB_non_ascii, 'utf16le');
@@ -334,7 +337,7 @@ const decode_utf16le_32b_ascii: BenchFn = () => {
 
   bench
     .add('rnqc', () => {
-      stringToBuffer(utf16le_32B_ascii, 'utf16le');
+      binaryLikeToArrayBuffer(utf16le_32B_ascii, 'utf16le');
     })
     .add('Buffer polyfill', () => {
       stringToBuffer_old(utf16le_32B_ascii, 'utf16le');
@@ -353,7 +356,7 @@ const decode_utf16le_1mb_ascii: BenchFn = () => {
 
   bench
     .add('rnqc', () => {
-      stringToBuffer(utf16le_1MB_ascii, 'utf16le');
+      binaryLikeToArrayBuffer(utf16le_1MB_ascii, 'utf16le');
     })
     .add('Buffer polyfill', () => {
       stringToBuffer_old(utf16le_1MB_ascii, 'utf16le');
