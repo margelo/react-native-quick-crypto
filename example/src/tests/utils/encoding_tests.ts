@@ -578,6 +578,84 @@ test(
   },
 );
 
+// --- UTF-16LE ---
+
+test(SUITE, '[Node.js] Roundtrips ASCII text through utf16le encoding.', () => {
+  const str = 'foo';
+  const ab = stringToBuffer(str, 'utf16le');
+  expect(bufferToString(ab, 'utf16le')).to.equal(str);
+});
+
+test(
+  SUITE,
+  'Roundtrips UTF-16LE text containing an unpaired high surrogate.',
+  () => {
+    const str = 'A\uD83DB';
+    const ab = stringToBuffer(str, 'utf16le');
+    expect(toU8(ab)).to.deep.equal(
+      new Uint8Array([0x41, 0x00, 0x3d, 0xd8, 0x42, 0x00]),
+    );
+    expect(bufferToString(ab, 'utf16le')).to.equal(str);
+  },
+);
+
+test(
+  SUITE,
+  'Roundtrips UTF-16LE text containing an unpaired low surrogate.',
+  () => {
+    const str = 'A\uDC00B';
+    const ab = stringToBuffer(str, 'utf16le');
+    expect(toU8(ab)).to.deep.equal(
+      new Uint8Array([0x41, 0x00, 0x00, 0xdc, 0x42, 0x00]),
+    );
+    expect(bufferToString(ab, 'utf16le')).to.equal(str);
+  },
+);
+
+test(SUITE, '[Node.js] UTF-16LE encoding of "über"', () => {
+  expect(toU8(stringToBuffer('über', 'utf16le'))).to.deep.equal(
+    new Uint8Array([252, 0, 98, 0, 101, 0, 114, 0]),
+  );
+});
+
+test(SUITE, '[Node.js] UTF-16LE encoding of "привет"', () => {
+  const encoded = toU8(stringToBuffer('привет', 'utf16le'));
+  expect(encoded).to.deep.equal(
+    new Uint8Array([63, 4, 64, 4, 56, 4, 50, 4, 53, 4, 66, 4]),
+  );
+  expect(bufferToString(encoded.buffer as ArrayBuffer, 'utf16le')).to.equal(
+    'привет',
+  );
+});
+
+test(SUITE, '[Node.js] UTF-16LE encoding of Thumbs up sign (U+1F44D)', () => {
+  expect(toU8(stringToBuffer('\uD83D\uDC4D', 'utf16le'))).to.deep.equal(
+    new Uint8Array([0x3d, 0xd8, 0x4d, 0xdc]),
+  );
+});
+
+test(SUITE, '[Node.js] Decodes UTF-16LE bytes back to Japanese text.', () => {
+  const bytes = new Uint8Array([
+    0x42, 0x30, 0x44, 0x30, 0x46, 0x30, 0x48, 0x30, 0x4a, 0x30,
+  ]);
+  expect(bufferToString(bytes.buffer as ArrayBuffer, 'utf16le')).to.equal(
+    'あいうえお',
+  );
+});
+
+test(
+  SUITE,
+  '[Node.js] Decodes UTF-16LE bytes correctly from a sliced buffer starting at byte offset 1.',
+  () => {
+    const bytes = new Uint8Array([
+      0xff, 0x42, 0x30, 0x44, 0x30, 0x46, 0x30, 0x48, 0x30, 0x4a, 0x30,
+    ]);
+    expect(
+      bufferToString(bytes.slice(1).buffer as ArrayBuffer, 'utf16le'),
+    ).to.equal('あいうえお');
+  },
+);
+
 // --- Latin1 / Binary ---
 
 test(
