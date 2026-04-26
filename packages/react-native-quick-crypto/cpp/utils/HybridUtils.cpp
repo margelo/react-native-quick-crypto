@@ -91,35 +91,7 @@ namespace {
     return result;
   }
 
-  std::vector<uint8_t> decodeBase64(facebook::jsi::Runtime& runtime, const facebook::jsi::String& str) {
-
-#if RNQC_NATIVE_GET_STRING_DATA
-    std::string b64;
-
-    auto chunkCallback = [&b64](bool isAscii, const void* data, size_t num) {
-      if (num == 0) {
-        return;
-      }
-
-      if (isAscii) {
-        b64.append(reinterpret_cast<const char*>(data), num);
-        return;
-      }
-
-      size_t offset = b64.size();
-      b64.resize(offset + num);
-      const auto* src = reinterpret_cast<const char16_t*>(data);
-      auto* dst = b64.data() + offset;
-      for (size_t i = 0; i < num; i++) {
-        dst[i] = static_cast<char>(src[i] & 0xFFu);
-      }
-    };
-
-    str.getStringData(runtime, chunkCallback);
-#else // RNQC_NATIVE_GET_STRING_DATA
-    std::string b64 = str.utf8(runtime);
-#endif
-
+  std::vector<uint8_t> decodeBase64(const std::string& b64) {
     if (b64.empty()) {
       return {};
     }
@@ -334,7 +306,7 @@ facebook::jsi::Value HybridUtils::JsiStringToBuffer(facebook::jsi::Runtime& runt
       return JSIConverter<std::shared_ptr<ArrayBuffer>>::toJSI(runtime, ArrayBuffer::move(std::move(decoded)));
     }
     if (encoding == "base64" || encoding == "base64url") {
-      auto decoded = decodeBase64(runtime, str);
+      auto decoded = decodeBase64(str.utf8(runtime));
       return JSIConverter<std::shared_ptr<ArrayBuffer>>::toJSI(runtime, ArrayBuffer::move(std::move(decoded)));
     }
     if (encoding == "utf8" || encoding == "utf-8") {
