@@ -694,3 +694,183 @@ test(SUITE, 'Cipher: _transform error surfaces as "error" event', async () => {
   });
   expect(error).to.be.instanceOf(Error);
 });
+
+// --- Phase 4.1: NIST AEAD Known-Answer Tests ---
+//
+// Until now the cipher suite only verified round-trip identity (encrypt →
+// decrypt yields the original plaintext) for every cipher returned by
+// `getCiphers()`. That catches obvious wiring bugs but does NOT pin the
+// ciphertext or the auth tag bytes against the published NIST / IETF
+// reference values. A subtle bug — e.g. CCM's CTR formatting, GCM's GHASH
+// byte order, OCB's offset chaining — could pass round-trip and still
+// produce ciphertext that no other AES-GCM/CCM/OCB implementation can
+// decrypt. The KATs below close that gap.
+//
+// Sources (each `name` field cites the document section):
+//   AES-GCM — NIST GCM Test Vectors (Joux/McGrew "The Galois/Counter Mode")
+//             Test Cases 2, 3, 4 — also in Section 2.5 of the spec.
+//   AES-CCM — NIST SP 800-38C Appendix C (C.1 / C.2 / C.3).
+//   AES-OCB — RFC 7253 §A — canonical key 0..0F, plaintext 0..N-1.
+
+interface AeadKat {
+  name: string;
+  cipher: string;
+  key: string; // hex
+  iv: string; // hex
+  aad: string; // hex (may be empty)
+  plaintext: string; // hex (may be empty)
+  ciphertext: string; // hex (may be empty)
+  tag: string; // hex (auth tag returned by getAuthTag)
+  authTagLength?: number; // bytes; defaults to tag.length / 2
+}
+
+const AEAD_KATS: AeadKat[] = [
+  // --- AES-GCM, NIST GCM spec test cases ---
+  // Test Case 2: K=0...0, IV=0...0, AAD empty, P=16 zero bytes
+  {
+    name: 'AES-GCM NIST Test Case 2',
+    cipher: 'aes-128-gcm',
+    key: '00000000000000000000000000000000',
+    iv: '000000000000000000000000',
+    aad: '',
+    plaintext: '00000000000000000000000000000000',
+    ciphertext: '0388dace60b6a392f328c2b971b2fe78',
+    tag: 'ab6e47d42cec13bdf53a67b21257bddf',
+  },
+  // Test Case 3: K = "feffe9928665731c6d6a8f9467308308", IV = "cafebabefacedbaddecaf888"
+  {
+    name: 'AES-GCM NIST Test Case 3',
+    cipher: 'aes-128-gcm',
+    key: 'feffe9928665731c6d6a8f9467308308',
+    iv: 'cafebabefacedbaddecaf888',
+    aad: '',
+    plaintext:
+      'd9313225f88406e5a55909c5aff5269a86a7a9531534f7da2e4c303d8a318a721c3c0c95956809532fcf0e2449a6b525b16aedf5aa0de657ba637b391aafd255',
+    ciphertext:
+      '42831ec2217774244b7221b784d0d49ce3aa212f2c02a4e035c17e2329aca12e21d514b25466931c7d8f6a5aac84aa051ba30b396a0aac973d58e091473f5985',
+    tag: '4d5c2af327cd64a62cf35abd2ba6fab4',
+  },
+  // Test Case 4: same K/IV as TC3, but with AAD and shorter (60-byte) P
+  {
+    name: 'AES-GCM NIST Test Case 4',
+    cipher: 'aes-128-gcm',
+    key: 'feffe9928665731c6d6a8f9467308308',
+    iv: 'cafebabefacedbaddecaf888',
+    aad: 'feedfacedeadbeeffeedfacedeadbeefabaddad2',
+    plaintext:
+      'd9313225f88406e5a55909c5aff5269a86a7a9531534f7da2e4c303d8a318a721c3c0c95956809532fcf0e2449a6b525b16aedf5aa0de657ba637b39',
+    ciphertext:
+      '42831ec2217774244b7221b784d0d49ce3aa212f2c02a4e035c17e2329aca12e21d514b25466931c7d8f6a5aac84aa051ba30b396a0aac973d58e091',
+    tag: '5bc94fbc3221a5db94fae95ae7121a47',
+  },
+  // --- AES-CCM, NIST SP 800-38C Appendix C ---
+  // C.1: K=40-..-4F (16 B), N=10..16 (7 B), A=0..7 (8 B), P=20..2E (4 B), Tlen=4, Mlen=4 ⇒ tag 4 B
+  {
+    name: 'AES-CCM SP 800-38C C.1',
+    cipher: 'aes-128-ccm',
+    key: '404142434445464748494a4b4c4d4e4f',
+    iv: '10111213141516',
+    aad: '0001020304050607',
+    plaintext: '20212223',
+    ciphertext: '7162015b',
+    tag: '4dac255d',
+    authTagLength: 4,
+  },
+  // C.2: same K, N=10..17 (8 B), A=0..F (16 B), P=20..2F (16 B), Tlen=8 ⇒ tag 8 B
+  {
+    name: 'AES-CCM SP 800-38C C.2',
+    cipher: 'aes-128-ccm',
+    key: '404142434445464748494a4b4c4d4e4f',
+    iv: '1011121314151617',
+    aad: '000102030405060708090a0b0c0d0e0f',
+    plaintext: '202122232425262728292a2b2c2d2e2f',
+    ciphertext: 'd2a1f0e051ea5f62081a7792073d593d',
+    tag: '1fc64fbfaccd',
+    authTagLength: 6,
+  },
+  // C.3: N=12 B, A=20 B, P=24 B, Tlen=8 ⇒ tag 8 B
+  {
+    name: 'AES-CCM SP 800-38C C.3',
+    cipher: 'aes-128-ccm',
+    key: '404142434445464748494a4b4c4d4e4f',
+    iv: '101112131415161718191a1b',
+    aad: '000102030405060708090a0b0c0d0e0f10111213',
+    plaintext: '202122232425262728292a2b2c2d2e2f3031323334353637',
+    ciphertext: 'e3b201a9f5b71a7a9b1ceaeccd97e70b6176aad9a4428aa5',
+    tag: '484392fbc1b09951',
+    authTagLength: 8,
+  },
+  // --- AES-OCB, RFC 7253 §A — K = 000102...0F (16 B) ---
+  // A.0: empty plaintext, empty AAD ⇒ ciphertext is just the 16-byte tag
+  {
+    name: 'AES-OCB RFC 7253 §A empty',
+    cipher: 'aes-128-ocb',
+    key: '000102030405060708090a0b0c0d0e0f',
+    iv: 'bbaa99887766554433221100',
+    aad: '',
+    plaintext: '',
+    ciphertext: '',
+    tag: '785407bfffc8ad9edcc5520ac9111ee6',
+  },
+  // §A second vector (N=...221101): 8-byte plaintext, 8-byte AAD, 16-byte tag
+  {
+    name: 'AES-OCB RFC 7253 §A 8B P + 8B AAD',
+    cipher: 'aes-128-ocb',
+    key: '000102030405060708090a0b0c0d0e0f',
+    iv: 'bbaa99887766554433221101',
+    aad: '0001020304050607',
+    plaintext: '0001020304050607',
+    ciphertext: '6820b3657b6f615a',
+    tag: '5725bda0d3b4eb3a257c9af1f8f03009',
+  },
+];
+
+for (const kat of AEAD_KATS) {
+  test(SUITE, `${kat.name} encrypt`, () => {
+    const tagLen = kat.authTagLength ?? kat.tag.length / 2;
+    const cipher = createCipheriv(
+      kat.cipher,
+      Buffer.from(kat.key, 'hex'),
+      Buffer.from(kat.iv, 'hex'),
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      { authTagLength: tagLen } as any,
+    );
+    if (kat.aad.length > 0) {
+      const aadBuf = Buffer.from(kat.aad, 'hex');
+      if (kat.cipher.includes('ccm')) {
+        cipher.setAAD(aadBuf, { plaintextLength: kat.plaintext.length / 2 });
+      } else {
+        cipher.setAAD(aadBuf);
+      }
+    }
+    const enc1 = cipher.update(Buffer.from(kat.plaintext, 'hex')) as Buffer;
+    const enc2 = cipher.final() as Buffer;
+    const ct = Buffer.concat([enc1, enc2]).toString('hex');
+    const tag = cipher.getAuthTag().toString('hex');
+    expect(ct).to.equal(kat.ciphertext);
+    expect(tag).to.equal(kat.tag);
+  });
+
+  test(SUITE, `${kat.name} decrypt`, () => {
+    const tagLen = kat.authTagLength ?? kat.tag.length / 2;
+    const decipher = createDecipheriv(
+      kat.cipher,
+      Buffer.from(kat.key, 'hex'),
+      Buffer.from(kat.iv, 'hex'),
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      { authTagLength: tagLen } as any,
+    );
+    if (kat.aad.length > 0) {
+      const aadBuf = Buffer.from(kat.aad, 'hex');
+      if (kat.cipher.includes('ccm')) {
+        decipher.setAAD(aadBuf, { plaintextLength: kat.plaintext.length / 2 });
+      } else {
+        decipher.setAAD(aadBuf);
+      }
+    }
+    decipher.setAuthTag(Buffer.from(kat.tag, 'hex'));
+    const dec1 = decipher.update(Buffer.from(kat.ciphertext, 'hex')) as Buffer;
+    const dec2 = decipher.final() as Buffer;
+    expect(Buffer.concat([dec1, dec2]).toString('hex')).to.equal(kat.plaintext);
+  });
+}

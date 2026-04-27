@@ -811,6 +811,137 @@ for (const variant of MLDSA_VARIANTS) {
   });
 }
 
+// --- Phase 4.1: ML-DSA NIST-style robustness checks ---
+//
+// OpenSSL does not expose seeded ML-DSA keygen, so we cannot anchor to
+// FIPS 204 KAT outputs deterministically. The checks below pin the
+// FIPS 204 properties we *can* observe at a black-box level:
+//
+//   (a) Cross-variant: a signature produced by ML-DSA-44 must NOT verify
+//       under an ML-DSA-65 or ML-DSA-87 public key (parameter sets are
+//       independent — even on the same secret seed, the public bytes,
+//       signing matrix dimensions, and challenge sets differ). A bug
+//       that accidentally accepted cross-variant signatures would silently
+//       weaken the parameter-set abstraction.
+//   (b) Tampered message: signing M1 and verifying M2 must return false.
+//   (c) Export → import → sign+verify round-trip must produce a verifying
+//       signature, against both the originally-generated public key and
+//       the re-imported public key.
+
+for (const variant of MLDSA_VARIANTS) {
+  test(SUITE, `${variant} verify rejects tampered message`, async () => {
+    const keyPair = await generateKeyPairChecked({ name: variant }, true, [
+      'sign',
+      'verify',
+    ]);
+    const sig = await subtle.sign(
+      { name: variant },
+      keyPair.privateKey,
+      testData,
+    );
+    const tamperedMsg = new Uint8Array(testData);
+    tamperedMsg[0] = (tamperedMsg[0] ?? 0) ^ 0x01;
+    const ok = await subtle.verify(
+      { name: variant },
+      keyPair.publicKey,
+      sig,
+      tamperedMsg,
+    );
+    expect(ok).to.equal(false);
+  });
+
+  test(SUITE, `${variant} export → import → sign+verify`, async () => {
+    const original = await generateKeyPairChecked({ name: variant }, true, [
+      'sign',
+      'verify',
+    ]);
+
+    const pkcs8 = (await subtle.exportKey(
+      'pkcs8',
+      original.privateKey,
+    )) as ArrayBuffer;
+    const spki = (await subtle.exportKey(
+      'spki',
+      original.publicKey,
+    )) as ArrayBuffer;
+
+    const importedPriv = await subtle.importKey(
+      'pkcs8',
+      pkcs8,
+      { name: variant },
+      true,
+      ['sign'],
+    );
+    const importedPub = await subtle.importKey(
+      'spki',
+      spki,
+      { name: variant },
+      true,
+      ['verify'],
+    );
+
+    const sig = await subtle.sign({ name: variant }, importedPriv, testData);
+    expect(sig.byteLength).to.equal(MLDSA_SIGNATURE_SIZES[variant]);
+
+    // The imported signature must verify under both the imported public
+    // key and the original public key.
+    const okImported = await subtle.verify(
+      { name: variant },
+      importedPub,
+      sig,
+      testData,
+    );
+    expect(okImported).to.equal(true);
+    const okOriginal = await subtle.verify(
+      { name: variant },
+      original.publicKey,
+      sig,
+      testData,
+    );
+    expect(okOriginal).to.equal(true);
+  });
+}
+
+// Cross-variant rejection: an ML-DSA-44 signature must not verify under an
+// ML-DSA-65 public key. This catches a bug class where the verifier
+// accepts any ML-DSA signature whose first bytes happen to look right.
+test(SUITE, 'ML-DSA cross-variant: 44 sig under 65 pub rejected', async () => {
+  const kp44 = await generateKeyPairChecked({ name: 'ML-DSA-44' }, true, [
+    'sign',
+    'verify',
+  ]);
+  const kp65 = await generateKeyPairChecked({ name: 'ML-DSA-65' }, true, [
+    'sign',
+    'verify',
+  ]);
+
+  const sig = await subtle.sign(
+    { name: 'ML-DSA-44' },
+    kp44.privateKey,
+    testData,
+  );
+
+  // Verify must return false (or throw — both are acceptable per spec; the
+  // bug class we care about is "returns true").
+  let result: boolean | Error;
+  try {
+    result = await subtle.verify(
+      { name: 'ML-DSA-65' },
+      kp65.publicKey,
+      sig,
+      testData,
+    );
+  } catch (e) {
+    result = e as Error;
+  }
+
+  if (typeof result === 'boolean') {
+    expect(result).to.equal(false);
+  } else {
+    expect(result).to.be.instanceOf(Error);
+  }
+});
+
 // --- Key Import/Export and Sign/Verify ---
 
 test(SUITE, 'Sign with imported Ed25519 key', async () => {
