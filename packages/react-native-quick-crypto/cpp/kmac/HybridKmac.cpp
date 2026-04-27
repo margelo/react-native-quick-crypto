@@ -68,16 +68,16 @@ std::shared_ptr<ArrayBuffer> HybridKmac::digest() {
     throw std::runtime_error("KMAC context not initialized");
   }
 
-  uint8_t* buffer = new uint8_t[outputLen];
+  auto buffer = std::make_unique<uint8_t[]>(outputLen);
 
-  if (EVP_MAC_final(ctx.get(), buffer, nullptr, outputLen) != 1) {
-    delete[] buffer;
+  if (EVP_MAC_final(ctx.get(), buffer.get(), nullptr, outputLen) != 1) {
     throw std::runtime_error("Failed to finalize KMAC digest: " + std::to_string(ERR_get_error()));
   }
 
   ctx.reset();
 
-  return std::make_shared<NativeArrayBuffer>(buffer, outputLen, [=]() { delete[] buffer; });
+  uint8_t* raw_ptr = buffer.get();
+  return std::make_shared<NativeArrayBuffer>(buffer.release(), outputLen, [raw_ptr]() { delete[] raw_ptr; });
 }
 
 } // namespace margelo::nitro::crypto

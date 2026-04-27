@@ -13,12 +13,8 @@ namespace margelo::nitro::crypto {
 
 class HybridRsaKeyPair : public HybridRsaKeyPairSpec {
  public:
-  HybridRsaKeyPair() : HybridObject(TAG), pkey(nullptr), modulusLength(2048), hashAlgorithm("SHA-256") {}
-  ~HybridRsaKeyPair() {
-    if (pkey) {
-      EVP_PKEY_free(pkey);
-    }
-  }
+  HybridRsaKeyPair() : HybridObject(TAG), modulusLength(2048), hashAlgorithm("SHA-256") {}
+  ~HybridRsaKeyPair() override = default;
 
   std::shared_ptr<Promise<void>> generateKeyPair() override;
   void generateKeyPairSync() override;
@@ -32,7 +28,8 @@ class HybridRsaKeyPair : public HybridRsaKeyPairSpec {
   std::shared_ptr<ArrayBuffer> exportKey(const KeyObject& key, const std::string& format) override;
 
  private:
-  EVP_PKEY* pkey;
+  using EVP_PKEY_ptr = std::unique_ptr<EVP_PKEY, decltype(&EVP_PKEY_free)>;
+  EVP_PKEY_ptr pkey_{nullptr, EVP_PKEY_free};
   int modulusLength;
   std::vector<unsigned char> publicExponent;
   std::string hashAlgorithm;

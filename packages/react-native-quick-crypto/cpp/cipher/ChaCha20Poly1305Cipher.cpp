@@ -69,11 +69,10 @@ std::shared_ptr<ArrayBuffer> ChaCha20Poly1305Cipher::update(const std::shared_pt
 
   // For ChaCha20-Poly1305, output size equals input size since it's a stream cipher
   int out_len = in_len;
-  uint8_t* out = new uint8_t[out_len];
+  auto out_buf = std::make_unique<uint8_t[]>(out_len);
 
   // Perform the cipher update operation
-  if (EVP_CipherUpdate(ctx.get(), out, &out_len, native_data->data(), in_len) != 1) {
-    delete[] out;
+  if (EVP_CipherUpdate(ctx.get(), out_buf.get(), &out_len, native_data->data(), in_len) != 1) {
     unsigned long err = ERR_get_error();
     char err_buf[256];
     ERR_error_string_n(err, err_buf, sizeof(err_buf));
@@ -81,7 +80,8 @@ std::shared_ptr<ArrayBuffer> ChaCha20Poly1305Cipher::update(const std::shared_pt
   }
 
   // Create and return a new buffer of exact size needed
-  return std::make_shared<NativeArrayBuffer>(out, out_len, [=]() { delete[] out; });
+  uint8_t* raw_ptr = out_buf.get();
+  return std::make_shared<NativeArrayBuffer>(out_buf.release(), out_len, [raw_ptr]() { delete[] raw_ptr; });
 }
 
 std::shared_ptr<ArrayBuffer> ChaCha20Poly1305Cipher::final() {
@@ -90,10 +90,9 @@ std::shared_ptr<ArrayBuffer> ChaCha20Poly1305Cipher::final() {
 
   // For ChaCha20-Poly1305, we need to call final to generate the tag
   int out_len = 0;
-  unsigned char* out = new unsigned char[0];
+  auto out_buf = std::make_unique<unsigned char[]>(0);
 
-  if (EVP_CipherFinal_ex(ctx.get(), out, &out_len) != 1) {
-    delete[] out;
+  if (EVP_CipherFinal_ex(ctx.get(), out_buf.get(), &out_len) != 1) {
     unsigned long err = ERR_get_error();
     char err_buf[256];
     ERR_error_string_n(err, err_buf, sizeof(err_buf));
@@ -101,7 +100,8 @@ std::shared_ptr<ArrayBuffer> ChaCha20Poly1305Cipher::final() {
   }
 
   is_finalized = true;
-  return std::make_shared<NativeArrayBuffer>(out, out_len, [=]() { delete[] out; });
+  unsigned char* raw_ptr = out_buf.get();
+  return std::make_shared<NativeArrayBuffer>(out_buf.release(), out_len, [raw_ptr]() { delete[] raw_ptr; });
 }
 
 bool ChaCha20Poly1305Cipher::setAAD(const std::shared_ptr<ArrayBuffer>& data, std::optional<double> plaintextLength) {

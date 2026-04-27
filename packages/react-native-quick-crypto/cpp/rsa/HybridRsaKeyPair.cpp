@@ -21,10 +21,7 @@ std::shared_ptr<Promise<void>> HybridRsaKeyPair::generateKeyPair() {
 
 void HybridRsaKeyPair::generateKeyPairSync() {
   // Clean up existing key if any
-  if (this->pkey != nullptr) {
-    EVP_PKEY_free(this->pkey);
-    this->pkey = nullptr;
-  }
+  this->pkey_.reset();
 
   // Create key generation context
   std::unique_ptr<EVP_PKEY_CTX, decltype(&EVP_PKEY_CTX_free)> ctx(EVP_PKEY_CTX_new_id(EVP_PKEY_RSA, nullptr), EVP_PKEY_CTX_free);
@@ -69,7 +66,7 @@ void HybridRsaKeyPair::generateKeyPairSync() {
     throw std::runtime_error("Failed to generate RSA key pair");
   }
 
-  this->pkey = raw_pkey;
+  this->pkey_.reset(raw_pkey);
 }
 
 void HybridRsaKeyPair::setModulusLength(double modulusLength) {
@@ -96,7 +93,7 @@ std::shared_ptr<ArrayBuffer> HybridRsaKeyPair::getPublicKey() {
     throw std::runtime_error("Failed to create BIO for public key export");
   }
 
-  if (i2d_PUBKEY_bio(bio, this->pkey) != 1) {
+  if (i2d_PUBKEY_bio(bio, this->pkey_.get()) != 1) {
     BIO_free(bio);
     throw std::runtime_error("Failed to export public key to DER format");
   }
@@ -120,7 +117,7 @@ std::shared_ptr<ArrayBuffer> HybridRsaKeyPair::getPrivateKey() {
     throw std::runtime_error("Failed to create BIO for private key export");
   }
 
-  if (i2d_PKCS8PrivateKey_bio(bio, this->pkey, nullptr, nullptr, 0, nullptr, nullptr) != 1) {
+  if (i2d_PKCS8PrivateKey_bio(bio, this->pkey_.get(), nullptr, nullptr, 0, nullptr, nullptr) != 1) {
     BIO_free(bio);
     throw std::runtime_error("Failed to export private key to DER PKCS8 format");
   }
@@ -146,7 +143,7 @@ std::shared_ptr<ArrayBuffer> HybridRsaKeyPair::exportKey(const KeyObject& /* key
 }
 
 void HybridRsaKeyPair::checkKeyPair() {
-  if (this->pkey == nullptr) {
+  if (!this->pkey_) {
     throw std::runtime_error("RSA KeyPair not initialized");
   }
 }

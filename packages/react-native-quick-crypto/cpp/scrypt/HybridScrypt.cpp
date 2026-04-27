@@ -46,17 +46,19 @@ std::shared_ptr<ArrayBuffer> HybridScrypt::deriveKeySync(const std::shared_ptr<A
   size_t salt_len = salt ? salt->size() : 0;
 
   // Allocate output buffer
-  uint8_t* outBuf = new uint8_t[outLen];
+  auto out_buf = std::make_unique<uint8_t[]>(outLen);
 
   // Use EVP_PBE_scrypt - the same API Node.js uses
-  int result = EVP_PBE_scrypt(pass_data, pass_len, salt_data, salt_len, n_val, r_val, p_val, maxmem_val, outBuf, outLen);
+  int result = EVP_PBE_scrypt(pass_data, pass_len, salt_data, salt_len, n_val, r_val, p_val, maxmem_val, out_buf.get(), outLen);
 
   if (result != 1) {
-    delete[] outBuf;
+    // Zero any partially-derived secret bits before unique_ptr frees the buffer.
+    secureZero(out_buf.get(), outLen);
     throw std::runtime_error("SCRYPT derivation failed: " + getOpenSSLError());
   }
 
-  return std::make_shared<NativeArrayBuffer>(outBuf, outLen, [=]() { delete[] outBuf; });
+  uint8_t* raw_ptr = out_buf.get();
+  return std::make_shared<NativeArrayBuffer>(out_buf.release(), outLen, [raw_ptr]() { delete[] raw_ptr; });
 }
 
 } // namespace margelo::nitro::crypto

@@ -68,11 +68,10 @@ std::shared_ptr<ArrayBuffer> ChaCha20Cipher::update(const std::shared_ptr<ArrayB
 
   // For ChaCha20, output size equals input size since it's a stream cipher
   int out_len = in_len;
-  uint8_t* out = new uint8_t[out_len];
+  auto out_buf = std::make_unique<uint8_t[]>(out_len);
 
   // Perform the cipher update operation
-  if (EVP_CipherUpdate(ctx.get(), out, &out_len, native_data->data(), in_len) != 1) {
-    delete[] out;
+  if (EVP_CipherUpdate(ctx.get(), out_buf.get(), &out_len, native_data->data(), in_len) != 1) {
     unsigned long err = ERR_get_error();
     char err_buf[256];
     ERR_error_string_n(err, err_buf, sizeof(err_buf));
@@ -80,15 +79,17 @@ std::shared_ptr<ArrayBuffer> ChaCha20Cipher::update(const std::shared_ptr<ArrayB
   }
 
   // Create and return a new buffer of exact size needed
-  return std::make_shared<NativeArrayBuffer>(out, out_len, [=]() { delete[] out; });
+  uint8_t* raw_ptr = out_buf.get();
+  return std::make_shared<NativeArrayBuffer>(out_buf.release(), out_len, [raw_ptr]() { delete[] raw_ptr; });
 }
 
 std::shared_ptr<ArrayBuffer> ChaCha20Cipher::final() {
   checkCtx();
   checkNotFinalized();
   is_finalized = true;
-  unsigned char* empty_output = new unsigned char[0];
-  return std::make_shared<NativeArrayBuffer>(empty_output, 0, [=]() { delete[] empty_output; });
+  auto empty_buf = std::make_unique<unsigned char[]>(0);
+  unsigned char* raw_ptr = empty_buf.get();
+  return std::make_shared<NativeArrayBuffer>(empty_buf.release(), 0, [raw_ptr]() { delete[] raw_ptr; });
 }
 
 } // namespace margelo::nitro::crypto

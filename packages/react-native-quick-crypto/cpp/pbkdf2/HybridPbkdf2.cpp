@@ -19,19 +19,18 @@ std::shared_ptr<ArrayBuffer> HybridPbkdf2::pbkdf2Sync(const std::shared_ptr<Arra
                                                       const std::shared_ptr<ArrayBuffer>& salt, double iterations, double keylen,
                                                       const std::string& digest) {
   size_t bufferSize = static_cast<size_t>(keylen);
-  uint8_t* data = new uint8_t[bufferSize];
-  auto result = std::make_shared<NativeArrayBuffer>(data, bufferSize, [=]() { delete[] data; });
+  auto out_buf = std::make_unique<uint8_t[]>(bufferSize);
 
   // use fastpbkdf2 when possible
   if (digest == "sha1") {
     fastpbkdf2_hmac_sha1(password.get()->data(), password.get()->size(), salt.get()->data(), salt.get()->size(),
-                         static_cast<uint32_t>(iterations), result.get()->data(), result.get()->size());
+                         static_cast<uint32_t>(iterations), out_buf.get(), bufferSize);
   } else if (digest == "sha256") {
     fastpbkdf2_hmac_sha256(password.get()->data(), password.get()->size(), salt.get()->data(), salt.get()->size(),
-                           static_cast<uint32_t>(iterations), result.get()->data(), result.get()->size());
+                           static_cast<uint32_t>(iterations), out_buf.get(), bufferSize);
   } else if (digest == "sha512") {
     fastpbkdf2_hmac_sha512(password.get()->data(), password.get()->size(), salt.get()->data(), salt.get()->size(),
-                           static_cast<uint32_t>(iterations), result.get()->data(), result.get()->size());
+                           static_cast<uint32_t>(iterations), out_buf.get(), bufferSize);
   } else {
     // fallback to OpenSSL
     auto* digestByName = EVP_get_digestbyname(digest.c_str());
@@ -40,12 +39,12 @@ std::shared_ptr<ArrayBuffer> HybridPbkdf2::pbkdf2Sync(const std::shared_ptr<Arra
     }
     char* passAsCharA = reinterpret_cast<char*>(password.get()->data());
     const unsigned char* saltAsCharA = reinterpret_cast<const unsigned char*>(salt.get()->data());
-    unsigned char* resultAsCharA = reinterpret_cast<unsigned char*>(result.get()->data());
     PKCS5_PBKDF2_HMAC(passAsCharA, password.get()->size(), saltAsCharA, salt.get()->size(), static_cast<uint32_t>(iterations), digestByName,
-                      result.get()->size(), resultAsCharA);
+                      bufferSize, out_buf.get());
   }
 
-  return result;
+  uint8_t* raw_ptr = out_buf.get();
+  return std::make_shared<NativeArrayBuffer>(out_buf.release(), bufferSize, [raw_ptr]() { delete[] raw_ptr; });
 }
 
 } // namespace margelo::nitro::crypto

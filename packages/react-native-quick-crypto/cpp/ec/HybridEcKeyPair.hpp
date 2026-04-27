@@ -13,12 +13,7 @@ namespace margelo::nitro::crypto {
 class HybridEcKeyPair : public HybridEcKeyPairSpec {
  public:
   HybridEcKeyPair() : HybridObject(TAG) {}
-  ~HybridEcKeyPair() {
-    if (pkey != nullptr) {
-      EVP_PKEY_free(pkey);
-      pkey = nullptr;
-    }
-  }
+  ~HybridEcKeyPair() override = default;
 
  public:
   // Methods
@@ -41,7 +36,8 @@ class HybridEcKeyPair : public HybridEcKeyPairSpec {
 
  private:
   std::string curve;
-  EVP_PKEY* pkey = nullptr;
+  using EVP_PKEY_ptr = std::unique_ptr<EVP_PKEY, decltype(&EVP_PKEY_free)>;
+  EVP_PKEY_ptr pkey_{nullptr, EVP_PKEY_free};
 
   static int GetCurveFromName(const char* name);
 };

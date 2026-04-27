@@ -106,21 +106,21 @@ std::shared_ptr<ArrayBuffer> HybridCipher::update(const std::shared_ptr<ArrayBuf
   }
 
   int out_len = in_len + EVP_CIPHER_CTX_block_size(ctx.get());
-  uint8_t* out = new uint8_t[out_len];
+  auto out_buf = std::make_unique<uint8_t[]>(out_len);
   // Perform the cipher update operation. The real size of the output is
   // returned in out_len
-  int ret = EVP_CipherUpdate(ctx.get(), out, &out_len, native_data->data(), in_len);
+  int ret = EVP_CipherUpdate(ctx.get(), out_buf.get(), &out_len, native_data->data(), in_len);
 
   if (!ret) {
     unsigned long err = ERR_get_error();
     char err_buf[256];
     ERR_error_string_n(err, err_buf, sizeof(err_buf));
-    delete[] out;
     throw std::runtime_error("Cipher update failed: " + std::string(err_buf));
   }
 
   // Create and return a new buffer of exact size needed
-  return std::make_shared<NativeArrayBuffer>(out, out_len, [=]() { delete[] out; });
+  uint8_t* raw_ptr = out_buf.get();
+  return std::make_shared<NativeArrayBuffer>(out_buf.release(), out_len, [raw_ptr]() { delete[] raw_ptr; });
 }
 
 std::shared_ptr<ArrayBuffer> HybridCipher::final() {

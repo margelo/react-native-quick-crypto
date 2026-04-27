@@ -110,8 +110,9 @@ std::shared_ptr<ArrayBuffer> CCMCipher::final() {
   // CCM decryption does not use final. Verification happens in the last update call.
   if (!is_cipher) {
     is_finalized = true;
-    unsigned char* empty_output = new unsigned char[0];
-    return std::make_shared<NativeArrayBuffer>(empty_output, 0, [=]() { delete[] empty_output; });
+    auto empty_output = std::make_unique<unsigned char[]>(0);
+    unsigned char* raw_ptr = empty_output.get();
+    return std::make_shared<NativeArrayBuffer>(empty_output.release(), 0, [raw_ptr]() { delete[] raw_ptr; });
   }
 
   // Proceed only for encryption
