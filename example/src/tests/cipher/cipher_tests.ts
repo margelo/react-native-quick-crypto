@@ -1011,3 +1011,126 @@ for (const cfg of AEAD_MISUSE_CIPHERS) {
     expect(() => d.final()).to.throw();
   });
 }
+
+// --- Phase 4.4: wrong-key/IV size rejection sweep ---
+//
+// Phase 3.1 added boundary validation for AES-CBC, AES-CCM, AES-GCM, and
+// xsalsa20. The sweep below extends that coverage to the remaining AEAD
+// modes (AES-OCB, ChaCha20-Poly1305, XChaCha20-Poly1305, XSalsa20-Poly1305)
+// plus a few representative legacy block modes (AES-192-CBC, AES-256-CTR,
+// DES-EDE3-CBC). Each entry pins the *expected* (key, iv) byte length and
+// verifies that:
+//
+//   (a) a cipher / decipher built with the right (key, iv) does NOT throw,
+//   (b) too-short key throws RangeError with "key length",
+//   (c) too-long key throws RangeError with "key length",
+//   (d) wrong iv length (when the cipher demands a fixed iv length)
+//       throws RangeError with "iv length" or "nonce length".
+//
+// We don't try to be exhaustive over every cipher in `getCiphers()` — the
+// existing big roundtrip loop (above) already verifies each cipher is
+// wired up. The point of this sweep is to confirm boundary rejection
+// fires *uniformly* across modes that share a code path.
+
+interface KeyIvSizeCfg {
+  cipher: string;
+  keyLen: number;
+  ivLen: number;
+  authTagLength?: number;
+  ivLabel?: string; // override "iv" in error messages (e.g. "nonce")
+}
+
+const KEY_IV_SIZE_CIPHERS: KeyIvSizeCfg[] = [
+  { cipher: 'aes-128-ocb', keyLen: 16, ivLen: 12, authTagLength: 16 },
+  { cipher: 'aes-256-ocb', keyLen: 32, ivLen: 12, authTagLength: 16 },
+  { cipher: 'chacha20-poly1305', keyLen: 32, ivLen: 12 },
+  { cipher: 'aes-192-cbc', keyLen: 24, ivLen: 16 },
+  { cipher: 'aes-256-ctr', keyLen: 32, ivLen: 16 },
+  { cipher: 'des-ede3-cbc', keyLen: 24, ivLen: 8 },
+];
+
+for (const cfg of KEY_IV_SIZE_CIPHERS) {
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const opts: any = cfg.authTagLength
+    ? { authTagLength: cfg.authTagLength }
+    : undefined;
+
+  test(SUITE, `${cfg.cipher} accepts correct (key, iv) lengths`, () => {
+    const key = Buffer.from(randomFillSync(new Uint8Array(cfg.keyLen)));
+    const ivBuf = Buffer.from(randomFillSync(new Uint8Array(cfg.ivLen)));
+    expect(() => createCipheriv(cfg.cipher, key, ivBuf, opts)).to.not.throw();
+    expect(() => createDecipheriv(cfg.cipher, key, ivBuf, opts)).to.not.throw();
+  });
+
+  test(SUITE, `${cfg.cipher} rejects too-short key`, () => {
+    const shortKey = Buffer.from(
+      randomFillSync(new Uint8Array(Math.max(1, cfg.keyLen - 1))),
+    );
+    const ivBuf = Buffer.from(randomFillSync(new Uint8Array(cfg.ivLen)));
+    expect(() => createCipheriv(cfg.cipher, shortKey, ivBuf, opts)).to.throw(
+      RangeError,
+      /key length/,
+    );
+  });
+
+  test(SUITE, `${cfg.cipher} rejects too-long key`, () => {
+    const longKey = Buffer.from(randomFillSync(new Uint8Array(cfg.keyLen + 1)));
+    const ivBuf = Buffer.from(randomFillSync(new Uint8Array(cfg.ivLen)));
+    expect(() => createCipheriv(cfg.cipher, longKey, ivBuf, opts)).to.throw(
+      RangeError,
+      /key length/,
+    );
+  });
+
+  test(SUITE, `${cfg.cipher} rejects wrong iv length`, () => {
+    const key = Buffer.from(randomFillSync(new Uint8Array(cfg.keyLen)));
+    const wrongIv = Buffer.from(randomFillSync(new Uint8Array(cfg.ivLen + 4)));
+    expect(() => createCipheriv(cfg.cipher, key, wrongIv, opts)).to.throw(
+      RangeError,
+      // libsodium-driven ciphers (xsalsa20*, xchacha20-poly1305) talk about
+      // "nonce" rather than "iv"; OpenSSL ciphers say "iv".
+      /(iv|nonce) length/,
+    );
+  });
+}
+
+// libsodium-only AEAD ciphers: same shape but the validator messages
+// mention "nonce" instead of "iv".
+const LIBSODIUM_AEAD: KeyIvSizeCfg[] = [
+  { cipher: 'xchacha20-poly1305', keyLen: 32, ivLen: 24, ivLabel: 'nonce' },
+  { cipher: 'xsalsa20-poly1305', keyLen: 32, ivLen: 24, ivLabel: 'nonce' },
+];
+
+for (const cfg of LIBSODIUM_AEAD) {
+  test(
+    SUITE,
+    `${cfg.cipher} accepts correct (key, ${cfg.ivLabel}) lengths`,
+    () => {
+      const key = Buffer.from(randomFillSync(new Uint8Array(cfg.keyLen)));
+      const nonce = Buffer.from(randomFillSync(new Uint8Array(cfg.ivLen)));
+      expect(() => createCipheriv(cfg.cipher, key, nonce)).to.not.throw();
+    },
+  );
+
+  test(SUITE, `${cfg.cipher} rejects too-short key`, () => {
+    const shortKey = Buffer.from(
+      randomFillSync(new Uint8Array(cfg.keyLen - 1)),
+    );
+    const nonce = Buffer.from(randomFillSync(new Uint8Array(cfg.ivLen)));
+    expect(() => createCipheriv(cfg.cipher, shortKey, nonce)).to.throw(
+      RangeError,
+      /key length/,
+    );
+  });
+
+  test(SUITE, `${cfg.cipher} rejects wrong ${cfg.ivLabel} length`, () => {
+    const key = Buffer.from(randomFillSync(new Uint8Array(cfg.keyLen)));
+    const wrongNonce = Buffer.from(
+      randomFillSync(new Uint8Array(cfg.ivLen - 4)),
+    );
+    expect(() => createCipheriv(cfg.cipher, key, wrongNonce)).to.throw(
+      RangeError,
+      /nonce length/,
+    );
+  });
+}
