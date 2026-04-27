@@ -13,15 +13,21 @@
 
 #include "HybridCipher.hpp"
 #include "NitroModules/ArrayBuffer.hpp"
+#include "QuickCryptoUtils.hpp"
 
 namespace margelo::nitro::crypto {
 
 class XSalsa20Cipher : public HybridCipher {
  public:
   XSalsa20Cipher() : HybridObject(TAG) {}
-  ~XSalsa20Cipher() {
-    // Let parent destructor free the context
-    ctx = nullptr;
+  ~XSalsa20Cipher() override {
+    // Wipe key material and any cached keystream bytes before the heap is
+    // returned. Without this the secret-bearing bytes persist on the heap
+    // until overwritten — see audit HIGH finding (XSalsa20Cipher.hpp:19-22).
+    // The base-class unique_ptr ctx frees itself; we don't touch it here.
+    secureZero(key);
+    secureZero(nonce);
+    secureZero(leftover_keystream);
   }
 
   void init(const std::shared_ptr<ArrayBuffer> cipher_key, const std::shared_ptr<ArrayBuffer> iv) override;

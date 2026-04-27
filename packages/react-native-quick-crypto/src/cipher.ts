@@ -107,10 +107,12 @@ class CipherCommon extends Stream.Transform {
     }
     super(streamOptions); // Pass filtered options
 
-    const authTagLen: number =
-      getUIntOption(options ?? {}, 'authTagLength') !== -1
-        ? getUIntOption(options ?? {}, 'authTagLength')
-        : 16; // defaults to 16 bytes
+    // defaults to 16 bytes for AEAD modes; non-AEAD callers ignore it.
+    const authTagLen =
+      getUIntOption(
+        options as Readonly<Record<string, unknown>> | undefined,
+        'authTagLength',
+      ) ?? 16;
 
     const factory =
       NitroModules.createHybridObject<CipherFactory>('CipherFactory');

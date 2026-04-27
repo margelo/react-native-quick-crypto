@@ -136,3 +136,69 @@ test(SUITE, 'argon2Sync: deterministic with same inputs', () => {
     Buffer.from(r2).toString('hex'),
   );
 });
+
+// --- Numeric parameter validation (Phase 1.1: validateUInt) ---
+//
+// `static_cast<uint32_t>(NaN | +/-Infinity | -1)` is undefined behavior in
+// C++. The C++ layer used to do these casts naked; the validateUInt helper
+// now rejects them with a descriptive error before the cast.
+
+const baseParams = {
+  message: Buffer.from('password'),
+  nonce: Buffer.from('somesalt0000'),
+  parallelism: 1,
+  tagLength: 32,
+  memory: 64,
+  passes: 3,
+};
+
+test(SUITE, 'argon2Sync: rejects NaN parallelism', () => {
+  assert.throws(() => {
+    argon2Sync('argon2id', { ...baseParams, parallelism: NaN });
+  }, /parallelism.*NaN/i);
+});
+
+test(SUITE, 'argon2Sync: rejects +Infinity memory', () => {
+  assert.throws(() => {
+    argon2Sync('argon2id', { ...baseParams, memory: Infinity });
+  }, /memory.*infinity/i);
+});
+
+test(SUITE, 'argon2Sync: rejects -Infinity passes', () => {
+  assert.throws(() => {
+    argon2Sync('argon2id', { ...baseParams, passes: -Infinity });
+  }, /passes.*infinity/i);
+});
+
+test(SUITE, 'argon2Sync: rejects negative tagLength', () => {
+  assert.throws(() => {
+    argon2Sync('argon2id', { ...baseParams, tagLength: -1 });
+  }, /tagLength.*non-negative/i);
+});
+
+test(SUITE, 'argon2Sync: rejects fractional passes', () => {
+  assert.throws(() => {
+    argon2Sync('argon2id', { ...baseParams, passes: 3.5 });
+  }, /passes.*integer/i);
+});
+
+test(SUITE, 'argon2Sync: rejects out-of-range memory', () => {
+  // memory is uint32_t — anything beyond UINT32_MAX must be rejected.
+  assert.throws(() => {
+    argon2Sync('argon2id', { ...baseParams, memory: 2 ** 32 });
+  }, /memory.*out of range/i);
+});
+
+test(SUITE, 'argon2: async path also rejects NaN parallelism', () => {
+  return new Promise<void>((resolve, reject) => {
+    argon2('argon2id', { ...baseParams, parallelism: NaN }, err => {
+      try {
+        assert.isNotNull(err);
+        assert.match(err!.message, /parallelism.*NaN/i);
+        resolve();
+      } catch (e) {
+        reject(e);
+      }
+    });
+  });
+});

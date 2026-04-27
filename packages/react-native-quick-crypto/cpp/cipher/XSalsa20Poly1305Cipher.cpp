@@ -9,18 +9,13 @@
 namespace margelo::nitro::crypto {
 
 XSalsa20Poly1305Cipher::~XSalsa20Poly1305Cipher() {
-#ifdef BLSALLOC_SODIUM
-  sodium_memzero(key_, kKeySize);
-  sodium_memzero(nonce_, kNonceSize);
-  sodium_memzero(auth_tag_, kTagSize);
-  if (!data_buffer_.empty()) {
-    sodium_memzero(data_buffer_.data(), data_buffer_.size());
-  }
-#else
-  std::memset(key_, 0, kKeySize);
-  std::memset(nonce_, 0, kNonceSize);
-  std::memset(auth_tag_, 0, kTagSize);
-#endif
+  // Always wipe via OPENSSL_cleanse (even when libsodium is enabled) so the
+  // non-sodium `std::memset` fallback can't be optimized away by the
+  // compiler. Audit MEDIUM finding (XSalsa20Poly1305Cipher.cpp:20-22).
+  secureZero(key_);
+  secureZero(nonce_);
+  secureZero(auth_tag_);
+  secureZero(data_buffer_);
   data_buffer_.clear();
 }
 

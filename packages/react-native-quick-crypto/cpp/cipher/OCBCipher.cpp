@@ -17,7 +17,7 @@ void OCBCipher::init(const std::shared_ptr<ArrayBuffer>& key, const std::shared_
   if (auth_tag_len < 8 || auth_tag_len > 16) {
     throw std::runtime_error("OCB tag length must be between 8 and 16 bytes");
   }
-  if (EVP_CIPHER_CTX_ctrl(ctx, EVP_CTRL_AEAD_SET_TAG, auth_tag_len, nullptr) != 1) {
+  if (EVP_CIPHER_CTX_ctrl(ctx.get(), EVP_CTRL_AEAD_SET_TAG, auth_tag_len, nullptr) != 1) {
     throw std::runtime_error("Failed to set OCB tag length");
   }
 }
@@ -28,7 +28,7 @@ std::shared_ptr<ArrayBuffer> OCBCipher::getAuthTag() {
     throw std::runtime_error("getAuthTag can only be called during encryption.");
   }
   auto tag_buf = std::make_unique<uint8_t[]>(auth_tag_len);
-  if (EVP_CIPHER_CTX_ctrl(ctx, EVP_CTRL_AEAD_GET_TAG, auth_tag_len, tag_buf.get()) != 1) {
+  if (EVP_CIPHER_CTX_ctrl(ctx.get(), EVP_CTRL_AEAD_GET_TAG, auth_tag_len, tag_buf.get()) != 1) {
     throw std::runtime_error("Failed to get OCB auth tag");
   }
   uint8_t* raw_ptr = tag_buf.get();
@@ -45,7 +45,7 @@ bool OCBCipher::setAuthTag(const std::shared_ptr<ArrayBuffer>& tag) {
   if (tag_len < 8 || tag_len > 16) {
     throw std::runtime_error("Invalid OCB tag length");
   }
-  if (EVP_CIPHER_CTX_ctrl(ctx, EVP_CTRL_AEAD_SET_TAG, tag_len, native_tag->data()) != 1) {
+  if (EVP_CIPHER_CTX_ctrl(ctx.get(), EVP_CTRL_AEAD_SET_TAG, tag_len, native_tag->data()) != 1) {
     throw std::runtime_error("Failed to set OCB auth tag");
   }
   auth_tag_len = tag_len;

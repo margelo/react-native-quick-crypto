@@ -1,5 +1,6 @@
 #pragma once
 
+#include <memory>
 #include <openssl/core_names.h>
 #include <openssl/err.h>
 #include <openssl/evp.h>
@@ -12,6 +13,15 @@
 #include "HybridCipherSpec.hpp"
 
 namespace margelo::nitro::crypto {
+
+// Owning smart pointer for EVP_CIPHER_CTX. Living in the base class means
+// subclasses never have to remember to free it — the destruction order
+// (subclass → base) automatically calls the deleter when the cipher object
+// goes away. The previous design required each subclass to handle ctx in
+// its destructor, and three subclasses (CCM, ChaCha20, ChaCha20-Poly1305)
+// got it wrong by setting `ctx = nullptr` without calling the free first,
+// leaking the OpenSSL cipher context. See audit Phase 1.3.
+using EvpCipherCtxPtr = std::unique_ptr<EVP_CIPHER_CTX, decltype(&EVP_CIPHER_CTX_free)>;
 
 // Default tag length for OCB, SIV, CCM, ChaCha20-Poly1305
 constexpr unsigned kDefaultAuthTagLength = 16;
@@ -55,7 +65,7 @@ class HybridCipher : public HybridCipherSpec {
   bool is_cipher = true;
   bool is_finalized = false;
   std::string cipher_type;
-  EVP_CIPHER_CTX* ctx = nullptr;
+  EvpCipherCtxPtr ctx{nullptr, EVP_CIPHER_CTX_free};
   bool pending_auth_failed = false;
   bool has_aad = false;
   uint8_t auth_tag[EVP_GCM_TLS_TAG_LEN];

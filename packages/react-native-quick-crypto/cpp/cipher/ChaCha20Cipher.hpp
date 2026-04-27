@@ -7,10 +7,8 @@ namespace margelo::nitro::crypto {
 class ChaCha20Cipher : public HybridCipher {
  public:
   ChaCha20Cipher() : HybridObject(TAG) {}
-  ~ChaCha20Cipher() {
-    // Let parent destructor free the context
-    ctx = nullptr;
-  }
+  // Destructor defaulted: HybridCipher's unique_ptr ctx frees itself.
+  ~ChaCha20Cipher() override = default;
 
   void init(const std::shared_ptr<ArrayBuffer> cipher_key, const std::shared_ptr<ArrayBuffer> iv) override;
   std::shared_ptr<ArrayBuffer> update(const std::shared_ptr<ArrayBuffer>& data) override;

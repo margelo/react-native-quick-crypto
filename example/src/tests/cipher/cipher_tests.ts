@@ -492,3 +492,48 @@ test(
     expect(() => decipher.final()).to.throw();
   },
 );
+
+// --- getUIntOption type-safety regression (Phase 1.4) ---
+//
+// Ensure the AEAD `authTagLength` option is validated at the JS boundary.
+// The previous implementation used `Record<string, any>` and the cryptic
+// `value >>> 0 !== value` check; the typed replacement throws RangeError
+// with a clear "must be a non-negative 32-bit integer" message.
+
+test(SUITE, 'createCipheriv: rejects negative authTagLength', () => {
+  expect(() => {
+    createCipheriv('aes-256-gcm', key32, iv12, {
+      authTagLength: -1,
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    } as any);
+  }).to.throw(/non-negative/i);
+});
+
+test(SUITE, 'createCipheriv: rejects NaN authTagLength', () => {
+  expect(() => {
+    createCipheriv('aes-256-gcm', key32, iv12, {
+      authTagLength: NaN,
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    } as any);
+  }).to.throw(/non-negative/i);
+});
+
+test(SUITE, 'createCipheriv: rejects fractional authTagLength', () => {
+  expect(() => {
+    createCipheriv('aes-256-gcm', key32, iv12, {
+      authTagLength: 12.5,
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    } as any);
+  }).to.throw(/non-negative/i);
+});
+
+test(
+  SUITE,
+  'createCipheriv: missing authTagLength still defaults to 16',
+  () => {
+    // Sanity check that the new helper's `?? 16` default still kicks in.
+    expect(() => {
+      createCipheriv('aes-256-gcm', key32, iv12, {});
+    }).to.not.throw();
+  },
+);
