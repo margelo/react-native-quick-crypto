@@ -748,6 +748,28 @@ test(SUITE, 'generateKeyPairSync RSA: rejects modulusLength = 1024', () => {
   }).to.throw(RangeError, /RSA modulusLength must be at least 2048/);
 });
 
+// Phase 3.4 regression: DSA below 1024-bit modulus must be rejected at
+// the JS boundary (FIPS 186-4 § 4.2 sanctions only 1024 / 2048 / 3072).
+test(SUITE, 'generateKeyPairSync DSA: rejects modulusLength < 1024', () => {
+  expect(() => {
+    generateKeyPairSync('dsa', {
+      modulusLength: 512,
+      publicKeyEncoding: { type: 'spki', format: 'pem' },
+      privateKeyEncoding: { type: 'pkcs8', format: 'pem' },
+    });
+  }).to.throw(RangeError, /DSA modulusLength must be at least 1024/);
+});
+
+test(SUITE, 'generateKeyPairSync DSA: rejects modulusLength = 0', () => {
+  expect(() => {
+    generateKeyPairSync('dsa', {
+      modulusLength: 0,
+      publicKeyEncoding: { type: 'spki', format: 'pem' },
+      privateKeyEncoding: { type: 'pkcs8', format: 'pem' },
+    });
+  }).to.throw(/DSA modulusLength must be at least 1024/);
+});
+
 test(SUITE, 'generateKeyPairSync DSA keys work for signing', () => {
   const { privateKey, publicKey } = generateKeyPairSync('dsa', {
     modulusLength: 2048,
