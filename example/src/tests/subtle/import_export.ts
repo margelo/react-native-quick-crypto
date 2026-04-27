@@ -1061,7 +1061,7 @@ test(SUITE, 'RSA spki', async () => {
   const generated = await subtle.generateKey(
     {
       name: 'RSA-PSS',
-      modulusLength: 1024,
+      modulusLength: 2048,
       publicExponent: new Uint8Array([1, 0, 1]),
       hash: 'SHA-384',
     },
@@ -1090,7 +1090,7 @@ test(SUITE, 'RSA pkcs8', async () => {
   const generated = await subtle.generateKey(
     {
       name: 'RSA-PSS',
-      modulusLength: 1024,
+      modulusLength: 2048,
       publicExponent: new Uint8Array([1, 0, 1]),
       hash: 'SHA-384',
     },
@@ -1120,7 +1120,7 @@ test(SUITE, 'RSA jwk', async () => {
   const generated = await subtle.generateKey(
     {
       name: 'RSA-PSS',
-      modulusLength: 1024,
+      modulusLength: 2048,
       publicExponent: new Uint8Array([1, 0, 1]),
       hash: 'SHA-384',
     },
@@ -1845,7 +1845,7 @@ test(SUITE, 'RSA-OAEP spki', async () => {
   const generated = await subtle.generateKey(
     {
       name: 'RSA-OAEP',
-      modulusLength: 1024,
+      modulusLength: 2048,
       publicExponent: new Uint8Array([1, 0, 1]),
       hash: 'SHA-256',
     },
@@ -1874,7 +1874,7 @@ test(SUITE, 'RSA-OAEP pkcs8', async () => {
   const generated = await subtle.generateKey(
     {
       name: 'RSA-OAEP',
-      modulusLength: 1024,
+      modulusLength: 2048,
       publicExponent: new Uint8Array([1, 0, 1]),
       hash: 'SHA-256',
     },
@@ -1903,7 +1903,7 @@ test(SUITE, 'RSA-OAEP jwk', async () => {
   const generated = await subtle.generateKey(
     {
       name: 'RSA-OAEP',
-      modulusLength: 1024,
+      modulusLength: 2048,
       publicExponent: new Uint8Array([1, 0, 1]),
       hash: 'SHA-256',
     },
@@ -1944,7 +1944,7 @@ test(SUITE, 'RSASSA-PKCS1-v1_5 spki', async () => {
   const generated = await subtle.generateKey(
     {
       name: 'RSASSA-PKCS1-v1_5',
-      modulusLength: 1024,
+      modulusLength: 2048,
       publicExponent: new Uint8Array([1, 0, 1]),
       hash: 'SHA-256',
     },
@@ -1973,7 +1973,7 @@ test(SUITE, 'RSASSA-PKCS1-v1_5 pkcs8', async () => {
   const generated = await subtle.generateKey(
     {
       name: 'RSASSA-PKCS1-v1_5',
-      modulusLength: 1024,
+      modulusLength: 2048,
       publicExponent: new Uint8Array([1, 0, 1]),
       hash: 'SHA-256',
     },
@@ -2002,7 +2002,7 @@ test(SUITE, 'RSASSA-PKCS1-v1_5 jwk', async () => {
   const generated = await subtle.generateKey(
     {
       name: 'RSASSA-PKCS1-v1_5',
-      modulusLength: 1024,
+      modulusLength: 2048,
       publicExponent: new Uint8Array([1, 0, 1]),
       hash: 'SHA-256',
     },
