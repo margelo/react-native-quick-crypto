@@ -7,11 +7,8 @@
 namespace margelo::nitro::crypto {
 
 void ChaCha20Poly1305Cipher::init(const std::shared_ptr<ArrayBuffer> cipher_key, const std::shared_ptr<ArrayBuffer> iv) {
-  // Clean up any existing context
-  if (ctx) {
-    EVP_CIPHER_CTX_free(ctx);
-    ctx = nullptr;
-  }
+  // Resetting the unique_ptr frees any previous context.
+  ctx.reset();
 
   // Get ChaCha20-Poly1305 cipher implementation
   const EVP_CIPHER* cipher = EVP_chacha20_poly1305();
@@ -20,18 +17,17 @@ void ChaCha20Poly1305Cipher::init(const std::shared_ptr<ArrayBuffer> cipher_key,
   }
 
   // Create a new context
-  ctx = EVP_CIPHER_CTX_new();
+  ctx.reset(EVP_CIPHER_CTX_new());
   if (!ctx) {
     throw std::runtime_error("Failed to create cipher context");
   }
 
   // Initialize the encryption/decryption operation
-  if (EVP_CipherInit_ex(ctx, cipher, nullptr, nullptr, nullptr, is_cipher) != 1) {
+  if (EVP_CipherInit_ex(ctx.get(), cipher, nullptr, nullptr, nullptr, is_cipher) != 1) {
     unsigned long err = ERR_get_error();
     char err_buf[256];
     ERR_error_string_n(err, err_buf, sizeof(err_buf));
-    EVP_CIPHER_CTX_free(ctx);
-    ctx = nullptr;
+    ctx.reset();
     throw std::runtime_error("ChaCha20Poly1305Cipher: Failed initial CipherInit setup: " + std::string(err_buf));
   }
 
@@ -52,12 +48,11 @@ void ChaCha20Poly1305Cipher::init(const std::shared_ptr<ArrayBuffer> cipher_key,
   const unsigned char* key_ptr = reinterpret_cast<const unsigned char*>(native_key->data());
   const unsigned char* iv_ptr = reinterpret_cast<const unsigned char*>(native_iv->data());
 
-  if (EVP_CipherInit_ex(ctx, nullptr, nullptr, key_ptr, iv_ptr, is_cipher) != 1) {
+  if (EVP_CipherInit_ex(ctx.get(), nullptr, nullptr, key_ptr, iv_ptr, is_cipher) != 1) {
     unsigned long err = ERR_get_error();
     char err_buf[256];
     ERR_error_string_n(err, err_buf, sizeof(err_buf));
-    EVP_CIPHER_CTX_free(ctx);
-    ctx = nullptr;
+    ctx.reset();
     throw std::runtime_error("ChaCha20Poly1305Cipher: Failed to set key/IV: " + std::string(err_buf));
   }
   is_finalized = false;
@@ -77,7 +72,7 @@ std::shared_ptr<ArrayBuffer> ChaCha20Poly1305Cipher::update(const std::shared_pt
   uint8_t* out = new uint8_t[out_len];
 
   // Perform the cipher update operation
-  if (EVP_CipherUpdate(ctx, out, &out_len, native_data->data(), in_len) != 1) {
+  if (EVP_CipherUpdate(ctx.get(), out, &out_len, native_data->data(), in_len) != 1) {
     delete[] out;
     unsigned long err = ERR_get_error();
     char err_buf[256];
@@ -97,7 +92,7 @@ std::shared_ptr<ArrayBuffer> ChaCha20Poly1305Cipher::final() {
   int out_len = 0;
   unsigned char* out = new unsigned char[0];
 
-  if (EVP_CipherFinal_ex(ctx, out, &out_len) != 1) {
+  if (EVP_CipherFinal_ex(ctx.get(), out, &out_len) != 1) {
     delete[] out;
     unsigned long err = ERR_get_error();
     char err_buf[256];
@@ -116,7 +111,7 @@ bool ChaCha20Poly1305Cipher::setAAD(const std::shared_ptr<ArrayBuffer>& data, st
 
   // Set AAD data
   int out_len = 0;
-  if (EVP_CipherUpdate(ctx, nullptr, &out_len, native_aad->data(), aad_len) != 1) {
+  if (EVP_CipherUpdate(ctx.get(), nullptr, &out_len, native_aad->data(), aad_len) != 1) {
     unsigned long err = ERR_get_error();
     char err_buf[256];
     ERR_error_string_n(err, err_buf, sizeof(err_buf));
@@ -136,7 +131,7 @@ std::shared_ptr<ArrayBuffer> ChaCha20Poly1305Cipher::getAuthTag() {
 
   // Get the authentication tag
   auto tag_buf = std::make_unique<uint8_t[]>(kTagSize);
-  if (EVP_CIPHER_CTX_ctrl(ctx, EVP_CTRL_AEAD_GET_TAG, kTagSize, tag_buf.get()) != 1) {
+  if (EVP_CIPHER_CTX_ctrl(ctx.get(), EVP_CTRL_AEAD_GET_TAG, kTagSize, tag_buf.get()) != 1) {
     unsigned long err = ERR_get_error();
     char err_buf[256];
     ERR_error_string_n(err, err_buf, sizeof(err_buf));
@@ -158,7 +153,7 @@ bool ChaCha20Poly1305Cipher::setAuthTag(const std::shared_ptr<ArrayBuffer>& tag)
     throw std::runtime_error("ChaCha20-Poly1305 tag must be 16 bytes");
   }
 
-  if (EVP_CIPHER_CTX_ctrl(ctx, EVP_CTRL_AEAD_SET_TAG, kTagSize, native_tag->data()) != 1) {
+  if (EVP_CIPHER_CTX_ctrl(ctx.get(), EVP_CTRL_AEAD_SET_TAG, kTagSize, native_tag->data()) != 1) {
     unsigned long err = ERR_get_error();
     char err_buf[256];
     ERR_error_string_n(err, err_buf, sizeof(err_buf));
