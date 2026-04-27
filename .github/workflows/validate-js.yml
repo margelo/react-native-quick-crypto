@@ -30,12 +30,18 @@ on:
       - 'example/*.*sx'
       - 'example/bun.lock'
 
+env:
+  # Opt actions still on Node 20 (e.g. reviewdog/action-setup) into the runner's Node 24.
+  # Silences deprecation warnings until each action ships a v5.
+  # https://github.blog/changelog/2025-09-19-deprecation-of-node-20-on-github-actions-runners/
+  FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: 'true'
+
 jobs:
   compile_js:
     name: Compile JS (tsc)
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
 
       - uses: ./.github/actions/setup-bun
 
@@ -63,7 +69,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
-        uses: actions/checkout@v4
+        uses: actions/checkout@v5
 
       - name: Setup Bun
         uses: ./.github/actions/setup-bun

@@ -83,14 +83,76 @@ function hasAnyNotIn(usages: KeyUsage[], allowed: KeyUsage[]): boolean {
   return usages.some(usage => !allowed.includes(usage));
 }
 
+// WebCrypto §18.4.4: algorithm name lookup is case-insensitive, but the
+// canonical mixed-case form is preserved in the resulting `name` field
+// (e.g. "aes-gcm" → "AES-GCM"). This map is built lazily on first call so
+// the registry of canonical names below can stay declared after the
+// function. Without this, callers who pass lowercase strings bypass the
+// downstream `SUPPORTED_ALGORITHMS` set comparisons silently.
+//
+// The map's value type is `AnyAlgorithm` so callers can use the lookup
+// result directly without re-asserting. The `as AnyAlgorithm` at insertion
+// is the single contract boundary: every name in `SUPPORTED_ALGORITHMS` is
+// already a member of `AnyAlgorithm` by construction.
+let _canonicalAlgorithmNames: Map<string, AnyAlgorithm> | null = null;
+function getCanonicalAlgorithmNames(): Map<string, AnyAlgorithm> {
+  if (_canonicalAlgorithmNames === null) {
+    const map = new Map<string, AnyAlgorithm>();
+    for (const set of Object.values(SUPPORTED_ALGORITHMS)) {
+      if (!set) continue;
+      for (const name of set) {
+        map.set(name.toLowerCase(), name as AnyAlgorithm);
+      }
+    }
+    _canonicalAlgorithmNames = map;
+  }
+  return _canonicalAlgorithmNames;
+}
+
 function normalizeAlgorithm(
   algorithm: SubtleAlgorithm | AnyAlgorithm,
   _operation: Operation,
 ): SubtleAlgorithm {
+  const map = getCanonicalAlgorithmNames();
   if (typeof algorithm === 'string') {
-    return { name: algorithm };
+    return { name: map.get(algorithm.toLowerCase()) ?? algorithm };
+  }
+  if (typeof algorithm.name === 'string') {
+    const canonical = map.get(algorithm.name.toLowerCase()) ?? algorithm.name;
+    return { ...algorithm, name: canonical };
   }
   return algorithm as SubtleAlgorithm;
+}
+
+// WebCrypto §25.7.6 (JWK import): if the JWK's `ext` member is present and
+// false, the requested `extractable` parameter must also be false. If the
+// JWK's `key_ops` member is present, every requested usage must appear in
+// it. We centralize the check here so every importKey path that accepts
+// `format === 'jwk'` can reuse it.
+function validateJwkExtAndKeyOps(
+  jwk: JWK,
+  extractable: boolean,
+  keyUsages: KeyUsage[],
+): void {
+  if (jwk.ext === false && extractable) {
+    throw lazyDOMException(
+      'JWK "ext" is false but extractable was requested',
+      'DataError',
+    );
+  }
+  if (jwk.key_ops !== undefined) {
+    if (!Array.isArray(jwk.key_ops)) {
+      throw lazyDOMException('JWK "key_ops" must be an array', 'DataError');
+    }
+    for (const usage of keyUsages) {
+      if (!jwk.key_ops.includes(usage)) {
+        throw lazyDOMException(
+          `JWK "key_ops" does not include requested usage "${usage}"`,
+          'DataError',
+        );
+      }
+    }
+  }
 }
 
 function getAlgorithmName(name: string, length: number): string {
@@ -816,6 +878,8 @@ async function kmacImportKey(
       throw lazyDOMException('Invalid keyData', 'DataError');
     }
 
+    validateJwkExtAndKeyOps(jwk, extractable, keyUsages);
+
     if (jwk.kty !== 'oct') {
       throw lazyDOMException('Invalid JWK format for KMAC key', 'DataError');
     }
@@ -901,6 +965,8 @@ function rsaImportKey(
     if (jwk.kty !== 'RSA') {
       throw new Error('Invalid JWK format for RSA key');
     }
+
+    validateJwkExtAndKeyOps(jwk, extractable, keyUsages);
 
     const handle =
       NitroModules.createHybridObject<KeyObjectHandle>('KeyObjectHandle');
@@ -992,6 +1058,8 @@ async function hmacImportKey(
       throw new Error('Invalid keyData');
     }
 
+    validateJwkExtAndKeyOps(jwk, extractable, keyUsages);
+
     if (jwk.kty !== 'oct') {
       throw new Error('Invalid JWK format for HMAC key');
     }
@@ -1068,6 +1136,8 @@ async function aesImportKey(
     if (jwk.kty !== 'oct') {
       throw new Error('Invalid JWK format for AES key');
     }
+
+    validateJwkExtAndKeyOps(jwk, extractable, keyUsages);
 
     const handle =
       NitroModules.createHybridObject<KeyObjectHandle>('KeyObjectHandle');
@@ -1164,6 +1234,7 @@ function edImportKey(
     keyObject = new PublicKeyObject(handle);
   } else if (format === 'jwk') {
     const jwkData = data as JWK;
+    validateJwkExtAndKeyOps(jwkData, extractable, keyUsages);
     const handle =
       NitroModules.createHybridObject<KeyObjectHandle>('KeyObjectHandle');
     const keyType = handle.initJwk(jwkData);
@@ -1588,6 +1659,13 @@ const hkdfImportKey = async (
   keyUsages: KeyUsage[],
 ): Promise<CryptoKey> => {
   const { name } = algorithm;
+  // WebCrypto §28.7.6: HKDF keys are never extractable. The previous
+  // implementation passed `extractable` through verbatim, allowing callers
+  // to round-trip the input keying material via `exportKey` — defeating
+  // the whole point of the deriveBits-only usage.
+  if (extractable) {
+    throw lazyDOMException(`${name} keys are not extractable`, 'SyntaxError');
+  }
   if (hasAnyNotIn(keyUsages, ['deriveKey', 'deriveBits'])) {
     throw new Error(`Unsupported key usage for a ${name} key`);
   }
@@ -1595,7 +1673,7 @@ const hkdfImportKey = async (
   switch (format) {
     case 'raw': {
       const keyObject = createSecretKey(keyData as BinaryLike);
-      return new CryptoKey(keyObject, { name }, keyUsages, extractable);
+      return new CryptoKey(keyObject, { name }, keyUsages, false);
     }
     default:
       throw new Error(`Unable to import ${name} key with format ${format}`);
@@ -2161,12 +2239,16 @@ export class Subtle {
     baseKey: CryptoKey,
     length: number,
   ): Promise<ArrayBuffer> {
-    // Allow either deriveBits OR deriveKey usage (WebCrypto spec allows both)
-    if (
-      !baseKey.keyUsages.includes('deriveBits') &&
-      !baseKey.keyUsages.includes('deriveKey')
-    ) {
-      throw new Error('baseKey does not have deriveBits or deriveKey usage');
+    // WebCrypto §SubtleCrypto.deriveBits step 11: throw InvalidAccessError
+    // unless `baseKey.[[usages]]` contains "deriveBits" specifically. The
+    // previous `deriveBits || deriveKey` accept-either branch silently
+    // promoted deriveKey-only keys into deriveBits use, contradicting the
+    // spec usage gate.
+    if (!baseKey.keyUsages.includes('deriveBits')) {
+      throw lazyDOMException(
+        'baseKey does not have deriveBits usage',
+        'InvalidAccessError',
+      );
     }
     if (baseKey.algorithm.name !== algorithm.name)
       throw new Error('Key algorithm mismatch');

@@ -25,6 +25,12 @@ export class Dsa {
   }
 }
 
+// FIPS 186-4 §4.2: only L = 1024, 2048, 3072 are sanctioned. NIST has
+// deprecated DSA-1024 for new applications, but we retain it for
+// interop with legacy systems and match Node's permissive default. We
+// reject anything below 1024 outright.
+const DSA_MIN_MODULUS_LENGTH = 1024;
+
 function dsa_prepareKeyGenParams(
   options: GenerateKeyPairOptions | undefined,
 ): Dsa {
@@ -34,8 +40,11 @@ function dsa_prepareKeyGenParams(
 
   const { modulusLength, divisorLength } = options;
 
-  if (!modulusLength || modulusLength <= 0) {
-    throw new Error('Invalid or missing modulusLength for DSA key generation');
+  if (!modulusLength || modulusLength < DSA_MIN_MODULUS_LENGTH) {
+    throw new RangeError(
+      `DSA modulusLength must be at least ${DSA_MIN_MODULUS_LENGTH} bits ` +
+        `(got ${modulusLength ?? 0})`,
+    );
   }
 
   return new Dsa(modulusLength, divisorLength);

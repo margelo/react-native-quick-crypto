@@ -321,3 +321,31 @@ test(SUITE, 'hash() oneshot - Buffer input', () => {
   const expected = createHash('sha256').update(data).digest('hex');
   expect(result).to.equal(expected);
 });
+
+// Phase 3.6 regression: synchronous failures inside `_transform` and
+// `_flush` must surface as stream 'error' events rather than throwing
+// out of the Transform plumbing — which can leave the stream in a
+// half-written state and crash the host pipeline. Drive each path
+// through the public stream API (write/end) and assert on 'error'.
+
+test(SUITE, 'Hash: _transform error surfaces as "error" event', async () => {
+  const h = createHash('sha256');
+  h.digest(); // finalize the native context — next update() throws
+
+  const error = await new Promise<Error>(resolve => {
+    h.once('error', resolve);
+    h.write('after digest');
+  });
+  expect(error).to.be.instanceOf(Error);
+});
+
+test(SUITE, 'Hash: _flush error surfaces as "error" event', async () => {
+  const h = createHash('sha256');
+  h.digest(); // first digest — second call (from _flush) throws
+
+  const error = await new Promise<Error>(resolve => {
+    h.once('error', resolve);
+    h.end();
+  });
+  expect(error).to.be.instanceOf(Error);
+});

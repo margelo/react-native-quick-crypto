@@ -1,5 +1,6 @@
 import {
   Buffer,
+  getCipherInfo,
   getCiphers,
   createCipheriv,
   createDecipheriv,
@@ -38,11 +39,12 @@ test(SUITE, 'invalid algorithm', () => {
 });
 
 test(SUITE, 'strings', () => {
-  // roundtrip expects Buffers, convert strings first
+  // Strings are interpreted as UTF-8 bytes by createCipheriv, so use
+  // 16-char ASCII so the byte-length matches aes-128-cbc's (16, 16) sizes.
   roundTrip(
     'aes-128-cbc',
-    key16.toString('hex'),
-    iv.toString('hex'),
+    'YELLOW SUBMARINE',
+    '0123456789ABCDEF',
     plaintextBuffer,
   );
 });
@@ -69,12 +71,20 @@ const allCiphers = getCiphers().filter(
 allCiphers.forEach(cipherName => {
   test(SUITE, cipherName, () => {
     try {
-      // Determine correct key length
-      let keyLen = 32; // Default to 256-bit
-      if (cipherName.includes('128')) {
+      // Determine correct key length. Order matters: DES-EDE3 must be
+      // checked before DES-EDE because `'DES-EDE3-CBC'.includes('DES-EDE')`
+      // is also true. AES / ARIA / CAMELLIA carry their key size in the name.
+      let keyLen: number;
+      if (cipherName.includes('DES-EDE3')) {
+        keyLen = 24; // 3-key 3DES
+      } else if (cipherName.includes('DES-EDE')) {
+        keyLen = 16; // 2-key 3DES
+      } else if (cipherName.includes('128')) {
         keyLen = 16;
       } else if (cipherName.includes('192')) {
         keyLen = 24;
+      } else {
+        keyLen = 32; // Default to 256-bit
       }
       let testKey: Uint8Array;
       if (cipherName.includes('XTS')) {
@@ -93,14 +103,25 @@ allCiphers.forEach(cipherName => {
         testKey = randomFillSync(new Uint8Array(keyLen));
       }
 
-      // Select IV size based on mode
-      const testIv: Uint8Array =
+      // Select IV size. AEAD modes get the canonical 12-byte nonce; for
+      // every other cipher we ask the runtime what IV length the cipher
+      // expects (0 for ECB, 8 for DES-family 64-bit blocks, 16 for AES,
+      // …). This keeps the loop generic instead of hard-coding sizes.
+      let testIv: Uint8Array;
+      if (
         cipherName.includes('GCM') ||
         cipherName.includes('OCB') ||
         cipherName.includes('CCM') ||
         cipherName.includes('Poly1305')
-          ? iv12
-          : iv16;
+      ) {
+        testIv = iv12;
+      } else {
+        const ivLen = getCipherInfo(cipherName)?.ivLength ?? 0;
+        testIv =
+          ivLen === 0
+            ? new Uint8Array(0)
+            : randomFillSync(new Uint8Array(ivLen));
+      }
 
       // Create key and iv as Buffers for the roundtrip functions
       const key = Buffer.from(testKey);
@@ -537,3 +558,139 @@ test(
     }).to.not.throw();
   },
 );
+
+// --- TS-layer cipher param validation regression (Phase 3.1) ---
+//
+// Pre-fix, wrong key / iv lengths reached C++ before being rejected, producing
+// confusing OpenSSL error strings. The TS layer now pre-validates against
+// getCipherInfo() (or a small libsodium table) and throws a clear
+// `RangeError: Invalid {key,iv} length …` before the native call.
+
+test(SUITE, 'createCipheriv: rejects empty algorithm', () => {
+  expect(() => {
+    createCipheriv('', key32, iv16);
+  }).to.throw(TypeError, /non-empty string/);
+});
+
+test(SUITE, 'createCipheriv: rejects unknown algorithm', () => {
+  expect(() => {
+    createCipheriv('aes-128-boorad', key16, iv16);
+  }).to.throw(TypeError, /Unsupported or unknown cipher/);
+});
+
+test(SUITE, 'createCipheriv: rejects too-short key for aes-256-cbc', () => {
+  // Pass a 128-bit key to a 256-bit cipher.
+  expect(() => {
+    createCipheriv('aes-256-cbc', key16, iv16);
+  }).to.throw(RangeError, /Invalid key length 16/);
+});
+
+test(SUITE, 'createCipheriv: rejects too-long key for aes-128-cbc', () => {
+  // Pass a 256-bit key to a 128-bit cipher.
+  expect(() => {
+    createCipheriv('aes-128-cbc', key32, iv16);
+  }).to.throw(RangeError, /Invalid key length 32/);
+});
+
+test(SUITE, 'createCipheriv: rejects empty key', () => {
+  expect(() => {
+    createCipheriv('aes-128-cbc', Buffer.alloc(0), iv16);
+  }).to.throw(RangeError, /key length 0/);
+});
+
+test(SUITE, 'createCipheriv: rejects wrong iv length for aes-128-cbc', () => {
+  // CBC requires a 16-byte IV. 12 bytes (a GCM-style IV) must be rejected.
+  expect(() => {
+    createCipheriv('aes-128-cbc', key16, iv12);
+  }).to.throw(RangeError, /Invalid iv length 12/);
+});
+
+test(SUITE, 'createCipheriv: rejects wrong iv length for aes-128-ccm', () => {
+  // CCM accepts 7..13 byte IVs. 16 bytes must be rejected.
+  expect(() => {
+    createCipheriv('aes-128-ccm', key16, iv16, { authTagLength: 16 });
+  }).to.throw(RangeError, /Invalid iv length 16/);
+});
+
+test(
+  SUITE,
+  'createCipheriv: accepts variable iv length for aes-256-gcm',
+  () => {
+    // GCM accepts a wide range of IV lengths.
+    expect(() => {
+      createCipheriv('aes-256-gcm', key32, iv16);
+    }).to.not.throw();
+    expect(() => {
+      createCipheriv('aes-256-gcm', key32, iv12);
+    }).to.not.throw();
+  },
+);
+
+test(SUITE, 'createDecipheriv: rejects too-long key for aes-128-cbc', () => {
+  expect(() => {
+    createDecipheriv('aes-128-cbc', key32, iv16);
+  }).to.throw(RangeError, /Invalid key length 32/);
+});
+
+test(SUITE, 'createCipheriv: rejects wrong xsalsa20 key length', () => {
+  expect(() => {
+    createCipheriv('xsalsa20', key16, randomFillSync(new Uint8Array(24)));
+  }).to.throw(RangeError, /Invalid key length 16 .* xsalsa20/);
+});
+
+test(SUITE, 'createCipheriv: rejects wrong xsalsa20 nonce length', () => {
+  expect(() => {
+    createCipheriv('xsalsa20', key32, iv16);
+  }).to.throw(RangeError, /Invalid nonce length 16 .* xsalsa20/);
+});
+
+// Phase 3.6 regression: stream _transform / _flush errors (e.g. AEAD
+// auth-tag mismatch on Decipher.final()) must surface as 'error' events
+// rather than throwing through the Transform plumbing. Drive each path
+// through the public stream API.
+
+test(
+  SUITE,
+  'Decipher: auth-tag mismatch surfaces as "error" event',
+  async () => {
+    // Encrypt to obtain a valid (key, iv, tag) triple, then tamper with the
+    // auth tag so Decipher.final() rejects authentication.
+    const testKey = Buffer.from(randomFillSync(new Uint8Array(32)));
+    const testIv = randomFillSync(new Uint8Array(12));
+    const cipher = createCipheriv('aes-256-gcm', testKey, Buffer.from(testIv));
+    cipher.setAAD(aad);
+    const encrypted = Buffer.concat([
+      cipher.update(plaintextBuffer),
+      cipher.final(),
+    ]);
+    const tag = cipher.getAuthTag();
+    tag[0] = tag[0]! ^ 0xff;
+
+    const decipher = createDecipheriv(
+      'aes-256-gcm',
+      testKey,
+      Buffer.from(testIv),
+    );
+    decipher.setAAD(aad);
+    decipher.setAuthTag(tag);
+    decipher.update(encrypted);
+
+    const error = await new Promise<Error>(resolve => {
+      decipher.once('error', resolve);
+      decipher.end(); // triggers _flush → final() → tag mismatch
+    });
+    expect(error).to.be.instanceOf(Error);
+  },
+);
+
+test(SUITE, 'Cipher: _transform error surfaces as "error" event', async () => {
+  const cipher = createCipheriv('aes-128-cbc', key16, iv16);
+  cipher.update(plaintextBuffer);
+  cipher.final(); // finalize — next update() throws
+
+  const error = await new Promise<Error>(resolve => {
+    cipher.once('error', resolve);
+    cipher.write('after final');
+  });
+  expect(error).to.be.instanceOf(Error);
+});

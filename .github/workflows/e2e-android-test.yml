@@ -25,6 +25,10 @@ on:
 
 env:
   EMULATOR_API_LEVEL: 34
+  # Opt actions still on Node 20 (setup-java, upload/download-artifact, setup-android, etc.)
+  # into the runner's Node 24 instead. Silences deprecation warnings until each action ships a v5.
+  # https://github.blog/changelog/2025-09-19-deprecation-of-node-20-on-github-actions-runners/
+  FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: 'true'
 
 jobs:
   # ============================================================================
@@ -51,7 +55,7 @@ jobs:
       - name: Setup Node.js
         uses: actions/setup-node@v5
         with:
-          node-version: '20'
+          node-version: '24'
 
       - name: Install Bun
         uses: ./.github/actions/setup-bun
@@ -87,7 +91,7 @@ jobs:
             packages/react-native-quick-crypto/android/build
             node_modules/.bun/react-native-nitro-modules*/node_modules/react-native-nitro-modules/android/.cxx
             node_modules/.bun/react-native-nitro-modules*/node_modules/react-native-nitro-modules/android/build
-          key: ${{ runner.os }}-gradle-${{ github.run_id }}
+          key: ${{ runner.os }}-gradle-${{ hashFiles('example/android/**/*.gradle*', 'example/android/gradle.properties', 'example/android/gradle/wrapper/gradle-wrapper.properties', 'packages/react-native-quick-crypto/android/build.gradle', 'packages/react-native-quick-crypto/android/gradle.properties', 'bun.lock') }}
           restore-keys: |
             ${{ runner.os }}-gradle-
 
@@ -141,7 +145,7 @@ jobs:
             packages/react-native-quick-crypto/android/build
             node_modules/.bun/react-native-nitro-modules*/node_modules/react-native-nitro-modules/android/.cxx
             node_modules/.bun/react-native-nitro-modules*/node_modules/react-native-nitro-modules/android/build
-          key: ${{ runner.os }}-gradle-${{ github.run_id }}
+          key: ${{ runner.os }}-gradle-${{ hashFiles('example/android/**/*.gradle*', 'example/android/gradle.properties', 'example/android/gradle/wrapper/gradle-wrapper.properties', 'packages/react-native-quick-crypto/android/build.gradle', 'packages/react-native-quick-crypto/android/gradle.properties', 'bun.lock') }}
 
   # ============================================================================
   # AVD Job - Create and cache emulator snapshot (runs in parallel with build)
@@ -167,9 +171,7 @@ jobs:
           path: |
             ~/.android/avd/*
             ~/.android/adb*
-          key: avd-pixel7pro-${{ env.EMULATOR_API_LEVEL }}-${{ github.run_id }}
-          restore-keys: |
-            avd-pixel7pro-${{ env.EMULATOR_API_LEVEL }}-
+          key: avd-pixel7pro-${{ env.EMULATOR_API_LEVEL }}-x86_64-v1
 
       - name: Create AVD and Generate Snapshot for Caching
         if: steps.avd-cache.outputs.cache-hit != 'true'
@@ -190,7 +192,7 @@ jobs:
           path: |
             ~/.android/avd/*
             ~/.android/adb*
-          key: avd-pixel7pro-${{ env.EMULATOR_API_LEVEL }}-${{ github.run_id }}
+          key: avd-pixel7pro-${{ env.EMULATOR_API_LEVEL }}-x86_64-v1
 
   # ============================================================================
   # Test Job - Run E2E tests (needs both build and AVD)
@@ -209,7 +211,7 @@ jobs:
       - name: Setup Node.js
         uses: actions/setup-node@v5
         with:
-          node-version: '20'
+          node-version: '24'
 
       - name: Install Bun
         uses: ./.github/actions/setup-bun
@@ -226,7 +228,7 @@ jobs:
         uses: actions/cache/restore@v5
         with:
           path: node_modules
-          key: ${{ runner.os }}-node-modules-${{ github.run_id }}
+          key: ${{ runner.os }}-node-modules-${{ hashFiles('bun.lock') }}
           restore-keys: |
             ${{ runner.os }}-node-modules-
 
@@ -237,7 +239,7 @@ jobs:
         uses: actions/cache/save@v5
         with:
           path: node_modules
-          key: ${{ runner.os }}-node-modules-${{ github.run_id }}
+          key: ${{ runner.os }}-node-modules-${{ hashFiles('bun.lock') }}
 
       - name: Download APK
         uses: actions/download-artifact@v4
@@ -263,9 +265,7 @@ jobs:
           path: |
             ~/.android/avd/*
             ~/.android/adb*
-          key: avd-pixel7pro-${{ env.EMULATOR_API_LEVEL }}-${{ github.run_id }}
-          restore-keys: |
-            avd-pixel7pro-${{ env.EMULATOR_API_LEVEL }}-
+          key: avd-pixel7pro-${{ env.EMULATOR_API_LEVEL }}-x86_64-v1
 
       - name: Run E2E Tests
         uses: reactivecircus/android-emulator-runner@v2

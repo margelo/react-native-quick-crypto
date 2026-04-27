@@ -35,11 +35,82 @@ const defaults = {
   maxmem: 32 * 1024 * 1024,
 };
 
+// RFC 7914 § 2: scrypt parameters
+//   N — CPU/memory cost; must be a power of 2 > 1.
+//   r — block size; positive integer.
+//   p — parallelization factor; positive integer.
+//   r * p must be < 2^30 (otherwise the spec output is undefined).
+//   The work buffer is 128 * r * N bytes, which must fit in maxmem.
+const SCRYPT_MAX_RP = 1 << 30; // 2^30 per RFC 7914
+
+function isPositiveInteger(value: unknown): value is number {
+  return (
+    typeof value === 'number' &&
+    Number.isFinite(value) &&
+    Number.isInteger(value) &&
+    value > 0
+  );
+}
+
+function validateScryptParams(
+  N: number,
+  r: number,
+  p: number,
+  maxmem: number,
+): void {
+  if (!isPositiveInteger(N)) {
+    throw new RangeError(`Invalid scrypt cost (N): ${N}`);
+  }
+  // Power-of-two & > 1 check (RFC 7914 §6 step 1).
+  if (N <= 1 || (N & (N - 1)) !== 0) {
+    throw new RangeError(
+      `Invalid scrypt cost (N): ${N} — must be a power of 2 greater than 1`,
+    );
+  }
+  if (!isPositiveInteger(r)) {
+    throw new RangeError(`Invalid scrypt blockSize (r): ${r}`);
+  }
+  if (!isPositiveInteger(p)) {
+    throw new RangeError(`Invalid scrypt parallelization (p): ${p}`);
+  }
+  if (r * p >= SCRYPT_MAX_RP) {
+    throw new RangeError(
+      `Invalid scrypt parameters: r * p (${r * p}) must be < 2^30`,
+    );
+  }
+  if (!isPositiveInteger(maxmem)) {
+    throw new RangeError(`Invalid scrypt maxmem: ${maxmem}`);
+  }
+  // 128 * r * N is the minimum working memory. Reject early so we don't
+  // hand a doomed parameter set to native and OOM the device.
+  const required = 128 * r * N;
+  if (required > maxmem) {
+    throw new RangeError(
+      `Invalid scrypt parameters: working memory ${required} bytes ` +
+        `exceeds maxmem ${maxmem}`,
+    );
+  }
+}
+
+function validateScryptKeylen(keylen: number): void {
+  if (
+    typeof keylen !== 'number' ||
+    !Number.isFinite(keylen) ||
+    !Number.isInteger(keylen) ||
+    keylen < 0 ||
+    keylen > 0x7fff_ffff
+  ) {
+    throw new TypeError('Bad key length');
+  }
+}
+
 function getScryptParams(options?: ScryptOptions) {
   const N = options?.N ?? options?.cost ?? defaults.N;
   const r = options?.r ?? options?.blockSize ?? defaults.r;
   const p = options?.p ?? options?.parallelization ?? defaults.p;
   const maxmem = options?.maxmem ?? defaults.maxmem;
+
+  validateScryptParams(N, r, p, maxmem);
 
   return { N, r, p, maxmem };
 }
@@ -85,9 +156,7 @@ export function scrypt(
     const sanitizedPassword = sanitizeInput(password, 'Password');
     const sanitizedSalt = sanitizeInput(salt, 'Salt');
 
-    if (keylen < 0) {
-      throw new TypeError('Bad key length');
-    }
+    validateScryptKeylen(keylen);
 
     const nativeMod = getNative();
     nativeMod
@@ -115,9 +184,7 @@ export function scryptSync(
   const sanitizedPassword = sanitizeInput(password, 'Password');
   const sanitizedSalt = sanitizeInput(salt, 'Salt');
 
-  if (keylen < 0) {
-    throw new TypeError('Bad key length');
-  }
+  validateScryptKeylen(keylen);
 
   const nativeMod = getNative();
   const result = nativeMod.deriveKeySync(

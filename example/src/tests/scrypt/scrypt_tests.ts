@@ -96,3 +96,72 @@ test(SUITE, 'should handle aliases cost/blockSize/parallelization', () => {
   });
   expect(derivedKey.toString('hex')).to.equal(t.expected);
 });
+
+// --- TS-layer scrypt parameter validation regression (Phase 3.2) ---
+//
+// Pre-fix, invalid (N, r, p, maxmem) reached native and produced opaque
+// OpenSSL errors or — worse — an OOM. These tests pin the RFC 7914
+// constraints (N power-of-2 > 1, r/p positive ints, r*p < 2^30,
+// 128*r*N ≤ maxmem).
+
+test(SUITE, 'scryptSync: rejects N=1 (must be > 1)', () => {
+  expect(() => {
+    crypto.scryptSync('pw', 'salt', 32, { N: 1, r: 8, p: 1 });
+  }).to.throw(RangeError, /power of 2 greater than 1/);
+});
+
+test(SUITE, 'scryptSync: rejects N=15 (not a power of 2)', () => {
+  expect(() => {
+    crypto.scryptSync('pw', 'salt', 32, { N: 15, r: 8, p: 1 });
+  }).to.throw(RangeError, /power of 2 greater than 1/);
+});
+
+test(SUITE, 'scryptSync: rejects fractional N', () => {
+  expect(() => {
+    crypto.scryptSync('pw', 'salt', 32, { N: 16.5, r: 8, p: 1 });
+  }).to.throw(RangeError, /Invalid scrypt cost/);
+});
+
+test(SUITE, 'scryptSync: rejects negative r', () => {
+  expect(() => {
+    crypto.scryptSync('pw', 'salt', 32, { N: 16, r: -1, p: 1 });
+  }).to.throw(RangeError, /blockSize/);
+});
+
+test(SUITE, 'scryptSync: rejects p = 0', () => {
+  expect(() => {
+    crypto.scryptSync('pw', 'salt', 32, { N: 16, r: 8, p: 0 });
+  }).to.throw(RangeError, /parallelization/);
+});
+
+test(SUITE, 'scryptSync: rejects working set larger than maxmem', () => {
+  // 128 * 8 * 16384 = 16 MiB; maxmem of 1 MiB is too small.
+  expect(() => {
+    crypto.scryptSync('pw', 'salt', 32, {
+      N: 16384,
+      r: 8,
+      p: 1,
+      maxmem: 1024 * 1024,
+    });
+  }).to.throw(RangeError, /exceeds maxmem/);
+});
+
+test(SUITE, 'scryptSync: rejects negative keylen', () => {
+  expect(() => {
+    crypto.scryptSync('pw', 'salt', -1);
+  }).to.throw(TypeError, /Bad key length/);
+});
+
+test(SUITE, 'scrypt: surfaces param errors via callback', async () => {
+  await new Promise<void>((resolve, reject) => {
+    crypto.scrypt('pw', 'salt', 32, { N: 15, r: 8, p: 1 }, err => {
+      try {
+        expect(err).to.be.instanceOf(RangeError);
+        expect(err!.message).to.match(/power of 2 greater than 1/);
+        resolve();
+      } catch (e) {
+        reject(e);
+      }
+    });
+  });
+});

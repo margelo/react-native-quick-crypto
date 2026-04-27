@@ -137,11 +137,13 @@ test(SUITE, 'argon2Sync: deterministic with same inputs', () => {
   );
 });
 
-// --- Numeric parameter validation (Phase 1.1: validateUInt) ---
+// --- Numeric parameter validation (Phase 1.1: validateUInt + Phase 3.2 RFC 9106) ---
 //
 // `static_cast<uint32_t>(NaN | +/-Infinity | -1)` is undefined behavior in
-// C++. The C++ layer used to do these casts naked; the validateUInt helper
-// now rejects them with a descriptive error before the cast.
+// C++. The C++ layer's validateUInt helper used to be the first line of
+// defense; Phase 3.2 added a TS-side RFC 9106 §3.1 check that fires
+// earlier and produces a clearer message. The regex below matches the
+// new RFC 9106 wording.
 
 const baseParams = {
   message: Buffer.from('password'),
@@ -173,20 +175,20 @@ test(SUITE, 'argon2Sync: rejects -Infinity passes', () => {
 test(SUITE, 'argon2Sync: rejects negative tagLength', () => {
   assert.throws(() => {
     argon2Sync('argon2id', { ...baseParams, tagLength: -1 });
-  }, /tagLength.*non-negative/i);
+  }, /Invalid Argon2 tagLength: -1/);
 });
 
 test(SUITE, 'argon2Sync: rejects fractional passes', () => {
   assert.throws(() => {
     argon2Sync('argon2id', { ...baseParams, passes: 3.5 });
-  }, /passes.*integer/i);
+  }, /Invalid Argon2 passes: 3\.5/);
 });
 
 test(SUITE, 'argon2Sync: rejects out-of-range memory', () => {
   // memory is uint32_t — anything beyond UINT32_MAX must be rejected.
   assert.throws(() => {
     argon2Sync('argon2id', { ...baseParams, memory: 2 ** 32 });
-  }, /memory.*out of range/i);
+  }, /Invalid Argon2 memory: 4294967296/);
 });
 
 test(SUITE, 'argon2: async path also rejects NaN parallelism', () => {
@@ -201,4 +203,50 @@ test(SUITE, 'argon2: async path also rejects NaN parallelism', () => {
       }
     });
   });
+});
+
+// --- RFC 9106 §3.1 minimum-bound validation (Phase 3.2) ---
+
+test(SUITE, 'argon2Sync: rejects parallelism = 0 (RFC 9106 mins)', () => {
+  assert.throws(() => {
+    argon2Sync('argon2id', { ...baseParams, parallelism: 0 });
+  }, /parallelism: 0/);
+});
+
+test(SUITE, 'argon2Sync: rejects tagLength < 4 (RFC 9106 mins)', () => {
+  assert.throws(() => {
+    argon2Sync('argon2id', { ...baseParams, tagLength: 3 });
+  }, /tagLength: 3/);
+});
+
+test(SUITE, 'argon2Sync: rejects passes = 0 (RFC 9106 mins)', () => {
+  assert.throws(() => {
+    argon2Sync('argon2id', { ...baseParams, passes: 0 });
+  }, /passes: 0/);
+});
+
+test(SUITE, 'argon2Sync: rejects memory < 8 * parallelism (RFC 9106)', () => {
+  // p=4 ⇒ memory must be ≥ 32 KiB; 16 KiB must be rejected.
+  assert.throws(() => {
+    argon2Sync('argon2id', {
+      ...baseParams,
+      parallelism: 4,
+      memory: 16,
+    });
+  }, /memory: 16/);
+});
+
+test(SUITE, 'argon2Sync: rejects nonce shorter than 8 bytes (RFC 9106)', () => {
+  assert.throws(() => {
+    argon2Sync('argon2id', {
+      ...baseParams,
+      nonce: Buffer.from('1234567'), // 7 bytes
+    });
+  }, /nonce length: 7/);
+});
+
+test(SUITE, 'argon2Sync: rejects unsupported version', () => {
+  assert.throws(() => {
+    argon2Sync('argon2id', { ...baseParams, version: 0x42 });
+  }, /Invalid Argon2 version/);
 });

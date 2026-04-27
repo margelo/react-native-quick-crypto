@@ -23,6 +23,12 @@ on:
       - 'packages/react-native-quick-crypto/src/**'
       - 'packages/react-native-quick-crypto/ios/**'
 
+env:
+  # Opt actions still on Node 20 (upload-artifact, McCzarny/upload-image, peter-evans/*, etc.)
+  # into the runner's Node 24 instead. Silences deprecation warnings until each action ships a v5.
+  # https://github.blog/changelog/2025-09-19-deprecation-of-node-20-on-github-actions-runners/
+  FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: 'true'
+
 jobs:
   e2e-tests-ios:
     runs-on: macOS-26
@@ -34,7 +40,7 @@ jobs:
 
     steps:
       - name: Checkout
-        uses: actions/checkout@v4
+        uses: actions/checkout@v5
 
       - name: Select Xcode 26.2
         run: |

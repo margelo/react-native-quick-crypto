@@ -518,3 +518,29 @@ test(SUITE, 'digest with ucs2 encoding', () => {
     crypto.createHmac('sha256', 'w00t').digest().toString('ucs2'),
   );
 });
+
+// Phase 3.6 regression: stream _transform / _flush errors must surface
+// as 'error' events rather than throwing through the Transform
+// plumbing. Drive each path through the public stream API.
+
+test(SUITE, 'Hmac: _transform error surfaces as "error" event', async () => {
+  const h = createHmac('sha256', 'k');
+  h.digest(); // finalize — next update() throws
+
+  const error = await new Promise<Error>(resolve => {
+    h.once('error', resolve);
+    h.write('after digest');
+  });
+  expect(error).to.be.instanceOf(Error);
+});
+
+test(SUITE, 'Hmac: _flush error surfaces as "error" event', async () => {
+  const h = createHmac('sha256', 'k');
+  h.digest(); // first digest — second call (from _flush) throws
+
+  const error = await new Promise<Error>(resolve => {
+    h.once('error', resolve);
+    h.end();
+  });
+  expect(error).to.be.instanceOf(Error);
+});
