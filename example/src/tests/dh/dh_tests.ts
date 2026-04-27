@@ -144,3 +144,45 @@ test(SUITE, 'verifyError should return 0 for created DH', () => {
   const dh = crypto.createDiffieHellman(prime, 2);
   assert.strictEqual(dh.verifyError, 0);
 });
+
+// --- Peer public-key validation (security audit Phase 0.3) ---
+//
+// Without an explicit DH_check_pub_key call, EVP_PKEY_derive_set_peer
+// silently accepts a peer pubkey of 0, 1, or p-1 and produces a
+// "shared secret" of 0, 1, or +/-1 — the small-subgroup attack.
+
+test(SUITE, 'computeSecret should reject peer public key of 0', () => {
+  const alice = crypto.getDiffieHellman('modp14');
+  alice.generateKeys();
+  assert.throws(() => {
+    alice.computeSecret(Buffer.from([0]));
+  }, /too small/i);
+});
+
+test(SUITE, 'computeSecret should reject peer public key of 1', () => {
+  const alice = crypto.getDiffieHellman('modp14');
+  alice.generateKeys();
+  assert.throws(() => {
+    alice.computeSecret(Buffer.from([1]));
+  }, /too small/i);
+});
+
+test(SUITE, 'computeSecret should reject peer public key of p-1', () => {
+  const alice = crypto.getDiffieHellman('modp14');
+  alice.generateKeys();
+  // modp14 prime ends in 0xFF...FF, so p-1 differs only in the trailing byte.
+  const pMinus1 = Buffer.from(MODP14_PRIME, 'hex');
+  pMinus1[pMinus1.length - 1] = pMinus1[pMinus1.length - 1]! ^ 0x01;
+  assert.throws(() => {
+    alice.computeSecret(pMinus1);
+  }, /too large/i);
+});
+
+test(SUITE, 'computeSecret should reject peer public key equal to p', () => {
+  const alice = crypto.getDiffieHellman('modp14');
+  alice.generateKeys();
+  const p = Buffer.from(MODP14_PRIME, 'hex');
+  assert.throws(() => {
+    alice.computeSecret(p);
+  }, /too large|invalid/i);
+});
