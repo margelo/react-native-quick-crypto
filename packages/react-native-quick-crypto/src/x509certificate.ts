@@ -78,12 +78,11 @@ export class X509Certificate {
       'X509CertificateHandle',
     );
 
-    let ab: ArrayBuffer;
-    if (typeof buffer === 'string') {
-      ab = Buffer.from(buffer).buffer as ArrayBuffer;
-    } else {
-      ab = binaryLikeToArrayBuffer(buffer);
-    }
+    // For string input, route through binaryLikeToArrayBuffer so the result
+    // is a tight ArrayBuffer of just the encoded bytes. `Buffer.from(str).buffer`
+    // can return a pool-backed ArrayBuffer with byteOffset > 0, exposing
+    // unrelated bytes (and giving the wrong byteLength) to native.
+    const ab: ArrayBuffer = binaryLikeToArrayBuffer(buffer);
 
     this.handle.init(ab);
   }

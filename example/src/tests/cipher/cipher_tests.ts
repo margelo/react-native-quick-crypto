@@ -399,3 +399,96 @@ test(SUITE, 'GCM tampered auth tag throws error', () => {
 
   expect(() => decipher.final()).to.throw();
 });
+
+// --- setAAD byte-offset regression tests ---
+// Pre-fix, setAAD passed `buffer.buffer` to native, ignoring byteOffset /
+// byteLength on sliced Buffers. That meant a sliced AAD authenticated the
+// wrong bytes — a silent AEAD integrity violation.
+
+test(
+  SUITE,
+  'GCM setAAD with sliced Buffer authenticates the slice (not backing)',
+  () => {
+    const testKey = Buffer.from(randomFillSync(new Uint8Array(32)));
+    const testIv = randomFillSync(new Uint8Array(12));
+    const testPlaintext = Buffer.from('test data for AAD slice');
+
+    // Build a backing buffer with a known 16-byte AAD region in the middle and
+    // distinct surrounding bytes. The cipher must only authenticate the slice.
+    const backing = Buffer.concat([
+      Buffer.from('PREFIX_NOISE_'),
+      Buffer.from('aad-payload-1234'), // 16-byte AAD window
+      Buffer.from('_SUFFIX_NOISE'),
+    ]);
+    const aadSlice = backing.subarray(13, 13 + 16);
+    expect(aadSlice.byteLength).to.equal(16);
+    expect(aadSlice.toString('utf8')).to.equal('aad-payload-1234');
+
+    // Encrypt with the sliced AAD.
+    const cipher = createCipheriv('aes-256-gcm', testKey, Buffer.from(testIv));
+    cipher.setAAD(aadSlice);
+    const encrypted = Buffer.concat([
+      cipher.update(testPlaintext),
+      cipher.final(),
+    ]);
+    const authTag = cipher.getAuthTag();
+
+    // Decrypt with a freshly-constructed Buffer carrying the same 16 logical
+    // bytes — no surrounding noise, byteOffset = 0. If setAAD honors the
+    // slice on encrypt, this must verify successfully.
+    const aadStandalone = Buffer.from('aad-payload-1234');
+    const decipher = createDecipheriv(
+      'aes-256-gcm',
+      testKey,
+      Buffer.from(testIv),
+    );
+    decipher.setAAD(aadStandalone);
+    decipher.setAuthTag(authTag);
+    const plaintextOut = Buffer.concat([
+      decipher.update(encrypted),
+      decipher.final(),
+    ]);
+    expect(plaintextOut.toString('utf8')).to.equal(
+      testPlaintext.toString('utf8'),
+    );
+  },
+);
+
+test(
+  SUITE,
+  'GCM setAAD with sliced Buffer rejects wrong AAD on decrypt',
+  () => {
+    // Mirror of the previous test but supplies different AAD bytes on decrypt
+    // — must fail authentication.
+    const testKey = Buffer.from(randomFillSync(new Uint8Array(32)));
+    const testIv = randomFillSync(new Uint8Array(12));
+    const testPlaintext = Buffer.from('test data for AAD slice');
+
+    const backing = Buffer.concat([
+      Buffer.from('PREFIX_NOISE_'),
+      Buffer.from('aad-payload-1234'),
+      Buffer.from('_SUFFIX_NOISE'),
+    ]);
+    const aadSlice = backing.subarray(13, 13 + 16);
+
+    const cipher = createCipheriv('aes-256-gcm', testKey, Buffer.from(testIv));
+    cipher.setAAD(aadSlice);
+    const encrypted = Buffer.concat([
+      cipher.update(testPlaintext),
+      cipher.final(),
+    ]);
+    const authTag = cipher.getAuthTag();
+
+    // Decrypt with WRONG AAD bytes — must throw on final().
+    const wrongAad = Buffer.from('aad-payload-DIFF');
+    const decipher = createDecipheriv(
+      'aes-256-gcm',
+      testKey,
+      Buffer.from(testIv),
+    );
+    decipher.setAAD(wrongAad);
+    decipher.setAuthTag(authTag);
+    decipher.update(encrypted);
+    expect(() => decipher.final()).to.throw();
+  },
+);

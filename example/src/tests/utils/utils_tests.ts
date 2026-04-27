@@ -180,3 +180,57 @@ test(SUITE, 'timingSafeEqual should work for HMAC comparison use case', () => {
   expect(crypto.timingSafeEqual(hmac1, hmac2)).to.equal(true);
   expect(crypto.timingSafeEqual(hmac1, hmac3)).to.equal(false);
 });
+
+// --- timingSafeEqual byte-offset regression tests ---
+// These cover the bug where TypedArray / Buffer views over a larger backing
+// were compared against the entire backing instead of the view's window.
+
+test(
+  SUITE,
+  'timingSafeEqual respects byteOffset/byteLength on Uint8Array views',
+  () => {
+    // Two distinct backings whose middle 4 bytes are equal but surrounding
+    // bytes differ. Pre-fix this returned false (length mismatch on the
+    // backings) or compared the wrong bytes.
+    const backingA = new Uint8Array([
+      0xaa, 0xaa, 0xde, 0xad, 0xbe, 0xef, 0xaa, 0xaa,
+    ]);
+    const backingB = new Uint8Array([
+      0xbb, 0xbb, 0xde, 0xad, 0xbe, 0xef, 0xbb, 0xbb,
+    ]);
+    const viewA = new Uint8Array(backingA.buffer, 2, 4);
+    const viewB = new Uint8Array(backingB.buffer, 2, 4);
+    expect(crypto.timingSafeEqual(viewA, viewB)).to.equal(true);
+  },
+);
+
+test(
+  SUITE,
+  'timingSafeEqual returns false when view contents differ even if backings happen to match',
+  () => {
+    // Same backing, two non-overlapping views of equal length but different
+    // contents — must compare false.
+    const backing = new Uint8Array([0x01, 0x02, 0x03, 0x04, 0x05, 0x06]);
+    const left = new Uint8Array(backing.buffer, 0, 3); // 01 02 03
+    const right = new Uint8Array(backing.buffer, 3, 3); // 04 05 06
+    expect(crypto.timingSafeEqual(left, right)).to.equal(false);
+  },
+);
+
+test(
+  SUITE,
+  'timingSafeEqual throws on view-length mismatch (not backing-length mismatch)',
+  () => {
+    // A 4-byte view inside an 8-byte backing vs a 4-byte view inside a
+    // different 12-byte backing. Backings differ in length; views match.
+    // Must NOT throw — pre-fix this threw RangeError because the backing
+    // lengths were what got compared.
+    const backingA = new Uint8Array(8);
+    const backingB = new Uint8Array(12);
+    backingA.set([1, 2, 3, 4], 2);
+    backingB.set([1, 2, 3, 4], 5);
+    const viewA = new Uint8Array(backingA.buffer, 2, 4);
+    const viewB = new Uint8Array(backingB.buffer, 5, 4);
+    expect(crypto.timingSafeEqual(viewA, viewB)).to.equal(true);
+  },
+);

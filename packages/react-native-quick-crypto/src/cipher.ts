@@ -211,7 +211,14 @@ class CipherCommon extends Stream.Transform {
     if (!this.native || typeof this.native.setAAD !== 'function') {
       throw new Error('Cipher native object or setAAD method not initialized.');
     }
-    const res = this.native.setAAD(buffer.buffer, options?.plaintextLength);
+    // Use binaryLikeToArrayBuffer (not `buffer.buffer`) so that sliced /
+    // offset views send only the AAD bytes the caller intended. Passing the
+    // raw backing ArrayBuffer authenticates the wrong data and silently
+    // breaks the AEAD integrity guarantee.
+    const res = this.native.setAAD(
+      binaryLikeToArrayBuffer(buffer),
+      options?.plaintextLength,
+    );
     if (!res) {
       throw new Error('setAAD failed (native call returned false)');
     }
