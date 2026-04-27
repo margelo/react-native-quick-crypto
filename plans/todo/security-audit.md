@@ -112,84 +112,84 @@ Each module is audited by all relevant agents. Status key:
 
 ### Hashing
 
-| Module | Crypto | Memory | Timing | API | Tests | Notes |
-|--------|--------|--------|--------|-----|-------|-------|
-| Hash (SHA-1/256/384/512, SHA3) | [!] | [!] | [x] | [!] | [!] | 3H/3M crypto; 3H/3M/1L mem; 4M API; 4H/1M tests |
-| HMAC | [!] | [!] | [!] | [!] | [!] | 1H/2M crypto; 2H/3M mem; 2H/4M API; 3H/5M tests |
-| KMAC (128/256) | [x] | [!] | [x] | [!] | [!] | 0H/2M crypto; 2H/3M mem; 3H/5M API; 3H/4M tests |
-| BLAKE3 | [!] | [!] | [x] | [!] | [!] | 2M crypto; 2H/2M mem; 2H/3M API; 3H/4M tests |
+| Module                         | Crypto | Memory | Timing | API | Tests | Notes                                           |
+| ------------------------------ | ------ | ------ | ------ | --- | ----- | ----------------------------------------------- |
+| Hash (SHA-1/256/384/512, SHA3) | [!]    | [!]    | [x]    | [!] | [!]   | 3H/3M crypto; 3H/3M/1L mem; 4M API; 4H/1M tests |
+| HMAC                           | [!]    | [!]    | [!]    | [!] | [!]   | 1H/2M crypto; 2H/3M mem; 2H/4M API; 3H/5M tests |
+| KMAC (128/256)                 | [x]    | [!]    | [x]    | [!] | [!]   | 0H/2M crypto; 2H/3M mem; 3H/5M API; 3H/4M tests |
+| BLAKE3                         | [!]    | [!]    | [x]    | [!] | [!]   | 2M crypto; 2H/2M mem; 2H/3M API; 3H/4M tests    |
 
 ### Symmetric Encryption
 
-| Module | Crypto | Memory | Timing | API | Tests | Notes |
-|--------|--------|--------|--------|-----|-------|-------|
-| AES-CBC | [!] | [!] | [x] | [!] | [!] | 2M crypto; 2H/2M mem; 0 timing; 4H API; 2H/2M/2L tests |
-| AES-CTR | [!] | [!] | [x] | [!] | [!] | 2M crypto; 2H/2M mem; 0 timing; 4H API; 2H/1M/1L tests |
-| AES-GCM | [!] | [!] | [x] | [!] | [!] | 2M/1L crypto; 1L mem; 0 timing; 4H/2M API; 3H/3M/1L tests |
-| AES-CCM | [!] | [!] | [!] | [!] | [!] | 2H/3M crypto; 2H/1M mem; 1H/1M timing; 2H API; 3H/1M tests |
-| AES-OCB | [!] | [!] | [x] | [!] | [!] | 2M/1L crypto; 1M mem; 0 timing; 1H/1M API; 2H/2M tests |
-| ChaCha20 | [x] | [!] | [!] | [!] | [!] | 1L crypto; 1H/1M mem; 1M timing; 1M/1L API; 2M/1L tests |
-| ChaCha20-Poly1305 | [!] | [!] | [!] | [!] | [!] | 1M/1L crypto; 1H/1M mem; 1M timing; 1H/1M API; 1H/3M tests |
-| XChaCha20-Poly1305 | [!] | [!] | [!] | [!] | [x] | 2M/1L crypto; 1M mem; 1H/2M timing; 1M API; 1M/1L tests |
-| XSalsa20 | [!] | [!] | [!] | [!] | [!] | 1H/2M crypto; 1M/1L mem; 1H timing; 1H/1M API; 2H/1M tests |
-| XSalsa20-Poly1305 | [x] | [!] | [!] | [!] | [!] | 1L crypto; 1M mem; 1M timing; 1M API; 1M/1L tests |
-| RSA Cipher | [!] | [!] | [!] | [!] | [!] | 2M/1L crypto; 1H/1M mem; 1H/1M timing; 1H/3M API; 1H/3M/1L tests |
+| Module             | Crypto | Memory | Timing | API | Tests | Notes                                                            |
+| ------------------ | ------ | ------ | ------ | --- | ----- | ---------------------------------------------------------------- |
+| AES-CBC            | [!]    | [!]    | [x]    | [!] | [!]   | 2M crypto; 2H/2M mem; 0 timing; 4H API; 2H/2M/2L tests           |
+| AES-CTR            | [!]    | [!]    | [x]    | [!] | [!]   | 2M crypto; 2H/2M mem; 0 timing; 4H API; 2H/1M/1L tests           |
+| AES-GCM            | [!]    | [!]    | [x]    | [!] | [!]   | 2M/1L crypto; 1L mem; 0 timing; 4H/2M API; 3H/3M/1L tests        |
+| AES-CCM            | [!]    | [!]    | [!]    | [!] | [!]   | 2H/3M crypto; 2H/1M mem; 1H/1M timing; 2H API; 3H/1M tests       |
+| AES-OCB            | [!]    | [!]    | [x]    | [!] | [!]   | 2M/1L crypto; 1M mem; 0 timing; 1H/1M API; 2H/2M tests           |
+| ChaCha20           | [x]    | [!]    | [!]    | [!] | [!]   | 1L crypto; 1H/1M mem; 1M timing; 1M/1L API; 2M/1L tests          |
+| ChaCha20-Poly1305  | [!]    | [!]    | [!]    | [!] | [!]   | 1M/1L crypto; 1H/1M mem; 1M timing; 1H/1M API; 1H/3M tests       |
+| XChaCha20-Poly1305 | [!]    | [!]    | [!]    | [!] | [x]   | 2M/1L crypto; 1M mem; 1H/2M timing; 1M API; 1M/1L tests          |
+| XSalsa20           | [!]    | [!]    | [!]    | [!] | [!]   | 1H/2M crypto; 1M/1L mem; 1H timing; 1H/1M API; 2H/1M tests       |
+| XSalsa20-Poly1305  | [x]    | [!]    | [!]    | [!] | [!]   | 1L crypto; 1M mem; 1M timing; 1M API; 1M/1L tests                |
+| RSA Cipher         | [!]    | [!]    | [!]    | [!] | [!]   | 2M/1L crypto; 1H/1M mem; 1H/1M timing; 1H/3M API; 1H/3M/1L tests |
 
 ### Key Derivation
 
-| Module | Crypto | Memory | Timing | API | Tests | Notes |
-|--------|--------|--------|--------|-----|-------|-------|
-| PBKDF2 | [!] | [!] | [x] | [!] | [!] | 4H/2M/1L; fastpbkdf2 unchecked returns |
-| Scrypt | [!] | [!] | [x] | [!] | [!] | 3H/3M/2L; N power-of-2 not validated |
-| HKDF | [!] | [!] | [x] | [!] | [!] | 3H/4M/2L; RFC 5869 max not enforced |
-| Argon2 (d/i/id) | [!] | [!] | [x] | [!] | [!] | 3H/4M/2L; no param validation per RFC 9106 |
+| Module          | Crypto | Memory | Timing | API | Tests | Notes                                      |
+| --------------- | ------ | ------ | ------ | --- | ----- | ------------------------------------------ |
+| PBKDF2          | [!]    | [!]    | [x]    | [!] | [!]   | 4H/2M/1L; fastpbkdf2 unchecked returns     |
+| Scrypt          | [!]    | [!]    | [x]    | [!] | [!]   | 3H/3M/2L; N power-of-2 not validated       |
+| HKDF            | [!]    | [!]    | [x]    | [!] | [!]   | 3H/4M/2L; RFC 5869 max not enforced        |
+| Argon2 (d/i/id) | [!]    | [!]    | [x]    | [!] | [!]   | 3H/4M/2L; no param validation per RFC 9106 |
 
 ### Key Exchange
 
-| Module | Crypto | Memory | Timing | API | Tests | Notes |
-|--------|--------|--------|--------|-----|-------|-------|
-| Diffie-Hellman | [!] | [!] | [!] | [!] | [!] | 4H/5M/3L; no peer key validation |
-| ECDH | [!] | [!] | [!] | [!] | [!] | 3H/4M/3L; no point-on-curve check |
+| Module         | Crypto | Memory | Timing | API | Tests | Notes                             |
+| -------------- | ------ | ------ | ------ | --- | ----- | --------------------------------- |
+| Diffie-Hellman | [!]    | [!]    | [!]    | [!] | [!]   | 4H/5M/3L; no peer key validation  |
+| ECDH           | [!]    | [!]    | [!]    | [!] | [!]   | 3H/4M/3L; no point-on-curve check |
 
 ### Digital Signatures
 
-| Module | Crypto | Memory | Timing | API | Tests | Notes |
-|--------|--------|--------|--------|-----|-------|-------|
-| Sign/Verify | [!] | [!] | [!] | [!] | [!] | 3H/2M/2L; EVP_PKEY_CTX ownership confusion |
-| ECDSA | [!] | [!] | [x] | [!] | [!] | 3H/2M/1L; no curve whitelist for Node API |
-| Ed25519/Ed448 | [!] | [!] | [!] | [!] | [!] | 3H/4M/1L; EVP_PKEY leak on import |
-| RSA (PKCS1-v1.5, PSS) | [!] | [!] | [x] | [!] | [!] | 1H/4M/1L; min modulus 256 bits |
-| DSA | [!] | [x] | [x] | [!] | [!] | 1H/2M/1L; no min modulus enforcement |
+| Module                | Crypto | Memory | Timing | API | Tests | Notes                                      |
+| --------------------- | ------ | ------ | ------ | --- | ----- | ------------------------------------------ |
+| Sign/Verify           | [!]    | [!]    | [!]    | [!] | [!]   | 3H/2M/2L; EVP_PKEY_CTX ownership confusion |
+| ECDSA                 | [!]    | [!]    | [x]    | [!] | [!]   | 3H/2M/1L; no curve whitelist for Node API  |
+| Ed25519/Ed448         | [!]    | [!]    | [!]    | [!] | [!]   | 3H/4M/1L; EVP_PKEY leak on import          |
+| RSA (PKCS1-v1.5, PSS) | [!]    | [!]    | [x]    | [!] | [!]   | 1H/4M/1L; min modulus 256 bits             |
+| DSA                   | [!]    | [x]    | [x]    | [!] | [!]   | 1H/2M/1L; no min modulus enforcement       |
 
 ### Post-Quantum
 
-| Module | Crypto | Memory | Timing | API | Tests | Notes |
-|--------|--------|--------|--------|-----|-------|-------|
-| ML-DSA (44/65/87) | [!] | [!] | [x] | [!] | [!] | 2H/5M/3L; double-free risk in signSync |
-| ML-KEM (512/768/1024) | [!] | [!] | [!] | [!] | [!] | 2H/5M/2L; shared secret not zeroed |
+| Module                | Crypto | Memory | Timing | API | Tests | Notes                                  |
+| --------------------- | ------ | ------ | ------ | --- | ----- | -------------------------------------- |
+| ML-DSA (44/65/87)     | [!]    | [!]    | [x]    | [!] | [!]   | 2H/5M/3L; double-free risk in signSync |
+| ML-KEM (512/768/1024) | [!]    | [!]    | [!]    | [!] | [!]   | 2H/5M/2L; shared secret not zeroed     |
 
 ### Key Management & Utilities
 
-| Module | Crypto | Memory | Timing | API | Tests | Notes |
-|--------|--------|--------|--------|-----|-------|-------|
-| KeyObjectHandle | [!] | [!] | [x] | [!] | [!] | 2H/3M/2L; 32-byte key misidentified |
-| Random | [x] | [!] | [x] | [!] | [!] | 1H/2M/2L; pow(2,31) fragile |
-| Prime | [x] | [x] | [x] | [!] | [!] | 0H/2M/1L; no bit size validation |
-| Certificate / SPKAC | [x] | [x] | [x] | [x] | [!] | 0H/0M/2L; minimal surface |
-| X.509 | [x] | [x] | [x] | [!] | [!] | 0H/2M/2L; no null check on cert_ |
-| WebCrypto Subtle | [!] | N/A | [!] | [!] | [!] | 5H/10M/5L; TS-only API surface |
-| Utils / Conversions | [!] | [x] | [!] | [!] | [!] | 1H/2M/1L; timingSafeEqual view bug |
+| Module              | Crypto | Memory | Timing | API | Tests | Notes                               |
+| ------------------- | ------ | ------ | ------ | --- | ----- | ----------------------------------- |
+| KeyObjectHandle     | [!]    | [!]    | [x]    | [!] | [!]   | 2H/3M/2L; 32-byte key misidentified |
+| Random              | [x]    | [!]    | [x]    | [!] | [!]   | 1H/2M/2L; pow(2,31) fragile         |
+| Prime               | [x]    | [x]    | [x]    | [!] | [!]   | 0H/2M/1L; no bit size validation    |
+| Certificate / SPKAC | [x]    | [x]    | [x]    | [x] | [!]   | 0H/0M/2L; minimal surface           |
+| X.509               | [x]    | [x]    | [x]    | [!] | [!]   | 0H/2M/2L; no null check on cert\_   |
+| WebCrypto Subtle    | [!]    | N/A    | [!]    | [!] | [!]   | 5H/10M/5L; TS-only API surface      |
+| Utils / Conversions | [!]    | [x]    | [!]    | [!] | [!]   | 1H/2M/1L; timingSafeEqual view bug  |
 
 ### Cross-Cutting
 
-| Area | Agent | Status | Notes |
-|------|-------|--------|-------|
-| NPM dependency audit | Dependency | [ ] | All workspace packages |
-| Native dep audit (blake3, ncrypto, fastpbkdf2) | Dependency | [ ] | |
-| CocoaPods / Android native deps | Dependency | [ ] | OpenSSL-Universal, libsodium |
-| CI/CD pipeline review | Build | [ ] | GitHub Actions |
-| Package distribution review | Build | [ ] | .npmignore, published artifacts |
-| Expo plugin review | Build | [ ] | withRNQC, sodium integration |
+| Area                                           | Agent      | Status | Notes                           |
+| ---------------------------------------------- | ---------- | ------ | ------------------------------- |
+| NPM dependency audit                           | Dependency | [ ]    | All workspace packages          |
+| Native dep audit (blake3, ncrypto, fastpbkdf2) | Dependency | [ ]    |                                 |
+| CocoaPods / Android native deps                | Dependency | [ ]    | OpenSSL-Universal, libsodium    |
+| CI/CD pipeline review                          | Build      | [ ]    | GitHub Actions                  |
+| Package distribution review                    | Build      | [ ]    | .npmignore, published artifacts |
+| Expo plugin review                             | Build      | [ ]    | withRNQC, sodium integration    |
 
 ---
 
@@ -230,53 +230,53 @@ Move this file to `plans/done/` when the full audit is complete.
 
 Issues seen across multiple modules. These are systemic and should be addressed project-wide rather than per-module.
 
-| Pattern | Severity | Modules Affected | Description |
-|---------|----------|-----------------|-------------|
-| Raw `new`/`delete` in digest | HIGH | Hash, HMAC, KMAC, BLAKE3 | Raw `new uint8_t[]` without RAII guard; leak window if `make_shared` or intervening code throws. Fix: `std::unique_ptr<uint8_t[]>` with `.release()` into `NativeArrayBuffer`. |
-| `double` → integer cast without validation | HIGH | Hash, HMAC, KMAC, BLAKE3 | Length/size parameters arrive as `double` from JS. NaN, Infinity, negative values, and fractions are not validated before `static_cast<size_t>`. NaN/Infinity casts are UB in C++. |
-| `abvToArrayBuffer` ignores byte offset | HIGH | Hash, HMAC, KMAC, BLAKE3 | Shared utility returns `.buffer` without respecting `byteOffset`/`byteLength`. Sliced typed arrays expose the entire backing buffer to native code. Not always on the hot path but exported and dangerous. |
-| No digest-once enforcement at TS layer | MEDIUM | Hash, HMAC, KMAC | After `digest()` is called, subsequent `update()`/`digest()` calls should throw. TS layer relies entirely on native to enforce this, producing cryptic errors. BLAKE3 is exempt (non-destructive finalize). |
-| Key material retained in TS after native handoff | MEDIUM | HMAC, BLAKE3 | Key stored as instance property after being passed to native. Never read again, never cleared. Increases exposure window via heap dumps/debuggers. |
-| OpenSSL error queue not cleared | LOW | Hash, HMAC, KMAC | `ERR_get_error()` pops one error but doesn't clear the queue. Stale errors can pollute subsequent operations. |
-| Unsafe `as Encoding` cast in `_transform` | MEDIUM | Hash, HMAC | Stream `_transform` casts `BufferEncoding` → `Encoding` without validation. Unsupported encodings silently misbehave. |
-| Stream `_transform`/`_flush` don't propagate errors | MEDIUM | Hash, HMAC | Errors thrown in `update()` crash the process instead of propagating via the stream callback. |
-| Test suites lack standard test vectors | HIGH | Hash, BLAKE3 | Hash has no NIST vectors; BLAKE3 has no official keyed_hash/derive_key vectors. Some modes would pass tests even with broken implementations. |
-| Subclass destructor leaks EVP_CIPHER_CTX | HIGH | CCMCipher, ChaCha20, ChaCha20-Poly1305 | Destructors set `ctx = nullptr` before parent `~HybridCipher()` runs. Parent sees null and skips `EVP_CIPHER_CTX_free`. Fix: convert `ctx` to `unique_ptr<EVP_CIPHER_CTX, decltype(&EVP_CIPHER_CTX_free)>` in base class. |
-| `setAAD` ignores Buffer byte offsets | HIGH | AES-GCM, AES-CCM, AES-OCB, ChaCha20-Poly1305 | `setAAD` passes `buffer.buffer` (entire backing ArrayBuffer) ignoring `byteOffset`/`byteLength`. Sliced Buffers send wrong AAD data — direct AEAD integrity violation. |
-| No TS-boundary input validation for ciphers | MEDIUM | All symmetric ciphers | Algorithm name, key length, and IV length are not validated at the TypeScript layer. Invalid inputs produce opaque native errors. Node.js validates these early. |
-| Stream `_transform`/`_flush` don't propagate errors | MEDIUM | Hash, HMAC, All Ciphers | Errors thrown in `update()`/`final()` crash the process instead of propagating via the stream callback. AEAD auth failures in `_flush` are especially dangerous. |
-| `std::memset` for key zeroing may be optimized away | MEDIUM | XChaCha20-Poly1305, XSalsa20-Poly1305 | Non-sodium destructor paths use `std::memset` which compilers may optimize away. Use `OPENSSL_cleanse` or `sodium_memzero` instead. |
-| Key material never zeroed in destructor | HIGH | XSalsa20 | `key[32]` and `nonce[24]` arrays persist in freed heap memory. Other libsodium ciphers at least attempt zeroing. |
-| RSA error messages enable padding oracles | HIGH | RSA Cipher | Error messages propagate OpenSSL internal strings; `publicDecrypt` has distinguishable error paths (empty buffer vs exception). Combined with PKCS#1 v1.5 support, this risks Bleichenbacher attacks. |
-| Prototype pollution in key preparation | HIGH | RSA Cipher | `'key' in key` traverses prototype chain in `preparePublicCipherKey`/`preparePrivateCipherKey`. Polluted `Object.prototype.key` triggers wrong code path. |
-| Unbounded data accumulation in libsodium ciphers | MEDIUM | XChaCha20-Poly1305, XSalsa20-Poly1305 | One-shot libsodium API requires buffering all data in `update()`. No size limit; potential OOM and `size_t` overflow on 32-bit platforms. |
-| No NIST/RFC test vectors for AEAD ciphers | HIGH | AES-GCM, AES-CCM, AES-OCB | All AEAD modes only use round-trip tests. No authoritative known-answer verification. Consistently-wrong encrypt/decrypt would pass. |
-| Zero dedicated tests for CCM and OCB | HIGH | AES-CCM, AES-OCB | Most complex AEAD implementations have no targeted test coverage — only generic round-trip loop. |
-| No AEAD API misuse tests | HIGH | AES-GCM, AES-CCM, AES-OCB, ChaCha20-Poly1305 | No tests for: setAAD after update, getAuthTag on decipher, setAuthTag on cipher, missing setAuthTag before decrypt. Common developer mistakes untested. |
-| No wrong key/IV size rejection tests | HIGH | All symmetric ciphers | No test verifies that invalid key or IV sizes are properly rejected through the JS layer. |
-| Derived key material never zeroed | MEDIUM | PBKDF2, Scrypt, HKDF, Argon2 | Derived key buffers `delete[]`'d without `OPENSSL_cleanse`. Key material persists in freed heap memory. |
-| `double` → integer cast without validation (KDFs) | HIGH | PBKDF2, Scrypt, HKDF, Argon2 | All numeric parameters cross JS-to-C++ bridge as `double` and are `static_cast`'d without checking NaN, Infinity, negative, or out-of-range at C++ layer. |
-| Raw `new uint8_t[]` allocation (KDFs) | MEDIUM | PBKDF2, Scrypt, HKDF | Output buffers allocated with raw `new`; exception between alloc and `make_shared` leaks. Should use `std::unique_ptr<uint8_t[]>` with release-on-success. |
-| Insufficient TS-layer validation (KDFs) | HIGH | Scrypt, HKDF, Argon2 | Scrypt: N power-of-2 unchecked. HKDF: max output length unchecked. Argon2: no param ranges validated. PBKDF2 is only KDF with thorough TS validation. |
-| Missing RFC test vectors (KDFs) | HIGH | HKDF, Argon2 | HKDF: 1 of 7 RFC 5869 vectors. Argon2: RFC 9106 vector output not compared against expected value. |
-| `keylen=0` handling inconsistent | MEDIUM | PBKDF2, Scrypt, HKDF | TS layers allow `keylen >= 0` but C++ behavior varies: PBKDF2 does `new uint8_t[0]`, Scrypt/HKDF throw. None tested. |
-| Missing peer public key validation | HIGH | DH, ECDH | DH: no range check [2, p-2]. ECDH: no point-on-curve validation. Single most critical key exchange gap. |
-| Secret material not zeroed (key exchange) | HIGH | DH, ECDH | Shared secrets in `std::vector<uint8_t>` not securely erased with `OPENSSL_cleanse` before destruction. |
-| Deprecated DH API usage | MEDIUM | DH | Uses deprecated `DH_*` APIs (DH_new, DH_generate_key, DH_set0_pqg) deprecated in OpenSSL 3.x. ECDH correctly uses modern EVP/OSSL_PARAM. |
-| Inconsistent minimum key size enforcement | MEDIUM | DH, RSA, DSA | DH: `initWithSize` enforces 2048-bit but `init`/`DhKeyPair` don't. RSA: minimum 256 bits. DSA: minimum 0 bits. |
-| Raw `EVP_PKEY*` without smart pointers | MEDIUM | RSA KeyPair, EC KeyPair, Ed KeyPair, Sign/Verify | Raw pointer with manual `EVP_PKEY_free` in destructor. DSA is the only module using `unique_ptr`. Violates C++20 mandate. |
-| Private key DER in `std::string` not zeroed | MEDIUM | RSA, EC, DSA, Ed25519 | All modules copy private key DER bytes into `std::string` that is not zeroed before destruction. |
-| EVP_PKEY_CTX ownership confusion in DigestSignInit | HIGH | Sign/Verify, Ed25519, ML-DSA | Pre-created `EVP_PKEY_CTX` passed to `EVP_DigestSignInit`; ownership after partial failure is ambiguous, risking double-free. |
-| Thread-unsafe `ERR_error_string` | HIGH | Ed25519 | `ERR_error_string(ERR_get_error(), NULL)` uses static internal buffer. Other modules correctly use `ERR_error_string_n`. |
-| No key-type validation at C++ layer (signing) | HIGH | Sign/Verify | C++ `sign()`/`verify()` accept any key type. Validation only in TypeScript, bypassable via Nitro bridge. |
-| Self-signing tests only (signatures) | MEDIUM | All signature modules | Every test generates keys and verifies own signatures. No standard test vectors; systematic algorithm errors undetectable. |
-| No RAII for OpenSSL contexts (PQ) | MEDIUM | ML-DSA, ML-KEM | `EVP_MD_CTX`, `EVP_PKEY_CTX`, BIO objects managed with manual `free` on each error path. |
-| Raw `this` in async lambdas | MEDIUM | ML-DSA, ML-KEM, DH | `Promise::async` captures `this` by raw pointer. Object destruction during async execution = use-after-free. |
-| `#if !HAS_*` without `#else` | MEDIUM | ML-DSA, ML-KEM | `setVariant` throws on old OpenSSL but falls through to execute unreachable code. |
-| Missing NIST KAT vectors (PQ) | MEDIUM | ML-DSA, ML-KEM | All tests are round-trip only. No KAT vectors from FIPS 203/204. |
-| Deprecated RSA API in KeyObjectHandle | MEDIUM | KeyObjectHandle | JWK import/export uses `RSA_new()`, `RSA_set0_key()`, `EVP_PKEY_assign_RSA()` — deprecated in OpenSSL 3.x. |
-| WebCrypto spec non-compliance | HIGH | Subtle | Algorithm names not case-insensitive. JWK `ext`/`key_ops` not validated. HKDF extractable not enforced. `deriveBits` accepts `deriveKey` usage. |
-| `as unknown as` type casts | MEDIUM | Subtle | Multiple `as unknown as SomeType` casts bypass TypeScript type safety with no runtime validation. |
+| Pattern                                             | Severity | Modules Affected                                 | Description                                                                                                                                                                                                               |
+| --------------------------------------------------- | -------- | ------------------------------------------------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Raw `new`/`delete` in digest                        | HIGH     | Hash, HMAC, KMAC, BLAKE3                         | Raw `new uint8_t[]` without RAII guard; leak window if `make_shared` or intervening code throws. Fix: `std::unique_ptr<uint8_t[]>` with `.release()` into `NativeArrayBuffer`.                                            |
+| `double` → integer cast without validation          | HIGH     | Hash, HMAC, KMAC, BLAKE3                         | Length/size parameters arrive as `double` from JS. NaN, Infinity, negative values, and fractions are not validated before `static_cast<size_t>`. NaN/Infinity casts are UB in C++.                                        |
+| `abvToArrayBuffer` ignores byte offset              | HIGH     | Hash, HMAC, KMAC, BLAKE3                         | Shared utility returns `.buffer` without respecting `byteOffset`/`byteLength`. Sliced typed arrays expose the entire backing buffer to native code. Not always on the hot path but exported and dangerous.                |
+| No digest-once enforcement at TS layer              | MEDIUM   | Hash, HMAC, KMAC                                 | After `digest()` is called, subsequent `update()`/`digest()` calls should throw. TS layer relies entirely on native to enforce this, producing cryptic errors. BLAKE3 is exempt (non-destructive finalize).               |
+| Key material retained in TS after native handoff    | MEDIUM   | HMAC, BLAKE3                                     | Key stored as instance property after being passed to native. Never read again, never cleared. Increases exposure window via heap dumps/debuggers.                                                                        |
+| OpenSSL error queue not cleared                     | LOW      | Hash, HMAC, KMAC                                 | `ERR_get_error()` pops one error but doesn't clear the queue. Stale errors can pollute subsequent operations.                                                                                                             |
+| Unsafe `as Encoding` cast in `_transform`           | MEDIUM   | Hash, HMAC                                       | Stream `_transform` casts `BufferEncoding` → `Encoding` without validation. Unsupported encodings silently misbehave.                                                                                                     |
+| Stream `_transform`/`_flush` don't propagate errors | MEDIUM   | Hash, HMAC                                       | Errors thrown in `update()` crash the process instead of propagating via the stream callback.                                                                                                                             |
+| Test suites lack standard test vectors              | HIGH     | Hash, BLAKE3                                     | Hash has no NIST vectors; BLAKE3 has no official keyed_hash/derive_key vectors. Some modes would pass tests even with broken implementations.                                                                             |
+| Subclass destructor leaks EVP_CIPHER_CTX            | HIGH     | CCMCipher, ChaCha20, ChaCha20-Poly1305           | Destructors set `ctx = nullptr` before parent `~HybridCipher()` runs. Parent sees null and skips `EVP_CIPHER_CTX_free`. Fix: convert `ctx` to `unique_ptr<EVP_CIPHER_CTX, decltype(&EVP_CIPHER_CTX_free)>` in base class. |
+| `setAAD` ignores Buffer byte offsets                | HIGH     | AES-GCM, AES-CCM, AES-OCB, ChaCha20-Poly1305     | `setAAD` passes `buffer.buffer` (entire backing ArrayBuffer) ignoring `byteOffset`/`byteLength`. Sliced Buffers send wrong AAD data — direct AEAD integrity violation.                                                    |
+| No TS-boundary input validation for ciphers         | MEDIUM   | All symmetric ciphers                            | Algorithm name, key length, and IV length are not validated at the TypeScript layer. Invalid inputs produce opaque native errors. Node.js validates these early.                                                          |
+| Stream `_transform`/`_flush` don't propagate errors | MEDIUM   | Hash, HMAC, All Ciphers                          | Errors thrown in `update()`/`final()` crash the process instead of propagating via the stream callback. AEAD auth failures in `_flush` are especially dangerous.                                                          |
+| `std::memset` for key zeroing may be optimized away | MEDIUM   | XChaCha20-Poly1305, XSalsa20-Poly1305            | Non-sodium destructor paths use `std::memset` which compilers may optimize away. Use `OPENSSL_cleanse` or `sodium_memzero` instead.                                                                                       |
+| Key material never zeroed in destructor             | HIGH     | XSalsa20                                         | `key[32]` and `nonce[24]` arrays persist in freed heap memory. Other libsodium ciphers at least attempt zeroing.                                                                                                          |
+| RSA error messages enable padding oracles           | HIGH     | RSA Cipher                                       | Error messages propagate OpenSSL internal strings; `publicDecrypt` has distinguishable error paths (empty buffer vs exception). Combined with PKCS#1 v1.5 support, this risks Bleichenbacher attacks.                     |
+| Prototype pollution in key preparation              | HIGH     | RSA Cipher                                       | `'key' in key` traverses prototype chain in `preparePublicCipherKey`/`preparePrivateCipherKey`. Polluted `Object.prototype.key` triggers wrong code path.                                                                 |
+| Unbounded data accumulation in libsodium ciphers    | MEDIUM   | XChaCha20-Poly1305, XSalsa20-Poly1305            | One-shot libsodium API requires buffering all data in `update()`. No size limit; potential OOM and `size_t` overflow on 32-bit platforms.                                                                                 |
+| No NIST/RFC test vectors for AEAD ciphers           | HIGH     | AES-GCM, AES-CCM, AES-OCB                        | All AEAD modes only use round-trip tests. No authoritative known-answer verification. Consistently-wrong encrypt/decrypt would pass.                                                                                      |
+| Zero dedicated tests for CCM and OCB                | HIGH     | AES-CCM, AES-OCB                                 | Most complex AEAD implementations have no targeted test coverage — only generic round-trip loop.                                                                                                                          |
+| No AEAD API misuse tests                            | HIGH     | AES-GCM, AES-CCM, AES-OCB, ChaCha20-Poly1305     | No tests for: setAAD after update, getAuthTag on decipher, setAuthTag on cipher, missing setAuthTag before decrypt. Common developer mistakes untested.                                                                   |
+| No wrong key/IV size rejection tests                | HIGH     | All symmetric ciphers                            | No test verifies that invalid key or IV sizes are properly rejected through the JS layer.                                                                                                                                 |
+| Derived key material never zeroed                   | MEDIUM   | PBKDF2, Scrypt, HKDF, Argon2                     | Derived key buffers `delete[]`'d without `OPENSSL_cleanse`. Key material persists in freed heap memory.                                                                                                                   |
+| `double` → integer cast without validation (KDFs)   | HIGH     | PBKDF2, Scrypt, HKDF, Argon2                     | All numeric parameters cross JS-to-C++ bridge as `double` and are `static_cast`'d without checking NaN, Infinity, negative, or out-of-range at C++ layer.                                                                 |
+| Raw `new uint8_t[]` allocation (KDFs)               | MEDIUM   | PBKDF2, Scrypt, HKDF                             | Output buffers allocated with raw `new`; exception between alloc and `make_shared` leaks. Should use `std::unique_ptr<uint8_t[]>` with release-on-success.                                                                |
+| Insufficient TS-layer validation (KDFs)             | HIGH     | Scrypt, HKDF, Argon2                             | Scrypt: N power-of-2 unchecked. HKDF: max output length unchecked. Argon2: no param ranges validated. PBKDF2 is only KDF with thorough TS validation.                                                                     |
+| Missing RFC test vectors (KDFs)                     | HIGH     | HKDF, Argon2                                     | HKDF: 1 of 7 RFC 5869 vectors. Argon2: RFC 9106 vector output not compared against expected value.                                                                                                                        |
+| `keylen=0` handling inconsistent                    | MEDIUM   | PBKDF2, Scrypt, HKDF                             | TS layers allow `keylen >= 0` but C++ behavior varies: PBKDF2 does `new uint8_t[0]`, Scrypt/HKDF throw. None tested.                                                                                                      |
+| Missing peer public key validation                  | HIGH     | DH, ECDH                                         | DH: no range check [2, p-2]. ECDH: no point-on-curve validation. Single most critical key exchange gap.                                                                                                                   |
+| Secret material not zeroed (key exchange)           | HIGH     | DH, ECDH                                         | Shared secrets in `std::vector<uint8_t>` not securely erased with `OPENSSL_cleanse` before destruction.                                                                                                                   |
+| Deprecated DH API usage                             | MEDIUM   | DH                                               | Uses deprecated `DH_*` APIs (DH_new, DH_generate_key, DH_set0_pqg) deprecated in OpenSSL 3.x. ECDH correctly uses modern EVP/OSSL_PARAM.                                                                                  |
+| Inconsistent minimum key size enforcement           | MEDIUM   | DH, RSA, DSA                                     | DH: `initWithSize` enforces 2048-bit but `init`/`DhKeyPair` don't. RSA: minimum 256 bits. DSA: minimum 0 bits.                                                                                                            |
+| Raw `EVP_PKEY*` without smart pointers              | MEDIUM   | RSA KeyPair, EC KeyPair, Ed KeyPair, Sign/Verify | Raw pointer with manual `EVP_PKEY_free` in destructor. DSA is the only module using `unique_ptr`. Violates C++20 mandate.                                                                                                 |
+| Private key DER in `std::string` not zeroed         | MEDIUM   | RSA, EC, DSA, Ed25519                            | All modules copy private key DER bytes into `std::string` that is not zeroed before destruction.                                                                                                                          |
+| EVP_PKEY_CTX ownership confusion in DigestSignInit  | HIGH     | Sign/Verify, Ed25519, ML-DSA                     | Pre-created `EVP_PKEY_CTX` passed to `EVP_DigestSignInit`; ownership after partial failure is ambiguous, risking double-free.                                                                                             |
+| Thread-unsafe `ERR_error_string`                    | HIGH     | Ed25519                                          | `ERR_error_string(ERR_get_error(), NULL)` uses static internal buffer. Other modules correctly use `ERR_error_string_n`.                                                                                                  |
+| No key-type validation at C++ layer (signing)       | HIGH     | Sign/Verify                                      | C++ `sign()`/`verify()` accept any key type. Validation only in TypeScript, bypassable via Nitro bridge.                                                                                                                  |
+| Self-signing tests only (signatures)                | MEDIUM   | All signature modules                            | Every test generates keys and verifies own signatures. No standard test vectors; systematic algorithm errors undetectable.                                                                                                |
+| No RAII for OpenSSL contexts (PQ)                   | MEDIUM   | ML-DSA, ML-KEM                                   | `EVP_MD_CTX`, `EVP_PKEY_CTX`, BIO objects managed with manual `free` on each error path.                                                                                                                                  |
+| Raw `this` in async lambdas                         | MEDIUM   | ML-DSA, ML-KEM, DH                               | `Promise::async` captures `this` by raw pointer. Object destruction during async execution = use-after-free.                                                                                                              |
+| `#if !HAS_*` without `#else`                        | MEDIUM   | ML-DSA, ML-KEM                                   | `setVariant` throws on old OpenSSL but falls through to execute unreachable code.                                                                                                                                         |
+| Missing NIST KAT vectors (PQ)                       | MEDIUM   | ML-DSA, ML-KEM                                   | All tests are round-trip only. No KAT vectors from FIPS 203/204.                                                                                                                                                          |
+| Deprecated RSA API in KeyObjectHandle               | MEDIUM   | KeyObjectHandle                                  | JWK import/export uses `RSA_new()`, `RSA_set0_key()`, `EVP_PKEY_assign_RSA()` — deprecated in OpenSSL 3.x.                                                                                                                |
+| WebCrypto spec non-compliance                       | HIGH     | Subtle                                           | Algorithm names not case-insensitive. JWK `ext`/`key_ops` not validated. HKDF extractable not enforced. `deriveBits` accepts `deriveKey` usage.                                                                           |
+| `as unknown as` type casts                          | MEDIUM   | Subtle                                           | Multiple `as unknown as SomeType` casts bypass TypeScript type safety with no runtime validation.                                                                                                                         |
 
 ---
 
@@ -287,6 +287,7 @@ _Record issues here as they are discovered. Format: `[severity] module — descr
 ### Hash (SHA-1/256/384/512, SHA3)
 
 **HIGH:**
+
 - [HIGH] Hash — `size_t digestSize` compared `< 0` is always false; negative `outputLength` wraps to massive allocation (HybridHash.cpp:98-101)
 - [HIGH] Hash — `reinterpret_cast<unsigned int*>(&hashLength)` aliasing violation; `size_t` is 8 bytes but OpenSSL writes 4 (HybridHash.cpp:111)
 - [HIGH] Hash — Raw `new uint8_t[]` without RAII guard; leak window on future code changes (HybridHash.cpp:105)
@@ -297,6 +298,7 @@ _Record issues here as they are discovered. Format: `[severity] module — descr
 - [HIGH] Hash — `asyncDigest` error paths completely untested (invalid algo, cSHAKE missing length, length % 8)
 
 **MEDIUM:**
+
 - [MEDIUM] Hash — `setParams()` deferred to `digest()` instead of `createHash()`; fails late vs Node.js behavior (HybridHash.cpp:94)
 - [MEDIUM] Hash — `double` to `uint32_t` truncation for XOF length; NaN/Infinity/fractions pass through (HybridHash.cpp:164)
 - [MEDIUM] Hash — Raw pointer members `ctx`/`md` should use `unique_ptr` with custom deleters (HybridHash.hpp:36-37)
@@ -308,6 +310,7 @@ _Record issues here as they are discovered. Format: `[severity] module — descr
 - [MEDIUM] Hash — No `copy()` after `digest()` test, no encoding variant tests, no large input tests
 
 **LOW:**
+
 - [LOW] Hash — cSHAKE bits/bytes ambiguity in length parameter (hash.ts:259-273)
 - [LOW] Hash — No guard against calling `digest()` twice at TS or C++ layer
 - [LOW] Hash — `hashnames.ts` uses `enum` violating project rules
@@ -316,6 +319,7 @@ _Record issues here as they are discovered. Format: `[severity] module — descr
 ### HMAC
 
 **HIGH:**
+
 - [HIGH] HMAC — No constant-time HMAC verification API; users must manually use `timingSafeEqual` (design gap, matches Node.js)
 - [HIGH] HMAC — Raw pointer `EVP_MAC_CTX*` enables double-free on copy, leak on re-init (HybridHmac.hpp:28)
 - [HIGH] HMAC — `createHmac()` error path leaves `ctx` allocated but uninitialized; subsequent `update()` = UB (HybridHmac.cpp:36-40)
@@ -325,6 +329,7 @@ _Record issues here as they are discovered. Format: `[severity] module — descr
 - [HIGH] HMAC — No test for double-`digest()`, `update()`-after-`digest()`, or HMAC verification workflow
 
 **MEDIUM:**
+
 - [MEDIUM] HMAC — Empty key handling substitutes `0x00` byte; diverges from spec intent (HybridHmac.cpp:50-55)
 - [MEDIUM] HMAC — No digest-once enforcement at TS or C++ layer
 - [MEDIUM] HMAC — Raw `new`/`delete` in `digest()` without RAII guard (HybridHmac.cpp:93)
@@ -337,6 +342,7 @@ _Record issues here as they are discovered. Format: `[severity] module — descr
 - [MEDIUM] HMAC — No tests for SHA3 algorithms, empty `update()`, large data, or `undefined` key
 
 **LOW:**
+
 - [LOW] HMAC — `EVP_MAC*` not wrapped in RAII for `createHmac()` scope (HybridHmac.cpp:30-31)
 - [LOW] HMAC — OpenSSL error queue not cleared after `ERR_get_error()` calls
 - [LOW] HMAC — Dead `algorithm` property stored on TS instance (hmac.ts:16)
@@ -345,6 +351,7 @@ _Record issues here as they are discovered. Format: `[severity] module — descr
 ### KMAC (128/256)
 
 **HIGH:**
+
 - [HIGH] KMAC — `abvToArrayBuffer` loses byte offset on sliced views; affects `timingSafeEqual` path in verify (utils/conversion.ts:17-25)
 - [HIGH] KMAC — No upper bound on `outputLengthBits`; unbounded allocation in C++ (subtle.ts:752-762, HybridKmac.cpp:71)
 - [HIGH] KMAC — Negative `algorithm.length` bypasses zero-length key check in `kmacGenerateKey` (subtle.ts:724-734)
@@ -355,6 +362,7 @@ _Record issues here as they are discovered. Format: `[severity] module — descr
 - [HIGH] KMAC — Empty data input not tested; no NIST vector for 0-byte message
 
 **MEDIUM:**
+
 - [MEDIUM] KMAC — Timing leak on signature length mismatch (acceptable, matches Node.js) (subtle.ts:787-789)
 - [MEDIUM] KMAC — Raw `new`/`delete` pattern in `digest()` (HybridKmac.cpp:71-80)
 - [MEDIUM] KMAC — No null check on `customization` shared_ptr value (HybridKmac.cpp:36)
@@ -367,6 +375,7 @@ _Record issues here as they are discovered. Format: `[severity] module — descr
 - [MEDIUM] KMAC — No tests for `generateKey` with custom length or empty vs absent customization
 
 **LOW:**
+
 - [LOW] KMAC — No minimum key length enforcement per NIST SP 800-185 (HybridKmac.cpp:47)
 - [LOW] KMAC — No `EVP_MAC_final` output length verification (HybridKmac.cpp:73)
 - [LOW] KMAC — Single-use digest not documented in TS interface
@@ -376,6 +385,7 @@ _Record issues here as they are discovered. Format: `[severity] module — descr
 ### BLAKE3
 
 **HIGH:**
+
 - [HIGH] BLAKE3 — Raw `new uint8_t[]` in `digest()` leaks on `make_shared` failure (HybridBlake3.cpp:70)
 - [HIGH] BLAKE3 — NaN/Infinity pass length validation; `static_cast<size_t>(NaN)` is UB (HybridBlake3.cpp:67)
 - [HIGH] BLAKE3 — Key material retained in TS `keyData` field after native handoff (blake3.ts:21,38)
@@ -385,6 +395,7 @@ _Record issues here as they are discovered. Format: `[severity] module — descr
 - [HIGH] BLAKE3 — keyed_hash mode would pass all tests even with broken implementation
 
 **MEDIUM:**
+
 - [MEDIUM] BLAKE3 — Key material not securely erased on destruction; `hasher.key` and stored `key` persist (HybridBlake3.hpp:15)
 - [MEDIUM] BLAKE3 — `reset()` silently does nothing if key/context optional is empty (HybridBlake3.cpp:85-94)
 - [MEDIUM] BLAKE3 — `memcpy` on `blake3_hasher` struct in `copy()` without `is_trivially_copyable` guard (HybridBlake3.cpp:105)
@@ -395,6 +406,7 @@ _Record issues here as they are discovered. Format: `[severity] module — descr
 - [MEDIUM] BLAKE3 — Double-digest, empty-data update, and derive_key reset untested
 
 **LOW:**
+
 - [LOW] BLAKE3 — XOF output capped at 65535 bytes; arbitrary undocumented limit (HybridBlake3.cpp:64)
 - [LOW] BLAKE3 — Stack-local `keyArray` in `initKeyed()` not zeroed after use (HybridBlake3.cpp:24)
 - [LOW] BLAKE3 — `getVersion()` not verified against expected "1.8.2" constant
@@ -403,12 +415,14 @@ _Record issues here as they are discovered. Format: `[severity] module — descr
 ### AES-CBC
 
 **HIGH:**
+
 - [HIGH] AES-CBC — `auth_tag_state` uninitialized in HybridCipher constructor; UB if checked before `setArgs()` (HybridCipher.hpp:62)
 - [HIGH] AES-CBC — Integer overflow in `update()`: `in_len + EVP_CIPHER_CTX_block_size(ctx)` overflows `int` near INT_MAX (HybridCipher.cpp:116)
 - [HIGH] AES-CBC — `setAAD` passes `buffer.buffer` ignoring `byteOffset`/`byteLength`; sliced Buffer sends wrong AAD (cipher.ts:204-219)
 - [HIGH] AES-CBC — Stream `_transform`/`_flush` don't propagate errors via callback; native errors crash process (cipher.ts:182-194)
 
 **MEDIUM:**
+
 - [MEDIUM] AES-CBC — No algorithm name validation at TS boundary; invalid names pass to native (cipher.ts:81-123)
 - [MEDIUM] AES-CBC — No key length validation; wrong key size produces opaque native error (cipher.ts:81-123)
 - [MEDIUM] AES-CBC — No IV length validation; AES-CBC requires 16-byte IV (cipher.ts:81-123)
@@ -416,6 +430,7 @@ _Record issues here as they are discovered. Format: `[severity] module — descr
 - [MEDIUM] AES-CBC — Intermediate key buffer from JS bridge never zeroed after EVP_CipherInit_ex (HybridCipher.cpp)
 
 **LOW:**
+
 - [LOW] AES-CBC — `max_message_size` member uninitialized and unused (HybridCipher.hpp:64)
 - [LOW] AES-CBC — OpenSSL error queue not cleared after `ERR_get_error()` calls (HybridCipher.cpp)
 - [LOW] AES-CBC — `setAutoPadding` exposed but no TS-side guidance for block-alignment requirement (cipher.ts:196-202)
@@ -423,27 +438,32 @@ _Record issues here as they are discovered. Format: `[severity] module — descr
 ### AES-CTR
 
 **HIGH:**
+
 - [HIGH] AES-CTR — Same `auth_tag_state` uninitialized UB as AES-CBC (HybridCipher.hpp:62)
 - [HIGH] AES-CTR — Same integer overflow in `update()` as AES-CBC (HybridCipher.cpp:116)
 - [HIGH] AES-CTR — Same `setAAD` buffer offset bug as AES-CBC (cipher.ts:204-219)
 - [HIGH] AES-CTR — Same stream error propagation bug as AES-CBC (cipher.ts:182-194)
 
 **MEDIUM:**
+
 - [MEDIUM] AES-CTR — No algorithm/key/IV validation at TS boundary; AES-CTR requires 16-byte IV (cipher.ts:81-123)
 - [MEDIUM] AES-CTR — Same raw `new`/`delete` in `update()` as AES-CBC (HybridCipher.cpp:117)
 
 **LOW:**
+
 - [LOW] AES-CTR — `setAutoPadding` exposed but meaningless for stream cipher (cipher.ts:196-202)
 
 ### AES-GCM
 
 **HIGH:**
+
 - [HIGH] AES-GCM — `setAAD` passes `buffer.buffer` ignoring byte offsets; wrong AAD = AEAD integrity violation (cipher.ts:204-219)
 - [HIGH] AES-GCM — `getAuthTag()` callable before `final()` and on decipher instances; may return garbage (cipher.ts:221-223)
 - [HIGH] AES-GCM — `authTagLength` options parsing uses `Record<string, any>` defeating type safety; prototype chain leak (utils/cipher.ts:52)
 - [HIGH] AES-GCM — Same stream error propagation bug; GCM auth failure in `_flush` crashes process (cipher.ts:182-194)
 
 **MEDIUM:**
+
 - [MEDIUM] AES-GCM — `getAuthTag()` always retrieves 16 bytes from OpenSSL regardless of requested `auth_tag_len` (HybridCipher.cpp:246-260)
 - [MEDIUM] AES-GCM — No key size validation (must be 16/24/32) at C++ or TS layer (GCMCipher.cpp)
 - [MEDIUM] AES-GCM — No auth tag length validation; GCM allows {4,8,12,13,14,15,16} only (cipher.ts:225-231)
@@ -451,17 +471,20 @@ _Record issues here as they are discovered. Format: `[severity] module — descr
 - [MEDIUM] AES-GCM — `auth_tag_state` uninitialized (inherited from base class)
 
 **LOW:**
+
 - [LOW] AES-GCM — Allows zero-length IV; cryptographically disastrous (GCMCipher.cpp:40)
 
 ### AES-CCM
 
 **HIGH:**
+
 - [HIGH] AES-CCM — Double key/IV initialization: base `init()` sets key+IV before CCM tag/IV lengths configured (CCMCipher.cpp:9-52)
 - [HIGH] AES-CCM — Destructor sets `ctx = nullptr` before parent runs; leaks EVP_CIPHER_CTX every time (CCMCipher.hpp:10-13)
 - [HIGH] AES-CCM — `authTagLength` silently defaults to 16 when using general `string` overload; CCM requires explicit tag length (cipher.ts:277-306)
 - [HIGH] AES-CCM — `setAAD` does not enforce required `plaintextLength` for CCM; Node.js throws ERR_CRYPTO_INVALID_MESSAGELEN (cipher.ts:204-219)
 
 **MEDIUM:**
+
 - [MEDIUM] AES-CCM — `setAAD` skips total plaintext length on decrypt when AAD empty; CCM always requires it (CCMCipher.cpp:180-188)
 - [MEDIUM] AES-CCM — `double` to `int` truncation in `setAAD` without NaN/Infinity validation (CCMCipher.cpp:158)
 - [MEDIUM] AES-CCM — Tag length validation allows odd values; NIST SP 800-38C requires {4,6,8,10,12,14,16} (HybridCipher.cpp:220-221)
@@ -472,94 +495,113 @@ _Record issues here as they are discovered. Format: `[severity] module — descr
 ### AES-OCB
 
 **HIGH:**
+
 - [HIGH] AES-OCB — `authTagLength` silently defaults when using general `string` overload; OCB requires explicit tag (cipher.ts:315-319)
 
 **MEDIUM:**
+
 - [MEDIUM] AES-OCB — `auth_tag_len` member shadows base class member; inconsistent state between `setArgs()` and OCB methods (OCBCipher.hpp:16)
 - [MEDIUM] AES-OCB — `init()` signature hides (not overrides) base class virtual `init()`; polymorphic calls use wrong method (OCBCipher.hpp:10)
 - [MEDIUM] AES-OCB — Same `setAAD` buffer offset bug as AES-GCM; integrity violation for AEAD (cipher.ts:204-219)
 
 **LOW:**
+
 - [LOW] AES-OCB — Tag length minimum 8 is more restrictive than RFC 7253 (allows 1-16); diverges from Node.js (OCBCipher.cpp:17)
 
 ### ChaCha20
 
 **HIGH:**
+
 - [HIGH] ChaCha20 — Destructor sets `ctx = nullptr` before parent runs; leaks EVP_CIPHER_CTX (ChaCha20Cipher.hpp:10-13)
 
 **MEDIUM:**
+
 - [MEDIUM] ChaCha20 — Key/IV validation after context allocation; failed validation leaks `ctx` (ChaCha20Cipher.cpp:43-50)
 - [MEDIUM] ChaCha20 — Destructor leaks EVP context retaining key material in freed heap memory (ChaCha20Cipher.hpp:19-22)
 - [MEDIUM] ChaCha20 — No IV length validation at TS boundary; requires 16-byte IV (cipher.ts:81-123)
 
 **LOW:**
+
 - [LOW] ChaCha20 — `final()` skips `EVP_CipherFinal_ex`; OpenSSL state never properly closed (ChaCha20Cipher.cpp:91)
 - [LOW] ChaCha20 — No authentication; by design but callers must be aware
 
 ### ChaCha20-Poly1305
 
 **HIGH:**
+
 - [HIGH] ChaCha20-Poly1305 — Destructor sets `ctx = nullptr` before parent runs; leaks EVP_CIPHER_CTX (ChaCha20Poly1305Cipher.hpp:10-13)
 - [HIGH] ChaCha20-Poly1305 — Same `setAAD` buffer offset bug; wrong AAD breaks AEAD authentication (cipher.ts:204-219)
 
 **MEDIUM:**
+
 - [MEDIUM] ChaCha20-Poly1305 — `final()` writes to zero-length `new unsigned char[0]` buffer; UB if EVP writes any bytes (ChaCha20Poly1305Cipher.cpp:98-100)
 - [MEDIUM] ChaCha20-Poly1305 — Auth tag must be exactly 16 bytes; no TS-side length validation (cipher.ts:225-231)
 - [MEDIUM] ChaCha20-Poly1305 — IV must be exactly 12 bytes; no TS-side validation (cipher.ts:81-123)
 - [MEDIUM] ChaCha20-Poly1305 — Destructor leaks EVP context retaining key material (ChaCha20Poly1305Cipher.hpp)
 
 **LOW:**
+
 - [LOW] ChaCha20-Poly1305 — No AAD-before-update ordering enforcement (ChaCha20Poly1305Cipher.cpp)
 
 ### XChaCha20-Poly1305
 
 **HIGH:**
+
 - [HIGH] XChaCha20-Poly1305 — Non-sodium destructor `std::memset` may be optimized away; key material persists (XChaCha20Poly1305Cipher.cpp:22-26)
 
 **MEDIUM:**
+
 - [MEDIUM] XChaCha20-Poly1305 — Unbounded data accumulation in `update()` via `data_buffer_.resize()`; OOM + potential `size_t` overflow on 32-bit (XChaCha20Poly1305Cipher.cpp:59-61)
 - [MEDIUM] XChaCha20-Poly1305 — Non-sodium path does not zero `data_buffer_` or `aad_` vectors in destructor (XChaCha20Poly1305Cipher.cpp:27-28)
 - [MEDIUM] XChaCha20-Poly1305 — `update()` returns null/empty buffer; streaming interface misleading — all processing in `final()` (XChaCha20Poly1305Cipher.cpp:51-64)
 - [MEDIUM] XChaCha20-Poly1305 — No TS-layer guidance that algorithm not in OpenSSL; depends on C++ fallback (cipher.ts)
 
 **LOW:**
+
 - [LOW] XChaCha20-Poly1305 — Preprocessor `#ifdef` vs `#if` inconsistency with XSalsa20Cipher.hpp (XChaCha20Poly1305Cipher.hpp:3)
 - [LOW] XChaCha20-Poly1305 — Entire message buffered for one-shot libsodium API; large payload DoS risk
 
 ### XSalsa20
 
 **HIGH:**
+
 - [HIGH] XSalsa20 — **CATASTROPHIC**: `crypto_stream_xor` restarts keystream from counter=0 on each `update()` call; identical keystream XORed with different plaintext blocks (XSalsa20Cipher.cpp:44)
 - [HIGH] XSalsa20 — Key material (`key[32]`, `nonce[24]`) never zeroed in destructor (XSalsa20Cipher.hpp:19-22)
 - [HIGH] XSalsa20 — Zero input validation in TS layer: key size, nonce size, empty data all unchecked (cipher.ts:352-373)
 
 **MEDIUM:**
+
 - [MEDIUM] XSalsa20 — Key/nonce validation uses `<` instead of `!=`; accepts oversized keys silently (XSalsa20Cipher.cpp:18,24)
 - [MEDIUM] XSalsa20 — `output` and `counter` parameters silently ignored with `@ts-expect-error` (cipher.ts:356-361)
 
 **LOW:**
+
 - [LOW] XSalsa20 — `update()` leaks `output` buffer on `crypto_stream_xor` failure (XSalsa20Cipher.cpp:43-47)
 - [LOW] XSalsa20 — No authentication; by design but callers must be aware
 
 ### XSalsa20-Poly1305
 
 **MEDIUM:**
+
 - [MEDIUM] XSalsa20-Poly1305 — Non-sodium destructor `std::memset` may be optimized away (XSalsa20Poly1305Cipher.cpp:20-22)
 - [MEDIUM] XSalsa20-Poly1305 — Unbounded data accumulation in `update()` with no size limit (XSalsa20Poly1305Cipher.cpp:54-56)
 - [MEDIUM] XSalsa20-Poly1305 — No dedicated TS API; behavior through generic `createCipheriv` undefined (cipher.ts)
 
 **LOW:**
+
 - [LOW] XSalsa20-Poly1305 — AAD not supported; `setAAD` throws explicit error (correct behavior) (XSalsa20Poly1305Cipher.cpp:104-106)
 - [LOW] XSalsa20-Poly1305 — Same buffering design as XChaCha20-Poly1305; large payload concern
 
 ### RSA Cipher
 
 **HIGH:**
+
 - [HIGH] RSA Cipher — Raw `EVP_PKEY_CTX*` without RAII; `toOpenSSLPadding()` throw leaks context in 5 methods (HybridRsaCipher.cpp)
 - [HIGH] RSA Cipher — RSA PKCS#1 v1.5 padding for decryption enables Bleichenbacher padding oracle; error messages propagate OpenSSL details (HybridRsaCipher.cpp + publicCipher.ts:126,219,248)
 - [HIGH] RSA Cipher — Prototype pollution in `preparePublicCipherKey`/`preparePrivateCipherKey`; `'key' in key` traverses prototype chain (publicCipher.ts:86-94,186)
 
 **MEDIUM:**
+
 - [MEDIUM] RSA Cipher — `double` to `int` cast for padding param; NaN/Infinity = UB (HybridRsaCipher.cpp:52)
 - [MEDIUM] RSA Cipher — `publicDecrypt` returns empty buffer on certain error codes; broad `(err & 0xFF) == 0x04` match masks real failures (HybridRsaCipher.cpp:264)
 - [MEDIUM] RSA Cipher — EVP_PKEY_CTX not RAII-wrapped; missed error paths leak context (HybridRsaCipher.cpp)
@@ -568,6 +610,7 @@ _Record issues here as they are discovered. Format: `[severity] module — descr
 - [MEDIUM] RSA Cipher — Default OAEP hash is SHA-1; deprecated but matches Node.js (publicCipher.ts:114,236)
 
 **LOW:**
+
 - [LOW] RSA Cipher — CryptoKey algorithm not validated as RSA before use (publicCipher.ts:63)
 - [LOW] RSA Cipher — No RSA key size minimum enforcement at encrypt/decrypt time (HybridRsaCipher.cpp)
 - [LOW] RSA Cipher — `RSA_NO_PADDING` not supported but not explicitly rejected with helpful message (HybridRsaCipher.cpp:17-26)
@@ -575,11 +618,13 @@ _Record issues here as they are discovered. Format: `[severity] module — descr
 ### Cross-Cutting (Symmetric Encryption)
 
 **HIGH:**
+
 - [HIGH] All Ciphers — `abvToArrayBuffer` ignores `byteOffset`/`byteLength`; sliced buffers pass wrong data to native (utils/conversion.ts:17-25)
 - [HIGH] All Ciphers — `getUIntOption` uses `Record<string, any>` defeating type safety for options parsing (utils/cipher.ts:52)
 - [HIGH] 3 Subclasses — CCMCipher, ChaCha20Cipher, ChaCha20Poly1305Cipher destructors leak EVP_CIPHER_CTX by nulling `ctx` before parent destructor
 
 **MEDIUM:**
+
 - [MEDIUM] All Ciphers — No algorithm name validation at TS boundary; invalid ciphers produce opaque native errors
 - [MEDIUM] All Ciphers — `any` casts in stream options filtering (cipher.ts:103-104)
 - [MEDIUM] All Ciphers — Double `binaryLikeToArrayBuffer` conversion in Cipheriv/Decipheriv constructors (cipher.ts:248-252)
@@ -587,12 +632,14 @@ _Record issues here as they are discovered. Format: `[severity] module — descr
 - [MEDIUM] HybridCipherFactory — Switch fallthrough from `EVP_CIPH_STREAM_CIPHER` to `default` without `[[fallthrough]]` (HybridCipherFactory.hpp:80-88)
 
 **LOW:**
+
 - [LOW] HybridCipherFactory — `EVP_CIPHER_free(nullptr)` called after failed fetch; no-op but code smell (HybridCipherFactory.hpp:91)
 - [LOW] cipher.ts — `authTagLen` defaults to 16 even for non-AEAD ciphers; harmless but unnecessary
 
 ### Test Coverage Gaps (Symmetric Encryption)
 
 **HIGH:**
+
 - [HIGH] AES-CBC — No NIST/RFC test vectors with known ciphertext verification; round-trip only
 - [HIGH] AES-CBC — No wrong key/IV length rejection tests
 - [HIGH] AES-GCM — No NIST SP 800-38D test vectors; correctness unverified against standard
@@ -611,6 +658,7 @@ _Record issues here as they are discovered. Format: `[severity] module — descr
 - [HIGH] All AEAD — No test for `setAuthTag` on cipher (must error)
 
 **MEDIUM:**
+
 - [MEDIUM] AES-CBC — No empty plaintext test (exercises padding-only output)
 - [MEDIUM] AES-CBC — No `setAutoPadding` test
 - [MEDIUM] AES-GCM — No tampered AAD test (modified AAD should cause auth failure)
@@ -635,6 +683,7 @@ _Record issues here as they are discovered. Format: `[severity] module — descr
 - [MEDIUM] All modules — Generic round-trip error catch converts all errors to `expect.fail`, masking root cause
 
 **LOW:**
+
 - [LOW] AES-CBC — No stream interface tests (pipe/transform API)
 - [LOW] AES-CTR/CFB/OFB/ECB — No mode-specific edge case tests
 - [LOW] AES-GCM — No empty AAD test
@@ -647,46 +696,54 @@ _Record issues here as they are discovered. Format: `[severity] module — descr
 ### PBKDF2
 
 **HIGH:**
+
 - [HIGH] PBKDF2 — No return value check on `PKCS5_PBKDF2_HMAC`; failed derivation silently returns uninitialized buffer (HybridPbkdf2.cpp:44)
 - [HIGH] PBKDF2 — No return value check on `fastpbkdf2_hmac_*` calls; failure returns uninitialized heap data as derived key material (HybridPbkdf2.cpp:27-34)
 - [HIGH] PBKDF2 — Raw `new uint8_t[]` without RAII guard; leak if `make_shared` throws (HybridPbkdf2.cpp:22-23)
 - [HIGH] PBKDF2 — `keylen=0` not rejected at C++ layer; `new uint8_t[0]` is implementation-defined (HybridPbkdf2.cpp:21-22)
 
 **MEDIUM:**
+
 - [MEDIUM] PBKDF2 — `double` to `uint32_t` truncation for iterations unchecked at C++ layer (HybridPbkdf2.cpp:28)
 - [MEDIUM] PBKDF2 — Derived key material never zeroed; `delete[]` without `OPENSSL_cleanse` (HybridPbkdf2.cpp:23)
 - [MEDIUM] PBKDF2 — `password.get()->data()` dereference without null check; null ArrayBuffer = UB (HybridPbkdf2.cpp:27)
 - [MEDIUM] PBKDF2 — No digest validation at C++ layer; unknown digests silently fall through to OpenSSL path (HybridPbkdf2.cpp:26-45)
 
 **LOW:**
+
 - [LOW] PBKDF2 — `reinterpret_cast<char*>` discards const; should be `const char*` (HybridPbkdf2.cpp:41)
 - [LOW] PBKDF2 — Async test assertions inside callback are fire-and-forget; failures silently swallowed (pbkdf2_tests.ts:30-35)
 
 ### Scrypt
 
 **HIGH:**
+
 - [HIGH] Scrypt — No validation of `N` being a power of 2 per RFC 7914; OpenSSL rejects with opaque error (scrypt.ts:38-45)
 - [HIGH] Scrypt — No upper-bound validation of N, r, p; `N=2^30, r=8, p=1` requires ~1TB memory (scrypt.ts:38-45)
 - [HIGH] Scrypt — `keylen=0` passes TS validation but C++ throws; inconsistent with Node.js which returns empty Buffer (scrypt.ts:88, HybridScrypt.cpp:36-38)
 
 **MEDIUM:**
+
 - [MEDIUM] Scrypt — Derived key material never zeroed before deallocation (HybridScrypt.cpp:59)
 - [MEDIUM] Scrypt — `double` to `uint64_t` truncation unchecked; negative doubles wrap to large positive values (HybridScrypt.cpp:30-34)
 - [MEDIUM] Scrypt — No `keylen` upper-bound validation; massive allocation possible (scrypt.ts:88,119)
 - [MEDIUM] Scrypt — `maxmem` default of 32MB may OOM mobile devices; no documentation (scrypt.ts:35)
 
 **LOW:**
+
 - [LOW] Scrypt — Missing `Number.isInteger(keylen)` check; float values truncated silently (scrypt.ts:88)
 - [LOW] Scrypt — Error in async path casts to `Error` with `err as Error`; OpenSSL errors may be strings (scrypt.ts:103)
 
 ### HKDF
 
 **HIGH:**
+
 - [HIGH] HKDF — No maximum output length validation per RFC 5869; must not exceed `255 * HashLen` (hkdf.ts:64, HybridHkdf.cpp:77-81)
 - [HIGH] HKDF — Passing `nullptr` to `OSSL_PARAM_construct_octet_string` for empty key; may segfault (HybridHkdf.cpp:57)
 - [HIGH] HKDF — `OSSL_PARAM params[5]` array exactly full; any additional param would overflow (HybridHkdf.cpp:44)
 
 **MEDIUM:**
+
 - [MEDIUM] HKDF — `keylen=0` allowed by TS but rejected by C++; inconsistent with Node.js (hkdf.ts:64)
 - [MEDIUM] HKDF — Derived key material not zeroed before deallocation (HybridHkdf.cpp:93)
 - [MEDIUM] HKDF — `hkdfDeriveBits` returns ArrayBuffer directly; `Math.ceil(length / 8)` excess bytes not trimmed (hkdf.ts:132,146)
@@ -694,29 +751,34 @@ _Record issues here as they are discovered. Format: `[severity] module — descr
 - [MEDIUM] HKDF — Salt silently omitted when empty; RFC 5869 defaults to `HashLen` zeros; behavior undocumented (HybridHkdf.cpp:60-66)
 
 **LOW:**
+
 - [LOW] HKDF — `keylen` not validated as integer; float values silently truncated (hkdf.ts:64)
 - [LOW] HKDF — Empty info buffer silently omitted; RFC 5869 defaults to empty string (HybridHkdf.cpp:70-72)
 
 ### Argon2
 
 **HIGH:**
+
 - [HIGH] Argon2 — No RFC 9106 parameter validation: min salt 8 bytes, min tag 4 bytes, min memory `8*parallelism` KiB, min passes 1, min parallelism 1 (argon2.ts:43-58, HybridArgon2.cpp:26-60)
 - [HIGH] Argon2 — `double` to `uint32_t` truncation for parallelism/memory/passes/version; NaN/Infinity/negative = UB (HybridArgon2.cpp:50)
 - [HIGH] Argon2 — `tagLength` cast from `double` to `size_t` can produce huge allocations (HybridArgon2.cpp:50)
 
 **MEDIUM:**
+
 - [MEDIUM] Argon2 — No version validation; only `0x10` and `0x13` are defined per RFC 9106 (argon2.ts:45, HybridArgon2.cpp:50)
 - [MEDIUM] Argon2 — Derived key material not zeroed; neither ncrypto buffer nor copy are cleansed (HybridArgon2.cpp:59)
 - [MEDIUM] Argon2 — `hashSync` passes original shared_ptrs without copying; potential use-after-free edge case (HybridArgon2.cpp:97)
 - [MEDIUM] Argon2 — Error message may expose OpenSSL internal reason strings (HybridArgon2.cpp:54-56)
 
 **LOW:**
+
 - [LOW] Argon2 — Algorithm name string echoed in error message (HybridArgon2.cpp:23)
 - [LOW] Argon2 — `argon2d` exposed without warning; vulnerable to side-channel attacks (argon2.ts:29-37)
 
 ### Test Coverage Gaps (Key Derivation)
 
 **HIGH:**
+
 - [HIGH] PBKDF2 — Async test assertions inside callbacks are fire-and-forget; failures silently swallowed (pbkdf2_tests.ts:30-35)
 - [HIGH] Scrypt — No negative/error-path tests: invalid N (not power of 2), N=0, r=0, p=0, negative params (scrypt_tests.ts)
 - [HIGH] HKDF — Only 1 of 7 RFC 5869 test vectors implemented; missing zero-length salt/info case (hkdf_tests.ts:8-17)
@@ -725,23 +787,27 @@ _Record issues here as they are discovered. Format: `[severity] module — descr
 - [HIGH] Argon2 — No error-path tests for invalid parameters: zero parallelism, zero memory, short salt, NaN (argon2_tests.ts)
 
 **MEDIUM:**
+
 - [MEDIUM] PBKDF2 — No test for `keylen=0`; Node.js returns empty Buffer (pbkdf2_tests.ts)
-- [MEDIUM] HKDF — No negative/error-path tests: invalid digest, negative keylen, keylen exceeding 255*HashLen (hkdf_tests.ts)
+- [MEDIUM] HKDF — No negative/error-path tests: invalid digest, negative keylen, keylen exceeding 255\*HashLen (hkdf_tests.ts)
 - [MEDIUM] Scrypt — Missing RFC 7914 Test Case 4 (N=1048576, r=8, p=1); should be documented (scrypt_tests.ts:12-43)
 - [MEDIUM] All KDFs — No cross-validation tests with Node.js `crypto` module output
 
 **LOW:**
+
 - [LOW] PBKDF2 — Test at line 100-106 labeled "should throw if password not string/ArrayBuffer" actually tests "No callback provided" (pbkdf2_tests.ts:97-106)
 
 ### Diffie-Hellman
 
 **HIGH:**
+
 - [HIGH] DH — No minimum prime size enforcement when custom prime provided via `init()`; accepts dangerously small primes (HybridDiffieHellman.cpp:25)
 - [HIGH] DH — No validation of peer public key in `computeSecret()`; 0, 1, or p-1 enable small subgroup attacks (HybridDiffieHellman.cpp:129-213)
 - [HIGH] DH — Shared secret in `std::vector<uint8_t>` not zeroed on destruction; persists in heap (HybridDiffieHellman.cpp:204)
 - [HIGH] DhKeyPair — No minimum prime size enforcement in `generateKeyPairSync()` unlike `HybridDiffieHellman::initWithSize()` (HybridDhKeyPair.cpp:85-107)
 
 **MEDIUM:**
+
 - [MEDIUM] DH — `double` to `int` cast for `primeLength` and `generator` without range validation; NaN/Infinity = UB (HybridDhKeyPair.cpp:27-28,35-36)
 - [MEDIUM] DH — Private key material not zeroed on destruction; BIGNUM temporaries freed with `BN_free` not `BN_clear_free` (HybridDiffieHellman.cpp:355-425)
 - [MEDIUM] DH — No generator validation; generator 0 or 1 produces degenerate keys (HybridDiffieHellman.cpp:25-64)
@@ -749,6 +815,7 @@ _Record issues here as they are discovered. Format: `[severity] module — descr
 - [MEDIUM] DH — `createDiffieHellman` default encoding 'utf8' inconsistent with Node.js 'binary' (diffie-hellman.ts:156)
 
 **LOW:**
+
 - [LOW] DH — BIO resource management uses manual `BIO_free` instead of RAII; leak on exception (HybridDhKeyPair.cpp:137-175)
 - [LOW] DH — `generateKeyPair()` captures `this` in async lambda; use-after-free if object destroyed (HybridDhKeyPair.cpp:40)
 - [LOW] DH — `ToNativeArrayBuffer` uses raw `new uint8_t[]` with lambda deleter (QuickCryptoUtils.hpp:38-41)
@@ -756,11 +823,13 @@ _Record issues here as they are discovered. Format: `[severity] module — descr
 ### ECDH
 
 **HIGH:**
+
 - [HIGH] ECDH — No explicit point-on-curve validation for peer public key in `computeSecret()`; invalid-curve attack possible (HybridECDH.cpp:62-100)
 - [HIGH] ECDH — No validation of private key range [1, n-1] in `setPrivateKey()`; key of 0 produces point at infinity (HybridECDH.cpp:120-149)
 - [HIGH] ECDH — Shared secret `std::vector<uint8_t>` not securely erased before destruction (HybridECDH.cpp:92-99)
 
 **MEDIUM:**
+
 - [MEDIUM] ECDH — `setPublicKey()` does not validate point is on configured curve (HybridECDH.cpp:169-174)
 - [MEDIUM] ECDH — No curve restriction/allowlist; weak/deprecated curves accepted via `OBJ_txt2nid` (HybridECDH.cpp:217-226)
 - [MEDIUM] ECDH — `double format` cast to `point_conversion_form_t` without validation at C++ layer (HybridECDH.cpp:176-209)
@@ -768,6 +837,7 @@ _Record issues here as they are discovered. Format: `[severity] module — descr
 - [MEDIUM] ECDH — `createEcEvpPkey()` does not check return values of `OSSL_PARAM_BLD_push_*` calls (QuickCryptoUtils.cpp:15-18)
 
 **LOW:**
+
 - [LOW] ECDH — `_curveNid` initialized to 0 (`NID_undef`); magic number dependency (HybridECDH.hpp:37)
 - [LOW] ECDH — Static singleton `_convertKeyHybrid` lazily created, never destroyed (ecdh.ts:11-18)
 - [LOW] ECDH — `getPublicKey()` ignores `format` parameter; no compressed/hybrid format support (ecdh.ts:69)
@@ -775,11 +845,13 @@ _Record issues here as they are discovered. Format: `[severity] module — descr
 ### Test Coverage Gaps (Key Exchange)
 
 **HIGH:**
+
 - [HIGH] DH — No invalid public key test; 0, 1, or p-1 (small subgroup attack vectors) not tested
 - [HIGH] ECDH — No invalid public key test; point not on curve and identity point untested
 - [HIGH] ECDH — No private key range test; value 0 or >= curve order n untested
 
 **MEDIUM:**
+
 - [MEDIUM] DH — No weak prime test; non-safe prime detection via `verifyError` untested
 - [MEDIUM] ECDH — No cross-curve test; Alice P-256 / Bob P-384 `computeSecret` behavior untested
 - [MEDIUM] DH/ECDH — No empty input test for `computeSecret`, `setPublicKey`, `setPrivateKey`
@@ -788,84 +860,101 @@ _Record issues here as they are discovered. Format: `[severity] module — descr
 - [MEDIUM] DhKeyPair — `DhKeyPairGen` class has no dedicated tests at all
 
 **LOW:**
+
 - [LOW] ECDH — No weak curve test (e.g., prime192v1)
 - [LOW] DH — No string encoding roundtrip test through `computeSecret`
 
 ### Sign/Verify (Generic Interface)
 
 **HIGH:**
+
 - [HIGH] Sign/Verify — Raw `EVP_PKEY*` via `GetAsymmetricKey().get()` with no reference-count guarantee during async operations (HybridSignHandle.cpp:127, HybridVerifyHandle.cpp:126)
 - [HIGH] Sign/Verify — No validation that key type matches operation; C++ accepts any key (HybridSignHandle.cpp:119-131, HybridVerifyHandle.cpp:119-130)
 - [HIGH] Sign/Verify — `EVP_PKEY_CTX` double-free risk on partial `EVP_DigestSignInit` failure (HybridSignHandle.cpp:150-165)
 
 **MEDIUM:**
+
 - [MEDIUM] Sign/Verify — Unbounded `data_buffer` accumulation in streaming mode; DoS vector (HybridSignHandle.hpp:33, HybridVerifyHandle.hpp:33)
 - [MEDIUM] Sign/Verify — No re-use protection; calling `sign()`/`verify()` twice on finalized context = UB (HybridSignHandle.cpp:194)
 
 **LOW:**
+
 - [LOW] Sign/Verify — Error message leaks key type info and internal constants (HybridSignHandle.cpp:206-208)
 - [LOW] Sign/Verify — `size_t` to `int` narrowing in `BN_bn2binpad` (SignUtils.hpp:50,64)
 
 ### ECDSA (EC Key Pairs)
 
 **HIGH:**
+
 - [HIGH] ECDSA — No curve validation for Node.js API key generation; arbitrary curve names accepted including weak curves (ec.ts:382-396, HybridEcKeyPair.cpp:317)
 - [HIGH] ECDSA — Raw `EVP_PKEY*` without RAII; violates project smart-pointer mandate (HybridEcKeyPair.hpp:44)
 - [HIGH] ECDSA — BIO not checked for null before `i2d_PKCS8PrivateKey_bio`; null = UB (HybridEcKeyPair.cpp:286)
 
 **MEDIUM:**
+
 - [MEDIUM] ECDSA — SHA-1 allowed for ECDSA signing; WebCrypto spec recommends rejection (HybridEcKeyPair.cpp:343)
 - [MEDIUM] ECDSA — Private key DER data in `std::string` not zeroed before destruction (HybridEcKeyPair.cpp:210-211,290-291)
 - [MEDIUM] ECDSA — `importKey` tries multiple parsing strategies without clearing error queue between attempts (HybridEcKeyPair.cpp:131-166)
 
 **LOW:**
+
 - [LOW] ECDSA — Signature malleability (high-S) not enforced; DER-encoded ECDSA signatures malleable by design (SignUtils.hpp:42-53)
 
 ### Ed25519/Ed448
 
 **HIGH:**
+
 - [HIGH] Ed25519/Ed448 — Memory leak for imported keys; `EVP_PKEY*` created in `importPublicKey`/`importPrivateKey` never freed by callers (HybridEdKeyPair.cpp:356-401, callers at :155,:221)
 - [HIGH] Ed25519/Ed448 — Double-free risk with `EVP_PKEY_CTX` in `signSync` on partial `EVP_DigestSignInit` failure (HybridEdKeyPair.cpp:163-173)
 - [HIGH] Ed25519/Ed448 — `ERR_error_string(ERR_get_error(), NULL)` uses thread-unsafe static buffer (HybridEdKeyPair.cpp:172,241)
 
 **MEDIUM:**
+
 - [MEDIUM] Ed25519/Ed448 — Raw `new`/`delete` throughout; violates C++20 smart-pointer mandate (HybridEdKeyPair.cpp:58,181,282-284,295-296,339-340)
 - [MEDIUM] Ed25519/Ed448 — Private key raw bytes not zeroed; `delete[]` without `OPENSSL_cleanse` (HybridEdKeyPair.cpp:339-343)
 - [MEDIUM] Ed25519/Ed448 — Incomplete curve name normalization; `"ED25519"` uppercase not handled (HybridEdKeyPair.cpp:359-366)
 - [MEDIUM] Ed25519/Ed448 — `cipher`/`passphrase` parameters accepted but ignored; encrypted export silently doesn't encrypt (HybridEdKeyPair.cpp:84-86)
 
 **LOW:**
+
 - [LOW] Ed25519/Ed448 — No validation of raw key sizes before `EVP_PKEY_new_raw_public_key`; generic error (HybridEdKeyPair.cpp:369)
 
 ### RSA (PKCS1-v1.5, PSS) Key Generation
 
 **HIGH:**
+
 - [HIGH] RSA KeyGen — Minimum modulus length 256 bits is trivially factorable; NIST minimum is 2048 (rsa.ts:73,201)
 
 **MEDIUM:**
+
 - [MEDIUM] RSA KeyGen — Raw `EVP_PKEY*` without RAII; violates smart-pointer mandate (HybridRsaKeyPair.hpp:35)
 - [MEDIUM] RSA KeyGen — Private key DER data in `std::string` not zeroed (HybridRsaKeyPair.cpp:132)
 - [MEDIUM] RSA KeyGen — Public exponent not validated; exponents of 1 or even numbers produce degenerate keys (HybridRsaKeyPair.cpp:57)
 - [MEDIUM] RSA KeyGen — `hashAlgorithm` stored but unused in key generation; RSA-PSS keys lack restricted parameters (HybridRsaKeyPair.cpp:86-88)
 
 **LOW:**
+
 - [LOW] RSA KeyGen — `double` to `int` truncation for `modulusLength` unchecked (HybridRsaKeyPair.cpp:76)
 
 ### DSA
 
 **HIGH:**
+
 - [HIGH] DSA — No minimum modulus length validation; `modulusLength=512` accepted; FIPS 186-4 requires 1024+ (HybridDsaKeyPair.cpp:29, dsa.ts:37)
 
 **MEDIUM:**
+
 - [MEDIUM] DSA — No validation of `divisorLength` against FIPS 186-4 (L,N) pairs: (1024,160), (2048,224), (2048,256), (3072,256) (HybridDsaKeyPair.cpp:50-53)
 - [MEDIUM] DSA — DSA deprecated in FIPS 186-5 (2023); no warning or deprecation notice to users
 
 **LOW:**
+
 - [LOW] DSA — Private key DER data in `std::string` not zeroed (HybridDsaKeyPair.cpp:121-122)
 
 ### Test Coverage Gaps (Digital Signatures)
 
 **HIGH:**
+
 - [HIGH] All Signatures — No NIST/RFC test vector validation; all tests use self-generated keys/signatures
 - [HIGH] All Signatures — No cross-implementation verification (Node.js crypto → RNQC or vice versa)
 - [HIGH] ECDSA — No signature malleability tests (high-S value handling)
@@ -874,6 +963,7 @@ _Record issues here as they are discovered. Format: `[severity] module — descr
 - [HIGH] RSA — No key size boundary tests; 512-bit or 1024-bit key generation not tested for rejection
 
 **MEDIUM:**
+
 - [MEDIUM] DSA — No tests for `dsaEncoding: 'ieee-p1363'` format
 - [MEDIUM] All — No empty-message signing tests
 - [MEDIUM] RSA-PSS — No salt length edge case tests (`RSA_PSS_SALTLEN_DIGEST`, `RSA_PSS_SALTLEN_MAX_SIGN`)
@@ -882,10 +972,12 @@ _Record issues here as they are discovered. Format: `[severity] module — descr
 ### ML-DSA (44/65/87)
 
 **HIGH:**
+
 - [HIGH] ML-DSA — Double-free risk on `EVP_PKEY_CTX` in `signSync`/`verifySync`; ownership ambiguous after partial `EVP_DigestSignInit` failure (HybridMlDsaKeyPair.cpp:180-182,231-233)
 - [HIGH] ML-DSA — Unnecessary `EVP_PKEY_CTX_new_from_name` before `EVP_DigestSignInit`; pre-created context with wrong algorithm = UB (HybridMlDsaKeyPair.cpp:174,225)
 
 **MEDIUM:**
+
 - [MEDIUM] ML-DSA — No RAII for `EVP_MD_CTX` and manual `new[]`/`delete[]` for signature buffers (HybridMlDsaKeyPair.cpp:169,192)
 - [MEDIUM] ML-DSA — Raw `this` capture in `Promise::async` lambdas; use-after-free if object destroyed (HybridMlDsaKeyPair.cpp:42,159,210)
 - [MEDIUM] ML-DSA — No FIPS 204 context string support; applications cannot use domain separation (HybridMlDsaKeyPair.cpp:162-203)
@@ -893,6 +985,7 @@ _Record issues here as they are discovered. Format: `[severity] module — descr
 - [MEDIUM] ML-DSA — `double` parameters for format/type enums cast to `int` without range/NaN checking (HybridMlDsaKeyPair.cpp:57-60)
 
 **LOW:**
+
 - [LOW] ML-DSA — `getEvpPkeyType()` defined but never called; dead code (HybridMlDsaKeyPair.cpp:18-28)
 - [LOW] ML-DSA — Private key export always unencrypted; no cipher/passphrase support (HybridMlDsaKeyPair.cpp:134)
 - [LOW] ML-DSA — Private key bytes in BIO buffers not zeroed before `delete[]` (HybridMlDsaKeyPair.cpp:145-153)
@@ -900,10 +993,12 @@ _Record issues here as they are discovered. Format: `[severity] module — descr
 ### ML-KEM (512/768/1024)
 
 **HIGH:**
+
 - [HIGH] ML-KEM — Shared secret not zeroed after use in `encapsulateSync`; raw `sharedKey` ArrayBuffer may be long-lived (HybridMlKemKeyPair.cpp:246-264, subtle.ts:2778)
 - [HIGH] ML-KEM — No key type validation in `_encapsulateCore`/`_decapsulateCore`; no check that key is public/private (subtle.ts:2752-2809)
 
 **MEDIUM:**
+
 - [MEDIUM] ML-KEM — No RAII for `EVP_PKEY_CTX` in encapsulate/decapsulate (HybridMlKemKeyPair.cpp:226-264,280-311)
 - [MEDIUM] ML-KEM — Raw `this` capture in `Promise::async` lambdas (HybridMlKemKeyPair.cpp:29,216,270)
 - [MEDIUM] ML-KEM — `BIO_new_mem_buf` casts `size_t` to `int` for key data size (HybridMlKemKeyPair.cpp:158,191)
@@ -911,17 +1006,20 @@ _Record issues here as they are discovered. Format: `[severity] module — descr
 - [MEDIUM] ML-KEM — Packed encapsulation result uses native byte order `memcpy` for `uint32_t` but TS unpacks as little-endian; breaks on big-endian (HybridMlKemKeyPair.cpp:250-251, mlkem.ts:51)
 
 **LOW:**
+
 - [LOW] ML-KEM — No validation that imported key matches configured variant (HybridMlKemKeyPair.cpp:145-178)
 - [LOW] ML-KEM — Decapsulated shared secret not zeroed before `delete[]` (HybridMlKemKeyPair.cpp:299-309)
 
 ### Test Coverage Gaps (Post-Quantum)
 
 **HIGH:**
+
 - [HIGH] ML-DSA/ML-KEM — No NIST Known-Answer Tests (KAT); all tests are round-trip only
 - [HIGH] ML-DSA/ML-KEM — No cross-parameter-set rejection tests (e.g., ML-DSA-44 key vs ML-DSA-65 signature)
 - [HIGH] ML-KEM — No invalid ciphertext tests; FIPS 203 implicit rejection behavior untested
 
 **MEDIUM:**
+
 - [MEDIUM] ML-DSA — No context string tests (API does not support context strings)
 - [MEDIUM] ML-KEM — No `encapsulateKey`/`decapsulateKey` end-to-end test using derived AES key for actual encryption
 - [MEDIUM] ML-DSA/ML-KEM — No non-extractable key export rejection tests
@@ -929,76 +1027,92 @@ _Record issues here as they are discovered. Format: `[severity] module — descr
 ### KeyObjectHandle
 
 **HIGH:**
+
 - [HIGH] KeyObjectHandle — 32-byte raw key unconditionally assumed X25519; Ed25519 keys silently misidentified (HybridKeyObjectHandle.cpp:757-759)
 - [HIGH] KeyObjectHandle — Private key export has no access control; no mechanism to mark keys non-exportable (HybridKeyObjectHandle.cpp:90-216)
 
 **MEDIUM:**
+
 - [MEDIUM] KeyObjectHandle — Deprecated RSA API usage: `EVP_PKEY_get0_RSA()`, `RSA_new()`, `RSA_set0_key()` etc. (HybridKeyObjectHandle.cpp:241-248,507-509)
 - [MEDIUM] KeyObjectHandle — BIGNUM memory leak in JWK EC import error path; partial null results leak decoded BIGNUMs (HybridKeyObjectHandle.cpp:547-553)
 - [MEDIUM] KeyObjectHandle — `base64url_to_bn` returns raw `BIGNUM*` without ownership semantics; error-prone (HybridKeyObjectHandle.cpp:51)
 - [MEDIUM] KeyObjectHandle — OpenSSL error details leaked in error messages (KeyObjectData.cpp:49-53,143-146,169-171)
 
 **LOW:**
+
 - [LOW] KeyObjectHandle — `setKeyObjectData` is public with no validation (HybridKeyObjectHandle.hpp:48-49)
 - [LOW] KeyObjectHandle — `keyDetail` returns empty struct for non-RSA/non-EC keys (HybridKeyObjectHandle.cpp:709-749)
 
 ### Random (CSPRNG)
 
 **HIGH:**
+
 - [HIGH] Random — `pow(2, 31) - 1` floating-point comparison for max size; should use `INT32_MAX` (HybridRandom.cpp:12,42)
 
 **MEDIUM:**
+
 - [MEDIUM] Random — `abvToArrayBuffer` returns full backing buffer; native layer receives larger-than-expected buffer (conversion.ts:17-25, random.ts:80-88)
 - [MEDIUM] Random — Debug `printData` function left in header; prints raw byte data to stdout (HybridRandom.hpp:24-31)
 
 **LOW:**
+
 - [LOW] Random — `checkSize` uses floating-point `pow` for integer comparison (HybridRandom.cpp:12)
 - [LOW] Random — `CheckIsUint32(1.5)` returns true; non-integer values not rejected (QuickCryptoUtils.hpp:63-65)
 
 ### Prime
 
 **MEDIUM:**
+
 - [MEDIUM] Prime — No validation of bit size parameter; 0, negative, or huge values passed to `BN_generate_prime_ex2` (HybridPrime.cpp:18, prime.ts)
 - [MEDIUM] Prime — `checkPrime` default `checks=0` meaning ("use OpenSSL default") not documented (prime.ts:105)
 
 **LOW:**
+
 - [LOW] Prime — `rem` without `add` silently ignored; matches Node.js but confusing (HybridPrime.cpp:16-35)
 
 ### Certificate / SPKAC
 
 **LOW:**
+
 - [LOW] Certificate — No size validation on SPKAC input; extremely large input = excessive allocation (HybridCertificate.cpp:8-40)
 - [LOW] Certificate — `OPENSSL_free(buf.data)` leaks if `ToNativeArrayBuffer` throws (HybridCertificate.cpp:29-39)
 
 ### X.509
 
 **MEDIUM:**
+
 - [MEDIUM] X.509 — No null check on `cert_` member before method calls; crash if `init()` never called (HybridX509Certificate.cpp:27-95)
 - [MEDIUM] X.509 — `validFromDate`/`validToDate` cast `time_t` to `double` × 1000; precision safe for practical dates (HybridX509Certificate.cpp:51-57)
 
 **LOW:**
+
 - [LOW] X.509 — `fingerprint()` uses SHA-1; provided for compatibility, `fingerprint256`/`fingerprint512` also available (HybridX509Certificate.cpp:78)
 - [LOW] X.509 — TypeScript caches immutable properties but never clears cache (x509certificate.ts:91-98)
 
 ### Utils / Conversions
 
 **HIGH:**
+
 - [HIGH] Utils — `timingSafeEqual` uses `abvToArrayBuffer` which returns entire backing buffer; TypedArray views compare wrong data (timingSafeEqual.ts:15-16, conversion.ts:17-25)
 
 **MEDIUM:**
+
 - [MEDIUM] Utils — `abvToArrayBuffer` does not respect `byteOffset`/`byteLength` for TypedArray views; also used in `timingSafeEqual` (conversion.ts:17-25)
 - [MEDIUM] Utils — `binaryLikeToArrayBuffer` duck-typing uses `Symbol.toStringTag === 'KeyObject'`; any object with this tag triggers `.handle.exportKey()` (conversion.ts:142-151)
 
 **LOW:**
+
 - [LOW] Utils — `decodeLatin1` does not validate UTF-8 continuation bytes have `10xxxxxx` pattern (HybridUtils.cpp:118-145)
 
 ### Test Coverage Gaps (Key Management & Utilities)
 
 **HIGH:**
+
 - [HIGH] Utils — No tests for `timingSafeEqual` with TypedArray views over larger buffers (backing buffer vs view comparison)
 - [HIGH] Random — Async randomFill tests swallow exceptions; failures silently ignored (random_tests.ts:53-68,70-85)
 
 **MEDIUM:**
+
 - [MEDIUM] KeyObjectHandle — No tests for encrypted private key export/import (cipher/passphrase params untested)
 - [MEDIUM] Prime — No negative tests: `generatePrimeSync(0)`, `generatePrimeSync(-1)`, `generatePrimeSync(2)`
 - [MEDIUM] KeyObjectHandle — No tests for OKP (Ed25519/X25519) JWK round-trip
@@ -1006,12 +1120,14 @@ _Record issues here as they are discovered. Format: `[severity] module — descr
 - [MEDIUM] X.509 — No tests for malformed certificates, truncated DER, expired certs, critical extensions
 
 **LOW:**
+
 - [LOW] Random — No test for `getRandomValues` exceeding 65536 bytes
 - [LOW] KeyObjectHandle — No `keyEquals` test for private keys being equal
 
 ### WebCrypto Subtle
 
 **HIGH:**
+
 - [HIGH] Subtle — `normalizeAlgorithm` does not perform case-insensitive matching per WebCrypto spec; `"aes-gcm"` bypasses `SUPPORTED_ALGORITHMS` (subtle.ts:86-94)
 - [HIGH] Subtle — Key material exported to plaintext via `key.keyObject.export()` for every encrypt/decrypt; "non-extractable" keys transit through JS memory (subtle.ts:261,302,349,477,540)
 - [HIGH] Subtle — `deriveBits` accepts `deriveKey` usage as substitute for `deriveBits`; violates spec usage enforcement (subtle.ts:2164-2169)
@@ -1019,6 +1135,7 @@ _Record issues here as they are discovered. Format: `[severity] module — descr
 - [HIGH] Subtle — `exportKeyRaw` does not enforce key type for symmetric algorithms (subtle.ts:1445-1468)
 
 **MEDIUM:**
+
 - [MEDIUM] Subtle — `as unknown as` casts bypass type safety (subtle.ts:2184,2238,2488)
 - [MEDIUM] Subtle — Return types `ArrayBuffer | unknown` on export functions; `unknown` union = no type safety (subtle.ts:1282,1346,1408,1477)
 - [MEDIUM] Subtle — No AES-GCM IV length validation; spec recommends 12 bytes, disallows 0 (subtle.ts:398-417)
@@ -1031,6 +1148,7 @@ _Record issues here as they are discovered. Format: `[severity] module — descr
 - [MEDIUM] Subtle — Enums used despite project rules prohibiting them (subtle.ts:70-79, types.ts:274-298)
 
 **LOW:**
+
 - [LOW] Subtle — `EncodingOptions.key` typed as `any` (types.ts:365)
 - [LOW] Subtle — Multiple `as` casts without runtime validation: `data as JWK`, `data as BufferLike`, `data as BinaryLike` (subtle.ts:898,922,930,988,1025,1065,1086,1140,1166)
 - [LOW] Subtle — Error messages inconsistent: some use `lazyDOMException`, others use plain `new Error()` (subtle.ts:889,892,901,938)
@@ -1040,6 +1158,7 @@ _Record issues here as they are discovered. Format: `[severity] module — descr
 ### Test Coverage Gaps (WebCrypto Subtle)
 
 **HIGH:**
+
 - [HIGH] Subtle — No tests for non-extractable key export rejection; `key.extractable` check at line 2283 untested
 - [HIGH] Subtle — No cross-algorithm key confusion tests (e.g., AES-GCM key used with AES-CBC)
 - [HIGH] Subtle — No tests for JWK `ext` and `key_ops` validation during import
@@ -1047,6 +1166,7 @@ _Record issues here as they are discovered. Format: `[severity] module — descr
 - [HIGH] Subtle — AES/HMAC generateKey tests largely commented out (generateKey.ts:46-68,647-815)
 
 **MEDIUM:**
+
 - [MEDIUM] Subtle — No algorithm name case sensitivity tests
 - [MEDIUM] Subtle — No negative tests for `deriveBits` with wrong key usage
 - [MEDIUM] Subtle — No AES-GCM tests with unusual IV lengths (empty, very long)
@@ -1055,6 +1175,7 @@ _Record issues here as they are discovered. Format: `[severity] module — descr
 - [MEDIUM] Subtle — No HKDF `deriveBits`/`deriveKey` tests in subtle test suite
 
 **LOW:**
+
 - [LOW] Subtle — `getPublicKey` tests do not cover ML-DSA or ML-KEM
 - [LOW] Subtle — No `subtle.supports()` tests for `encapsulateBits`/`decapsulateBits` operations
 - [LOW] Subtle — Digest tests do not test error cases (invalid algorithm, null data)
@@ -1069,23 +1190,23 @@ Status key: `[ ]` not started · `[~]` in progress · `[x]` complete
 
 ### Phase 0 — Stop the Bleeding (actively exploitable)
 
-| # | Status | Issue | Files | Closes |
-|---|--------|-------|-------|--------|
-| 0.1 | [x] | `abvToArrayBuffer` byte-offset bug | `src/utils/{conversion,timingSafeEqual}.ts`, `src/cipher.ts` setAAD, `src/x509certificate.ts` string ctor | `timingSafeEqual` HIGH, all AEAD `setAAD` HIGH, x509 string-input pool-leak (newly found), conversion.ts doc hardening |
-| 0.2 | [ ] | XSalsa20 keystream restart on every `update()` | `cpp/cipher/XSalsa20Cipher.{cpp,hpp}` | XSalsa20 catastrophic finding |
-| 0.3 | [ ] | DH/ECDH peer-key validation missing | `cpp/dh/HybridDiffieHellman.cpp`, `cpp/ecdh/HybridECDH.cpp` | DH/ECDH HIGH findings |
-| 0.4 | [ ] | RSA Bleichenbacher oracle (PKCS#1 v1.5 distinguishable errors) | `cpp/cipher/HybridRsaCipher.cpp`, `src/utils/publicCipher.ts` | RSA Cipher HIGH |
+| #   | Status | Issue                                                          | Files                                                                                                     | Closes                                                                                                                 |
+| --- | ------ | -------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------- |
+| 0.1 | [x]    | `abvToArrayBuffer` byte-offset bug                             | `src/utils/{conversion,timingSafeEqual}.ts`, `src/cipher.ts` setAAD, `src/x509certificate.ts` string ctor | `timingSafeEqual` HIGH, all AEAD `setAAD` HIGH, x509 string-input pool-leak (newly found), conversion.ts doc hardening |
+| 0.2 | [x]    | XSalsa20 keystream restart on every `update()`                 | `cpp/cipher/XSalsa20Cipher.{cpp,hpp}`                                                                     | XSalsa20 catastrophic finding                                                                                          |
+| 0.3 | [ ]    | DH/ECDH peer-key validation missing                            | `cpp/dh/HybridDiffieHellman.cpp`, `cpp/ecdh/HybridECDH.cpp`                                               | DH/ECDH HIGH findings                                                                                                  |
+| 0.4 | [ ]    | RSA Bleichenbacher oracle (PKCS#1 v1.5 distinguishable errors) | `cpp/cipher/HybridRsaCipher.cpp`, `src/utils/publicCipher.ts`                                             | RSA Cipher HIGH                                                                                                        |
 
 ### Phase 1 — Shared Foundation (root-cause helpers)
 
 Once these helpers exist the bulk Phase 2/3 sweep just consumes them.
 
-| # | Status | Helper | Closes |
-|---|--------|--------|--------|
-| 1.1 | [ ] | `validateDouble()` — reject NaN/Inf/negative/non-integer at JS↔C++ boundary | ~20 findings (Hash, HMAC, KMAC, BLAKE3, all KDFs, RSA, ML-DSA, AES-CCM) |
-| 1.2 | [ ] | `secureZero()` — `OPENSSL_cleanse` / `sodium_memzero` wrapper | XSalsa20, XChaCha20-Poly1305, all KDFs, DH/ECDH, RSA/EC/Ed/DSA DER strings |
-| 1.3 | [ ] | `EVP_CIPHER_CTX` `unique_ptr` in `HybridCipher` base | CCMCipher, ChaCha20, ChaCha20-Poly1305 destructor leaks |
-| 1.4 | [ ] | Replace `Record<string, any>` `getUIntOption` with typed helper | Cross-cutting cipher options |
+| #   | Status | Helper                                                                       | Closes                                                                     |
+| --- | ------ | ---------------------------------------------------------------------------- | -------------------------------------------------------------------------- |
+| 1.1 | [ ]    | `validateDouble()` — reject NaN/Inf/negative/non-integer at JS↔C++ boundary | ~20 findings (Hash, HMAC, KMAC, BLAKE3, all KDFs, RSA, ML-DSA, AES-CCM)    |
+| 1.2 | [ ]    | `secureZero()` — `OPENSSL_cleanse` / `sodium_memzero` wrapper                | XSalsa20, XChaCha20-Poly1305, all KDFs, DH/ECDH, RSA/EC/Ed/DSA DER strings |
+| 1.3 | [ ]    | `EVP_CIPHER_CTX` `unique_ptr` in `HybridCipher` base                         | CCMCipher, ChaCha20, ChaCha20-Poly1305 destructor leaks                    |
+| 1.4 | [ ]    | Replace `Record<string, any>` `getUIntOption` with typed helper              | Cross-cutting cipher options                                               |
 
 ### Phase 2 — Memory Safety Sweep
 
@@ -1131,4 +1252,4 @@ _Append entries as PRs land. Format: `YYYY-MM-DD — [phase.task] description (P
 
 - 2026-04-26 — [0.1] Fix byte-offset bugs across `timingSafeEqual`, AEAD `setAAD`, and X.509 string constructor. Harden `abvToArrayBuffer` doc to flag the zero-copy semantic. Adds 5 regression tests (3 timingSafeEqual view cases, 2 GCM sliced-AAD cases). (branch: `feat/security-audit`, PR: TBD)
   - Newly discovered while sweeping: `X509Certificate(string)` was using `Buffer.from(str).buffer` which can return a pool-backed ArrayBuffer with non-zero `byteOffset` — same class of bug as `setAAD`. Fixed in this pass.
-
+- 2026-04-26 — [0.2] Fix XSalsa20 keystream restart on every `update()`. Replace `crypto_stream_xor` with `crypto_stream_xsalsa20_xor_ic` plus per-instance `block_counter` + 64-byte `leftover_keystream` so the keystream advances correctly across chunked update() calls. Output now uses `unique_ptr` for exception safety on the failure path. Adds 6 streaming regression tests covering block-aligned splits, mid-block splits, many-small-chunk splits, drain-to-boundary continuation, the catastrophic two-time-pad regression (identical plaintext in two updates → distinct ciphertexts), and a streaming round-trip across encrypt + decrypt instances. Independent crypto-specialist review approved correctness, exception safety, and re-init isolation. (branch: `feat/security-audit`, PR: TBD)
