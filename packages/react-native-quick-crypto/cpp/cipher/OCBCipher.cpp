@@ -49,6 +49,7 @@ bool OCBCipher::setAuthTag(const std::shared_ptr<ArrayBuffer>& tag) {
     throw std::runtime_error("Failed to set OCB auth tag");
   }
   auth_tag_len = tag_len;
+  auth_tag_state = kAuthTagPassedToOpenSSL;
   return true;
 }
 

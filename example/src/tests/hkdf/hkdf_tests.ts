@@ -57,7 +57,7 @@ const testVectors = [
   },
   // A.6 — Test Case 6: SHA-1 with zero-length salt and zero-length info
   {
-    ikm: '0b0b0b0b0b0b0b0b0b0b0b',
+    ikm: '0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b',
     salt: '',
     info: '',
     len: 42,

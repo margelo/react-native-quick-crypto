@@ -55,6 +55,7 @@ void CCMCipher::init(const std::shared_ptr<ArrayBuffer> cipher_key, const std::s
 std::shared_ptr<ArrayBuffer> CCMCipher::update(const std::shared_ptr<ArrayBuffer>& data) {
   checkCtx();
   checkNotFinalized();
+  has_update_called = true;
   auto native_data = ToNativeArrayBuffer(data);
   size_t in_len = native_data->size();
   if (in_len < 0 || in_len > INT_MAX) {
@@ -82,10 +83,14 @@ std::shared_ptr<ArrayBuffer> CCMCipher::update(const std::shared_ptr<ArrayBuffer
   int ret = EVP_CipherUpdate(ctx.get(), out_buf.get(), &actual_out_len, in, in_len);
 
   if (!is_cipher) {
-    // Decryption: Check for tag verification failure
+    // Decryption: tag verification happens during update for CCM. Don't
+    // throw here — defer the failure to final() so callers see the standard
+    // "auth tag mismatch on final" semantics. This also covers the misuse
+    // case where setAuthTag() was never called: ret <= 0 here, we record
+    // it, and final() turns it into a thrown error.
     if (ret <= 0) {
-      // Tag verification failed (or other decryption error)
-      throw std::runtime_error("CCM Decryption: Tag verification failed");
+      pending_auth_failed = true;
+      actual_out_len = 0;
     }
   } else {
     // Encryption: Check for standard errors
@@ -107,9 +112,15 @@ std::shared_ptr<ArrayBuffer> CCMCipher::final() {
   checkCtx();
   checkNotFinalized();
 
-  // CCM decryption does not use final. Verification happens in the last update call.
+  // CCM decryption does not use final for the verification step itself
+  // (that happens in update()), but final() is still where misuse must
+  // surface — both "setAuthTag was never called" and "the tag we did set
+  // didn't match the ciphertext" land here.
   if (!is_cipher) {
     is_finalized = true;
+    if (auth_tag_state == kAuthTagUnknown || pending_auth_failed) {
+      throw std::runtime_error("Unsupported state or unable to authenticate data");
+    }
     auto empty_output = std::make_unique<unsigned char[]>(0);
     unsigned char* raw_ptr = empty_output.get();
     return std::make_shared<NativeArrayBuffer>(empty_output.release(), 0, [raw_ptr]() { delete[] raw_ptr; });
@@ -149,6 +160,7 @@ std::shared_ptr<ArrayBuffer> CCMCipher::final() {
 
 bool CCMCipher::setAAD(const std::shared_ptr<ArrayBuffer>& data, std::optional<double> plaintextLength) {
   checkCtx();
+  checkAADBeforeUpdate();
   if (!plaintextLength.has_value()) {
     throw std::runtime_error("CCM mode requires plaintextLength to be set");
   }

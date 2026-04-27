@@ -56,11 +56,16 @@ void ChaCha20Poly1305Cipher::init(const std::shared_ptr<ArrayBuffer> cipher_key,
     throw std::runtime_error("ChaCha20Poly1305Cipher: Failed to set key/IV: " + std::string(err_buf));
   }
   is_finalized = false;
+  has_update_called = false;
+  has_aad = false;
+  pending_auth_failed = false;
+  auth_tag_state = kAuthTagUnknown;
 }
 
 std::shared_ptr<ArrayBuffer> ChaCha20Poly1305Cipher::update(const std::shared_ptr<ArrayBuffer>& data) {
   checkCtx();
   checkNotFinalized();
+  has_update_called = true;
   auto native_data = ToNativeArrayBuffer(data);
   size_t in_len = native_data->size();
   if (in_len > INT_MAX) {
@@ -88,6 +93,15 @@ std::shared_ptr<ArrayBuffer> ChaCha20Poly1305Cipher::final() {
   checkCtx();
   checkNotFinalized();
 
+  // For decryption, the auth tag must have been provided via setAuthTag
+  // before final(). OpenSSL's ChaCha20-Poly1305 EVP_CipherFinal_ex does
+  // not flag a missing tag as an error (it simply doesn't verify), which
+  // would silently accept unauthenticated ciphertext — defeating the whole
+  // point of an AEAD. Enforce the precondition explicitly.
+  if (!is_cipher && auth_tag_state == kAuthTagUnknown) {
+    throw std::runtime_error("Unsupported state or unable to authenticate data");
+  }
+
   // For ChaCha20-Poly1305, we need to call final to generate the tag
   int out_len = 0;
   auto out_buf = std::make_unique<unsigned char[]>(0);
@@ -106,6 +120,7 @@ std::shared_ptr<ArrayBuffer> ChaCha20Poly1305Cipher::final() {
 
 bool ChaCha20Poly1305Cipher::setAAD(const std::shared_ptr<ArrayBuffer>& data, std::optional<double> plaintextLength) {
   checkCtx();
+  checkAADBeforeUpdate();
   auto native_aad = ToNativeArrayBuffer(data);
   size_t aad_len = native_aad->size();
 
@@ -159,6 +174,7 @@ bool ChaCha20Poly1305Cipher::setAuthTag(const std::shared_ptr<ArrayBuffer>& tag)
     ERR_error_string_n(err, err_buf, sizeof(err_buf));
     throw std::runtime_error("ChaCha20Poly1305Cipher: Failed to set auth tag: " + std::string(err_buf));
   }
+  auth_tag_state = kAuthTagPassedToOpenSSL;
   return true;
 }
 

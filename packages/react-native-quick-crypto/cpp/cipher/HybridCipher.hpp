@@ -68,6 +68,11 @@ class HybridCipher : public HybridCipherSpec {
   EvpCipherCtxPtr ctx{nullptr, EVP_CIPHER_CTX_free};
   bool pending_auth_failed = false;
   bool has_aad = false;
+  // Tracks whether update() has been called on this cipher. Used to enforce
+  // the AEAD ordering invariant that setAAD() must precede any update() call;
+  // OpenSSL silently accepts misordered AAD/data on some modes (OCB,
+  // ChaCha20-Poly1305), letting an attacker truncate authenticated data.
+  bool has_update_called = false;
   uint8_t auth_tag[EVP_GCM_TLS_TAG_LEN];
   AuthTagState auth_tag_state;
   unsigned int auth_tag_len = 0;
@@ -78,6 +83,7 @@ class HybridCipher : public HybridCipherSpec {
   int getMode();
   void checkCtx() const;
   void checkNotFinalized() const;
+  void checkAADBeforeUpdate() const;
   bool maybePassAuthTagToOpenSSL();
 };
 
