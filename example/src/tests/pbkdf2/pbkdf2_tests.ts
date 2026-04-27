@@ -1,7 +1,7 @@
 /* eslint-disable @typescript-eslint/no-unused-expressions */
 import { Buffer } from 'safe-buffer';
 import { expect } from 'chai';
-import { test } from '../util';
+import { test, assertThrowsAsync } from '../util';
 import { fixtures, type ValidFixture } from './fixtures';
 
 import crypto from 'react-native-quick-crypto';
@@ -18,6 +18,11 @@ type TestFixture = [string, string, number, number, string];
 const SUITE = 'pbkdf2';
 
 // RFC 6070 tests from Node.js
+//
+// The async callbacks must be awaited. Pre-fix, the callback assertions ran
+// fire-and-forget after the test had already resolved — so a wrong digest
+// would not fail the test. Wrap each call in a Promise that resolves on the
+// callback and rejects when an assertion throws.
 {
   const testFn = (
     pass: string,
@@ -27,10 +32,24 @@ const SUITE = 'pbkdf2';
     length: number,
     expected: string,
   ) => {
-    crypto.pbkdf2(pass, salt, iterations, length, hash, function (err, result) {
-      expect(err).to.be.null;
-      expect(result).not.to.be.null;
-      expect(result?.toString('hex')).to.equal(expected);
+    return new Promise<void>((resolve, reject) => {
+      crypto.pbkdf2(
+        pass,
+        salt,
+        iterations,
+        length,
+        hash,
+        function (err, result) {
+          try {
+            expect(err).to.be.null;
+            expect(result).not.to.be.null;
+            expect(result?.toString('hex')).to.equal(expected);
+            resolve();
+          } catch (e) {
+            reject(e);
+          }
+        },
+      );
     });
   };
 
@@ -60,9 +79,7 @@ const SUITE = 'pbkdf2';
     test(
       SUITE,
       `RFC 6070 - ${pass} ${salt} ${iterations} ${hash} ${length}`,
-      () => {
-        testFn(pass, salt, iterations, hash, length, expected);
-      },
+      () => testFn(pass, salt, iterations, hash, length, expected),
     );
   });
 }
@@ -73,18 +90,26 @@ test(SUITE, 'handles buffers', () => {
     '0c60c80f961f0e71f3a9b524af6012062fe037a6e0f0eb94fe8fc46bdc637164',
   );
 
-  crypto.pbkdf2(
-    Buffer.from('password'),
-    Buffer.from('salt'),
-    1,
-    32,
-    'sha1',
-    function (_, result) {
-      expect(result?.toString()).to.equal(
-        '0c60c80f961f0e71f3a9b524af6012062fe037a6e0f0eb94fe8fc46bdc637164',
-      );
-    },
-  );
+  return new Promise<void>((resolve, reject) => {
+    crypto.pbkdf2(
+      Buffer.from('password'),
+      Buffer.from('salt'),
+      1,
+      32,
+      'sha1',
+      function (err, result) {
+        try {
+          expect(err).to.be.null;
+          expect(result?.toString('hex')).to.equal(
+            '0c60c80f961f0e71f3a9b524af6012062fe037a6e0f0eb94fe8fc46bdc637164',
+          );
+          resolve();
+        } catch (e) {
+          reject(e);
+        }
+      },
+    );
+  });
 });
 
 test(SUITE, 'should throw if no callback is provided', function () {
@@ -169,18 +194,25 @@ algos.forEach(function (algorithm) {
       expected;
 
     test(SUITE, ' async w/ ' + description, () => {
-      crypto.pbkdf2(
-        key,
-        salt,
-        f.iterations,
-        f.dkLen,
-        algorithm,
-        function (err, result) {
-          expect(err).to.be.null;
-          expect(result).not.to.be.null;
-          expect(result?.toString('hex')).to.equal(expected);
-        },
-      );
+      return new Promise<void>((resolve, reject) => {
+        crypto.pbkdf2(
+          key,
+          salt,
+          f.iterations,
+          f.dkLen,
+          algorithm,
+          function (err, result) {
+            try {
+              expect(err).to.be.null;
+              expect(result).not.to.be.null;
+              expect(result?.toString('hex')).to.equal(expected);
+              resolve();
+            } catch (e) {
+              reject(e);
+            }
+          },
+        );
+      });
     });
 
     test(SUITE, 'sync w/ ' + description, function () {
@@ -213,3 +245,26 @@ algos.forEach(function (algorithm) {
     );
   });
 });
+
+// --- Phase 4.5: fire-and-forget async assertion regression ---
+//
+// Mirrors the random suite's regression check. A wrong expected digest
+// inside the callback must now reject the returned Promise — pre-fix this
+// would silently pass.
+test(SUITE, 'fire-and-forget regression: failing assert rejects the test', () =>
+  assertThrowsAsync(
+    () =>
+      new Promise<void>((resolve, reject) => {
+        crypto.pbkdf2('password', 'salt', 1, 20, 'sha1', (err, result) => {
+          try {
+            expect(err).to.be.null;
+            expect(result?.toString('hex')).to.equal('deadbeef'); // wrong
+            resolve();
+          } catch (e) {
+            reject(e);
+          }
+        });
+      }),
+    'expected',
+  ),
+);

@@ -1,5 +1,5 @@
 /* eslint-disable @typescript-eslint/no-unused-expressions */
-import { test } from '../util';
+import { test, assertThrowsAsync } from '../util';
 import { expect } from 'chai';
 
 import crypto, {
@@ -10,6 +10,34 @@ import crypto, {
 
 // copied from https://github.com/nodejs/node/blob/master/test/parallel/test-crypto-random.js
 const SUITE = 'random';
+
+// --- Phase 4.5: fire-and-forget async assertion regression ---
+//
+// Pre-fix, every `crypto.randomFill(buf, (err, res) => { expect(...) })`
+// call had its assertions silently swallowed: the test function returned
+// before the callback fired, so a thrown AssertionError became an
+// unhandled rejection rather than a test failure. The fix wraps each
+// callback in a Promise the test function returns. The two tests below
+// prove the pattern actually surfaces failures now.
+
+test(SUITE, 'fire-and-forget regression: failing assert rejects the test', () =>
+  assertThrowsAsync(
+    () =>
+      new Promise<void>((resolve, reject) => {
+        const buf = Buffer.alloc(8);
+        crypto.randomFill(buf, (err, _res) => {
+          try {
+            expect(err).to.be.null;
+            expect(_res.length).to.equal(999); // intentionally wrong
+            resolve();
+          } catch (e) {
+            reject(e);
+          }
+        });
+      }),
+    'expected', // chai assertion failure message contains "expected ..."
+  ),
+);
 
 test(SUITE, 'simple test 1', () => {
   const buf = Buffer.alloc(10);
@@ -51,36 +79,38 @@ test(SUITE, 'simple test 4 - randomFillSync ArrayBuffer', () => {
 });
 
 test(SUITE, 'simple test 5 - randomFill Buffer ', () => {
-  // done: Done
   const buf = Buffer.alloc(10);
   const before = buf.toString('hex');
 
-  crypto.randomFill(buf, (_err: Error | null, res: Buffer) => {
-    try {
-      const after = res?.toString('hex');
-      expect(before).not.to.equal(after);
-      // done();
-      // eslint-disable-next-line @typescript-eslint/no-unused-vars
-    } catch (e) {
-      // done(e);
-    }
+  return new Promise<void>((resolve, reject) => {
+    crypto.randomFill(buf, (err: Error | null, res: Buffer) => {
+      try {
+        expect(err).to.be.null;
+        const after = res?.toString('hex');
+        expect(before).not.to.equal(after);
+        resolve();
+      } catch (e) {
+        reject(e);
+      }
+    });
   });
 });
 
 test(SUITE, 'simple test 6', () => {
-  // done: Done
   const buf = new Uint8Array(new Array(10).fill(0));
   const before = Buffer.from(buf).toString('hex');
 
-  crypto.randomFill(buf, (_err: Error | null, res: Uint8Array) => {
-    try {
-      const after = Buffer.from(res).toString('hex');
-      expect(before).not.to.equal(after);
-      // done();
-      // eslint-disable-next-line @typescript-eslint/no-unused-vars
-    } catch (e) {
-      // done(e);
-    }
+  return new Promise<void>((resolve, reject) => {
+    crypto.randomFill(buf, (err: Error | null, res: Uint8Array) => {
+      try {
+        expect(err).to.be.null;
+        const after = Buffer.from(res).toString('hex');
+        expect(before).not.to.equal(after);
+        resolve();
+      } catch (e) {
+        reject(e);
+      }
+    });
   });
 });
 
@@ -99,42 +129,44 @@ const bufs: [BufTypes, string][] = [
 ];
 bufs.forEach(([buf, name]) => {
   test(SUITE, `simple test 7, ${name}`, () => {
-    // done: Done
     const ab = abvToArrayBuffer(buf);
     const before = ab2str(ab);
 
-    crypto.randomFill(ab, (_err: Error | null, buf2: ArrayBuffer) => {
-      try {
-        const after = Buffer.from(buf2).toString('hex');
-        expect(before).not.to.equal(after);
-        // done();
-        // eslint-disable-next-line @typescript-eslint/no-unused-vars
-      } catch (e) {
-        // done(e);
-      }
+    return new Promise<void>((resolve, reject) => {
+      crypto.randomFill(ab, (err: Error | null, buf2: ArrayBuffer) => {
+        try {
+          expect(err).to.be.null;
+          const after = Buffer.from(buf2).toString('hex');
+          expect(before).not.to.equal(after);
+          resolve();
+        } catch (e) {
+          reject(e);
+        }
+      });
     });
   });
 });
 
 test(SUITE, 'simple test 8', () => {
-  // done: Done
-  let ctr = 0;
-  [new ArrayBuffer(10), new ArrayBuffer(10)].forEach(buf => {
-    const before = Buffer.from(buf).toString('hex');
-    crypto.randomFill(buf, (_err: Error | null, res: ArrayBuffer) => {
-      try {
-        const after = Buffer.from(res).toString('hex');
-        expect(before).not.to.equal(after);
-        // eslint-disable-next-line @typescript-eslint/no-unused-vars
-      } catch (e) {
-        // done(e);
-      }
-      ctr++;
-      if (ctr === 2) {
-        // done();
-      }
-    });
-  });
+  // Two ArrayBuffers, two callbacks — resolve only when both have asserted.
+  return Promise.all(
+    [new ArrayBuffer(10), new ArrayBuffer(10)].map(
+      buf =>
+        new Promise<void>((resolve, reject) => {
+          const before = Buffer.from(buf).toString('hex');
+          crypto.randomFill(buf, (err: Error | null, res: ArrayBuffer) => {
+            try {
+              expect(err).to.be.null;
+              const after = Buffer.from(res).toString('hex');
+              expect(before).not.to.equal(after);
+              resolve();
+            } catch (e) {
+              reject(e);
+            }
+          });
+        }),
+    ),
+  ).then(() => {});
 });
 
 test(SUITE, 'randomFillSync - deepStringEqual - Buffer', () => {
@@ -165,37 +197,39 @@ test(SUITE, 'randomFillSync - deepStringEqual - Buffer no size', () => {
 });
 
 test(SUITE, 'randomFill - deepStringEqual - Buffer', () => {
-  // done: Done
   const buf = Buffer.alloc(10);
   const before = buf.toString('hex');
 
-  crypto.randomFill(buf, 5, 5, (_err: Error | null, res: Buffer) => {
-    try {
-      const after = Buffer.from(res).toString('hex');
-      expect(before).not.to.equal(after);
-      expect(before.slice(0, 5)).to.equal(after.slice(0, 5));
-      // done();
-      // eslint-disable-next-line @typescript-eslint/no-unused-vars
-    } catch (e) {
-      // done(e);
-    }
+  return new Promise<void>((resolve, reject) => {
+    crypto.randomFill(buf, 5, 5, (err: Error | null, res: Buffer) => {
+      try {
+        expect(err).to.be.null;
+        const after = Buffer.from(res).toString('hex');
+        expect(before).not.to.equal(after);
+        expect(before.slice(0, 5)).to.equal(after.slice(0, 5));
+        resolve();
+      } catch (e) {
+        reject(e);
+      }
+    });
   });
 });
 
 test(SUITE, 'randomFill - deepStringEqual - Uint8Array', () => {
-  // done: Done
   const buf = new Uint8Array(new Array(10).fill(0));
   const before = Buffer.from(buf).toString('hex');
-  crypto.randomFill(buf, 5, 5, (_err: Error | null, res: Uint8Array) => {
-    try {
-      const after = Buffer.from(res).toString('hex');
-      expect(before).not.to.equal(after);
-      expect(before.slice(0, 5)).to.equal(after.slice(0, 5));
-      // done();
-      // eslint-disable-next-line @typescript-eslint/no-unused-vars
-    } catch (e) {
-      // done(e);
-    }
+  return new Promise<void>((resolve, reject) => {
+    crypto.randomFill(buf, 5, 5, (err: Error | null, res: Uint8Array) => {
+      try {
+        expect(err).to.be.null;
+        const after = Buffer.from(res).toString('hex');
+        expect(before).not.to.equal(after);
+        expect(before.slice(0, 5)).to.equal(after.slice(0, 5));
+        resolve();
+      } catch (e) {
+        reject(e);
+      }
+    });
   });
 });
 
@@ -325,13 +359,18 @@ test(SUITE, 'randomFill - deepStringEqual - Uint8Array', () => {
 [crypto.randomBytes, crypto.pseudoRandomBytes].map(fn => {
   [0, 1, 2, 4, 16, 256, 1024, 101.2].map(len => {
     test(SUITE, `${fn.name} @ ${len}`, () => {
-      expect(() => {
+      return new Promise<void>((resolve, reject) => {
         fn(len, (ex: Error | null, buf?: Buffer) => {
-          expect(ex).to.be.null;
-          expect(buf?.length).to.equal(Math.floor(len));
-          expect(Buffer.isBuffer(buf)).to.be.true;
+          try {
+            expect(ex).to.be.null;
+            expect(buf?.length).to.equal(Math.floor(len));
+            expect(Buffer.isBuffer(buf)).to.be.true;
+            resolve();
+          } catch (e) {
+            reject(e);
+          }
         });
-      }).to.not.throw();
+      });
     });
   });
 });
@@ -346,32 +385,38 @@ test(SUITE, 'randomFill - deepStringEqual - Uint8Array', () => {
 });
 
 test(SUITE, 'randomInt - Asynchronous API', () => {
-  // done: Done
-  const randomInts: number[] = [];
-  let failed = false;
-  for (let i = 0; i < 100; i++) {
-    crypto.randomInt(3, (_err: Error | null, n: number) => {
-      try {
-        expect(n).to.be.greaterThanOrEqual(0);
-        expect(n).to.be.lessThan(3);
-        randomInts.push(n);
-        if (randomInts.length === 100) {
-          expect(randomInts).not.to.contain(-1);
-          expect(randomInts).to.contain(0);
-          expect(randomInts).to.contain(1);
-          expect(randomInts).to.contain(2);
-          expect(randomInts).not.to.contain(3);
-          // done();
-        }
-        // eslint-disable-next-line @typescript-eslint/no-unused-vars
-      } catch (e) {
-        if (!failed) {
-          // done(e);
-          failed = true;
-        }
+  return new Promise<void>((resolve, reject) => {
+    const randomInts: number[] = [];
+    let settled = false;
+    const reportFail = (e: unknown) => {
+      if (!settled) {
+        settled = true;
+        reject(e);
       }
-    });
-  }
+    };
+    for (let i = 0; i < 100; i++) {
+      crypto.randomInt(3, (err: Error | null, n: number) => {
+        if (settled) return;
+        try {
+          expect(err).to.be.null;
+          expect(n).to.be.greaterThanOrEqual(0);
+          expect(n).to.be.lessThan(3);
+          randomInts.push(n);
+          if (randomInts.length === 100) {
+            expect(randomInts).not.to.contain(-1);
+            expect(randomInts).to.contain(0);
+            expect(randomInts).to.contain(1);
+            expect(randomInts).to.contain(2);
+            expect(randomInts).not.to.contain(3);
+            settled = true;
+            resolve();
+          }
+        } catch (e) {
+          reportFail(e);
+        }
+      });
+    }
+  });
 });
 
 test(SUITE, 'randomInt - Synchronous API', () => {
@@ -391,56 +436,59 @@ test(SUITE, 'randomInt - Synchronous API', () => {
 });
 
 test(SUITE, 'randomInt positive range', () => {
-  // done: Done
-  const randomInts: number[] = [];
-  let failed = false;
-  for (let i = 0; i < 100; i++) {
-    crypto.randomInt(1, 3, (_err: Error | null, n: number) => {
-      try {
-        expect(n).to.be.greaterThanOrEqual(1);
-        expect(n).to.be.lessThan(3);
-        randomInts.push(n);
-        if (randomInts.length === 100) {
-          expect(randomInts).to.contain(1);
-          expect(randomInts).to.contain(2);
-          // done();
+  return new Promise<void>((resolve, reject) => {
+    const randomInts: number[] = [];
+    let settled = false;
+    for (let i = 0; i < 100; i++) {
+      crypto.randomInt(1, 3, (err: Error | null, n: number) => {
+        if (settled) return;
+        try {
+          expect(err).to.be.null;
+          expect(n).to.be.greaterThanOrEqual(1);
+          expect(n).to.be.lessThan(3);
+          randomInts.push(n);
+          if (randomInts.length === 100) {
+            expect(randomInts).to.contain(1);
+            expect(randomInts).to.contain(2);
+            settled = true;
+            resolve();
+          }
+        } catch (e) {
+          settled = true;
+          reject(e);
         }
-        // eslint-disable-next-line @typescript-eslint/no-unused-vars
-      } catch (e) {
-        if (!failed) {
-          // done(e);
-          failed = true;
-        }
-      }
-    });
-  }
+      });
+    }
+  });
 });
 
 test(SUITE, 'randomInt negative range', () => {
-  const randomInts: number[] = [];
-  let failed = false;
-  for (let i = 0; i < 100; i++) {
-    crypto.randomInt(-10, -8, (_err: Error | null, n: number) => {
-      try {
-        expect(n).to.be.greaterThanOrEqual(-10);
-        expect(n).to.be.lessThan(-8);
-        randomInts.push(n);
-        if (randomInts.length === 100) {
-          expect(randomInts).not.to.contain(-11);
-          expect(randomInts).to.contain(-10);
-          expect(randomInts).to.contain(-9);
-          expect(randomInts).not.to.contain(-8);
-          // done();
+  return new Promise<void>((resolve, reject) => {
+    const randomInts: number[] = [];
+    let settled = false;
+    for (let i = 0; i < 100; i++) {
+      crypto.randomInt(-10, -8, (err: Error | null, n: number) => {
+        if (settled) return;
+        try {
+          expect(err).to.be.null;
+          expect(n).to.be.greaterThanOrEqual(-10);
+          expect(n).to.be.lessThan(-8);
+          randomInts.push(n);
+          if (randomInts.length === 100) {
+            expect(randomInts).not.to.contain(-11);
+            expect(randomInts).to.contain(-10);
+            expect(randomInts).to.contain(-9);
+            expect(randomInts).not.to.contain(-8);
+            settled = true;
+            resolve();
+          }
+        } catch (e) {
+          settled = true;
+          reject(e);
         }
-        // eslint-disable-next-line @typescript-eslint/no-unused-vars
-      } catch (e) {
-        if (!failed) {
-          // done(e);
-          failed = true;
-        }
-      }
-    });
-  }
+      });
+    }
+  });
 });
 
 // ['10', true, NaN, null, {}, []].forEach((i) => {
@@ -685,19 +733,21 @@ test(
     full.fill(42);
 
     const view = new Uint8Array(heap, 100, 32);
-    // eslint-disable-next-line @typescript-eslint/no-unused-vars
-    crypto.randomFill(view, (_err: Error | null, _res: Uint8Array) => {
-      try {
-        expect(full[0]).to.equal(42);
-        expect(full[99]).to.equal(42);
-        expect(full[132]).to.equal(42);
-        expect(full[1023]).to.equal(42);
-        const viewStillAll42 = view.every(b => b === 42);
-        expect(viewStillAll42).to.be.false;
-        // eslint-disable-next-line @typescript-eslint/no-unused-vars
-      } catch (e) {
-        // test framework doesn't support async done callbacks
-      }
+    return new Promise<void>((resolve, reject) => {
+      crypto.randomFill(view, (err: Error | null) => {
+        try {
+          expect(err).to.be.null;
+          expect(full[0]).to.equal(42);
+          expect(full[99]).to.equal(42);
+          expect(full[132]).to.equal(42);
+          expect(full[1023]).to.equal(42);
+          const viewStillAll42 = view.every(b => b === 42);
+          expect(viewStillAll42).to.be.false;
+          resolve();
+        } catch (e) {
+          reject(e);
+        }
+      });
     });
   },
 );

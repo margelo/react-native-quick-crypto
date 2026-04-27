@@ -4,7 +4,11 @@ import { assert } from 'chai';
 
 const SUITE = 'argon2';
 
-// RFC 9106 test vector for argon2id
+// RFC 9106 §5 official test vectors (32-byte tags). The (P, S, K, X, t, m,
+// p, T, v) tuple is identical across the three modes; only the variant and
+// resulting tag differ.
+//
+// https://www.rfc-editor.org/rfc/rfc9106#section-5
 const RFC_PARAMS = {
   message: Buffer.from(
     '0101010101010101010101010101010101010101010101010101010101010101',
@@ -20,10 +24,56 @@ const RFC_PARAMS = {
   version: 0x13,
 };
 
-test(SUITE, 'argon2Sync: argon2id produces expected output', () => {
-  const result = argon2Sync('argon2id', RFC_PARAMS);
-  assert.isOk(result);
+const RFC_9106_TAGS = {
+  argon2d: '512b391b6f1162975371d30919734294f868e3be3984f3c1a13a4db9fabe4acb',
+  argon2i: 'c814d9d1dc7f37aa13f0d77f2494bda1c8de6b016dd388d29952a4c4672b6ce8',
+  argon2id: '0d640df58d78766c08c037a34a8b53c9d01ef0452d75b65eb52520e96b01e659',
+} as const;
+
+test(SUITE, 'argon2Sync: argon2id matches RFC 9106 §5 KAT', () => {
+  // Pass `version: 0x13` explicitly (matches RFC_PARAMS) so a future change
+  // to the native binding's default version cannot silently break the KAT.
+  const result = argon2Sync('argon2id', { ...RFC_PARAMS, version: 0x13 });
   assert.strictEqual(result.length, 32);
+  assert.strictEqual(
+    Buffer.from(result).toString('hex'),
+    RFC_9106_TAGS.argon2id,
+  );
+});
+
+test(SUITE, 'argon2Sync: argon2i matches RFC 9106 §5 KAT', () => {
+  const result = argon2Sync('argon2i', { ...RFC_PARAMS, version: 0x13 });
+  assert.strictEqual(result.length, 32);
+  assert.strictEqual(
+    Buffer.from(result).toString('hex'),
+    RFC_9106_TAGS.argon2i,
+  );
+});
+
+test(SUITE, 'argon2Sync: argon2d matches RFC 9106 §5 KAT', () => {
+  const result = argon2Sync('argon2d', { ...RFC_PARAMS, version: 0x13 });
+  assert.strictEqual(result.length, 32);
+  assert.strictEqual(
+    Buffer.from(result).toString('hex'),
+    RFC_9106_TAGS.argon2d,
+  );
+});
+
+test(SUITE, 'argon2: async argon2id matches RFC 9106 §5 KAT', () => {
+  return new Promise<void>((resolve, reject) => {
+    argon2('argon2id', { ...RFC_PARAMS, version: 0x13 }, (err, result) => {
+      try {
+        assert.isNull(err);
+        assert.strictEqual(
+          Buffer.from(result).toString('hex'),
+          RFC_9106_TAGS.argon2id,
+        );
+        resolve();
+      } catch (e) {
+        reject(e);
+      }
+    });
+  });
 });
 
 test(SUITE, 'argon2Sync: argon2i produces output', () => {

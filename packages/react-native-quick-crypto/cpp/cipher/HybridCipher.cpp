@@ -30,6 +30,12 @@ void HybridCipher::checkNotFinalized() const {
   }
 }
 
+void HybridCipher::checkAADBeforeUpdate() const {
+  if (has_update_called) {
+    throw std::runtime_error("setAAD must be called before update");
+  }
+}
+
 bool HybridCipher::maybePassAuthTagToOpenSSL() {
   if (auth_tag_state == kAuthTagKnown) {
     OSSL_PARAM params[] = {OSSL_PARAM_construct_octet_string(OSSL_CIPHER_PARAM_AEAD_TAG, auth_tag, auth_tag_len),
@@ -49,6 +55,9 @@ void HybridCipher::init(const std::shared_ptr<ArrayBuffer> cipher_key, const std
   // Resetting the unique_ptr frees any previous context.
   ctx.reset();
   is_finalized = false;
+  has_update_called = false;
+  has_aad = false;
+  pending_auth_failed = false;
 
   // 1. Get cipher implementation by name
   const EVP_CIPHER* cipher = EVP_get_cipherbyname(cipher_type.c_str());
@@ -100,6 +109,7 @@ std::shared_ptr<ArrayBuffer> HybridCipher::update(const std::shared_ptr<ArrayBuf
   auto native_data = ToNativeArrayBuffer(data);
   checkCtx();
   checkNotFinalized();
+  has_update_called = true;
   size_t in_len = native_data->size();
   if (in_len > INT_MAX) {
     throw std::runtime_error("Message too long");
@@ -157,6 +167,7 @@ std::shared_ptr<ArrayBuffer> HybridCipher::final() {
 
 bool HybridCipher::setAAD(const std::shared_ptr<ArrayBuffer>& data, std::optional<double> plaintextLength) {
   checkCtx();
+  checkAADBeforeUpdate();
   auto native_data = ToNativeArrayBuffer(data);
 
   // Set the AAD

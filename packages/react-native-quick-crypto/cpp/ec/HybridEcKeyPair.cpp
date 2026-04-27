@@ -418,7 +418,12 @@ bool HybridEcKeyPair::verify(const std::shared_ptr<ArrayBuffer>& data, const std
     throw std::runtime_error("Failed to update ECDSA verification with data");
   }
 
-  // Web Crypto API passes IEEE P1363 format, OpenSSL expects DER
+  // Web Crypto API typically passes IEEE P1363 (raw r||s, exactly 2*n bytes);
+  // the Node-API path with `dsaEncoding: 'der'` passes ASN.1 DER instead.
+  // Discriminate by length — anything other than 2*n is treated as DER and
+  // passed through unchanged. This matches what every other ECDSA verify
+  // wrapper (Node's, ncrypto's) does and is robust because well-formed DER
+  // ECDSA signatures are never exactly 2*n bytes for the curves we support.
   const unsigned char* sig_data = static_cast<const unsigned char*>(signature->data());
   size_t sig_len = signature->size();
   std::unique_ptr<uint8_t[]> der_sig_buf;
@@ -427,13 +432,16 @@ bool HybridEcKeyPair::verify(const std::shared_ptr<ArrayBuffer>& data, const std
   if (n == 0) {
     throw std::runtime_error("Failed to determine EC key order size for DER conversion");
   }
-  size_t der_len = 0;
-  der_sig_buf = convertSignatureToDER(sig_data, sig_len, n, &der_len);
-  if (!der_sig_buf) {
-    throw std::runtime_error("Failed to convert ECDSA signature from P1363 to DER format");
+
+  if (sig_len == 2 * n) {
+    size_t der_len = 0;
+    der_sig_buf = convertSignatureToDER(sig_data, sig_len, n, &der_len);
+    if (!der_sig_buf) {
+      throw std::runtime_error("Failed to convert ECDSA signature from P1363 to DER format");
+    }
+    sig_data = der_sig_buf.get();
+    sig_len = der_len;
   }
-  sig_data = der_sig_buf.get();
-  sig_len = der_len;
 
   int result = EVP_DigestVerifyFinal(md_ctx.get(), sig_data, sig_len);
 

@@ -9,6 +9,11 @@ namespace margelo::nitro::crypto {
 void GCMCipher::init(const std::shared_ptr<ArrayBuffer> cipher_key, const std::shared_ptr<ArrayBuffer> iv) {
   // Resetting the unique_ptr frees any previous context.
   ctx.reset();
+  is_finalized = false;
+  has_update_called = false;
+  has_aad = false;
+  pending_auth_failed = false;
+  auth_tag_state = kAuthTagUnknown;
 
   // 1. Get cipher implementation by name
   const EVP_CIPHER* cipher = EVP_get_cipherbyname(cipher_type.c_str());

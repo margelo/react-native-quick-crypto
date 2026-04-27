@@ -9,7 +9,11 @@
     "jsx": "react-native",
     "lib": ["esnext"],
     "module": "esnext",
-    "moduleResolution": "node",
+    // `node` (alias for `node10`) is deprecated and removed in TS 7.0; CI
+    // (TS 5.9+) treats it as a hard TS5107 error. `bundler` matches the
+    // shared `config/tsconfig.json` and is the recommended setting for a
+    // Metro/Bun-bundled package.
+    "moduleResolution": "bundler",
     "noEmit": false,
     "noFallthroughCasesInSwitch": true,
     "noImplicitReturns": true,
