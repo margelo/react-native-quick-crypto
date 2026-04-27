@@ -65,6 +65,85 @@ export function getCipherInfo(
   return CipherUtils.getCipherInfo(name, options?.keyLength, options?.ivLength);
 }
 
+// libsodium ciphers aren't visible to OpenSSL's EVP_CIPHER_fetch, so
+// getCipherInfo() returns undefined for them. Hard-code the (key, iv)
+// byte-lengths the C++ factory will accept.
+const LIBSODIUM_CIPHER_PARAMS: Readonly<
+  Record<string, { keyLength: number; ivLength: number }>
+> = {
+  xsalsa20: { keyLength: 32, ivLength: 24 },
+  'xsalsa20-poly1305': { keyLength: 32, ivLength: 24 },
+  'xchacha20-poly1305': { keyLength: 32, ivLength: 24 },
+};
+
+function validateCipherParams(
+  cipherType: string,
+  keyByteLength: number,
+  ivByteLength: number,
+): void {
+  if (typeof cipherType !== 'string' || cipherType.length === 0) {
+    throw new TypeError('cipher algorithm must be a non-empty string');
+  }
+  if (!Number.isFinite(keyByteLength) || keyByteLength === 0) {
+    throw new RangeError(`Invalid key length 0 for cipher ${cipherType}`);
+  }
+
+  const lower = cipherType.toLowerCase();
+  const sodium = LIBSODIUM_CIPHER_PARAMS[lower];
+  if (sodium) {
+    if (keyByteLength !== sodium.keyLength) {
+      throw new RangeError(
+        `Invalid key length ${keyByteLength} for cipher ${cipherType} ` +
+          `(expected ${sodium.keyLength})`,
+      );
+    }
+    if (ivByteLength !== sodium.ivLength) {
+      throw new RangeError(
+        `Invalid iv length ${ivByteLength} for cipher ${cipherType} ` +
+          `(expected ${sodium.ivLength})`,
+      );
+    }
+    return;
+  }
+
+  // OpenSSL path: getCipherInfo(name, keyLen, ivLen) returns undefined when
+  // the requested lengths are not accepted by the cipher. We split the call
+  // into three checks so the thrown error can name which parameter is wrong.
+  const info = CipherUtils.getCipherInfo(cipherType);
+  if (info === undefined) {
+    throw new TypeError(`Unsupported or unknown cipher type: ${cipherType}`);
+  }
+  if (
+    CipherUtils.getCipherInfo(cipherType, keyByteLength, undefined) ===
+    undefined
+  ) {
+    throw new RangeError(
+      `Invalid key length ${keyByteLength} for cipher ${cipherType}`,
+    );
+  }
+
+  const expectedIv = info.ivLength ?? 0;
+  if (expectedIv > 0) {
+    if (ivByteLength === 0) {
+      throw new RangeError(
+        `Cipher ${cipherType} requires an iv but none was provided`,
+      );
+    }
+    if (
+      CipherUtils.getCipherInfo(cipherType, undefined, ivByteLength) ===
+      undefined
+    ) {
+      throw new RangeError(
+        `Invalid iv length ${ivByteLength} for cipher ${cipherType}`,
+      );
+    }
+  } else if (ivByteLength > 0) {
+    throw new RangeError(
+      `Cipher ${cipherType} does not use an iv (got ${ivByteLength} bytes)`,
+    );
+  }
+}
+
 interface CipherArgs {
   isCipher: boolean;
   cipherType: string;
@@ -114,13 +193,17 @@ class CipherCommon extends Stream.Transform {
         'authTagLength',
       ) ?? 16;
 
+    const cipherKeyAB = binaryLikeToArrayBuffer(cipherKey);
+    const ivAB = binaryLikeToArrayBuffer(iv);
+    validateCipherParams(cipherType, cipherKeyAB.byteLength, ivAB.byteLength);
+
     const factory =
       NitroModules.createHybridObject<CipherFactory>('CipherFactory');
     this.native = factory.createCipher({
       isCipher,
       cipherType,
-      cipherKey: binaryLikeToArrayBuffer(cipherKey),
-      iv: binaryLikeToArrayBuffer(iv),
+      cipherKey: cipherKeyAB,
+      iv: ivAB,
       authTagLen,
     });
   }
@@ -369,13 +452,17 @@ export function xsalsa20(
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
   counter?: number,
 ): Uint8Array {
+  const cipherKeyAB = binaryLikeToArrayBuffer(key);
+  const ivAB = binaryLikeToArrayBuffer(nonce);
+  validateCipherParams('xsalsa20', cipherKeyAB.byteLength, ivAB.byteLength);
+
   const factory =
     NitroModules.createHybridObject<CipherFactory>('CipherFactory');
   const native = factory.createCipher({
     isCipher: true,
     cipherType: 'xsalsa20',
-    cipherKey: binaryLikeToArrayBuffer(key),
-    iv: binaryLikeToArrayBuffer(nonce),
+    cipherKey: cipherKeyAB,
+    iv: ivAB,
   });
   const result = native.update(binaryLikeToArrayBuffer(data));
   return new Uint8Array(result);

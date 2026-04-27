@@ -537,3 +537,88 @@ test(
     }).to.not.throw();
   },
 );
+
+// --- TS-layer cipher param validation regression (Phase 3.1) ---
+//
+// Pre-fix, wrong key / iv lengths reached C++ before being rejected, producing
+// confusing OpenSSL error strings. The TS layer now pre-validates against
+// getCipherInfo() (or a small libsodium table) and throws a clear
+// `RangeError: Invalid {key,iv} length …` before the native call.
+
+test(SUITE, 'createCipheriv: rejects empty algorithm', () => {
+  expect(() => {
+    createCipheriv('', key32, iv16);
+  }).to.throw(TypeError, /non-empty string/);
+});
+
+test(SUITE, 'createCipheriv: rejects unknown algorithm', () => {
+  expect(() => {
+    createCipheriv('aes-128-boorad', key16, iv16);
+  }).to.throw(TypeError, /Unsupported or unknown cipher/);
+});
+
+test(SUITE, 'createCipheriv: rejects too-short key for aes-256-cbc', () => {
+  // Pass a 128-bit key to a 256-bit cipher.
+  expect(() => {
+    createCipheriv('aes-256-cbc', key16, iv16);
+  }).to.throw(RangeError, /Invalid key length 16/);
+});
+
+test(SUITE, 'createCipheriv: rejects too-long key for aes-128-cbc', () => {
+  // Pass a 256-bit key to a 128-bit cipher.
+  expect(() => {
+    createCipheriv('aes-128-cbc', key32, iv16);
+  }).to.throw(RangeError, /Invalid key length 32/);
+});
+
+test(SUITE, 'createCipheriv: rejects empty key', () => {
+  expect(() => {
+    createCipheriv('aes-128-cbc', Buffer.alloc(0), iv16);
+  }).to.throw(RangeError, /key length 0/);
+});
+
+test(SUITE, 'createCipheriv: rejects wrong iv length for aes-128-cbc', () => {
+  // CBC requires a 16-byte IV. 12 bytes (a GCM-style IV) must be rejected.
+  expect(() => {
+    createCipheriv('aes-128-cbc', key16, iv12);
+  }).to.throw(RangeError, /Invalid iv length 12/);
+});
+
+test(SUITE, 'createCipheriv: rejects wrong iv length for aes-128-ccm', () => {
+  // CCM accepts 7..13 byte IVs. 16 bytes must be rejected.
+  expect(() => {
+    createCipheriv('aes-128-ccm', key16, iv16, { authTagLength: 16 });
+  }).to.throw(RangeError, /Invalid iv length 16/);
+});
+
+test(
+  SUITE,
+  'createCipheriv: accepts variable iv length for aes-256-gcm',
+  () => {
+    // GCM accepts a wide range of IV lengths.
+    expect(() => {
+      createCipheriv('aes-256-gcm', key32, iv16);
+    }).to.not.throw();
+    expect(() => {
+      createCipheriv('aes-256-gcm', key32, iv12);
+    }).to.not.throw();
+  },
+);
+
+test(SUITE, 'createDecipheriv: rejects too-long key for aes-128-cbc', () => {
+  expect(() => {
+    createDecipheriv('aes-128-cbc', key32, iv16);
+  }).to.throw(RangeError, /Invalid key length 32/);
+});
+
+test(SUITE, 'createCipheriv: rejects wrong xsalsa20 key length', () => {
+  expect(() => {
+    createCipheriv('xsalsa20', key16, randomFillSync(new Uint8Array(24)));
+  }).to.throw(RangeError, /Invalid key length 16 .* xsalsa20/);
+});
+
+test(SUITE, 'createCipheriv: rejects wrong xsalsa20 nonce length', () => {
+  expect(() => {
+    createCipheriv('xsalsa20', key32, iv16);
+  }).to.throw(RangeError, /Invalid iv length 16 .* xsalsa20/);
+});
