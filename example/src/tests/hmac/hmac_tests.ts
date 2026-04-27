@@ -518,3 +518,35 @@ test(SUITE, 'digest with ucs2 encoding', () => {
     crypto.createHmac('sha256', 'w00t').digest().toString('ucs2'),
   );
 });
+
+// Phase 3.6 regression: stream _transform / _flush errors must flow
+// through the callback so they emit as 'error' events rather than
+// throwing through the Transform plumbing.
+
+test(SUITE, 'Hmac._transform: surfaces update() error via callback', () => {
+  const h = createHmac('sha256', 'k');
+  h.digest(); // post-digest state — next update() throws
+
+  let received: Error | null | undefined = undefined;
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  (h as any)._transform(
+    Buffer.from('after digest'),
+    'utf8',
+    (err: Error | null) => {
+      received = err;
+    },
+  );
+  expect(received).to.be.instanceOf(Error);
+});
+
+test(SUITE, 'Hmac._flush: surfaces digest() error via callback', () => {
+  const h = createHmac('sha256', 'k');
+  h.digest();
+
+  let received: Error | null | undefined = undefined;
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  (h as any)._flush((err: Error | null) => {
+    received = err;
+  });
+  expect(received).to.be.instanceOf(Error);
+});

@@ -264,18 +264,31 @@ class CipherCommon extends Stream.Transform {
     return Buffer.from(ret);
   }
 
+  // Stream interface — surface synchronous errors (bad encoding,
+  // OpenSSL EVP failures, AEAD tag mismatch in `final()`, etc.) via
+  // the callback so they emit as stream 'error' events instead of
+  // throwing out of the Transform plumbing and crashing the host
+  // pipeline.
   _transform(
     chunk: BinaryLike,
     encoding: BufferEncoding,
-    callback: () => void,
+    callback: (err?: Error | null) => void,
   ) {
-    this.push(this.update(chunk, normalizeEncoding(encoding)));
-    callback();
+    try {
+      this.push(this.update(chunk, normalizeEncoding(encoding)));
+      callback();
+    } catch (err) {
+      callback(err as Error);
+    }
   }
 
-  _flush(callback: () => void) {
-    this.push(this.final());
-    callback();
+  _flush(callback: (err?: Error | null) => void) {
+    try {
+      this.push(this.final());
+      callback();
+    } catch (err) {
+      callback(err as Error);
+    }
   }
 
   public setAutoPadding(autoPadding?: boolean): this {

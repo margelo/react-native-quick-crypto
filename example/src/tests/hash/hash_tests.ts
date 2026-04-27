@@ -321,3 +321,37 @@ test(SUITE, 'hash() oneshot - Buffer input', () => {
   const expected = createHash('sha256').update(data).digest('hex');
   expect(result).to.equal(expected);
 });
+
+// Phase 3.6 regression: synchronous failures inside `_transform` and
+// `_flush` must surface via the stream callback (i.e. become 'error'
+// events) rather than throwing out of the Transform plumbing — which
+// can leave the stream in a half-written state and crash the host
+// pipeline.
+
+test(SUITE, 'Hash._transform: surfaces update() error via callback', () => {
+  const h = createHash('sha256');
+  h.digest(); // put the native context in finalized state — next update() throws
+
+  let received: Error | null | undefined = undefined;
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  (h as any)._transform(
+    Buffer.from('after digest'),
+    'utf8',
+    (err: Error | null) => {
+      received = err;
+    },
+  );
+  expect(received).to.be.instanceOf(Error);
+});
+
+test(SUITE, 'Hash._flush: surfaces digest() error via callback', () => {
+  const h = createHash('sha256');
+  h.digest(); // first digest — second call throws
+
+  let received: Error | null | undefined = undefined;
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  (h as any)._flush((err: Error | null) => {
+    received = err;
+  });
+  expect(received).to.be.instanceOf(Error);
+});

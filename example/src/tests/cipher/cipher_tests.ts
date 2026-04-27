@@ -622,3 +622,55 @@ test(SUITE, 'createCipheriv: rejects wrong xsalsa20 nonce length', () => {
     createCipheriv('xsalsa20', key32, iv16);
   }).to.throw(RangeError, /Invalid iv length 16 .* xsalsa20/);
 });
+
+// Phase 3.6 regression: stream _transform / _flush errors (e.g. AEAD
+// auth-tag mismatch on Decipher.final()) must flow through the
+// callback so they emit as 'error' events on the stream.
+
+test(SUITE, 'Decipher._flush: surfaces auth-tag mismatch via callback', () => {
+  // Encrypt to obtain a valid (key, iv, tag) triple, then tamper with the
+  // auth tag so Decipher.final() rejects authentication.
+  const testKey = Buffer.from(randomFillSync(new Uint8Array(32)));
+  const testIv = randomFillSync(new Uint8Array(12));
+  const cipher = createCipheriv('aes-256-gcm', testKey, Buffer.from(testIv));
+  cipher.setAAD(aad);
+  const encrypted = Buffer.concat([
+    cipher.update(plaintextBuffer),
+    cipher.final(),
+  ]);
+  const tag = cipher.getAuthTag();
+  tag[0] = tag[0]! ^ 0xff;
+
+  const decipher = createDecipheriv(
+    'aes-256-gcm',
+    testKey,
+    Buffer.from(testIv),
+  );
+  decipher.setAAD(aad);
+  decipher.setAuthTag(tag);
+  decipher.update(encrypted);
+
+  let received: Error | null | undefined = undefined;
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  (decipher as any)._flush((err: Error | null) => {
+    received = err;
+  });
+  expect(received).to.be.instanceOf(Error);
+});
+
+test(SUITE, 'Cipher._transform: surfaces update() error via callback', () => {
+  const cipher = createCipheriv('aes-128-cbc', key16, iv16);
+  cipher.update(plaintextBuffer);
+  cipher.final(); // post-final — next update() throws
+
+  let received: Error | null | undefined = undefined;
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  (cipher as any)._transform(
+    Buffer.from('after final'),
+    'utf8',
+    (err: Error | null) => {
+      received = err;
+    },
+  );
+  expect(received).to.be.instanceOf(Error);
+});
