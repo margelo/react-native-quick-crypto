@@ -7,7 +7,7 @@ buildscript {
   }
 
   dependencies {
-    classpath "com.android.tools.build:gradle:8.7.3"
+    classpath "com.android.tools.build:gradle:8.12.2"
     classpath "org.jetbrains.kotlin:kotlin-gradle-plugin:${kotlinVersion}"
   }
 }
@@ -113,6 +113,10 @@ packagingOptions {
 
   lintOptions {
     disable "GradleCompatible"
+    // AGP version is constrained by RN 0.81 + Gradle 8.14.3 + JDK 17.
+    // AGP 9.x requires Gradle 9 and JDK 21 — not viable until RN bumps its toolchain.
+    disable "AndroidGradlePluginVersion"
+    disable "GradleDependency"
   }
 
   compileOptions {
