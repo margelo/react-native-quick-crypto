@@ -3,8 +3,11 @@
 #include <algorithm>
 #include <cctype>
 #include <cmath>
+#include <cstddef>
+#include <cstdint>
 #include <limits>
 #include <openssl/bn.h>
+#include <openssl/crypto.h>
 #include <openssl/err.h>
 #include <openssl/evp.h>
 #include <string>
@@ -101,6 +104,40 @@ T validateUInt(double value, const char* paramName, T minValue = 0, T maxValue =
                              "], got " + std::to_string(value));
   }
   return static_cast<T>(value);
+}
+
+// Securely zero a memory range using OPENSSL_cleanse, which the compiler is
+// guaranteed not to optimize away even when the buffer is about to leave
+// scope. Use this for any memory that held secrets — keys, derived bits,
+// shared secrets, plaintext, PEM/DER private-key strings, IV/nonce material.
+//
+// Plain std::memset is unsafe for this purpose: under -O2 the compiler will
+// see that the memset writes are dead (the memory is freed or going out of
+// scope right after) and elide them, leaving the secret on the heap.
+//
+// Overloads cover the common shapes: raw pointer + size, vector, string,
+// fixed-size array. The audit found ~30 sites that need this — XSalsa20,
+// XChaCha20-Poly1305, all KDFs, DH/ECDH shared secrets, RSA/EC/Ed/DSA DER
+// private-key strings — and they get swept in Phase 2.
+inline void secureZero(void* ptr, std::size_t size) {
+  if (ptr != nullptr && size > 0) {
+    OPENSSL_cleanse(ptr, size);
+  }
+}
+
+inline void secureZero(std::vector<uint8_t>& vec) {
+  secureZero(vec.data(), vec.size());
+}
+
+inline void secureZero(std::string& s) {
+  if (!s.empty()) {
+    secureZero(s.data(), s.size());
+  }
+}
+
+template <std::size_t N>
+inline void secureZero(uint8_t (&arr)[N]) {
+  secureZero(static_cast<void*>(arr), N);
 }
 
 // Function to convert a string to lowercase
