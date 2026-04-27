@@ -86,35 +86,13 @@ static bool isOneShotVariant(EVP_PKEY* pkey) {
 #endif
 }
 
-// Get the algorithm name for creating PKEY_CTX (for ML-DSA variants)
-static const char* getAlgorithmName(EVP_PKEY* pkey) {
-  int type = EVP_PKEY_id(pkey);
-#if RNQC_HAS_ML_DSA
-  switch (type) {
-    case EVP_PKEY_ML_DSA_44:
-      return "ML-DSA-44";
-    case EVP_PKEY_ML_DSA_65:
-      return "ML-DSA-65";
-    case EVP_PKEY_ML_DSA_87:
-      return "ML-DSA-87";
-    case EVP_PKEY_ED25519:
-      return "ED25519";
-    case EVP_PKEY_ED448:
-      return "ED448";
-    default:
-      return nullptr;
-  }
-#else
-  switch (type) {
-    case EVP_PKEY_ED25519:
-      return "ED25519";
-    case EVP_PKEY_ED448:
-      return "ED448";
-    default:
-      return nullptr;
-  }
-#endif
-}
+// RAII owners for short-lived OpenSSL handles used in this method. EVP_MD_CTX
+// transitively owns its EVP_PKEY_CTX after a successful EVP_DigestVerifyInit,
+// so we deliberately rely on EVP_MD_CTX_free to clean both up; the standalone
+// EvpPkeyCtxPtr alias is kept only for the RSA/ECDSA branch, where we
+// allocate the PKEY_CTX directly via EVP_PKEY_CTX_new.
+using EvpMdCtxPtr = std::unique_ptr<EVP_MD_CTX, decltype(&EVP_MD_CTX_free)>;
+using EvpPkeyCtxPtr = std::unique_ptr<EVP_PKEY_CTX, decltype(&EVP_PKEY_CTX_free)>;
 
 bool HybridVerifyHandle::verify(const std::shared_ptr<HybridKeyObjectHandleSpec>& keyHandle, const std::shared_ptr<ArrayBuffer>& signature,
                                 std::optional<double> padding, std::optional<double> saltLength, std::optional<double> dsaEncoding) {
@@ -136,32 +114,23 @@ bool HybridVerifyHandle::verify(const std::shared_ptr<HybridKeyObjectHandleSpec>
   // Ed25519/Ed448/ML-DSA require one-shot verification with EVP_DigestVerify
   // Also use one-shot path if no digest was specified (md == nullptr)
   if (isOneShotVariant(pkey) || md == nullptr) {
-    EVP_MD_CTX* verify_ctx = EVP_MD_CTX_new();
+    EvpMdCtxPtr verify_ctx{EVP_MD_CTX_new(), EVP_MD_CTX_free};
     if (!verify_ctx) {
       throw std::runtime_error("Failed to create verification context");
     }
 
-    // Get algorithm name and create PKEY_CTX for ML-DSA
-    const char* alg_name = getAlgorithmName(pkey);
-    EVP_PKEY_CTX* pkey_ctx = nullptr;
-    if (alg_name != nullptr) {
-      pkey_ctx = EVP_PKEY_CTX_new_from_name(nullptr, alg_name, nullptr);
-      if (!pkey_ctx) {
-        EVP_MD_CTX_free(verify_ctx);
-        throw std::runtime_error(std::string("Failed to create verification context for ") + alg_name);
-      }
-    }
-
-    // Initialize for one-shot verification (pass nullptr for md - these algorithms have built-in hash)
-    if (EVP_DigestVerifyInit(verify_ctx, pkey_ctx ? &pkey_ctx : nullptr, nullptr, nullptr, pkey) <= 0) {
-      EVP_MD_CTX_free(verify_ctx);
-      if (pkey_ctx)
-        EVP_PKEY_CTX_free(pkey_ctx);
+    // Let OpenSSL allocate the PKEY_CTX from the key's keymgmt. On success the
+    // EVP_MD_CTX assumes ownership and EVP_MD_CTX_free will dispose it; on
+    // failure pkey_ctx_raw stays nullptr, so there is nothing to leak. This
+    // mirrors ncrypto's EVPMDCtxPointer::verifyInit (Node.js deps/ncrypto/ncrypto.cc
+    // and ~/dev/ncrypto/src/ncrypto.cpp), which works for RSA, ECDSA, Ed25519,
+    // Ed448 and ML-DSA without any algorithm-name pre-creation.
+    EVP_PKEY_CTX* pkey_ctx_raw = nullptr;
+    if (EVP_DigestVerifyInit(verify_ctx.get(), &pkey_ctx_raw, nullptr, nullptr, pkey) <= 0) {
       throw std::runtime_error("Failed to initialize one-shot verification");
     }
 
-    int result = EVP_DigestVerify(verify_ctx, sig_data, sig_len, data_buffer.data(), data_buffer.size());
-    EVP_MD_CTX_free(verify_ctx);
+    int result = EVP_DigestVerify(verify_ctx.get(), sig_data, sig_len, data_buffer.data(), data_buffer.size());
     return result == 1;
   }
 
@@ -187,40 +156,34 @@ bool HybridVerifyHandle::verify(const std::shared_ptr<HybridKeyObjectHandleSpec>
     }
   }
 
-  EVP_PKEY_CTX* pkey_ctx = EVP_PKEY_CTX_new(pkey, nullptr);
+  EvpPkeyCtxPtr pkey_ctx{EVP_PKEY_CTX_new(pkey, nullptr), EVP_PKEY_CTX_free};
   if (!pkey_ctx) {
     throw std::runtime_error("Failed to create verification context");
   }
 
-  if (EVP_PKEY_verify_init(pkey_ctx) <= 0) {
-    EVP_PKEY_CTX_free(pkey_ctx);
+  if (EVP_PKEY_verify_init(pkey_ctx.get()) <= 0) {
     throw std::runtime_error("Failed to initialize verification");
   }
 
   if (padding.has_value()) {
     int pad = static_cast<int>(padding.value());
-    if (EVP_PKEY_CTX_set_rsa_padding(pkey_ctx, pad) <= 0) {
-      EVP_PKEY_CTX_free(pkey_ctx);
+    if (EVP_PKEY_CTX_set_rsa_padding(pkey_ctx.get(), pad) <= 0) {
       throw std::runtime_error("Failed to set RSA padding");
     }
   }
 
   if (saltLength.has_value() && padding.has_value() && static_cast<int>(padding.value()) == RSA_PKCS1_PSS_PADDING) {
     int salt_len = static_cast<int>(saltLength.value());
-    if (EVP_PKEY_CTX_set_rsa_pss_saltlen(pkey_ctx, salt_len) <= 0) {
-      EVP_PKEY_CTX_free(pkey_ctx);
+    if (EVP_PKEY_CTX_set_rsa_pss_saltlen(pkey_ctx.get(), salt_len) <= 0) {
       throw std::runtime_error("Failed to set PSS salt length");
     }
   }
 
-  if (EVP_PKEY_CTX_set_signature_md(pkey_ctx, md) <= 0) {
-    EVP_PKEY_CTX_free(pkey_ctx);
+  if (EVP_PKEY_CTX_set_signature_md(pkey_ctx.get(), md) <= 0) {
     throw std::runtime_error("Failed to set signature digest");
   }
 
-  int result = EVP_PKEY_verify(pkey_ctx, sig_data, sig_len, digest, digest_len);
-  EVP_PKEY_CTX_free(pkey_ctx);
-
+  int result = EVP_PKEY_verify(pkey_ctx.get(), sig_data, sig_len, digest, digest_len);
   return result == 1;
 }
 

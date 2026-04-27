@@ -15,6 +15,9 @@
 
 namespace margelo::nitro::crypto {
 
+using EVP_MD_CTX_ptr = std::unique_ptr<EVP_MD_CTX, decltype(&EVP_MD_CTX_free)>;
+using EVP_PKEY_CTX_ptr = std::unique_ptr<EVP_PKEY_CTX, decltype(&EVP_PKEY_CTX_free)>;
+
 int HybridMlDsaKeyPair::getEvpPkeyType() const {
 #if RNQC_HAS_ML_DSA
   if (variant_ == "ML-DSA-44")
@@ -39,8 +42,9 @@ void HybridMlDsaKeyPair::setVariant(const std::string& variant) {
 
 std::shared_ptr<Promise<void>> HybridMlDsaKeyPair::generateKeyPair(double publicFormat, double publicType, double privateFormat,
                                                                    double privateType) {
-  return Promise<void>::async([this, publicFormat, publicType, privateFormat, privateType]() {
-    this->generateKeyPairSync(publicFormat, publicType, privateFormat, privateType);
+  auto self = this->shared_cast<HybridMlDsaKeyPair>();
+  return Promise<void>::async([self, publicFormat, publicType, privateFormat, privateType]() {
+    self->generateKeyPairSync(publicFormat, publicType, privateFormat, privateType);
   });
 }
 
@@ -61,24 +65,20 @@ void HybridMlDsaKeyPair::generateKeyPairSync(double publicFormat, double publicT
 
   pkey_.reset();
 
-  EVP_PKEY_CTX* pctx = EVP_PKEY_CTX_new_from_name(nullptr, variant_.c_str(), nullptr);
+  EVP_PKEY_CTX_ptr pctx(EVP_PKEY_CTX_new_from_name(nullptr, variant_.c_str(), nullptr), EVP_PKEY_CTX_free);
   if (pctx == nullptr) {
     throw std::runtime_error("Failed to create key context for " + variant_ + ": " + getOpenSSLError());
   }
 
-  if (EVP_PKEY_keygen_init(pctx) <= 0) {
-    EVP_PKEY_CTX_free(pctx);
+  if (EVP_PKEY_keygen_init(pctx.get()) <= 0) {
     throw std::runtime_error("Failed to initialize keygen: " + getOpenSSLError());
   }
 
   EVP_PKEY* raw = nullptr;
-  if (EVP_PKEY_keygen(pctx, &raw) <= 0) {
-    EVP_PKEY_CTX_free(pctx);
+  if (EVP_PKEY_keygen(pctx.get(), &raw) <= 0) {
     throw std::runtime_error("Failed to generate ML-DSA key pair: " + getOpenSSLError());
   }
   pkey_.reset(raw);
-
-  EVP_PKEY_CTX_free(pctx);
 #endif
 }
 
@@ -108,13 +108,14 @@ std::shared_ptr<ArrayBuffer> HybridMlDsaKeyPair::getPublicKey() {
   BUF_MEM* bptr;
   BIO_get_mem_ptr(bio, &bptr);
 
-  uint8_t* data = new uint8_t[bptr->length];
-  memcpy(data, bptr->data, bptr->length);
   size_t len = bptr->length;
+  auto buf = std::make_unique<uint8_t[]>(len);
+  memcpy(buf.get(), bptr->data, len);
 
   BIO_free(bio);
 
-  return std::make_shared<NativeArrayBuffer>(data, len, [=]() { delete[] data; });
+  uint8_t* raw_ptr = buf.get();
+  return std::make_shared<NativeArrayBuffer>(buf.release(), len, [raw_ptr]() { delete[] raw_ptr; });
 #endif
 }
 
@@ -144,19 +145,23 @@ std::shared_ptr<ArrayBuffer> HybridMlDsaKeyPair::getPrivateKey() {
   BUF_MEM* bptr;
   BIO_get_mem_ptr(bio, &bptr);
 
-  uint8_t* data = new uint8_t[bptr->length];
-  memcpy(data, bptr->data, bptr->length);
   size_t len = bptr->length;
+  auto buf = std::make_unique<uint8_t[]>(len);
+  memcpy(buf.get(), bptr->data, len);
 
+  // Wipe the private key bytes from the BIO before freeing.
+  secureZero(bptr->data, bptr->length);
   BIO_free(bio);
 
-  return std::make_shared<NativeArrayBuffer>(data, len, [=]() { delete[] data; });
+  uint8_t* raw_ptr = buf.get();
+  return std::make_shared<NativeArrayBuffer>(buf.release(), len, [raw_ptr]() { delete[] raw_ptr; });
 #endif
 }
 
 std::shared_ptr<Promise<std::shared_ptr<ArrayBuffer>>> HybridMlDsaKeyPair::sign(const std::shared_ptr<ArrayBuffer>& message) {
   auto nativeMessage = ToNativeArrayBuffer(message);
-  return Promise<std::shared_ptr<ArrayBuffer>>::async([this, nativeMessage]() { return this->signSync(nativeMessage); });
+  auto self = this->shared_cast<HybridMlDsaKeyPair>();
+  return Promise<std::shared_ptr<ArrayBuffer>>::async([self, nativeMessage]() { return self->signSync(nativeMessage); });
 }
 
 std::shared_ptr<ArrayBuffer> HybridMlDsaKeyPair::signSync(const std::shared_ptr<ArrayBuffer>& message) {
@@ -166,40 +171,30 @@ std::shared_ptr<ArrayBuffer> HybridMlDsaKeyPair::signSync(const std::shared_ptr<
   clearOpenSSLErrors();
   checkKeyPair();
 
-  EVP_MD_CTX* md_ctx = EVP_MD_CTX_new();
+  EVP_MD_CTX_ptr md_ctx(EVP_MD_CTX_new(), EVP_MD_CTX_free);
   if (md_ctx == nullptr) {
     throw std::runtime_error("Failed to create signing context");
   }
 
-  EVP_PKEY_CTX* pkey_ctx = EVP_PKEY_CTX_new_from_name(nullptr, variant_.c_str(), nullptr);
-  if (pkey_ctx == nullptr) {
-    EVP_MD_CTX_free(md_ctx);
-    throw std::runtime_error("Failed to create signing context for " + variant_);
-  }
-
-  if (EVP_DigestSignInit(md_ctx, &pkey_ctx, nullptr, nullptr, pkey_.get()) <= 0) {
-    EVP_MD_CTX_free(md_ctx);
-    EVP_PKEY_CTX_free(pkey_ctx);
+  // Pass nullptr — EVP_DigestSignInit allocates the matching PKEY_CTX from
+  // pkey_ and the EVP_MD_CTX takes ownership of it.
+  if (EVP_DigestSignInit(md_ctx.get(), nullptr, nullptr, nullptr, pkey_.get()) <= 0) {
     throw std::runtime_error("Failed to initialize signing: " + getOpenSSLError());
   }
 
   size_t sig_len = 0;
-  if (EVP_DigestSign(md_ctx, nullptr, &sig_len, message->data(), message->size()) <= 0) {
-    EVP_MD_CTX_free(md_ctx);
+  if (EVP_DigestSign(md_ctx.get(), nullptr, &sig_len, message->data(), message->size()) <= 0) {
     throw std::runtime_error("Failed to calculate signature size: " + getOpenSSLError());
   }
 
-  uint8_t* sig = new uint8_t[sig_len];
+  auto sig = std::make_unique<uint8_t[]>(sig_len);
 
-  if (EVP_DigestSign(md_ctx, sig, &sig_len, message->data(), message->size()) <= 0) {
-    EVP_MD_CTX_free(md_ctx);
-    delete[] sig;
+  if (EVP_DigestSign(md_ctx.get(), sig.get(), &sig_len, message->data(), message->size()) <= 0) {
     throw std::runtime_error("Failed to sign message: " + getOpenSSLError());
   }
 
-  EVP_MD_CTX_free(md_ctx);
-
-  return std::make_shared<NativeArrayBuffer>(sig, sig_len, [=]() { delete[] sig; });
+  uint8_t* raw_ptr = sig.get();
+  return std::make_shared<NativeArrayBuffer>(sig.release(), sig_len, [raw_ptr]() { delete[] raw_ptr; });
 #endif
 }
 
@@ -207,7 +202,8 @@ std::shared_ptr<Promise<bool>> HybridMlDsaKeyPair::verify(const std::shared_ptr<
                                                           const std::shared_ptr<ArrayBuffer>& message) {
   auto nativeSignature = ToNativeArrayBuffer(signature);
   auto nativeMessage = ToNativeArrayBuffer(message);
-  return Promise<bool>::async([this, nativeSignature, nativeMessage]() { return this->verifySync(nativeSignature, nativeMessage); });
+  auto self = this->shared_cast<HybridMlDsaKeyPair>();
+  return Promise<bool>::async([self, nativeSignature, nativeMessage]() { return self->verifySync(nativeSignature, nativeMessage); });
 }
 
 bool HybridMlDsaKeyPair::verifySync(const std::shared_ptr<ArrayBuffer>& signature, const std::shared_ptr<ArrayBuffer>& message) {
@@ -217,26 +213,18 @@ bool HybridMlDsaKeyPair::verifySync(const std::shared_ptr<ArrayBuffer>& signatur
   clearOpenSSLErrors();
   checkKeyPair();
 
-  EVP_MD_CTX* md_ctx = EVP_MD_CTX_new();
+  EVP_MD_CTX_ptr md_ctx(EVP_MD_CTX_new(), EVP_MD_CTX_free);
   if (md_ctx == nullptr) {
     throw std::runtime_error("Failed to create verify context");
   }
 
-  EVP_PKEY_CTX* pkey_ctx = EVP_PKEY_CTX_new_from_name(nullptr, variant_.c_str(), nullptr);
-  if (pkey_ctx == nullptr) {
-    EVP_MD_CTX_free(md_ctx);
-    throw std::runtime_error("Failed to create verify context for " + variant_);
-  }
-
-  if (EVP_DigestVerifyInit(md_ctx, &pkey_ctx, nullptr, nullptr, pkey_.get()) <= 0) {
-    EVP_MD_CTX_free(md_ctx);
-    EVP_PKEY_CTX_free(pkey_ctx);
+  // Pass nullptr — EVP_DigestVerifyInit allocates the matching PKEY_CTX from
+  // pkey_ and the EVP_MD_CTX takes ownership of it.
+  if (EVP_DigestVerifyInit(md_ctx.get(), nullptr, nullptr, nullptr, pkey_.get()) <= 0) {
     throw std::runtime_error("Failed to initialize verification: " + getOpenSSLError());
   }
 
-  int result = EVP_DigestVerify(md_ctx, signature->data(), signature->size(), message->data(), message->size());
-
-  EVP_MD_CTX_free(md_ctx);
+  int result = EVP_DigestVerify(md_ctx.get(), signature->data(), signature->size(), message->data(), message->size());
 
   if (result < 0) {
     throw std::runtime_error("Verification error: " + getOpenSSLError());

@@ -40,10 +40,7 @@ void HybridEcKeyPair::generateKeyPairSync() {
   }
 
   // Clean up existing key if any
-  if (this->pkey != nullptr) {
-    EVP_PKEY_free(this->pkey);
-    this->pkey = nullptr;
-  }
+  this->pkey_.reset();
 
   // Get curve NID from curve name
   int curve_nid = GetCurveFromName(this->curve.c_str());
@@ -105,17 +102,14 @@ void HybridEcKeyPair::generateKeyPairSync() {
     throw std::runtime_error("Failed to generate EC key pair");
   }
 
-  this->pkey = raw_pkey;
+  this->pkey_.reset(raw_pkey);
 }
 
 KeyObject HybridEcKeyPair::importKey(const std::string& format, const std::shared_ptr<ArrayBuffer>& keyData,
                                      const std::string& /* algorithm */, bool /* extractable */,
                                      const std::vector<std::string>& /* keyUsages */) {
   // Clean up any existing key
-  if (this->pkey != nullptr) {
-    EVP_PKEY_free(this->pkey);
-    this->pkey = nullptr;
-  }
+  this->pkey_.reset();
   // Reset curve state to avoid interference between different uses
   this->curve.clear();
 
@@ -143,7 +137,7 @@ KeyObject HybridEcKeyPair::importKey(const std::string& format, const std::share
         PKCS8_PRIV_KEY_INFO_free(p8inf);
         BIO_free(pkcs8_bio);
         if (pkcs8_pkey != nullptr) {
-          this->pkey = pkcs8_pkey;
+          this->pkey_.reset(pkcs8_pkey);
           KeyObject keyObj;
           return keyObj;
         }
@@ -157,7 +151,7 @@ KeyObject HybridEcKeyPair::importKey(const std::string& format, const std::share
       EVP_PKEY* spki_pkey = d2i_PUBKEY_bio(spki_bio, nullptr);
       BIO_free(spki_bio);
       if (spki_pkey != nullptr) {
-        this->pkey = spki_pkey;
+        this->pkey_.reset(spki_pkey);
         KeyObject keyObj;
         return keyObj;
       }
@@ -166,7 +160,7 @@ KeyObject HybridEcKeyPair::importKey(const std::string& format, const std::share
     throw std::runtime_error("Failed to import EC key from DER data");
   }
 
-  this->pkey = pkey;
+  this->pkey_.reset(pkey);
 
   // Return a placeholder KeyObject - this would need proper implementation
   // For now, we just need the key imported into this->pkey for sign/verify
@@ -178,20 +172,20 @@ std::shared_ptr<ArrayBuffer> HybridEcKeyPair::exportKey(const KeyObject& key, co
   // Suppress unused parameter warning
   (void)key;
 
-  if (!this->pkey) {
+  if (!this->pkey_) {
     throw std::runtime_error("No key pair generated");
   }
 
   if (format == "der-spki") {
     // Export public key in DER SPKI format
-    int len = i2d_PUBKEY(this->pkey, nullptr);
+    int len = i2d_PUBKEY(this->pkey_.get(), nullptr);
     if (len <= 0) {
       throw std::runtime_error("Failed to get public key DER length");
     }
 
     std::vector<unsigned char> derData(len);
     unsigned char* ptr = derData.data();
-    i2d_PUBKEY(this->pkey, &ptr);
+    i2d_PUBKEY(this->pkey_.get(), &ptr);
     return ToNativeArrayBuffer(std::string(derData.begin(), derData.end()));
   } else if (format == "der-pkcs8") {
     // Export private key in DER PKCS8 format
@@ -200,7 +194,7 @@ std::shared_ptr<ArrayBuffer> HybridEcKeyPair::exportKey(const KeyObject& key, co
       throw std::runtime_error("Failed to create BIO for private key export");
     }
 
-    if (i2d_PKCS8PrivateKey_bio(bio, this->pkey, nullptr, nullptr, 0, nullptr, nullptr) != 1) {
+    if (i2d_PKCS8PrivateKey_bio(bio, this->pkey_.get(), nullptr, nullptr, 0, nullptr, nullptr) != 1) {
       BIO_free(bio);
       throw std::runtime_error("Failed to export private key to DER PKCS8 format");
     }
@@ -218,7 +212,7 @@ std::shared_ptr<ArrayBuffer> HybridEcKeyPair::exportKey(const KeyObject& key, co
       throw std::runtime_error("Failed to create BIO for public key export");
     }
 
-    if (PEM_write_bio_PUBKEY(bio, this->pkey) != 1) {
+    if (PEM_write_bio_PUBKEY(bio, this->pkey_.get()) != 1) {
       BIO_free(bio);
       throw std::runtime_error("Failed to export public key to PEM SPKI format");
     }
@@ -236,7 +230,7 @@ std::shared_ptr<ArrayBuffer> HybridEcKeyPair::exportKey(const KeyObject& key, co
       throw std::runtime_error("Failed to create BIO for private key export");
     }
 
-    if (PEM_write_bio_PKCS8PrivateKey(bio, this->pkey, nullptr, nullptr, 0, nullptr, nullptr) != 1) {
+    if (PEM_write_bio_PKCS8PrivateKey(bio, this->pkey_.get(), nullptr, nullptr, 0, nullptr, nullptr) != 1) {
       BIO_free(bio);
       throw std::runtime_error("Failed to export private key to PEM PKCS8 format");
     }
@@ -261,7 +255,7 @@ std::shared_ptr<ArrayBuffer> HybridEcKeyPair::getPublicKey() {
     throw std::runtime_error("Failed to create BIO for public key export");
   }
 
-  if (i2d_PUBKEY_bio(bio, this->pkey) != 1) {
+  if (i2d_PUBKEY_bio(bio, this->pkey_.get()) != 1) {
     BIO_free(bio);
     throw std::runtime_error("Failed to export public key to DER format");
   }
@@ -277,13 +271,13 @@ std::shared_ptr<ArrayBuffer> HybridEcKeyPair::getPublicKey() {
 }
 
 std::shared_ptr<ArrayBuffer> HybridEcKeyPair::getPrivateKey() {
-  if (this->pkey == nullptr) {
+  if (!this->pkey_) {
     throw std::runtime_error("No private key available");
   }
 
   // Export private key in PKCS8 DER format
   BIO* bio = BIO_new(BIO_s_mem());
-  if (i2d_PKCS8PrivateKey_bio(bio, this->pkey, nullptr, nullptr, 0, nullptr, nullptr) != 1) {
+  if (i2d_PKCS8PrivateKey_bio(bio, this->pkey_.get(), nullptr, nullptr, 0, nullptr, nullptr) != 1) {
     BIO_free(bio);
     throw std::runtime_error("Failed to export private key");
   }
@@ -350,7 +344,7 @@ std::shared_ptr<ArrayBuffer> HybridEcKeyPair::sign(const std::shared_ptr<ArrayBu
   }
 
   // Initialize signing
-  if (EVP_DigestSignInit(md_ctx.get(), nullptr, md, nullptr, this->pkey) <= 0) {
+  if (EVP_DigestSignInit(md_ctx.get(), nullptr, md, nullptr, this->pkey_.get()) <= 0) {
     throw std::runtime_error("Failed to initialize ECDSA signing");
   }
 
@@ -377,7 +371,7 @@ std::shared_ptr<ArrayBuffer> HybridEcKeyPair::sign(const std::shared_ptr<ArrayBu
   signature.resize(sig_len);
 
   // Web Crypto API requires IEEE P1363 format for ECDSA signatures
-  unsigned int n = getBytesOfRS(this->pkey);
+  unsigned int n = getBytesOfRS(this->pkey_.get());
   if (n == 0) {
     throw std::runtime_error("Failed to determine EC key order size for P1363 conversion");
   }
@@ -415,7 +409,7 @@ bool HybridEcKeyPair::verify(const std::shared_ptr<ArrayBuffer>& data, const std
   }
 
   // Initialize verification
-  if (EVP_DigestVerifyInit(md_ctx.get(), nullptr, md, nullptr, this->pkey) <= 0) {
+  if (EVP_DigestVerifyInit(md_ctx.get(), nullptr, md, nullptr, this->pkey_.get()) <= 0) {
     throw std::runtime_error("Failed to initialize ECDSA verification");
   }
 
@@ -429,7 +423,7 @@ bool HybridEcKeyPair::verify(const std::shared_ptr<ArrayBuffer>& data, const std
   size_t sig_len = signature->size();
   std::unique_ptr<uint8_t[]> der_sig_buf;
 
-  unsigned int n = getBytesOfRS(this->pkey);
+  unsigned int n = getBytesOfRS(this->pkey_.get());
   if (n == 0) {
     throw std::runtime_error("Failed to determine EC key order size for DER conversion");
   }
@@ -451,7 +445,7 @@ bool HybridEcKeyPair::verify(const std::shared_ptr<ArrayBuffer>& data, const std
 }
 
 void HybridEcKeyPair::checkKeyPair() {
-  if (this->pkey == nullptr) {
+  if (!this->pkey_) {
     throw std::runtime_error("EC KeyPair not initialized");
   }
 }

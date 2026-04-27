@@ -101,24 +101,22 @@ std::shared_ptr<ArrayBuffer> HybridHash::digest(const std::optional<std::string>
     throw std::runtime_error("Invalid digest size: " + std::to_string(digestSize));
   }
 
-  // Create a buffer for the hash output
-  uint8_t* hashBuffer = new uint8_t[digestSize];
+  auto hashBuffer = std::make_unique<uint8_t[]>(digestSize);
   size_t hashLength = digestSize;
 
-  // Finalize the digest
   int ret;
   if (digestSize == defaultLen) {
-    ret = EVP_DigestFinal_ex(ctx, hashBuffer, reinterpret_cast<unsigned int*>(&hashLength));
+    ret = EVP_DigestFinal_ex(ctx, hashBuffer.get(), reinterpret_cast<unsigned int*>(&hashLength));
   } else {
-    ret = EVP_DigestFinalXOF(ctx, hashBuffer, hashLength);
+    ret = EVP_DigestFinalXOF(ctx, hashBuffer.get(), hashLength);
   }
 
   if (ret != 1) {
-    delete[] hashBuffer;
     throw std::runtime_error("Failed to finalize hash digest: " + std::to_string(ERR_get_error()));
   }
 
-  return std::make_shared<NativeArrayBuffer>(hashBuffer, hashLength, [=]() { delete[] hashBuffer; });
+  uint8_t* raw_ptr = hashBuffer.get();
+  return std::make_shared<NativeArrayBuffer>(hashBuffer.release(), hashLength, [raw_ptr]() { delete[] raw_ptr; });
 }
 
 std::shared_ptr<margelo::nitro::crypto::HybridHashSpec> HybridHash::copy(const std::optional<double> outputLengthArg) {

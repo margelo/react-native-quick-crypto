@@ -10,17 +10,17 @@ on:
     paths:
       - '.github/workflows/e2e-android-test.yml'
       - 'example/**'
-      - 'cpp/**'
-      - 'nitrogen/**'
-      - 'src/**'
+      - 'packages/react-native-quick-crypto/cpp/**'
+      - 'packages/react-native-quick-crypto/nitrogen/**'
+      - 'packages/react-native-quick-crypto/src/**'
       - 'packages/react-native-quick-crypto/android/**'
   push:
     branches: [main]
     paths:
       - 'example/**'
-      - 'cpp/**'
-      - 'nitrogen/**'
-      - 'src/**'
+      - 'packages/react-native-quick-crypto/cpp/**'
+      - 'packages/react-native-quick-crypto/nitrogen/**'
+      - 'packages/react-native-quick-crypto/src/**'
       - 'packages/react-native-quick-crypto/android/**'
 
 env:

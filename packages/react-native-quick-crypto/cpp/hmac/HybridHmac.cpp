@@ -89,16 +89,14 @@ std::shared_ptr<ArrayBuffer> HybridHmac::digest() {
   const EVP_MD* md = EVP_get_digestbyname(algorithm.c_str());
   const size_t hmacLength = EVP_MD_get_size(md);
 
-  // Allocate buffer with the exact required size
-  uint8_t* hmacBuffer = new uint8_t[hmacLength];
+  auto hmacBuffer = std::make_unique<uint8_t[]>(hmacLength);
 
-  // Finalize the HMAC computation directly into the final buffer
-  if (EVP_MAC_final(ctx, hmacBuffer, nullptr, hmacLength) != 1) {
-    delete[] hmacBuffer;
+  if (EVP_MAC_final(ctx, hmacBuffer.get(), nullptr, hmacLength) != 1) {
     throw std::runtime_error("Failed to finalize HMAC digest: " + std::to_string(ERR_get_error()));
   }
 
-  return std::make_shared<NativeArrayBuffer>(hmacBuffer, hmacLength, [=]() { delete[] hmacBuffer; });
+  uint8_t* raw_ptr = hmacBuffer.get();
+  return std::make_shared<NativeArrayBuffer>(hmacBuffer.release(), hmacLength, [raw_ptr]() { delete[] raw_ptr; });
 }
 
 } // namespace margelo::nitro::crypto

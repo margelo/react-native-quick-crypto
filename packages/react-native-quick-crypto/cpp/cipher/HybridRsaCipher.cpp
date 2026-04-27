@@ -283,8 +283,9 @@ std::shared_ptr<ArrayBuffer> HybridRsaCipher::publicDecrypt(const std::shared_pt
 
   if (outlen == 0) {
     EVP_PKEY_CTX_free(ctx);
-    uint8_t* empty_buf = new uint8_t[1];
-    return std::make_shared<NativeArrayBuffer>(empty_buf, 0, [empty_buf]() { delete[] empty_buf; });
+    auto empty_buf = std::make_unique<uint8_t[]>(1);
+    uint8_t* raw_ptr = empty_buf.get();
+    return std::make_shared<NativeArrayBuffer>(empty_buf.release(), 0, [raw_ptr]() { delete[] raw_ptr; });
   }
 
   auto out_buf = std::make_unique<uint8_t[]>(outlen);
@@ -306,8 +307,9 @@ std::shared_ptr<ArrayBuffer> HybridRsaCipher::publicDecrypt(const std::shared_pt
     if ((err & 0xFFFFFFF) == 0x1C880004 || (err & 0xFF) == 0x04) {
       ERR_clear_error();
       EVP_PKEY_CTX_free(ctx);
-      uint8_t* empty_buf = new uint8_t[1];
-      return std::make_shared<NativeArrayBuffer>(empty_buf, 0, [empty_buf]() { delete[] empty_buf; });
+      auto empty_buf = std::make_unique<uint8_t[]>(1);
+      uint8_t* raw_ptr = empty_buf.get();
+      return std::make_shared<NativeArrayBuffer>(empty_buf.release(), 0, [raw_ptr]() { delete[] raw_ptr; });
     }
     EVP_PKEY_CTX_free(ctx);
     throwOpaqueDecryptFailure();

@@ -11,12 +11,7 @@ namespace margelo::nitro::crypto {
 class HybridEdKeyPair : public HybridEdKeyPairSpec {
  public:
   HybridEdKeyPair() : HybridObject(TAG) {}
-  ~HybridEdKeyPair() {
-    if (pkey != nullptr) {
-      EVP_PKEY_free(pkey);
-      pkey = nullptr;
-    }
-  }
+  ~HybridEdKeyPair() override = default;
 
  public:
   // Methods
@@ -54,7 +49,8 @@ class HybridEdKeyPair : public HybridEdKeyPairSpec {
 
  private:
   std::string curve;
-  EVP_PKEY* pkey = nullptr;
+  using EVP_PKEY_ptr = std::unique_ptr<EVP_PKEY, decltype(&EVP_PKEY_free)>;
+  EVP_PKEY_ptr pkey_{nullptr, EVP_PKEY_free};
 
   // Encoding configuration for key export
   // Format: -1 = default (raw), 0 = DER, 1 = PEM
@@ -64,8 +60,8 @@ class HybridEdKeyPair : public HybridEdKeyPairSpec {
   int privateFormat_ = -1;
   int privateType_ = -1;
 
-  EVP_PKEY* importPublicKey(const std::optional<std::shared_ptr<ArrayBuffer>>& key);
-  EVP_PKEY* importPrivateKey(const std::optional<std::shared_ptr<ArrayBuffer>>& key);
+  EVP_PKEY_ptr importPublicKey(const std::optional<std::shared_ptr<ArrayBuffer>>& key);
+  EVP_PKEY_ptr importPrivateKey(const std::optional<std::shared_ptr<ArrayBuffer>>& key);
 };
 
 } // namespace margelo::nitro::crypto

@@ -70,42 +70,42 @@ std::shared_ptr<ArrayBuffer> XChaCha20Poly1305Cipher::final() {
   throw std::runtime_error("XChaCha20Poly1305Cipher: libsodium must be enabled (BLSALLOC_SODIUM)");
 #else
   if (is_cipher) {
-    uint8_t* ciphertext = new uint8_t[data_buffer_.size()];
+    auto ciphertext = std::make_unique<uint8_t[]>(data_buffer_.size());
 
     int result =
-        crypto_aead_xchacha20poly1305_ietf_encrypt_detached(ciphertext, auth_tag_, nullptr, data_buffer_.data(), data_buffer_.size(),
+        crypto_aead_xchacha20poly1305_ietf_encrypt_detached(ciphertext.get(), auth_tag_, nullptr, data_buffer_.data(), data_buffer_.size(),
                                                             aad_.empty() ? nullptr : aad_.data(), aad_.size(), nullptr, nonce_, key_);
 
     if (result != 0) {
-      sodium_memzero(ciphertext, data_buffer_.size());
-      delete[] ciphertext;
+      sodium_memzero(ciphertext.get(), data_buffer_.size());
       throw std::runtime_error("XChaCha20Poly1305Cipher: encryption failed");
     }
 
     is_finalized = true;
     size_t ct_len = data_buffer_.size();
-    return std::make_shared<NativeArrayBuffer>(ciphertext, ct_len, [=]() { delete[] ciphertext; });
+    uint8_t* raw_ptr = ciphertext.get();
+    return std::make_shared<NativeArrayBuffer>(ciphertext.release(), ct_len, [raw_ptr]() { delete[] raw_ptr; });
   } else {
     if (data_buffer_.empty()) {
       is_finalized = true;
       return std::make_shared<NativeArrayBuffer>(nullptr, 0, nullptr);
     }
 
-    uint8_t* plaintext = new uint8_t[data_buffer_.size()];
+    auto plaintext = std::make_unique<uint8_t[]>(data_buffer_.size());
 
     int result =
-        crypto_aead_xchacha20poly1305_ietf_decrypt_detached(plaintext, nullptr, data_buffer_.data(), data_buffer_.size(), auth_tag_,
+        crypto_aead_xchacha20poly1305_ietf_decrypt_detached(plaintext.get(), nullptr, data_buffer_.data(), data_buffer_.size(), auth_tag_,
                                                             aad_.empty() ? nullptr : aad_.data(), aad_.size(), nonce_, key_);
 
     if (result != 0) {
-      sodium_memzero(plaintext, data_buffer_.size());
-      delete[] plaintext;
+      sodium_memzero(plaintext.get(), data_buffer_.size());
       throw std::runtime_error("XChaCha20Poly1305Cipher: decryption failed - authentication tag mismatch");
     }
 
     is_finalized = true;
     size_t pt_len = data_buffer_.size();
-    return std::make_shared<NativeArrayBuffer>(plaintext, pt_len, [=]() { delete[] plaintext; });
+    uint8_t* raw_ptr = plaintext.get();
+    return std::make_shared<NativeArrayBuffer>(plaintext.release(), pt_len, [raw_ptr]() { delete[] raw_ptr; });
   }
 #endif
 }
@@ -132,9 +132,10 @@ std::shared_ptr<ArrayBuffer> XChaCha20Poly1305Cipher::getAuthTag() {
     throw std::runtime_error("getAuthTag must be called after final()");
   }
 
-  uint8_t* tag_copy = new uint8_t[kTagSize];
-  std::memcpy(tag_copy, auth_tag_, kTagSize);
-  return std::make_shared<NativeArrayBuffer>(tag_copy, kTagSize, [=]() { delete[] tag_copy; });
+  auto tag_copy = std::make_unique<uint8_t[]>(kTagSize);
+  std::memcpy(tag_copy.get(), auth_tag_, kTagSize);
+  uint8_t* raw_ptr = tag_copy.get();
+  return std::make_shared<NativeArrayBuffer>(tag_copy.release(), kTagSize, [raw_ptr]() { delete[] raw_ptr; });
 #endif
 }
 

@@ -11,7 +11,6 @@ namespace margelo::nitro::crypto {
 
 std::shared_ptr<ArrayBuffer> HybridEdKeyPair::diffieHellman(const std::shared_ptr<ArrayBuffer>& privateKey,
                                                             const std::shared_ptr<ArrayBuffer>& publicKey) {
-  using EVP_PKEY_ptr = std::unique_ptr<EVP_PKEY, decltype(&EVP_PKEY_free)>;
   using EVP_PKEY_CTX_ptr = std::unique_ptr<EVP_PKEY_CTX, decltype(&EVP_PKEY_CTX_free)>;
 
   // Determine key type from curve name
@@ -55,16 +54,16 @@ std::shared_ptr<ArrayBuffer> HybridEdKeyPair::diffieHellman(const std::shared_pt
   }
 
   // 7. Allocate memory for the shared secret
-  auto shared_secret = new uint8_t[shared_secret_len];
+  auto shared_secret = std::make_unique<uint8_t[]>(shared_secret_len);
 
   // 8. Derive the shared secret
-  if (EVP_PKEY_derive(ctx.get(), shared_secret, &shared_secret_len) <= 0) {
-    delete[] shared_secret;
+  if (EVP_PKEY_derive(ctx.get(), shared_secret.get(), &shared_secret_len) <= 0) {
     throw std::runtime_error("Failed to derive shared secret: " + getOpenSSLError());
   }
 
   // 9. Return a newly-created ArrayBuffer from the raw buffer w/ cleanup
-  return std::make_shared<NativeArrayBuffer>(shared_secret, shared_secret_len, [=]() { delete[] shared_secret; });
+  uint8_t* raw_ptr = shared_secret.get();
+  return std::make_shared<NativeArrayBuffer>(shared_secret.release(), shared_secret_len, [raw_ptr]() { delete[] raw_ptr; });
 }
 
 std::shared_ptr<Promise<void>> HybridEdKeyPair::generateKeyPair(double publicFormat, double publicType, double privateFormat,
@@ -98,34 +97,26 @@ void HybridEdKeyPair::generateKeyPairSync(double publicFormat, double publicType
   this->privateType_ = static_cast<int>(privateType);
 
   // Clean up existing key if any
-  if (this->pkey != nullptr) {
-    EVP_PKEY_free(this->pkey);
-    this->pkey = nullptr;
-  }
+  this->pkey_.reset();
 
-  EVP_PKEY_CTX* pctx;
-
-  // key context
-  pctx = EVP_PKEY_CTX_new_from_name(nullptr, this->curve.c_str(), nullptr);
-  if (pctx == nullptr) {
+  std::unique_ptr<EVP_PKEY_CTX, decltype(&EVP_PKEY_CTX_free)> pctx(EVP_PKEY_CTX_new_from_name(nullptr, this->curve.c_str(), nullptr),
+                                                                   EVP_PKEY_CTX_free);
+  if (!pctx) {
     throw std::runtime_error("Invalid curve name: " + this->curve);
   }
 
   // keygen init
-  if (EVP_PKEY_keygen_init(pctx) <= 0) {
-    EVP_PKEY_CTX_free(pctx);
+  if (EVP_PKEY_keygen_init(pctx.get()) <= 0) {
     throw std::runtime_error("Failed to initialize keygen");
   }
 
   // generate key
-  EVP_PKEY_keygen(pctx, &this->pkey);
-  if (this->pkey == nullptr) {
-    EVP_PKEY_CTX_free(pctx);
+  EVP_PKEY* raw_pkey = nullptr;
+  EVP_PKEY_keygen(pctx.get(), &raw_pkey);
+  if (raw_pkey == nullptr) {
     throw std::runtime_error("Failed to generate key");
   }
-
-  // cleanup
-  EVP_PKEY_CTX_free(pctx);
+  this->pkey_.reset(raw_pkey);
 }
 
 std::shared_ptr<Promise<std::shared_ptr<ArrayBuffer>>> HybridEdKeyPair::sign(const std::shared_ptr<ArrayBuffer>& message,
@@ -146,55 +137,34 @@ std::shared_ptr<ArrayBuffer> HybridEdKeyPair::signSync(const std::shared_ptr<Arr
   // Clear any previous OpenSSL errors to prevent pollution
   clearOpenSSLErrors();
 
-  size_t sig_len = 0;
-  uint8_t* sig = NULL;
-  EVP_MD_CTX* md_ctx = nullptr;
-  EVP_PKEY_CTX* pkey_ctx = nullptr;
-
   // get key to use for signing
-  EVP_PKEY* pkey = this->importPrivateKey(key);
+  EVP_PKEY_ptr pkey = this->importPrivateKey(key);
 
   // key context
-  md_ctx = EVP_MD_CTX_new();
-  if (md_ctx == nullptr) {
+  std::unique_ptr<EVP_MD_CTX, decltype(&EVP_MD_CTX_free)> md_ctx(EVP_MD_CTX_new(), EVP_MD_CTX_free);
+  if (!md_ctx) {
     throw std::runtime_error("Error creating signing context");
   }
 
-  pkey_ctx = EVP_PKEY_CTX_new_from_name(nullptr, this->curve.c_str(), nullptr);
-  if (pkey_ctx == nullptr) {
-    EVP_MD_CTX_free(md_ctx);
-    throw std::runtime_error("Error creating signing context: " + this->curve);
-  }
-
-  if (EVP_DigestSignInit(md_ctx, &pkey_ctx, NULL, NULL, pkey) <= 0) {
-    EVP_MD_CTX_free(md_ctx);
-    EVP_PKEY_CTX_free(pkey_ctx);
-    char* err = ERR_error_string(ERR_get_error(), NULL);
-    throw std::runtime_error("Failed to initialize signing: " + std::string(err));
+  if (EVP_DigestSignInit(md_ctx.get(), nullptr, NULL, NULL, pkey.get()) <= 0) {
+    throw std::runtime_error("Failed to initialize signing: " + getOpenSSLError());
   }
 
   // Calculate the required size for the signature by passing a NULL buffer.
-  if (EVP_DigestSign(md_ctx, NULL, &sig_len, message.get()->data(), message.get()->size()) <= 0) {
-    EVP_MD_CTX_free(md_ctx);
+  size_t sig_len = 0;
+  if (EVP_DigestSign(md_ctx.get(), NULL, &sig_len, message.get()->data(), message.get()->size()) <= 0) {
     throw std::runtime_error("Failed to calculate signature size");
   }
-  sig = new uint8_t[sig_len];
+  auto sig = std::make_unique<uint8_t[]>(sig_len);
 
   // Actually calculate the signature
-  if (EVP_DigestSign(md_ctx, sig, &sig_len, message.get()->data(), message.get()->size()) <= 0) {
-    EVP_MD_CTX_free(md_ctx);
-    delete[] sig;
+  if (EVP_DigestSign(md_ctx.get(), sig.get(), &sig_len, message.get()->data(), message.get()->size()) <= 0) {
     throw std::runtime_error("Failed to calculate signature");
   }
 
   // return value for JS
-  std::shared_ptr<ArrayBuffer> signature = std::make_shared<NativeArrayBuffer>(sig, sig_len, [=]() { delete[] sig; });
-
-  // Clean up
-  EVP_MD_CTX_free(md_ctx);
-  // Note: pkey_ctx is freed automatically by EVP_MD_CTX_free when using EVP_DigestSignInit
-
-  return signature;
+  uint8_t* raw_ptr = sig.get();
+  return std::make_shared<NativeArrayBuffer>(sig.release(), sig_len, [raw_ptr]() { delete[] raw_ptr; });
 }
 
 std::shared_ptr<Promise<bool>> HybridEdKeyPair::verify(const std::shared_ptr<ArrayBuffer>& signature,
@@ -218,36 +188,23 @@ bool HybridEdKeyPair::verifySync(const std::shared_ptr<ArrayBuffer>& signature, 
   clearOpenSSLErrors();
 
   // get key to use for verifying
-  EVP_PKEY* pkey = this->importPublicKey(key);
-
-  EVP_MD_CTX* md_ctx = nullptr;
-  EVP_PKEY_CTX* pkey_ctx = nullptr;
+  EVP_PKEY_ptr pkey = this->importPublicKey(key);
 
   // key context
-  md_ctx = EVP_MD_CTX_new();
-  if (md_ctx == nullptr) {
+  std::unique_ptr<EVP_MD_CTX, decltype(&EVP_MD_CTX_free)> md_ctx(EVP_MD_CTX_new(), EVP_MD_CTX_free);
+  if (!md_ctx) {
     throw std::runtime_error("Error creating verify context");
   }
 
-  pkey_ctx = EVP_PKEY_CTX_new_from_name(nullptr, this->curve.c_str(), nullptr);
-  if (pkey_ctx == nullptr) {
-    EVP_MD_CTX_free(md_ctx);
-    throw std::runtime_error("Error creating verify context: " + this->curve);
-  }
-
-  if (EVP_DigestVerifyInit(md_ctx, &pkey_ctx, NULL, NULL, pkey) <= 0) {
-    EVP_MD_CTX_free(md_ctx);
-    EVP_PKEY_CTX_free(pkey_ctx);
-    char* err = ERR_error_string(ERR_get_error(), NULL);
-    throw std::runtime_error("Failed to initialize verify: " + std::string(err));
+  if (EVP_DigestVerifyInit(md_ctx.get(), nullptr, NULL, NULL, pkey.get()) <= 0) {
+    throw std::runtime_error("Failed to initialize verify: " + getOpenSSLError());
   }
 
   // verify
-  auto res = EVP_DigestVerify(md_ctx, signature.get()->data(), signature.get()->size(), message.get()->data(), message.get()->size());
+  auto res = EVP_DigestVerify(md_ctx.get(), signature.get()->data(), signature.get()->size(), message.get()->data(), message.get()->size());
 
   // return value for JS
   if (res < 0) {
-    EVP_MD_CTX_free(md_ctx);
     throw std::runtime_error("Failed to verify");
   }
   return res == 1; // true if 1, false if 0
@@ -258,7 +215,7 @@ std::shared_ptr<ArrayBuffer> HybridEdKeyPair::getPublicKey() {
 
   // If format is DER (0) or PEM (1), export in SPKI format
   if (publicFormat_ == 0 || publicFormat_ == 1) {
-    BIO* bio = BIO_new(BIO_s_mem());
+    std::unique_ptr<BIO, decltype(&BIO_free)> bio(BIO_new(BIO_s_mem()), BIO_free);
     if (!bio) {
       throw std::runtime_error("Failed to create BIO for public key export");
     }
@@ -266,36 +223,35 @@ std::shared_ptr<ArrayBuffer> HybridEdKeyPair::getPublicKey() {
     int result;
     if (publicFormat_ == 1) {
       // PEM format
-      result = PEM_write_bio_PUBKEY(bio, this->pkey);
+      result = PEM_write_bio_PUBKEY(bio.get(), this->pkey_.get());
     } else {
       // DER format
-      result = i2d_PUBKEY_bio(bio, this->pkey);
+      result = i2d_PUBKEY_bio(bio.get(), this->pkey_.get());
     }
 
     if (result != 1) {
-      BIO_free(bio);
       throw std::runtime_error("Failed to export public key");
     }
 
     BUF_MEM* bptr;
-    BIO_get_mem_ptr(bio, &bptr);
+    BIO_get_mem_ptr(bio.get(), &bptr);
 
-    uint8_t* data = new uint8_t[bptr->length];
-    memcpy(data, bptr->data, bptr->length);
+    auto data = std::make_unique<uint8_t[]>(bptr->length);
+    memcpy(data.get(), bptr->data, bptr->length);
     size_t len = bptr->length;
 
-    BIO_free(bio);
-
-    return std::make_shared<NativeArrayBuffer>(data, len, [=]() { delete[] data; });
+    uint8_t* raw_ptr = data.get();
+    return std::make_shared<NativeArrayBuffer>(data.release(), len, [raw_ptr]() { delete[] raw_ptr; });
   }
 
   // Default: raw format
   size_t len = 0;
-  EVP_PKEY_get_raw_public_key(this->pkey, nullptr, &len);
-  uint8_t* publ = new uint8_t[len];
-  EVP_PKEY_get_raw_public_key(this->pkey, publ, &len);
+  EVP_PKEY_get_raw_public_key(this->pkey_.get(), nullptr, &len);
+  auto publ = std::make_unique<uint8_t[]>(len);
+  EVP_PKEY_get_raw_public_key(this->pkey_.get(), publ.get(), &len);
 
-  return std::make_shared<NativeArrayBuffer>(publ, len, [=]() { delete[] publ; });
+  uint8_t* raw_ptr = publ.get();
+  return std::make_shared<NativeArrayBuffer>(publ.release(), len, [raw_ptr]() { delete[] raw_ptr; });
 }
 
 std::shared_ptr<ArrayBuffer> HybridEdKeyPair::getPrivateKey() {
@@ -303,7 +259,7 @@ std::shared_ptr<ArrayBuffer> HybridEdKeyPair::getPrivateKey() {
 
   // If format is DER (0) or PEM (1), export in PKCS8 format
   if (privateFormat_ == 0 || privateFormat_ == 1) {
-    BIO* bio = BIO_new(BIO_s_mem());
+    std::unique_ptr<BIO, decltype(&BIO_free)> bio(BIO_new(BIO_s_mem()), BIO_free);
     if (!bio) {
       throw std::runtime_error("Failed to create BIO for private key export");
     }
@@ -311,40 +267,42 @@ std::shared_ptr<ArrayBuffer> HybridEdKeyPair::getPrivateKey() {
     int result;
     if (privateFormat_ == 1) {
       // PEM format (PKCS8)
-      result = PEM_write_bio_PrivateKey(bio, this->pkey, nullptr, nullptr, 0, nullptr, nullptr);
+      result = PEM_write_bio_PrivateKey(bio.get(), this->pkey_.get(), nullptr, nullptr, 0, nullptr, nullptr);
     } else {
       // DER format (PKCS8)
-      result = i2d_PrivateKey_bio(bio, this->pkey);
+      result = i2d_PrivateKey_bio(bio.get(), this->pkey_.get());
     }
 
     if (result != 1) {
-      BIO_free(bio);
       throw std::runtime_error("Failed to export private key");
     }
 
     BUF_MEM* bptr;
-    BIO_get_mem_ptr(bio, &bptr);
+    BIO_get_mem_ptr(bio.get(), &bptr);
 
-    uint8_t* data = new uint8_t[bptr->length];
-    memcpy(data, bptr->data, bptr->length);
+    auto data = std::make_unique<uint8_t[]>(bptr->length);
+    memcpy(data.get(), bptr->data, bptr->length);
     size_t len = bptr->length;
 
-    BIO_free(bio);
+    // Zero the BIO's internal buffer — it held private key bytes (PEM/DER PKCS8)
+    secureZero(bptr->data, bptr->length);
 
-    return std::make_shared<NativeArrayBuffer>(data, len, [=]() { delete[] data; });
+    uint8_t* raw_ptr = data.get();
+    return std::make_shared<NativeArrayBuffer>(data.release(), len, [raw_ptr]() { delete[] raw_ptr; });
   }
 
   // Default: raw format
   size_t len = 0;
-  EVP_PKEY_get_raw_private_key(this->pkey, nullptr, &len);
-  uint8_t* priv = new uint8_t[len];
-  EVP_PKEY_get_raw_private_key(this->pkey, priv, &len);
+  EVP_PKEY_get_raw_private_key(this->pkey_.get(), nullptr, &len);
+  auto priv = std::make_unique<uint8_t[]>(len);
+  EVP_PKEY_get_raw_private_key(this->pkey_.get(), priv.get(), &len);
 
-  return std::make_shared<NativeArrayBuffer>(priv, len, [=]() { delete[] priv; });
+  uint8_t* raw_ptr = priv.get();
+  return std::make_shared<NativeArrayBuffer>(priv.release(), len, [raw_ptr]() { delete[] raw_ptr; });
 }
 
 void HybridEdKeyPair::checkKeyPair() {
-  if (this->pkey == nullptr) {
+  if (!this->pkey_) {
     throw std::runtime_error("Keypair not initialized");
   }
 }
@@ -353,8 +311,7 @@ void HybridEdKeyPair::setCurve(const std::string& curve) {
   this->curve = curve;
 }
 
-EVP_PKEY* HybridEdKeyPair::importPublicKey(const std::optional<std::shared_ptr<ArrayBuffer>>& key) {
-  EVP_PKEY* pkey = nullptr;
+auto HybridEdKeyPair::importPublicKey(const std::optional<std::shared_ptr<ArrayBuffer>>& key) -> EVP_PKEY_ptr {
   if (key.has_value()) {
     // Determine key type from curve name
     int keyType = EVP_PKEY_ED25519;
@@ -366,19 +323,18 @@ EVP_PKEY* HybridEdKeyPair::importPublicKey(const std::optional<std::shared_ptr<A
       keyType = EVP_PKEY_X448;
     }
 
-    pkey = EVP_PKEY_new_raw_public_key(keyType, NULL, key.value()->data(), key.value()->size());
-    if (pkey == nullptr) {
+    EVP_PKEY_ptr pkey(EVP_PKEY_new_raw_public_key(keyType, NULL, key.value()->data(), key.value()->size()), EVP_PKEY_free);
+    if (!pkey) {
       throw std::runtime_error("Failed to read public key");
     }
-  } else {
-    this->checkKeyPair();
-    pkey = this->pkey;
+    return pkey;
   }
-  return pkey;
+  this->checkKeyPair();
+  EVP_PKEY_up_ref(this->pkey_.get());
+  return EVP_PKEY_ptr(this->pkey_.get(), EVP_PKEY_free);
 }
 
-EVP_PKEY* HybridEdKeyPair::importPrivateKey(const std::optional<std::shared_ptr<ArrayBuffer>>& key) {
-  EVP_PKEY* pkey = nullptr;
+auto HybridEdKeyPair::importPrivateKey(const std::optional<std::shared_ptr<ArrayBuffer>>& key) -> EVP_PKEY_ptr {
   if (key.has_value()) {
     // Determine key type from curve name
     int keyType = EVP_PKEY_ED25519;
@@ -390,15 +346,15 @@ EVP_PKEY* HybridEdKeyPair::importPrivateKey(const std::optional<std::shared_ptr<
       keyType = EVP_PKEY_X448;
     }
 
-    pkey = EVP_PKEY_new_raw_private_key(keyType, NULL, key.value()->data(), key.value()->size());
-    if (pkey == nullptr) {
+    EVP_PKEY_ptr pkey(EVP_PKEY_new_raw_private_key(keyType, NULL, key.value()->data(), key.value()->size()), EVP_PKEY_free);
+    if (!pkey) {
       throw std::runtime_error("Failed to read private key");
     }
-  } else {
-    this->checkKeyPair();
-    pkey = this->pkey;
+    return pkey;
   }
-  return pkey;
+  this->checkKeyPair();
+  EVP_PKEY_up_ref(this->pkey_.get());
+  return EVP_PKEY_ptr(this->pkey_.get(), EVP_PKEY_free);
 }
 
 } // namespace margelo::nitro::crypto
