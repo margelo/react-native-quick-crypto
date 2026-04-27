@@ -460,3 +460,42 @@ test(SUITE, 'EC diffieHellman - curve mismatch throws', () => {
     });
   }).to.throw('Private and public key curves do not match');
 });
+
+// Phase 3.5 regression: subtle.deriveBits MUST require the literal
+// "deriveBits" usage on the base key (WebCrypto §SubtleCrypto-method
+// -deriveBits step 11). The previous implementation accepted "deriveKey"
+// usage as a substitute, which silently allowed callers to bypass the
+// usage gate.
+test(
+  SUITE,
+  'deriveBits: rejects baseKey without deriveBits usage',
+  async () => {
+    const ikm = Buffer.from('deadbeef'.repeat(8), 'hex');
+    const key = await subtle.importKey(
+      'raw',
+      ikm,
+      { name: 'PBKDF2' },
+      false,
+      ['deriveKey'], // intentionally NOT 'deriveBits'
+    );
+
+    let threw: Error | undefined;
+    try {
+      await subtle.deriveBits(
+        {
+          name: 'PBKDF2',
+          salt: 'salt',
+          iterations: 10,
+          hash: 'SHA-256',
+          // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        } as any,
+        key,
+        256,
+      );
+    } catch (e) {
+      threw = e as Error;
+    }
+    expect(threw).to.not.equal(undefined);
+    expect(threw!.message).to.match(/deriveBits usage/);
+  },
+);

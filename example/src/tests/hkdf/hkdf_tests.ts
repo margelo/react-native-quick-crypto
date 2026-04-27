@@ -130,6 +130,40 @@ test(SUITE, 'hkdf: surfaces ceiling errors via callback', async () => {
   });
 });
 
+// Phase 3.5 regression: WebCrypto §28.7.6 mandates HKDF keys be created
+// with extractable=false. The previous implementation passed `extractable`
+// through verbatim, allowing input keying material to round-trip via
+// exportKey — defeating the deriveBits-only usage.
+test(SUITE, 'HKDF importKey: rejects extractable=true', async () => {
+  const ikm = Buffer.from('00'.repeat(16), 'hex');
+  let threw: Error | undefined;
+  try {
+    await crypto.subtle.importKey('raw', ikm, { name: 'HKDF' }, true, [
+      'deriveBits',
+    ]);
+  } catch (e) {
+    threw = e as Error;
+  }
+  expect(threw).to.not.equal(undefined);
+  expect(threw!.message).to.match(/HKDF keys are not extractable/);
+});
+
+test(
+  SUITE,
+  'HKDF importKey: forces extractable=false even when false',
+  async () => {
+    const ikm = Buffer.from('00'.repeat(16), 'hex');
+    const key = await crypto.subtle.importKey(
+      'raw',
+      ikm,
+      { name: 'HKDF' },
+      false,
+      ['deriveBits'],
+    );
+    expect(key.extractable).to.equal(false);
+  },
+);
+
 test(SUITE, 'WebCrypto HKDF deriveKey (AES-GCM)', async () => {
   const vec = testVectors[0]!;
   const ikm = Buffer.from(vec.ikm, 'hex');

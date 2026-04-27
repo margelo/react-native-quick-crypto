@@ -16,6 +16,17 @@ test(SUITE, 'empty hash just works', async () => {
   await subtle.digest('SHA-512', Buffer.alloc(0));
 });
 
+// Phase 3.5 regression: WebCrypto §18.4.4 mandates case-insensitive
+// algorithm name matching. The previous `normalizeAlgorithm` was a
+// no-op and lowercase strings reached `SUPPORTED_ALGORITHMS` set
+// comparisons which only accepted the canonical mixed-case form.
+test(SUITE, 'digest accepts lowercase algorithm name', async () => {
+  const expected = createHash('sha256').update(kData).digest().toString('hex');
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const value = await subtle.digest('sha-256' as any, kData);
+  expect(ab2str(value)).to.equal(expected);
+});
+
 const kTests: Test[] = [
   ['SHA-1', 'sha1', 160],
   ['SHA-256', 'sha256', 256],

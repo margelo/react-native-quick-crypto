@@ -262,6 +262,72 @@ const withZero = getRandomValues(new Uint8Array(32));
 withZero[4] = 0;
 testFn(withZero as Uint8Array, 'with zero');
 
+// Phase 3.5 regression: WebCrypto §25.7.6 — JWK import must reject when
+// `jwk.ext === false` and `extractable === true`, and must reject when
+// `jwk.key_ops` is present and any requested usage is missing from it.
+test(
+  SUITE,
+  'AES import jwk: rejects ext=false with extractable=true',
+  async () => {
+    const jwk: JWK = {
+      kty: 'oct',
+      k: 'Y0zt37HgOx-BY7SQjYVmrqhPkO44Ii2Jcb9yydUDPfE.',
+      alg: 'A256GCM',
+      ext: false,
+    };
+    await assertThrowsAsync(
+      async () =>
+        await subtle.importKey(
+          'jwk',
+          jwk,
+          { name: 'AES-GCM' },
+          true, // extractable
+          ['encrypt', 'decrypt'],
+        ),
+      'JWK "ext" is false but extractable was requested',
+    );
+  },
+);
+
+test(
+  SUITE,
+  'AES import jwk: rejects key_ops missing requested usage',
+  async () => {
+    const jwk: JWK = {
+      kty: 'oct',
+      k: 'Y0zt37HgOx-BY7SQjYVmrqhPkO44Ii2Jcb9yydUDPfE.',
+      alg: 'A256GCM',
+      ext: true,
+      key_ops: ['encrypt'], // intentionally NOT 'decrypt'
+    };
+    await assertThrowsAsync(
+      async () =>
+        await subtle.importKey(
+          'jwk',
+          jwk,
+          { name: 'AES-GCM' },
+          true,
+          ['encrypt', 'decrypt'], // requests 'decrypt'
+        ),
+      'JWK "key_ops" does not include requested usage "decrypt"',
+    );
+  },
+);
+
+test(SUITE, 'AES import jwk: accepts when key_ops covers usages', async () => {
+  const jwk: JWK = {
+    kty: 'oct',
+    k: 'Y0zt37HgOx-BY7SQjYVmrqhPkO44Ii2Jcb9yydUDPfE.',
+    alg: 'A256GCM',
+    ext: true,
+    key_ops: ['encrypt', 'decrypt', 'wrapKey'],
+  };
+  const key = await subtle.importKey('jwk', jwk, { name: 'AES-GCM' }, true, [
+    'encrypt',
+  ]);
+  expect(key.algorithm.name).to.equal('AES-GCM');
+});
+
 // from https://gist.github.com/pedrouid/b4056fd1f754918ddae86b32cf7d803e#aes-gcm---importkey
 test(SUITE, 'AES import jwk / export jwk', async () => {
   const origKey: string = 'Y0zt37HgOx-BY7SQjYVmrqhPkO44Ii2Jcb9yydUDPfE.';
