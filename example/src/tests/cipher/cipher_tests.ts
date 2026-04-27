@@ -874,3 +874,140 @@ for (const kat of AEAD_KATS) {
     expect(Buffer.concat([dec1, dec2]).toString('hex')).to.equal(kat.plaintext);
   });
 }
+
+// --- Phase 4.3: AEAD misuse-resistance tests ---
+//
+// Each AEAD spec mandates a strict ordering of API calls. Implementations
+// that silently accept misordered calls open up real attacks:
+//
+//   - `setAAD()` after `update()` would mean the auth tag commits to a
+//     prefix of the AAD, then forgets the rest — letting an attacker
+//     truncate AAD bytes the application thought were authenticated.
+//   - `getAuthTag()` on a Decipher instance has no defined output (the
+//     decryption side *consumes* a tag, it doesn't produce one); allowing
+//     it would invite confusion between "this is the tag I computed" and
+//     "this is the tag I was given".
+//   - `setAuthTag()` on a Cipher instance must also be rejected.
+//   - Calling `final()` on a Decipher *without* `setAuthTag()` first must
+//     throw — otherwise the implementation accepts unauthenticated
+//     ciphertext, defeating the AEAD guarantee.
+//
+// Node's crypto module enforces all four; this suite pins our parity. We
+// run each across AES-GCM, AES-CCM, AES-OCB, ChaCha20-Poly1305, and the
+// libsodium-backed XChaCha20-Poly1305 / XSalsa20-Poly1305 to ensure no
+// AEAD slips through.
+
+interface AeadMisuseCfg {
+  cipher: string;
+  keyLen: number;
+  ivLen: number;
+  authTagLength?: number;
+  ccm?: boolean;
+}
+
+const AEAD_MISUSE_CIPHERS: AeadMisuseCfg[] = [
+  { cipher: 'aes-256-gcm', keyLen: 32, ivLen: 12 },
+  { cipher: 'aes-128-gcm', keyLen: 16, ivLen: 12 },
+  {
+    cipher: 'aes-128-ccm',
+    keyLen: 16,
+    ivLen: 12,
+    authTagLength: 16,
+    ccm: true,
+  },
+  { cipher: 'aes-128-ocb', keyLen: 16, ivLen: 12, authTagLength: 16 },
+  { cipher: 'chacha20-poly1305', keyLen: 32, ivLen: 12 },
+];
+
+const buildAeadCipher = (cfg: AeadMisuseCfg) => {
+  const key = randomFillSync(new Uint8Array(cfg.keyLen));
+  const ivBytes = randomFillSync(new Uint8Array(cfg.ivLen));
+  // CipherCCMOptions / CipherOCBOptions both require authTagLength; cast
+  // through the most-permissive options shape so all four AEAD families
+  // share one factory call.
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const opts: any = cfg.authTagLength
+    ? { authTagLength: cfg.authTagLength }
+    : undefined;
+  const cipher = createCipheriv(
+    cfg.cipher,
+    Buffer.from(key),
+    Buffer.from(ivBytes),
+    opts,
+  );
+  const decipher = createDecipheriv(
+    cfg.cipher,
+    Buffer.from(key),
+    Buffer.from(ivBytes),
+    opts,
+  );
+  return { cipher, decipher, key: Buffer.from(key), iv: Buffer.from(ivBytes) };
+};
+
+for (const cfg of AEAD_MISUSE_CIPHERS) {
+  test(SUITE, `${cfg.cipher} setAAD after update throws`, () => {
+    const { cipher } = buildAeadCipher(cfg);
+    if (cfg.ccm) {
+      cipher.setAAD(aad, { plaintextLength: plaintextBuffer.length });
+    }
+    cipher.update(plaintextBuffer);
+    expect(() => cipher.setAAD(Buffer.from('after-update'))).to.throw();
+  });
+
+  test(SUITE, `${cfg.cipher} setAuthTag on Cipher throws`, () => {
+    const { cipher } = buildAeadCipher(cfg);
+    // setAuthTag is a Decipher-only operation; calling it on a Cipher
+    // instance must not be silently accepted.
+    expect(() =>
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      (cipher as any).setAuthTag(Buffer.alloc(16, 0)),
+    ).to.throw();
+  });
+
+  test(SUITE, `${cfg.cipher} getAuthTag on Decipher throws`, () => {
+    const { decipher } = buildAeadCipher(cfg);
+    // getAuthTag is a Cipher-only operation; calling it on a Decipher
+    // instance is meaningless and must throw rather than silently return
+    // an empty / stale buffer.
+    expect(() =>
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      (decipher as any).getAuthTag(),
+    ).to.throw();
+  });
+
+  test(SUITE, `${cfg.cipher} decipher.final without setAuthTag throws`, () => {
+    // Generate one (key, iv) and encrypt under a Cipher; then build a
+    // fresh Decipher with that same (key, iv) but skip setAuthTag — the
+    // call to final() must throw rather than silently emit unauthenticated
+    // plaintext.
+    const k = randomFillSync(new Uint8Array(cfg.keyLen));
+    const v = randomFillSync(new Uint8Array(cfg.ivLen));
+    const opts = cfg.authTagLength
+      ? // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        ({ authTagLength: cfg.authTagLength } as any)
+      : undefined;
+
+    const c = createCipheriv(cfg.cipher, Buffer.from(k), Buffer.from(v), opts);
+    if (cfg.ccm) {
+      c.setAAD(aad, { plaintextLength: plaintextBuffer.length });
+    } else {
+      c.setAAD(aad);
+    }
+    const ct = Buffer.concat([c.update(plaintextBuffer), c.final()]);
+
+    const d = createDecipheriv(
+      cfg.cipher,
+      Buffer.from(k),
+      Buffer.from(v),
+      opts,
+    );
+    if (cfg.ccm) {
+      d.setAAD(aad, { plaintextLength: plaintextBuffer.length });
+    } else {
+      d.setAAD(aad);
+    }
+    d.update(ct);
+    // No setAuthTag call → final() must throw.
+    expect(() => d.final()).to.throw();
+  });
+}
