@@ -298,7 +298,11 @@ std::shared_ptr<ArrayBuffer> HybridRsaCipher::publicDecrypt(const std::shared_pt
     // key — anyone can perform it — so the special case does not enable a
     // Bleichenbacher-style oracle. The fall-through still uses the opaque
     // throw helper.
-    unsigned long err = ERR_peek_last_error();
+    //
+    // Use ERR_get_error (oldest in the FIFO queue) to match the inner
+    // padding-check error rather than ERR_peek_last_error which returns
+    // the outer wrapper code that doesn't satisfy the narrow match.
+    unsigned long err = ERR_get_error();
     if ((err & 0xFFFFFFF) == 0x1C880004 || (err & 0xFF) == 0x04) {
       ERR_clear_error();
       EVP_PKEY_CTX_free(ctx);
