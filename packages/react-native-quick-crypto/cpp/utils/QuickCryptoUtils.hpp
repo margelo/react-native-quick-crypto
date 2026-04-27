@@ -2,11 +2,13 @@
 
 #include <algorithm>
 #include <cctype>
+#include <cmath>
 #include <limits>
 #include <openssl/bn.h>
 #include <openssl/err.h>
 #include <openssl/evp.h>
 #include <string>
+#include <type_traits>
 #include <vector>
 
 #include "Macros.hpp"
@@ -66,6 +68,39 @@ inline bool CheckIsUint32(double value) {
 
 inline bool CheckIsInt32(double value) {
   return (value >= std::numeric_limits<int32_t>::lowest() && value <= std::numeric_limits<int32_t>::max());
+}
+
+// Validate a JS-side `double` intended to be an unsigned integer in
+// [minValue, maxValue], then cast it to T. Rejects NaN, +/-Infinity, negative
+// values, and fractional values BEFORE the cast — `static_cast<uint32_t>(NaN)`
+// and friends are undefined behavior in C++, and the audit found ~20 sites
+// that did the cast naked. Throws `std::runtime_error` carrying `paramName`
+// on any failure so JS callers see a descriptive, actionable message.
+//
+// The helper is templated so callers pick the destination type
+// (uint32_t, uint64_t, size_t, ...). T must be an unsigned integer type.
+template <typename T>
+T validateUInt(double value, const char* paramName, T minValue = 0, T maxValue = std::numeric_limits<T>::max()) {
+  static_assert(std::is_integral_v<T> && std::is_unsigned_v<T>, "validateUInt: T must be an unsigned integer type");
+
+  if (std::isnan(value)) {
+    throw std::runtime_error(std::string(paramName) + " must be a finite number, got NaN");
+  }
+  if (std::isinf(value)) {
+    throw std::runtime_error(std::string(paramName) + std::string(" must be a finite number, got ") +
+                             (value > 0 ? "+Infinity" : "-Infinity"));
+  }
+  if (value < 0) {
+    throw std::runtime_error(std::string(paramName) + " must be non-negative, got " + std::to_string(value));
+  }
+  if (value != std::floor(value)) {
+    throw std::runtime_error(std::string(paramName) + " must be an integer, got " + std::to_string(value));
+  }
+  if (value < static_cast<double>(minValue) || value > static_cast<double>(maxValue)) {
+    throw std::runtime_error(std::string(paramName) + " out of range [" + std::to_string(minValue) + ", " + std::to_string(maxValue) +
+                             "], got " + std::to_string(value));
+  }
+  return static_cast<T>(value);
 }
 
 // Function to convert a string to lowercase

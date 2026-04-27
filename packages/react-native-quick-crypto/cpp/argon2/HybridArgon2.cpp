@@ -30,6 +30,15 @@ static std::shared_ptr<ArrayBuffer> hashImpl(const std::string& algorithm, const
 
   auto type = parseAlgorithm(algorithm);
 
+  // Validate every numeric parameter before the cast. The previous code did
+  // `static_cast<uint32_t>(parallelism)` etc. naked, which is undefined
+  // behavior for NaN, +/-Infinity, or negative input — see audit Phase 1.1.
+  uint32_t parallelismU = validateUInt<uint32_t>(parallelism, "Argon2 parallelism");
+  size_t tagLengthU = validateUInt<size_t>(tagLength, "Argon2 tagLength");
+  uint32_t memoryU = validateUInt<uint32_t>(memory, "Argon2 memory");
+  uint32_t passesU = validateUInt<uint32_t>(passes, "Argon2 passes");
+  uint32_t versionU = validateUInt<uint32_t>(version, "Argon2 version");
+
   ncrypto::Buffer<const char> passBuf{message->size() > 0 ? reinterpret_cast<const char*>(message->data()) : "", message->size()};
 
   ncrypto::Buffer<const unsigned char> saltBuf{nonce->size() > 0 ? reinterpret_cast<const unsigned char*>(nonce->data())
@@ -46,9 +55,7 @@ static std::shared_ptr<ArrayBuffer> hashImpl(const std::string& algorithm, const
     adBuf = {reinterpret_cast<const unsigned char*>(associatedData.value()->data()), associatedData.value()->size()};
   }
 
-  auto result =
-      ncrypto::argon2(passBuf, saltBuf, static_cast<uint32_t>(parallelism), static_cast<size_t>(tagLength), static_cast<uint32_t>(memory),
-                      static_cast<uint32_t>(passes), static_cast<uint32_t>(version), secretBuf, adBuf, type);
+  auto result = ncrypto::argon2(passBuf, saltBuf, parallelismU, tagLengthU, memoryU, passesU, versionU, secretBuf, adBuf, type);
 
   if (!result) {
     unsigned long err = ERR_peek_last_error();
