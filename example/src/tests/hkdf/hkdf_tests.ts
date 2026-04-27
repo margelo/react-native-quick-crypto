@@ -77,6 +77,59 @@ test(SUITE, 'WebCrypto HKDF importKey and deriveBits', async () => {
   expect(Buffer.from(bits).toString('hex')).to.equal(vec.okm);
 });
 
+// --- TS-layer HKDF parameter validation regression (Phase 3.2) ---
+//
+// RFC 5869 §2.3 caps L (output keylen in bytes) at 255 * HashLen. Pre-fix,
+// callers could request any keylen; the native side either silently
+// truncated or — in the worst case — produced an error string only after
+// the round-trip. We now reject too-large requests at the JS boundary.
+
+test(SUITE, 'hkdfSync: rejects negative keylen', () => {
+  const ikm = Buffer.from('00', 'hex');
+  expect(() => {
+    hkdfSync('sha256', ikm, Buffer.alloc(0), Buffer.alloc(0), -1);
+  }).to.throw(TypeError, /Bad key length/);
+});
+
+test(SUITE, 'hkdfSync: rejects keylen > 255 * HashLen for sha256', () => {
+  const ikm = Buffer.from('00', 'hex');
+  expect(() => {
+    // 255 * 32 = 8160 bytes, so 8161 must be rejected.
+    hkdfSync('sha256', ikm, Buffer.alloc(0), Buffer.alloc(0), 8161);
+  }).to.throw(RangeError, /exceeds RFC 5869 ceiling/);
+});
+
+test(SUITE, 'hkdfSync: rejects keylen > 255 * HashLen for sha1', () => {
+  const ikm = Buffer.from('00', 'hex');
+  expect(() => {
+    // 255 * 20 = 5100 bytes for sha1.
+    hkdfSync('sha1', ikm, Buffer.alloc(0), Buffer.alloc(0), 5101);
+  }).to.throw(RangeError, /exceeds RFC 5869 ceiling/);
+});
+
+test(SUITE, 'hkdfSync: accepts keylen at the RFC 5869 ceiling', () => {
+  const ikm = Buffer.from('00', 'hex');
+  // Exactly 255 * 32 = 8160 must succeed.
+  expect(() => {
+    hkdfSync('sha256', ikm, Buffer.alloc(0), Buffer.alloc(0), 8160);
+  }).to.not.throw();
+});
+
+test(SUITE, 'hkdf: surfaces ceiling errors via callback', async () => {
+  const ikm = Buffer.from('00', 'hex');
+  await new Promise<void>((resolve, reject) => {
+    hkdf('sha256', ikm, Buffer.alloc(0), Buffer.alloc(0), 9000, err => {
+      try {
+        expect(err).to.be.instanceOf(RangeError);
+        expect(err!.message).to.match(/exceeds RFC 5869 ceiling/);
+        resolve();
+      } catch (e) {
+        reject(e);
+      }
+    });
+  });
+});
+
 test(SUITE, 'WebCrypto HKDF deriveKey (AES-GCM)', async () => {
   const vec = testVectors[0]!;
   const ikm = Buffer.from(vec.ikm, 'hex');

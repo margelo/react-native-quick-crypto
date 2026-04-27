@@ -45,6 +45,39 @@ function sanitizeInput(input: BinaryLike, name: string): ArrayBuffer {
   }
 }
 
+// Output byte-length of each digest the C++ Hkdf supports. Used to enforce
+// the RFC 5869 §2.3 ceiling: L ≤ 255 * HashLen.
+const HKDF_HASH_BYTES: Readonly<Record<string, number>> = {
+  sha1: 20,
+  sha224: 28,
+  sha256: 32,
+  sha384: 48,
+  sha512: 64,
+  'sha3-256': 32,
+  'sha3-384': 48,
+  'sha3-512': 64,
+  ripemd160: 20,
+};
+
+function validateHkdfKeylen(digest: string, keylen: number): void {
+  if (
+    typeof keylen !== 'number' ||
+    !Number.isFinite(keylen) ||
+    !Number.isInteger(keylen) ||
+    keylen < 0 ||
+    keylen > 0x7fff_ffff
+  ) {
+    throw new TypeError('Bad key length');
+  }
+  const hashLen = HKDF_HASH_BYTES[digest.toLowerCase()];
+  if (hashLen !== undefined && keylen > 255 * hashLen) {
+    throw new RangeError(
+      `HKDF keylen ${keylen} exceeds RFC 5869 ceiling ` +
+        `255 * HashLen (${255 * hashLen}) for ${digest}`,
+    );
+  }
+}
+
 export function hkdf(
   digest: string,
   key: KeyMaterial,
@@ -61,9 +94,7 @@ export function hkdf(
     const sanitizedSalt = sanitizeInput(salt, 'Salt');
     const sanitizedInfo = sanitizeInput(info, 'Info');
 
-    if (keylen < 0) {
-      throw new TypeError('Bad key length');
-    }
+    validateHkdfKeylen(normalizedDigest, keylen);
 
     const nativeMod = getNative();
     nativeMod
@@ -99,9 +130,7 @@ export function hkdfSync(
   const sanitizedSalt = sanitizeInput(salt, 'Salt');
   const sanitizedInfo = sanitizeInput(info, 'Info');
 
-  if (keylen < 0) {
-    throw new TypeError('Bad key length');
-  }
+  validateHkdfKeylen(normalizedDigest, keylen);
 
   const nativeMod = getNative();
   const result = nativeMod.deriveKeySync(
@@ -133,6 +162,8 @@ export function hkdfDeriveBits(
 
   const hashName = typeof hash === 'string' ? hash : hash.name;
   const normalizedDigest = normalizeHashName(hashName);
+
+  validateHkdfKeylen(normalizedDigest, keylen);
 
   const nativeMod = getNative();
   const result = nativeMod.deriveKeySync(
