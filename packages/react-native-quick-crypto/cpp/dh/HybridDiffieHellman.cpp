@@ -133,6 +133,35 @@ std::shared_ptr<ArrayBuffer> HybridDiffieHellman::computeSecret(const std::share
   const BIGNUM *p, *q, *g;
   DH_get0_pqg(ourDh, &p, &q, &g);
 
+  // Validate the peer's public key against our DH parameters BEFORE doing
+  // anything else. EVP_PKEY_derive_set_peer() does NOT call DH_check_pub_key,
+  // so without this check a peer key of 0, 1, or p-1 silently produces a
+  // degenerate "shared secret" (0, 1, or ±1) — the small-subgroup attack.
+  // Match the ncrypto pattern (DHPointer::checkPublicKey) and Node.js error
+  // surface so callers see why the key was rejected.
+  {
+    BN_ptr peerPubCheck(BN_bin2bn(otherPublicKey->data(), static_cast<int>(otherPublicKey->size()), nullptr), BN_free);
+    if (!peerPubCheck) {
+      throw std::runtime_error("DiffieHellman: failed to parse peer public key");
+    }
+    int codes = 0;
+    if (DH_check_pub_key(ourDh, peerPubCheck.get(), &codes) != 1) {
+      throw std::runtime_error("DiffieHellman: failed to check peer public key");
+    }
+    if (codes & DH_CHECK_PUBKEY_TOO_SMALL) {
+      throw std::runtime_error("DiffieHellman: peer public key is too small (<= 1)");
+    }
+    if (codes & DH_CHECK_PUBKEY_TOO_LARGE) {
+      throw std::runtime_error("DiffieHellman: peer public key is too large (>= p-1)");
+    }
+    if (codes & DH_CHECK_PUBKEY_INVALID) {
+      throw std::runtime_error("DiffieHellman: peer public key is invalid (not in subgroup)");
+    }
+    if (codes != 0) {
+      throw std::runtime_error("DiffieHellman: peer public key is invalid");
+    }
+  }
+
   // Create peer DH with same parameters but peer's public key
   DH_ptr peerDh(DH_new(), DH_free);
   if (!peerDh) {
