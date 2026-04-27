@@ -339,3 +339,87 @@ test(SUITE, 'blake3 - empty context throws', () => {
     /context must be a non-empty string/,
   );
 });
+
+// --- Phase 4.2: official BLAKE3 keyed_hash + derive_key KAT vectors ---
+//
+// Source: https://github.com/BLAKE3-team/BLAKE3/blob/master/test_vectors/test_vectors.json
+//
+// Each test_vectors.json case lists the same input bytes hashed in three
+// modes (hash, keyed_hash, derive_key). The pre-existing tests above only
+// exercised mode 1 (hash) against the official outputs — modes 2 and 3
+// produced different bytes per construction but were never pinned to the
+// published KAT outputs.
+//
+// The input is an N-byte prefix of the repeating sequence (0, 1, 2, ...,
+// 250, 0, 1, ...) per the file's `_comment` field. The keyed_hash mode key
+// is the 32-byte ASCII string `whats the Elvish word for friend`. The
+// derive_key mode context is the ASCII string
+// `BLAKE3 2019-12-27 16:29:52 test vectors context`. Implementations are
+// expected to produce extended output but match the first 32 bytes against
+// their default-length output — that's what we verify here.
+const BLAKE3_KAT_KEY = new TextEncoder().encode(
+  'whats the Elvish word for friend',
+);
+// The KAT key is 32 ASCII bytes; assert at module load so a future Unicode
+// contamination of the source string can't silently shift every keyed_hash
+// expected output by 1+ bytes. BLAKE3 keys must be exactly 32 bytes
+// (`KEYED_HASH_KEY_LEN`) — anything else is a different MAC.
+if (BLAKE3_KAT_KEY.length !== 32) {
+  throw new Error(
+    `BLAKE3_KAT_KEY must be 32 bytes; got ${BLAKE3_KAT_KEY.length}`,
+  );
+}
+const BLAKE3_KAT_CONTEXT = 'BLAKE3 2019-12-27 16:29:52 test vectors context';
+
+const buildKatInput = (len: number): Uint8Array => {
+  const buf = new Uint8Array(len);
+  for (let i = 0; i < len; i++) buf[i] = i % 251;
+  return buf;
+};
+
+// First 32 bytes of each mode's extended output, taken verbatim from
+// test_vectors.json cases for input_len ∈ {0, 1, 8, 64}.
+const BLAKE3_KAT_CASES = [
+  {
+    input_len: 0,
+    keyed_hash:
+      '92b2b75604ed3c761f9d6f62392c8a9227ad0ea3f09573e783f1498a4ed60d26',
+    derive_key:
+      '2cc39783c223154fea8dfb7c1b1660f2ac2dcbd1c1de8277b0b0dd39b7e50d7d',
+  },
+  {
+    input_len: 1,
+    keyed_hash:
+      '6d7878dfff2f485635d39013278ae14f1454b8c0a3a2d34bc1ab38228a80c95b',
+    derive_key:
+      'b3e2e340a117a499c6cf2398a19ee0d29cca2bb7404c73063382693bf66cb06c',
+  },
+  {
+    input_len: 8,
+    keyed_hash:
+      'be2f5495c61cba1bb348a34948c004045e3bd4dae8f0fe82bf44d0da245a0600',
+    derive_key:
+      '2b166978cef14d9d438046c720519d8b1cad707e199746f1562d0c87fbd32940',
+  },
+  {
+    input_len: 64,
+    keyed_hash:
+      'ba8ced36f327700d213f120b1a207a3b8c04330528586f414d09f2f7d9ccb7e6',
+    derive_key:
+      'a5c4a7053fa86b64746d4bb688d06ad1f02a18fce9afd3e818fefaa7126bf73e',
+  },
+];
+
+for (const kat of BLAKE3_KAT_CASES) {
+  test(SUITE, `BLAKE3 KAT keyed_hash input_len=${kat.input_len}`, () => {
+    const input = buildKatInput(kat.input_len);
+    const result = blake3(input, { key: BLAKE3_KAT_KEY });
+    expect(Buffer.from(result).toString('hex')).to.equal(kat.keyed_hash);
+  });
+
+  test(SUITE, `BLAKE3 KAT derive_key input_len=${kat.input_len}`, () => {
+    const input = buildKatInput(kat.input_len);
+    const result = blake3(input, { context: BLAKE3_KAT_CONTEXT });
+    expect(Buffer.from(result).toString('hex')).to.equal(kat.derive_key);
+  });
+}

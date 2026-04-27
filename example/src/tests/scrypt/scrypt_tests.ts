@@ -165,3 +165,57 @@ test(SUITE, 'scrypt: surfaces param errors via callback', async () => {
     });
   });
 });
+
+// --- RFC 7914 §11 Test Case 4 — opt-in, separate suite ---
+//
+// TC4 (P="pleaseletmein", S="SodiumChloride", N=2^20, r=8, p=1, dkLen=64)
+// requires ~1.07 GiB of working memory (128 * r * N = 128 * 8 * 2^20 bytes)
+// and several seconds of CPU time. Running it under the regular `scrypt`
+// suite would OOM on Android emulators and slow CI substantially. It lives
+// in its own suite (`scrypt-tc4-slow`) which is opt-in: enable it via the
+// suite picker on the example app's "Tests" screen when you specifically
+// want full RFC 7914 coverage. Node.js's parallel scrypt test omits this
+// vector for the same reason
+// (https://github.com/nodejs/node/blob/main/test/parallel/test-crypto-scrypt.js).
+const SLOW_SUITE = 'scrypt-tc4-slow';
+
+const TC4 = {
+  password: 'pleaseletmein',
+  salt: 'SodiumChloride',
+  N: 1048576, // 2^20
+  r: 8,
+  p: 1,
+  keylen: 64,
+  expected:
+    '2101cb9b6a511aaeaddbbe09cf70f881ec568d574a2ffd4dabe5ee9820adaa478e56fd8f4ba5d09ffa1c6d927c40f4c337304049e8a952fbcbf45c6fa77a41a4',
+};
+
+test(SLOW_SUITE, 'RFC 7914 Test Case 4 (sync, ~1.07 GiB)', () => {
+  const derivedKey = crypto.scryptSync(TC4.password, TC4.salt, TC4.keylen, {
+    N: TC4.N,
+    r: TC4.r,
+    p: TC4.p,
+    maxmem: 1.5 * 1024 * 1024 * 1024, // 1.5 GiB ceiling so the call passes
+  });
+  expect(derivedKey.toString('hex')).to.equal(TC4.expected);
+});
+
+test(SLOW_SUITE, 'RFC 7914 Test Case 4 (async, ~1.07 GiB)', async () => {
+  await new Promise<void>((resolve, reject) => {
+    crypto.scrypt(
+      TC4.password,
+      TC4.salt,
+      TC4.keylen,
+      { N: TC4.N, r: TC4.r, p: TC4.p, maxmem: 1.5 * 1024 * 1024 * 1024 },
+      (err, derivedKey) => {
+        try {
+          expect(err).to.be.null;
+          expect(derivedKey?.toString('hex')).to.equal(TC4.expected);
+          resolve();
+        } catch (e) {
+          reject(e);
+        }
+      },
+    );
+  });
+});
