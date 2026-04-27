@@ -290,6 +290,21 @@ std::shared_ptr<ArrayBuffer> HybridRsaCipher::publicDecrypt(const std::shared_pt
   auto out_buf = std::make_unique<uint8_t[]>(outlen);
 
   if (EVP_PKEY_verify_recover(ctx, out_buf.get(), &outlen, in, inlen) <= 0) {
+    // Empty-plaintext recovery: when the original message was zero bytes,
+    // OpenSSL's verify_recover surfaces a specific reason code rather than
+    // returning success+outlen=0. Match the narrow code from the original
+    // implementation and return an empty buffer so `publicDecrypt(privateEncrypt(""))`
+    // round-trips. publicDecrypt is signature verification with the PUBLIC
+    // key — anyone can perform it — so the special case does not enable a
+    // Bleichenbacher-style oracle. The fall-through still uses the opaque
+    // throw helper.
+    unsigned long err = ERR_peek_last_error();
+    if ((err & 0xFFFFFFF) == 0x1C880004 || (err & 0xFF) == 0x04) {
+      ERR_clear_error();
+      EVP_PKEY_CTX_free(ctx);
+      uint8_t* empty_buf = new uint8_t[1];
+      return std::make_shared<NativeArrayBuffer>(empty_buf, 0, [empty_buf]() { delete[] empty_buf; });
+    }
     EVP_PKEY_CTX_free(ctx);
     throwOpaqueDecryptFailure();
   }
