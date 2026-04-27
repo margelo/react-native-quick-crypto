@@ -1188,6 +1188,14 @@ The scan surfaces ~120 HIGH / ~180 MEDIUM / ~50 LOW findings across 32 modules, 
 
 Status key: `[ ]` not started · `[~]` in progress · `[x]` complete
 
+### Phase Execution Rules
+
+These rules apply to every phase below. Follow them on every multi-task phase, not just the first.
+
+1. **Commit after each sub-section, not at the end of the phase.** A "sub-section" is a single numbered task (e.g. 0.1, 1.2, 2.3) or a single logical wave inside a sweep (e.g. Wave 1A: digests). Each commit should be self-contained, reviewable, and revertable on its own. Do **not** batch a whole phase into one commit — that loses bisectability and makes review harder.
+2. **Do NOT push or open a PR until the user has run the example app's tests locally and reported pass/fail.** Tests live in `example/src/tests/` and run inside the React Native example app, not under any Node.js test runner. Pre-commit hooks only cover lint, format, tsc, and bob build — they cannot exercise the native bridge. Wait for explicit user confirmation ("tests pass") before `git push -u` or `gh pr create`. If tests fail, fix in place on the local branch and re-request a test run.
+3. **CI gate**: PRs must run the full CI matrix — `Validate C++`, `Validate JS`, `End-to-End Tests for Android`, `End-to-End Tests for iOS`. If a path-filtered workflow doesn't trigger on a C++-only or TS-only PR, fix the workflow's `paths:` filter and push that fix on the same branch (workflow files are in their own filters, so the change re-triggers the run).
+
 ### Phase 0 — Stop the Bleeding (actively exploitable)
 
 | #   | Status | Issue                                                          | Files                                                                                                     | Closes                                                                                                                 |
