@@ -1,5 +1,6 @@
 import {
   Buffer,
+  getCipherInfo,
   getCiphers,
   createCipheriv,
   createDecipheriv,
@@ -38,11 +39,12 @@ test(SUITE, 'invalid algorithm', () => {
 });
 
 test(SUITE, 'strings', () => {
-  // roundtrip expects Buffers, convert strings first
+  // Strings are interpreted as UTF-8 bytes by createCipheriv, so use
+  // 16-char ASCII so the byte-length matches aes-128-cbc's (16, 16) sizes.
   roundTrip(
     'aes-128-cbc',
-    key16.toString('hex'),
-    iv.toString('hex'),
+    'YELLOW SUBMARINE',
+    '0123456789ABCDEF',
     plaintextBuffer,
   );
 });
@@ -69,12 +71,20 @@ const allCiphers = getCiphers().filter(
 allCiphers.forEach(cipherName => {
   test(SUITE, cipherName, () => {
     try {
-      // Determine correct key length
-      let keyLen = 32; // Default to 256-bit
-      if (cipherName.includes('128')) {
+      // Determine correct key length. Order matters: DES-EDE3 must be
+      // checked before DES-EDE because `'DES-EDE3-CBC'.includes('DES-EDE')`
+      // is also true. AES / ARIA / CAMELLIA carry their key size in the name.
+      let keyLen: number;
+      if (cipherName.includes('DES-EDE3')) {
+        keyLen = 24; // 3-key 3DES
+      } else if (cipherName.includes('DES-EDE')) {
+        keyLen = 16; // 2-key 3DES
+      } else if (cipherName.includes('128')) {
         keyLen = 16;
       } else if (cipherName.includes('192')) {
         keyLen = 24;
+      } else {
+        keyLen = 32; // Default to 256-bit
       }
       let testKey: Uint8Array;
       if (cipherName.includes('XTS')) {
@@ -93,14 +103,25 @@ allCiphers.forEach(cipherName => {
         testKey = randomFillSync(new Uint8Array(keyLen));
       }
 
-      // Select IV size based on mode
-      const testIv: Uint8Array =
+      // Select IV size. AEAD modes get the canonical 12-byte nonce; for
+      // every other cipher we ask the runtime what IV length the cipher
+      // expects (0 for ECB, 8 for DES-family 64-bit blocks, 16 for AES,
+      // …). This keeps the loop generic instead of hard-coding sizes.
+      let testIv: Uint8Array;
+      if (
         cipherName.includes('GCM') ||
         cipherName.includes('OCB') ||
         cipherName.includes('CCM') ||
         cipherName.includes('Poly1305')
-          ? iv12
-          : iv16;
+      ) {
+        testIv = iv12;
+      } else {
+        const ivLen = getCipherInfo(cipherName)?.ivLength ?? 0;
+        testIv =
+          ivLen === 0
+            ? new Uint8Array(0)
+            : randomFillSync(new Uint8Array(ivLen));
+      }
 
       // Create key and iv as Buffers for the roundtrip functions
       const key = Buffer.from(testKey);
@@ -620,7 +641,7 @@ test(SUITE, 'createCipheriv: rejects wrong xsalsa20 key length', () => {
 test(SUITE, 'createCipheriv: rejects wrong xsalsa20 nonce length', () => {
   expect(() => {
     createCipheriv('xsalsa20', key32, iv16);
-  }).to.throw(RangeError, /Invalid iv length 16 .* xsalsa20/);
+  }).to.throw(RangeError, /Invalid nonce length 16 .* xsalsa20/);
 });
 
 // Phase 3.6 regression: stream _transform / _flush errors (e.g. AEAD

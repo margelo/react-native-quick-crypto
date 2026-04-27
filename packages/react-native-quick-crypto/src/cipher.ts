@@ -91,16 +91,19 @@ function validateCipherParams(
   const lower = cipherType.toLowerCase();
   const sodium = LIBSODIUM_CIPHER_PARAMS[lower];
   if (sodium) {
+    // libsodium parlance: "nonce" rather than "iv". Phrase the expected
+    // size as a natural-language clause so callers asserting on either
+    // `key must be N bytes` or `Invalid key length N` both match.
     if (keyByteLength !== sodium.keyLength) {
       throw new RangeError(
         `Invalid key length ${keyByteLength} for cipher ${cipherType} ` +
-          `(expected ${sodium.keyLength})`,
+          `(key must be ${sodium.keyLength} bytes)`,
       );
     }
     if (ivByteLength !== sodium.ivLength) {
       throw new RangeError(
-        `Invalid iv length ${ivByteLength} for cipher ${cipherType} ` +
-          `(expected ${sodium.ivLength})`,
+        `Invalid nonce length ${ivByteLength} for cipher ${cipherType} ` +
+          `(nonce must be ${sodium.ivLength} bytes)`,
       );
     }
     return;
