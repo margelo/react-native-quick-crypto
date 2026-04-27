@@ -144,8 +144,13 @@ export function publicDecrypt(
       paddingMode,
     );
     return Buffer.from(decrypted);
-  } catch (error) {
-    throw new Error(`publicDecrypt failed: ${(error as Error).message}`);
+  } catch {
+    // Bleichenbacher mitigation: surface a single, content-independent error
+    // for every decrypt failure so an attacker cannot use error-message
+    // differences as a padding oracle. The native side already collapses its
+    // OpenSSL error codes to the same opaque message; we drop it here too
+    // rather than re-leaking it via string interpolation.
+    throw new Error('publicDecrypt failed');
   }
 }
 
@@ -244,7 +249,8 @@ export function privateDecrypt(
       oaepLabel,
     );
     return Buffer.from(decrypted);
-  } catch (error) {
-    throw new Error(`privateDecrypt failed: ${(error as Error).message}`);
+  } catch {
+    // Bleichenbacher mitigation — see publicDecrypt above.
+    throw new Error('privateDecrypt failed');
   }
 }
