@@ -645,53 +645,52 @@ test(SUITE, 'createCipheriv: rejects wrong xsalsa20 nonce length', () => {
 });
 
 // Phase 3.6 regression: stream _transform / _flush errors (e.g. AEAD
-// auth-tag mismatch on Decipher.final()) must flow through the
-// callback so they emit as 'error' events on the stream.
+// auth-tag mismatch on Decipher.final()) must surface as 'error' events
+// rather than throwing through the Transform plumbing. Drive each path
+// through the public stream API.
 
-test(SUITE, 'Decipher._flush: surfaces auth-tag mismatch via callback', () => {
-  // Encrypt to obtain a valid (key, iv, tag) triple, then tamper with the
-  // auth tag so Decipher.final() rejects authentication.
-  const testKey = Buffer.from(randomFillSync(new Uint8Array(32)));
-  const testIv = randomFillSync(new Uint8Array(12));
-  const cipher = createCipheriv('aes-256-gcm', testKey, Buffer.from(testIv));
-  cipher.setAAD(aad);
-  const encrypted = Buffer.concat([
-    cipher.update(plaintextBuffer),
-    cipher.final(),
-  ]);
-  const tag = cipher.getAuthTag();
-  tag[0] = tag[0]! ^ 0xff;
+test(
+  SUITE,
+  'Decipher: auth-tag mismatch surfaces as "error" event',
+  async () => {
+    // Encrypt to obtain a valid (key, iv, tag) triple, then tamper with the
+    // auth tag so Decipher.final() rejects authentication.
+    const testKey = Buffer.from(randomFillSync(new Uint8Array(32)));
+    const testIv = randomFillSync(new Uint8Array(12));
+    const cipher = createCipheriv('aes-256-gcm', testKey, Buffer.from(testIv));
+    cipher.setAAD(aad);
+    const encrypted = Buffer.concat([
+      cipher.update(plaintextBuffer),
+      cipher.final(),
+    ]);
+    const tag = cipher.getAuthTag();
+    tag[0] = tag[0]! ^ 0xff;
 
-  const decipher = createDecipheriv(
-    'aes-256-gcm',
-    testKey,
-    Buffer.from(testIv),
-  );
-  decipher.setAAD(aad);
-  decipher.setAuthTag(tag);
-  decipher.update(encrypted);
+    const decipher = createDecipheriv(
+      'aes-256-gcm',
+      testKey,
+      Buffer.from(testIv),
+    );
+    decipher.setAAD(aad);
+    decipher.setAuthTag(tag);
+    decipher.update(encrypted);
 
-  let received: Error | null | undefined = undefined;
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  (decipher as any)._flush((err: Error | null) => {
-    received = err;
-  });
-  expect(received).to.be.instanceOf(Error);
-});
+    const error = await new Promise<Error>(resolve => {
+      decipher.once('error', resolve);
+      decipher.end(); // triggers _flush → final() → tag mismatch
+    });
+    expect(error).to.be.instanceOf(Error);
+  },
+);
 
-test(SUITE, 'Cipher._transform: surfaces update() error via callback', () => {
+test(SUITE, 'Cipher: _transform error surfaces as "error" event', async () => {
   const cipher = createCipheriv('aes-128-cbc', key16, iv16);
   cipher.update(plaintextBuffer);
-  cipher.final(); // post-final — next update() throws
+  cipher.final(); // finalize — next update() throws
 
-  let received: Error | null | undefined = undefined;
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  (cipher as any)._transform(
-    Buffer.from('after final'),
-    'utf8',
-    (err: Error | null) => {
-      received = err;
-    },
-  );
-  expect(received).to.be.instanceOf(Error);
+  const error = await new Promise<Error>(resolve => {
+    cipher.once('error', resolve);
+    cipher.write('after final');
+  });
+  expect(error).to.be.instanceOf(Error);
 });

@@ -56,7 +56,12 @@ function validateAlgorithm(algorithm: string): void {
   }
 }
 
-function validateArgon2Params(params: Argon2Params, version: number): void {
+// Returns the resolved nonce ArrayBuffer so the caller can pass it
+// straight to native without re-resolving `params.nonce`.
+function validateArgon2Params(
+  params: Argon2Params,
+  version: number,
+): ArrayBuffer {
   if (!isUInt(params.parallelism, ARGON2_MAX_U24) || params.parallelism < 1) {
     throw new RangeError(
       `Invalid Argon2 parallelism: ${params.parallelism} ` +
@@ -91,13 +96,14 @@ function validateArgon2Params(params: Argon2Params, version: number): void {
   // Salt (nonce) must be 8..2^32 - 1 bytes — measured against the resolved
   // ArrayBuffer because BinaryLike accepts strings whose UTF-8 length is
   // what actually reaches OpenSSL.
-  const nonceLen = binaryLikeToArrayBuffer(params.nonce).byteLength;
-  if (nonceLen < 8 || nonceLen > ARGON2_MAX_U32) {
+  const nonceAB = binaryLikeToArrayBuffer(params.nonce);
+  if (nonceAB.byteLength < 8 || nonceAB.byteLength > ARGON2_MAX_U32) {
     throw new RangeError(
-      `Invalid Argon2 nonce length: ${nonceLen} bytes ` +
+      `Invalid Argon2 nonce length: ${nonceAB.byteLength} bytes ` +
         `(RFC 9106: 8 ≤ |s| ≤ 2^32 - 1)`,
     );
   }
+  return nonceAB;
 }
 
 function toAB(value: BinaryLike): ArrayBuffer {
@@ -107,11 +113,11 @@ function toAB(value: BinaryLike): ArrayBuffer {
 export function argon2Sync(algorithm: string, params: Argon2Params): Buffer {
   validateAlgorithm(algorithm);
   const version = params.version ?? ARGON2_VERSION;
-  validateArgon2Params(params, version);
+  const nonceAB = validateArgon2Params(params, version);
   const result = getNative().hashSync(
     algorithm,
     toAB(params.message),
-    toAB(params.nonce),
+    nonceAB,
     params.parallelism,
     params.tagLength,
     params.memory,
@@ -130,8 +136,9 @@ export function argon2(
 ): void {
   validateAlgorithm(algorithm);
   const version = params.version ?? ARGON2_VERSION;
+  let nonceAB: ArrayBuffer;
   try {
-    validateArgon2Params(params, version);
+    nonceAB = validateArgon2Params(params, version);
   } catch (err) {
     callback(err as Error, Buffer.alloc(0));
     return;
@@ -140,7 +147,7 @@ export function argon2(
     .hash(
       algorithm,
       toAB(params.message),
-      toAB(params.nonce),
+      nonceAB,
       params.parallelism,
       params.tagLength,
       params.memory,

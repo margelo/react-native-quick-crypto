@@ -45,8 +45,11 @@ function sanitizeInput(input: BinaryLike, name: string): ArrayBuffer {
   }
 }
 
-// Output byte-length of each digest the C++ Hkdf supports. Used to enforce
-// the RFC 5869 §2.3 ceiling: L ≤ 255 * HashLen.
+// Output byte-length of each fixed-length digest. HKDF requires a fixed-
+// output hash (it builds on HMAC), so XOFs like SHAKE128/256 are not
+// included even though `normalizeHashName` will accept them — passing
+// SHAKE here is a caller bug we surface as `Unsupported HKDF digest`
+// instead of letting the native side return an opaque error.
 const HKDF_HASH_BYTES: Readonly<Record<string, number>> = {
   sha1: 20,
   sha224: 28,
@@ -70,7 +73,11 @@ function validateHkdfKeylen(digest: string, keylen: number): void {
     throw new TypeError('Bad key length');
   }
   const hashLen = HKDF_HASH_BYTES[digest.toLowerCase()];
-  if (hashLen !== undefined && keylen > 255 * hashLen) {
+  if (hashLen === undefined) {
+    throw new TypeError(`Unsupported HKDF digest: ${digest}`);
+  }
+  // RFC 5869 §2.3: L ≤ 255 * HashLen.
+  if (keylen > 255 * hashLen) {
     throw new RangeError(
       `HKDF keylen ${keylen} exceeds RFC 5869 ceiling ` +
         `255 * HashLen (${255 * hashLen}) for ${digest}`,

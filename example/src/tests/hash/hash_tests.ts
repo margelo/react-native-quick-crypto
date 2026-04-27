@@ -323,35 +323,29 @@ test(SUITE, 'hash() oneshot - Buffer input', () => {
 });
 
 // Phase 3.6 regression: synchronous failures inside `_transform` and
-// `_flush` must surface via the stream callback (i.e. become 'error'
-// events) rather than throwing out of the Transform plumbing — which
-// can leave the stream in a half-written state and crash the host
-// pipeline.
+// `_flush` must surface as stream 'error' events rather than throwing
+// out of the Transform plumbing — which can leave the stream in a
+// half-written state and crash the host pipeline. Drive each path
+// through the public stream API (write/end) and assert on 'error'.
 
-test(SUITE, 'Hash._transform: surfaces update() error via callback', () => {
+test(SUITE, 'Hash: _transform error surfaces as "error" event', async () => {
   const h = createHash('sha256');
-  h.digest(); // put the native context in finalized state — next update() throws
+  h.digest(); // finalize the native context — next update() throws
 
-  let received: Error | null | undefined = undefined;
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  (h as any)._transform(
-    Buffer.from('after digest'),
-    'utf8',
-    (err: Error | null) => {
-      received = err;
-    },
-  );
-  expect(received).to.be.instanceOf(Error);
+  const error = await new Promise<Error>(resolve => {
+    h.once('error', resolve);
+    h.write('after digest');
+  });
+  expect(error).to.be.instanceOf(Error);
 });
 
-test(SUITE, 'Hash._flush: surfaces digest() error via callback', () => {
+test(SUITE, 'Hash: _flush error surfaces as "error" event', async () => {
   const h = createHash('sha256');
-  h.digest(); // first digest — second call throws
+  h.digest(); // first digest — second call (from _flush) throws
 
-  let received: Error | null | undefined = undefined;
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  (h as any)._flush((err: Error | null) => {
-    received = err;
+  const error = await new Promise<Error>(resolve => {
+    h.once('error', resolve);
+    h.end();
   });
-  expect(received).to.be.instanceOf(Error);
+  expect(error).to.be.instanceOf(Error);
 });

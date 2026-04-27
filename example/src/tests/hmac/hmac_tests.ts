@@ -519,34 +519,28 @@ test(SUITE, 'digest with ucs2 encoding', () => {
   );
 });
 
-// Phase 3.6 regression: stream _transform / _flush errors must flow
-// through the callback so they emit as 'error' events rather than
-// throwing through the Transform plumbing.
+// Phase 3.6 regression: stream _transform / _flush errors must surface
+// as 'error' events rather than throwing through the Transform
+// plumbing. Drive each path through the public stream API.
 
-test(SUITE, 'Hmac._transform: surfaces update() error via callback', () => {
+test(SUITE, 'Hmac: _transform error surfaces as "error" event', async () => {
   const h = createHmac('sha256', 'k');
-  h.digest(); // post-digest state — next update() throws
+  h.digest(); // finalize — next update() throws
 
-  let received: Error | null | undefined = undefined;
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  (h as any)._transform(
-    Buffer.from('after digest'),
-    'utf8',
-    (err: Error | null) => {
-      received = err;
-    },
-  );
-  expect(received).to.be.instanceOf(Error);
+  const error = await new Promise<Error>(resolve => {
+    h.once('error', resolve);
+    h.write('after digest');
+  });
+  expect(error).to.be.instanceOf(Error);
 });
 
-test(SUITE, 'Hmac._flush: surfaces digest() error via callback', () => {
+test(SUITE, 'Hmac: _flush error surfaces as "error" event', async () => {
   const h = createHmac('sha256', 'k');
-  h.digest();
+  h.digest(); // first digest — second call (from _flush) throws
 
-  let received: Error | null | undefined = undefined;
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  (h as any)._flush((err: Error | null) => {
-    received = err;
+  const error = await new Promise<Error>(resolve => {
+    h.once('error', resolve);
+    h.end();
   });
-  expect(received).to.be.instanceOf(Error);
+  expect(error).to.be.instanceOf(Error);
 });

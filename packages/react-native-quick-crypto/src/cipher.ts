@@ -84,7 +84,10 @@ function validateCipherParams(
   if (typeof cipherType !== 'string' || cipherType.length === 0) {
     throw new TypeError('cipher algorithm must be a non-empty string');
   }
-  if (!Number.isFinite(keyByteLength) || keyByteLength === 0) {
+  // ArrayBuffer.byteLength is always a non-negative integer, so the only
+  // out-of-range value we need to guard is 0 — empty key buffers must not
+  // reach OpenSSL's EVP_CipherInit_ex.
+  if (keyByteLength === 0) {
     throw new RangeError(`Invalid key length 0 for cipher ${cipherType}`);
   }
 
@@ -109,13 +112,35 @@ function validateCipherParams(
     return;
   }
 
-  // OpenSSL path: getCipherInfo(name, keyLen, ivLen) returns undefined when
-  // the requested lengths are not accepted by the cipher. We split the call
-  // into three checks so the thrown error can name which parameter is wrong.
+  // OpenSSL path. Look up the cipher's defaults once. Most callers pass
+  // exactly the cipher's default key/iv lengths (e.g. AES-128-CBC always
+  // wants 16/16) — short-circuit those to a single native round-trip.
+  // Variable-length ciphers (GCM, CCM, OCB, ChaCha20-Poly1305) fall through
+  // to per-parameter validation calls so the error message can name which
+  // of {key, iv} is wrong.
   const info = CipherUtils.getCipherInfo(cipherType);
   if (info === undefined) {
     throw new TypeError(`Unsupported or unknown cipher type: ${cipherType}`);
   }
+
+  const expectedIv = info.ivLength ?? 0;
+  if (expectedIv === 0 && ivByteLength > 0) {
+    throw new RangeError(
+      `Cipher ${cipherType} does not use an iv (got ${ivByteLength} bytes)`,
+    );
+  }
+  if (expectedIv > 0 && ivByteLength === 0) {
+    throw new RangeError(
+      `Cipher ${cipherType} requires an iv but none was provided`,
+    );
+  }
+
+  // Fast path: lengths match the cipher's defaults exactly.
+  if (info.keyLength === keyByteLength && expectedIv === ivByteLength) {
+    return;
+  }
+
+  // Variable-length: verify against native one parameter at a time.
   if (
     CipherUtils.getCipherInfo(cipherType, keyByteLength, undefined) ===
     undefined
@@ -124,25 +149,12 @@ function validateCipherParams(
       `Invalid key length ${keyByteLength} for cipher ${cipherType}`,
     );
   }
-
-  const expectedIv = info.ivLength ?? 0;
-  if (expectedIv > 0) {
-    if (ivByteLength === 0) {
-      throw new RangeError(
-        `Cipher ${cipherType} requires an iv but none was provided`,
-      );
-    }
-    if (
-      CipherUtils.getCipherInfo(cipherType, undefined, ivByteLength) ===
-      undefined
-    ) {
-      throw new RangeError(
-        `Invalid iv length ${ivByteLength} for cipher ${cipherType}`,
-      );
-    }
-  } else if (ivByteLength > 0) {
+  if (
+    expectedIv > 0 &&
+    CipherUtils.getCipherInfo(cipherType, undefined, ivByteLength) === undefined
+  ) {
     throw new RangeError(
-      `Cipher ${cipherType} does not use an iv (got ${ivByteLength} bytes)`,
+      `Invalid iv length ${ivByteLength} for cipher ${cipherType}`,
     );
   }
 }

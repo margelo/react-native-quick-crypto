@@ -89,14 +89,19 @@ function hasAnyNotIn(usages: KeyUsage[], allowed: KeyUsage[]): boolean {
 // the registry of canonical names below can stay declared after the
 // function. Without this, callers who pass lowercase strings bypass the
 // downstream `SUPPORTED_ALGORITHMS` set comparisons silently.
-let _canonicalAlgorithmNames: Map<string, string> | null = null;
-function getCanonicalAlgorithmNames(): Map<string, string> {
+//
+// The map's value type is `AnyAlgorithm` so callers can use the lookup
+// result directly without re-asserting. The `as AnyAlgorithm` at insertion
+// is the single contract boundary: every name in `SUPPORTED_ALGORITHMS` is
+// already a member of `AnyAlgorithm` by construction.
+let _canonicalAlgorithmNames: Map<string, AnyAlgorithm> | null = null;
+function getCanonicalAlgorithmNames(): Map<string, AnyAlgorithm> {
   if (_canonicalAlgorithmNames === null) {
-    const map = new Map<string, string>();
+    const map = new Map<string, AnyAlgorithm>();
     for (const set of Object.values(SUPPORTED_ALGORITHMS)) {
       if (!set) continue;
       for (const name of set) {
-        map.set(name.toLowerCase(), name);
+        map.set(name.toLowerCase(), name as AnyAlgorithm);
       }
     }
     _canonicalAlgorithmNames = map;
@@ -110,12 +115,11 @@ function normalizeAlgorithm(
 ): SubtleAlgorithm {
   const map = getCanonicalAlgorithmNames();
   if (typeof algorithm === 'string') {
-    const canonical = map.get(algorithm.toLowerCase()) ?? algorithm;
-    return { name: canonical as AnyAlgorithm };
+    return { name: map.get(algorithm.toLowerCase()) ?? algorithm };
   }
   if (typeof algorithm.name === 'string') {
     const canonical = map.get(algorithm.name.toLowerCase()) ?? algorithm.name;
-    return { ...algorithm, name: canonical as AnyAlgorithm } as SubtleAlgorithm;
+    return { ...algorithm, name: canonical };
   }
   return algorithm as SubtleAlgorithm;
 }

@@ -115,6 +115,17 @@ test(SUITE, 'hkdfSync: accepts keylen at the RFC 5869 ceiling', () => {
   }).to.not.throw();
 });
 
+test(SUITE, 'hkdfSync: rejects unsupported digest (shake128)', () => {
+  const ikm = Buffer.from('00', 'hex');
+  // SHAKE is an extendable-output function, not a fixed-length hash, so it
+  // is not a valid HKDF digest (HKDF builds on HMAC, which requires a
+  // fixed-length hash). The validator surfaces this as a TypeError before
+  // the call reaches OpenSSL.
+  expect(() => {
+    hkdfSync('shake128', ikm, Buffer.alloc(0), Buffer.alloc(0), 32);
+  }).to.throw(TypeError, /Unsupported HKDF digest/);
+});
+
 test(SUITE, 'hkdf: surfaces ceiling errors via callback', async () => {
   const ikm = Buffer.from('00', 'hex');
   await new Promise<void>((resolve, reject) => {
