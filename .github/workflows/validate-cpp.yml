@@ -22,6 +22,12 @@ env:
   # https://github.blog/changelog/2025-09-19-deprecation-of-node-20-on-github-actions-runners/
   FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: 'true'
 
+# Minimum scopes — reviewdog posts review comments on PRs.
+permissions:
+  contents: read
+  checks: write
+  pull-requests: write
+
 jobs:
   validate_cpp:
     name: C++ Lint
@@ -35,7 +41,7 @@ jobs:
           find packages/react-native-quick-crypto/cpp packages/react-native-quick-crypto/android/src/main/cpp \
           -regex '.*\.\(cpp\|hpp\|cc\|cxx\|h\)' \
           -exec clang-format --style=file --dry-run --Werror {} +
-      - uses: reviewdog/action-cpplint@master
+      - uses: reviewdog/action-cpplint@9552c62f4bd516c1e3a6f84eae56bd864cc304c6 # v1.11.0
         with:
           github_token: ${{ secrets.github_token }}
           reporter: github-pr-review
