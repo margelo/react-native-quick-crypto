@@ -29,6 +29,12 @@ env:
   # https://github.blog/changelog/2025-09-19-deprecation-of-node-20-on-github-actions-runners/
   FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: 'true'
 
+# Minimum scopes — post-maestro-screenshot composite action posts a PR comment with
+# the upload-image artifact link.
+permissions:
+  contents: read
+  pull-requests: write
+
 jobs:
   e2e-tests-ios:
     runs-on: macOS-26

@@ -63,20 +63,24 @@ jobs:
       - name: Release package to npm
         working-directory: packages/react-native-quick-crypto
         run: |
-          if [ "${{ inputs.dry-run }}" = "true" ]; then
-            bun release ${{ inputs.version }} --dry-run --ci
+          if [ "$DRY_RUN" = "true" ]; then
+            bun release "$VERSION" --dry-run --ci
           else
-            bun release ${{ inputs.version }} --ci
+            bun release "$VERSION" --ci
           fi
         env:
           NPM_CONFIG_PROVENANCE: true
+          VERSION: ${{ inputs.version }}
+          DRY_RUN: ${{ inputs.dry-run }}
 
       - name: Create Git tag and GitHub release
         run: |
-          if [ "${{ inputs.dry-run }}" = "true" ]; then
-            bun run release-it ${{ inputs.version }} --dry-run --ci
+          if [ "$DRY_RUN" = "true" ]; then
+            bun run release-it "$VERSION" --dry-run --ci
           else
-            bun run release-it ${{ inputs.version }} --ci
+            bun run release-it "$VERSION" --ci
           fi
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          VERSION: ${{ inputs.version }}
+          DRY_RUN: ${{ inputs.dry-run }}

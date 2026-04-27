@@ -36,6 +36,12 @@ env:
   # https://github.blog/changelog/2025-09-19-deprecation-of-node-20-on-github-actions-runners/
   FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: 'true'
 
+# Minimum scopes — reviewdog posts tsc errors as review comments on PRs.
+permissions:
+  contents: read
+  checks: write
+  pull-requests: write
+
 jobs:
   compile_js:
     name: Compile JS (tsc)
@@ -63,6 +69,27 @@ jobs:
         run: |
           cd packages/react-native-quick-crypto
           bun circular
+
+  audit_runtime_deps:
+    name: Audit runtime deps (bun audit)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+
+      - uses: ./.github/actions/setup-bun
+
+      # Audits only the 6 runtime `dependencies:` of the published package, not the
+      # workspace's dev/peer tooling. Workspace-level `bun audit` walks through optional
+      # peers (expo, react-native, etc.) which surface ~70 advisories that never reach a
+      # consumer's runtime bundle. Phase 5.1 baseline: zero advisories in the runtime tree.
+      - name: Audit runtime dependencies
+        run: |
+          mkdir -p /tmp/rnqc-runtime-audit
+          cd /tmp/rnqc-runtime-audit
+          bun -e "const pkg=require('$GITHUB_WORKSPACE/packages/react-native-quick-crypto/package.json'); require('fs').writeFileSync('package.json', JSON.stringify({name:'rnqc-runtime-audit',version:'0.0.0',dependencies:pkg.dependencies},null,2));"
+          cat package.json
+          bun install --no-summary
+          bun audit --audit-level=high
 
   lint_js:
     name: JS Lint (eslint, prettier)
