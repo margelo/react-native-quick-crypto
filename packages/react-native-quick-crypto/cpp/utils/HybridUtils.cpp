@@ -145,22 +145,26 @@ namespace {
       }
 
       size_t offset = result.size();
-      result.resize(offset + (num * 2));
+      result.resize(offset + (num * 2)); // This fills the buffer with '\0'
 
       auto* dst = result.data() + offset;
       if (isAscii) {
+        // Widen ASCII characters from char into char16_t
         const auto* asciiSrc = reinterpret_cast<const char*>(data);
         for (size_t i = 0; i < num; i++, dst += 2) {
           *dst = asciiSrc[i];
+          // *(dst + 1) = '\0' is unnecessary because the buffer is zero filled
         }
         return;
       }
 
       const auto* utf16Src = reinterpret_cast<const char16_t*>(data);
       if constexpr (std::endian::native == std::endian::little && sizeof(char16_t) == 2) {
+        // Fast&direct copy path for expected endianness and char16_t size
         std::memcpy(dst, utf16Src, num * 2);
         return;
       }
+      // Slow path for unexpected endianness/char16_t size
       for (size_t i = 0; i < num; i++) {
         const uint16_t codeUnit = static_cast<uint16_t>(utf16Src[i]);
         dst[i * 2 + 0] = static_cast<uint8_t>(codeUnit & 0xFFu);
