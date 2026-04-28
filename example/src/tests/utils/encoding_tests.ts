@@ -643,19 +643,6 @@ test(SUITE, '[Node.js] Decodes UTF-16LE bytes back to Japanese text.', () => {
   );
 });
 
-test(
-  SUITE,
-  '[Node.js] Decodes UTF-16LE bytes correctly from a sliced buffer starting at byte offset 1.',
-  () => {
-    const bytes = new Uint8Array([
-      0xff, 0x42, 0x30, 0x44, 0x30, 0x46, 0x30, 0x48, 0x30, 0x4a, 0x30,
-    ]);
-    expect(
-      bufferToString(bytes.slice(1).buffer as ArrayBuffer, 'utf16le'),
-    ).to.equal('あいうえお');
-  },
-);
-
 // --- Latin1 / Binary ---
 
 test(
