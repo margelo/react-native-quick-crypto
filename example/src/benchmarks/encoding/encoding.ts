@@ -48,14 +48,14 @@ const ab32B_ascii = generateData(32, true);
 const ab32B = generateData(32, false);
 
 // Pre-encode strings for decode benchmarks
-const hex_1MB = bufferToString(ab1MB, 'hex');
-const hex_32B = bufferToString(ab32B, 'hex');
-const base64_1MB = bufferToString(ab1MB, 'base64');
-const base64_32B = bufferToString(ab32B, 'base64');
-const utf16le_1MB_ascii = bufferToString(ab1MB_ascii, 'utf16le');
-const utf16le_32B_ascii = bufferToString(ab32B_ascii, 'utf16le');
-const utf16le_1MB_non_ascii = bufferToString(ab1MB, 'utf16le');
-const utf16le_32B_non_ascii = bufferToString(ab32B, 'utf16le');
+const hex_1MB = ab2str(ab1MB, 'hex');
+const hex_32B = ab2str(ab32B, 'hex');
+const base64_1MB = ab2str(ab1MB, 'base64');
+const base64_32B = ab2str(ab32B, 'base64');
+const utf16le_1MB_ascii = ab2str(ab1MB_ascii, 'utf16le');
+const utf16le_32B_ascii = ab2str(ab32B_ascii, 'utf16le');
+const utf16le_1MB_non_ascii = ab2str(ab1MB, 'utf16le');
+const utf16le_32B_non_ascii = ab2str(ab32B, 'utf16le');
 
 // --- Encode benchmarks (ArrayBuffer → string) ---
 
