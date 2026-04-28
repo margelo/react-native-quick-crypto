@@ -17,7 +17,7 @@ class HybridUtils : public HybridUtilsSpec {
  private:
   facebook::jsi::Value bufferToJsiString(facebook::jsi::Runtime& runtime, const facebook::jsi::Value& thisArg,
                                          const facebook::jsi::Value* args, size_t argCount);
-  facebook::jsi::Value JsiStringToBuffer(facebook::jsi::Runtime& runtime, const facebook::jsi::Value& thisArg,
+  facebook::jsi::Value jsiStringToBuffer(facebook::jsi::Runtime& runtime, const facebook::jsi::Value& thisArg,
                                          const facebook::jsi::Value* args, size_t argCount);
 };
 

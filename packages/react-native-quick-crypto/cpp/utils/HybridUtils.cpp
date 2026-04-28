@@ -287,7 +287,7 @@ facebook::jsi::Value HybridUtils::bufferToJsiString(facebook::jsi::Runtime& runt
   }
 }
 
-facebook::jsi::Value HybridUtils::JsiStringToBuffer(facebook::jsi::Runtime& runtime, const facebook::jsi::Value&,
+facebook::jsi::Value HybridUtils::jsiStringToBuffer(facebook::jsi::Runtime& runtime, const facebook::jsi::Value&,
                                                     const facebook::jsi::Value* args, size_t argCount) {
   // Runtime argument check from react-native-nitro-modules/cpp/core/HybridFunction.hpp
   if (argCount != 2) [[unlikely]] {
@@ -337,7 +337,7 @@ void HybridUtils::loadHybridMethods() {
   HybridUtilsSpec::loadHybridMethods();
   registerHybrids(this, [](Prototype& prototype) {
     prototype.registerRawHybridMethod("bufferToString", 2, &HybridUtils::bufferToJsiString);
-    prototype.registerRawHybridMethod("stringToBuffer", 2, &HybridUtils::JsiStringToBuffer);
+    prototype.registerRawHybridMethod("stringToBuffer", 2, &HybridUtils::jsiStringToBuffer);
   });
 }
 
