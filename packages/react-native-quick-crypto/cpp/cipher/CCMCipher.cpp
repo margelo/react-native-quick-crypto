@@ -22,7 +22,7 @@ void CCMCipher::init(const std::shared_ptr<ArrayBuffer> cipher_key, const std::s
   size_t iv_len = native_iv->size();
 
   // Set the IV length using CCM-specific control
-  if (EVP_CIPHER_CTX_ctrl(ctx, EVP_CTRL_CCM_SET_IVLEN, iv_len, nullptr) != 1) {
+  if (EVP_CIPHER_CTX_ctrl(ctx.get(), EVP_CTRL_CCM_SET_IVLEN, iv_len, nullptr) != 1) {
     unsigned long err = ERR_get_error();
     char err_buf[256];
     ERR_error_string_n(err, err_buf, sizeof(err_buf));
@@ -31,7 +31,7 @@ void CCMCipher::init(const std::shared_ptr<ArrayBuffer> cipher_key, const std::s
 
   // Set the expected/output tag length using CCM-specific control.
   // auth_tag_len should have been defaulted or set via setArgs in the base init.
-  if (EVP_CIPHER_CTX_ctrl(ctx, EVP_CTRL_CCM_SET_TAG, auth_tag_len, nullptr) != 1) {
+  if (EVP_CIPHER_CTX_ctrl(ctx.get(), EVP_CTRL_CCM_SET_TAG, auth_tag_len, nullptr) != 1) {
     unsigned long err = ERR_get_error();
     char err_buf[256];
     ERR_error_string_n(err, err_buf, sizeof(err_buf));
@@ -44,7 +44,7 @@ void CCMCipher::init(const std::shared_ptr<ArrayBuffer> cipher_key, const std::s
   const unsigned char* iv_ptr = reinterpret_cast<const unsigned char*>(native_iv->data());
 
   // The last argument (is_cipher) should be consistent with the initial setup call.
-  if (EVP_CipherInit_ex(ctx, nullptr, nullptr, key_ptr, iv_ptr, is_cipher) != 1) {
+  if (EVP_CipherInit_ex(ctx.get(), nullptr, nullptr, key_ptr, iv_ptr, is_cipher) != 1) {
     unsigned long err = ERR_get_error();
     char err_buf[256];
     ERR_error_string_n(err, err_buf, sizeof(err_buf));
@@ -55,6 +55,7 @@ void CCMCipher::init(const std::shared_ptr<ArrayBuffer> cipher_key, const std::s
 std::shared_ptr<ArrayBuffer> CCMCipher::update(const std::shared_ptr<ArrayBuffer>& data) {
   checkCtx();
   checkNotFinalized();
+  has_update_called = true;
   auto native_data = ToNativeArrayBuffer(data);
   size_t in_len = native_data->size();
   if (in_len < 0 || in_len > INT_MAX) {
@@ -66,7 +67,7 @@ std::shared_ptr<ArrayBuffer> CCMCipher::update(const std::shared_ptr<ArrayBuffer
     maybePassAuthTagToOpenSSL();
   }
 
-  int block_size = EVP_CIPHER_CTX_block_size(ctx);
+  int block_size = EVP_CIPHER_CTX_block_size(ctx.get());
   if (block_size <= 0) {
     throw std::runtime_error("Invalid block size in update");
   }
@@ -79,13 +80,17 @@ std::shared_ptr<ArrayBuffer> CCMCipher::update(const std::shared_ptr<ArrayBuffer
   const uint8_t* in = reinterpret_cast<const uint8_t*>(native_data->data());
 
   int actual_out_len = 0;
-  int ret = EVP_CipherUpdate(ctx, out_buf.get(), &actual_out_len, in, in_len);
+  int ret = EVP_CipherUpdate(ctx.get(), out_buf.get(), &actual_out_len, in, in_len);
 
   if (!is_cipher) {
-    // Decryption: Check for tag verification failure
+    // Decryption: tag verification happens during update for CCM. Don't
+    // throw here — defer the failure to final() so callers see the standard
+    // "auth tag mismatch on final" semantics. This also covers the misuse
+    // case where setAuthTag() was never called: ret <= 0 here, we record
+    // it, and final() turns it into a thrown error.
     if (ret <= 0) {
-      // Tag verification failed (or other decryption error)
-      throw std::runtime_error("CCM Decryption: Tag verification failed");
+      pending_auth_failed = true;
+      actual_out_len = 0;
     }
   } else {
     // Encryption: Check for standard errors
@@ -107,22 +112,29 @@ std::shared_ptr<ArrayBuffer> CCMCipher::final() {
   checkCtx();
   checkNotFinalized();
 
-  // CCM decryption does not use final. Verification happens in the last update call.
+  // CCM decryption does not use final for the verification step itself
+  // (that happens in update()), but final() is still where misuse must
+  // surface — both "setAuthTag was never called" and "the tag we did set
+  // didn't match the ciphertext" land here.
   if (!is_cipher) {
     is_finalized = true;
-    unsigned char* empty_output = new unsigned char[0];
-    return std::make_shared<NativeArrayBuffer>(empty_output, 0, [=]() { delete[] empty_output; });
+    if (auth_tag_state == kAuthTagUnknown || pending_auth_failed) {
+      throw std::runtime_error("Unsupported state or unable to authenticate data");
+    }
+    auto empty_output = std::make_unique<unsigned char[]>(0);
+    unsigned char* raw_ptr = empty_output.get();
+    return std::make_shared<NativeArrayBuffer>(empty_output.release(), 0, [raw_ptr]() { delete[] raw_ptr; });
   }
 
   // Proceed only for encryption
-  int block_size = EVP_CIPHER_CTX_block_size(ctx);
+  int block_size = EVP_CIPHER_CTX_block_size(ctx.get());
   if (block_size <= 0) {
     throw std::runtime_error("Invalid block size");
   }
   auto out_buf = std::make_unique<unsigned char[]>(block_size);
   int out_len = 0;
 
-  if (!EVP_CipherFinal_ex(ctx, out_buf.get(), &out_len)) {
+  if (!EVP_CipherFinal_ex(ctx.get(), out_buf.get(), &out_len)) {
     unsigned long err = ERR_get_error();
     char err_buf[256];
     ERR_error_string_n(err, err_buf, sizeof(err_buf));
@@ -133,7 +145,7 @@ std::shared_ptr<ArrayBuffer> CCMCipher::final() {
     auth_tag_len = sizeof(auth_tag);
   }
 
-  if (EVP_CIPHER_CTX_ctrl(ctx, EVP_CTRL_CCM_GET_TAG, auth_tag_len, auth_tag) != 1) {
+  if (EVP_CIPHER_CTX_ctrl(ctx.get(), EVP_CTRL_CCM_GET_TAG, auth_tag_len, auth_tag) != 1) {
     unsigned long err = ERR_get_error();
     char err_buf[256];
     ERR_error_string_n(err, err_buf, sizeof(err_buf));
@@ -148,6 +160,7 @@ std::shared_ptr<ArrayBuffer> CCMCipher::final() {
 
 bool CCMCipher::setAAD(const std::shared_ptr<ArrayBuffer>& data, std::optional<double> plaintextLength) {
   checkCtx();
+  checkAADBeforeUpdate();
   if (!plaintextLength.has_value()) {
     throw std::runtime_error("CCM mode requires plaintextLength to be set");
   }
@@ -179,7 +192,7 @@ bool CCMCipher::setAAD(const std::shared_ptr<ArrayBuffer>& data, std::optional<d
   //    BUT the wiki says "(only needed if AAD is passed)". Let's skip if decrypting and AAD length is 0.
   bool should_set_total_length = is_cipher || aad_len > 0;
   if (should_set_total_length) {
-    if (EVP_CipherUpdate(ctx, nullptr, &out_len, nullptr, data_len) != 1) {
+    if (EVP_CipherUpdate(ctx.get(), nullptr, &out_len, nullptr, data_len) != 1) {
       unsigned long err = ERR_get_error();
       char err_buf[256];
       ERR_error_string_n(err, err_buf, sizeof(err_buf));
@@ -190,7 +203,7 @@ bool CCMCipher::setAAD(const std::shared_ptr<ArrayBuffer>& data, std::optional<d
   // 2. Process AAD Data
   // Per OpenSSL CCM decryption examples, this MUST be called even if aad_len is 0.
   // Pass nullptr as the output buffer, the AAD data pointer, and its length.
-  if (EVP_CipherUpdate(ctx, nullptr, &out_len, native_aad->data(), aad_len) != 1) {
+  if (EVP_CipherUpdate(ctx.get(), nullptr, &out_len, native_aad->data(), aad_len) != 1) {
     unsigned long err = ERR_get_error();
     char err_buf[256];
     ERR_error_string_n(err, err_buf, sizeof(err_buf));

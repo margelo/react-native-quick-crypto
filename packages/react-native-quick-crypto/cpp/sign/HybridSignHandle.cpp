@@ -86,35 +86,13 @@ static bool isOneShotVariant(EVP_PKEY* pkey) {
 #endif
 }
 
-// Get the algorithm name for creating PKEY_CTX (for ML-DSA variants)
-static const char* getAlgorithmName(EVP_PKEY* pkey) {
-  int type = EVP_PKEY_id(pkey);
-#if RNQC_HAS_ML_DSA
-  switch (type) {
-    case EVP_PKEY_ML_DSA_44:
-      return "ML-DSA-44";
-    case EVP_PKEY_ML_DSA_65:
-      return "ML-DSA-65";
-    case EVP_PKEY_ML_DSA_87:
-      return "ML-DSA-87";
-    case EVP_PKEY_ED25519:
-      return "ED25519";
-    case EVP_PKEY_ED448:
-      return "ED448";
-    default:
-      return nullptr;
-  }
-#else
-  switch (type) {
-    case EVP_PKEY_ED25519:
-      return "ED25519";
-    case EVP_PKEY_ED448:
-      return "ED448";
-    default:
-      return nullptr;
-  }
-#endif
-}
+// RAII owners for short-lived OpenSSL handles used in this method. EVP_MD_CTX
+// transitively owns its EVP_PKEY_CTX after a successful EVP_DigestSignInit, so
+// we deliberately rely on EVP_MD_CTX_free to clean both up; the standalone
+// EvpPkeyCtxPtr alias is kept only for the RSA/ECDSA branch, where we
+// allocate the PKEY_CTX directly via EVP_PKEY_CTX_new.
+using EvpMdCtxPtr = std::unique_ptr<EVP_MD_CTX, decltype(&EVP_MD_CTX_free)>;
+using EvpPkeyCtxPtr = std::unique_ptr<EVP_PKEY_CTX, decltype(&EVP_PKEY_CTX_free)>;
 
 std::shared_ptr<ArrayBuffer> HybridSignHandle::sign(const std::shared_ptr<HybridKeyObjectHandleSpec>& keyHandle,
                                                     std::optional<double> padding, std::optional<double> saltLength,
@@ -139,28 +117,19 @@ std::shared_ptr<ArrayBuffer> HybridSignHandle::sign(const std::shared_ptr<Hybrid
   // Ed25519/Ed448/ML-DSA require one-shot signing with EVP_DigestSign
   // Also use one-shot path if no digest was specified (md == nullptr)
   if (is_one_shot || md == nullptr) {
-    // Create a new context for one-shot signing
-    EVP_MD_CTX* sign_ctx = EVP_MD_CTX_new();
+    EvpMdCtxPtr sign_ctx{EVP_MD_CTX_new(), EVP_MD_CTX_free};
     if (!sign_ctx) {
       throw std::runtime_error("Failed to create signing context");
     }
 
-    // Get algorithm name and create PKEY_CTX for ML-DSA
-    const char* alg_name = getAlgorithmName(pkey);
-    EVP_PKEY_CTX* pkey_ctx = nullptr;
-    if (alg_name != nullptr) {
-      pkey_ctx = EVP_PKEY_CTX_new_from_name(nullptr, alg_name, nullptr);
-      if (!pkey_ctx) {
-        EVP_MD_CTX_free(sign_ctx);
-        throw std::runtime_error(std::string("Failed to create signing context for ") + alg_name);
-      }
-    }
-
-    // Initialize for one-shot signing (pass nullptr for md - these algorithms have built-in hash)
-    if (EVP_DigestSignInit(sign_ctx, pkey_ctx ? &pkey_ctx : nullptr, nullptr, nullptr, pkey) <= 0) {
-      EVP_MD_CTX_free(sign_ctx);
-      if (pkey_ctx)
-        EVP_PKEY_CTX_free(pkey_ctx);
+    // Let OpenSSL allocate the PKEY_CTX from the key's keymgmt. On success the
+    // EVP_MD_CTX assumes ownership and EVP_MD_CTX_free will dispose it; on
+    // failure pkey_ctx_raw stays nullptr, so there is nothing to leak. This
+    // mirrors ncrypto's EVPMDCtxPointer::signInit (Node.js deps/ncrypto/ncrypto.cc
+    // and ~/dev/ncrypto/src/ncrypto.cpp), which works for RSA, ECDSA, Ed25519,
+    // Ed448 and ML-DSA without any algorithm-name pre-creation.
+    EVP_PKEY_CTX* pkey_ctx_raw = nullptr;
+    if (EVP_DigestSignInit(sign_ctx.get(), &pkey_ctx_raw, nullptr, nullptr, pkey) <= 0) {
       throw std::runtime_error("Failed to initialize one-shot signing");
     }
 
@@ -171,21 +140,17 @@ std::shared_ptr<ArrayBuffer> HybridSignHandle::sign(const std::shared_ptr<Hybrid
     // We need to use EVP_DigestSign with the accumulated data
 
     // For one-shot variants, determine signature length first
-    if (EVP_DigestSign(sign_ctx, nullptr, &sig_len, data_buffer.data(), data_buffer.size()) <= 0) {
-      EVP_MD_CTX_free(sign_ctx);
+    if (EVP_DigestSign(sign_ctx.get(), nullptr, &sig_len, data_buffer.data(), data_buffer.size()) <= 0) {
       throw std::runtime_error("Failed to determine Ed signature length");
     }
 
     sig_buf = std::make_unique<uint8_t[]>(sig_len);
-    if (EVP_DigestSign(sign_ctx, sig_buf.get(), &sig_len, data_buffer.data(), data_buffer.size()) <= 0) {
-      EVP_MD_CTX_free(sign_ctx);
+    if (EVP_DigestSign(sign_ctx.get(), sig_buf.get(), &sig_len, data_buffer.data(), data_buffer.size()) <= 0) {
       unsigned long err = ERR_get_error();
       char err_buf[256];
       ERR_error_string_n(err, err_buf, sizeof(err_buf));
       throw std::runtime_error("Failed to sign with Ed key: " + std::string(err_buf));
     }
-
-    EVP_MD_CTX_free(sign_ctx);
   } else {
     // Standard signing flow for RSA/ECDSA
     unsigned char digest[EVP_MAX_MD_SIZE];
@@ -195,13 +160,12 @@ std::shared_ptr<ArrayBuffer> HybridSignHandle::sign(const std::shared_ptr<Hybrid
       throw std::runtime_error("Failed to finalize digest");
     }
 
-    EVP_PKEY_CTX* pkey_ctx = EVP_PKEY_CTX_new(pkey, nullptr);
+    EvpPkeyCtxPtr pkey_ctx{EVP_PKEY_CTX_new(pkey, nullptr), EVP_PKEY_CTX_free};
     if (!pkey_ctx) {
       throw std::runtime_error("Failed to create signing context");
     }
 
-    if (EVP_PKEY_sign_init(pkey_ctx) <= 0) {
-      EVP_PKEY_CTX_free(pkey_ctx);
+    if (EVP_PKEY_sign_init(pkey_ctx.get()) <= 0) {
       char err_buf[512];
       snprintf(err_buf, sizeof(err_buf), "Failed to initialize signing for key type %d (expected one-shot: %s, RNQC_HAS_ML_DSA=%d)",
                pkey_type, is_one_shot ? "true" : "false", RNQC_HAS_ML_DSA);
@@ -210,40 +174,33 @@ std::shared_ptr<ArrayBuffer> HybridSignHandle::sign(const std::shared_ptr<Hybrid
 
     if (padding.has_value()) {
       int pad = static_cast<int>(padding.value());
-      if (EVP_PKEY_CTX_set_rsa_padding(pkey_ctx, pad) <= 0) {
-        EVP_PKEY_CTX_free(pkey_ctx);
+      if (EVP_PKEY_CTX_set_rsa_padding(pkey_ctx.get(), pad) <= 0) {
         throw std::runtime_error("Failed to set RSA padding");
       }
     }
 
     if (saltLength.has_value() && padding.has_value() && static_cast<int>(padding.value()) == RSA_PKCS1_PSS_PADDING) {
       int salt_len = static_cast<int>(saltLength.value());
-      if (EVP_PKEY_CTX_set_rsa_pss_saltlen(pkey_ctx, salt_len) <= 0) {
-        EVP_PKEY_CTX_free(pkey_ctx);
+      if (EVP_PKEY_CTX_set_rsa_pss_saltlen(pkey_ctx.get(), salt_len) <= 0) {
         throw std::runtime_error("Failed to set PSS salt length");
       }
     }
 
-    if (EVP_PKEY_CTX_set_signature_md(pkey_ctx, md) <= 0) {
-      EVP_PKEY_CTX_free(pkey_ctx);
+    if (EVP_PKEY_CTX_set_signature_md(pkey_ctx.get(), md) <= 0) {
       throw std::runtime_error("Failed to set signature digest");
     }
 
-    if (EVP_PKEY_sign(pkey_ctx, nullptr, &sig_len, digest, digest_len) <= 0) {
-      EVP_PKEY_CTX_free(pkey_ctx);
+    if (EVP_PKEY_sign(pkey_ctx.get(), nullptr, &sig_len, digest, digest_len) <= 0) {
       throw std::runtime_error("Failed to determine signature length");
     }
 
     sig_buf = std::make_unique<uint8_t[]>(sig_len);
-    if (EVP_PKEY_sign(pkey_ctx, sig_buf.get(), &sig_len, digest, digest_len) <= 0) {
-      EVP_PKEY_CTX_free(pkey_ctx);
+    if (EVP_PKEY_sign(pkey_ctx.get(), sig_buf.get(), &sig_len, digest, digest_len) <= 0) {
       unsigned long err = ERR_get_error();
       char err_buf[256];
       ERR_error_string_n(err, err_buf, sizeof(err_buf));
       throw std::runtime_error("Failed to sign: " + std::string(err_buf));
     }
-
-    EVP_PKEY_CTX_free(pkey_ctx);
   }
 
   int dsa_enc = dsaEncoding.has_value() ? static_cast<int>(dsaEncoding.value()) : kSigEncDER;

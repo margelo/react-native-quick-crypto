@@ -8,17 +8,26 @@
 #define crypto_stream_NONCEBYTES 24 // XSalsa20 nonce size (24 bytes)
 #endif
 
+#include <cstddef>
+#include <cstdint>
+
 #include "HybridCipher.hpp"
 #include "NitroModules/ArrayBuffer.hpp"
+#include "QuickCryptoUtils.hpp"
 
 namespace margelo::nitro::crypto {
 
 class XSalsa20Cipher : public HybridCipher {
  public:
   XSalsa20Cipher() : HybridObject(TAG) {}
-  ~XSalsa20Cipher() {
-    // Let parent destructor free the context
-    ctx = nullptr;
+  ~XSalsa20Cipher() override {
+    // Wipe key material and any cached keystream bytes before the heap is
+    // returned. Without this the secret-bearing bytes persist on the heap
+    // until overwritten — see audit HIGH finding (XSalsa20Cipher.hpp:19-22).
+    // The base-class unique_ptr ctx frees itself; we don't touch it here.
+    secureZero(key);
+    secureZero(nonce);
+    secureZero(leftover_keystream);
   }
 
   void init(const std::shared_ptr<ArrayBuffer> cipher_key, const std::shared_ptr<ArrayBuffer> iv) override;
@@ -26,8 +35,21 @@ class XSalsa20Cipher : public HybridCipher {
   std::shared_ptr<ArrayBuffer> final() override;
 
  private:
+  // Salsa20 (and therefore XSalsa20) processes the keystream in 64-byte blocks.
+  static constexpr std::size_t kSalsa20BlockBytes = 64;
+
   uint8_t key[crypto_stream_KEYBYTES];
   uint8_t nonce[crypto_stream_NONCEBYTES];
+
+  // Streaming state — keeps the keystream advancing across multiple update()
+  // calls. Without this, every update() would restart at block 0, producing
+  // identical keystream for each chunk (a two-time-pad break).
+  uint8_t leftover_keystream[kSalsa20BlockBytes] = {};
+  // 0..kSalsa20BlockBytes; the sentinel value kSalsa20BlockBytes means "no
+  // leftover keystream available — start the next chunk on a block boundary".
+  std::size_t leftover_offset = kSalsa20BlockBytes;
+  // Index of the next 64-byte keystream block to consume.
+  uint64_t block_counter = 0;
 };
 
 } // namespace margelo::nitro::crypto

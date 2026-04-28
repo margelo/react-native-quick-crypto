@@ -14,12 +14,9 @@
 
 namespace margelo::nitro::crypto {
 
-HybridCipher::~HybridCipher() {
-  if (ctx) {
-    EVP_CIPHER_CTX_free(ctx);
-    // No need to set ctx = nullptr here, object is being destroyed
-  }
-}
+// The unique_ptr in the base class destroys ctx automatically — nothing for
+// us to do here. Subclasses MUST NOT touch ctx in their own destructors.
+HybridCipher::~HybridCipher() = default;
 
 void HybridCipher::checkCtx() const {
   if (!ctx) {
@@ -33,11 +30,17 @@ void HybridCipher::checkNotFinalized() const {
   }
 }
 
+void HybridCipher::checkAADBeforeUpdate() const {
+  if (has_update_called) {
+    throw std::runtime_error("setAAD must be called before update");
+  }
+}
+
 bool HybridCipher::maybePassAuthTagToOpenSSL() {
   if (auth_tag_state == kAuthTagKnown) {
     OSSL_PARAM params[] = {OSSL_PARAM_construct_octet_string(OSSL_CIPHER_PARAM_AEAD_TAG, auth_tag, auth_tag_len),
                            OSSL_PARAM_construct_end()};
-    if (!EVP_CIPHER_CTX_set_params(ctx, params)) {
+    if (!EVP_CIPHER_CTX_set_params(ctx.get(), params)) {
       unsigned long err = ERR_get_error();
       char err_buf[256];
       ERR_error_string_n(err, err_buf, sizeof(err_buf));
@@ -49,12 +52,12 @@ bool HybridCipher::maybePassAuthTagToOpenSSL() {
 }
 
 void HybridCipher::init(const std::shared_ptr<ArrayBuffer> cipher_key, const std::shared_ptr<ArrayBuffer> iv) {
-  // Clean up any existing context
-  if (ctx) {
-    EVP_CIPHER_CTX_free(ctx);
-    ctx = nullptr;
-  }
+  // Resetting the unique_ptr frees any previous context.
+  ctx.reset();
   is_finalized = false;
+  has_update_called = false;
+  has_aad = false;
+  pending_auth_failed = false;
 
   // 1. Get cipher implementation by name
   const EVP_CIPHER* cipher = EVP_get_cipherbyname(cipher_type.c_str());
@@ -63,19 +66,18 @@ void HybridCipher::init(const std::shared_ptr<ArrayBuffer> cipher_key, const std
   }
 
   // 2. Create a new context
-  ctx = EVP_CIPHER_CTX_new();
+  ctx.reset(EVP_CIPHER_CTX_new());
   if (!ctx) {
     throw std::runtime_error("Failed to create cipher context");
   }
 
   // Initialise the encryption/decryption operation with the cipher type.
   // Key and IV will be set later by the derived class if needed.
-  if (EVP_CipherInit_ex(ctx, cipher, nullptr, nullptr, nullptr, is_cipher) != 1) {
+  if (EVP_CipherInit_ex(ctx.get(), cipher, nullptr, nullptr, nullptr, is_cipher) != 1) {
     unsigned long err = ERR_get_error();
     char err_buf[256];
     ERR_error_string_n(err, err_buf, sizeof(err_buf));
-    EVP_CIPHER_CTX_free(ctx);
-    ctx = nullptr;
+    ctx.reset();
     throw std::runtime_error("HybridCipher: Failed initial CipherInit setup: " + std::string(err_buf));
   }
 
@@ -86,12 +88,11 @@ void HybridCipher::init(const std::shared_ptr<ArrayBuffer> cipher_key, const std
   const unsigned char* key_ptr = reinterpret_cast<const unsigned char*>(native_key->data());
   const unsigned char* iv_ptr = reinterpret_cast<const unsigned char*>(native_iv->data());
 
-  if (EVP_CipherInit_ex(ctx, nullptr, nullptr, key_ptr, iv_ptr, is_cipher) != 1) {
+  if (EVP_CipherInit_ex(ctx.get(), nullptr, nullptr, key_ptr, iv_ptr, is_cipher) != 1) {
     unsigned long err = ERR_get_error();
     char err_buf[256];
     ERR_error_string_n(err, err_buf, sizeof(err_buf));
-    EVP_CIPHER_CTX_free(ctx);
-    ctx = nullptr;
+    ctx.reset();
     throw std::runtime_error("HybridCipher: Failed to set key/IV: " + std::string(err_buf));
   }
 
@@ -99,8 +100,8 @@ void HybridCipher::init(const std::shared_ptr<ArrayBuffer> cipher_key, const std
   std::string cipher_name(cipher_type);
   if (cipher_name.find("-wrap") != std::string::npos) {
     // This flag is required for AES-KW in OpenSSL 3.x
-    EVP_CIPHER_CTX_set_flags(ctx, EVP_CIPHER_CTX_FLAG_WRAP_ALLOW);
-    EVP_CIPHER_CTX_set_padding(ctx, 0);
+    EVP_CIPHER_CTX_set_flags(ctx.get(), EVP_CIPHER_CTX_FLAG_WRAP_ALLOW);
+    EVP_CIPHER_CTX_set_padding(ctx.get(), 0);
   }
 }
 
@@ -108,40 +109,41 @@ std::shared_ptr<ArrayBuffer> HybridCipher::update(const std::shared_ptr<ArrayBuf
   auto native_data = ToNativeArrayBuffer(data);
   checkCtx();
   checkNotFinalized();
+  has_update_called = true;
   size_t in_len = native_data->size();
   if (in_len > INT_MAX) {
     throw std::runtime_error("Message too long");
   }
 
-  int out_len = in_len + EVP_CIPHER_CTX_block_size(ctx);
-  uint8_t* out = new uint8_t[out_len];
+  int out_len = in_len + EVP_CIPHER_CTX_block_size(ctx.get());
+  auto out_buf = std::make_unique<uint8_t[]>(out_len);
   // Perform the cipher update operation. The real size of the output is
   // returned in out_len
-  int ret = EVP_CipherUpdate(ctx, out, &out_len, native_data->data(), in_len);
+  int ret = EVP_CipherUpdate(ctx.get(), out_buf.get(), &out_len, native_data->data(), in_len);
 
   if (!ret) {
     unsigned long err = ERR_get_error();
     char err_buf[256];
     ERR_error_string_n(err, err_buf, sizeof(err_buf));
-    delete[] out;
     throw std::runtime_error("Cipher update failed: " + std::string(err_buf));
   }
 
   // Create and return a new buffer of exact size needed
-  return std::make_shared<NativeArrayBuffer>(out, out_len, [=]() { delete[] out; });
+  uint8_t* raw_ptr = out_buf.get();
+  return std::make_shared<NativeArrayBuffer>(out_buf.release(), out_len, [raw_ptr]() { delete[] raw_ptr; });
 }
 
 std::shared_ptr<ArrayBuffer> HybridCipher::final() {
   checkCtx();
   checkNotFinalized();
   // Block size is max output size for final, unless EVP_CIPH_NO_PADDING is set
-  int block_size = EVP_CIPHER_CTX_block_size(ctx);
+  int block_size = EVP_CIPHER_CTX_block_size(ctx.get());
   if (block_size <= 0)
     block_size = 16; // Default if block size is weird (e.g., 0)
   auto out_buf = std::make_unique<uint8_t[]>(block_size);
   int out_len = 0;
 
-  int ret = EVP_CipherFinal_ex(ctx, out_buf.get(), &out_len);
+  int ret = EVP_CipherFinal_ex(ctx.get(), out_buf.get(), &out_len);
   if (!ret) {
     unsigned long err = ERR_get_error();
     char err_buf[256];
@@ -165,11 +167,12 @@ std::shared_ptr<ArrayBuffer> HybridCipher::final() {
 
 bool HybridCipher::setAAD(const std::shared_ptr<ArrayBuffer>& data, std::optional<double> plaintextLength) {
   checkCtx();
+  checkAADBeforeUpdate();
   auto native_data = ToNativeArrayBuffer(data);
 
   // Set the AAD
   int out_len;
-  if (!EVP_CipherUpdate(ctx, nullptr, &out_len, native_data->data(), native_data->size())) {
+  if (!EVP_CipherUpdate(ctx.get(), nullptr, &out_len, native_data->data(), native_data->size())) {
     return false;
   }
 
@@ -179,7 +182,7 @@ bool HybridCipher::setAAD(const std::shared_ptr<ArrayBuffer>& data, std::optiona
 
 bool HybridCipher::setAutoPadding(bool autoPad) {
   checkCtx();
-  return EVP_CIPHER_CTX_set_padding(ctx, autoPad) == 1;
+  return EVP_CIPHER_CTX_set_padding(ctx.get(), autoPad) == 1;
 }
 
 bool HybridCipher::setAuthTag(const std::shared_ptr<ArrayBuffer>& tag) {
@@ -193,7 +196,7 @@ bool HybridCipher::setAuthTag(const std::shared_ptr<ArrayBuffer>& tag) {
   size_t tag_len = native_tag->size();
   uint8_t* tag_ptr = native_tag->data();
 
-  int mode = EVP_CIPHER_CTX_mode(ctx);
+  int mode = EVP_CIPHER_CTX_mode(ctx.get());
 
   if (mode == EVP_CIPH_GCM_MODE || mode == EVP_CIPH_OCB_MODE) {
     // Use EVP_CTRL_AEAD_SET_TAG for GCM/OCB decryption
@@ -202,10 +205,10 @@ bool HybridCipher::setAuthTag(const std::shared_ptr<ArrayBuffer>& tag) {
     }
     // Add check for valid cipher in context before setting tag
     // Use the correct OpenSSL 3 function: EVP_CIPHER_CTX_cipher
-    if (!EVP_CIPHER_CTX_cipher(ctx)) {
+    if (!EVP_CIPHER_CTX_cipher(ctx.get())) {
       throw std::runtime_error("Context has no cipher set before setting GCM/OCB tag");
     }
-    if (EVP_CIPHER_CTX_ctrl(ctx, EVP_CTRL_AEAD_SET_TAG, tag_len, tag_ptr) <= 0) {
+    if (EVP_CIPHER_CTX_ctrl(ctx.get(), EVP_CTRL_AEAD_SET_TAG, tag_len, tag_ptr) <= 0) {
       unsigned long err = ERR_get_error();
       char err_buf[256];
       ERR_error_string_n(err, err_buf, sizeof(err_buf));
@@ -235,7 +238,7 @@ bool HybridCipher::setAuthTag(const std::shared_ptr<ArrayBuffer>& tag) {
 std::shared_ptr<ArrayBuffer> HybridCipher::getAuthTag() {
   checkCtx();
 
-  int mode = EVP_CIPHER_CTX_mode(ctx);
+  int mode = EVP_CIPHER_CTX_mode(ctx.get());
 
   if (!is_cipher) {
     throw std::runtime_error("getAuthTag can only be called during encryption.");
@@ -246,7 +249,7 @@ std::shared_ptr<ArrayBuffer> HybridCipher::getAuthTag() {
     constexpr int max_tag_len = 16; // GCM/OCB tags are typically up to 16 bytes
     auto tag_buf = std::make_unique<uint8_t[]>(max_tag_len);
 
-    int ret = EVP_CIPHER_CTX_ctrl(ctx, EVP_CTRL_AEAD_GET_TAG, max_tag_len, tag_buf.get());
+    int ret = EVP_CIPHER_CTX_ctrl(ctx.get(), EVP_CTRL_AEAD_GET_TAG, max_tag_len, tag_buf.get());
 
     if (ret <= 0) {
       unsigned long err = ERR_get_error();
@@ -283,7 +286,7 @@ int HybridCipher::getMode() {
   if (!ctx) {
     throw std::runtime_error("Cipher not initialized. Did you call setArgs()?");
   }
-  return EVP_CIPHER_CTX_get_mode(ctx);
+  return EVP_CIPHER_CTX_get_mode(ctx.get());
 }
 
 void HybridCipher::setArgs(const CipherArgs& args) {

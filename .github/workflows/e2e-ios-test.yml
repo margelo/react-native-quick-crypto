@@ -10,18 +10,30 @@ on:
     paths:
       - '.github/workflows/e2e-ios-test.yml'
       - 'example/**'
-      - 'cpp/**'
-      - 'nitrogen/**'
-      - 'src/**'
+      - 'packages/react-native-quick-crypto/cpp/**'
+      - 'packages/react-native-quick-crypto/nitrogen/**'
+      - 'packages/react-native-quick-crypto/src/**'
       - 'packages/react-native-quick-crypto/ios/**'
   push:
     branches: [main]
     paths:
       - 'example/**'
-      - 'cpp/**'
-      - 'nitrogen/**'
-      - 'src/**'
+      - 'packages/react-native-quick-crypto/cpp/**'
+      - 'packages/react-native-quick-crypto/nitrogen/**'
+      - 'packages/react-native-quick-crypto/src/**'
       - 'packages/react-native-quick-crypto/ios/**'
+
+env:
+  # Opt actions still on Node 20 (upload-artifact, McCzarny/upload-image, peter-evans/*, etc.)
+  # into the runner's Node 24 instead. Silences deprecation warnings until each action ships a v5.
+  # https://github.blog/changelog/2025-09-19-deprecation-of-node-20-on-github-actions-runners/
+  FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: 'true'
+
+# Minimum scopes — post-maestro-screenshot composite action posts a PR comment with
+# the upload-image artifact link.
+permissions:
+  contents: read
+  pull-requests: write
 
 jobs:
   e2e-tests-ios:
@@ -34,7 +46,7 @@ jobs:
 
     steps:
       - name: Checkout
-        uses: actions/checkout@v4
+        uses: actions/checkout@v5
 
       - name: Select Xcode 26.2
         run: |

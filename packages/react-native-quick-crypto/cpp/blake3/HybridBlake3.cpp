@@ -2,6 +2,7 @@
 
 #include <NitroModules/ArrayBuffer.hpp>
 #include <cstring>
+#include <memory>
 #include <stdexcept>
 
 #include "QuickCryptoUtils.hpp"
@@ -67,10 +68,11 @@ std::shared_ptr<ArrayBuffer> HybridBlake3::digest(std::optional<double> length) 
     outLen = static_cast<size_t>(len);
   }
 
-  auto output = new uint8_t[outLen];
-  blake3_hasher_finalize(&hasher, output, outLen);
+  auto output = std::make_unique<uint8_t[]>(outLen);
+  blake3_hasher_finalize(&hasher, output.get(), outLen);
 
-  return std::make_shared<margelo::nitro::NativeArrayBuffer>(output, outLen, [=]() { delete[] output; });
+  uint8_t* raw_ptr = output.get();
+  return std::make_shared<margelo::nitro::NativeArrayBuffer>(output.release(), outLen, [raw_ptr]() { delete[] raw_ptr; });
 }
 
 void HybridBlake3::reset() {

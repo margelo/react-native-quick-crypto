@@ -183,18 +183,28 @@ class Hash extends Stream.Transform {
     return this.native.getOpenSSLVersion();
   }
 
-  // stream interface
+  // Stream interface — surface synchronous errors via the callback so
+  // they emit as stream 'error' events instead of throwing out of the
+  // Transform plumbing (which would crash the host pipeline).
   _transform(
     chunk: BinaryLike,
     encoding: BufferEncoding,
-    callback: () => void,
+    callback: (err?: Error | null) => void,
   ) {
-    this.update(chunk, encoding as Encoding);
-    callback();
+    try {
+      this.update(chunk, encoding as Encoding);
+      callback();
+    } catch (err) {
+      callback(err as Error);
+    }
   }
-  _flush(callback: () => void) {
-    this.push(this.digest());
-    callback();
+  _flush(callback: (err?: Error | null) => void) {
+    try {
+      this.push(this.digest());
+      callback();
+    } catch (err) {
+      callback(err as Error);
+    }
   }
 }
 

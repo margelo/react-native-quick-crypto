@@ -60,6 +60,13 @@ export class Rsa {
   }
 }
 
+// Modern best practice (NIST SP 800-131A Rev. 2, IETF RFC 8017): RSA keys
+// shorter than 2048 bits are deprecated for both signing and encryption.
+// 1024-bit moduli have been factored in academic settings; 768-bit keys
+// have been factored on commodity hardware. Reject anything below 2048
+// at the JS boundary so callers can't accidentally generate weak keys.
+const RSA_MIN_MODULUS_LENGTH = 2048;
+
 // Node API
 export async function rsa_generateKeyPair(
   algorithm: SubtleAlgorithm,
@@ -70,8 +77,12 @@ export async function rsa_generateKeyPair(
     algorithm as RsaHashedKeyGenParams;
 
   // Validate parameters first
-  if (!modulusLength || modulusLength < 256) {
-    throw lazyDOMException('Invalid key length', 'OperationError');
+  if (!modulusLength || modulusLength < RSA_MIN_MODULUS_LENGTH) {
+    throw lazyDOMException(
+      `RSA modulusLength must be at least ${RSA_MIN_MODULUS_LENGTH} bits ` +
+        `(got ${modulusLength ?? 0})`,
+      'OperationError',
+    );
   }
 
   if (!publicExponent || publicExponent.length === 0) {
@@ -198,8 +209,11 @@ function rsa_prepareKeyGenParams(
     hash?: string;
   };
 
-  if (!modulusLength || modulusLength < 256) {
-    throw new Error('Invalid modulus length');
+  if (!modulusLength || modulusLength < RSA_MIN_MODULUS_LENGTH) {
+    throw new RangeError(
+      `RSA modulusLength must be at least ${RSA_MIN_MODULUS_LENGTH} bits ` +
+        `(got ${modulusLength ?? 0})`,
+    );
   }
 
   const pubExp = publicExponent || 65537;

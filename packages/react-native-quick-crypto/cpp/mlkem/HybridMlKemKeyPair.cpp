@@ -15,6 +15,8 @@
 
 namespace margelo::nitro::crypto {
 
+using EVP_PKEY_CTX_ptr = std::unique_ptr<EVP_PKEY_CTX, decltype(&EVP_PKEY_CTX_free)>;
+
 void HybridMlKemKeyPair::setVariant(const std::string& variant) {
 #if !RNQC_HAS_ML_KEM
   throw std::runtime_error("ML-KEM requires OpenSSL 3.5+");
@@ -27,8 +29,9 @@ void HybridMlKemKeyPair::setVariant(const std::string& variant) {
 
 std::shared_ptr<Promise<void>> HybridMlKemKeyPair::generateKeyPair(double publicFormat, double publicType, double privateFormat,
                                                                    double privateType) {
-  return Promise<void>::async([this, publicFormat, publicType, privateFormat, privateType]() {
-    this->generateKeyPairSync(publicFormat, publicType, privateFormat, privateType);
+  auto self = this->shared_cast<HybridMlKemKeyPair>();
+  return Promise<void>::async([self, publicFormat, publicType, privateFormat, privateType]() {
+    self->generateKeyPairSync(publicFormat, publicType, privateFormat, privateType);
   });
 }
 
@@ -49,24 +52,21 @@ void HybridMlKemKeyPair::generateKeyPairSync(double publicFormat, double publicT
 
   pkey_.reset();
 
-  EVP_PKEY_CTX* pctx = EVP_PKEY_CTX_new_from_name(nullptr, variant_.c_str(), nullptr);
+  EVP_PKEY_CTX_ptr pctx(EVP_PKEY_CTX_new_from_name(nullptr, variant_.c_str(), nullptr), EVP_PKEY_CTX_free);
   if (pctx == nullptr) {
     throw std::runtime_error("Failed to create key context for " + variant_ + ": " + getOpenSSLError());
   }
 
-  if (EVP_PKEY_keygen_init(pctx) <= 0) {
-    EVP_PKEY_CTX_free(pctx);
+  if (EVP_PKEY_keygen_init(pctx.get()) <= 0) {
     throw std::runtime_error("Failed to initialize keygen: " + getOpenSSLError());
   }
 
   EVP_PKEY* raw = nullptr;
-  if (EVP_PKEY_keygen(pctx, &raw) <= 0) {
-    EVP_PKEY_CTX_free(pctx);
+  if (EVP_PKEY_keygen(pctx.get(), &raw) <= 0) {
     throw std::runtime_error("Failed to generate ML-KEM key pair: " + getOpenSSLError());
   }
 
   pkey_.reset(raw);
-  EVP_PKEY_CTX_free(pctx);
 #endif
 }
 
@@ -96,13 +96,14 @@ std::shared_ptr<ArrayBuffer> HybridMlKemKeyPair::getPublicKey() {
   BUF_MEM* bptr;
   BIO_get_mem_ptr(bio, &bptr);
 
-  uint8_t* data = new uint8_t[bptr->length];
-  memcpy(data, bptr->data, bptr->length);
   size_t len = bptr->length;
+  auto buf = std::make_unique<uint8_t[]>(len);
+  memcpy(buf.get(), bptr->data, len);
 
   BIO_free(bio);
 
-  return std::make_shared<NativeArrayBuffer>(data, len, [=]() { delete[] data; });
+  uint8_t* raw_ptr = buf.get();
+  return std::make_shared<NativeArrayBuffer>(buf.release(), len, [raw_ptr]() { delete[] raw_ptr; });
 #endif
 }
 
@@ -132,13 +133,16 @@ std::shared_ptr<ArrayBuffer> HybridMlKemKeyPair::getPrivateKey() {
   BUF_MEM* bptr;
   BIO_get_mem_ptr(bio, &bptr);
 
-  uint8_t* data = new uint8_t[bptr->length];
-  memcpy(data, bptr->data, bptr->length);
   size_t len = bptr->length;
+  auto buf = std::make_unique<uint8_t[]>(len);
+  memcpy(buf.get(), bptr->data, len);
 
+  // Wipe the private key bytes from the BIO before freeing.
+  secureZero(bptr->data, bptr->length);
   BIO_free(bio);
 
-  return std::make_shared<NativeArrayBuffer>(data, len, [=]() { delete[] data; });
+  uint8_t* raw_ptr = buf.get();
+  return std::make_shared<NativeArrayBuffer>(buf.release(), len, [raw_ptr]() { delete[] raw_ptr; });
 #endif
 }
 
@@ -213,7 +217,8 @@ void HybridMlKemKeyPair::setPrivateKey(const std::shared_ptr<ArrayBuffer>& keyDa
 }
 
 std::shared_ptr<Promise<std::shared_ptr<ArrayBuffer>>> HybridMlKemKeyPair::encapsulate() {
-  return Promise<std::shared_ptr<ArrayBuffer>>::async([this]() { return this->encapsulateSync(); });
+  auto self = this->shared_cast<HybridMlKemKeyPair>();
+  return Promise<std::shared_ptr<ArrayBuffer>>::async([self]() { return self->encapsulateSync(); });
 }
 
 std::shared_ptr<ArrayBuffer> HybridMlKemKeyPair::encapsulateSync() {
@@ -223,51 +228,47 @@ std::shared_ptr<ArrayBuffer> HybridMlKemKeyPair::encapsulateSync() {
   clearOpenSSLErrors();
   checkKeyPair();
 
-  EVP_PKEY_CTX* ctx = EVP_PKEY_CTX_new(pkey_.get(), nullptr);
+  EVP_PKEY_CTX_ptr ctx(EVP_PKEY_CTX_new(pkey_.get(), nullptr), EVP_PKEY_CTX_free);
   if (ctx == nullptr) {
     throw std::runtime_error("Failed to create encapsulation context: " + getOpenSSLError());
   }
 
-  if (EVP_PKEY_encapsulate_init(ctx, nullptr) <= 0) {
-    EVP_PKEY_CTX_free(ctx);
+  if (EVP_PKEY_encapsulate_init(ctx.get(), nullptr) <= 0) {
     throw std::runtime_error("Failed to initialize encapsulation: " + getOpenSSLError());
   }
 
   size_t ct_len = 0;
   size_t sk_len = 0;
-  if (EVP_PKEY_encapsulate(ctx, nullptr, &ct_len, nullptr, &sk_len) <= 0) {
-    EVP_PKEY_CTX_free(ctx);
+  if (EVP_PKEY_encapsulate(ctx.get(), nullptr, &ct_len, nullptr, &sk_len) <= 0) {
     throw std::runtime_error("Failed to determine encapsulation output sizes: " + getOpenSSLError());
   }
 
   // Pack result as: [uint32 ct_len][uint32 sk_len][ciphertext][shared_key]
   size_t header_size = sizeof(uint32_t) * 2;
   size_t total_size = header_size + ct_len + sk_len;
-  uint8_t* out = new uint8_t[total_size];
+  auto out = std::make_unique<uint8_t[]>(total_size);
 
   uint32_t ct_len_u32 = static_cast<uint32_t>(ct_len);
   uint32_t sk_len_u32 = static_cast<uint32_t>(sk_len);
-  memcpy(out, &ct_len_u32, sizeof(uint32_t));
-  memcpy(out + sizeof(uint32_t), &sk_len_u32, sizeof(uint32_t));
+  memcpy(out.get(), &ct_len_u32, sizeof(uint32_t));
+  memcpy(out.get() + sizeof(uint32_t), &sk_len_u32, sizeof(uint32_t));
 
-  uint8_t* ct_data = out + header_size;
+  uint8_t* ct_data = out.get() + header_size;
   uint8_t* sk_data = ct_data + ct_len;
 
-  if (EVP_PKEY_encapsulate(ctx, ct_data, &ct_len, sk_data, &sk_len) <= 0) {
-    EVP_PKEY_CTX_free(ctx);
-    delete[] out;
+  if (EVP_PKEY_encapsulate(ctx.get(), ct_data, &ct_len, sk_data, &sk_len) <= 0) {
     throw std::runtime_error("Failed to encapsulate: " + getOpenSSLError());
   }
 
-  EVP_PKEY_CTX_free(ctx);
-
-  return std::make_shared<NativeArrayBuffer>(out, total_size, [=]() { delete[] out; });
+  uint8_t* raw_ptr = out.get();
+  return std::make_shared<NativeArrayBuffer>(out.release(), total_size, [raw_ptr]() { delete[] raw_ptr; });
 #endif
 }
 
 std::shared_ptr<Promise<std::shared_ptr<ArrayBuffer>>> HybridMlKemKeyPair::decapsulate(const std::shared_ptr<ArrayBuffer>& ciphertext) {
   auto nativeCiphertext = ToNativeArrayBuffer(ciphertext);
-  return Promise<std::shared_ptr<ArrayBuffer>>::async([this, nativeCiphertext]() { return this->decapsulateSync(nativeCiphertext); });
+  auto self = this->shared_cast<HybridMlKemKeyPair>();
+  return Promise<std::shared_ptr<ArrayBuffer>>::async([self, nativeCiphertext]() { return self->decapsulateSync(nativeCiphertext); });
 }
 
 std::shared_ptr<ArrayBuffer> HybridMlKemKeyPair::decapsulateSync(const std::shared_ptr<ArrayBuffer>& ciphertext) {
@@ -277,13 +278,12 @@ std::shared_ptr<ArrayBuffer> HybridMlKemKeyPair::decapsulateSync(const std::shar
   clearOpenSSLErrors();
   checkKeyPair();
 
-  EVP_PKEY_CTX* ctx = EVP_PKEY_CTX_new(pkey_.get(), nullptr);
+  EVP_PKEY_CTX_ptr ctx(EVP_PKEY_CTX_new(pkey_.get(), nullptr), EVP_PKEY_CTX_free);
   if (ctx == nullptr) {
     throw std::runtime_error("Failed to create decapsulation context: " + getOpenSSLError());
   }
 
-  if (EVP_PKEY_decapsulate_init(ctx, nullptr) <= 0) {
-    EVP_PKEY_CTX_free(ctx);
+  if (EVP_PKEY_decapsulate_init(ctx.get(), nullptr) <= 0) {
     throw std::runtime_error("Failed to initialize decapsulation: " + getOpenSSLError());
   }
 
@@ -291,22 +291,18 @@ std::shared_ptr<ArrayBuffer> HybridMlKemKeyPair::decapsulateSync(const std::shar
   size_t ct_size = ciphertext->size();
 
   size_t sk_len = 0;
-  if (EVP_PKEY_decapsulate(ctx, nullptr, &sk_len, ct_data, ct_size) <= 0) {
-    EVP_PKEY_CTX_free(ctx);
+  if (EVP_PKEY_decapsulate(ctx.get(), nullptr, &sk_len, ct_data, ct_size) <= 0) {
     throw std::runtime_error("Failed to determine shared key size: " + getOpenSSLError());
   }
 
-  uint8_t* sk_data = new uint8_t[sk_len];
+  auto sk_buf = std::make_unique<uint8_t[]>(sk_len);
 
-  if (EVP_PKEY_decapsulate(ctx, sk_data, &sk_len, ct_data, ct_size) <= 0) {
-    EVP_PKEY_CTX_free(ctx);
-    delete[] sk_data;
+  if (EVP_PKEY_decapsulate(ctx.get(), sk_buf.get(), &sk_len, ct_data, ct_size) <= 0) {
     throw std::runtime_error("Failed to decapsulate: " + getOpenSSLError());
   }
 
-  EVP_PKEY_CTX_free(ctx);
-
-  return std::make_shared<NativeArrayBuffer>(sk_data, sk_len, [=]() { delete[] sk_data; });
+  uint8_t* raw_ptr = sk_buf.get();
+  return std::make_shared<NativeArrayBuffer>(sk_buf.release(), sk_len, [raw_ptr]() { delete[] raw_ptr; });
 #endif
 }
 

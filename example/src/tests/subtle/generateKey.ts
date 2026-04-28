@@ -68,7 +68,7 @@ const vectors: Vectors = {
   // },
   'RSASSA-PKCS1-v1_5': {
     algorithm: {
-      modulusLength: 1024,
+      modulusLength: 2048,
       publicExponent: new Uint8Array([1, 0, 1]),
       hash: 'SHA-256',
     },
@@ -77,7 +77,7 @@ const vectors: Vectors = {
   },
   'RSA-PSS': {
     algorithm: {
-      modulusLength: 1024,
+      modulusLength: 2048,
       publicExponent: new Uint8Array([1, 0, 1]),
       hash: 'SHA-256',
     },
@@ -86,7 +86,7 @@ const vectors: Vectors = {
   },
   'RSA-OAEP': {
     algorithm: {
-      modulusLength: 1024,
+      modulusLength: 2048,
       publicExponent: new Uint8Array([1, 0, 1]),
       hash: 'SHA-256',
     },
@@ -375,7 +375,7 @@ async function testRSAKeyGen(
         `Unsupported key usage for a ${name} key`,
       );
 
-      // Test invalid modulus length
+      // Test invalid modulus length (Phase 3.3: must be ≥ 2048 bits)
       await assertThrowsAsync(
         async () =>
           subtle.generateKey(
@@ -383,7 +383,18 @@ async function testRSAKeyGen(
             true,
             usages,
           ),
-        'Invalid key length',
+        'RSA modulusLength must be at least 2048 bits',
+      );
+
+      // Phase 3.3: 1024-bit RSA is below modern minimums and must be rejected.
+      await assertThrowsAsync(
+        async () =>
+          subtle.generateKey(
+            { name, modulusLength: 1024, publicExponent, hash } as any,
+            true,
+            usages,
+          ),
+        'RSA modulusLength must be at least 2048 bits',
       );
     },
   );
@@ -391,7 +402,7 @@ async function testRSAKeyGen(
 
 testRSAKeyGen(
   'RSASSA-PKCS1-v1_5',
-  1024,
+  2048,
   new Uint8Array([1, 0, 1]),
   'SHA-256',
   ['sign'],
@@ -407,7 +418,7 @@ testRSAKeyGen(
 );
 testRSAKeyGen(
   'RSA-OAEP',
-  1024,
+  2048,
   new Uint8Array([3]),
   'SHA-384',
   ['decrypt', 'unwrapKey'],

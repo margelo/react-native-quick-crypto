@@ -65,6 +65,29 @@ std::shared_ptr<ArrayBuffer> HybridECDH::computeSecret(const std::shared_ptr<Arr
     throw std::runtime_error("ECDH: private key not set");
   }
 
+  // Validate the peer's public key BEFORE building an EVP_PKEY from it.
+  // EVP_PKEY_fromdata() does NOT verify that the supplied public-key octets
+  // decode to a point on the configured curve, so an attacker can mount an
+  // invalid-curve attack: send a point on a related, weaker curve (or a
+  // small-order point) and recover bits of our private key from the
+  // resulting "shared secret". Reject malformed encodings, the identity
+  // point, and any point that is not on _group up front.
+  {
+    EC_POINT_ptr peerPoint(EC_POINT_new(_group.get()), EC_POINT_free);
+    if (!peerPoint) {
+      throw std::runtime_error("ECDH: failed to allocate EC_POINT for peer key validation");
+    }
+    if (EC_POINT_oct2point(_group.get(), peerPoint.get(), otherPublicKey->data(), otherPublicKey->size(), nullptr) != 1) {
+      throw std::runtime_error("ECDH: peer public key is malformed");
+    }
+    if (EC_POINT_is_at_infinity(_group.get(), peerPoint.get())) {
+      throw std::runtime_error("ECDH: peer public key is the identity point");
+    }
+    if (EC_POINT_is_on_curve(_group.get(), peerPoint.get(), nullptr) != 1) {
+      throw std::runtime_error("ECDH: peer public key is not on the configured curve");
+    }
+  }
+
   // Build peer EVP_PKEY from raw public key octets
   EVP_PKEY_ptr peerPkey(createEcEvpPkey(_curveName.c_str(), otherPublicKey->data(), otherPublicKey->size()), EVP_PKEY_free);
 

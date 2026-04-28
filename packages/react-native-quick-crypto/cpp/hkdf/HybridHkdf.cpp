@@ -80,17 +80,19 @@ std::shared_ptr<ArrayBuffer> HybridHkdf::deriveKeySync(const std::string& algori
     throw std::runtime_error("HKDF length cannot be zero");
   }
 
-  uint8_t* outBuf = new uint8_t[outLen];
+  auto out_buf = std::make_unique<uint8_t[]>(outLen);
 
-  if (EVP_KDF_derive(ctx, outBuf, outLen, params) <= 0) {
+  if (EVP_KDF_derive(ctx, out_buf.get(), outLen, params) <= 0) {
     EVP_KDF_CTX_free(ctx);
-    delete[] outBuf;
+    // Zero any partially-derived secret bits before unique_ptr frees the buffer.
+    secureZero(out_buf.get(), outLen);
     throw std::runtime_error("HKDF derivation failed: " + std::to_string(ERR_get_error()));
   }
 
   EVP_KDF_CTX_free(ctx);
 
-  return std::make_shared<NativeArrayBuffer>(outBuf, outLen, [=]() { delete[] outBuf; });
+  uint8_t* raw_ptr = out_buf.get();
+  return std::make_shared<NativeArrayBuffer>(out_buf.release(), outLen, [raw_ptr]() { delete[] raw_ptr; });
 }
 
 } // namespace margelo::nitro::crypto

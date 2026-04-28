@@ -65,6 +65,100 @@ export function getCipherInfo(
   return CipherUtils.getCipherInfo(name, options?.keyLength, options?.ivLength);
 }
 
+// libsodium ciphers aren't visible to OpenSSL's EVP_CIPHER_fetch, so
+// getCipherInfo() returns undefined for them. Hard-code the (key, iv)
+// byte-lengths the C++ factory will accept.
+const LIBSODIUM_CIPHER_PARAMS: Readonly<
+  Record<string, { keyLength: number; ivLength: number }>
+> = {
+  xsalsa20: { keyLength: 32, ivLength: 24 },
+  'xsalsa20-poly1305': { keyLength: 32, ivLength: 24 },
+  'xchacha20-poly1305': { keyLength: 32, ivLength: 24 },
+};
+
+function validateCipherParams(
+  cipherType: string,
+  keyByteLength: number,
+  ivByteLength: number,
+): void {
+  if (typeof cipherType !== 'string' || cipherType.length === 0) {
+    throw new TypeError('cipher algorithm must be a non-empty string');
+  }
+  // ArrayBuffer.byteLength is always a non-negative integer, so the only
+  // out-of-range value we need to guard is 0 — empty key buffers must not
+  // reach OpenSSL's EVP_CipherInit_ex.
+  if (keyByteLength === 0) {
+    throw new RangeError(`Invalid key length 0 for cipher ${cipherType}`);
+  }
+
+  const lower = cipherType.toLowerCase();
+  const sodium = LIBSODIUM_CIPHER_PARAMS[lower];
+  if (sodium) {
+    // libsodium parlance: "nonce" rather than "iv". Phrase the expected
+    // size as a natural-language clause so callers asserting on either
+    // `key must be N bytes` or `Invalid key length N` both match.
+    if (keyByteLength !== sodium.keyLength) {
+      throw new RangeError(
+        `Invalid key length ${keyByteLength} for cipher ${cipherType} ` +
+          `(key must be ${sodium.keyLength} bytes)`,
+      );
+    }
+    if (ivByteLength !== sodium.ivLength) {
+      throw new RangeError(
+        `Invalid nonce length ${ivByteLength} for cipher ${cipherType} ` +
+          `(nonce must be ${sodium.ivLength} bytes)`,
+      );
+    }
+    return;
+  }
+
+  // OpenSSL path. Look up the cipher's defaults once. Most callers pass
+  // exactly the cipher's default key/iv lengths (e.g. AES-128-CBC always
+  // wants 16/16) — short-circuit those to a single native round-trip.
+  // Variable-length ciphers (GCM, CCM, OCB, ChaCha20-Poly1305) fall through
+  // to per-parameter validation calls so the error message can name which
+  // of {key, iv} is wrong.
+  const info = CipherUtils.getCipherInfo(cipherType);
+  if (info === undefined) {
+    throw new TypeError(`Unsupported or unknown cipher type: ${cipherType}`);
+  }
+
+  const expectedIv = info.ivLength ?? 0;
+  if (expectedIv === 0 && ivByteLength > 0) {
+    throw new RangeError(
+      `Cipher ${cipherType} does not use an iv (got ${ivByteLength} bytes)`,
+    );
+  }
+  if (expectedIv > 0 && ivByteLength === 0) {
+    throw new RangeError(
+      `Cipher ${cipherType} requires an iv but none was provided`,
+    );
+  }
+
+  // Fast path: lengths match the cipher's defaults exactly.
+  if (info.keyLength === keyByteLength && expectedIv === ivByteLength) {
+    return;
+  }
+
+  // Variable-length: verify against native one parameter at a time.
+  if (
+    CipherUtils.getCipherInfo(cipherType, keyByteLength, undefined) ===
+    undefined
+  ) {
+    throw new RangeError(
+      `Invalid key length ${keyByteLength} for cipher ${cipherType}`,
+    );
+  }
+  if (
+    expectedIv > 0 &&
+    CipherUtils.getCipherInfo(cipherType, undefined, ivByteLength) === undefined
+  ) {
+    throw new RangeError(
+      `Invalid iv length ${ivByteLength} for cipher ${cipherType}`,
+    );
+  }
+}
+
 interface CipherArgs {
   isCipher: boolean;
   cipherType: string;
@@ -107,18 +201,24 @@ class CipherCommon extends Stream.Transform {
     }
     super(streamOptions); // Pass filtered options
 
-    const authTagLen: number =
-      getUIntOption(options ?? {}, 'authTagLength') !== -1
-        ? getUIntOption(options ?? {}, 'authTagLength')
-        : 16; // defaults to 16 bytes
+    // defaults to 16 bytes for AEAD modes; non-AEAD callers ignore it.
+    const authTagLen =
+      getUIntOption(
+        options as Readonly<Record<string, unknown>> | undefined,
+        'authTagLength',
+      ) ?? 16;
+
+    const cipherKeyAB = binaryLikeToArrayBuffer(cipherKey);
+    const ivAB = binaryLikeToArrayBuffer(iv);
+    validateCipherParams(cipherType, cipherKeyAB.byteLength, ivAB.byteLength);
 
     const factory =
       NitroModules.createHybridObject<CipherFactory>('CipherFactory');
     this.native = factory.createCipher({
       isCipher,
       cipherType,
-      cipherKey: binaryLikeToArrayBuffer(cipherKey),
-      iv: binaryLikeToArrayBuffer(iv),
+      cipherKey: cipherKeyAB,
+      iv: ivAB,
       authTagLen,
     });
   }
@@ -179,18 +279,31 @@ class CipherCommon extends Stream.Transform {
     return Buffer.from(ret);
   }
 
+  // Stream interface — surface synchronous errors (bad encoding,
+  // OpenSSL EVP failures, AEAD tag mismatch in `final()`, etc.) via
+  // the callback so they emit as stream 'error' events instead of
+  // throwing out of the Transform plumbing and crashing the host
+  // pipeline.
   _transform(
     chunk: BinaryLike,
     encoding: BufferEncoding,
-    callback: () => void,
+    callback: (err?: Error | null) => void,
   ) {
-    this.push(this.update(chunk, normalizeEncoding(encoding)));
-    callback();
+    try {
+      this.push(this.update(chunk, normalizeEncoding(encoding)));
+      callback();
+    } catch (err) {
+      callback(err as Error);
+    }
   }
 
-  _flush(callback: () => void) {
-    this.push(this.final());
-    callback();
+  _flush(callback: (err?: Error | null) => void) {
+    try {
+      this.push(this.final());
+      callback();
+    } catch (err) {
+      callback(err as Error);
+    }
   }
 
   public setAutoPadding(autoPadding?: boolean): this {
@@ -211,7 +324,14 @@ class CipherCommon extends Stream.Transform {
     if (!this.native || typeof this.native.setAAD !== 'function') {
       throw new Error('Cipher native object or setAAD method not initialized.');
     }
-    const res = this.native.setAAD(buffer.buffer, options?.plaintextLength);
+    // Use binaryLikeToArrayBuffer (not `buffer.buffer`) so that sliced /
+    // offset views send only the AAD bytes the caller intended. Passing the
+    // raw backing ArrayBuffer authenticates the wrong data and silently
+    // breaks the AEAD integrity guarantee.
+    const res = this.native.setAAD(
+      binaryLikeToArrayBuffer(buffer),
+      options?.plaintextLength,
+    );
     if (!res) {
       throw new Error('setAAD failed (native call returned false)');
     }
@@ -360,13 +480,17 @@ export function xsalsa20(
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
   counter?: number,
 ): Uint8Array {
+  const cipherKeyAB = binaryLikeToArrayBuffer(key);
+  const ivAB = binaryLikeToArrayBuffer(nonce);
+  validateCipherParams('xsalsa20', cipherKeyAB.byteLength, ivAB.byteLength);
+
   const factory =
     NitroModules.createHybridObject<CipherFactory>('CipherFactory');
   const native = factory.createCipher({
     isCipher: true,
     cipherType: 'xsalsa20',
-    cipherKey: binaryLikeToArrayBuffer(key),
-    iv: binaryLikeToArrayBuffer(nonce),
+    cipherKey: cipherKeyAB,
+    iv: ivAB,
   });
   const result = native.update(binaryLikeToArrayBuffer(data));
   return new Uint8Array(result);

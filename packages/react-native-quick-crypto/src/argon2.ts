@@ -26,6 +26,26 @@ export interface Argon2Params {
 
 const ARGON2_VERSION = 0x13; // v1.3
 
+// RFC 9106 § 3.1: Argon2 input/parameter constraints.
+//   p (parallelism)   1   ≤ p ≤ 2^24 - 1
+//   T (tag length)    4   ≤ T ≤ 2^32 - 1
+//   m (memory in KiB) 8*p ≤ m ≤ 2^32 - 1
+//   t (passes)        1   ≤ t ≤ 2^32 - 1
+//   |salt| (nonce)    8   ≤ |s| ≤ 2^32 - 1
+//   v (version)       0x10 (v1.0) or 0x13 (v1.3)
+const ARGON2_MAX_U24 = 0xff_ffff;
+const ARGON2_MAX_U32 = 0xffff_ffff;
+
+function isUInt(value: unknown, max: number): value is number {
+  return (
+    typeof value === 'number' &&
+    Number.isFinite(value) &&
+    Number.isInteger(value) &&
+    value >= 0 &&
+    value <= max
+  );
+}
+
 function validateAlgorithm(algorithm: string): void {
   if (
     algorithm !== 'argon2d' &&
@@ -36,6 +56,56 @@ function validateAlgorithm(algorithm: string): void {
   }
 }
 
+// Returns the resolved nonce ArrayBuffer so the caller can pass it
+// straight to native without re-resolving `params.nonce`.
+function validateArgon2Params(
+  params: Argon2Params,
+  version: number,
+): ArrayBuffer {
+  if (!isUInt(params.parallelism, ARGON2_MAX_U24) || params.parallelism < 1) {
+    throw new RangeError(
+      `Invalid Argon2 parallelism: ${params.parallelism} ` +
+        `(RFC 9106: 1 ≤ p ≤ 2^24 - 1)`,
+    );
+  }
+  if (!isUInt(params.tagLength, ARGON2_MAX_U32) || params.tagLength < 4) {
+    throw new RangeError(
+      `Invalid Argon2 tagLength: ${params.tagLength} ` +
+        `(RFC 9106: 4 ≤ T ≤ 2^32 - 1)`,
+    );
+  }
+  const minMemory = 8 * params.parallelism;
+  if (!isUInt(params.memory, ARGON2_MAX_U32) || params.memory < minMemory) {
+    throw new RangeError(
+      `Invalid Argon2 memory: ${params.memory} KiB ` +
+        `(RFC 9106: 8 * p (= ${minMemory}) ≤ m ≤ 2^32 - 1)`,
+    );
+  }
+  if (!isUInt(params.passes, ARGON2_MAX_U32) || params.passes < 1) {
+    throw new RangeError(
+      `Invalid Argon2 passes: ${params.passes} ` +
+        `(RFC 9106: 1 ≤ t ≤ 2^32 - 1)`,
+    );
+  }
+  if (version !== 0x10 && version !== 0x13) {
+    throw new RangeError(
+      `Invalid Argon2 version: 0x${version.toString(16)} ` +
+        `(RFC 9106: 0x10 or 0x13)`,
+    );
+  }
+  // Salt (nonce) must be 8..2^32 - 1 bytes — measured against the resolved
+  // ArrayBuffer because BinaryLike accepts strings whose UTF-8 length is
+  // what actually reaches OpenSSL.
+  const nonceAB = binaryLikeToArrayBuffer(params.nonce);
+  if (nonceAB.byteLength < 8 || nonceAB.byteLength > ARGON2_MAX_U32) {
+    throw new RangeError(
+      `Invalid Argon2 nonce length: ${nonceAB.byteLength} bytes ` +
+        `(RFC 9106: 8 ≤ |s| ≤ 2^32 - 1)`,
+    );
+  }
+  return nonceAB;
+}
+
 function toAB(value: BinaryLike): ArrayBuffer {
   return binaryLikeToArrayBuffer(value);
 }
@@ -43,10 +113,11 @@ function toAB(value: BinaryLike): ArrayBuffer {
 export function argon2Sync(algorithm: string, params: Argon2Params): Buffer {
   validateAlgorithm(algorithm);
   const version = params.version ?? ARGON2_VERSION;
+  const nonceAB = validateArgon2Params(params, version);
   const result = getNative().hashSync(
     algorithm,
     toAB(params.message),
-    toAB(params.nonce),
+    nonceAB,
     params.parallelism,
     params.tagLength,
     params.memory,
@@ -65,11 +136,18 @@ export function argon2(
 ): void {
   validateAlgorithm(algorithm);
   const version = params.version ?? ARGON2_VERSION;
+  let nonceAB: ArrayBuffer;
+  try {
+    nonceAB = validateArgon2Params(params, version);
+  } catch (err) {
+    callback(err as Error, Buffer.alloc(0));
+    return;
+  }
   getNative()
     .hash(
       algorithm,
       toAB(params.message),
-      toAB(params.nonce),
+      nonceAB,
       params.parallelism,
       params.tagLength,
       params.memory,

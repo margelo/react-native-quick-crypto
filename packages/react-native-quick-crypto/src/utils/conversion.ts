@@ -53,12 +53,15 @@ if (isHermes) {
 }
 
 /**
- * Converts supplied argument to an ArrayBuffer.  Note this does not copy the
- * data so it is faster than toArrayBuffer.  Not copying is important for
- * functions like randomFill which need to be able to write to the underlying
- * buffer.
- * @param buf
- * @returns ArrayBuffer
+ * Returns the underlying ArrayBuffer of a Buffer / TypedArray view **without
+ * copying**, ignoring `byteOffset`/`byteLength`. The full backing storage is
+ * exposed.
+ *
+ * Only use this when the caller separately tracks `byteOffset`/`byteLength`
+ * and the native receiver needs to write back into the original memory
+ * (e.g. `randomFill`). For data that will be read by native crypto, use
+ * `binaryLikeToArrayBuffer`/`toArrayBuffer` instead — those slice to the
+ * view's region and won't leak unrelated bytes from the backing buffer.
  */
 export const abvToArrayBuffer = (buf: ABV) => {
   if (CraftzdogBuffer.isBuffer(buf)) {

@@ -9,18 +9,13 @@
 namespace margelo::nitro::crypto {
 
 XSalsa20Poly1305Cipher::~XSalsa20Poly1305Cipher() {
-#ifdef BLSALLOC_SODIUM
-  sodium_memzero(key_, kKeySize);
-  sodium_memzero(nonce_, kNonceSize);
-  sodium_memzero(auth_tag_, kTagSize);
-  if (!data_buffer_.empty()) {
-    sodium_memzero(data_buffer_.data(), data_buffer_.size());
-  }
-#else
-  std::memset(key_, 0, kKeySize);
-  std::memset(nonce_, 0, kNonceSize);
-  std::memset(auth_tag_, 0, kTagSize);
-#endif
+  // Always wipe via OPENSSL_cleanse (even when libsodium is enabled) so the
+  // non-sodium `std::memset` fallback can't be optimized away by the
+  // compiler. Audit MEDIUM finding (XSalsa20Poly1305Cipher.cpp:20-22).
+  secureZero(key_);
+  secureZero(nonce_);
+  secureZero(auth_tag_);
+  secureZero(data_buffer_);
   data_buffer_.clear();
 }
 
@@ -65,38 +60,38 @@ std::shared_ptr<ArrayBuffer> XSalsa20Poly1305Cipher::final() {
   throw std::runtime_error("XSalsa20Poly1305Cipher: libsodium must be enabled (BLSALLOC_SODIUM)");
 #else
   if (is_cipher) {
-    uint8_t* ciphertext = new uint8_t[data_buffer_.size()];
+    auto ciphertext = std::make_unique<uint8_t[]>(data_buffer_.size());
 
-    int result = crypto_secretbox_detached(ciphertext, auth_tag_, data_buffer_.data(), data_buffer_.size(), nonce_, key_);
+    int result = crypto_secretbox_detached(ciphertext.get(), auth_tag_, data_buffer_.data(), data_buffer_.size(), nonce_, key_);
 
     if (result != 0) {
-      sodium_memzero(ciphertext, data_buffer_.size());
-      delete[] ciphertext;
+      sodium_memzero(ciphertext.get(), data_buffer_.size());
       throw std::runtime_error("XSalsa20Poly1305Cipher: encryption failed");
     }
 
     is_finalized = true;
     size_t ct_len = data_buffer_.size();
-    return std::make_shared<NativeArrayBuffer>(ciphertext, ct_len, [=]() { delete[] ciphertext; });
+    uint8_t* raw_ptr = ciphertext.get();
+    return std::make_shared<NativeArrayBuffer>(ciphertext.release(), ct_len, [raw_ptr]() { delete[] raw_ptr; });
   } else {
     if (data_buffer_.empty()) {
       is_finalized = true;
       return std::make_shared<NativeArrayBuffer>(nullptr, 0, nullptr);
     }
 
-    uint8_t* plaintext = new uint8_t[data_buffer_.size()];
+    auto plaintext = std::make_unique<uint8_t[]>(data_buffer_.size());
 
-    int result = crypto_secretbox_open_detached(plaintext, data_buffer_.data(), auth_tag_, data_buffer_.size(), nonce_, key_);
+    int result = crypto_secretbox_open_detached(plaintext.get(), data_buffer_.data(), auth_tag_, data_buffer_.size(), nonce_, key_);
 
     if (result != 0) {
-      sodium_memzero(plaintext, data_buffer_.size());
-      delete[] plaintext;
+      sodium_memzero(plaintext.get(), data_buffer_.size());
       throw std::runtime_error("XSalsa20Poly1305Cipher: decryption failed - authentication tag mismatch");
     }
 
     is_finalized = true;
     size_t pt_len = data_buffer_.size();
-    return std::make_shared<NativeArrayBuffer>(plaintext, pt_len, [=]() { delete[] plaintext; });
+    uint8_t* raw_ptr = plaintext.get();
+    return std::make_shared<NativeArrayBuffer>(plaintext.release(), pt_len, [raw_ptr]() { delete[] raw_ptr; });
   }
 #endif
 }
@@ -116,9 +111,10 @@ std::shared_ptr<ArrayBuffer> XSalsa20Poly1305Cipher::getAuthTag() {
     throw std::runtime_error("getAuthTag must be called after final()");
   }
 
-  uint8_t* tag_copy = new uint8_t[kTagSize];
-  std::memcpy(tag_copy, auth_tag_, kTagSize);
-  return std::make_shared<NativeArrayBuffer>(tag_copy, kTagSize, [=]() { delete[] tag_copy; });
+  auto tag_copy = std::make_unique<uint8_t[]>(kTagSize);
+  std::memcpy(tag_copy.get(), auth_tag_, kTagSize);
+  uint8_t* raw_ptr = tag_copy.get();
+  return std::make_shared<NativeArrayBuffer>(tag_copy.release(), kTagSize, [raw_ptr]() { delete[] raw_ptr; });
 #endif
 }
 

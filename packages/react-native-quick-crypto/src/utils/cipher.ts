@@ -48,13 +48,35 @@ export function validateEncoding(data: string, encoding: string) {
   }
 }
 
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-export function getUIntOption(options: Record<string, any>, key: string) {
-  let value;
-  if (options && (value = options[key]) != null) {
-    // >>> Turns any type into a positive integer (also sets the sign bit to 0)
-    if (value >>> 0 !== value) throw new Error(`options.${key}: ${value}`);
-    return value;
+/**
+ * Reads an unsigned-integer option from an options-like object.
+ *
+ * Returns `undefined` if the option is missing, `null`, or `undefined`.
+ * Throws `RangeError` if the value is present but not a non-negative
+ * 32-bit integer (NaN, Infinity, fractional, negative, or > 2^32 - 1).
+ *
+ * Replaces the previous `Record<string, any>` + sentinel-`-1` signature,
+ * which defeated the type checker (audit Phase 1.4). Callers that used
+ * `getUIntOption(opts ?? {}, key) !== -1 ? getUIntOption(...) : default`
+ * collapse to `getUIntOption(opts, key) ?? default`.
+ */
+export function getUIntOption(
+  options: Readonly<Record<string, unknown>> | undefined,
+  key: string,
+): number | undefined {
+  if (options == null) return undefined;
+  const value = options[key];
+  if (value == null) return undefined;
+  if (
+    typeof value !== 'number' ||
+    !Number.isFinite(value) ||
+    !Number.isInteger(value) ||
+    value < 0 ||
+    value > 0xffff_ffff
+  ) {
+    throw new RangeError(
+      `options.${key} must be a non-negative 32-bit integer, got ${String(value)}`,
+    );
   }
-  return -1;
+  return value;
 }

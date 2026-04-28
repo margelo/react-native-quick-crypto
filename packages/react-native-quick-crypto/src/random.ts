@@ -59,8 +59,17 @@ export function randomFill(buffer: ABV, ...rest: unknown[]): void {
   }
 
   getNative();
-  random.randomFill(abvToArrayBuffer(buffer), viewOffset + offset, size).then(
+  const ab = abvToArrayBuffer(buffer);
+  const start = viewOffset + offset;
+  random.randomFill(ab, start, size).then(
     (res: ArrayBuffer) => {
+      // The native async path operates on a copy of the underlying buffer to
+      // avoid races with JS-owned memory on the worker thread, so the
+      // randomized bytes live in `res`, not in the caller's buffer. Copy them
+      // back to preserve Node's in-place randomFill semantics.
+      if (res !== ab) {
+        new Uint8Array(ab, start, size).set(new Uint8Array(res, start, size));
+      }
       callback(null, res);
     },
     (e: Error) => {
@@ -224,7 +233,7 @@ export function randomInt(
     if (x < randLimit) {
       const n = (x % range) + min;
       if (isSync) return n;
-      process.nextTick(callback as RandomIntCallback, undefined, n);
+      process.nextTick(callback as RandomIntCallback, null, n);
       return;
     }
   }

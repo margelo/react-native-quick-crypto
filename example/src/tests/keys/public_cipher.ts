@@ -1069,3 +1069,208 @@ test(SUITE, 'publicEncrypt/privateDecrypt are inverses', () => {
 
   expect(decrypted.toString()).to.equal(shortPlaintext.toString());
 });
+
+// --- Bleichenbacher oracle mitigation (security audit Phase 0.4) ---
+//
+// PKCS#1 v1.5 RSA decryption must NOT reveal whether a ciphertext had valid
+// padding. We close the oracle two ways:
+//   (1) OpenSSL implicit rejection — corrupted PKCS#1 v1.5 ciphertexts
+//       silently decrypt to deterministic random-looking bytes instead of
+//       throwing.
+//   (2) Opaque error messages — any decrypt failure (PKCS#1 v1.5, OAEP, or
+//       publicDecrypt/verify_recover) throws the same generic message,
+//       never leaking the underlying OpenSSL error reason.
+
+test(
+  SUITE,
+  'Bleichenbacher: corrupted PKCS#1 v1.5 ciphertext does not throw',
+  () => {
+    const publicKey = createPublicKey({
+      key: Buffer.from(spki),
+      format: 'der',
+      type: 'spki',
+    });
+    const privateKey = createPrivateKey({
+      key: Buffer.from(pkcs8),
+      format: 'der',
+      type: 'pkcs8',
+    });
+
+    const encrypted = publicEncrypt(
+      { key: publicKey, padding: constants.RSA_PKCS1_PADDING },
+      shortPlaintext,
+    );
+
+    // Flip a bit in the middle of the ciphertext. With a Bleichenbacher
+    // mitigation in place, decryption returns random-looking bytes; without
+    // it, OpenSSL reports a padding error and we throw a distinguishable one.
+    const corrupted = Buffer.from(encrypted);
+    const corruptAt = Math.floor(corrupted.length / 2);
+    corrupted[corruptAt] = corrupted[corruptAt]! ^ 0x01;
+
+    expect(() => {
+      privateDecrypt(
+        { key: privateKey, padding: constants.RSA_PKCS1_PADDING },
+        corrupted,
+      );
+    }).to.not.throw();
+  },
+);
+
+test(
+  SUITE,
+  'Bleichenbacher: corrupted PKCS#1 v1.5 outputs are deterministic and distinct',
+  () => {
+    const publicKey = createPublicKey({
+      key: Buffer.from(spki),
+      format: 'der',
+      type: 'spki',
+    });
+    const privateKey = createPrivateKey({
+      key: Buffer.from(pkcs8),
+      format: 'der',
+      type: 'pkcs8',
+    });
+
+    const encrypted = publicEncrypt(
+      { key: publicKey, padding: constants.RSA_PKCS1_PADDING },
+      shortPlaintext,
+    );
+
+    const corruptA = Buffer.from(encrypted);
+    const aAt = Math.floor(corruptA.length / 2);
+    corruptA[aAt] = corruptA[aAt]! ^ 0x01;
+    const corruptB = Buffer.from(encrypted);
+    const bAt = Math.floor(corruptB.length / 2) + 7;
+    corruptB[bAt] = corruptB[bAt]! ^ 0x80;
+
+    const out1 = privateDecrypt(
+      { key: privateKey, padding: constants.RSA_PKCS1_PADDING },
+      corruptA,
+    );
+    const out2 = privateDecrypt(
+      { key: privateKey, padding: constants.RSA_PKCS1_PADDING },
+      corruptA,
+    );
+    const out3 = privateDecrypt(
+      { key: privateKey, padding: constants.RSA_PKCS1_PADDING },
+      corruptB,
+    );
+
+    // Implicit rejection is deterministic: same (key, ciphertext) → same output.
+    expect(Buffer.compare(out1, out2)).to.equal(0);
+    // Different ciphertexts → different "implicit-rejection" outputs (so the
+    // value isn't a constant the attacker could equality-test against).
+    expect(Buffer.compare(out1, out3)).to.not.equal(0);
+  },
+);
+
+test(SUITE, 'Bleichenbacher: OAEP decrypt errors are opaque', async () => {
+  const publicKey = createPublicKey({
+    key: Buffer.from(spki),
+    format: 'der',
+    type: 'spki',
+  });
+  const privateKey = createPrivateKey({
+    key: Buffer.from(pkcs8),
+    format: 'der',
+    type: 'pkcs8',
+  });
+
+  const encrypted = publicEncrypt(
+    { key: publicKey, oaepHash: 'SHA-256', oaepLabel: label },
+    shortPlaintext,
+  );
+
+  // Decrypt with the wrong label — must throw, but the error must NOT name
+  // the specific OpenSSL failure reason ("oaep", "label", "padding", etc.).
+  let caught: Error | undefined;
+  try {
+    privateDecrypt(
+      {
+        key: privateKey,
+        oaepHash: 'SHA-256',
+        oaepLabel: Buffer.from('wrong'),
+      },
+      encrypted,
+    );
+  } catch (e) {
+    caught = e as Error;
+  }
+  expect(caught).to.be.instanceOf(Error);
+  expect(caught!.message).to.equal('privateDecrypt failed');
+  expect(caught!.message.toLowerCase()).to.not.match(
+    /openssl|padding|oaep|label|mgf|digest|version|pkcs/,
+  );
+});
+
+test(
+  SUITE,
+  'Bleichenbacher: OAEP / PKCS#1 wrong-padding errors look identical',
+  () => {
+    // An attacker could distinguish padding modes if our error string differed
+    // by ciphertext shape. Decrypt the same garbage twice — once asking for
+    // OAEP, once asking for PKCS#1 v1.5 — and confirm the (PKCS#1) call no-ops
+    // via implicit rejection while the OAEP call throws the same opaque error
+    // we'd get from any other OAEP failure.
+    const privateKey = createPrivateKey({
+      key: Buffer.from(pkcs8),
+      format: 'der',
+      type: 'pkcs8',
+    });
+
+    const garbage = Buffer.alloc(256, 0xab); // RSA-2048 modulus size
+
+    // PKCS#1 v1.5: implicit rejection → no throw.
+    expect(() => {
+      privateDecrypt(
+        { key: privateKey, padding: constants.RSA_PKCS1_PADDING },
+        garbage,
+      );
+    }).to.not.throw();
+
+    // OAEP: throw, but ONLY the opaque message.
+    let caught: Error | undefined;
+    try {
+      privateDecrypt(
+        { key: privateKey, padding: constants.RSA_PKCS1_OAEP_PADDING },
+        garbage,
+      );
+    } catch (e) {
+      caught = e as Error;
+    }
+    expect(caught).to.be.instanceOf(Error);
+    expect(caught!.message).to.equal('privateDecrypt failed');
+  },
+);
+
+test(
+  PRIVATE_CIPHER_SUITE,
+  'Bleichenbacher: publicDecrypt errors are opaque',
+  () => {
+    const publicKey = createPublicKey({
+      key: Buffer.from(spki),
+      format: 'der',
+      type: 'spki',
+    });
+
+    // Garbage in. publicDecrypt is signature verification with the public
+    // key (anyone can perform it) so this is not a Bleichenbacher target —
+    // either silently returning an empty buffer (the empty-plaintext
+    // recovery path may match) OR throwing an opaque error is acceptable.
+    // What we DO require: if we throw, the message must NOT leak OpenSSL
+    // error reasons.
+    let caught: Error | undefined;
+    try {
+      publicDecrypt(publicKey, Buffer.alloc(256, 0xcd));
+    } catch (e) {
+      caught = e as Error;
+    }
+    if (caught !== undefined) {
+      expect(caught.message).to.equal('publicDecrypt failed');
+      expect(caught.message.toLowerCase()).to.not.match(
+        /openssl|padding|pkcs|version|recover|verify/,
+      );
+    }
+  },
+);
