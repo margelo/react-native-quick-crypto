@@ -3,6 +3,9 @@ import {
   stringToBuffer,
   Buffer as CraftzdogBuffer,
 } from 'react-native-quick-crypto';
+// For utf16le, the native implementation could be disabled for non-Hermes runtimes or older versions of RN.
+// Use the fallbacks to meature the performance without causing errors, even if it could use Buffer polyfill.
+import { ab2str, binaryLikeToArrayBuffer } from 'react-native-quick-crypto';
 import type { BenchFn } from '../../types/benchmarks';
 import { Bench } from 'tinybench';
 
@@ -22,28 +25,37 @@ function stringToBuffer_old(
 }
 
 // Generate test data
-const generate1MB = (): ArrayBuffer => {
-  const bytes = new Uint8Array(1024 * 1024);
-  for (let i = 0; i < bytes.length; i++) {
-    bytes[i] = i & 0xff;
+const generateData = (size: number, asciiOnly: boolean = true): ArrayBuffer => {
+  if (size < 2 || size % 2 !== 0) {
+    throw new Error('Size must be at least 2 and even');
+  }
+  const bytes = new Uint8Array(size); // Implicitly filled with 0
+  // Fill ASCII characters in UTF-16LE code units, which can also be represented as binary/ASCII/Latin1/UTF-8
+  for (let i = 0; i < bytes.length; i += 2) {
+    bytes[i] = i & 0x7f;
+  }
+  if (!asciiOnly) {
+    // \xC3\xA9 in UTF-8 or \uA9C3 in UTF-16LE
+    bytes[0] = 0xc3;
+    bytes[1] = 0xa9;
   }
   return bytes.buffer as ArrayBuffer;
 };
 
-const ab1MB = generate1MB();
-const ab32B = new Uint8Array(32).buffer as ArrayBuffer; // typical hash digest size
-// Fill 32B with non-zero data
-new Uint8Array(ab32B).set([
-  0xde, 0xad, 0xbe, 0xef, 0xca, 0xfe, 0xba, 0xbe, 0x01, 0x23, 0x45, 0x67, 0x89,
-  0xab, 0xcd, 0xef, 0xfe, 0xdc, 0xba, 0x98, 0x76, 0x54, 0x32, 0x10, 0x11, 0x22,
-  0x33, 0x44, 0x55, 0x66, 0x77, 0x88,
-]);
+const ab1MB_ascii = generateData(1024 * 1024, true);
+const ab1MB = generateData(1024 * 1024, false);
+const ab32B_ascii = generateData(32, true);
+const ab32B = generateData(32, false);
 
 // Pre-encode strings for decode benchmarks
-const hex1MB = bufferToString(ab1MB, 'hex');
-const base64_1MB = bufferToString(ab1MB, 'base64');
-const hex32B = bufferToString(ab32B, 'hex');
-const base64_32B = bufferToString(ab32B, 'base64');
+const hex_1MB = ab2str(ab1MB, 'hex');
+const hex_32B = ab2str(ab32B, 'hex');
+const base64_1MB = ab2str(ab1MB, 'base64');
+const base64_32B = ab2str(ab32B, 'base64');
+const utf16le_1MB_ascii = ab2str(ab1MB_ascii, 'utf16le');
+const utf16le_32B_ascii = ab2str(ab32B_ascii, 'utf16le');
+const utf16le_1MB_non_ascii = ab2str(ab1MB, 'utf16le');
+const utf16le_32B_non_ascii = ab2str(ab32B, 'utf16le');
 
 // --- Encode benchmarks (ArrayBuffer → string) ---
 
@@ -123,6 +135,82 @@ const encode_base64_1mb: BenchFn = () => {
   return bench;
 };
 
+const encode_utf16le_32b: BenchFn = () => {
+  const bench = new Bench({
+    name: 'utf16le encode 32B',
+    iterations: 100,
+    warmupIterations: 10,
+    time: 0,
+  });
+
+  bench
+    .add('rnqc', () => {
+      ab2str(ab32B, 'utf16le');
+    })
+    .add('Buffer polyfill', () => {
+      ab2str_old(ab32B, 'utf16le');
+    });
+
+  return bench;
+};
+
+const encode_utf16le_1mb: BenchFn = () => {
+  const bench = new Bench({
+    name: 'utf16le encode 1MB',
+    iterations: 10,
+    warmupIterations: 2,
+    time: 0,
+  });
+
+  bench
+    .add('rnqc', () => {
+      ab2str(ab1MB, 'utf16le');
+    })
+    .add('Buffer polyfill', () => {
+      ab2str_old(ab1MB, 'utf16le');
+    });
+
+  return bench;
+};
+
+const encode_utf16le_32b_ascii: BenchFn = () => {
+  const bench = new Bench({
+    name: 'utf16le encode 32B (ASCII only)',
+    iterations: 100,
+    warmupIterations: 10,
+    time: 0,
+  });
+
+  bench
+    .add('rnqc', () => {
+      ab2str(ab32B_ascii, 'utf16le');
+    })
+    .add('Buffer polyfill', () => {
+      ab2str_old(ab32B_ascii, 'utf16le');
+    });
+
+  return bench;
+};
+
+const encode_utf16le_1mb_ascii: BenchFn = () => {
+  const bench = new Bench({
+    name: 'utf16le encode 1MB (ASCII only)',
+    iterations: 10,
+    warmupIterations: 2,
+    time: 0,
+  });
+
+  bench
+    .add('rnqc', () => {
+      ab2str(ab1MB_ascii, 'utf16le');
+    })
+    .add('Buffer polyfill', () => {
+      ab2str_old(ab1MB_ascii, 'utf16le');
+    });
+
+  return bench;
+};
+
 // --- Decode benchmarks (string → ArrayBuffer) ---
 
 const decode_hex_32b: BenchFn = () => {
@@ -135,10 +223,10 @@ const decode_hex_32b: BenchFn = () => {
 
   bench
     .add('rnqc', () => {
-      stringToBuffer(hex32B, 'hex');
+      stringToBuffer(hex_32B, 'hex');
     })
     .add('Buffer polyfill', () => {
-      stringToBuffer_old(hex32B, 'hex');
+      stringToBuffer_old(hex_32B, 'hex');
     });
 
   return bench;
@@ -154,10 +242,10 @@ const decode_hex_1mb: BenchFn = () => {
 
   bench
     .add('rnqc', () => {
-      stringToBuffer(hex1MB, 'hex');
+      stringToBuffer(hex_1MB, 'hex');
     })
     .add('Buffer polyfill', () => {
-      stringToBuffer_old(hex1MB, 'hex');
+      stringToBuffer_old(hex_1MB, 'hex');
     });
 
   return bench;
@@ -201,13 +289,97 @@ const decode_base64_1mb: BenchFn = () => {
   return bench;
 };
 
+const decode_utf16le_32b: BenchFn = () => {
+  const bench = new Bench({
+    name: 'utf16le decode 32B',
+    iterations: 100,
+    warmupIterations: 10,
+    time: 0,
+  });
+
+  bench
+    .add('rnqc', () => {
+      binaryLikeToArrayBuffer(utf16le_32B_non_ascii, 'utf16le');
+    })
+    .add('Buffer polyfill', () => {
+      stringToBuffer_old(utf16le_32B_non_ascii, 'utf16le');
+    });
+
+  return bench;
+};
+
+const decode_utf16le_1mb: BenchFn = () => {
+  const bench = new Bench({
+    name: 'utf16le decode 1MB',
+    iterations: 10,
+    warmupIterations: 2,
+    time: 0,
+  });
+
+  bench
+    .add('rnqc', () => {
+      binaryLikeToArrayBuffer(utf16le_1MB_non_ascii, 'utf16le');
+    })
+    .add('Buffer polyfill', () => {
+      stringToBuffer_old(utf16le_1MB_non_ascii, 'utf16le');
+    });
+
+  return bench;
+};
+
+const decode_utf16le_32b_ascii: BenchFn = () => {
+  const bench = new Bench({
+    name: 'utf16le decode 32B (ASCII only)',
+    iterations: 100,
+    warmupIterations: 10,
+    time: 0,
+  });
+
+  bench
+    .add('rnqc', () => {
+      binaryLikeToArrayBuffer(utf16le_32B_ascii, 'utf16le');
+    })
+    .add('Buffer polyfill', () => {
+      stringToBuffer_old(utf16le_32B_ascii, 'utf16le');
+    });
+
+  return bench;
+};
+
+const decode_utf16le_1mb_ascii: BenchFn = () => {
+  const bench = new Bench({
+    name: 'utf16le decode 1MB (ASCII only)',
+    iterations: 10,
+    warmupIterations: 2,
+    time: 0,
+  });
+
+  bench
+    .add('rnqc', () => {
+      binaryLikeToArrayBuffer(utf16le_1MB_ascii, 'utf16le');
+    })
+    .add('Buffer polyfill', () => {
+      stringToBuffer_old(utf16le_1MB_ascii, 'utf16le');
+    });
+
+  return bench;
+};
+
 export default [
   encode_hex_32b,
   encode_hex_1mb,
   encode_base64_32b,
   encode_base64_1mb,
+  encode_utf16le_32b,
+  encode_utf16le_1mb,
+  encode_utf16le_32b_ascii,
+  encode_utf16le_1mb_ascii,
   decode_hex_32b,
   decode_hex_1mb,
   decode_base64_32b,
   decode_base64_1mb,
+  decode_utf16le_32b,
+  decode_utf16le_1mb,
+  decode_utf16le_32b_ascii,
+  decode_utf16le_1mb_ascii,
 ];

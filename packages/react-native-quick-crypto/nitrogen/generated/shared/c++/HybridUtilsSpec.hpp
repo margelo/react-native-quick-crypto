@@ -16,7 +16,6 @@
 
 
 #include <NitroModules/ArrayBuffer.hpp>
-#include <string>
 
 namespace margelo::nitro::crypto {
 
@@ -50,8 +49,6 @@ namespace margelo::nitro::crypto {
     public:
       // Methods
       virtual bool timingSafeEqual(const std::shared_ptr<ArrayBuffer>& a, const std::shared_ptr<ArrayBuffer>& b) = 0;
-      virtual std::string bufferToString(const std::shared_ptr<ArrayBuffer>& buffer, const std::string& encoding) = 0;
-      virtual std::shared_ptr<ArrayBuffer> stringToBuffer(const std::string& str, const std::string& encoding) = 0;
 
     protected:
       // Hybrid Setup

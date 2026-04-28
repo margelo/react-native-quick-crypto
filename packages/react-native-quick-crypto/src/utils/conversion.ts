@@ -3,8 +3,54 @@ import { Buffer as SafeBuffer } from 'safe-buffer';
 import { NitroModules } from 'react-native-nitro-modules';
 import type { Utils } from '../specs/utils.nitro';
 import type { ABV, BinaryLikeNode, BufferLike } from './types';
+import { Platform } from 'react-native';
 
-const utils = NitroModules.createHybridObject<Utils>('Utils');
+type UtilsWithStringConverter = Utils & {
+  bufferToString(buffer: ArrayBuffer, encoding: string): string;
+  stringToBuffer(str: string, encoding: string): ArrayBuffer;
+};
+
+const utils =
+  NitroModules.createHybridObject<UtilsWithStringConverter>('Utils');
+
+const isHermes =
+  (global as { HermesInternal?: unknown }).HermesInternal != null;
+
+// v0.78.0, https://github.com/facebook/react-native/commit/c6f12254d16d87978383c08065a626d437e60450
+// Use jsi::String::getStringData() rather than jsi::String::utf16()
+const canGetU16StringFromJsiString = !(
+  Platform.constants.reactNativeVersion.major == 0 &&
+  Platform.constants.reactNativeVersion.minor < 78
+);
+
+// v0.79.0, https://github.com/facebook/react-native/commit/d9d824055e9f24614abd5657f9fc89a6ab3f2da2
+const canCreateJsiStringFromUtf16 = !(
+  Platform.constants.reactNativeVersion.major == 0 &&
+  Platform.constants.reactNativeVersion.minor < 79
+);
+
+const baseNativeEncodings = [
+  'hex',
+  'base64',
+  'base64url',
+  'utf8',
+  'utf-8',
+  'latin1',
+  'binary',
+  'ascii',
+];
+const nativeStringToBufferEncodings = new Set<string>(baseNativeEncodings);
+const nativeBufferToStringEncodings = new Set<string>(baseNativeEncodings);
+
+// The fast and lossless paths for utf16le are only available on Hermes
+if (isHermes) {
+  if (canGetU16StringFromJsiString) {
+    nativeStringToBufferEncodings.add('utf16le');
+  }
+  if (canCreateJsiStringFromUtf16) {
+    nativeBufferToStringEncodings.add('utf16le');
+  }
+}
 
 /**
  * Returns the underlying ArrayBuffer of a Buffer / TypedArray view **without
@@ -100,7 +146,7 @@ export function binaryLikeToArrayBuffer(
       );
     }
 
-    if (nativeEncodings.has(encoding)) {
+    if (nativeStringToBufferEncodings.has(encoding)) {
       return utils.stringToBuffer(input, encoding);
     }
     const buffer = CraftzdogBuffer.from(input, encoding);
@@ -158,19 +204,8 @@ export function binaryLikeToArrayBuffer(
   );
 }
 
-const nativeEncodings = new Set([
-  'hex',
-  'base64',
-  'base64url',
-  'utf8',
-  'utf-8',
-  'latin1',
-  'binary',
-  'ascii',
-]);
-
 export function ab2str(buf: ArrayBuffer, encoding: string = 'hex'): string {
-  if (nativeEncodings.has(encoding)) {
+  if (nativeBufferToStringEncodings.has(encoding)) {
     return utils.bufferToString(buf, encoding);
   }
   return CraftzdogBuffer.from(buf).toString(encoding);

@@ -1,5 +1,8 @@
 #include "HybridUtils.hpp"
 
+#include <NitroModules/JSIConverter+ArrayBuffer.hpp>
+#include <bit>
+#include <cstring>
 #include <openssl/crypto.h>
 #include <stdexcept>
 #include <string>
@@ -13,6 +16,25 @@ namespace margelo::nitro::crypto {
 namespace {
 
   constexpr char kHexChars[] = "0123456789abcdef";
+  constexpr bool kCanDirectCopyUtf16 = std::endian::native == std::endian::little && sizeof(char16_t) == 2;
+
+  // Probe if jsi::String::createFromUtf16() is available
+  // jsi::String::createFromUtf16(Runtime& runtime, const char16_t* utf16, size_t length)
+  // and
+  // jsi::String::createFromUtf16(Runtime& runtime, const std::u16string& utf16) are available in RN v0.79.0 and later:
+  // https://github.com/facebook/react-native/commit/d9d824055e9f24614abd5657f9fc89a6ab3f2da2
+  template <typename JSIString = facebook::jsi::String>
+  concept HasStringCreateFromUtf16 = requires(facebook::jsi::Runtime& runtime, const char16_t* utf16, size_t length) {
+    JSIString::createFromUtf16(runtime, utf16, length);
+  };
+
+  // Probe if jsi::String::getStringData() is available
+  // jsi::String::getStringData() is available in RN v0.78.0 and later:
+  // https://github.com/facebook/react-native/commit/c6f12254d16d87978383c08065a626d437e60450
+  template <typename JSIString = facebook::jsi::String>
+  concept HasStringGetStringData = requires(const JSIString& str, facebook::jsi::Runtime& runtime, void (*cb)(bool, const void*, size_t)) {
+    str.getStringData(runtime, cb);
+  };
 
   int hexCharToVal(char c) {
     if (c >= '0' && c <= '9')
@@ -86,6 +108,73 @@ namespace {
     return result;
   }
 
+  template <typename JSIString = facebook::jsi::String>
+  JSIString createUtf16LeString(facebook::jsi::Runtime& runtime, const uint8_t* data, size_t len) {
+    if constexpr (HasStringCreateFromUtf16<JSIString>) {
+      if constexpr (kCanDirectCopyUtf16) {
+        // Fast&direct copy path
+        return JSIString::createFromUtf16(runtime, reinterpret_cast<const char16_t*>(data), len / 2);
+      }
+      // Slow path for unexpected endianness/char16_t size
+      const size_t codeUnitCount = len / 2;
+      std::u16string result(codeUnitCount, u'\0');
+      if (codeUnitCount == 0) {
+        return JSIString::createFromUtf16(runtime, result);
+      }
+
+      for (size_t i = 0; i < codeUnitCount; i++) {
+        result[i] = static_cast<char16_t>(static_cast<uint16_t>(data[i * 2]) | (static_cast<uint16_t>(data[i * 2 + 1]) << 8));
+      }
+      return JSIString::createFromUtf16(runtime, result);
+    }
+    throw std::runtime_error("Unsupported encoding: utf16le");
+  }
+
+  template <typename JSIString = facebook::jsi::String>
+  std::vector<uint8_t> decodeUtf16Le(facebook::jsi::Runtime& runtime, const JSIString& str) {
+    if constexpr (HasStringGetStringData<JSIString>) {
+      std::vector<uint8_t> result;
+      // str.utf8() cannot preserve raw UTF-16 code units such as unpaired surrogates.
+      // Use jsi::String::getStringData() instead.
+      auto chunkCallback = [&result](bool isAscii, const void* data, size_t num) {
+        if (num == 0) {
+          return;
+        }
+
+        size_t offset = result.size();
+        result.resize(offset + (num * 2)); // This fills the buffer with '\0'
+
+        auto* dst = result.data() + offset;
+        if (isAscii) {
+          // Widen ASCII characters from char into char16_t
+          const auto* asciiSrc = reinterpret_cast<const char*>(data);
+          for (size_t i = 0; i < num; i++, dst += 2) {
+            *dst = asciiSrc[i];
+            // *(dst + 1) = '\0' is unnecessary because the buffer is zero filled in resize()
+          }
+          return;
+        }
+
+        const auto* utf16Src = reinterpret_cast<const char16_t*>(data);
+        if constexpr (kCanDirectCopyUtf16) {
+          // Fast&direct copy path
+          std::memcpy(dst, utf16Src, num * 2);
+          return;
+        }
+        // Slow path for unexpected endianness/char16_t size
+        for (size_t i = 0; i < num; i++) {
+          const uint16_t codeUnit = static_cast<uint16_t>(utf16Src[i]);
+          dst[i * 2 + 0] = static_cast<uint8_t>(codeUnit & 0xFFu);
+          dst[i * 2 + 1] = static_cast<uint8_t>(codeUnit >> 8);
+        }
+      };
+
+      str.getStringData(runtime, chunkCallback);
+      return result;
+    }
+    throw std::runtime_error("Unsupported encoding: utf16le");
+  }
+
   std::vector<uint8_t> decodeLatin1(const std::string& str) {
     std::vector<uint8_t> result;
     result.reserve(str.size());
@@ -142,56 +231,107 @@ bool HybridUtils::timingSafeEqual(const std::shared_ptr<ArrayBuffer>& a, const s
   return CRYPTO_memcmp(a->data(), b->data(), aLen) == 0;
 }
 
-std::string HybridUtils::bufferToString(const std::shared_ptr<ArrayBuffer>& buffer, const std::string& encoding) {
-  const auto* data = reinterpret_cast<const uint8_t*>(buffer->data());
-  size_t len = buffer->size();
+facebook::jsi::Value HybridUtils::bufferToJsiString(facebook::jsi::Runtime& runtime, const facebook::jsi::Value&,
+                                                    const facebook::jsi::Value* args, size_t argCount) {
+  // Runtime argument check from react-native-nitro-modules/cpp/core/HybridFunction.hpp
+  if (argCount != 2) [[unlikely]] {
+    throw facebook::jsi::JSError(runtime,
+                                 "`Utils.bufferToString(...)` expected 2 arguments, but received " + std::to_string(argCount) + "!");
+  }
 
-  if (encoding == "hex") {
-    return encodeHex(data, len);
-  }
-  if (encoding == "base64") {
-    return encodeBase64(data, len);
-  }
-  if (encoding == "base64url") {
-    return encodeBase64Url(data, len);
-  }
-  if (encoding == "utf8" || encoding == "utf-8") {
-    return std::string(reinterpret_cast<const char*>(data), len);
-  }
-  if (encoding == "latin1" || encoding == "binary") {
-    return encodeLatin1(data, len);
-  }
-  if (encoding == "ascii") {
-    std::string result(reinterpret_cast<const char*>(data), len);
-    for (auto& c : result) {
-      c &= 0x7F;
+  // Exception wrapper from react-native-nitro-modules/cpp/core/HybridFunction.hpp
+  try {
+    // bufferToString(buffer: ArrayBuffer, encoding: string): string; Defined in utils/conversion.ts
+    auto buffer = JSIConverter<std::shared_ptr<ArrayBuffer>>::fromJSI(runtime, args[0]);
+    std::string encoding = JSIConverter<std::string>::fromJSI(runtime, args[1]);
+
+    const auto* data = reinterpret_cast<const uint8_t*>(buffer->data());
+    size_t len = buffer->size();
+
+    if (encoding == "hex") {
+      return facebook::jsi::String::createFromUtf8(runtime, encodeHex(data, len));
     }
-    return result;
+    if (encoding == "base64") {
+      return facebook::jsi::String::createFromUtf8(runtime, encodeBase64(data, len));
+    }
+    if (encoding == "base64url") {
+      return facebook::jsi::String::createFromUtf8(runtime, encodeBase64Url(data, len));
+    }
+    if (encoding == "utf8" || encoding == "utf-8") {
+      return facebook::jsi::String::createFromUtf8(runtime, data, len);
+    }
+    if (encoding == "latin1" || encoding == "binary") {
+      return facebook::jsi::String::createFromUtf8(runtime, encodeLatin1(data, len));
+    }
+    if (encoding == "ascii") {
+      std::string result(reinterpret_cast<const char*>(data), len);
+      for (auto& c : result) {
+        c &= 0x7F;
+      }
+      return facebook::jsi::String::createFromUtf8(runtime, result);
+    }
+    if (encoding == "utf16le") {
+      return createUtf16LeString(runtime, data, len);
+    }
+    throw std::runtime_error("Unsupported encoding: " + encoding);
+  } catch (const std::exception& exception) {
+    throw facebook::jsi::JSError(runtime, "Utils.bufferToString(...): " + std::string(exception.what()));
+  } catch (...) {
+    throw facebook::jsi::JSError(runtime,
+                                 "`Utils.bufferToString(...)` threw an unknown " + TypeInfo::getCurrentExceptionName() + " error.");
   }
-  throw std::runtime_error("Unsupported encoding: " + encoding);
 }
 
-std::shared_ptr<ArrayBuffer> HybridUtils::stringToBuffer(const std::string& str, const std::string& encoding) {
-  if (encoding == "hex") {
-    auto decoded = decodeHex(str);
-    return ArrayBuffer::move(std::move(decoded));
+facebook::jsi::Value HybridUtils::jsiStringToBuffer(facebook::jsi::Runtime& runtime, const facebook::jsi::Value&,
+                                                    const facebook::jsi::Value* args, size_t argCount) {
+  // Runtime argument check from react-native-nitro-modules/cpp/core/HybridFunction.hpp
+  if (argCount != 2) [[unlikely]] {
+    throw facebook::jsi::JSError(runtime,
+                                 "`Utils.stringToBuffer(...)` expected 2 arguments, but received " + std::to_string(argCount) + "!");
   }
-  if (encoding == "base64" || encoding == "base64url") {
-    auto decoded = decodeBase64(str);
-    return ArrayBuffer::move(std::move(decoded));
+
+  // Exception wrapper from react-native-nitro-modules/cpp/core/HybridFunction.hpp
+  try {
+    // stringToBuffer(str: string, encoding: string): ArrayBuffer; Defined in utils/conversion.ts
+    auto str = args[0].asString(runtime);
+    std::string encoding = JSIConverter<std::string>::fromJSI(runtime, args[1]);
+
+    if (encoding == "hex") {
+      auto decoded = decodeHex(str.utf8(runtime));
+      return JSIConverter<std::shared_ptr<ArrayBuffer>>::toJSI(runtime, ArrayBuffer::move(std::move(decoded)));
+    }
+    if (encoding == "base64" || encoding == "base64url") {
+      auto decoded = decodeBase64(str.utf8(runtime));
+      return JSIConverter<std::shared_ptr<ArrayBuffer>>::toJSI(runtime, ArrayBuffer::move(std::move(decoded)));
+    }
+    if (encoding == "utf8" || encoding == "utf-8") {
+      auto utf8Str = str.utf8(runtime);
+      return JSIConverter<std::shared_ptr<ArrayBuffer>>::toJSI(
+          runtime, ArrayBuffer::copy(reinterpret_cast<const uint8_t*>(utf8Str.data()), utf8Str.size()));
+    }
+    if (encoding == "latin1" || encoding == "binary" || encoding == "ascii") {
+      auto decoded = decodeLatin1(str.utf8(runtime));
+      return JSIConverter<std::shared_ptr<ArrayBuffer>>::toJSI(runtime, ArrayBuffer::move(std::move(decoded)));
+    }
+    if (encoding == "utf16le") {
+      auto decoded = decodeUtf16Le(runtime, str);
+      return JSIConverter<std::shared_ptr<ArrayBuffer>>::toJSI(runtime, ArrayBuffer::move(std::move(decoded)));
+    }
+    throw std::runtime_error("Unsupported encoding: " + encoding);
+  } catch (const std::exception& exception) {
+    throw facebook::jsi::JSError(runtime, "Utils.stringToBuffer(...): " + std::string(exception.what()));
+  } catch (...) {
+    throw facebook::jsi::JSError(runtime,
+                                 "`Utils.stringToBuffer(...)` threw an unknown " + TypeInfo::getCurrentExceptionName() + " error.");
   }
-  if (encoding == "utf8" || encoding == "utf-8") {
-    return ArrayBuffer::copy(reinterpret_cast<const uint8_t*>(str.data()), str.size());
-  }
-  if (encoding == "latin1" || encoding == "binary") {
-    auto decoded = decodeLatin1(str);
-    return ArrayBuffer::move(std::move(decoded));
-  }
-  if (encoding == "ascii") {
-    auto decoded = decodeLatin1(str);
-    return ArrayBuffer::move(std::move(decoded));
-  }
-  throw std::runtime_error("Unsupported encoding: " + encoding);
+}
+
+void HybridUtils::loadHybridMethods() {
+  HybridUtilsSpec::loadHybridMethods();
+  registerHybrids(this, [](Prototype& prototype) {
+    prototype.registerRawHybridMethod("bufferToString", 2, &HybridUtils::bufferToJsiString);
+    prototype.registerRawHybridMethod("stringToBuffer", 2, &HybridUtils::jsiStringToBuffer);
+  });
 }
 
 } // namespace margelo::nitro::crypto
