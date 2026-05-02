@@ -20,19 +20,16 @@ XSalsa20Poly1305Cipher::~XSalsa20Poly1305Cipher() {
 }
 
 void XSalsa20Poly1305Cipher::init(const std::shared_ptr<ArrayBuffer> cipher_key, const std::shared_ptr<ArrayBuffer> iv) {
-  auto native_key = ToNativeArrayBuffer(cipher_key);
-  auto native_iv = ToNativeArrayBuffer(iv);
-
-  if (native_key->size() != kKeySize) {
-    throw std::runtime_error("XSalsa20-Poly1305 key must be 32 bytes, got " + std::to_string(native_key->size()) + " bytes");
+  if (cipher_key->size() != kKeySize) {
+    throw std::runtime_error("XSalsa20-Poly1305 key must be 32 bytes, got " + std::to_string(cipher_key->size()) + " bytes");
   }
 
-  if (native_iv->size() != kNonceSize) {
-    throw std::runtime_error("XSalsa20-Poly1305 nonce must be 24 bytes, got " + std::to_string(native_iv->size()) + " bytes");
+  if (iv->size() != kNonceSize) {
+    throw std::runtime_error("XSalsa20-Poly1305 nonce must be 24 bytes, got " + std::to_string(iv->size()) + " bytes");
   }
 
-  std::memcpy(key_, native_key->data(), kKeySize);
-  std::memcpy(nonce_, native_iv->data(), kNonceSize);
+  std::memcpy(key_, cipher_key->data(), kKeySize);
+  std::memcpy(nonce_, iv->data(), kNonceSize);
 
   data_buffer_.clear();
   is_finalized = false;
@@ -43,12 +40,11 @@ std::shared_ptr<ArrayBuffer> XSalsa20Poly1305Cipher::update(const std::shared_pt
 #ifndef BLSALLOC_SODIUM
   throw std::runtime_error("XSalsa20Poly1305Cipher: libsodium must be enabled (BLSALLOC_SODIUM)");
 #else
-  auto native_data = ToNativeArrayBuffer(data);
-  size_t data_len = native_data->size();
+  size_t data_len = data->size();
 
   size_t old_size = data_buffer_.size();
   data_buffer_.resize(old_size + data_len);
-  std::memcpy(data_buffer_.data() + old_size, native_data->data(), data_len);
+  std::memcpy(data_buffer_.data() + old_size, data->data(), data_len);
 
   return std::make_shared<NativeArrayBuffer>(nullptr, 0, nullptr);
 #endif
@@ -126,12 +122,11 @@ bool XSalsa20Poly1305Cipher::setAuthTag(const std::shared_ptr<ArrayBuffer>& tag)
     throw std::runtime_error("setAuthTag can only be called during decryption");
   }
 
-  auto native_tag = ToNativeArrayBuffer(tag);
-  if (native_tag->size() != kTagSize) {
-    throw std::runtime_error("XSalsa20-Poly1305 tag must be 16 bytes, got " + std::to_string(native_tag->size()) + " bytes");
+  if (tag->size() != kTagSize) {
+    throw std::runtime_error("XSalsa20-Poly1305 tag must be 16 bytes, got " + std::to_string(tag->size()) + " bytes");
   }
 
-  std::memcpy(auth_tag_, native_tag->data(), kTagSize);
+  std::memcpy(auth_tag_, tag->data(), kTagSize);
   return true;
 #endif
 }

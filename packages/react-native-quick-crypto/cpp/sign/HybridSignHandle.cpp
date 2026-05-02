@@ -58,15 +58,13 @@ void HybridSignHandle::update(const std::shared_ptr<ArrayBuffer>& data) {
     throw std::runtime_error("Sign not initialized");
   }
 
-  auto native_data = ToNativeArrayBuffer(data);
-
   // Accumulate raw data for potential one-shot signing (Ed25519/Ed448/ML-DSA)
-  const uint8_t* ptr = reinterpret_cast<const uint8_t*>(native_data->data());
-  data_buffer.insert(data_buffer.end(), ptr, ptr + native_data->size());
+  const uint8_t* ptr = reinterpret_cast<const uint8_t*>(data->data());
+  data_buffer.insert(data_buffer.end(), ptr, ptr + data->size());
 
   // Only update digest if we have one (not needed for pure signature schemes)
   if (md != nullptr) {
-    if (EVP_DigestUpdate(md_ctx, native_data->data(), native_data->size()) <= 0) {
+    if (EVP_DigestUpdate(md_ctx, data->data(), data->size()) <= 0) {
       unsigned long err = ERR_get_error();
       char err_buf[256];
       ERR_error_string_n(err, err_buf, sizeof(err_buf));

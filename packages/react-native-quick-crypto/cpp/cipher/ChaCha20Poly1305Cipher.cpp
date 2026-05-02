@@ -32,21 +32,18 @@ void ChaCha20Poly1305Cipher::init(const std::shared_ptr<ArrayBuffer> cipher_key,
   }
 
   // Set key and IV
-  auto native_key = ToNativeArrayBuffer(cipher_key);
-  auto native_iv = ToNativeArrayBuffer(iv);
-
   // Validate key size
-  if (native_key->size() != kKeySize) {
+  if (cipher_key->size() != kKeySize) {
     throw std::runtime_error("ChaCha20-Poly1305 key must be 32 bytes");
   }
 
   // Validate nonce size
-  if (native_iv->size() != kNonceSize) {
+  if (iv->size() != kNonceSize) {
     throw std::runtime_error("ChaCha20-Poly1305 nonce must be 12 bytes");
   }
 
-  const unsigned char* key_ptr = reinterpret_cast<const unsigned char*>(native_key->data());
-  const unsigned char* iv_ptr = reinterpret_cast<const unsigned char*>(native_iv->data());
+  const unsigned char* key_ptr = reinterpret_cast<const unsigned char*>(cipher_key->data());
+  const unsigned char* iv_ptr = reinterpret_cast<const unsigned char*>(iv->data());
 
   if (EVP_CipherInit_ex(ctx.get(), nullptr, nullptr, key_ptr, iv_ptr, is_cipher) != 1) {
     unsigned long err = ERR_get_error();
@@ -66,8 +63,7 @@ std::shared_ptr<ArrayBuffer> ChaCha20Poly1305Cipher::update(const std::shared_pt
   checkCtx();
   checkNotFinalized();
   has_update_called = true;
-  auto native_data = ToNativeArrayBuffer(data);
-  size_t in_len = native_data->size();
+  size_t in_len = data->size();
   if (in_len > INT_MAX) {
     throw std::runtime_error("Message too long");
   }
@@ -77,7 +73,7 @@ std::shared_ptr<ArrayBuffer> ChaCha20Poly1305Cipher::update(const std::shared_pt
   auto out_buf = std::make_unique<uint8_t[]>(out_len);
 
   // Perform the cipher update operation
-  if (EVP_CipherUpdate(ctx.get(), out_buf.get(), &out_len, native_data->data(), in_len) != 1) {
+  if (EVP_CipherUpdate(ctx.get(), out_buf.get(), &out_len, data->data(), in_len) != 1) {
     unsigned long err = ERR_get_error();
     char err_buf[256];
     ERR_error_string_n(err, err_buf, sizeof(err_buf));
@@ -121,12 +117,11 @@ std::shared_ptr<ArrayBuffer> ChaCha20Poly1305Cipher::final() {
 bool ChaCha20Poly1305Cipher::setAAD(const std::shared_ptr<ArrayBuffer>& data, std::optional<double> plaintextLength) {
   checkCtx();
   checkAADBeforeUpdate();
-  auto native_aad = ToNativeArrayBuffer(data);
-  size_t aad_len = native_aad->size();
+  size_t aad_len = data->size();
 
   // Set AAD data
   int out_len = 0;
-  if (EVP_CipherUpdate(ctx.get(), nullptr, &out_len, native_aad->data(), aad_len) != 1) {
+  if (EVP_CipherUpdate(ctx.get(), nullptr, &out_len, data->data(), aad_len) != 1) {
     unsigned long err = ERR_get_error();
     char err_buf[256];
     ERR_error_string_n(err, err_buf, sizeof(err_buf));
@@ -163,12 +158,11 @@ bool ChaCha20Poly1305Cipher::setAuthTag(const std::shared_ptr<ArrayBuffer>& tag)
     throw std::runtime_error("setAuthTag can only be called during decryption");
   }
 
-  auto native_tag = ToNativeArrayBuffer(tag);
-  if (native_tag->size() != kTagSize) {
+  if (tag->size() != kTagSize) {
     throw std::runtime_error("ChaCha20-Poly1305 tag must be 16 bytes");
   }
 
-  if (EVP_CIPHER_CTX_ctrl(ctx.get(), EVP_CTRL_AEAD_SET_TAG, kTagSize, native_tag->data()) != 1) {
+  if (EVP_CIPHER_CTX_ctrl(ctx.get(), EVP_CTRL_AEAD_SET_TAG, kTagSize, tag->data()) != 1) {
     unsigned long err = ERR_get_error();
     char err_buf[256];
     ERR_error_string_n(err, err_buf, sizeof(err_buf));

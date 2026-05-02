@@ -13,23 +13,20 @@ namespace margelo::nitro::crypto {
  * Initialize the cipher with a key and a nonce (using iv argument as nonce)
  */
 void XSalsa20Cipher::init(const std::shared_ptr<ArrayBuffer> cipher_key, const std::shared_ptr<ArrayBuffer> iv) {
-  auto native_key = ToNativeArrayBuffer(cipher_key);
-  auto native_iv = ToNativeArrayBuffer(iv);
-
   // Validate key size
-  if (native_key->size() < crypto_stream_KEYBYTES) {
+  if (cipher_key->size() < crypto_stream_KEYBYTES) {
     throw std::runtime_error("XSalsa20 key too short: expected " + std::to_string(crypto_stream_KEYBYTES) + " bytes, got " +
-                             std::to_string(native_key->size()) + " bytes.");
+                             std::to_string(cipher_key->size()) + " bytes.");
   }
   // Validate nonce size
-  if (native_iv->size() < crypto_stream_NONCEBYTES) {
+  if (iv->size() < crypto_stream_NONCEBYTES) {
     throw std::runtime_error("XSalsa20 nonce too short: expected " + std::to_string(crypto_stream_NONCEBYTES) + " bytes, got " +
-                             std::to_string(native_iv->size()) + " bytes.");
+                             std::to_string(iv->size()) + " bytes.");
   }
 
   // Copy key and nonce data
-  std::memcpy(key, native_key->data(), crypto_stream_KEYBYTES);
-  std::memcpy(nonce, native_iv->data(), crypto_stream_NONCEBYTES);
+  std::memcpy(key, cipher_key->data(), crypto_stream_KEYBYTES);
+  std::memcpy(nonce, iv->data(), crypto_stream_NONCEBYTES);
 
   // Reset streaming state so a re-init'd cipher does not accidentally reuse
   // keystream bytes from a previous session.
@@ -57,8 +54,7 @@ std::shared_ptr<ArrayBuffer> XSalsa20Cipher::update(const std::shared_ptr<ArrayB
 #ifndef BLSALLOC_SODIUM
   throw std::runtime_error("XSalsa20Cipher: libsodium must be enabled to use this cipher (BLSALLOC_SODIUM is not defined).");
 #else
-  auto native_data = ToNativeArrayBuffer(data);
-  const std::size_t data_size = native_data->size();
+  const std::size_t data_size = data->size();
 
   if (data_size == 0) {
     return std::make_shared<NativeArrayBuffer>(nullptr, 0, nullptr);
@@ -66,7 +62,7 @@ std::shared_ptr<ArrayBuffer> XSalsa20Cipher::update(const std::shared_ptr<ArrayB
 
   // Owning buffer: prevents leaking `output` if we throw on the way out.
   auto output = std::make_unique<uint8_t[]>(data_size);
-  const uint8_t* input = native_data->data();
+  const uint8_t* input = data->data();
   std::size_t pos = 0;
 
   // (1) Drain any unused keystream from the previous update()'s tail block.
