@@ -15,7 +15,7 @@ namespace margelo::nitro::crypto {
 
 class HybridKeyObjectHandle : public HybridKeyObjectHandleSpec {
  public:
-  HybridKeyObjectHandle() : HybridObject(TAG) {}
+  HybridKeyObjectHandle();
 
  public:
   std::shared_ptr<ArrayBuffer> exportKey(std::optional<KFormatType> format, std::optional<KeyEncoding> type,

@@ -1281,14 +1281,26 @@ function edImportKey(
 // Lengths (in bytes) of seedless ML-DSA / ML-KEM PKCS#8 encodings. A PKCS#8
 // blob of exactly this length contains only the expanded private key with no
 // seed; Node rejects these to keep cross-implementation interop intact.
-// Refs: ~/dev/node/lib/internal/crypto/ml_dsa.js:158-174, ml_kem.js:157-173.
-const PQC_SEEDLESS_PKCS8_LENGTHS: Readonly<Record<string, number>> = {
+// Refs: node lib/internal/crypto/ml_dsa.js (mlDsaImportKey, pkcs8 case)
+//       node lib/internal/crypto/ml_kem.js (mlKemImportKey, pkcs8 case)
+export const PQC_SEEDLESS_PKCS8_LENGTHS: Readonly<Record<string, number>> = {
   'ML-DSA-44': 2588,
   'ML-DSA-65': 4060,
   'ML-DSA-87': 4924,
   'ML-KEM-512': 1660,
   'ML-KEM-768': 2428,
   'ML-KEM-1024': 3196,
+};
+
+// Map from PQC algorithm name to display family. Used to render the
+// import-rejection error message in the same form Node emits.
+const PQC_FAMILY: Readonly<Record<string, 'ML-DSA' | 'ML-KEM'>> = {
+  'ML-DSA-44': 'ML-DSA',
+  'ML-DSA-65': 'ML-DSA',
+  'ML-DSA-87': 'ML-DSA',
+  'ML-KEM-512': 'ML-KEM',
+  'ML-KEM-768': 'ML-KEM',
+  'ML-KEM-1024': 'ML-KEM',
 };
 
 function pqcImportKeyObject(
@@ -1308,8 +1320,11 @@ function pqcImportKeyObject(
     };
   } else if (format === 'pkcs8') {
     const ab = bufferLikeToArrayBuffer(data as BufferLike);
-    if (ab.byteLength === PQC_SEEDLESS_PKCS8_LENGTHS[name]) {
-      const family = name.startsWith('ML-DSA') ? 'ML-DSA' : 'ML-KEM';
+    const family = PQC_FAMILY[name];
+    if (
+      family !== undefined &&
+      ab.byteLength === PQC_SEEDLESS_PKCS8_LENGTHS[name]
+    ) {
       throw lazyDOMException(
         `Importing an ${family} PKCS#8 key without a seed is not supported`,
         'NotSupportedError',

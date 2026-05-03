@@ -28,6 +28,7 @@ import {
   // createPublicKey, // TODO: for 'bad usages' test
   // createPrivateKey, // TODO: for 'bad usages' test
   getRandomValues,
+  PQC_SEEDLESS_PKCS8_LENGTHS,
   subtle,
 } from 'react-native-quick-crypto';
 import { MLKEM_VARIANTS } from './mlkem_constants';
@@ -2283,17 +2284,11 @@ test(SUITE, 'ML-DSA-44 importKey rejects jwk alg mismatch', async () => {
   );
 });
 
-// --- ML-DSA seedless PKCS#8 import rejection (issue #997) ---
-
-const MLDSA_SEEDLESS_PKCS8_LENGTHS: Record<MlDsaVariant, number> = {
-  'ML-DSA-44': 2588,
-  'ML-DSA-65': 4060,
-  'ML-DSA-87': 4924,
-};
+// --- ML-DSA seedless PKCS#8 import rejection (PR #997) ---
 
 for (const variant of MLDSA_VARIANTS) {
   test(SUITE, `${variant} pkcs8 import rejects seedless key`, async () => {
-    const seedless = new Uint8Array(MLDSA_SEEDLESS_PKCS8_LENGTHS[variant]);
+    const seedless = new Uint8Array(PQC_SEEDLESS_PKCS8_LENGTHS[variant] ?? 0);
     await assertThrowsAsync(
       async () =>
         await subtle.importKey('pkcs8', seedless, { name: variant }, true, [
@@ -2319,6 +2314,37 @@ for (const variant of MLDSA_VARIANTS) {
     },
   );
 }
+
+test(SUITE, 'ML-DSA-65 pkcs8 round-trip + sign/verify', async () => {
+  const keyPair = (await subtle.generateKey({ name: 'ML-DSA-65' }, true, [
+    'sign',
+    'verify',
+  ])) as CryptoKeyPair;
+
+  const exported = (await subtle.exportKey(
+    'pkcs8',
+    keyPair.privateKey as CryptoKey,
+  )) as ArrayBuffer;
+  expect(exported.byteLength).to.equal(54);
+
+  const imported = await subtle.importKey(
+    'pkcs8',
+    exported,
+    { name: 'ML-DSA-65' },
+    true,
+    ['sign'],
+  );
+
+  const message = new TextEncoder().encode('round-trip test');
+  const signature = await subtle.sign({ name: 'ML-DSA-65' }, imported, message);
+  const verified = await subtle.verify(
+    { name: 'ML-DSA-65' },
+    keyPair.publicKey as CryptoKey,
+    signature,
+    message,
+  );
+  expect(verified).to.equal(true);
+});
 
 // --- ML-DSA raw-public and raw-seed export/import tests ---
 // 'raw-public' is normalized to 'raw' internally (public key bytes)
@@ -2721,20 +2747,11 @@ test(SUITE, 'ML-KEM-768 importKey raw rejects bad usages', async () => {
   );
 });
 
-// --- ML-KEM seedless PKCS#8 import rejection + export length (issue #997) ---
-
-const MLKEM_SEEDLESS_PKCS8_LENGTHS: Record<
-  (typeof MLKEM_VARIANTS)[number],
-  number
-> = {
-  'ML-KEM-512': 1660,
-  'ML-KEM-768': 2428,
-  'ML-KEM-1024': 3196,
-};
+// --- ML-KEM seedless PKCS#8 import rejection + export length (PR #997) ---
 
 for (const variant of MLKEM_VARIANTS) {
   test(SUITE, `${variant} pkcs8 import rejects seedless key`, async () => {
-    const seedless = new Uint8Array(MLKEM_SEEDLESS_PKCS8_LENGTHS[variant]);
+    const seedless = new Uint8Array(PQC_SEEDLESS_PKCS8_LENGTHS[variant] ?? 0);
     await assertThrowsAsync(
       async () =>
         await subtle.importKey('pkcs8', seedless, { name: variant }, true, [

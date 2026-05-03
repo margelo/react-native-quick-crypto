@@ -20,7 +20,7 @@ namespace margelo::nitro::crypto {
 // Configure loaded providers to prefer seed-only PKCS#8 output for ML-DSA /
 // ML-KEM, falling back to priv-only when no seed is available. Without this,
 // OpenSSL defaults to "seed-priv" — a longer encoding that bundles both —
-// which breaks interop with Node and PR #997's exact-length export check.
+// which breaks interop with Node and the exact-length export check in subtle.ts.
 // Mirrors src/crypto/crypto_util.cc in Node.
 static void configurePqcOutputFormats() {
   static std::once_flag once;
@@ -36,6 +36,15 @@ static void configurePqcOutputFormats() {
   });
 }
 #endif
+
+HybridKeyObjectHandle::HybridKeyObjectHandle() : HybridObject(TAG) {
+#if OPENSSL_VERSION_NUMBER >= 0x30600000L
+  // Configure once on first handle construction. Providers are guaranteed
+  // loaded by this point (any prior crypto op routed through ncrypto), and
+  // the call_once flag makes subsequent constructions cheap.
+  configurePqcOutputFormats();
+#endif
+}
 
 // Helper functions for base64url encoding/decoding with BIGNUMs
 static std::string bn_to_base64url(const BIGNUM* bn, size_t expected_size = 0) {
@@ -192,18 +201,6 @@ std::shared_ptr<ArrayBuffer> HybridKeyObjectHandle::exportKey(std::optional<KFor
     // If SPKI is requested, export as public key (works for both public and private keys)
     // This allows extracting the public key from a private key
     bool exportAsPublic = (exportType == KeyEncoding::SPKI) || (keyType == KeyType::PUBLIC);
-
-#if OPENSSL_VERSION_NUMBER >= 0x30600000L
-    if (!exportAsPublic && exportType == KeyEncoding::PKCS8) {
-      const char* typeName = EVP_PKEY_get0_type_name(pkey.get());
-      if (typeName != nullptr) {
-        std::string name(typeName);
-        if (name.starts_with("ML-KEM-") || name.starts_with("ML-DSA-")) {
-          configurePqcOutputFormats();
-        }
-      }
-    }
-#endif
 
     // Create encoding config
     if (exportAsPublic) {
