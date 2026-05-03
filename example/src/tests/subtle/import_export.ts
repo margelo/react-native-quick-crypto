@@ -2283,6 +2283,43 @@ test(SUITE, 'ML-DSA-44 importKey rejects jwk alg mismatch', async () => {
   );
 });
 
+// --- ML-DSA seedless PKCS#8 import rejection (issue #997) ---
+
+const MLDSA_SEEDLESS_PKCS8_LENGTHS: Record<MlDsaVariant, number> = {
+  'ML-DSA-44': 2588,
+  'ML-DSA-65': 4060,
+  'ML-DSA-87': 4924,
+};
+
+for (const variant of MLDSA_VARIANTS) {
+  test(SUITE, `${variant} pkcs8 import rejects seedless key`, async () => {
+    const seedless = new Uint8Array(MLDSA_SEEDLESS_PKCS8_LENGTHS[variant]);
+    await assertThrowsAsync(
+      async () =>
+        await subtle.importKey('pkcs8', seedless, { name: variant }, true, [
+          'sign',
+        ]),
+      'NotSupportedError',
+    );
+  });
+
+  test(
+    SUITE,
+    `${variant} pkcs8 export produces 54-byte seed-only encoding`,
+    async () => {
+      const keyPair = (await subtle.generateKey({ name: variant }, true, [
+        'sign',
+        'verify',
+      ])) as CryptoKeyPair;
+      const exported = (await subtle.exportKey(
+        'pkcs8',
+        keyPair.privateKey as CryptoKey,
+      )) as ArrayBuffer;
+      expect(exported.byteLength).to.equal(54);
+    },
+  );
+}
+
 // --- ML-DSA raw-public and raw-seed export/import tests ---
 // 'raw-public' is normalized to 'raw' internally (public key bytes)
 // 'raw-seed' passes through directly (64-byte private seed)
@@ -2682,6 +2719,78 @@ test(SUITE, 'ML-KEM-768 importKey raw rejects bad usages', async () => {
       ),
     'Unsupported key usage',
   );
+});
+
+// --- ML-KEM seedless PKCS#8 import rejection + export length (issue #997) ---
+
+const MLKEM_SEEDLESS_PKCS8_LENGTHS: Record<
+  (typeof MLKEM_VARIANTS)[number],
+  number
+> = {
+  'ML-KEM-512': 1660,
+  'ML-KEM-768': 2428,
+  'ML-KEM-1024': 3196,
+};
+
+for (const variant of MLKEM_VARIANTS) {
+  test(SUITE, `${variant} pkcs8 import rejects seedless key`, async () => {
+    const seedless = new Uint8Array(MLKEM_SEEDLESS_PKCS8_LENGTHS[variant]);
+    await assertThrowsAsync(
+      async () =>
+        await subtle.importKey('pkcs8', seedless, { name: variant }, true, [
+          'decapsulateBits',
+        ]),
+      'NotSupportedError',
+    );
+  });
+
+  test(
+    SUITE,
+    `${variant} pkcs8 export produces 86-byte seed-only encoding`,
+    async () => {
+      const keyPair = (await subtle.generateKey({ name: variant }, true, [
+        'encapsulateBits',
+        'decapsulateBits',
+      ])) as CryptoKeyPair;
+      const exported = (await subtle.exportKey(
+        'pkcs8',
+        keyPair.privateKey as CryptoKey,
+      )) as ArrayBuffer;
+      expect(exported.byteLength).to.equal(86);
+    },
+  );
+}
+
+test(SUITE, 'ML-KEM-768 pkcs8 round-trip + decapsulate', async () => {
+  const keyPair = (await subtle.generateKey({ name: 'ML-KEM-768' }, true, [
+    'encapsulateBits',
+    'decapsulateBits',
+  ])) as CryptoKeyPair;
+
+  const exported = (await subtle.exportKey(
+    'pkcs8',
+    keyPair.privateKey as CryptoKey,
+  )) as ArrayBuffer;
+  expect(exported.byteLength).to.equal(86);
+
+  const imported = await subtle.importKey(
+    'pkcs8',
+    exported,
+    { name: 'ML-KEM-768' },
+    true,
+    ['decapsulateBits'],
+  );
+
+  const { sharedKey, ciphertext } = await subtle.encapsulateBits(
+    { name: 'ML-KEM-768' },
+    keyPair.publicKey as CryptoKey,
+  );
+  const recovered = await subtle.decapsulateBits(
+    { name: 'ML-KEM-768' },
+    imported,
+    ciphertext,
+  );
+  expect(new Uint8Array(recovered)).to.deep.equal(new Uint8Array(sharedKey));
 });
 
 // --- Ed25519/Ed448 raw import/export Tests ---
