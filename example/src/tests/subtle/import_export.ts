@@ -3376,3 +3376,28 @@ for (const algorithm of ['KMAC128', 'KMAC256'] as const) {
     expect(ab2str(sig1, 'hex')).to.equal(ab2str(sig2, 'hex'));
   });
 }
+
+// WebCrypto §SubtleCrypto.exportKey step 4: a non-extractable key must reject
+// with an InvalidAccessError DOMException, not a generic Error.
+test(
+  SUITE,
+  'exportKey - non-extractable key throws InvalidAccessError',
+  async () => {
+    const key = await subtle.generateKey(
+      { name: 'AES-GCM', length: 256 },
+      false,
+      ['encrypt', 'decrypt'],
+    );
+
+    let caught: unknown;
+    try {
+      await subtle.exportKey('raw', key as CryptoKey);
+    } catch (e) {
+      caught = e;
+    }
+    const err = caught as Error;
+    expect(err).to.be.instanceOf(Error);
+    expect(err.name).to.equal('InvalidAccessError');
+    expect(err.message).to.contain('not extractable');
+  },
+);

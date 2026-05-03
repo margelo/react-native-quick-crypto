@@ -1,6 +1,10 @@
 import { Buffer } from '@craftzdog/react-native-buffer';
 import type { ABV, RandomCallback } from './utils';
-import { abvToArrayBuffer } from './utils';
+import {
+  abvToArrayBuffer,
+  lazyDOMException,
+  QuotaExceededError,
+} from './utils';
 import { NitroModules } from 'react-native-nitro-modules';
 import type { Random } from './specs/random.nitro';
 
@@ -288,6 +292,27 @@ export type RandomTypedArrays =
   | Uint16Array
   | Uint32Array;
 
+// WebCrypto §getRandomValues only accepts integer-typed views. Float and
+// non-TypedArray ABVs (DataView) must be rejected with a TypeMismatchError
+// DOMException — see https://w3c.github.io/webcrypto/#Crypto-method-getRandomValues
+const INTEGER_TYPED_ARRAY_TAGS = new Set([
+  'Int8Array',
+  'Int16Array',
+  'Int32Array',
+  'Uint8Array',
+  'Uint8ClampedArray',
+  'Uint16Array',
+  'Uint32Array',
+  'BigInt64Array',
+  'BigUint64Array',
+]);
+
+function isIntegerTypedArray(value: unknown): boolean {
+  if (!ArrayBuffer.isView(value)) return false;
+  const tag = (value as { [Symbol.toStringTag]?: string })[Symbol.toStringTag];
+  return tag !== undefined && INTEGER_TYPED_ARRAY_TAGS.has(tag);
+}
+
 /**
  * Fills the provided typed array with cryptographically strong random values.
  *
@@ -295,8 +320,17 @@ export type RandomTypedArrays =
  * @returns The filled data
  */
 export function getRandomValues(data: RandomTypedArrays) {
+  if (!isIntegerTypedArray(data)) {
+    throw lazyDOMException(
+      'The data argument must be an integer-type TypedArray',
+      'TypeMismatchError',
+    );
+  }
   if (data.byteLength > 65536) {
-    throw new Error('The requested length exceeds 65,536 bytes');
+    throw new QuotaExceededError('The requested length exceeds 65,536 bytes', {
+      quota: 65536,
+      requested: data.byteLength,
+    });
   }
   randomFillSync(data, 0);
   return data;
