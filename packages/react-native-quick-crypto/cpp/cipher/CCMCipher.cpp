@@ -18,8 +18,7 @@ void CCMCipher::init(const std::shared_ptr<ArrayBuffer> cipher_key, const std::s
   checkCtx();
 
   // 2. Perform CCM-specific initialization
-  auto native_iv = ToNativeArrayBuffer(iv);
-  size_t iv_len = native_iv->size();
+  size_t iv_len = iv->size();
 
   // Set the IV length using CCM-specific control
   if (EVP_CIPHER_CTX_ctrl(ctx.get(), EVP_CTRL_CCM_SET_IVLEN, iv_len, nullptr) != 1) {
@@ -39,9 +38,8 @@ void CCMCipher::init(const std::shared_ptr<ArrayBuffer> cipher_key, const std::s
   }
 
   // Finally, initialize the key and IV using the parameters passed to this function.
-  auto native_key = ToNativeArrayBuffer(cipher_key); // Use 'cipher_key' parameter
-  const unsigned char* key_ptr = reinterpret_cast<const unsigned char*>(native_key->data());
-  const unsigned char* iv_ptr = reinterpret_cast<const unsigned char*>(native_iv->data());
+  const unsigned char* key_ptr = reinterpret_cast<const unsigned char*>(cipher_key->data());
+  const unsigned char* iv_ptr = reinterpret_cast<const unsigned char*>(iv->data());
 
   // The last argument (is_cipher) should be consistent with the initial setup call.
   if (EVP_CipherInit_ex(ctx.get(), nullptr, nullptr, key_ptr, iv_ptr, is_cipher) != 1) {
@@ -56,8 +54,7 @@ std::shared_ptr<ArrayBuffer> CCMCipher::update(const std::shared_ptr<ArrayBuffer
   checkCtx();
   checkNotFinalized();
   has_update_called = true;
-  auto native_data = ToNativeArrayBuffer(data);
-  size_t in_len = native_data->size();
+  size_t in_len = data->size();
   if (in_len < 0 || in_len > INT_MAX) {
     throw std::runtime_error("Invalid message length");
   }
@@ -77,7 +74,7 @@ std::shared_ptr<ArrayBuffer> CCMCipher::update(const std::shared_ptr<ArrayBuffer
   }
 
   auto out_buf = std::make_unique<unsigned char[]>(out_len);
-  const uint8_t* in = reinterpret_cast<const uint8_t*>(native_data->data());
+  const uint8_t* in = reinterpret_cast<const uint8_t*>(data->data());
 
   int actual_out_len = 0;
   int ret = EVP_CipherUpdate(ctx.get(), out_buf.get(), &actual_out_len, in, in_len);
@@ -185,8 +182,7 @@ bool CCMCipher::setAAD(const std::shared_ptr<ArrayBuffer>& data, std::optional<d
   int out_len = 0;
 
   // Get AAD data and length *before* deciding whether to set total length
-  auto native_aad = ToNativeArrayBuffer(data);
-  size_t aad_len = native_aad->size();
+  size_t aad_len = data->size();
 
   // 1. Set the total *ciphertext* length. This seems necessary based on examples,
   //    BUT the wiki says "(only needed if AAD is passed)". Let's skip if decrypting and AAD length is 0.
@@ -203,7 +199,7 @@ bool CCMCipher::setAAD(const std::shared_ptr<ArrayBuffer>& data, std::optional<d
   // 2. Process AAD Data
   // Per OpenSSL CCM decryption examples, this MUST be called even if aad_len is 0.
   // Pass nullptr as the output buffer, the AAD data pointer, and its length.
-  if (EVP_CipherUpdate(ctx.get(), nullptr, &out_len, native_aad->data(), aad_len) != 1) {
+  if (EVP_CipherUpdate(ctx.get(), nullptr, &out_len, data->data(), aad_len) != 1) {
     unsigned long err = ERR_get_error();
     char err_buf[256];
     ERR_error_string_n(err, err_buf, sizeof(err_buf));

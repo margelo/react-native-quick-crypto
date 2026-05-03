@@ -58,15 +58,13 @@ void HybridVerifyHandle::update(const std::shared_ptr<ArrayBuffer>& data) {
     throw std::runtime_error("Verify not initialized");
   }
 
-  auto native_data = ToNativeArrayBuffer(data);
-
   // Accumulate raw data for potential one-shot verification (Ed25519/Ed448/ML-DSA)
-  const uint8_t* ptr = reinterpret_cast<const uint8_t*>(native_data->data());
-  data_buffer.insert(data_buffer.end(), ptr, ptr + native_data->size());
+  const uint8_t* ptr = reinterpret_cast<const uint8_t*>(data->data());
+  data_buffer.insert(data_buffer.end(), ptr, ptr + data->size());
 
   // Only update digest if we have one (not needed for pure signature schemes)
   if (md != nullptr) {
-    if (EVP_DigestUpdate(md_ctx, native_data->data(), native_data->size()) <= 0) {
+    if (EVP_DigestUpdate(md_ctx, data->data(), data->size()) <= 0) {
       unsigned long err = ERR_get_error();
       char err_buf[256];
       ERR_error_string_n(err, err_buf, sizeof(err_buf));
@@ -107,9 +105,8 @@ bool HybridVerifyHandle::verify(const std::shared_ptr<HybridKeyObjectHandleSpec>
     throw std::runtime_error("Invalid public key for verification");
   }
 
-  auto native_sig = ToNativeArrayBuffer(signature);
-  const unsigned char* sig_data = native_sig->data();
-  size_t sig_len = native_sig->size();
+  const unsigned char* sig_data = signature->data();
+  size_t sig_len = signature->size();
 
   // Ed25519/Ed448/ML-DSA require one-shot verification with EVP_DigestVerify
   // Also use one-shot path if no digest was specified (md == nullptr)

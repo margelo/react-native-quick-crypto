@@ -83,10 +83,8 @@ void HybridCipher::init(const std::shared_ptr<ArrayBuffer> cipher_key, const std
 
   // For base hybrid cipher, set key and IV immediately.
   // Derived classes like CCM might override init and handle this differently.
-  auto native_key = ToNativeArrayBuffer(cipher_key);
-  auto native_iv = ToNativeArrayBuffer(iv);
-  const unsigned char* key_ptr = reinterpret_cast<const unsigned char*>(native_key->data());
-  const unsigned char* iv_ptr = reinterpret_cast<const unsigned char*>(native_iv->data());
+  const unsigned char* key_ptr = reinterpret_cast<const unsigned char*>(cipher_key->data());
+  const unsigned char* iv_ptr = reinterpret_cast<const unsigned char*>(iv->data());
 
   if (EVP_CipherInit_ex(ctx.get(), nullptr, nullptr, key_ptr, iv_ptr, is_cipher) != 1) {
     unsigned long err = ERR_get_error();
@@ -106,11 +104,10 @@ void HybridCipher::init(const std::shared_ptr<ArrayBuffer> cipher_key, const std
 }
 
 std::shared_ptr<ArrayBuffer> HybridCipher::update(const std::shared_ptr<ArrayBuffer>& data) {
-  auto native_data = ToNativeArrayBuffer(data);
   checkCtx();
   checkNotFinalized();
   has_update_called = true;
-  size_t in_len = native_data->size();
+  size_t in_len = data->size();
   if (in_len > INT_MAX) {
     throw std::runtime_error("Message too long");
   }
@@ -119,7 +116,7 @@ std::shared_ptr<ArrayBuffer> HybridCipher::update(const std::shared_ptr<ArrayBuf
   auto out_buf = std::make_unique<uint8_t[]>(out_len);
   // Perform the cipher update operation. The real size of the output is
   // returned in out_len
-  int ret = EVP_CipherUpdate(ctx.get(), out_buf.get(), &out_len, native_data->data(), in_len);
+  int ret = EVP_CipherUpdate(ctx.get(), out_buf.get(), &out_len, data->data(), in_len);
 
   if (!ret) {
     unsigned long err = ERR_get_error();
@@ -168,11 +165,9 @@ std::shared_ptr<ArrayBuffer> HybridCipher::final() {
 bool HybridCipher::setAAD(const std::shared_ptr<ArrayBuffer>& data, std::optional<double> plaintextLength) {
   checkCtx();
   checkAADBeforeUpdate();
-  auto native_data = ToNativeArrayBuffer(data);
-
   // Set the AAD
   int out_len;
-  if (!EVP_CipherUpdate(ctx.get(), nullptr, &out_len, native_data->data(), native_data->size())) {
+  if (!EVP_CipherUpdate(ctx.get(), nullptr, &out_len, data->data(), data->size())) {
     return false;
   }
 
@@ -192,9 +187,8 @@ bool HybridCipher::setAuthTag(const std::shared_ptr<ArrayBuffer>& tag) {
     throw std::runtime_error("setAuthTag can only be called during decryption.");
   }
 
-  auto native_tag = ToNativeArrayBuffer(tag);
-  size_t tag_len = native_tag->size();
-  uint8_t* tag_ptr = native_tag->data();
+  size_t tag_len = tag->size();
+  uint8_t* tag_ptr = tag->data();
 
   int mode = EVP_CIPHER_CTX_mode(ctx.get());
 

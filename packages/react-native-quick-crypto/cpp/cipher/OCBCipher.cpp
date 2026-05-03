@@ -40,12 +40,11 @@ bool OCBCipher::setAuthTag(const std::shared_ptr<ArrayBuffer>& tag) {
   if (is_cipher) {
     throw std::runtime_error("setAuthTag can only be called during decryption.");
   }
-  auto native_tag = ToNativeArrayBuffer(tag);
-  size_t tag_len = native_tag->size();
+  size_t tag_len = tag->size();
   if (tag_len < 8 || tag_len > 16) {
     throw std::runtime_error("Invalid OCB tag length");
   }
-  if (EVP_CIPHER_CTX_ctrl(ctx.get(), EVP_CTRL_AEAD_SET_TAG, tag_len, native_tag->data()) != 1) {
+  if (EVP_CIPHER_CTX_ctrl(ctx.get(), EVP_CTRL_AEAD_SET_TAG, tag_len, tag->data()) != 1) {
     throw std::runtime_error("Failed to set OCB auth tag");
   }
   auth_tag_len = tag_len;

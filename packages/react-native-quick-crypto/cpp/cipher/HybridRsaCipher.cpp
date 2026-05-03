@@ -102,15 +102,14 @@ std::shared_ptr<ArrayBuffer> HybridRsaCipher::encrypt(const std::shared_ptr<Hybr
     }
 
     if (label.has_value() && label.value()->size() > 0) {
-      auto native_label = ToNativeArrayBuffer(label.value());
-      unsigned char* label_copy = (unsigned char*)OPENSSL_malloc(native_label->size());
+      unsigned char* label_copy = (unsigned char*)OPENSSL_malloc(label.value()->size());
       if (!label_copy) {
         EVP_PKEY_CTX_free(ctx);
         throw std::runtime_error("Failed to allocate memory for label");
       }
-      std::memcpy(label_copy, native_label->data(), native_label->size());
+      std::memcpy(label_copy, label.value()->data(), label.value()->size());
 
-      if (EVP_PKEY_CTX_set0_rsa_oaep_label(ctx, label_copy, native_label->size()) <= 0) {
+      if (EVP_PKEY_CTX_set0_rsa_oaep_label(ctx, label_copy, label.value()->size()) <= 0) {
         OPENSSL_free(label_copy);
         EVP_PKEY_CTX_free(ctx);
         throw std::runtime_error("Failed to set OAEP label");
@@ -118,9 +117,8 @@ std::shared_ptr<ArrayBuffer> HybridRsaCipher::encrypt(const std::shared_ptr<Hybr
     }
   }
 
-  auto native_data = ToNativeArrayBuffer(data);
-  const unsigned char* in = native_data->data();
-  size_t inlen = native_data->size();
+  const unsigned char* in = data->data();
+  size_t inlen = data->size();
 
   size_t outlen;
   if (EVP_PKEY_encrypt(ctx, nullptr, &outlen, in, inlen) <= 0) {
@@ -197,15 +195,14 @@ std::shared_ptr<ArrayBuffer> HybridRsaCipher::decrypt(const std::shared_ptr<Hybr
     }
 
     if (label.has_value() && label.value()->size() > 0) {
-      auto native_label = ToNativeArrayBuffer(label.value());
-      unsigned char* label_copy = (unsigned char*)OPENSSL_malloc(native_label->size());
+      unsigned char* label_copy = (unsigned char*)OPENSSL_malloc(label.value()->size());
       if (!label_copy) {
         EVP_PKEY_CTX_free(ctx);
         throw std::runtime_error("Failed to allocate memory for label");
       }
-      std::memcpy(label_copy, native_label->data(), native_label->size());
+      std::memcpy(label_copy, label.value()->data(), label.value()->size());
 
-      if (EVP_PKEY_CTX_set0_rsa_oaep_label(ctx, label_copy, native_label->size()) <= 0) {
+      if (EVP_PKEY_CTX_set0_rsa_oaep_label(ctx, label_copy, label.value()->size()) <= 0) {
         OPENSSL_free(label_copy);
         EVP_PKEY_CTX_free(ctx);
         throw std::runtime_error("Failed to set OAEP label");
@@ -213,9 +210,8 @@ std::shared_ptr<ArrayBuffer> HybridRsaCipher::decrypt(const std::shared_ptr<Hybr
     }
   }
 
-  auto native_data = ToNativeArrayBuffer(data);
-  const unsigned char* in = native_data->data();
-  size_t inlen = native_data->size();
+  const unsigned char* in = data->data();
+  size_t inlen = data->size();
 
   // Both decrypt calls below operate on attacker-controlled ciphertext, so
   // any failure must be surfaced with an opaque, content-independent message.
@@ -269,9 +265,8 @@ std::shared_ptr<ArrayBuffer> HybridRsaCipher::publicDecrypt(const std::shared_pt
     throw std::runtime_error("Failed to set RSA padding");
   }
 
-  auto native_data = ToNativeArrayBuffer(data);
-  const unsigned char* in = native_data->data();
-  size_t inlen = native_data->size();
+  const unsigned char* in = data->data();
+  size_t inlen = data->size();
 
   // verify_recover acts on attacker-controlled ciphertext too — surface only
   // an opaque error so a remote caller cannot distinguish failure modes.
@@ -351,9 +346,8 @@ std::shared_ptr<ArrayBuffer> HybridRsaCipher::privateEncrypt(const std::shared_p
     throw std::runtime_error("Failed to set RSA padding");
   }
 
-  auto native_data = ToNativeArrayBuffer(data);
-  const unsigned char* in = native_data->data();
-  size_t inlen = native_data->size();
+  const unsigned char* in = data->data();
+  size_t inlen = data->size();
 
   size_t outlen;
   if (EVP_PKEY_sign(ctx, nullptr, &outlen, in, inlen) <= 0) {
@@ -430,15 +424,14 @@ std::shared_ptr<ArrayBuffer> HybridRsaCipher::privateDecrypt(const std::shared_p
     }
 
     if (label.has_value() && label.value()->size() > 0) {
-      auto native_label = ToNativeArrayBuffer(label.value());
-      unsigned char* label_copy = (unsigned char*)OPENSSL_malloc(native_label->size());
+      unsigned char* label_copy = (unsigned char*)OPENSSL_malloc(label.value()->size());
       if (!label_copy) {
         EVP_PKEY_CTX_free(ctx);
         throw std::runtime_error("Failed to allocate memory for label");
       }
-      std::memcpy(label_copy, native_label->data(), native_label->size());
+      std::memcpy(label_copy, label.value()->data(), label.value()->size());
 
-      if (EVP_PKEY_CTX_set0_rsa_oaep_label(ctx, label_copy, native_label->size()) <= 0) {
+      if (EVP_PKEY_CTX_set0_rsa_oaep_label(ctx, label_copy, label.value()->size()) <= 0) {
         OPENSSL_free(label_copy);
         EVP_PKEY_CTX_free(ctx);
         throw std::runtime_error("Failed to set OAEP label");
@@ -446,9 +439,8 @@ std::shared_ptr<ArrayBuffer> HybridRsaCipher::privateDecrypt(const std::shared_p
     }
   }
 
-  auto native_data = ToNativeArrayBuffer(data);
-  const unsigned char* in = native_data->data();
-  size_t inlen = native_data->size();
+  const unsigned char* in = data->data();
+  size_t inlen = data->size();
 
   // Both decrypt calls below operate on attacker-controlled ciphertext, so
   // any failure must be surfaced with an opaque, content-independent message.
