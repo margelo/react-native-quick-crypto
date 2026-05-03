@@ -1278,6 +1278,31 @@ function edImportKey(
   return new CryptoKey(keyObject, { name }, keyUsages, extractable);
 }
 
+// Lengths (in bytes) of seedless ML-DSA / ML-KEM PKCS#8 encodings. A PKCS#8
+// blob of exactly this length contains only the expanded private key with no
+// seed; Node rejects these to keep cross-implementation interop intact.
+// Refs: node lib/internal/crypto/ml_dsa.js (mlDsaImportKey, pkcs8 case)
+//       node lib/internal/crypto/ml_kem.js (mlKemImportKey, pkcs8 case)
+export const PQC_SEEDLESS_PKCS8_LENGTHS: Readonly<Record<string, number>> = {
+  'ML-DSA-44': 2588,
+  'ML-DSA-65': 4060,
+  'ML-DSA-87': 4924,
+  'ML-KEM-512': 1660,
+  'ML-KEM-768': 2428,
+  'ML-KEM-1024': 3196,
+};
+
+// Map from PQC algorithm name to display family. Used to render the
+// import-rejection error message in the same form Node emits.
+const PQC_FAMILY: Readonly<Record<string, 'ML-DSA' | 'ML-KEM'>> = {
+  'ML-DSA-44': 'ML-DSA',
+  'ML-DSA-65': 'ML-DSA',
+  'ML-DSA-87': 'ML-DSA',
+  'ML-KEM-512': 'ML-KEM',
+  'ML-KEM-768': 'ML-KEM',
+  'ML-KEM-1024': 'ML-KEM',
+};
+
 function pqcImportKeyObject(
   format: ImportFormat,
   data: BufferLike | JWK,
@@ -1294,10 +1319,21 @@ function pqcImportKeyObject(
       isPublic: true,
     };
   } else if (format === 'pkcs8') {
+    const ab = bufferLikeToArrayBuffer(data as BufferLike);
+    const family = PQC_FAMILY[name];
+    if (
+      family !== undefined &&
+      ab.byteLength === PQC_SEEDLESS_PKCS8_LENGTHS[name]
+    ) {
+      throw lazyDOMException(
+        `Importing an ${family} PKCS#8 key without a seed is not supported`,
+        'NotSupportedError',
+      );
+    }
     return {
       keyObject: KeyObject.createKeyObject(
         'private',
-        bufferLikeToArrayBuffer(data as BufferLike),
+        ab,
         KFormatType.DER,
         KeyEncoding.PKCS8,
       ),
@@ -1551,22 +1587,26 @@ const exportKeyPkcs8 = async (
     case 'ML-DSA-65':
     // Fall through
     case 'ML-DSA-87':
-      if (key.type === 'private') {
-        // Export ML-DSA key in PKCS8 DER format
-        return bufferLikeToArrayBuffer(
-          key.keyObject.handle.exportKey(KFormatType.DER, KeyEncoding.PKCS8),
-        );
-      }
-      break;
+    // Fall through
     case 'ML-KEM-512':
     // Fall through
     case 'ML-KEM-768':
     // Fall through
     case 'ML-KEM-1024':
       if (key.type === 'private') {
-        return bufferLikeToArrayBuffer(
+        const ab = bufferLikeToArrayBuffer(
           key.keyObject.handle.exportKey(KFormatType.DER, KeyEncoding.PKCS8),
         );
+        // 22 bytes of PKCS#8 ASN.1 + seed (32 ML-DSA, 64 ML-KEM). Guards
+        // against a seedless KeyObject that was wrapped via toCryptoKey.
+        const expected = key.algorithm.name.startsWith('ML-DSA') ? 54 : 86;
+        if (ab.byteLength !== expected) {
+          throw lazyDOMException(
+            'The operation failed for an operation-specific reason',
+            'OperationError',
+          );
+        }
+        return ab;
       }
       break;
   }

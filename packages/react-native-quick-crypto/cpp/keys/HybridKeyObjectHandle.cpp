@@ -1,4 +1,5 @@
 #include <cstdio>
+#include <mutex>
 #include <stdexcept>
 
 #include "../utils/base64.h"
@@ -10,9 +11,40 @@
 #include <openssl/ec.h>
 #include <openssl/evp.h>
 #include <openssl/obj_mac.h>
+#include <openssl/provider.h>
 #include <openssl/rsa.h>
 
 namespace margelo::nitro::crypto {
+
+#if OPENSSL_VERSION_NUMBER >= 0x30600000L
+// Configure loaded providers to prefer seed-only PKCS#8 output for ML-DSA /
+// ML-KEM, falling back to priv-only when no seed is available. Without this,
+// OpenSSL defaults to "seed-priv" — a longer encoding that bundles both —
+// which breaks interop with Node and the exact-length export check in subtle.ts.
+// Mirrors src/crypto/crypto_util.cc in Node.
+static void configurePqcOutputFormats() {
+  static std::once_flag once;
+  std::call_once(once, []() {
+    OSSL_PROVIDER_do_all(
+        nullptr,
+        [](OSSL_PROVIDER* provider, void*) -> int {
+          OSSL_PROVIDER_add_conf_parameter(provider, "ml-kem.output_formats", "seed-only,priv-only");
+          OSSL_PROVIDER_add_conf_parameter(provider, "ml-dsa.output_formats", "seed-only,priv-only");
+          return 1;
+        },
+        nullptr);
+  });
+}
+#endif
+
+HybridKeyObjectHandle::HybridKeyObjectHandle() : HybridObject(TAG) {
+#if OPENSSL_VERSION_NUMBER >= 0x30600000L
+  // Configure once on first handle construction. Providers are guaranteed
+  // loaded by this point (any prior crypto op routed through ncrypto), and
+  // the call_once flag makes subsequent constructions cheap.
+  configurePqcOutputFormats();
+#endif
+}
 
 // Helper functions for base64url encoding/decoding with BIGNUMs
 static std::string bn_to_base64url(const BIGNUM* bn, size_t expected_size = 0) {
