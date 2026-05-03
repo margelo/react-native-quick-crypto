@@ -23,10 +23,17 @@ export const assertThrowsAsync = async (
   } catch (error) {
     const err = error as Error;
     if (expectedMessage) {
-      assert.include(
-        err.message,
-        expectedMessage,
-        `Function failed as expected, but could not find message snippet '${expectedMessage}'.  Saw '${err.message}' instead.`,
+      // Match the snippet against either the message OR the error name. Spec-
+      // correct DOMException errors carry the type ('DataError',
+      // 'NotSupportedError', etc.) on `err.name`, not in the human-readable
+      // message — so existing tests that check for the type-name snippet
+      // continue to pass.
+      const found =
+        err.message.includes(expectedMessage) ||
+        err.name.includes(expectedMessage);
+      assert.isTrue(
+        found,
+        `Function failed as expected, but could not find snippet '${expectedMessage}' in message or name.  Saw message='${err.message}' name='${err.name}' instead.`,
       );
     }
     return;

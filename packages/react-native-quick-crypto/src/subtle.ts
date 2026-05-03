@@ -2514,7 +2514,8 @@ export class Subtle {
     format: ImportFormat,
     key: CryptoKey,
   ): Promise<ArrayBuffer | JWK> {
-    if (!key.extractable) throw new Error('key is not extractable');
+    if (!key.extractable)
+      throw lazyDOMException('key is not extractable', 'InvalidAccessError');
 
     if (format === 'raw-seed') {
       const pqcAlgos = [

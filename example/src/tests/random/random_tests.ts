@@ -650,6 +650,43 @@ test(SUITE, 'crypto.getRandomValues', () => {
   expect(r.length).to.equal(10);
 });
 
+// WebCrypto §getRandomValues: byteLength > 65536 must throw a
+// QuotaExceededError DOMException carrying `quota` and `requested`.
+test(SUITE, 'getRandomValues - QuotaExceededError on > 65536 bytes', () => {
+  let caught: unknown;
+  try {
+    crypto.getRandomValues(new Uint8Array(65537));
+  } catch (e) {
+    caught = e;
+  }
+  const err = caught as Error & { quota?: number; requested?: number };
+  expect(err).to.be.instanceOf(Error);
+  expect(err.name).to.equal('QuotaExceededError');
+  expect(err.quota).to.equal(65536);
+  expect(err.requested).to.equal(65537);
+});
+
+// WebCrypto §getRandomValues: non-integer-typed views must throw
+// TypeMismatchError. Float and DataView are explicitly excluded.
+[
+  ['Float32Array', () => new Float32Array(4)],
+  ['Float64Array', () => new Float64Array(4)],
+  ['DataView', () => new DataView(new ArrayBuffer(8))],
+].forEach(([name, make]) => {
+  test(SUITE, `getRandomValues - TypeMismatchError on ${name}`, () => {
+    let caught: unknown;
+    try {
+      // @ts-expect-error - intentionally passing disallowed view type
+      crypto.getRandomValues((make as () => ArrayBufferView)());
+    } catch (e) {
+      caught = e;
+    }
+    const err = caught as Error;
+    expect(err).to.be.instanceOf(Error);
+    expect(err.name).to.equal('TypeMismatchError');
+  });
+});
+
 // Issue #953: TypedArray views over larger ArrayBuffers
 // getRandomValues / randomFillSync should only fill the view, not the entire
 // underlying ArrayBuffer.
