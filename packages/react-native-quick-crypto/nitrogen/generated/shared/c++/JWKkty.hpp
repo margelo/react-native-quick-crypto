@@ -34,6 +34,7 @@ namespace margelo::nitro::crypto {
     EC      SWIFT_NAME(ec) = 2,
     OCT      SWIFT_NAME(oct) = 3,
     OKP      SWIFT_NAME(okp) = 4,
+    AKP      SWIFT_NAME(akp) = 5,
   } CLOSED_ENUM;
 
 } // namespace margelo::nitro::crypto
@@ -51,6 +52,7 @@ namespace margelo::nitro {
         case hashString("EC"): return margelo::nitro::crypto::JWKkty::EC;
         case hashString("oct"): return margelo::nitro::crypto::JWKkty::OCT;
         case hashString("OKP"): return margelo::nitro::crypto::JWKkty::OKP;
+        case hashString("AKP"): return margelo::nitro::crypto::JWKkty::AKP;
         default: [[unlikely]]
           throw std::invalid_argument("Cannot convert \"" + unionValue + "\" to enum JWKkty - invalid value!");
       }
@@ -62,6 +64,7 @@ namespace margelo::nitro {
         case margelo::nitro::crypto::JWKkty::EC: return JSIConverter<std::string>::toJSI(runtime, "EC");
         case margelo::nitro::crypto::JWKkty::OCT: return JSIConverter<std::string>::toJSI(runtime, "oct");
         case margelo::nitro::crypto::JWKkty::OKP: return JSIConverter<std::string>::toJSI(runtime, "OKP");
+        case margelo::nitro::crypto::JWKkty::AKP: return JSIConverter<std::string>::toJSI(runtime, "AKP");
         default: [[unlikely]]
           throw std::invalid_argument("Cannot convert JWKkty to JS - invalid value: "
                                     + std::to_string(static_cast<int>(arg)) + "!");
@@ -78,6 +81,7 @@ namespace margelo::nitro {
         case hashString("EC"):
         case hashString("oct"):
         case hashString("OKP"):
+        case hashString("AKP"):
           return true;
         default:
           return false;

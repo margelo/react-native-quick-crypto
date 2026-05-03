@@ -364,6 +364,37 @@ JWK HybridKeyObjectHandle::exportJwk(const JWK& key, bool handleRsaPss) {
     return result;
   }
 
+#if OPENSSL_VERSION_NUMBER >= 0x30500000L
+  // Export AKP keys (ML-DSA, ML-KEM)
+  {
+    const char* typeName = EVP_PKEY_get0_type_name(pkey.get());
+    if (typeName != nullptr) {
+      std::string name(typeName);
+      bool isPqcKey = (name.starts_with("ML-DSA-") || name.starts_with("ML-KEM-"));
+      if (isPqcKey) {
+        result.kty = JWKkty::AKP;
+        result.alg = name;
+
+        auto pubKey = pkey.rawPublicKey();
+        if (!pubKey) {
+          throw std::runtime_error("Failed to get raw public key for AKP JWK export");
+        }
+        result.pub = base64url_encode(reinterpret_cast<const unsigned char*>(pubKey.get()), pubKey.size());
+
+        if (keyType == KeyType::PRIVATE) {
+          auto seed = pkey.rawSeed();
+          if (!seed) {
+            throw std::runtime_error("Key does not have an available seed");
+          }
+          result.priv = base64url_encode(reinterpret_cast<const unsigned char*>(seed.get()), seed.size());
+        }
+
+        return result;
+      }
+    }
+  }
+#endif
+
   throw std::runtime_error("Unsupported key type for JWK export");
 }
 
@@ -702,6 +733,72 @@ std::optional<KeyType> HybridKeyObjectHandle::initJwk(const JWK& keyData, std::o
       return KeyType::PUBLIC;
     }
   }
+
+#if OPENSSL_VERSION_NUMBER >= 0x30500000L
+  // Handle AKP keys (ML-DSA, ML-KEM)
+  if (kty == JWKkty::AKP) {
+    if (!keyData.alg.has_value()) {
+      throw std::runtime_error("JWK AKP key missing 'alg' field");
+    }
+    if (!keyData.pub.has_value()) {
+      throw std::runtime_error("JWK AKP key missing 'pub' field");
+    }
+
+    const std::string& alg = keyData.alg.value();
+    int nid = 0;
+    if (alg == "ML-DSA-44")
+      nid = EVP_PKEY_ML_DSA_44;
+    else if (alg == "ML-DSA-65")
+      nid = EVP_PKEY_ML_DSA_65;
+    else if (alg == "ML-DSA-87")
+      nid = EVP_PKEY_ML_DSA_87;
+    else if (alg == "ML-KEM-512")
+      nid = EVP_PKEY_ML_KEM_512;
+    else if (alg == "ML-KEM-768")
+      nid = EVP_PKEY_ML_KEM_768;
+    else if (alg == "ML-KEM-1024")
+      nid = EVP_PKEY_ML_KEM_1024;
+    else
+      throw std::runtime_error("Unsupported JWK AKP \"alg\": " + alg);
+
+    bool isPrivate = keyData.priv.has_value();
+    ncrypto::EVPKeyPointer pkey;
+
+    if (isPrivate) {
+      std::string seedBytes = base64url_decode(keyData.priv.value());
+      ncrypto::Buffer<const unsigned char> buf{
+          .data = reinterpret_cast<const unsigned char*>(seedBytes.data()),
+          .len = seedBytes.size(),
+      };
+      pkey = ncrypto::EVPKeyPointer::NewRawSeed(nid, buf);
+      if (!pkey) {
+        throw std::runtime_error("Invalid JWK AKP key");
+      }
+
+      // Verify the pub field matches the public key derived from the seed.
+      std::string pubBytes = base64url_decode(keyData.pub.value());
+      auto derivedPub = pkey.rawPublicKey();
+      if (!derivedPub || derivedPub.size() != pubBytes.size() || CRYPTO_memcmp(derivedPub.get(), pubBytes.data(), pubBytes.size()) != 0) {
+        throw std::runtime_error("Invalid JWK AKP key");
+      }
+
+      data_ = KeyObjectData::CreateAsymmetric(KeyType::PRIVATE, std::move(pkey));
+      return KeyType::PRIVATE;
+    } else {
+      std::string pubBytes = base64url_decode(keyData.pub.value());
+      ncrypto::Buffer<const unsigned char> buf{
+          .data = reinterpret_cast<const unsigned char*>(pubBytes.data()),
+          .len = pubBytes.size(),
+      };
+      pkey = ncrypto::EVPKeyPointer::NewRawPublic(nid, buf);
+      if (!pkey) {
+        throw std::runtime_error("Invalid JWK AKP key");
+      }
+      data_ = KeyObjectData::CreateAsymmetric(KeyType::PUBLIC, std::move(pkey));
+      return KeyType::PUBLIC;
+    }
+  }
+#endif
 
   throw std::runtime_error("Unsupported JWK key type");
 }

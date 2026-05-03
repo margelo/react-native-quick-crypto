@@ -164,8 +164,7 @@
           {
             "file": "../../example/package.json",
             "path": [
-              "version",
-              "dependencies.react-native-quick-crypto"
+              "version"
             ]
           }
         ]
