@@ -27,6 +27,7 @@ import {
   kNamedCurveAliases,
   lazyDOMException,
   normalizeHashName,
+  validateJwkStructure,
   HashContext,
   KeyEncoding,
   KFormatType,
@@ -93,36 +94,27 @@ export function ecImportKey(
     throw lazyDOMException('Unrecognized namedCurve', 'NotSupportedError');
   }
 
-  // Handle JWK format
   if (format === 'jwk') {
     const jwk = keyData as JWK;
 
-    // Validate JWK
+    if (!jwk || typeof jwk !== 'object') {
+      throw lazyDOMException('Invalid keyData', 'DataError');
+    }
     if (jwk.kty !== 'EC') {
       throw lazyDOMException('Invalid JWK "kty" Parameter', 'DataError');
     }
-
     if (jwk.crv !== namedCurve) {
       throw lazyDOMException(
         'JWK "crv" does not match the requested algorithm',
         'DataError',
       );
     }
+    const expectedUse = name === 'ECDH' ? 'enc' : 'sig';
+    validateJwkStructure(jwk, extractable, keyUsages, expectedUse);
 
-    // Check use parameter if present
-    if (jwk.use !== undefined) {
-      const expectedUse = name === 'ECDH' ? 'enc' : 'sig';
-      if (jwk.use !== expectedUse) {
-        throw lazyDOMException('Invalid JWK "use" Parameter', 'DataError');
-      }
-    }
-
-    // Check alg parameter if present
     if (jwk.alg !== undefined) {
       let expectedAlg: string | undefined;
-
       if (name === 'ECDSA') {
-        // Map namedCurve to expected ECDSA algorithm
         expectedAlg =
           namedCurve === 'P-256'
             ? 'ES256'
@@ -132,11 +124,9 @@ export function ecImportKey(
                 ? 'ES512'
                 : undefined;
       } else if (name === 'ECDH') {
-        // ECDH uses ECDH-ES algorithm
         expectedAlg = 'ECDH-ES';
       }
-
-      if (expectedAlg && jwk.alg !== undefined && jwk.alg !== expectedAlg) {
+      if (expectedAlg && jwk.alg !== expectedAlg) {
         throw lazyDOMException(
           'JWK "alg" does not match the requested algorithm',
           'DataError',
@@ -144,32 +134,49 @@ export function ecImportKey(
       }
     }
 
-    // Import using C++ layer
-    const handle =
-      NitroModules.createHybridObject<KeyObjectHandle>('KeyObjectHandle');
-    const keyType = handle.initJwk(jwk, namedCurve as NamedCurve);
-
-    if (keyType === undefined) {
-      throw lazyDOMException('Invalid JWK', 'DataError');
+    const isPublicJwk = jwk.d === undefined;
+    const validUsagesJwk: KeyUsage[] =
+      name === 'ECDSA'
+        ? isPublicJwk
+          ? ['verify']
+          : ['sign']
+        : isPublicJwk
+          ? []
+          : ['deriveKey', 'deriveBits'];
+    if (hasAnyNotIn(keyUsages, validUsagesJwk)) {
+      throw lazyDOMException(
+        `Unsupported key usage for a ${name} key`,
+        'SyntaxError',
+      );
     }
 
-    // Create the appropriate KeyObject based on type
+    const handle =
+      NitroModules.createHybridObject<KeyObjectHandle>('KeyObjectHandle');
+    let keyType: number | undefined;
+    try {
+      keyType = handle.initJwk(jwk, namedCurve as NamedCurve);
+    } catch (err) {
+      throw lazyDOMException('Invalid keyData', {
+        name: 'DataError',
+        cause: err,
+      });
+    }
+    if (keyType === undefined) {
+      throw lazyDOMException('Invalid keyData', 'DataError');
+    }
+
     let keyObject: KeyObject;
     if (keyType === 1) {
       keyObject = new PublicKeyObject(handle);
     } else if (keyType === 2) {
       keyObject = new PrivateKeyObject(handle);
     } else {
-      throw lazyDOMException(
-        'Unexpected key type from JWK import',
-        'DataError',
-      );
+      throw lazyDOMException('Invalid keyData', 'DataError');
     }
 
     return new CryptoKey(keyObject, algorithm, keyUsages, extractable);
   }
 
-  // Handle binary formats (spki, pkcs8, raw)
   if (format !== 'spki' && format !== 'pkcs8' && format !== 'raw') {
     throw lazyDOMException(
       `Unsupported format: ${format}`,
@@ -177,11 +184,9 @@ export function ecImportKey(
     );
   }
 
-  // Determine expected key type based on format
   const expectedKeyType =
     format === 'spki' || format === 'raw' ? 'public' : 'private';
 
-  // Validate usages for the key type
   const isPublicKey = expectedKeyType === 'public';
   let validUsages: KeyUsage[];
 

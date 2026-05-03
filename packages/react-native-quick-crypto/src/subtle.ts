@@ -31,7 +31,10 @@ import { bufferLikeToArrayBuffer } from './utils/conversion';
 import { argon2Sync } from './argon2';
 import { lazyDOMException } from './utils/errors';
 import { normalizeHashName, HashContext } from './utils/hashnames';
-import { validateMaxBufferLength } from './utils/validation';
+import {
+  validateJwkStructure,
+  validateMaxBufferLength,
+} from './utils/validation';
 import { asyncDigest } from './hash';
 import { createSecretKey, createPublicKey } from './keys';
 import { NitroModules } from 'react-native-nitro-modules';
@@ -122,37 +125,6 @@ function normalizeAlgorithm(
     return { ...algorithm, name: canonical };
   }
   return algorithm as SubtleAlgorithm;
-}
-
-// WebCrypto §25.7.6 (JWK import): if the JWK's `ext` member is present and
-// false, the requested `extractable` parameter must also be false. If the
-// JWK's `key_ops` member is present, every requested usage must appear in
-// it. We centralize the check here so every importKey path that accepts
-// `format === 'jwk'` can reuse it.
-function validateJwkExtAndKeyOps(
-  jwk: JWK,
-  extractable: boolean,
-  keyUsages: KeyUsage[],
-): void {
-  if (jwk.ext === false && extractable) {
-    throw lazyDOMException(
-      'JWK "ext" is false but extractable was requested',
-      'DataError',
-    );
-  }
-  if (jwk.key_ops !== undefined) {
-    if (!Array.isArray(jwk.key_ops)) {
-      throw lazyDOMException('JWK "key_ops" must be an array', 'DataError');
-    }
-    for (const usage of keyUsages) {
-      if (!jwk.key_ops.includes(usage)) {
-        throw lazyDOMException(
-          `JWK "key_ops" does not include requested usage "${usage}"`,
-          'DataError',
-        );
-      }
-    }
-  }
 }
 
 function getAlgorithmName(name: string, length: number): string {
@@ -862,13 +834,6 @@ async function kmacImportKey(
 ): Promise<CryptoKey> {
   const { name } = algorithm;
 
-  if (hasAnyNotIn(keyUsages, ['sign', 'verify'])) {
-    throw lazyDOMException(
-      `Unsupported key usage for ${name} key`,
-      'SyntaxError',
-    );
-  }
-
   let keyObject: KeyObject;
 
   if (format === 'jwk') {
@@ -877,31 +842,49 @@ async function kmacImportKey(
     if (!jwk || typeof jwk !== 'object') {
       throw lazyDOMException('Invalid keyData', 'DataError');
     }
-
-    validateJwkExtAndKeyOps(jwk, extractable, keyUsages);
-
     if (jwk.kty !== 'oct') {
-      throw lazyDOMException('Invalid JWK format for KMAC key', 'DataError');
+      throw lazyDOMException('Invalid JWK "kty" Parameter', 'DataError');
     }
+    validateJwkStructure(jwk, extractable, keyUsages, 'sig');
 
     const expectedAlg = name === 'KMAC128' ? 'K128' : 'K256';
     if (jwk.alg !== undefined && jwk.alg !== expectedAlg) {
       throw lazyDOMException(
-        'JWK "alg" does not match the requested algorithm',
+        'JWK "alg" Parameter and algorithm name mismatch',
         'DataError',
+      );
+    }
+
+    if (hasAnyNotIn(keyUsages, ['sign', 'verify'])) {
+      throw lazyDOMException(
+        `Unsupported key usage for ${name} key`,
+        'SyntaxError',
       );
     }
 
     const handle =
       NitroModules.createHybridObject<KeyObjectHandle>('KeyObjectHandle');
-    const keyType = handle.initJwk(jwk, undefined);
-
+    let keyType: KeyType | undefined;
+    try {
+      keyType = handle.initJwk(jwk, undefined);
+    } catch (err) {
+      throw lazyDOMException('Invalid keyData', {
+        name: 'DataError',
+        cause: err,
+      });
+    }
     if (keyType === undefined || keyType !== 0) {
-      throw lazyDOMException('Failed to import KMAC JWK', 'DataError');
+      throw lazyDOMException('Invalid keyData', 'DataError');
     }
 
     keyObject = new SecretKeyObject(handle);
   } else if (format === 'raw' || format === 'raw-secret') {
+    if (hasAnyNotIn(keyUsages, ['sign', 'verify'])) {
+      throw lazyDOMException(
+        `Unsupported key usage for ${name} key`,
+        'SyntaxError',
+      );
+    }
     keyObject = createSecretKey(data as BinaryLike);
   } else {
     throw lazyDOMException(
@@ -938,7 +921,6 @@ function rsaImportKey(
 ): CryptoKey {
   const { name } = algorithm;
 
-  // Validate usages
   let checkSet: KeyUsage[];
   switch (name) {
     case 'RSASSA-PKCS1-v1_5':
@@ -951,40 +933,54 @@ function rsaImportKey(
     default:
       throw new Error(`Unsupported RSA algorithm: ${name}`);
   }
-
-  if (hasAnyNotIn(keyUsages, checkSet)) {
-    throw new Error(`Unsupported key usage for ${name}`);
-  }
+  const checkUsages = (): void => {
+    if (hasAnyNotIn(keyUsages, checkSet)) {
+      throw lazyDOMException(
+        `Unsupported key usage for ${name} key`,
+        'SyntaxError',
+      );
+    }
+  };
 
   let keyObject: KeyObject;
 
   if (format === 'jwk') {
     const jwk = data as JWK;
 
-    // Validate JWK
-    if (jwk.kty !== 'RSA') {
-      throw new Error('Invalid JWK format for RSA key');
+    if (!jwk || typeof jwk !== 'object') {
+      throw lazyDOMException('Invalid keyData', 'DataError');
     }
-
-    validateJwkExtAndKeyOps(jwk, extractable, keyUsages);
+    if (jwk.kty !== 'RSA') {
+      throw lazyDOMException('Invalid JWK "kty" Parameter', 'DataError');
+    }
+    const expectedUse = name === 'RSA-OAEP' ? 'enc' : 'sig';
+    validateJwkStructure(jwk, extractable, keyUsages, expectedUse);
+    checkUsages();
 
     const handle =
       NitroModules.createHybridObject<KeyObjectHandle>('KeyObjectHandle');
-    const keyType = handle.initJwk(jwk, undefined);
-
+    let keyType: KeyType | undefined;
+    try {
+      keyType = handle.initJwk(jwk, undefined);
+    } catch (err) {
+      throw lazyDOMException('Invalid keyData', {
+        name: 'DataError',
+        cause: err,
+      });
+    }
     if (keyType === undefined) {
-      throw new Error('Failed to import RSA JWK');
+      throw lazyDOMException('Invalid keyData', 'DataError');
     }
 
-    // Create the appropriate KeyObject based on type
-    if (keyType === 1) {
+    if (keyType === KeyType.PUBLIC) {
       keyObject = new PublicKeyObject(handle);
-    } else if (keyType === 2) {
+    } else if (keyType === KeyType.PRIVATE) {
       keyObject = new PrivateKeyObject(handle);
     } else {
-      throw new Error('Unexpected key type from RSA JWK import');
+      throw lazyDOMException('Invalid keyData', 'DataError');
     }
   } else if (format === 'spki') {
+    checkUsages();
     const keyData = bufferLikeToArrayBuffer(data as BufferLike);
     keyObject = KeyObject.createKeyObject(
       'public',
@@ -993,6 +989,7 @@ function rsaImportKey(
       KeyEncoding.SPKI,
     );
   } else if (format === 'pkcs8') {
+    checkUsages();
     const keyData = bufferLikeToArrayBuffer(data as BufferLike);
     keyObject = KeyObject.createKeyObject(
       'private',
@@ -1001,7 +998,10 @@ function rsaImportKey(
       KeyEncoding.PKCS8,
     );
   } else {
-    throw new Error(`Unsupported format for RSA import: ${format}`);
+    throw lazyDOMException(
+      `Unsupported format for ${name} import: ${format}`,
+      'NotSupportedError',
+    );
   }
 
   // Get the modulus length from the key and add it to the algorithm
@@ -1043,33 +1043,30 @@ async function hmacImportKey(
   extractable: boolean,
   keyUsages: KeyUsage[],
 ): Promise<CryptoKey> {
-  // Validate usages
-  if (hasAnyNotIn(keyUsages, ['sign', 'verify'])) {
-    throw new Error('Unsupported key usage for an HMAC key');
-  }
+  const checkUsages = (): void => {
+    if (hasAnyNotIn(keyUsages, ['sign', 'verify'])) {
+      throw new Error('Unsupported key usage for an HMAC key');
+    }
+  };
 
   let keyObject: KeyObject;
 
   if (format === 'jwk') {
     const jwk = data as JWK;
 
-    // Validate JWK
     if (!jwk || typeof jwk !== 'object') {
       throw new Error('Invalid keyData');
     }
-
-    validateJwkExtAndKeyOps(jwk, extractable, keyUsages);
-
     if (jwk.kty !== 'oct') {
       throw new Error('Invalid JWK format for HMAC key');
     }
+    validateJwkStructure(jwk, extractable, keyUsages, 'sig');
+    checkUsages();
 
-    // Validate key length if specified
     if (algorithm.length !== undefined) {
       if (!jwk.k) {
         throw new Error('JWK missing key data');
       }
-      // Decode to check length
       const decoded = SBuffer.from(jwk.k, 'base64');
       const keyBitLength = decoded.length * 8;
       if (algorithm.length === 0) {
@@ -1082,14 +1079,22 @@ async function hmacImportKey(
 
     const handle =
       NitroModules.createHybridObject<KeyObjectHandle>('KeyObjectHandle');
-    const keyType = handle.initJwk(jwk, undefined);
-
+    let keyType: KeyType | undefined;
+    try {
+      keyType = handle.initJwk(jwk, undefined);
+    } catch (err) {
+      throw lazyDOMException('Invalid keyData', {
+        name: 'DataError',
+        cause: err,
+      });
+    }
     if (keyType === undefined || keyType !== 0) {
-      throw new Error('Failed to import HMAC JWK');
+      throw lazyDOMException('Invalid keyData', 'DataError');
     }
 
     keyObject = new SecretKeyObject(handle);
   } else if (format === 'raw') {
+    checkUsages();
     keyObject = createSecretKey(data as BinaryLike);
   } else {
     throw new Error(`Unable to import HMAC key with format ${format}`);
@@ -1115,16 +1120,17 @@ async function aesImportKey(
 ): Promise<CryptoKey> {
   const { name, length } = algorithm;
 
-  // Validate usages
   const validUsages: KeyUsage[] = [
     'encrypt',
     'decrypt',
     'wrapKey',
     'unwrapKey',
   ];
-  if (hasAnyNotIn(keyUsages, validUsages)) {
-    throw new Error(`Unsupported key usage for ${name}`);
-  }
+  const checkUsages = (): void => {
+    if (hasAnyNotIn(keyUsages, validUsages)) {
+      throw new Error(`Unsupported key usage for ${name}`);
+    }
+  };
 
   let keyObject: KeyObject;
   let actualLength: number;
@@ -1132,31 +1138,36 @@ async function aesImportKey(
   if (format === 'jwk') {
     const jwk = data as JWK;
 
-    // Validate JWK
     if (jwk.kty !== 'oct') {
       throw new Error('Invalid JWK format for AES key');
     }
-
-    validateJwkExtAndKeyOps(jwk, extractable, keyUsages);
+    validateJwkStructure(jwk, extractable, keyUsages, 'enc');
+    checkUsages();
 
     const handle =
       NitroModules.createHybridObject<KeyObjectHandle>('KeyObjectHandle');
-    const keyType = handle.initJwk(jwk, undefined);
-
+    let keyType: KeyType | undefined;
+    try {
+      keyType = handle.initJwk(jwk, undefined);
+    } catch (err) {
+      throw lazyDOMException('Invalid keyData', {
+        name: 'DataError',
+        cause: err,
+      });
+    }
     if (keyType === undefined || keyType !== 0) {
-      throw new Error('Failed to import AES JWK');
+      throw lazyDOMException('Invalid keyData', 'DataError');
     }
 
     keyObject = new SecretKeyObject(handle);
 
-    // Get actual key length from imported key
     const exported = keyObject.export();
     actualLength = exported.byteLength * 8;
   } else if (format === 'raw') {
+    checkUsages();
     const keyData = bufferLikeToArrayBuffer(data as BufferLike);
     actualLength = keyData.byteLength * 8;
 
-    // Validate key length
     if (![128, 192, 256].includes(actualLength)) {
       throw new Error('Invalid AES key length');
     }
@@ -1190,23 +1201,23 @@ function edImportKey(
 ): CryptoKey {
   const { name } = algorithm;
 
-  // Validate usages
   const isX = name === 'X25519' || name === 'X448';
   const allowedUsages: KeyUsage[] = isX
     ? ['deriveKey', 'deriveBits']
     : ['sign', 'verify'];
-
-  if (hasAnyNotIn(keyUsages, allowedUsages)) {
-    throw lazyDOMException(
-      `Unsupported key usage for ${name} key`,
-      'SyntaxError',
-    );
-  }
+  const checkUsages = (): void => {
+    if (hasAnyNotIn(keyUsages, allowedUsages)) {
+      throw lazyDOMException(
+        `Unsupported key usage for ${name} key`,
+        'SyntaxError',
+      );
+    }
+  };
 
   let keyObject: KeyObject;
 
   if (format === 'spki') {
-    // Import public key
+    checkUsages();
     const keyData = bufferLikeToArrayBuffer(data as BufferLike);
     keyObject = KeyObject.createKeyObject(
       'public',
@@ -1215,7 +1226,7 @@ function edImportKey(
       KeyEncoding.SPKI,
     );
   } else if (format === 'pkcs8') {
-    // Import private key
+    checkUsages();
     const keyData = bufferLikeToArrayBuffer(data as BufferLike);
     keyObject = KeyObject.createKeyObject(
       'private',
@@ -1224,20 +1235,31 @@ function edImportKey(
       KeyEncoding.PKCS8,
     );
   } else if (format === 'raw') {
-    // Raw format - public key only for Ed keys
+    checkUsages();
     const keyData = bufferLikeToArrayBuffer(data as BufferLike);
     const handle =
       NitroModules.createHybridObject<KeyObjectHandle>('KeyObjectHandle');
-    // For raw Ed keys, we need to create them differently
-    // Raw public keys are just the key bytes
-    handle.init(1, keyData); // 1 = public key type
+    handle.init(1, keyData);
     keyObject = new PublicKeyObject(handle);
   } else if (format === 'jwk') {
     const jwkData = data as JWK;
-    validateJwkExtAndKeyOps(jwkData, extractable, keyUsages);
+    if (!jwkData || typeof jwkData !== 'object') {
+      throw lazyDOMException('Invalid keyData', 'DataError');
+    }
+    const expectedUse = isX ? 'enc' : 'sig';
+    validateJwkStructure(jwkData, extractable, keyUsages, expectedUse);
+    checkUsages();
     const handle =
       NitroModules.createHybridObject<KeyObjectHandle>('KeyObjectHandle');
-    const keyType = handle.initJwk(jwkData);
+    let keyType: KeyType | undefined;
+    try {
+      keyType = handle.initJwk(jwkData);
+    } catch (err) {
+      throw lazyDOMException('Invalid JWK data', {
+        name: 'DataError',
+        cause: err,
+      });
+    }
     if (keyType === undefined) {
       throw lazyDOMException('Invalid JWK data', 'DataError');
     }
@@ -1260,8 +1282,6 @@ function pqcImportKeyObject(
   format: ImportFormat,
   data: BufferLike | JWK,
   name: string,
-  extractable: boolean,
-  keyUsages: KeyUsage[],
 ): { keyObject: KeyObject; isPublic: boolean } {
   if (format === 'spki') {
     return {
@@ -1314,20 +1334,18 @@ function pqcImportKeyObject(
     return { keyObject: new PrivateKeyObject(handle), isPublic: false };
   } else if (format === 'jwk') {
     const jwkData = data as JWK;
-    if (jwkData.kty !== 'AKP') {
-      throw lazyDOMException('Invalid JWK "kty" Parameter', 'DataError');
-    }
-    if (jwkData.alg !== name) {
-      throw lazyDOMException(
-        'JWK "alg" Parameter and algorithm name mismatch',
-        'DataError',
-      );
-    }
-    validateJwkExtAndKeyOps(jwkData, extractable, keyUsages);
     const isPublic = jwkData.priv === undefined;
     const handle =
       NitroModules.createHybridObject<KeyObjectHandle>('KeyObjectHandle');
-    const keyType = handle.initJwk(jwkData);
+    let keyType: KeyType | undefined;
+    try {
+      keyType = handle.initJwk(jwkData);
+    } catch (err) {
+      throw lazyDOMException('Invalid JWK data', {
+        name: 'DataError',
+        cause: err,
+      });
+    }
     if (keyType === undefined) {
       throw lazyDOMException('Invalid JWK data', 'DataError');
     }
@@ -1344,14 +1362,43 @@ function pqcImportKeyObject(
   );
 }
 
+// Per WebCrypto AKP JWK rules, public-vs-private is determined by the presence
+// of `priv`. For binary formats it follows from the format itself.
 function pqcIsPublicImport(
   format: ImportFormat,
   data: BufferLike | JWK,
 ): boolean {
   if (format === 'jwk') {
-    return (data as JWK).priv === undefined;
+    return (
+      typeof data === 'object' &&
+      data !== null &&
+      (data as JWK).priv === undefined
+    );
   }
   return format === 'spki' || format === 'raw';
+}
+
+function validatePqcJwk(
+  data: BufferLike | JWK,
+  name: string,
+  extractable: boolean,
+  keyUsages: KeyUsage[],
+  expectedUse: 'sig' | 'enc',
+): void {
+  if (typeof data !== 'object' || data === null) {
+    throw lazyDOMException('Invalid keyData', 'DataError');
+  }
+  const jwk = data as JWK;
+  if (jwk.kty !== 'AKP') {
+    throw lazyDOMException('Invalid JWK "kty" Parameter', 'DataError');
+  }
+  validateJwkStructure(jwk, extractable, keyUsages, expectedUse);
+  if (jwk.alg !== name) {
+    throw lazyDOMException(
+      'JWK "alg" Parameter and algorithm name mismatch',
+      'DataError',
+    );
+  }
 }
 
 function mldsaImportKey(
@@ -1362,6 +1409,9 @@ function mldsaImportKey(
   keyUsages: KeyUsage[],
 ): CryptoKey {
   const { name } = algorithm;
+  if (format === 'jwk') {
+    validatePqcJwk(data, name, extractable, keyUsages, 'sig');
+  }
   const isPublic = pqcIsPublicImport(format, data);
   if (hasAnyNotIn(keyUsages, isPublic ? ['verify'] : ['sign'])) {
     throw lazyDOMException(
@@ -1369,13 +1419,7 @@ function mldsaImportKey(
       'SyntaxError',
     );
   }
-  const { keyObject } = pqcImportKeyObject(
-    format,
-    data,
-    name,
-    extractable,
-    keyUsages,
-  );
+  const { keyObject } = pqcImportKeyObject(format, data, name);
   return new CryptoKey(keyObject, { name }, keyUsages, extractable);
 }
 
@@ -1387,6 +1431,9 @@ function mlkemImportKey(
   keyUsages: KeyUsage[],
 ): CryptoKey {
   const { name } = algorithm;
+  if (format === 'jwk') {
+    validatePqcJwk(data, name, extractable, keyUsages, 'enc');
+  }
   const isPublic = pqcIsPublicImport(format, data);
   const allowedUsages: KeyUsage[] = isPublic
     ? ['encapsulateBits', 'encapsulateKey']
@@ -1397,13 +1444,7 @@ function mlkemImportKey(
       'SyntaxError',
     );
   }
-  const { keyObject } = pqcImportKeyObject(
-    format,
-    data,
-    name,
-    extractable,
-    keyUsages,
-  );
+  const { keyObject } = pqcImportKeyObject(format, data, name);
   return new CryptoKey(keyObject, { name }, keyUsages, extractable);
 }
 

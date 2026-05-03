@@ -1,5 +1,5 @@
 import { Buffer as SBuffer } from 'safe-buffer';
-import type { BinaryLike, BufferLike, KeyUsage } from './types';
+import type { BinaryLike, BufferLike, JWK, KeyUsage } from './types';
 import { lazyDOMException } from './errors';
 
 // The maximum buffer size that we'll support in the WebCrypto impl
@@ -119,6 +119,52 @@ export const validateKeyOps = (
     }
   }
 };
+
+// WebCrypto JWK import structural validation, mirroring Node's
+// `internal/crypto/webcrypto_util.validateJwk` + `validateKeyOps`:
+//   - `ext`: if present and false, `extractable` must also be false
+//   - `use`: if `keyUsages` is non-empty and `use` is present, must equal
+//     the algorithm's expected use ('sig' or 'enc')
+//   - `key_ops`: must be an array, must not contain duplicates, and every
+//     requested usage must appear in it
+export function validateJwkStructure(
+  jwk: JWK,
+  extractable: boolean,
+  keyUsages: KeyUsage[],
+  expectedUse: 'sig' | 'enc',
+): void {
+  if (jwk.ext === false && extractable) {
+    throw lazyDOMException(
+      'JWK "ext" is false but extractable was requested',
+      'DataError',
+    );
+  }
+  if (keyUsages.length > 0 && jwk.use !== undefined) {
+    if (jwk.use !== expectedUse) {
+      throw lazyDOMException('Invalid JWK "use" Parameter', 'DataError');
+    }
+  }
+  if (jwk.key_ops !== undefined) {
+    if (!Array.isArray(jwk.key_ops)) {
+      throw lazyDOMException('JWK "key_ops" must be an array', 'DataError');
+    }
+    const seen = new Set<string>();
+    for (const op of jwk.key_ops) {
+      if (seen.has(op)) {
+        throw lazyDOMException('Duplicate key operation', 'DataError');
+      }
+      seen.add(op);
+    }
+    for (const usage of keyUsages) {
+      if (!jwk.key_ops.includes(usage)) {
+        throw lazyDOMException(
+          `JWK "key_ops" does not include requested usage "${usage}"`,
+          'DataError',
+        );
+      }
+    }
+  }
+}
 
 export function hasAnyNotIn(set: string[], checks: string[]) {
   for (const s of set) {

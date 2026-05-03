@@ -365,7 +365,7 @@ JWK HybridKeyObjectHandle::exportJwk(const JWK& key, bool handleRsaPss) {
   }
 
 #if OPENSSL_VERSION_NUMBER >= 0x30500000L
-  // Export AKP keys (ML-DSA, ML-KEM) per draft-ietf-cose-dilithium and RFC 9269
+  // Export AKP keys (ML-DSA, ML-KEM)
   {
     const char* typeName = EVP_PKEY_get0_type_name(pkey.get());
     if (typeName != nullptr) {
