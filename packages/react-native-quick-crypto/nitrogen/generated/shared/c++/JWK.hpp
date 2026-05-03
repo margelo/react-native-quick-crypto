@@ -70,11 +70,13 @@ namespace margelo::nitro::crypto {
     std::optional<std::string> dp     SWIFT_PRIVATE;
     std::optional<std::string> dq     SWIFT_PRIVATE;
     std::optional<std::string> qi     SWIFT_PRIVATE;
+    std::optional<std::string> pub     SWIFT_PRIVATE;
+    std::optional<std::string> priv     SWIFT_PRIVATE;
     std::optional<bool> ext     SWIFT_PRIVATE;
 
   public:
     JWK() = default;
-    explicit JWK(std::optional<JWKkty> kty, std::optional<JWKuse> use, std::optional<std::vector<KeyUsage>> key_ops, std::optional<std::string> alg, std::optional<std::string> crv, std::optional<std::string> kid, std::optional<std::string> x5u, std::optional<std::vector<std::string>> x5c, std::optional<std::string> x5t, std::optional<std::string> x5t_256, std::optional<std::string> n, std::optional<std::string> e, std::optional<std::string> d, std::optional<std::string> p, std::optional<std::string> q, std::optional<std::string> x, std::optional<std::string> y, std::optional<std::string> k, std::optional<std::string> dp, std::optional<std::string> dq, std::optional<std::string> qi, std::optional<bool> ext): kty(kty), use(use), key_ops(key_ops), alg(alg), crv(crv), kid(kid), x5u(x5u), x5c(x5c), x5t(x5t), x5t_256(x5t_256), n(n), e(e), d(d), p(p), q(q), x(x), y(y), k(k), dp(dp), dq(dq), qi(qi), ext(ext) {}
+    explicit JWK(std::optional<JWKkty> kty, std::optional<JWKuse> use, std::optional<std::vector<KeyUsage>> key_ops, std::optional<std::string> alg, std::optional<std::string> crv, std::optional<std::string> kid, std::optional<std::string> x5u, std::optional<std::vector<std::string>> x5c, std::optional<std::string> x5t, std::optional<std::string> x5t_256, std::optional<std::string> n, std::optional<std::string> e, std::optional<std::string> d, std::optional<std::string> p, std::optional<std::string> q, std::optional<std::string> x, std::optional<std::string> y, std::optional<std::string> k, std::optional<std::string> dp, std::optional<std::string> dq, std::optional<std::string> qi, std::optional<std::string> pub, std::optional<std::string> priv, std::optional<bool> ext): kty(kty), use(use), key_ops(key_ops), alg(alg), crv(crv), kid(kid), x5u(x5u), x5c(x5c), x5t(x5t), x5t_256(x5t_256), n(n), e(e), d(d), p(p), q(q), x(x), y(y), k(k), dp(dp), dq(dq), qi(qi), pub(pub), priv(priv), ext(ext) {}
 
   public:
     friend bool operator==(const JWK& lhs, const JWK& rhs) = default;
@@ -111,6 +113,8 @@ namespace margelo::nitro {
         JSIConverter<std::optional<std::string>>::fromJSI(runtime, obj.getProperty(runtime, PropNameIDCache::get(runtime, "dp"))),
         JSIConverter<std::optional<std::string>>::fromJSI(runtime, obj.getProperty(runtime, PropNameIDCache::get(runtime, "dq"))),
         JSIConverter<std::optional<std::string>>::fromJSI(runtime, obj.getProperty(runtime, PropNameIDCache::get(runtime, "qi"))),
+        JSIConverter<std::optional<std::string>>::fromJSI(runtime, obj.getProperty(runtime, PropNameIDCache::get(runtime, "pub"))),
+        JSIConverter<std::optional<std::string>>::fromJSI(runtime, obj.getProperty(runtime, PropNameIDCache::get(runtime, "priv"))),
         JSIConverter<std::optional<bool>>::fromJSI(runtime, obj.getProperty(runtime, PropNameIDCache::get(runtime, "ext")))
       );
     }
@@ -137,6 +141,8 @@ namespace margelo::nitro {
       obj.setProperty(runtime, PropNameIDCache::get(runtime, "dp"), JSIConverter<std::optional<std::string>>::toJSI(runtime, arg.dp));
       obj.setProperty(runtime, PropNameIDCache::get(runtime, "dq"), JSIConverter<std::optional<std::string>>::toJSI(runtime, arg.dq));
       obj.setProperty(runtime, PropNameIDCache::get(runtime, "qi"), JSIConverter<std::optional<std::string>>::toJSI(runtime, arg.qi));
+      obj.setProperty(runtime, PropNameIDCache::get(runtime, "pub"), JSIConverter<std::optional<std::string>>::toJSI(runtime, arg.pub));
+      obj.setProperty(runtime, PropNameIDCache::get(runtime, "priv"), JSIConverter<std::optional<std::string>>::toJSI(runtime, arg.priv));
       obj.setProperty(runtime, PropNameIDCache::get(runtime, "ext"), JSIConverter<std::optional<bool>>::toJSI(runtime, arg.ext));
       return obj;
     }
@@ -169,6 +175,8 @@ namespace margelo::nitro {
       if (!JSIConverter<std::optional<std::string>>::canConvert(runtime, obj.getProperty(runtime, PropNameIDCache::get(runtime, "dp")))) return false;
       if (!JSIConverter<std::optional<std::string>>::canConvert(runtime, obj.getProperty(runtime, PropNameIDCache::get(runtime, "dq")))) return false;
       if (!JSIConverter<std::optional<std::string>>::canConvert(runtime, obj.getProperty(runtime, PropNameIDCache::get(runtime, "qi")))) return false;
+      if (!JSIConverter<std::optional<std::string>>::canConvert(runtime, obj.getProperty(runtime, PropNameIDCache::get(runtime, "pub")))) return false;
+      if (!JSIConverter<std::optional<std::string>>::canConvert(runtime, obj.getProperty(runtime, PropNameIDCache::get(runtime, "priv")))) return false;
       if (!JSIConverter<std::optional<bool>>::canConvert(runtime, obj.getProperty(runtime, PropNameIDCache::get(runtime, "ext")))) return false;
       return true;
     }

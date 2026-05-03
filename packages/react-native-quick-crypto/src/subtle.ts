@@ -1258,40 +1258,85 @@ function edImportKey(
 
 function pqcImportKeyObject(
   format: ImportFormat,
-  data: BufferLike,
+  data: BufferLike | JWK,
   name: string,
-): KeyObject {
+  extractable: boolean,
+  keyUsages: KeyUsage[],
+): { keyObject: KeyObject; isPublic: boolean } {
   if (format === 'spki') {
-    return KeyObject.createKeyObject(
-      'public',
-      bufferLikeToArrayBuffer(data),
-      KFormatType.DER,
-      KeyEncoding.SPKI,
-    );
+    return {
+      keyObject: KeyObject.createKeyObject(
+        'public',
+        bufferLikeToArrayBuffer(data as BufferLike),
+        KFormatType.DER,
+        KeyEncoding.SPKI,
+      ),
+      isPublic: true,
+    };
   } else if (format === 'pkcs8') {
-    return KeyObject.createKeyObject(
-      'private',
-      bufferLikeToArrayBuffer(data),
-      KFormatType.DER,
-      KeyEncoding.PKCS8,
-    );
+    return {
+      keyObject: KeyObject.createKeyObject(
+        'private',
+        bufferLikeToArrayBuffer(data as BufferLike),
+        KFormatType.DER,
+        KeyEncoding.PKCS8,
+      ),
+      isPublic: false,
+    };
   } else if (format === 'raw') {
     const handle =
       NitroModules.createHybridObject<KeyObjectHandle>('KeyObjectHandle');
-    if (!handle.initPqcRaw(name, bufferLikeToArrayBuffer(data), true)) {
+    if (
+      !handle.initPqcRaw(
+        name,
+        bufferLikeToArrayBuffer(data as BufferLike),
+        true,
+      )
+    ) {
       throw lazyDOMException(
         `Failed to import ${name} raw public key`,
         'DataError',
       );
     }
-    return new PublicKeyObject(handle);
+    return { keyObject: new PublicKeyObject(handle), isPublic: true };
   } else if (format === 'raw-seed') {
     const handle =
       NitroModules.createHybridObject<KeyObjectHandle>('KeyObjectHandle');
-    if (!handle.initPqcRaw(name, bufferLikeToArrayBuffer(data), false)) {
+    if (
+      !handle.initPqcRaw(
+        name,
+        bufferLikeToArrayBuffer(data as BufferLike),
+        false,
+      )
+    ) {
       throw lazyDOMException(`Failed to import ${name} raw seed`, 'DataError');
     }
-    return new PrivateKeyObject(handle);
+    return { keyObject: new PrivateKeyObject(handle), isPublic: false };
+  } else if (format === 'jwk') {
+    const jwkData = data as JWK;
+    if (jwkData.kty !== 'AKP') {
+      throw lazyDOMException('Invalid JWK "kty" Parameter', 'DataError');
+    }
+    if (jwkData.alg !== name) {
+      throw lazyDOMException(
+        'JWK "alg" Parameter and algorithm name mismatch',
+        'DataError',
+      );
+    }
+    validateJwkExtAndKeyOps(jwkData, extractable, keyUsages);
+    const isPublic = jwkData.priv === undefined;
+    const handle =
+      NitroModules.createHybridObject<KeyObjectHandle>('KeyObjectHandle');
+    const keyType = handle.initJwk(jwkData);
+    if (keyType === undefined) {
+      throw lazyDOMException('Invalid JWK data', 'DataError');
+    }
+    return {
+      keyObject: isPublic
+        ? new PublicKeyObject(handle)
+        : new PrivateKeyObject(handle),
+      isPublic,
+    };
   }
   throw lazyDOMException(
     `Unsupported format for ${name} import: ${format}`,
@@ -1299,39 +1344,51 @@ function pqcImportKeyObject(
   );
 }
 
+function pqcIsPublicImport(
+  format: ImportFormat,
+  data: BufferLike | JWK,
+): boolean {
+  if (format === 'jwk') {
+    return (data as JWK).priv === undefined;
+  }
+  return format === 'spki' || format === 'raw';
+}
+
 function mldsaImportKey(
   format: ImportFormat,
-  data: BufferLike,
+  data: BufferLike | JWK,
   algorithm: SubtleAlgorithm,
   extractable: boolean,
   keyUsages: KeyUsage[],
 ): CryptoKey {
   const { name } = algorithm;
-  const isPublicFormat = format === 'spki' || format === 'raw';
-  if (hasAnyNotIn(keyUsages, isPublicFormat ? ['verify'] : ['sign'])) {
+  const isPublic = pqcIsPublicImport(format, data);
+  if (hasAnyNotIn(keyUsages, isPublic ? ['verify'] : ['sign'])) {
     throw lazyDOMException(
       `Unsupported key usage for ${name} key`,
       'SyntaxError',
     );
   }
-  return new CryptoKey(
-    pqcImportKeyObject(format, data, name),
-    { name },
-    keyUsages,
+  const { keyObject } = pqcImportKeyObject(
+    format,
+    data,
+    name,
     extractable,
+    keyUsages,
   );
+  return new CryptoKey(keyObject, { name }, keyUsages, extractable);
 }
 
 function mlkemImportKey(
   format: ImportFormat,
-  data: BufferLike,
+  data: BufferLike | JWK,
   algorithm: SubtleAlgorithm,
   extractable: boolean,
   keyUsages: KeyUsage[],
 ): CryptoKey {
   const { name } = algorithm;
-  const isPublicFormat = format === 'spki' || format === 'raw';
-  const allowedUsages: KeyUsage[] = isPublicFormat
+  const isPublic = pqcIsPublicImport(format, data);
+  const allowedUsages: KeyUsage[] = isPublic
     ? ['encapsulateBits', 'encapsulateKey']
     : ['decapsulateBits', 'decapsulateKey'];
   if (hasAnyNotIn(keyUsages, allowedUsages)) {
@@ -1340,12 +1397,14 @@ function mlkemImportKey(
       'SyntaxError',
     );
   }
-  return new CryptoKey(
-    pqcImportKeyObject(format, data, name),
-    { name },
-    keyUsages,
+  const { keyObject } = pqcImportKeyObject(
+    format,
+    data,
+    name,
     extractable,
+    keyUsages,
   );
+  return new CryptoKey(keyObject, { name }, keyUsages, extractable);
 }
 
 const exportKeySpki = async (
@@ -1584,6 +1643,18 @@ const exportKeyJWK = (key: CryptoKey): ArrayBuffer | unknown => {
     case 'X25519':
     // Fall through
     case 'X448':
+      return jwk;
+    case 'ML-DSA-44':
+    // Fall through
+    case 'ML-DSA-65':
+    // Fall through
+    case 'ML-DSA-87':
+    // Fall through
+    case 'ML-KEM-512':
+    // Fall through
+    case 'ML-KEM-768':
+    // Fall through
+    case 'ML-KEM-1024':
       return jwk;
     case 'AES-CTR':
     // Fall through
@@ -2768,7 +2839,7 @@ export class Subtle {
       case 'ML-DSA-87':
         result = mldsaImportKey(
           format,
-          data as BufferLike,
+          data as BufferLike | JWK,
           normalizedAlgorithm,
           extractable,
           keyUsages,
@@ -2781,7 +2852,7 @@ export class Subtle {
       case 'ML-KEM-1024':
         result = mlkemImportKey(
           format,
-          data as BufferLike,
+          data as BufferLike | JWK,
           normalizedAlgorithm,
           extractable,
           keyUsages,

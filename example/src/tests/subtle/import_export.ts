@@ -2246,8 +2246,8 @@ for (const variant of MLDSA_VARIANTS) {
   });
 }
 
-// ML-DSA error handling tests
-test(SUITE, 'ML-DSA-44 importKey rejects jwk format', async () => {
+// ML-DSA JWK error handling tests
+test(SUITE, 'ML-DSA-44 importKey rejects wrong jwk kty', async () => {
   await assertThrowsAsync(
     async () =>
       await subtle.importKey(
@@ -2255,9 +2255,31 @@ test(SUITE, 'ML-DSA-44 importKey rejects jwk format', async () => {
         { kty: 'OKP', alg: 'ML-DSA-44' },
         { name: 'ML-DSA-44' },
         true,
-        ['sign'],
+        ['verify'],
       ),
-    'NotSupportedError',
+    'DataError',
+  );
+});
+
+test(SUITE, 'ML-DSA-44 importKey rejects jwk alg mismatch', async () => {
+  const keyPair = (await subtle.generateKey({ name: 'ML-DSA-44' }, true, [
+    'sign',
+    'verify',
+  ])) as CryptoKeyPair;
+  const jwk = (await subtle.exportKey(
+    'jwk',
+    keyPair.publicKey as CryptoKey,
+  )) as JWK;
+  await assertThrowsAsync(
+    async () =>
+      await subtle.importKey(
+        'jwk',
+        { ...jwk, alg: 'ML-DSA-65' },
+        { name: 'ML-DSA-44' },
+        true,
+        ['verify'],
+      ),
+    'DataError',
   );
 });
 
@@ -2386,6 +2408,116 @@ for (const variant of MLDSA_VARIANTS) {
   );
 }
 
+// --- ML-DSA JWK import/export round-trip tests ---
+
+for (const variant of MLDSA_VARIANTS) {
+  test(SUITE, `${variant} jwk export public key`, async () => {
+    const keyPair = (await subtle.generateKey({ name: variant }, true, [
+      'sign',
+      'verify',
+    ])) as CryptoKeyPair;
+
+    const jwk = (await subtle.exportKey(
+      'jwk',
+      keyPair.publicKey as CryptoKey,
+    )) as JWK;
+
+    expect(jwk.kty).to.equal('AKP');
+    expect(jwk.alg).to.equal(variant);
+    expect(jwk.pub).to.be.a('string');
+    expect(jwk.priv).to.equal(undefined);
+    expect(jwk.key_ops).to.deep.equal(['verify']);
+    expect(jwk.ext).to.equal(true);
+  });
+
+  test(SUITE, `${variant} jwk export private key`, async () => {
+    const keyPair = (await subtle.generateKey({ name: variant }, true, [
+      'sign',
+      'verify',
+    ])) as CryptoKeyPair;
+
+    const jwk = (await subtle.exportKey(
+      'jwk',
+      keyPair.privateKey as CryptoKey,
+    )) as JWK;
+
+    expect(jwk.kty).to.equal('AKP');
+    expect(jwk.alg).to.equal(variant);
+    expect(jwk.pub).to.be.a('string');
+    expect(jwk.priv).to.be.a('string');
+    expect(jwk.key_ops).to.deep.equal(['sign']);
+    expect(jwk.ext).to.equal(true);
+  });
+
+  test(SUITE, `${variant} jwk public key round-trip + verify`, async () => {
+    const keyPair = (await subtle.generateKey({ name: variant }, true, [
+      'sign',
+      'verify',
+    ])) as CryptoKeyPair;
+
+    const jwk = (await subtle.exportKey(
+      'jwk',
+      keyPair.publicKey as CryptoKey,
+    )) as JWK;
+
+    const imported = await subtle.importKey(
+      'jwk',
+      jwk,
+      { name: variant },
+      true,
+      ['verify'],
+    );
+    expect(imported.type).to.equal('public');
+    expect(imported.algorithm.name).to.equal(variant);
+
+    const testData = new TextEncoder().encode('ML-DSA JWK round-trip');
+    const signature = await subtle.sign(
+      { name: variant },
+      keyPair.privateKey as CryptoKey,
+      testData,
+    );
+    const isValid = await subtle.verify(
+      { name: variant },
+      imported,
+      signature,
+      testData,
+    );
+    expect(isValid).to.equal(true);
+  });
+
+  test(SUITE, `${variant} jwk private key round-trip + sign`, async () => {
+    const keyPair = (await subtle.generateKey({ name: variant }, true, [
+      'sign',
+      'verify',
+    ])) as CryptoKeyPair;
+
+    const jwk = (await subtle.exportKey(
+      'jwk',
+      keyPair.privateKey as CryptoKey,
+    )) as JWK;
+
+    const imported = await subtle.importKey(
+      'jwk',
+      jwk,
+      { name: variant },
+      true,
+      ['sign'],
+    );
+    expect(imported.type).to.equal('private');
+    expect(imported.algorithm.name).to.equal(variant);
+
+    const testData = new TextEncoder().encode('ML-DSA JWK private round-trip');
+    const signature = await subtle.sign({ name: variant }, imported, testData);
+    const isValid = await subtle.verify(
+      { name: variant },
+      keyPair.publicKey as CryptoKey,
+      signature,
+      testData,
+    );
+    expect(isValid).to.equal(true);
+  });
+}
+
 // --- ML-KEM Import/Export Tests ---
 
 for (const variant of MLKEM_VARIANTS) {
@@ -2432,6 +2564,110 @@ for (const variant of MLKEM_VARIANTS) {
     expect(imported.type).to.equal('private');
     expect(imported.algorithm.name).to.equal(variant);
   });
+}
+
+// --- ML-KEM JWK import/export round-trip tests ---
+
+for (const variant of MLKEM_VARIANTS) {
+  test(SUITE, `${variant} jwk export public key`, async () => {
+    const keyPair = (await subtle.generateKey({ name: variant }, true, [
+      'encapsulateBits',
+      'decapsulateBits',
+    ])) as CryptoKeyPair;
+
+    const jwk = (await subtle.exportKey(
+      'jwk',
+      keyPair.publicKey as CryptoKey,
+    )) as JWK;
+
+    expect(jwk.kty).to.equal('AKP');
+    expect(jwk.alg).to.equal(variant);
+    expect(jwk.pub).to.be.a('string');
+    expect(jwk.priv).to.equal(undefined);
+    expect(jwk.key_ops).to.deep.equal(['encapsulateBits']);
+    expect(jwk.ext).to.equal(true);
+  });
+
+  test(SUITE, `${variant} jwk export private key`, async () => {
+    const keyPair = (await subtle.generateKey({ name: variant }, true, [
+      'encapsulateBits',
+      'decapsulateBits',
+    ])) as CryptoKeyPair;
+
+    const jwk = (await subtle.exportKey(
+      'jwk',
+      keyPair.privateKey as CryptoKey,
+    )) as JWK;
+
+    expect(jwk.kty).to.equal('AKP');
+    expect(jwk.alg).to.equal(variant);
+    expect(jwk.pub).to.be.a('string');
+    expect(jwk.priv).to.be.a('string');
+    expect(jwk.key_ops).to.deep.equal(['decapsulateBits']);
+    expect(jwk.ext).to.equal(true);
+  });
+
+  test(SUITE, `${variant} jwk public key round-trip`, async () => {
+    const keyPair = (await subtle.generateKey({ name: variant }, true, [
+      'encapsulateBits',
+      'decapsulateBits',
+    ])) as CryptoKeyPair;
+
+    const jwk = (await subtle.exportKey(
+      'jwk',
+      keyPair.publicKey as CryptoKey,
+    )) as JWK;
+
+    const imported = await subtle.importKey(
+      'jwk',
+      jwk,
+      { name: variant },
+      true,
+      ['encapsulateBits'],
+    );
+    expect(imported.type).to.equal('public');
+    expect(imported.algorithm.name).to.equal(variant);
+  });
+
+  test(
+    SUITE,
+    `${variant} jwk private key round-trip + decapsulate`,
+    async () => {
+      const keyPair = (await subtle.generateKey({ name: variant }, true, [
+        'encapsulateBits',
+        'decapsulateBits',
+      ])) as CryptoKeyPair;
+
+      const jwk = (await subtle.exportKey(
+        'jwk',
+        keyPair.privateKey as CryptoKey,
+      )) as JWK;
+
+      const imported = await subtle.importKey(
+        'jwk',
+        jwk,
+        { name: variant },
+        true,
+        ['decapsulateBits'],
+      );
+      expect(imported.type).to.equal('private');
+      expect(imported.algorithm.name).to.equal(variant);
+
+      // Encapsulate with original public key, decapsulate with imported private key
+      const { sharedKey, ciphertext } = await subtle.encapsulateBits(
+        { name: variant },
+        keyPair.publicKey as CryptoKey,
+      );
+      const recovered = await subtle.decapsulateBits(
+        { name: variant },
+        imported,
+        ciphertext,
+      );
+      expect(new Uint8Array(recovered)).to.deep.equal(
+        new Uint8Array(sharedKey),
+      );
+    },
+  );
 }
 
 test(SUITE, 'ML-KEM-768 importKey raw rejects bad usages', async () => {
