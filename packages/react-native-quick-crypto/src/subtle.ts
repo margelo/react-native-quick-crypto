@@ -1688,7 +1688,7 @@ const exportKeyRaw = (key: CryptoKey): ArrayBuffer | unknown => {
 const exportKeyJWK = (key: CryptoKey): ArrayBuffer | unknown => {
   const jwk = key.keyObject.handle.exportJwk(
     {
-      key_ops: key.usages,
+      key_ops: [...key.usages],
       ext: key.extractable,
     },
     true,

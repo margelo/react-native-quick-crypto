@@ -9,7 +9,7 @@ import type {
   KeyUsage,
   SubtleAlgorithm,
 } from '../utils';
-import { KeyType, KFormatType, KeyEncoding } from '../utils';
+import { KeyType, KFormatType, KeyEncoding, getSortedUsages } from '../utils';
 import { parsePrivateKeyEncoding, parsePublicKeyEncoding } from './utils';
 
 export class CryptoKey {
@@ -30,7 +30,8 @@ export class CryptoKey {
   ) {
     this.keyObject = keyObject;
     this.keyAlgorithm = keyAlgorithm;
-    this.keyUsages = keyUsages;
+    // Frozen so external code can't mutate `key.usages` (per WebCrypto spec).
+    this.keyUsages = Object.freeze(getSortedUsages(keyUsages)) as KeyUsage[];
     this.keyExtractable = keyExtractable;
   }
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
