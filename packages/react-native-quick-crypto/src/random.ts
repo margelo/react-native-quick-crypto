@@ -4,6 +4,7 @@ import {
   abvToArrayBuffer,
   lazyDOMException,
   QuotaExceededError,
+  rejectSharedArrayBuffer,
 } from './utils';
 import { NitroModules } from 'react-native-nitro-modules';
 import type { Random } from './specs/random.nitro';
@@ -320,6 +321,9 @@ function isIntegerTypedArray(value: unknown): boolean {
  * @returns The filled data
  */
 export function getRandomValues(data: RandomTypedArrays) {
+  // WebIDL ArrayBufferView conversion rejects SAB-backed views (TypeError)
+  // before the WebCrypto-specific integer-type / size checks run.
+  rejectSharedArrayBuffer(data);
   if (!isIntegerTypedArray(data)) {
     throw lazyDOMException(
       'The data argument must be an integer-type TypedArray',

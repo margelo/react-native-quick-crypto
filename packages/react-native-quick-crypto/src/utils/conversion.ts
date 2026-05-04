@@ -52,6 +52,27 @@ if (isHermes) {
   }
 }
 
+// WebCrypto / Web IDL §BufferSource: SharedArrayBuffer-backed inputs must
+// be rejected. Concurrent writes from another worker during async crypto
+// can corrupt computations or leak intermediate state, so even copying
+// the source isn't safe (the copy itself races). Reject at conversion.
+// See Node's `lib/internal/webidl.js` BufferSource converter (commit
+// bee10872588) — it throws TypeError, matching the WebIDL spec.
+export function rejectSharedArrayBuffer(buf: unknown): void {
+  if (typeof SharedArrayBuffer === 'undefined') return;
+  if (buf instanceof SharedArrayBuffer) {
+    throw new TypeError('SharedArrayBuffer is not a supported BufferSource');
+  }
+  if (
+    ArrayBuffer.isView(buf) &&
+    (buf as ArrayBufferView).buffer instanceof SharedArrayBuffer
+  ) {
+    throw new TypeError(
+      'View on a SharedArrayBuffer is not a supported BufferSource',
+    );
+  }
+}
+
 /**
  * Returns the underlying ArrayBuffer of a Buffer / TypedArray view **without
  * copying**, ignoring `byteOffset`/`byteLength`. The full backing storage is
@@ -64,6 +85,7 @@ if (isHermes) {
  * view's region and won't leak unrelated bytes from the backing buffer.
  */
 export const abvToArrayBuffer = (buf: ABV) => {
+  rejectSharedArrayBuffer(buf);
   if (CraftzdogBuffer.isBuffer(buf)) {
     return buf.buffer as ArrayBuffer;
   }
@@ -101,6 +123,8 @@ export function toArrayBuffer(
 }
 
 export function bufferLikeToArrayBuffer(buf: BufferLike): ArrayBuffer {
+  rejectSharedArrayBuffer(buf);
+
   // Buffer
   if (CraftzdogBuffer.isBuffer(buf) || SafeBuffer.isBuffer(buf)) {
     return toArrayBuffer(buf);
@@ -115,22 +139,8 @@ export function bufferLikeToArrayBuffer(buf: BufferLike): ArrayBuffer {
     return buf;
   }
 
-  // If buf is a SharedArrayBuffer, convert it to ArrayBuffer.
-  // This typically involves a copy of the data.
-  if (
-    typeof SharedArrayBuffer !== 'undefined' &&
-    buf instanceof SharedArrayBuffer
-  ) {
-    const arrayBuffer = new ArrayBuffer(buf.byteLength);
-    new Uint8Array(arrayBuffer).set(new Uint8Array(buf));
-    return arrayBuffer;
-  }
-
-  // If we reach here, 'buf' is of a type within BufferLike that has not been handled by the above checks.
-  // This indicates either an incomplete BufferLike definition or an unexpected input type.
-  // Throw an error to signal this, ensuring the function's contract (return ArrayBuffer or throw) is met.
   throw new TypeError(
-    'Input must be a Buffer, ArrayBufferView, ArrayBuffer, or SharedArrayBuffer.',
+    'Input must be a Buffer, ArrayBufferView, or ArrayBuffer.',
   );
 }
 
@@ -138,6 +148,8 @@ export function binaryLikeToArrayBuffer(
   input: BinaryLikeNode, // CipherKey adds compat with node types
   encoding: string = 'utf-8',
 ): ArrayBuffer {
+  rejectSharedArrayBuffer(input);
+
   // string
   if (typeof input === 'string') {
     if (encoding === 'buffer') {
