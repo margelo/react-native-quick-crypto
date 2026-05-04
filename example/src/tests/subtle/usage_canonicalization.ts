@@ -1,7 +1,10 @@
 import { expect } from 'chai';
 import type {
+  AnyAlgorithm,
   CryptoKey,
   JWK,
+  KeyUsage,
+  SubtleAlgorithm,
   WebCryptoKeyPair,
 } from 'react-native-quick-crypto';
 import crypto, { subtle } from 'react-native-quick-crypto';
@@ -21,10 +24,9 @@ const SUITE = 'subtle.usage-canonicalization';
 
 const symmetricVectors: Array<{
   name: string;
-  // SubtleAlgorithm types vary across algorithms; loose typing is fine here.
-  algorithm: object;
-  usages: string[];
-  expected: string[];
+  algorithm: SubtleAlgorithm;
+  usages: KeyUsage[];
+  expected: KeyUsage[];
 }> = [
   {
     name: 'HMAC',
@@ -62,11 +64,9 @@ const symmetricVectors: Array<{
 for (const { name, algorithm, usages, expected } of symmetricVectors) {
   test(SUITE, `generateKey ${name} usages canonical + deduped`, async () => {
     const key = (await subtle.generateKey(
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      algorithm as any,
+      algorithm,
       true,
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      usages as any,
+      usages,
     )) as CryptoKey;
     expect(key.usages).to.deep.equal(expected);
     expect(key.usages.length).to.equal(expected.length);
@@ -77,10 +77,10 @@ for (const { name, algorithm, usages, expected } of symmetricVectors) {
 
 type PairVector = {
   name: string;
-  algorithm: object;
-  usages: string[];
-  publicExpected: string[];
-  privateExpected: string[];
+  algorithm: SubtleAlgorithm;
+  usages: KeyUsage[];
+  publicExpected: KeyUsage[];
+  privateExpected: KeyUsage[];
 };
 
 const asymmetricVectors: PairVector[] = [
@@ -171,11 +171,9 @@ const asymmetricVectors: PairVector[] = [
 for (const v of asymmetricVectors) {
   test(SUITE, `generateKey ${v.name} usages canonical + deduped`, async () => {
     const { publicKey, privateKey } = (await subtle.generateKey(
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      v.algorithm as any,
+      v.algorithm,
       true,
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      v.usages as any,
+      v.usages,
     )) as WebCryptoKeyPair;
     expect(publicKey.usages, `${v.name} publicKey`).to.deep.equal(
       v.publicExpected,
@@ -211,16 +209,15 @@ test(SUITE, 'importKey raw HMAC dedupes + canonicalizes', async () => {
 });
 
 // HKDF / PBKDF2 (importGenericSecretKey path).
-for (const name of ['HKDF', 'PBKDF2']) {
+const derivationAlgs: AnyAlgorithm[] = ['HKDF', 'PBKDF2'];
+for (const name of derivationAlgs) {
   test(SUITE, `importKey raw ${name} dedupes + canonicalizes`, async () => {
-    const key = await subtle.importKey(
-      'raw',
-      new Uint8Array(16),
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      name as any,
-      false,
-      ['deriveBits', 'deriveKey', 'deriveBits', 'deriveKey'],
-    );
+    const key = await subtle.importKey('raw', new Uint8Array(16), name, false, [
+      'deriveBits',
+      'deriveKey',
+      'deriveBits',
+      'deriveKey',
+    ]);
     expect(key.usages).to.deep.equal(['deriveKey', 'deriveBits']);
   });
 }
@@ -240,6 +237,39 @@ test(SUITE, 'importKey jwk AES-CBC dedupes', async () => {
   ]);
   expect(key.usages).to.deep.equal(['encrypt', 'decrypt']);
 });
+
+// --- key.usages immutability ----------------------------------------------
+
+test(
+  SUITE,
+  'key.usages is frozen (push throws, length unchanged)',
+  async () => {
+    const key = (await subtle.generateKey(
+      { name: 'AES-GCM', length: 128 },
+      true,
+      ['encrypt', 'decrypt'],
+    )) as CryptoKey;
+    expect(Object.isFrozen(key.usages)).to.equal(true);
+    expect(() => key.usages.push('sign')).to.throw(TypeError);
+    expect(key.usages).to.deep.equal(['encrypt', 'decrypt']);
+  },
+);
+
+test(
+  SUITE,
+  'jwk.key_ops is independent of key.usages (mutable copy)',
+  async () => {
+    const key = (await subtle.generateKey(
+      { name: 'AES-GCM', length: 128 },
+      true,
+      ['encrypt', 'decrypt'],
+    )) as CryptoKey;
+    const jwk = (await subtle.exportKey('jwk', key)) as JWK;
+    expect(jwk.key_ops).to.deep.equal(['encrypt', 'decrypt']);
+    jwk.key_ops!.push('sign');
+    expect(key.usages).to.deep.equal(['encrypt', 'decrypt']);
+  },
+);
 
 // --- KeyObject.toCryptoKey() ----------------------------------------------
 

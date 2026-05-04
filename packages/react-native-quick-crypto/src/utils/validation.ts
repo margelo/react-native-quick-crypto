@@ -57,6 +57,9 @@ export const validateMaxBufferLength = (
   }
 };
 
+// Returns the intersection of `usageSet` and the spread `usages`, preserving
+// the spread order. Dedup and canonical ordering are not performed here —
+// the `CryptoKey` constructor runs `getSortedUsages` on every input.
 export const getUsagesUnion = (usageSet: KeyUsage[], ...usages: KeyUsage[]) => {
   const newset: KeyUsage[] = [];
   for (let n = 0; n < usages.length; n++) {
@@ -83,9 +86,8 @@ const kCanonicalUsageOrder: readonly KeyUsage[] = [
 ];
 
 export function getSortedUsages(usages: KeyUsage[]): KeyUsage[] {
-  if (usages.length <= 1) return usages.slice();
   const set = new Set<KeyUsage>(usages);
-  return kCanonicalUsageOrder.filter(u => set.has(u));
+  return kCanonicalUsageOrder.filter(usage => set.has(usage));
 }
 
 const kKeyOps: {

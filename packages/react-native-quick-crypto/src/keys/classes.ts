@@ -30,7 +30,8 @@ export class CryptoKey {
   ) {
     this.keyObject = keyObject;
     this.keyAlgorithm = keyAlgorithm;
-    this.keyUsages = getSortedUsages(keyUsages);
+    // Frozen so external code can't mutate `key.usages` (per WebCrypto spec).
+    this.keyUsages = Object.freeze(getSortedUsages(keyUsages)) as KeyUsage[];
     this.keyExtractable = keyExtractable;
   }
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
