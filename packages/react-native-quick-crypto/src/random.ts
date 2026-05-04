@@ -321,8 +321,12 @@ function isIntegerTypedArray(value: unknown): boolean {
  * @returns The filled data
  */
 export function getRandomValues(data: RandomTypedArrays) {
-  // WebIDL ArrayBufferView conversion rejects SAB-backed views (TypeError)
-  // before the WebCrypto-specific integer-type / size checks run.
+  // WebIDL BufferSource conversion (TypeError) must run before the
+  // WebCrypto-specific integer-type / size checks (TypeMismatchError /
+  // QuotaExceededError). `randomFillSync` below also rejects SAB via
+  // `abvToArrayBuffer`, but by then we'd already have thrown the wrong
+  // error type for a non-integer SAB-view, so the explicit early call is
+  // load-bearing for spec compliance — not redundant.
   rejectSharedArrayBuffer(data);
   if (!isIntegerTypedArray(data)) {
     throw lazyDOMException(

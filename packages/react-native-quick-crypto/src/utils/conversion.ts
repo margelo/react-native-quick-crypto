@@ -58,6 +58,13 @@ if (isHermes) {
 // the source isn't safe (the copy itself races). Reject at conversion.
 // See Node's `lib/internal/webidl.js` BufferSource converter (commit
 // bee10872588) — it throws TypeError, matching the WebIDL spec.
+//
+// We apply this guard to *every* conversion helper, not just the ones
+// reached from `subtle.*`. That's deliberately stricter than Node, whose
+// classic APIs (`createHash().update`, `createHmac().update`,
+// `createCipheriv().update`, etc.) accept SAB-backed views. The TOCTOU
+// concern is the same on either side of the WebCrypto / classic line, so
+// we prefer the safer default everywhere.
 export function rejectSharedArrayBuffer(buf: unknown): void {
   if (typeof SharedArrayBuffer === 'undefined') return;
   if (buf instanceof SharedArrayBuffer) {

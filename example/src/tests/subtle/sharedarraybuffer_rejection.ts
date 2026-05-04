@@ -1,6 +1,6 @@
 import { expect } from 'chai';
 import crypto, { subtle, getRandomValues } from 'react-native-quick-crypto';
-import type { CryptoKey } from 'react-native-quick-crypto';
+import type { CryptoKey, HkdfAlgorithm } from 'react-native-quick-crypto';
 import { test } from '../util';
 
 // WebCrypto / Web IDL §BufferSource: SharedArrayBuffer-backed inputs must
@@ -240,6 +240,56 @@ if (sabAvailable) {
     expectRejected(caught, 'subtle.importKey');
   });
 
+  // ---- subtle.encrypt AES-GCM additionalData ----------------------------
+
+  test(
+    SUITE,
+    'subtle.encrypt AES-GCM rejects SAB-backed additionalData',
+    async () => {
+      const key = await subtle.generateKey(
+        { name: 'AES-GCM', length: 256 },
+        false,
+        ['encrypt', 'decrypt'],
+      );
+      let caught: unknown;
+      try {
+        await subtle.encrypt(
+          {
+            name: 'AES-GCM',
+            iv: new Uint8Array(12),
+            additionalData: makeSabView(16),
+          },
+          key as CryptoKey,
+          new Uint8Array(16),
+        );
+      } catch (e) {
+        caught = e;
+      }
+      expectRejected(caught, 'subtle.encrypt (SAB additionalData)');
+    },
+  );
+
+  // ---- subtle.encrypt AES-CTR counter -----------------------------------
+
+  test(SUITE, 'subtle.encrypt AES-CTR rejects SAB-backed counter', async () => {
+    const key = await subtle.generateKey(
+      { name: 'AES-CTR', length: 256 },
+      false,
+      ['encrypt', 'decrypt'],
+    );
+    let caught: unknown;
+    try {
+      await subtle.encrypt(
+        { name: 'AES-CTR', counter: makeSabView(16), length: 64 },
+        key as CryptoKey,
+        new Uint8Array(16),
+      );
+    } catch (e) {
+      caught = e;
+    }
+    expectRejected(caught, 'subtle.encrypt (SAB counter)');
+  });
+
   // ---- subtle.deriveBits (HKDF salt/info) --------------------------------
 
   test(SUITE, 'subtle.deriveBits rejects SAB-backed HKDF salt', async () => {
@@ -252,13 +302,14 @@ if (sabAvailable) {
     );
     let caught: unknown;
     try {
+      const algorithm = {
+        name: 'HKDF',
+        hash: 'SHA-256',
+        salt: makeSabView(16),
+        info: new Uint8Array(0),
+      } satisfies HkdfAlgorithm;
       await subtle.deriveBits(
-        {
-          name: 'HKDF',
-          hash: 'SHA-256',
-          salt: makeSabView(16),
-          info: new Uint8Array(0),
-        } as never,
+        algorithm as Parameters<typeof subtle.deriveBits>[0],
         baseKey,
         128,
       );
