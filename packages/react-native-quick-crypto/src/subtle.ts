@@ -957,6 +957,27 @@ function rsaImportKey(
     validateJwkStructure(jwk, extractable, keyUsages, expectedUse);
     checkUsages();
 
+    if (jwk.alg !== undefined) {
+      let jwkContext: HashContext;
+      switch (name) {
+        case 'RSASSA-PKCS1-v1_5':
+          jwkContext = HashContext.JwkRsa;
+          break;
+        case 'RSA-PSS':
+          jwkContext = HashContext.JwkRsaPss;
+          break;
+        default:
+          jwkContext = HashContext.JwkRsaOaep;
+      }
+      const expectedAlg = normalizeHashName(algorithm.hash, jwkContext);
+      if (jwk.alg !== expectedAlg) {
+        throw lazyDOMException(
+          'JWK "alg" does not match the requested algorithm',
+          'DataError',
+        );
+      }
+    }
+
     const handle =
       NitroModules.createHybridObject<KeyObjectHandle>('KeyObjectHandle');
     let keyType: KeyType | undefined;
@@ -1246,8 +1267,28 @@ function edImportKey(
     if (!jwkData || typeof jwkData !== 'object') {
       throw lazyDOMException('Invalid keyData', 'DataError');
     }
+    if (jwkData.kty !== 'OKP') {
+      throw lazyDOMException('Invalid JWK "kty" Parameter', 'DataError');
+    }
     const expectedUse = isX ? 'enc' : 'sig';
     validateJwkStructure(jwkData, extractable, keyUsages, expectedUse);
+
+    if (jwkData.crv !== name) {
+      throw lazyDOMException(
+        'JWK "crv" Parameter and algorithm name mismatch',
+        'DataError',
+      );
+    }
+
+    if (!isX && jwkData.alg !== undefined) {
+      if (jwkData.alg !== name && jwkData.alg !== 'EdDSA') {
+        throw lazyDOMException(
+          'JWK "alg" does not match the requested algorithm',
+          'DataError',
+        );
+      }
+    }
+
     checkUsages();
     const handle =
       NitroModules.createHybridObject<KeyObjectHandle>('KeyObjectHandle');
