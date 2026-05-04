@@ -9,7 +9,7 @@ import type {
   KeyUsage,
   SubtleAlgorithm,
 } from '../utils';
-import { KeyType, KFormatType, KeyEncoding } from '../utils';
+import { KeyType, KFormatType, KeyEncoding, getSortedUsages } from '../utils';
 import { parsePrivateKeyEncoding, parsePublicKeyEncoding } from './utils';
 
 export class CryptoKey {
@@ -30,7 +30,7 @@ export class CryptoKey {
   ) {
     this.keyObject = keyObject;
     this.keyAlgorithm = keyAlgorithm;
-    this.keyUsages = keyUsages;
+    this.keyUsages = getSortedUsages(keyUsages);
     this.keyExtractable = keyExtractable;
   }
   // eslint-disable-next-line @typescript-eslint/no-unused-vars

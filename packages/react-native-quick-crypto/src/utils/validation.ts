@@ -67,6 +67,27 @@ export const getUsagesUnion = (usageSet: KeyUsage[], ...usages: KeyUsage[]) => {
   return newset;
 };
 
+const kCanonicalUsageOrder: readonly KeyUsage[] = [
+  'encrypt',
+  'decrypt',
+  'sign',
+  'verify',
+  'deriveKey',
+  'deriveBits',
+  'wrapKey',
+  'unwrapKey',
+  'encapsulateKey',
+  'encapsulateBits',
+  'decapsulateKey',
+  'decapsulateBits',
+];
+
+export function getSortedUsages(usages: KeyUsage[]): KeyUsage[] {
+  if (usages.length <= 1) return usages.slice();
+  const set = new Set<KeyUsage>(usages);
+  return kCanonicalUsageOrder.filter(u => set.has(u));
+}
+
 const kKeyOps: {
   [key in KeyUsage]: number;
 } = {
