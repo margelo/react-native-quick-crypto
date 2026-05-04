@@ -3025,7 +3025,7 @@ for (const { name } of edCurves) {
     expect(imported.algorithm.name).to.equal(name);
   });
 
-  test(SUITE, `${name} importKey rejects jwk use="enc"`, async () => {
+  test(SUITE, `${name} importKey rejects wrong jwk kty`, async () => {
     const keyPair = (await subtle.generateKey({ name }, true, [
       'sign',
       'verify',
@@ -3036,10 +3036,36 @@ for (const { name } of edCurves) {
     )) as JWK;
     await assertThrowsAsync(
       async () =>
-        await subtle.importKey('jwk', { ...jwk, use: 'enc' }, { name }, true, [
+        await subtle.importKey('jwk', { ...jwk, kty: 'EC' }, { name }, true, [
           'verify',
         ]),
-      'Invalid JWK "use" Parameter',
+      'Invalid JWK "kty" Parameter',
+    );
+  });
+}
+
+const xCurves = ['X25519', 'X448'] as const;
+for (const name of xCurves) {
+  test(SUITE, `${name} importKey rejects wrong jwk crv`, async () => {
+    const keyPair = (await subtle.generateKey({ name }, true, [
+      'deriveKey',
+      'deriveBits',
+    ])) as CryptoKeyPair;
+    const jwk = (await subtle.exportKey(
+      'jwk',
+      keyPair.publicKey as CryptoKey,
+    )) as JWK;
+    const wrongCrv = name === 'X25519' ? 'X448' : 'X25519';
+    await assertThrowsAsync(
+      async () =>
+        await subtle.importKey(
+          'jwk',
+          { ...jwk, crv: wrongCrv },
+          { name },
+          true,
+          [],
+        ),
+      'JWK "crv" Parameter and algorithm name mismatch',
     );
   });
 }

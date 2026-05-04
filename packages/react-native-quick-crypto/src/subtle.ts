@@ -958,12 +958,17 @@ function rsaImportKey(
     checkUsages();
 
     if (jwk.alg !== undefined) {
-      const jwkContext =
-        name === 'RSASSA-PKCS1-v1_5'
-          ? HashContext.JwkRsa
-          : name === 'RSA-PSS'
-            ? HashContext.JwkRsaPss
-            : HashContext.JwkRsaOaep;
+      let jwkContext: HashContext;
+      switch (name) {
+        case 'RSASSA-PKCS1-v1_5':
+          jwkContext = HashContext.JwkRsa;
+          break;
+        case 'RSA-PSS':
+          jwkContext = HashContext.JwkRsaPss;
+          break;
+        default:
+          jwkContext = HashContext.JwkRsaOaep;
+      }
       const expectedAlg = normalizeHashName(algorithm.hash, jwkContext);
       if (jwk.alg !== expectedAlg) {
         throw lazyDOMException(
@@ -1261,6 +1266,9 @@ function edImportKey(
     const jwkData = data as JWK;
     if (!jwkData || typeof jwkData !== 'object') {
       throw lazyDOMException('Invalid keyData', 'DataError');
+    }
+    if (jwkData.kty !== 'OKP') {
+      throw lazyDOMException('Invalid JWK "kty" Parameter', 'DataError');
     }
     const expectedUse = isX ? 'enc' : 'sig';
     validateJwkStructure(jwkData, extractable, keyUsages, expectedUse);
