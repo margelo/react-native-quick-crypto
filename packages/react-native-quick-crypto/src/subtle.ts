@@ -146,6 +146,16 @@ function getAlgorithmName(name: string, length: number): string {
   }
 }
 
+// Mirrors Node's aliasKeyFormat (lib/internal/crypto/webcrypto.js): for
+// algorithms whose import/export accepts both 'raw' and the disambiguated
+// 'raw-secret' / 'raw-public', collapse the latter to 'raw'. Used per-algorithm
+// — algorithms that demand the disambiguated form (KMAC, AES-OCB,
+// ChaCha20-Poly1305, Argon2*, ML-DSA, ML-KEM) MUST NOT alias.
+function aliasKeyFormat(format: ImportFormat): ImportFormat {
+  if (format === 'raw-secret' || format === 'raw-public') return 'raw';
+  return format;
+}
+
 // Placeholder implementations for missing functions
 function ecExportKey(key: CryptoKey, format: KWebCryptoKeyFormat): ArrayBuffer {
   const keyObject = key.keyObject;
@@ -878,7 +888,9 @@ async function kmacImportKey(
     }
 
     keyObject = new SecretKeyObject(handle);
-  } else if (format === 'raw' || format === 'raw-secret') {
+  } else if (format === 'raw-secret') {
+    // KMAC accepts only the disambiguated 'raw-secret' form (Node mac.js:141-145
+    // returns undefined for plain 'raw' when not HMAC).
     if (hasAnyNotIn(keyUsages, ['sign', 'verify'])) {
       throw lazyDOMException(
         `Unsupported key usage for ${name} key`,
@@ -1114,11 +1126,15 @@ async function hmacImportKey(
     }
 
     keyObject = new SecretKeyObject(handle);
-  } else if (format === 'raw') {
+  } else if (format === 'raw' || format === 'raw-secret') {
+    // HMAC accepts both 'raw' and 'raw-secret' (Node mac.js:141-145).
     checkUsages();
     keyObject = createSecretKey(data as BinaryLike);
   } else {
-    throw new Error(`Unable to import HMAC key with format ${format}`);
+    throw lazyDOMException(
+      `Unable to import HMAC key with format ${format}`,
+      'NotSupportedError',
+    );
   }
 
   // Normalize hash to { name: string } format per WebCrypto spec
@@ -1153,6 +1169,13 @@ async function aesImportKey(
     }
   };
 
+  // AES-OCB and ChaCha20-Poly1305 require the disambiguated 'raw-secret' form
+  // and reject 'raw' (Node aes.js:243-249, chacha20_poly1305.js:104-134).
+  // Other AES variants accept both 'raw' and 'raw-secret'.
+  const requiresRawSecret = name === 'AES-OCB' || name === 'ChaCha20-Poly1305';
+  const acceptsRaw =
+    format === 'raw-secret' || (format === 'raw' && !requiresRawSecret);
+
   let keyObject: KeyObject;
   let actualLength: number;
 
@@ -1184,18 +1207,28 @@ async function aesImportKey(
 
     const exported = keyObject.export();
     actualLength = exported.byteLength * 8;
-  } else if (format === 'raw') {
+  } else if (acceptsRaw) {
     checkUsages();
     const keyData = bufferLikeToArrayBuffer(data as BufferLike);
     actualLength = keyData.byteLength * 8;
 
-    if (![128, 192, 256].includes(actualLength)) {
+    if (name === 'ChaCha20-Poly1305') {
+      if (actualLength !== 256) {
+        throw lazyDOMException(
+          'Invalid ChaCha20-Poly1305 key length',
+          'DataError',
+        );
+      }
+    } else if (![128, 192, 256].includes(actualLength)) {
       throw new Error('Invalid AES key length');
     }
 
     keyObject = createSecretKey(keyData);
   } else {
-    throw new Error(`Unsupported format for AES import: ${format}`);
+    throw lazyDOMException(
+      `Unable to import ${name} key with format ${format}`,
+      'NotSupportedError',
+    );
   }
 
   // Validate length if specified
@@ -1380,7 +1413,9 @@ function pqcImportKeyObject(
       ),
       isPublic: false,
     };
-  } else if (format === 'raw') {
+  } else if (format === 'raw-public') {
+    // ML-DSA / ML-KEM reject plain 'raw' — only 'raw-public' is accepted for
+    // public-key import (Node webcrypto.js:493-499, 506-511).
     const handle =
       NitroModules.createHybridObject<KeyObjectHandle>('KeyObjectHandle');
     if (
@@ -1452,7 +1487,7 @@ function pqcIsPublicImport(
       (data as JWK).priv === undefined
     );
   }
-  return format === 'spki' || format === 'raw';
+  return format === 'spki' || format === 'raw-public';
 }
 
 function validatePqcJwk(
@@ -1478,6 +1513,23 @@ function validatePqcJwk(
   }
 }
 
+// Validates that `format` is one of the formats PQC algorithms accept; rejects
+// plain 'raw' early so the format error wins over usage-based errors.
+function validatePqcFormat(format: ImportFormat, name: string): void {
+  if (
+    format !== 'spki' &&
+    format !== 'pkcs8' &&
+    format !== 'raw-public' &&
+    format !== 'raw-seed' &&
+    format !== 'jwk'
+  ) {
+    throw lazyDOMException(
+      `Unsupported format for ${name} import: ${format}`,
+      'NotSupportedError',
+    );
+  }
+}
+
 function mldsaImportKey(
   format: ImportFormat,
   data: BufferLike | JWK,
@@ -1486,6 +1538,7 @@ function mldsaImportKey(
   keyUsages: KeyUsage[],
 ): CryptoKey {
   const { name } = algorithm;
+  validatePqcFormat(format, name);
   if (format === 'jwk') {
     validatePqcJwk(data, name, extractable, keyUsages, 'sig');
   }
@@ -1508,6 +1561,7 @@ function mlkemImportKey(
   keyUsages: KeyUsage[],
 ): CryptoKey {
   const { name } = algorithm;
+  validatePqcFormat(format, name);
   if (format === 'jwk') {
     validatePqcJwk(data, name, extractable, keyUsages, 'enc');
   }
@@ -1657,73 +1711,83 @@ const exportKeyPkcs8 = async (
   );
 };
 
-const exportKeyRaw = (key: CryptoKey): ArrayBuffer | unknown => {
-  switch (key.algorithm.name) {
+// Mirrors Node's export key matrix (lib/internal/crypto/webcrypto.js
+// exportKeyRawSecret / exportKeyRawPublic, lines 472-563):
+//
+//   raw         — AES-CTR/CBC/GCM/KW + HMAC (secret); ECDSA/ECDH/Ed/X (public)
+//   raw-secret  — AES-CTR/CBC/GCM/KW + HMAC + AES-OCB + KMAC + ChaCha20-Poly1305
+//   raw-public  — ECDSA/ECDH + Ed/X + ML-DSA + ML-KEM (public)
+const exportKeyRaw = (
+  key: CryptoKey,
+  format: 'raw' | 'raw-secret' | 'raw-public',
+): ArrayBuffer => {
+  const name = key.algorithm.name;
+  const isPublic = key.type === 'public';
+  const isSecret = key.type === 'secret';
+
+  const exportSecret = (): ArrayBuffer => {
+    const exported = key.keyObject.export();
+    return exported.buffer.slice(
+      exported.byteOffset,
+      exported.byteOffset + exported.byteLength,
+    ) as ArrayBuffer;
+  };
+  const exportRawPublic = (): ArrayBuffer =>
+    bufferLikeToArrayBuffer(key.keyObject.handle.exportKey());
+
+  const fail = (): never => {
+    throw lazyDOMException(
+      `Unable to export ${name} ${key.type} key using ${format} format`,
+      'NotSupportedError',
+    );
+  };
+
+  // Symmetric: AES-CTR/CBC/GCM/KW and HMAC accept both 'raw' and 'raw-secret';
+  // AES-OCB / KMAC* / ChaCha20-Poly1305 only 'raw-secret'.
+  switch (name) {
+    case 'AES-CTR':
+    case 'AES-CBC':
+    case 'AES-GCM':
+    case 'AES-KW':
+    case 'HMAC':
+      if (!isSecret) return fail();
+      if (format === 'raw' || format === 'raw-secret') return exportSecret();
+      return fail();
+    case 'AES-OCB':
+    case 'KMAC128':
+    case 'KMAC256':
+    case 'ChaCha20-Poly1305':
+      if (!isSecret) return fail();
+      if (format === 'raw-secret') return exportSecret();
+      return fail();
     case 'ECDSA':
-    // Fall through
     case 'ECDH':
-      if (key.type === 'public') {
+      if (!isPublic) return fail();
+      if (format === 'raw' || format === 'raw-public') {
         return ecExportKey(key, KWebCryptoKeyFormat.kWebCryptoKeyFormatRaw);
       }
-      break;
+      return fail();
     case 'Ed25519':
-    // Fall through
     case 'Ed448':
-    // Fall through
     case 'X25519':
-    // Fall through
     case 'X448':
-      if (key.type === 'public') {
-        const exported = key.keyObject.handle.exportKey();
-        return bufferLikeToArrayBuffer(exported);
-      }
-      break;
-    case 'ML-KEM-512':
-    // Fall through
-    case 'ML-KEM-768':
-    // Fall through
-    case 'ML-KEM-1024':
-    // Fall through
+      if (!isPublic) return fail();
+      if (format === 'raw' || format === 'raw-public') return exportRawPublic();
+      return fail();
     case 'ML-DSA-44':
-    // Fall through
     case 'ML-DSA-65':
-    // Fall through
     case 'ML-DSA-87':
-      if (key.type === 'public') {
-        const exported = key.keyObject.handle.exportKey();
-        return bufferLikeToArrayBuffer(exported);
-      }
-      break;
-    case 'AES-CTR':
-    // Fall through
-    case 'AES-CBC':
-    // Fall through
-    case 'AES-GCM':
-    // Fall through
-    case 'AES-KW':
-    // Fall through
-    case 'AES-OCB':
-    // Fall through
-    case 'ChaCha20-Poly1305':
-    // Fall through
-    case 'HMAC':
-    // Fall through
-    case 'KMAC128':
-    // Fall through
-    case 'KMAC256': {
-      const exported = key.keyObject.export();
-      // Convert Buffer to ArrayBuffer
-      return exported.buffer.slice(
-        exported.byteOffset,
-        exported.byteOffset + exported.byteLength,
-      );
-    }
+    case 'ML-KEM-512':
+    case 'ML-KEM-768':
+    case 'ML-KEM-1024':
+      // ML-DSA / ML-KEM keys do not recognize plain 'raw' (Node webcrypto.js
+      // lines 488-510).
+      if (!isPublic) return fail();
+      if (format === 'raw-public') return exportRawPublic();
+      return fail();
   }
 
-  throw lazyDOMException(
-    `Unable to export a raw ${key.algorithm.name} ${key.type} key`,
-    'InvalidAccessError',
-  );
+  return fail();
 };
 
 const exportKeyJWK = (key: CryptoKey): ArrayBuffer | unknown => {
@@ -1807,7 +1871,11 @@ const exportKeyJWK = (key: CryptoKey): ArrayBuffer | unknown => {
   );
 };
 
-const importGenericSecretKey = async (
+// PBKDF2 import. Mirrors Node's importGenericSecretKey ordering
+// (keys.js:945-971): extractable → usage → format → length. Callers pre-alias
+// 'raw-secret' / 'raw-public' to 'raw' via aliasKeyFormat
+// (webcrypto.js:798-808).
+const pbkdf2ImportKey = async (
   { name, length }: SubtleAlgorithm,
   format: ImportFormat,
   keyData: BufferLike | BinaryLike,
@@ -1815,33 +1883,70 @@ const importGenericSecretKey = async (
   keyUsages: KeyUsage[],
 ): Promise<CryptoKey> => {
   if (extractable) {
-    throw new Error(`${name} keys are not extractable`);
+    throw lazyDOMException(`${name} keys are not extractable`, 'SyntaxError');
   }
   if (hasAnyNotIn(keyUsages, ['deriveKey', 'deriveBits'])) {
-    throw new Error(`Unsupported key usage for a ${name} key`);
+    throw lazyDOMException(
+      `Unsupported key usage for a ${name} key`,
+      'SyntaxError',
+    );
+  }
+  if (format !== 'raw') {
+    throw lazyDOMException(
+      `Unable to import ${name} key with format ${format}`,
+      'NotSupportedError',
+    );
   }
 
-  switch (format) {
-    case 'raw': {
-      if (hasAnyNotIn(keyUsages, ['deriveKey', 'deriveBits'])) {
-        throw new Error(`Unsupported key usage for a ${name} key`);
-      }
-
-      const checkLength =
-        typeof keyData === 'string' || SBuffer.isBuffer(keyData)
-          ? keyData.length * 8
-          : keyData.byteLength * 8;
-
-      if (length !== undefined && length !== checkLength) {
-        throw new Error('Invalid key length');
-      }
-
-      const keyObject = createSecretKey(keyData as BinaryLike);
-      return new CryptoKey(keyObject, { name }, keyUsages, false);
-    }
+  const checkLength =
+    typeof keyData === 'string' || SBuffer.isBuffer(keyData)
+      ? keyData.length * 8
+      : keyData.byteLength * 8;
+  if (length !== undefined && length !== checkLength) {
+    throw lazyDOMException('Invalid key length', 'DataError');
   }
 
-  throw new Error(`Unable to import ${name} key with format ${format}`);
+  const keyObject = createSecretKey(keyData as BinaryLike);
+  return new CryptoKey(keyObject, { name }, keyUsages, false);
+};
+
+// Argon2 import. Node gates the format at the dispatcher level — only
+// 'raw-secret' enters importGenericSecretKey (webcrypto.js:813-822). To match
+// that, format is the first check here; remaining ordering matches Node's
+// importGenericSecretKey.
+const argon2ImportKey = async (
+  { name, length }: SubtleAlgorithm,
+  format: ImportFormat,
+  keyData: BufferLike | BinaryLike,
+  extractable: boolean,
+  keyUsages: KeyUsage[],
+): Promise<CryptoKey> => {
+  if (format !== 'raw-secret') {
+    throw lazyDOMException(
+      `Unable to import ${name} key with format ${format}`,
+      'NotSupportedError',
+    );
+  }
+  if (extractable) {
+    throw lazyDOMException(`${name} keys are not extractable`, 'SyntaxError');
+  }
+  if (hasAnyNotIn(keyUsages, ['deriveKey', 'deriveBits'])) {
+    throw lazyDOMException(
+      `Unsupported key usage for a ${name} key`,
+      'SyntaxError',
+    );
+  }
+
+  const checkLength =
+    typeof keyData === 'string' || SBuffer.isBuffer(keyData)
+      ? keyData.length * 8
+      : keyData.byteLength * 8;
+  if (length !== undefined && length !== checkLength) {
+    throw lazyDOMException('Invalid key length', 'DataError');
+  }
+
+  const keyObject = createSecretKey(keyData as BinaryLike);
+  return new CryptoKey(keyObject, { name }, keyUsages, false);
 };
 
 const hkdfImportKey = async (
@@ -2526,9 +2631,10 @@ export class Subtle {
         );
     }
 
-    // Step 2: Import as key
+    // Step 2: Import as key. Use 'raw-secret' so derived material flows into
+    // AEADs / KMAC correctly — they reject plain 'raw' (Node webcrypto.js:381-385).
     return this.importKey(
-      'raw',
+      'raw-secret',
       derivedBits,
       derivedKeyAlgorithm,
       extractable,
@@ -2582,9 +2688,6 @@ export class Subtle {
       return bufferLikeToArrayBuffer(key.keyObject.handle.exportKey());
     }
 
-    // Note: 'raw-seed' is handled above; do NOT normalize it here
-    if (format === 'raw-secret' || format === 'raw-public') format = 'raw';
-
     switch (format) {
       case 'spki':
         return (await exportKeySpki(key)) as ArrayBuffer;
@@ -2593,7 +2696,9 @@ export class Subtle {
       case 'jwk':
         return exportKeyJWK(key) as JWK;
       case 'raw':
-        return exportKeyRaw(key) as ArrayBuffer;
+      case 'raw-secret':
+      case 'raw-public':
+        return exportKeyRaw(key, format) as ArrayBuffer;
     }
   }
 
@@ -2851,8 +2956,10 @@ export class Subtle {
     extractable: boolean,
     keyUsages: KeyUsage[],
   ): Promise<CryptoKey> {
-    // Note: 'raw-seed' is NOT normalized — PQC import functions handle it directly
-    if (format === 'raw-secret' || format === 'raw-public') format = 'raw';
+    // Per-algorithm format handling. Some algorithms alias raw-secret/raw-public
+    // to 'raw' (RSA, EC, Ed/X, HMAC, HKDF, PBKDF2); others demand the
+    // disambiguated form (KMAC, AES-OCB, ChaCha20-Poly1305, Argon2, ML-DSA,
+    // ML-KEM). 'raw-seed' is never normalized — PQC import handles it directly.
     const normalizedAlgorithm = normalizeAlgorithm(algorithm, 'importKey');
     let result: CryptoKey;
     switch (normalizedAlgorithm.name) {
@@ -2862,7 +2969,7 @@ export class Subtle {
       // Fall through
       case 'RSA-OAEP':
         result = rsaImportKey(
-          format,
+          aliasKeyFormat(format),
           data as BufferLike | JWK,
           normalizedAlgorithm,
           extractable,
@@ -2873,7 +2980,7 @@ export class Subtle {
       // Fall through
       case 'ECDH':
         result = ecImportKey(
-          format,
+          aliasKeyFormat(format),
           data,
           normalizedAlgorithm,
           extractable,
@@ -2881,6 +2988,9 @@ export class Subtle {
         );
         break;
       case 'HMAC':
+        // No aliasing — Node routes HMAC straight into mac.js, which accepts
+        // 'raw' / 'raw-secret' / 'jwk' and rejects everything else
+        // (webcrypto.js:774-781, mac.js:136-174).
         result = await hmacImportKey(
           normalizedAlgorithm,
           format,
@@ -2920,10 +3030,18 @@ export class Subtle {
         );
         break;
       case 'PBKDF2':
+        result = await pbkdf2ImportKey(
+          normalizedAlgorithm,
+          aliasKeyFormat(format),
+          data as BufferLike | BinaryLike,
+          extractable,
+          keyUsages,
+        );
+        break;
       case 'Argon2d':
       case 'Argon2i':
       case 'Argon2id':
-        result = await importGenericSecretKey(
+        result = await argon2ImportKey(
           normalizedAlgorithm,
           format,
           data as BufferLike | BinaryLike,
@@ -2933,7 +3051,7 @@ export class Subtle {
         break;
       case 'HKDF':
         result = await hkdfImportKey(
-          format,
+          aliasKeyFormat(format),
           data as BufferLike | BinaryLike,
           normalizedAlgorithm,
           extractable,
@@ -2948,7 +3066,7 @@ export class Subtle {
       // Fall through
       case 'Ed448':
         result = edImportKey(
-          format,
+          aliasKeyFormat(format),
           data as BufferLike | JWK,
           normalizedAlgorithm,
           extractable,
@@ -3113,8 +3231,10 @@ export class Subtle {
     }
 
     const { sharedKey, ciphertext } = this._encapsulateCore(algorithm, key);
+    // Node imports the encapsulated shared bits as 'raw-secret'
+    // (webcrypto.js:1370-1374) so AEADs / KMAC accept the result.
     const importedKey = await this.importKey(
-      'raw',
+      'raw-secret',
       sharedKey,
       sharedKeyAlgorithm,
       extractable,
@@ -3155,8 +3275,10 @@ export class Subtle {
     }
 
     const sharedKey = this._decapsulateCore(algorithm, key, ciphertext);
+    // Node imports the decapsulated shared bits as 'raw-secret'
+    // (webcrypto.js:1490-1494).
     return this.importKey(
-      'raw',
+      'raw-secret',
       sharedKey,
       sharedKeyAlgorithm,
       extractable,
