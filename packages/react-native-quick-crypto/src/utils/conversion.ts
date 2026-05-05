@@ -6,7 +6,12 @@ import type { ABV, BinaryLikeNode, BufferLike } from './types';
 import { Platform } from 'react-native';
 
 type UtilsWithStringConverter = Utils & {
-  bufferToString(buffer: ArrayBuffer, encoding: string): string;
+  bufferToString(
+    buffer: ArrayBuffer,
+    encoding: string,
+    byteOffset?: number,
+    length?: number,
+  ): string;
   stringToBuffer(str: string, encoding: string): ArrayBuffer;
 };
 
@@ -223,19 +228,59 @@ export function binaryLikeToArrayBuffer(
   );
 }
 
-export function ab2str(buf: ArrayBuffer, encoding: string = 'hex'): string {
-  if (nativeBufferToStringEncodings.has(encoding)) {
-    return utils.bufferToString(buf, encoding);
+export function ab2str(
+  buf: ArrayBuffer,
+  encoding: string = 'hex',
+  byteOffset?: number,
+  length?: number,
+): string {
+  const resolvedByteOffset = byteOffset ?? 0;
+  const resolvedLength = length ?? buf.byteLength - resolvedByteOffset;
+  const isPartial =
+    resolvedByteOffset !== 0 || resolvedLength !== buf.byteLength;
+  if (isPartial) {
+    if (nativeBufferToStringEncodings.has(encoding)) {
+      return utils.bufferToString(
+        buf,
+        encoding,
+        resolvedByteOffset,
+        resolvedLength,
+      );
+    }
+    return CraftzdogBuffer.from(
+      buf,
+      resolvedByteOffset,
+      resolvedLength,
+    ).toString(encoding);
+  } else {
+    if (nativeBufferToStringEncodings.has(encoding)) {
+      return utils.bufferToString(buf, encoding);
+    }
+    return CraftzdogBuffer.from(buf).toString(encoding);
   }
-  return CraftzdogBuffer.from(buf).toString(encoding);
 }
 
 /** Native C++ buffer-to-string — exposed for benchmarking */
 export function bufferToString(
   buf: ArrayBuffer,
   encoding: string = 'hex',
+  byteOffset?: number,
+  length?: number,
 ): string {
-  return utils.bufferToString(buf, encoding);
+  const resolvedByteOffset = byteOffset ?? 0;
+  const resolvedLength = length ?? buf.byteLength - resolvedByteOffset;
+  const isPartial =
+    resolvedByteOffset !== 0 || resolvedLength !== buf.byteLength;
+  if (isPartial) {
+    return utils.bufferToString(
+      buf,
+      encoding,
+      resolvedByteOffset,
+      resolvedLength,
+    );
+  } else {
+    return utils.bufferToString(buf, encoding);
+  }
 }
 
 /** Native C++ string-to-buffer — exposed for benchmarking */
