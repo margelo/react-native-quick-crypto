@@ -5,6 +5,7 @@ Review all commits on the current branch since diverging from main.
 ## Prerequisites
 
 **IMPORTANT**: Before starting the review, check if this is a fresh context/session:
+
 - If there is prior conversation history in this session (e.g., you helped write the code being reviewed), STOP immediately
 - Inform the user: "Code reviews should be done in a fresh context to avoid bias. Please start a new Claude Code session and run /review there."
 - A reviewer should not be the same "person" who wrote the code
@@ -32,3 +33,17 @@ When activated (in a fresh session), perform a full code review of the commits s
    - Recommended actions (if any)
 
 Run `bun tsc` to verify the code compiles.
+
+## Follow-up
+
+After presenting the review, present a **fix plan table** for the user to approve before making any changes:
+
+| #   | Severity | File:Line          | Issue             | Proposed Action  |
+| --- | -------- | ------------------ | ----------------- | ---------------- |
+| 1   | Medium   | path/to/file.ts:42 | Brief description | Fix / Skip / Ask |
+
+- **Fix**: Will apply the change
+- **Skip**: Not worth changing (explain why)
+- **Ask**: Ambiguous, needs user input on approach
+
+**Wait for the user to approve the plan** (they may want to skip or modify items). Then apply only the approved fixes. Run `bun tsc` after all fixes are applied to verify everything is clean.

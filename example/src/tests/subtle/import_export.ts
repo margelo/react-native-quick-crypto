@@ -3763,3 +3763,114 @@ for (const variant of [
     );
   });
 }
+
+// HMAC accepts BOTH 'raw' and 'raw-secret' (Node mac.js:141-145).
+test(SUITE, 'HMAC accepts raw-secret import/export', async () => {
+  const keyData = getRandomValues(new Uint8Array(32));
+  const key = await subtle.importKey(
+    'raw-secret',
+    keyData,
+    { name: 'HMAC', hash: 'SHA-256' },
+    true,
+    ['sign', 'verify'],
+  );
+  const exportedSecret = (await subtle.exportKey(
+    'raw-secret',
+    key,
+  )) as ArrayBuffer;
+  expect(Buffer.from(exportedSecret).toString('hex')).to.equal(
+    Buffer.from(keyData as Uint8Array).toString('hex'),
+  );
+  const exportedRaw = (await subtle.exportKey('raw', key)) as ArrayBuffer;
+  expect(Buffer.from(exportedRaw).toString('hex')).to.equal(
+    Buffer.from(keyData as Uint8Array).toString('hex'),
+  );
+});
+
+// HMAC rejects 'raw-public' (Node mac.js:172-173 returns undefined → parent
+// throws NotSupportedError). Without this gate, raw-public would silently be
+// accepted via aliasing.
+test(SUITE, 'HMAC importKey rejects raw-public format', async () => {
+  await assertThrowsAsync(
+    async () =>
+      await subtle.importKey(
+        'raw-public',
+        getRandomValues(new Uint8Array(32)),
+        { name: 'HMAC', hash: 'SHA-256' },
+        true,
+        ['sign', 'verify'],
+      ),
+    'Unable to import HMAC key with format raw-public',
+  );
+});
+
+// Ed25519 / Ed448 / X25519 / X448 public keys accept both 'raw' and
+// 'raw-public' (Node webcrypto.js:763-773 aliases for CFRG).
+for (const variant of ['Ed25519', 'Ed448', 'X25519', 'X448'] as const) {
+  test(SUITE, `${variant} accepts raw-public import/export`, async () => {
+    const isX = variant === 'X25519' || variant === 'X448';
+    const generateUsages: KeyUsage[] = isX
+      ? ['deriveBits']
+      : ['sign', 'verify'];
+    const keyPair = (await subtle.generateKey(
+      { name: variant },
+      true,
+      generateUsages,
+    )) as CryptoKeyPair;
+    const exportedPublic = (await subtle.exportKey(
+      'raw-public',
+      keyPair.publicKey as CryptoKey,
+    )) as ArrayBuffer;
+    const exportedRaw = (await subtle.exportKey(
+      'raw',
+      keyPair.publicKey as CryptoKey,
+    )) as ArrayBuffer;
+    expect(Buffer.from(exportedPublic).toString('hex')).to.equal(
+      Buffer.from(exportedRaw).toString('hex'),
+    );
+    const reimported = await subtle.importKey(
+      'raw-public',
+      exportedPublic,
+      { name: variant },
+      true,
+      isX ? [] : ['verify'],
+    );
+    expect((reimported as CryptoKey).type).to.equal('public');
+    expect((reimported as CryptoKey).algorithm.name).to.equal(variant);
+  });
+}
+
+// ECDSA / ECDH public keys accept both 'raw' and 'raw-public' (Node
+// webcrypto.js:756-762 aliases for EC).
+for (const variant of ['ECDSA', 'ECDH'] as const) {
+  test(SUITE, `${variant} accepts raw-public import/export`, async () => {
+    const usages: KeyUsage[] =
+      variant === 'ECDSA' ? ['sign', 'verify'] : ['deriveBits'];
+    const importUsages: KeyUsage[] = variant === 'ECDSA' ? ['verify'] : [];
+    const keyPair = (await subtle.generateKey(
+      { name: variant, namedCurve: 'P-256' },
+      true,
+      usages,
+    )) as CryptoKeyPair;
+    const exportedPublic = (await subtle.exportKey(
+      'raw-public',
+      keyPair.publicKey as CryptoKey,
+    )) as ArrayBuffer;
+    const exportedRaw = (await subtle.exportKey(
+      'raw',
+      keyPair.publicKey as CryptoKey,
+    )) as ArrayBuffer;
+    expect(Buffer.from(exportedPublic).toString('hex')).to.equal(
+      Buffer.from(exportedRaw).toString('hex'),
+    );
+    const reimported = await subtle.importKey(
+      'raw-public',
+      exportedPublic,
+      { name: variant, namedCurve: 'P-256' },
+      true,
+      importUsages,
+    );
+    expect((reimported as CryptoKey).type).to.equal('public');
+    expect((reimported as CryptoKey).algorithm.name).to.equal(variant);
+  });
+}

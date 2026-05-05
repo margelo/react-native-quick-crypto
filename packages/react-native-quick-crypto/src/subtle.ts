@@ -1126,11 +1126,15 @@ async function hmacImportKey(
     }
 
     keyObject = new SecretKeyObject(handle);
-  } else if (format === 'raw') {
+  } else if (format === 'raw' || format === 'raw-secret') {
+    // HMAC accepts both 'raw' and 'raw-secret' (Node mac.js:141-145).
     checkUsages();
     keyObject = createSecretKey(data as BinaryLike);
   } else {
-    throw new Error(`Unable to import HMAC key with format ${format}`);
+    throw lazyDOMException(
+      `Unable to import HMAC key with format ${format}`,
+      'NotSupportedError',
+    );
   }
 
   // Normalize hash to { name: string } format per WebCrypto spec
@@ -1867,7 +1871,11 @@ const exportKeyJWK = (key: CryptoKey): ArrayBuffer | unknown => {
   );
 };
 
-const importGenericSecretKey = async (
+// PBKDF2 import. Mirrors Node's importGenericSecretKey ordering
+// (keys.js:945-971): extractable → usage → format → length. Callers pre-alias
+// 'raw-secret' / 'raw-public' to 'raw' via aliasKeyFormat
+// (webcrypto.js:798-808).
+const pbkdf2ImportKey = async (
   { name, length }: SubtleAlgorithm,
   format: ImportFormat,
   keyData: BufferLike | BinaryLike,
@@ -1875,19 +1883,15 @@ const importGenericSecretKey = async (
   keyUsages: KeyUsage[],
 ): Promise<CryptoKey> => {
   if (extractable) {
-    throw new Error(`${name} keys are not extractable`);
+    throw lazyDOMException(`${name} keys are not extractable`, 'SyntaxError');
   }
   if (hasAnyNotIn(keyUsages, ['deriveKey', 'deriveBits'])) {
-    throw new Error(`Unsupported key usage for a ${name} key`);
+    throw lazyDOMException(
+      `Unsupported key usage for a ${name} key`,
+      'SyntaxError',
+    );
   }
-
-  // Argon2 accepts only the disambiguated 'raw-secret' form (Node
-  // webcrypto.js:813-822). PBKDF2 callers pre-alias to 'raw'.
-  const isArgon2 =
-    name === 'Argon2d' || name === 'Argon2i' || name === 'Argon2id';
-  const acceptedFormat: ImportFormat = isArgon2 ? 'raw-secret' : 'raw';
-
-  if (format !== acceptedFormat) {
+  if (format !== 'raw') {
     throw lazyDOMException(
       `Unable to import ${name} key with format ${format}`,
       'NotSupportedError',
@@ -1898,9 +1902,47 @@ const importGenericSecretKey = async (
     typeof keyData === 'string' || SBuffer.isBuffer(keyData)
       ? keyData.length * 8
       : keyData.byteLength * 8;
-
   if (length !== undefined && length !== checkLength) {
-    throw new Error('Invalid key length');
+    throw lazyDOMException('Invalid key length', 'DataError');
+  }
+
+  const keyObject = createSecretKey(keyData as BinaryLike);
+  return new CryptoKey(keyObject, { name }, keyUsages, false);
+};
+
+// Argon2 import. Node gates the format at the dispatcher level — only
+// 'raw-secret' enters importGenericSecretKey (webcrypto.js:813-822). To match
+// that, format is the first check here; remaining ordering matches Node's
+// importGenericSecretKey.
+const argon2ImportKey = async (
+  { name, length }: SubtleAlgorithm,
+  format: ImportFormat,
+  keyData: BufferLike | BinaryLike,
+  extractable: boolean,
+  keyUsages: KeyUsage[],
+): Promise<CryptoKey> => {
+  if (format !== 'raw-secret') {
+    throw lazyDOMException(
+      `Unable to import ${name} key with format ${format}`,
+      'NotSupportedError',
+    );
+  }
+  if (extractable) {
+    throw lazyDOMException(`${name} keys are not extractable`, 'SyntaxError');
+  }
+  if (hasAnyNotIn(keyUsages, ['deriveKey', 'deriveBits'])) {
+    throw lazyDOMException(
+      `Unsupported key usage for a ${name} key`,
+      'SyntaxError',
+    );
+  }
+
+  const checkLength =
+    typeof keyData === 'string' || SBuffer.isBuffer(keyData)
+      ? keyData.length * 8
+      : keyData.byteLength * 8;
+  if (length !== undefined && length !== checkLength) {
+    throw lazyDOMException('Invalid key length', 'DataError');
   }
 
   const keyObject = createSecretKey(keyData as BinaryLike);
@@ -2946,9 +2988,12 @@ export class Subtle {
         );
         break;
       case 'HMAC':
+        // No aliasing — Node routes HMAC straight into mac.js, which accepts
+        // 'raw' / 'raw-secret' / 'jwk' and rejects everything else
+        // (webcrypto.js:774-781, mac.js:136-174).
         result = await hmacImportKey(
           normalizedAlgorithm,
-          aliasKeyFormat(format),
+          format,
           data as BufferLike | JWK,
           extractable,
           keyUsages,
@@ -2985,7 +3030,7 @@ export class Subtle {
         );
         break;
       case 'PBKDF2':
-        result = await importGenericSecretKey(
+        result = await pbkdf2ImportKey(
           normalizedAlgorithm,
           aliasKeyFormat(format),
           data as BufferLike | BinaryLike,
@@ -2996,7 +3041,7 @@ export class Subtle {
       case 'Argon2d':
       case 'Argon2i':
       case 'Argon2id':
-        result = await importGenericSecretKey(
+        result = await argon2ImportKey(
           normalizedAlgorithm,
           format,
           data as BufferLike | BinaryLike,
