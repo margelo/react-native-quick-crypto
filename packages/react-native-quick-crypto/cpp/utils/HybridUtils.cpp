@@ -234,33 +234,26 @@ bool HybridUtils::timingSafeEqual(const std::shared_ptr<ArrayBuffer>& a, const s
 facebook::jsi::Value HybridUtils::bufferToJsiString(facebook::jsi::Runtime& runtime, const facebook::jsi::Value&,
                                                     const facebook::jsi::Value* args, size_t argCount) {
   // Runtime argument check from react-native-nitro-modules/cpp/core/HybridFunction.hpp
-  if (argCount != 2 && argCount != 4) [[unlikely]] {
+  if (argCount != 4) [[unlikely]] {
     throw facebook::jsi::JSError(runtime,
-                                 "`Utils.bufferToString(...)` expected 2 or 4 arguments, but received " + std::to_string(argCount) + "!");
+                                 "`Utils.bufferToString(...)` expected 4 arguments, but received " + std::to_string(argCount) + "!");
   }
 
   // Exception wrapper from react-native-nitro-modules/cpp/core/HybridFunction.hpp
   try {
-    // bufferToString(buffer: ArrayBuffer, encoding: string, byteOffset?: number, length?: number): string;
+    // bufferToString(buffer: ArrayBuffer, encoding: string, start: number, end: number): string;
     // Defined in utils/conversion.ts
     auto buffer = JSIConverter<std::shared_ptr<ArrayBuffer>>::fromJSI(runtime, args[0]);
     std::string encoding = JSIConverter<std::string>::fromJSI(runtime, args[1]);
     const size_t bufferSize = buffer->size();
-    size_t byteOffset = 0;
-    size_t length = bufferSize;
+    // `start` and `end` are normalized in the TS code
+    // so it's safe to use `static_cast<size_t>` here
+    const size_t start = static_cast<size_t>(JSIConverter<double>::fromJSI(runtime, args[2]));
+    const size_t end = static_cast<size_t>(JSIConverter<double>::fromJSI(runtime, args[3]));
+    const size_t offset = start;
+    const size_t length = end - start;
 
-    if (argCount == 4) {
-      byteOffset = validateUInt<size_t>(JSIConverter<double>::fromJSI(runtime, args[2]), "byteOffset");
-      if (byteOffset > bufferSize) {
-        throw std::runtime_error("byteOffset is out of bounds");
-      }
-      length = validateUInt<size_t>(JSIConverter<double>::fromJSI(runtime, args[3]), "length");
-      if (length > bufferSize - byteOffset) {
-        throw std::runtime_error("length is out of bounds");
-      }
-    }
-
-    const auto* data = reinterpret_cast<const uint8_t*>(buffer->data() + byteOffset);
+    const auto* data = reinterpret_cast<const uint8_t*>(buffer->data() + offset);
 
     if (encoding == "hex") {
       return facebook::jsi::String::createFromUtf8(runtime, encodeHex(data, length));
