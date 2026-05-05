@@ -1199,8 +1199,9 @@ const kmacNistVectors = [
 
 for (const vec of kmacNistVectors) {
   test(SUITE, `NIST KMAC sign: ${vec.name}`, async () => {
+    // KMAC accepts only 'raw-secret' (Node mac.js:141-145).
     const key = await subtle.importKey(
-      'raw',
+      'raw-secret',
       vec.key,
       { name: vec.algorithm },
       false,
@@ -1224,7 +1225,7 @@ for (const vec of kmacNistVectors) {
 for (const vec of kmacNistVectors) {
   test(SUITE, `NIST KMAC verify: ${vec.name}`, async () => {
     const key = await subtle.importKey(
-      'raw',
+      'raw-secret',
       vec.key,
       { name: vec.algorithm },
       false,

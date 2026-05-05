@@ -2733,11 +2733,11 @@ for (const variant of MLKEM_VARIANTS) {
   );
 }
 
-test(SUITE, 'ML-KEM-768 importKey raw rejects bad usages', async () => {
+test(SUITE, 'ML-KEM-768 importKey raw-public rejects bad usages', async () => {
   await assertThrowsAsync(
     async () =>
       await subtle.importKey(
-        'raw',
+        'raw-public',
         new Uint8Array(1184),
         { name: 'ML-KEM-768' },
         true,
@@ -3093,8 +3093,12 @@ test(SUITE, 'AES-OCB export/import jwk', async () => {
     ['encrypt', 'decrypt'],
   );
 
-  const exportedRaw1 = await subtle.exportKey('raw', key as CryptoKey);
-  const exportedRaw2 = await subtle.exportKey('raw', imported as CryptoKey);
+  // AES-OCB does not accept plain 'raw' — use 'raw-secret' (Node aes.js:243-249)
+  const exportedRaw1 = await subtle.exportKey('raw-secret', key as CryptoKey);
+  const exportedRaw2 = await subtle.exportKey(
+    'raw-secret',
+    imported as CryptoKey,
+  );
   expect(Buffer.from(exportedRaw1 as ArrayBuffer).toString('hex')).to.equal(
     Buffer.from(exportedRaw2 as ArrayBuffer).toString('hex'),
   );
@@ -3497,19 +3501,20 @@ test(SUITE, 'ML-KEM-768 unwrapKey with AES-GCM', async () => {
 // --- KMAC Import/Export Tests ---
 
 for (const algorithm of ['KMAC128', 'KMAC256'] as const) {
-  test(SUITE, `KMAC import/export raw (${algorithm})`, async () => {
+  // KMAC accepts only 'raw-secret' (Node mac.js:141-145, webcrypto.js:552-560)
+  test(SUITE, `KMAC import/export raw-secret (${algorithm})`, async () => {
     const keyBytes = new Uint8Array(32);
     globalThis.crypto.getRandomValues(keyBytes);
 
     const key = await subtle.importKey(
-      'raw',
+      'raw-secret',
       keyBytes,
       { name: algorithm },
       true,
       ['sign', 'verify'],
     );
 
-    const exported = await subtle.exportKey('raw', key);
+    const exported = await subtle.exportKey('raw-secret', key);
     expect(ab2str(exported as ArrayBuffer, 'hex')).to.equal(
       ab2str(keyBytes.buffer as ArrayBuffer, 'hex'),
     );
@@ -3573,3 +3578,188 @@ test(
     expect(err.message).to.contain('not extractable');
   },
 );
+
+// --- Format aliasing per-algorithm tests (gh#1002) ---
+//
+// Mirrors Node's per-algorithm format matrix
+// (lib/internal/crypto/webcrypto.js:472-563, 734-742, 813-822;
+// lib/internal/crypto/aes.js:243-249;
+// lib/internal/crypto/chacha20_poly1305.js:104-134;
+// lib/internal/crypto/mac.js:141-145).
+
+test(SUITE, 'AES-OCB importKey rejects plain raw format', async () => {
+  await assertThrowsAsync(
+    async () =>
+      await subtle.importKey(
+        'raw',
+        getRandomValues(new Uint8Array(32)),
+        { name: 'AES-OCB' },
+        true,
+        ['encrypt', 'decrypt'],
+      ),
+    'Unable to import AES-OCB key with format raw',
+  );
+});
+
+test(SUITE, 'AES-OCB exportKey rejects plain raw format', async () => {
+  const key = (await subtle.generateKey(
+    { name: 'AES-OCB', length: 256 },
+    true,
+    ['encrypt', 'decrypt'],
+  )) as CryptoKey;
+  await assertThrowsAsync(
+    async () => await subtle.exportKey('raw', key),
+    'Unable to export AES-OCB secret key using raw format',
+  );
+});
+
+test(
+  SUITE,
+  'ChaCha20-Poly1305 importKey rejects plain raw format',
+  async () => {
+    await assertThrowsAsync(
+      async () =>
+        await subtle.importKey(
+          'raw',
+          getRandomValues(new Uint8Array(32)),
+          // eslint-disable-next-line @typescript-eslint/no-explicit-any
+          { name: 'ChaCha20-Poly1305' } as any,
+          true,
+          ['encrypt', 'decrypt'],
+        ),
+      'Unable to import ChaCha20-Poly1305 key with format raw',
+    );
+  },
+);
+
+test(
+  SUITE,
+  'ChaCha20-Poly1305 exportKey rejects plain raw format',
+  async () => {
+    const key = (await subtle.generateKey(
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      { name: 'ChaCha20-Poly1305', length: 256 } as any,
+      true,
+      ['encrypt', 'decrypt'],
+    )) as CryptoKey;
+    await assertThrowsAsync(
+      async () => await subtle.exportKey('raw', key),
+      'Unable to export ChaCha20-Poly1305 secret key using raw format',
+    );
+  },
+);
+
+for (const algorithm of ['KMAC128', 'KMAC256'] as const) {
+  test(SUITE, `${algorithm} importKey rejects plain raw format`, async () => {
+    await assertThrowsAsync(
+      async () =>
+        await subtle.importKey(
+          'raw',
+          getRandomValues(new Uint8Array(32)),
+          { name: algorithm },
+          true,
+          ['sign', 'verify'],
+        ),
+      `Unable to import ${algorithm} key with format raw`,
+    );
+  });
+
+  test(SUITE, `${algorithm} exportKey rejects plain raw format`, async () => {
+    const key = (await subtle.generateKey({ name: algorithm }, true, [
+      'sign',
+      'verify',
+    ])) as CryptoKey;
+    await assertThrowsAsync(
+      async () => await subtle.exportKey('raw', key),
+      `Unable to export ${algorithm} secret key using raw format`,
+    );
+  });
+}
+
+for (const algorithm of ['Argon2d', 'Argon2i', 'Argon2id'] as const) {
+  test(SUITE, `${algorithm} importKey rejects plain raw format`, async () => {
+    await assertThrowsAsync(
+      async () =>
+        await subtle.importKey(
+          'raw',
+          getRandomValues(new Uint8Array(32)),
+          { name: algorithm },
+          false,
+          ['deriveBits'],
+        ),
+      `Unable to import ${algorithm} key with format raw`,
+    );
+  });
+}
+
+// AES-CTR/CBC/GCM/KW + HMAC accept BOTH 'raw' and 'raw-secret' (Node aliases).
+test(SUITE, 'AES-GCM accepts raw-secret import/export', async () => {
+  const keyData = getRandomValues(new Uint8Array(32));
+  const key = await subtle.importKey(
+    'raw-secret',
+    keyData,
+    { name: 'AES-GCM' },
+    true,
+    ['encrypt', 'decrypt'],
+  );
+  const exported = (await subtle.exportKey('raw-secret', key)) as ArrayBuffer;
+  expect(Buffer.from(exported).toString('hex')).to.equal(
+    Buffer.from(keyData as Uint8Array).toString('hex'),
+  );
+  const exportedRaw = (await subtle.exportKey('raw', key)) as ArrayBuffer;
+  expect(Buffer.from(exportedRaw).toString('hex')).to.equal(
+    Buffer.from(keyData as Uint8Array).toString('hex'),
+  );
+});
+
+// ML-DSA / ML-KEM reject plain 'raw' — only 'raw-public' is accepted for
+// public-key import/export (Node webcrypto.js:493-499, 506-511).
+for (const variant of [
+  'ML-DSA-44',
+  'ML-DSA-65',
+  'ML-DSA-87',
+  'ML-KEM-512',
+  'ML-KEM-768',
+  'ML-KEM-1024',
+] as const) {
+  test(SUITE, `${variant} exportKey rejects plain raw format`, async () => {
+    const isMlKem = variant.startsWith('ML-KEM');
+    const usages: KeyUsage[] = isMlKem
+      ? ['encapsulateBits', 'decapsulateBits']
+      : ['sign', 'verify'];
+    const keyPair = (await subtle.generateKey(
+      { name: variant },
+      true,
+      usages,
+    )) as CryptoKeyPair;
+    await assertThrowsAsync(
+      async () => await subtle.exportKey('raw', keyPair.publicKey as CryptoKey),
+      `Unable to export ${variant} public key using raw format`,
+    );
+  });
+
+  test(SUITE, `${variant} importKey rejects plain raw format`, async () => {
+    const isMlKem = variant.startsWith('ML-KEM');
+    const usages: KeyUsage[] = isMlKem ? ['encapsulateBits'] : ['verify'];
+    const keyPair = (await subtle.generateKey(
+      { name: variant },
+      true,
+      isMlKem ? ['encapsulateBits', 'decapsulateBits'] : ['sign', 'verify'],
+    )) as CryptoKeyPair;
+    const exported = (await subtle.exportKey(
+      'raw-public',
+      keyPair.publicKey as CryptoKey,
+    )) as ArrayBuffer;
+    await assertThrowsAsync(
+      async () =>
+        await subtle.importKey(
+          'raw',
+          exported,
+          { name: variant },
+          true,
+          usages,
+        ),
+      `Unsupported format for ${variant} import: raw`,
+    );
+  });
+}

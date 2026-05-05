@@ -603,7 +603,7 @@ test(SUITE, 'ChaCha20-Poly1305 RF C 8439 vector', async () => {
   const expectedTagHex = '1ae10b594f09e26a7e902ecbd0600691';
 
   const key = await subtle.importKey(
-    'raw',
+    'raw-secret',
     Buffer.from(keyHex, 'hex'),
     { name: 'ChaCha20-Poly1305' } as any, // eslint-disable-line @typescript-eslint/no-explicit-any
     true,
@@ -763,18 +763,19 @@ test(SUITE, 'ChaCha20-Poly1305 large plaintext', async () => {
   );
 });
 
-test(SUITE, 'ChaCha20-Poly1305 key import/export raw', async () => {
+test(SUITE, 'ChaCha20-Poly1305 key import/export raw-secret', async () => {
   const keyMaterial = getRandomValues(new Uint8Array(32)); // 256 bits
 
+  // ChaCha20-Poly1305 accepts only 'raw-secret' (Node chacha20_poly1305.js:104-134)
   const key = await subtle.importKey(
-    'raw',
+    'raw-secret',
     keyMaterial,
     { name: 'ChaCha20-Poly1305' } as any, // eslint-disable-line @typescript-eslint/no-explicit-any
     true,
     ['encrypt', 'decrypt'],
   );
 
-  const exported = await subtle.exportKey('raw', key as CryptoKey);
+  const exported = await subtle.exportKey('raw-secret', key as CryptoKey);
 
   expect(Buffer.from(exported as ArrayBuffer).toString('hex')).to.equal(
     Buffer.from(keyMaterial as Uint8Array).toString('hex'),
@@ -1367,19 +1368,20 @@ test(SUITE, 'AES-OCB empty plaintext', async () => {
   expect(decrypted.byteLength).to.equal(0);
 });
 
-// Test AES-OCB key import/export
-test(SUITE, 'AES-OCB key import/export raw', async () => {
+// Test AES-OCB key import/export — Node accepts only 'raw-secret' for AES-OCB
+// (aes.js:243-249, webcrypto.js:550-560).
+test(SUITE, 'AES-OCB key import/export raw-secret', async () => {
   const keyMaterial = getRandomValues(new Uint8Array(32));
 
   const key = await subtle.importKey(
-    'raw',
+    'raw-secret',
     keyMaterial,
     { name: 'AES-OCB' },
     true,
     ['encrypt', 'decrypt'],
   );
 
-  const exported = await subtle.exportKey('raw', key as CryptoKey);
+  const exported = await subtle.exportKey('raw-secret', key as CryptoKey);
 
   expect(Buffer.from(exported as ArrayBuffer).toString('hex')).to.equal(
     Buffer.from(keyMaterial as Uint8Array).toString('hex'),
