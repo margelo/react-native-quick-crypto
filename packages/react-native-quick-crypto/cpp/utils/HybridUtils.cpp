@@ -1,6 +1,6 @@
 #include "HybridUtils.hpp"
 
-#include <NitroModules/JSIConverter+ArrayBuffer.hpp>
+#include <NitroModules/JSIConverter.hpp>
 #include <bit>
 #include <cstring>
 #include <openssl/crypto.h>
