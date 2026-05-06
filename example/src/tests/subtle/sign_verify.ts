@@ -1211,7 +1211,7 @@ for (const vec of kmacNistVectors) {
     const signature = await subtle.sign(
       {
         name: vec.algorithm,
-        length: vec.length,
+        outputLength: vec.length,
         customization: vec.customization,
       },
       key,
@@ -1239,7 +1239,7 @@ for (const vec of kmacNistVectors) {
     const result = await subtle.verify(
       {
         name: vec.algorithm,
-        length: vec.length,
+        outputLength: vec.length,
         customization: vec.customization,
       },
       key,
@@ -1259,18 +1259,18 @@ for (const algorithm of ['KMAC128', 'KMAC256'] as const) {
     ]);
 
     const data = new TextEncoder().encode('Hello KMAC!');
-    const length = algorithm === 'KMAC128' ? 256 : 512;
+    const outputLength = algorithm === 'KMAC128' ? 256 : 512;
 
     const signature = await subtle.sign(
-      { name: algorithm, length },
+      { name: algorithm, outputLength },
       key as CryptoKey,
       data,
     );
 
-    expect(signature.byteLength).to.equal(length / 8);
+    expect(signature.byteLength).to.equal(outputLength / 8);
 
     const valid = await subtle.verify(
-      { name: algorithm, length },
+      { name: algorithm, outputLength },
       key as CryptoKey,
       signature,
       data,
@@ -1289,7 +1289,7 @@ test(SUITE, 'KMAC verify returns false for wrong signature', async () => {
   const data = new TextEncoder().encode('test data');
 
   const signature = await subtle.sign(
-    { name: 'KMAC256', length: 256 },
+    { name: 'KMAC256', outputLength: 256 },
     key as CryptoKey,
     data,
   );
@@ -1298,7 +1298,7 @@ test(SUITE, 'KMAC verify returns false for wrong signature', async () => {
   corrupted[0] = corrupted[0]! ^ 0xff;
 
   const valid = await subtle.verify(
-    { name: 'KMAC256', length: 256 },
+    { name: 'KMAC256', outputLength: 256 },
     key as CryptoKey,
     corrupted,
     data,
@@ -1318,7 +1318,7 @@ test(
     const sig1 = await subtle.sign(
       {
         name: 'KMAC128',
-        length: 256,
+        outputLength: 256,
         customization: new TextEncoder().encode('App A'),
       },
       key as CryptoKey,
@@ -1328,7 +1328,7 @@ test(
     const sig2 = await subtle.sign(
       {
         name: 'KMAC128',
-        length: 256,
+        outputLength: 256,
         customization: new TextEncoder().encode('App B'),
       },
       key as CryptoKey,

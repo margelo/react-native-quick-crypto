@@ -245,8 +245,9 @@ export type SubtleAlgorithm = {
   secretValue?: BufferLike;
   associatedData?: BufferLike;
   version?: number;
-  // KMAC parameters
+  // KMAC / cSHAKE parameters
   customization?: BufferLike;
+  outputLength?: number;
 };
 
 export type KeyPairType =

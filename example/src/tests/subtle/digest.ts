@@ -63,28 +63,29 @@ kTests.forEach(([algorithm, legacyName, bitLength]) => {
 
 // cSHAKE tests (XOF - extendable output functions)
 test(SUITE, 'hash: cSHAKE128', async () => {
-  const outputLength = 32;
-  const checkValue = createHash('shake128', { outputLength })
+  const outputBytes = 32;
+  const checkValue = createHash('shake128', { outputLength: outputBytes })
     .update(kData)
     .digest()
     .toString('hex');
 
+  // CShakeParams.outputLength is in bits per spec.
   const result = await subtle.digest(
-    { name: 'cSHAKE128', length: outputLength },
+    { name: 'cSHAKE128', outputLength: outputBytes * 8 },
     kData,
   );
   expect(ab2str(result)).to.equal(checkValue);
 });
 
 test(SUITE, 'hash: cSHAKE256', async () => {
-  const outputLength = 64;
-  const checkValue = createHash('shake256', { outputLength })
+  const outputBytes = 64;
+  const checkValue = createHash('shake256', { outputLength: outputBytes })
     .update(kData)
     .digest()
     .toString('hex');
 
   const result = await subtle.digest(
-    { name: 'cSHAKE256', length: outputLength },
+    { name: 'cSHAKE256', outputLength: outputBytes * 8 },
     kData,
   );
   expect(ab2str(result)).to.equal(checkValue);

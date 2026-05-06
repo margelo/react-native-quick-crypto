@@ -267,19 +267,25 @@ export const asyncDigest = async (
   }
 
   if (name === 'cSHAKE128' || name === 'cSHAKE256') {
-    if (typeof algorithm.length !== 'number' || algorithm.length <= 0) {
+    // CShakeParams.outputLength is required (in bits) per the WICG modern-algos
+    // spec, renamed from `length` (commit ab8dc2b84c2). Mirror Node's
+    // hash.js:223-228 / webidl.js:570-595.
+    if (
+      typeof algorithm.outputLength !== 'number' ||
+      algorithm.outputLength <= 0
+    ) {
       throw lazyDOMException(
-        'cSHAKE requires a length parameter',
+        'CShakeParams.outputLength is required',
         'OperationError',
       );
     }
-    if (algorithm.length % 8) {
+    if (algorithm.outputLength % 8) {
       throw lazyDOMException(
-        'Unsupported CShakeParams length',
+        'Unsupported CShakeParams outputLength',
         'NotSupportedError',
       );
     }
-    return internalDigest(algorithm, data, algorithm.length);
+    return internalDigest(algorithm, data, algorithm.outputLength / 8);
   }
 
   throw lazyDOMException(
