@@ -152,6 +152,7 @@ Pod::Spec.new do |s|
     "\"$(PODS_TARGET_SRCROOT)/cpp/hkdf\"",
     "\"$(PODS_TARGET_SRCROOT)/cpp/dh\"",
     "\"$(PODS_TARGET_SRCROOT)/cpp/ecdh\"",
+    "\"$(PODS_TARGET_SRCROOT)/cpp/turboshake\"",
     "\"$(PODS_TARGET_SRCROOT)/nitrogen/generated/shared/c++\"",
     "\"$(PODS_TARGET_SRCROOT)/deps/ncrypto/include\"",
     "\"$(PODS_TARGET_SRCROOT)/deps/simdutf/include\"",

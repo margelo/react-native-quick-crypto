@@ -2485,6 +2485,10 @@ const SUPPORTED_ALGORITHMS: Record<string, Set<string>> = {
     'SHA3-512',
     'cSHAKE128',
     'cSHAKE256',
+    'TurboSHAKE128',
+    'TurboSHAKE256',
+    'KT128',
+    'KT256',
   ]),
   generateKey: new Set([
     'RSASSA-PKCS1-v1_5',
