@@ -36,6 +36,7 @@ import '../tests/subtle/argon2_deriveBits';
 import '../tests/subtle/deriveBits';
 import '../tests/subtle/derive_key';
 import '../tests/subtle/digest';
+import '../tests/subtle/digest_turboshake';
 import '../tests/subtle/encap_decap';
 import '../tests/subtle/encrypt_decrypt';
 import '../tests/subtle/generateKey';

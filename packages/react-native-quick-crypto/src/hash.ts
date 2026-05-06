@@ -3,6 +3,7 @@ import { NitroModules } from 'react-native-nitro-modules';
 import type { TransformOptions } from 'readable-stream';
 import { Buffer } from '@craftzdog/react-native-buffer';
 import type { Hash as NativeHash } from './specs/hash.nitro';
+import type { TurboShake as NativeTurboShake } from './specs/turboshake.nitro';
 import type {
   BinaryLike,
   Encoding,
@@ -288,9 +289,105 @@ export const asyncDigest = async (
     return internalDigest(algorithm, data, algorithm.outputLength / 8);
   }
 
+  if (name === 'TurboSHAKE128' || name === 'TurboSHAKE256') {
+    return turboShakeDigest(name, algorithm, data);
+  }
+
+  if (name === 'KT128' || name === 'KT256') {
+    return kangarooTwelveDigest(name, algorithm, data);
+  }
+
   throw lazyDOMException(
     `Unrecognized algorithm name: ${name}`,
     'NotSupportedError',
+  );
+};
+
+// TurboSHAKE / KangarooTwelve are not exposed by OpenSSL EVP, so we route
+// them to a dedicated Nitro module (cpp/turboshake) that ports the Node.js
+// reference implementation. Lazy-load to keep the module out of the hot path
+// for callers that only use SHA-2/SHA-3.
+let nativeTurboShake: NativeTurboShake | undefined;
+const getTurboShake = (): NativeTurboShake => {
+  if (!nativeTurboShake) {
+    nativeTurboShake =
+      NitroModules.createHybridObject<NativeTurboShake>('TurboShake');
+  }
+  return nativeTurboShake;
+};
+
+// RFC 9861 §2.2 default per the WICG Modern Algos draft for TurboSHAKE.
+const kDefaultTurboShakeDomainSeparation = 0x1f;
+
+const turboShakeDigest = async (
+  name: 'TurboSHAKE128' | 'TurboSHAKE256',
+  algorithm: SubtleAlgorithm,
+  data: BufferLike,
+): Promise<ArrayBuffer> => {
+  if (
+    typeof algorithm.outputLength !== 'number' ||
+    algorithm.outputLength <= 0
+  ) {
+    throw lazyDOMException(
+      'TurboShakeParams.outputLength is required',
+      'OperationError',
+    );
+  }
+  if (algorithm.outputLength % 8) {
+    throw lazyDOMException(
+      'Invalid TurboShakeParams outputLength',
+      'OperationError',
+    );
+  }
+  const ds = algorithm.domainSeparation ?? kDefaultTurboShakeDomainSeparation;
+  if (
+    typeof ds !== 'number' ||
+    !Number.isInteger(ds) ||
+    ds < 0x01 ||
+    ds > 0x7f
+  ) {
+    throw lazyDOMException(
+      'TurboShakeParams.domainSeparation must be in range 0x01-0x7f',
+      'OperationError',
+    );
+  }
+  return getTurboShake().turboShake(
+    name,
+    ds,
+    algorithm.outputLength / 8,
+    bufferLikeToArrayBuffer(data),
+  );
+};
+
+const kangarooTwelveDigest = async (
+  name: 'KT128' | 'KT256',
+  algorithm: SubtleAlgorithm,
+  data: BufferLike,
+): Promise<ArrayBuffer> => {
+  if (
+    typeof algorithm.outputLength !== 'number' ||
+    algorithm.outputLength <= 0
+  ) {
+    throw lazyDOMException(
+      'KangarooTwelveParams.outputLength is required',
+      'OperationError',
+    );
+  }
+  if (algorithm.outputLength % 8) {
+    throw lazyDOMException(
+      'Invalid KangarooTwelveParams outputLength',
+      'OperationError',
+    );
+  }
+  const customization =
+    algorithm.customization !== undefined
+      ? bufferLikeToArrayBuffer(algorithm.customization)
+      : undefined;
+  return getTurboShake().kangarooTwelve(
+    name,
+    algorithm.outputLength / 8,
+    bufferLikeToArrayBuffer(data),
+    customization,
   );
 };
 

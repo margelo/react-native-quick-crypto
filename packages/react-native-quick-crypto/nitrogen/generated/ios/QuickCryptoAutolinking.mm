@@ -36,6 +36,7 @@
 #include "HybridRsaKeyPair.hpp"
 #include "HybridScrypt.hpp"
 #include "HybridSignHandle.hpp"
+#include "HybridTurboShake.hpp"
 #include "HybridUtils.hpp"
 #include "HybridVerifyHandle.hpp"
 #include "HybridX509Certificate.hpp"
@@ -281,6 +282,15 @@
                     "The HybridObject \"HybridSignHandle\" is not default-constructible! "
                     "Create a public constructor that takes zero arguments to be able to autolink this HybridObject.");
       return std::make_shared<HybridSignHandle>();
+    }
+  );
+  HybridObjectRegistry::registerHybridObjectConstructor(
+    "TurboShake",
+    []() -> std::shared_ptr<HybridObject> {
+      static_assert(std::is_default_constructible_v<HybridTurboShake>,
+                    "The HybridObject \"HybridTurboShake\" is not default-constructible! "
+                    "Create a public constructor that takes zero arguments to be able to autolink this HybridObject.");
+      return std::make_shared<HybridTurboShake>();
     }
   );
   HybridObjectRegistry::registerHybridObjectConstructor(

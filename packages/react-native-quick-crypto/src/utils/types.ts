@@ -49,7 +49,11 @@ export type DigestAlgorithm =
   | 'SHA3-384'
   | 'SHA3-512'
   | 'cSHAKE128'
-  | 'cSHAKE256';
+  | 'cSHAKE256'
+  | 'TurboSHAKE128'
+  | 'TurboSHAKE256'
+  | 'KT128'
+  | 'KT256';
 
 export type HashAlgorithm = DigestAlgorithm | 'SHA-224' | 'RIPEMD-160';
 
@@ -276,9 +280,13 @@ export type SubtleAlgorithm = {
   secretValue?: BufferLike;
   associatedData?: BufferLike;
   version?: number;
-  // KMAC / cSHAKE parameters
+  // KMAC / cSHAKE / KangarooTwelve parameters
   customization?: BufferLike;
   outputLength?: number;
+  // TurboSHAKE parameter (RFC 9861 §2.2): single-byte domain separator in
+  // [0x01, 0x7F]. Defaults to 0x1F per the WICG WebCrypto Modern Algorithms
+  // draft when omitted.
+  domainSeparation?: number;
 };
 
 export type KeyPairType =

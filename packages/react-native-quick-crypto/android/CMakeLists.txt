@@ -60,6 +60,7 @@ add_library(
   ../cpp/scrypt/HybridScrypt.cpp
   ../cpp/sign/HybridSignHandle.cpp
   ../cpp/sign/HybridVerifyHandle.cpp
+  ../cpp/turboshake/HybridTurboShake.cpp
   ../cpp/x509/HybridX509Certificate.cpp
   ../cpp/utils/HybridUtils.cpp
   ../cpp/utils/QuickCryptoUtils.cpp
@@ -100,6 +101,7 @@ include_directories(
   "../cpp/rsa"
   "../cpp/sign"
   "../cpp/scrypt"
+  "../cpp/turboshake"
   "../cpp/utils"
   "../cpp/x509"
   "../deps/blake3/c"

@@ -86,6 +86,9 @@
     "SignHandle": {
       "cpp": "HybridSignHandle"
     },
+    "TurboShake": {
+      "cpp": "HybridTurboShake"
+    },
     "Utils": {
       "cpp": "HybridUtils"
     },
