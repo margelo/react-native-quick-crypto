@@ -789,7 +789,7 @@ test(
   },
 );
 
-// --- randomUUID (RFC 9562 §4.4 — v4) ---
+// --- randomUUID (RFC 9562 §5.4 — v4) ---
 
 const UUID_V4_RE =
   /^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/;

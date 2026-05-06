@@ -356,7 +356,7 @@ export interface RandomUUIDOptions {
   disableEntropyCache?: boolean;
 }
 
-function validateRandomUUIDOptions(options?: RandomUUIDOptions) {
+function validateRandomUUIDOptions(options?: RandomUUIDOptions): void {
   if (options === undefined) return;
   if (typeof options !== 'object' || options === null) {
     throw new TypeError('options must be an object');
@@ -369,9 +369,10 @@ function validateRandomUUIDOptions(options?: RandomUUIDOptions) {
   }
 }
 
-function serializeUUID(buffer: Buffer, version: number, variant: number) {
-  buffer[6] = (buffer[6]! & 0x0f) | version;
-  buffer[8] = (buffer[8]! & 0x3f) | variant;
+// RFC 9562 variant 10xx is shared by v4 and v7.
+function serializeUUID(buffer: Buffer, version: number): string {
+  buffer[6] = (buffer[6]! & 0x0f) | (version << 4);
+  buffer[8] = (buffer[8]! & 0x3f) | 0x80;
 
   return (
     byteToHex[buffer[0]!]! +
@@ -397,18 +398,18 @@ function serializeUUID(buffer: Buffer, version: number, variant: number) {
   ).toLowerCase();
 }
 
-// RFC 9562 §4.4 — random UUID (v4).
-export function randomUUID(options?: RandomUUIDOptions) {
+// RFC 9562 §5.4 — random UUID (v4).
+export function randomUUID(options?: RandomUUIDOptions): string {
   validateRandomUUIDOptions(options);
   const buffer = new Buffer(16);
   randomFillSync(buffer, 0, 16);
-  return serializeUUID(buffer, 0x40, 0x80);
+  return serializeUUID(buffer, 4);
 }
 
 // RFC 9562 §5.7 — Unix-ms timestamped UUID (v7).
 // Layout: 48-bit big-endian Unix-ms timestamp | 4-bit version (7) |
 // 12 bits random | 2-bit variant (10) | 62 bits random.
-export function randomUUIDv7(options?: RandomUUIDOptions) {
+export function randomUUIDv7(options?: RandomUUIDOptions): string {
   validateRandomUUIDOptions(options);
   const buffer = new Buffer(16);
   randomFillSync(buffer, 6, 10);
@@ -422,5 +423,5 @@ export function randomUUIDv7(options?: RandomUUIDOptions) {
   buffer[4] = (now >>> 8) & 0xff;
   buffer[5] = now & 0xff;
 
-  return serializeUUID(buffer, 0x70, 0x80);
+  return serializeUUID(buffer, 7);
 }
