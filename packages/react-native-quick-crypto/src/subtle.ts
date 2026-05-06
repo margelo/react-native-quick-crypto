@@ -86,6 +86,18 @@ function hasAnyNotIn(usages: KeyUsage[], allowed: KeyUsage[]): boolean {
   return usages.some(usage => !allowed.includes(usage));
 }
 
+// Mirrors webidl.requiredArguments. Node throws TypeError when a SubtleCrypto
+// method is called with fewer than the spec-required number of arguments
+// (webcrypto.js:866 etc.); we relied on TypeScript types alone, which apps
+// catching `instanceof TypeError` could not see at runtime.
+function requireArgs(actual: number, required: number, method: string): void {
+  if (actual < required) {
+    throw new TypeError(
+      `Failed to execute '${method}' on 'SubtleCrypto': ${required} arguments required, but only ${actual} present.`,
+    );
+  }
+}
+
 // WebCrypto §18.4.4: algorithm name lookup is case-insensitive, but the
 // canonical mixed-case form is preserved in the resulting `name` field
 // (e.g. "aes-gcm" → "AES-GCM"). This map is built lazily on first call so
@@ -2196,7 +2208,11 @@ const signVerify = (
   const usage: Operation = signature === undefined ? 'sign' : 'verify';
   algorithm = normalizeAlgorithm(algorithm, usage);
 
-  if (!key.usages.includes(usage) || algorithm.name !== key.algorithm.name) {
+  if (algorithm.name !== key.algorithm.name) {
+    throw lazyDOMException('Key algorithm mismatch', 'InvalidAccessError');
+  }
+
+  if (!key.usages.includes(usage)) {
     throw lazyDOMException(
       `Unable to use this key to ${usage}`,
       'InvalidAccessError',
@@ -2229,23 +2245,16 @@ const signVerify = (
   );
 };
 
+// Algorithm-mismatch and usage checks live at the public-method call sites
+// (encrypt / decrypt / wrapKey / unwrapKey) so spec-mandated message and
+// ordering — algorithm-mismatch first, then usage — is preserved
+// (Node webcrypto.js, commit 4cb1f284136).
 const cipherOrWrap = async (
   mode: CipherOrWrapMode,
   algorithm: EncryptDecryptParams,
   key: CryptoKey,
   data: ArrayBuffer,
-  op: Operation,
 ): Promise<ArrayBuffer> => {
-  if (
-    key.algorithm.name !== algorithm.name ||
-    !key.usages.includes(op as KeyUsage)
-  ) {
-    throw lazyDOMException(
-      'The requested operation is not valid for the provided key',
-      'InvalidAccessError',
-    );
-  }
-
   validateMaxBufferLength(data, 'data');
 
   switch (algorithm.name) {
@@ -2511,13 +2520,25 @@ export class Subtle {
     key: CryptoKey,
     data: BufferLike,
   ): Promise<ArrayBuffer> {
-    const normalizedAlgorithm = normalizeAlgorithm(algorithm, 'decrypt');
+    requireArgs(arguments.length, 3, 'decrypt');
+    const normalizedAlgorithm = normalizeAlgorithm(
+      algorithm,
+      'decrypt',
+    ) as EncryptDecryptParams;
+    if (normalizedAlgorithm.name !== key.algorithm.name) {
+      throw lazyDOMException('Key algorithm mismatch', 'InvalidAccessError');
+    }
+    if (!key.usages.includes('decrypt')) {
+      throw lazyDOMException(
+        'Unable to use this key to decrypt',
+        'InvalidAccessError',
+      );
+    }
     return cipherOrWrap(
       CipherOrWrapMode.kWebCryptoCipherDecrypt,
-      normalizedAlgorithm as EncryptDecryptParams,
+      normalizedAlgorithm,
       key,
       bufferLikeToArrayBuffer(data),
-      'decrypt',
     );
   }
 
@@ -2525,6 +2546,7 @@ export class Subtle {
     algorithm: SubtleAlgorithm | AnyAlgorithm,
     data: BufferLike,
   ): Promise<ArrayBuffer> {
+    requireArgs(arguments.length, 2, 'digest');
     const normalizedAlgorithm = normalizeAlgorithm(
       algorithm,
       'digest' as Operation,
@@ -2535,43 +2557,56 @@ export class Subtle {
   async deriveBits(
     algorithm: SubtleAlgorithm,
     baseKey: CryptoKey,
-    length: number,
+    length: number | null = null,
   ): Promise<ArrayBuffer> {
+    requireArgs(arguments.length, 2, 'deriveBits');
+    const normalizedAlgorithm = normalizeAlgorithm(algorithm, 'deriveBits');
     // WebCrypto §SubtleCrypto.deriveBits step 11: throw InvalidAccessError
     // unless `baseKey.[[usages]]` contains "deriveBits" specifically. The
     // previous `deriveBits || deriveKey` accept-either branch silently
     // promoted deriveKey-only keys into deriveBits use, contradicting the
     // spec usage gate.
-    if (!baseKey.keyUsages.includes('deriveBits')) {
+    if (!baseKey.usages.includes('deriveBits')) {
       throw lazyDOMException(
         'baseKey does not have deriveBits usage',
         'InvalidAccessError',
       );
     }
-    if (baseKey.algorithm.name !== algorithm.name)
-      throw new Error('Key algorithm mismatch');
-    switch (algorithm.name) {
+    if (baseKey.algorithm.name !== normalizedAlgorithm.name) {
+      throw lazyDOMException('Key algorithm mismatch', 'InvalidAccessError');
+    }
+    switch (normalizedAlgorithm.name) {
       case 'PBKDF2':
-        return pbkdf2DeriveBits(algorithm, baseKey, length);
+        if (length === null) {
+          throw lazyDOMException('length cannot be null', 'OperationError');
+        }
+        return pbkdf2DeriveBits(normalizedAlgorithm, baseKey, length);
       case 'X25519':
       // Fall through
       case 'X448':
-        return xDeriveBits(algorithm, baseKey, length);
+        return xDeriveBits(normalizedAlgorithm, baseKey, length);
       case 'ECDH':
-        return ecDeriveBits(algorithm, baseKey, length);
+        return ecDeriveBits(normalizedAlgorithm, baseKey, length);
       case 'HKDF':
+        if (length === null) {
+          throw lazyDOMException('length cannot be null', 'OperationError');
+        }
         return hkdfDeriveBits(
-          algorithm as unknown as HkdfAlgorithm,
+          normalizedAlgorithm as unknown as HkdfAlgorithm,
           baseKey,
           length,
         );
       case 'Argon2d':
       case 'Argon2i':
       case 'Argon2id':
-        return argon2DeriveBits(algorithm, baseKey, length);
+        if (length === null) {
+          throw lazyDOMException('length cannot be null', 'OperationError');
+        }
+        return argon2DeriveBits(normalizedAlgorithm, baseKey, length);
     }
-    throw new Error(
-      `'subtle.deriveBits()' for ${algorithm.name} is not implemented.`,
+    throw lazyDOMException(
+      `'subtle.deriveBits()' for ${normalizedAlgorithm.name} is not implemented.`,
+      'NotSupportedError',
     );
   }
 
@@ -2582,40 +2617,55 @@ export class Subtle {
     extractable: boolean,
     keyUsages: KeyUsage[],
   ): Promise<CryptoKey> {
+    requireArgs(arguments.length, 5, 'deriveKey');
+    const normalizedAlgorithm = normalizeAlgorithm(algorithm, 'deriveBits');
+    const normalizedDerivedKeyAlgorithm = normalizeAlgorithm(
+      derivedKeyAlgorithm,
+      'importKey',
+    );
+
     // Validate baseKey usage
-    if (
-      !baseKey.usages.includes('deriveKey') &&
-      !baseKey.usages.includes('deriveBits')
-    ) {
+    if (!baseKey.usages.includes('deriveKey')) {
       throw lazyDOMException(
-        'baseKey does not have deriveKey or deriveBits usage',
+        'baseKey does not have deriveKey usage',
         'InvalidAccessError',
       );
     }
 
-    // Calculate required key length
-    const length = getKeyLength(derivedKeyAlgorithm);
+    if (baseKey.algorithm.name !== normalizedAlgorithm.name) {
+      throw lazyDOMException('Key algorithm mismatch', 'InvalidAccessError');
+    }
+
+    // Calculate required key length (may be null for KDF-derived material).
+    const length = getKeyLength(normalizedDerivedKeyAlgorithm);
 
     // Step 1: Derive bits
     let derivedBits: ArrayBuffer;
-    if (baseKey.algorithm.name !== algorithm.name)
-      throw new Error('Key algorithm mismatch');
-
-    switch (algorithm.name) {
+    switch (normalizedAlgorithm.name) {
       case 'PBKDF2':
-        derivedBits = await pbkdf2DeriveBits(algorithm, baseKey, length);
+        if (length === null) {
+          throw lazyDOMException('length cannot be null', 'OperationError');
+        }
+        derivedBits = await pbkdf2DeriveBits(
+          normalizedAlgorithm,
+          baseKey,
+          length,
+        );
         break;
       case 'X25519':
       // Fall through
       case 'X448':
-        derivedBits = await xDeriveBits(algorithm, baseKey, length);
+        derivedBits = await xDeriveBits(normalizedAlgorithm, baseKey, length);
         break;
       case 'ECDH':
-        derivedBits = await ecDeriveBits(algorithm, baseKey, length);
+        derivedBits = await ecDeriveBits(normalizedAlgorithm, baseKey, length);
         break;
       case 'HKDF':
+        if (length === null) {
+          throw lazyDOMException('length cannot be null', 'OperationError');
+        }
         derivedBits = hkdfDeriveBits(
-          algorithm as unknown as HkdfAlgorithm,
+          normalizedAlgorithm as unknown as HkdfAlgorithm,
           baseKey,
           length,
         );
@@ -2623,11 +2673,15 @@ export class Subtle {
       case 'Argon2d':
       case 'Argon2i':
       case 'Argon2id':
-        derivedBits = argon2DeriveBits(algorithm, baseKey, length);
+        if (length === null) {
+          throw lazyDOMException('length cannot be null', 'OperationError');
+        }
+        derivedBits = argon2DeriveBits(normalizedAlgorithm, baseKey, length);
         break;
       default:
-        throw new Error(
-          `'subtle.deriveKey()' for ${algorithm.name} is not implemented.`,
+        throw lazyDOMException(
+          `'subtle.deriveKey()' for ${normalizedAlgorithm.name} is not implemented.`,
+          'NotSupportedError',
         );
     }
 
@@ -2647,13 +2701,25 @@ export class Subtle {
     key: CryptoKey,
     data: BufferLike,
   ): Promise<ArrayBuffer> {
-    const normalizedAlgorithm = normalizeAlgorithm(algorithm, 'encrypt');
+    requireArgs(arguments.length, 3, 'encrypt');
+    const normalizedAlgorithm = normalizeAlgorithm(
+      algorithm,
+      'encrypt',
+    ) as EncryptDecryptParams;
+    if (normalizedAlgorithm.name !== key.algorithm.name) {
+      throw lazyDOMException('Key algorithm mismatch', 'InvalidAccessError');
+    }
+    if (!key.usages.includes('encrypt')) {
+      throw lazyDOMException(
+        'Unable to use this key to encrypt',
+        'InvalidAccessError',
+      );
+    }
     return cipherOrWrap(
       CipherOrWrapMode.kWebCryptoCipherEncrypt,
-      normalizedAlgorithm as EncryptDecryptParams,
+      normalizedAlgorithm,
       key,
       bufferLikeToArrayBuffer(data),
-      'encrypt',
     );
   }
 
@@ -2661,6 +2727,7 @@ export class Subtle {
     format: ImportFormat,
     key: CryptoKey,
   ): Promise<ArrayBuffer | JWK> {
+    requireArgs(arguments.length, 2, 'exportKey');
     if (!key.extractable)
       throw lazyDOMException('key is not extractable', 'InvalidAccessError');
 
@@ -2708,10 +2775,18 @@ export class Subtle {
     wrappingKey: CryptoKey,
     wrapAlgorithm: EncryptDecryptParams,
   ): Promise<ArrayBuffer> {
-    // Validate wrappingKey usage
+    requireArgs(arguments.length, 4, 'wrapKey');
+    const normalizedWrapAlgorithm = normalizeAlgorithm(
+      wrapAlgorithm,
+      'wrapKey',
+    ) as EncryptDecryptParams;
+
+    if (normalizedWrapAlgorithm.name !== wrappingKey.algorithm.name) {
+      throw lazyDOMException('Key algorithm mismatch', 'InvalidAccessError');
+    }
     if (!wrappingKey.usages.includes('wrapKey')) {
       throw lazyDOMException(
-        'wrappingKey does not have wrapKey usage',
+        'Unable to use this key to wrapKey',
         'InvalidAccessError',
       );
     }
@@ -2726,7 +2801,7 @@ export class Subtle {
       const buffer = SBuffer.from(jwkString, 'utf8');
 
       // For AES-KW, pad to multiple of 8 bytes (accounting for null terminator)
-      if (wrapAlgorithm.name === 'AES-KW') {
+      if (normalizedWrapAlgorithm.name === 'AES-KW') {
         const length = buffer.length;
         // Add 1 for null terminator, then pad to multiple of 8
         const paddedLength = Math.ceil((length + 1) / 8) * 8;
@@ -2745,10 +2820,9 @@ export class Subtle {
     // Step 3: Encrypt the exported key
     return cipherOrWrap(
       CipherOrWrapMode.kWebCryptoCipherEncrypt,
-      wrapAlgorithm,
+      normalizedWrapAlgorithm,
       wrappingKey,
       keyData,
-      'wrapKey',
     );
   }
 
@@ -2761,10 +2835,18 @@ export class Subtle {
     extractable: boolean,
     keyUsages: KeyUsage[],
   ): Promise<CryptoKey> {
-    // Validate unwrappingKey usage
+    requireArgs(arguments.length, 7, 'unwrapKey');
+    const normalizedUnwrapAlgorithm = normalizeAlgorithm(
+      unwrapAlgorithm,
+      'unwrapKey',
+    ) as EncryptDecryptParams;
+
+    if (normalizedUnwrapAlgorithm.name !== unwrappingKey.algorithm.name) {
+      throw lazyDOMException('Key algorithm mismatch', 'InvalidAccessError');
+    }
     if (!unwrappingKey.usages.includes('unwrapKey')) {
       throw lazyDOMException(
-        'unwrappingKey does not have unwrapKey usage',
+        'Unable to use this key to unwrapKey',
         'InvalidAccessError',
       );
     }
@@ -2772,10 +2854,9 @@ export class Subtle {
     // Step 1: Decrypt the wrapped key
     const decrypted = await cipherOrWrap(
       CipherOrWrapMode.kWebCryptoCipherDecrypt,
-      unwrapAlgorithm,
+      normalizedUnwrapAlgorithm,
       unwrappingKey,
       bufferLikeToArrayBuffer(wrappedKey),
-      'unwrapKey',
     );
 
     // Step 2: Convert to appropriate format
@@ -2784,7 +2865,7 @@ export class Subtle {
       const buffer = SBuffer.from(decrypted);
       // For AES-KW, the data may be padded - find the null terminator
       let jwkString: string;
-      if (unwrapAlgorithm.name === 'AES-KW') {
+      if (normalizedUnwrapAlgorithm.name === 'AES-KW') {
         // Find the null terminator (if present) to get the original string
         const nullIndex = buffer.indexOf(0);
         if (nullIndex !== -1) {
@@ -2816,6 +2897,7 @@ export class Subtle {
     extractable: boolean,
     keyUsages: KeyUsage[],
   ): Promise<CryptoKey | CryptoKeyPair> {
+    requireArgs(arguments.length, 3, 'generateKey');
     algorithm = normalizeAlgorithm(algorithm, 'generateKey');
     let result: CryptoKey | CryptoKeyPair;
     switch (algorithm.name) {
@@ -2938,6 +3020,7 @@ export class Subtle {
     key: CryptoKey,
     keyUsages: KeyUsage[],
   ): Promise<CryptoKey> {
+    requireArgs(arguments.length, 2, 'getPublicKey');
     if (key.type === 'secret') {
       throw lazyDOMException('key must be a private key', 'NotSupportedError');
     }
@@ -2956,6 +3039,7 @@ export class Subtle {
     extractable: boolean,
     keyUsages: KeyUsage[],
   ): Promise<CryptoKey> {
+    requireArgs(arguments.length, 5, 'importKey');
     // Per-algorithm format handling. Some algorithms alias raw-secret/raw-public
     // to 'raw' (RSA, EC, Ed/X, HMAC, HKDF, PBKDF2); others demand the
     // disambiguated form (KMAC, AES-OCB, ChaCha20-Poly1305, Argon2, ML-DSA,
@@ -3122,6 +3206,7 @@ export class Subtle {
     key: CryptoKey,
     data: BufferLike,
   ): Promise<ArrayBuffer> {
+    requireArgs(arguments.length, 3, 'sign');
     return signVerify(
       normalizeAlgorithm(algorithm, 'sign'),
       key,
@@ -3135,6 +3220,7 @@ export class Subtle {
     signature: BufferLike,
     data: BufferLike,
   ): Promise<boolean> {
+    requireArgs(arguments.length, 4, 'verify');
     return signVerify(
       normalizeAlgorithm(algorithm, 'verify'),
       key,
@@ -3206,6 +3292,7 @@ export class Subtle {
     algorithm: SubtleAlgorithm,
     key: CryptoKey,
   ): Promise<EncapsulateResult> {
+    requireArgs(arguments.length, 2, 'encapsulateBits');
     if (!key.usages.includes('encapsulateBits')) {
       throw lazyDOMException(
         'Key does not have encapsulateBits usage',
@@ -3223,6 +3310,7 @@ export class Subtle {
     extractable: boolean,
     usages: KeyUsage[],
   ): Promise<{ key: CryptoKey; ciphertext: ArrayBuffer }> {
+    requireArgs(arguments.length, 5, 'encapsulateKey');
     if (!key.usages.includes('encapsulateKey')) {
       throw lazyDOMException(
         'Key does not have encapsulateKey usage',
@@ -3249,6 +3337,7 @@ export class Subtle {
     key: CryptoKey,
     ciphertext: BufferLike,
   ): Promise<ArrayBuffer> {
+    requireArgs(arguments.length, 3, 'decapsulateBits');
     if (!key.usages.includes('decapsulateBits')) {
       throw lazyDOMException(
         'Key does not have decapsulateBits usage',
@@ -3267,6 +3356,7 @@ export class Subtle {
     extractable: boolean,
     usages: KeyUsage[],
   ): Promise<CryptoKey> {
+    requireArgs(arguments.length, 6, 'decapsulateKey');
     if (!key.usages.includes('decapsulateKey')) {
       throw lazyDOMException(
         'Key does not have decapsulateKey usage',
@@ -3289,8 +3379,14 @@ export class Subtle {
 
 export const subtle = new Subtle();
 
-function getKeyLength(algorithm: SubtleAlgorithm): number {
+// Returns the number of bits to derive for an `importKey` algorithm, mirroring
+// Node's webcrypto.js:269-306 `getKeyLength`. Returns null for KDF algorithms
+// (HKDF / PBKDF2 / Argon2) — those carry their full derived secret without a
+// fixed key length. Throws OperationError on invalid AES / HMAC inputs rather
+// than silently coercing to a default (Node commit 4cb1f284136 behavior).
+function getKeyLength(algorithm: SubtleAlgorithm): number | null {
   const name = algorithm.name;
+  const length = (algorithm as { length?: number }).length;
 
   switch (name) {
     case 'AES-CTR':
@@ -3298,23 +3394,65 @@ function getKeyLength(algorithm: SubtleAlgorithm): number {
     case 'AES-GCM':
     case 'AES-KW':
     case 'AES-OCB':
-    case 'ChaCha20-Poly1305':
-      return (algorithm as AesKeyGenParams).length || 256;
+      if (length !== 128 && length !== 192 && length !== 256) {
+        throw lazyDOMException('Invalid key length', 'OperationError');
+      }
+      return length;
 
     case 'HMAC': {
-      const hmacAlg = algorithm as { length?: number };
-      return hmacAlg.length || 256;
+      if (length === undefined) {
+        return getHmacBlockSize(
+          (algorithm.hash as { name?: string } | undefined)?.name ??
+            (algorithm.hash as string | undefined),
+        );
+      }
+      if (typeof length === 'number' && length !== 0) {
+        return length;
+      }
+      throw lazyDOMException('Invalid key length', 'OperationError');
     }
 
     case 'KMAC128':
-      return algorithm.length || 128;
+      return typeof length === 'number' ? length : 128;
     case 'KMAC256':
-      return algorithm.length || 256;
+      return typeof length === 'number' ? length : 256;
+
+    case 'ChaCha20-Poly1305':
+      return 256;
+
+    case 'HKDF':
+    case 'PBKDF2':
+    case 'Argon2d':
+    case 'Argon2i':
+    case 'Argon2id':
+      return null;
 
     default:
       throw lazyDOMException(
         `Cannot determine key length for ${name}`,
         'NotSupportedError',
       );
+  }
+}
+
+function getHmacBlockSize(name: string | undefined): number {
+  switch (name) {
+    case 'SHA-1':
+    case 'SHA-256':
+      return 512;
+    case 'SHA-384':
+    case 'SHA-512':
+      return 1024;
+    case 'SHA3-256':
+    case 'SHA3-384':
+    case 'SHA3-512':
+      // SHA-3 / HMAC interaction undefined — Node throws here too
+      // (webcrypto-modern-algos issue #23).
+      throw lazyDOMException(
+        'Explicit algorithm length member is required',
+        'NotSupportedError',
+      );
+    default:
+      throw lazyDOMException('Invalid key length', 'OperationError');
   }
 }

@@ -46,6 +46,7 @@ import '../tests/subtle/sign_verify';
 import '../tests/subtle/supports';
 import '../tests/subtle/getPublicKey';
 import '../tests/subtle/usage_canonicalization';
+import '../tests/subtle/validation_ordering';
 import '../tests/subtle/wrap_unwrap';
 import '../tests/utils/utils_tests';
 import '../tests/utils/encoding_tests';
