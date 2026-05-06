@@ -250,6 +250,11 @@ facebook::jsi::Value HybridUtils::bufferToJsiString(facebook::jsi::Runtime& runt
     // so it's safe to use `static_cast<size_t>` here
     const size_t start = static_cast<size_t>(JSIConverter<double>::fromJSI(runtime, args[2]));
     const size_t end = static_cast<size_t>(JSIConverter<double>::fromJSI(runtime, args[3]));
+    if (start > end || end > bufferSize) {
+      // This should never happen if called from the TS wrapper
+      // Add this check to avoid out of bounds access
+      throw std::runtime_error("Invalid start/end value");
+    }
     const size_t offset = start;
     const size_t length = end - start;
 
