@@ -113,6 +113,38 @@ test(SUITE, 'RSA-PSS with padding and salt length options', () => {
   expect(isValid).to.equal(true);
 });
 
+test(SUITE, 'RSA-PSS defaults saltLength to MAX_SIGN when undefined', () => {
+  const signature = sign('SHA256', testData, {
+    key: rsaPrivateKeyPem,
+    padding: constants.RSA_PKCS1_PSS_PADDING,
+  });
+
+  const isValid = verify(
+    'SHA256',
+    testData,
+    {
+      key: rsaPublicKeyPem,
+      padding: constants.RSA_PKCS1_PSS_PADDING,
+    },
+    signature,
+  );
+
+  expect(isValid).to.equal(true);
+
+  const isValidExplicit = verify(
+    'SHA256',
+    testData,
+    {
+      key: rsaPublicKeyPem,
+      padding: constants.RSA_PKCS1_PSS_PADDING,
+      saltLength: constants.RSA_PSS_SALTLEN_MAX_SIGN,
+    },
+    signature,
+  );
+
+  expect(isValidExplicit).to.equal(true);
+});
+
 // --- ECDSA Tests ---
 
 test(SUITE, 'ECDSA P-256 with DER encoding', async () => {

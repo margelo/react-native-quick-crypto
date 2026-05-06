@@ -219,6 +219,40 @@ test(SUITE, 'RSA-PSS with SHA256 and auto salt length', () => {
   expect(isValid).to.equal(true);
 });
 
+test(SUITE, 'RSA-PSS defaults saltLength to MAX_SIGN when undefined', () => {
+  const signer = createSign('SHA256');
+  signer.update(testData);
+  const signature = signer.sign({
+    key: rsaPrivateKeyPem,
+    padding: constants.RSA_PKCS1_PSS_PADDING,
+  });
+
+  const verifier = createVerify('SHA256');
+  verifier.update(testData);
+  const isValid = verifier.verify(
+    {
+      key: rsaPublicKeyPem,
+      padding: constants.RSA_PKCS1_PSS_PADDING,
+    },
+    signature,
+  );
+
+  expect(isValid).to.equal(true);
+
+  const verifierExplicit = createVerify('SHA256');
+  verifierExplicit.update(testData);
+  const isValidExplicit = verifierExplicit.verify(
+    {
+      key: rsaPublicKeyPem,
+      padding: constants.RSA_PKCS1_PSS_PADDING,
+      saltLength: constants.RSA_PSS_SALTLEN_MAX_SIGN,
+    },
+    signature,
+  );
+
+  expect(isValidExplicit).to.equal(true);
+});
+
 // --- KeyObject Tests ---
 
 test(SUITE, 'Sign/Verify with KeyObject', () => {
