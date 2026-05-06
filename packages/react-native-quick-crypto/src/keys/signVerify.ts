@@ -13,6 +13,7 @@ import {
   KFormatType,
   KeyEncoding,
 } from '../utils';
+import { constants } from '../constants';
 
 type KeyInput = BinaryLike | KeyObject | CryptoKey | KeyInputObject;
 
@@ -144,6 +145,16 @@ function dsaEncodingToNumber(
   return undefined;
 }
 
+function getSaltLength(options?: SignOptions): number | undefined {
+  if (
+    options?.padding === constants.RSA_PKCS1_PSS_PADDING &&
+    options?.saltLength === undefined
+  ) {
+    return constants.RSA_PSS_SALTLEN_MAX_SIGN;
+  }
+  return options?.saltLength;
+}
+
 export class Sign {
   private handle: SignHandleSpec;
 
@@ -169,7 +180,7 @@ export class Sign {
     const signature = this.handle.sign(
       keyObject.handle,
       options?.padding,
-      options?.saltLength,
+      getSaltLength(options),
       dsaEncodingToNumber(options?.dsaEncoding),
     );
 
@@ -219,7 +230,7 @@ export class Verify {
       keyObject.handle,
       sigBuffer,
       options?.padding,
-      options?.saltLength,
+      getSaltLength(options),
       dsaEncodingToNumber(options?.dsaEncoding),
     );
   }
