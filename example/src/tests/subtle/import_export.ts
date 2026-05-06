@@ -401,6 +401,27 @@ test(SUITE, 'EC SPKI import rejects named-curve mismatch (#1005)', async () => {
   );
 });
 
+test(
+  SUITE,
+  'EC PKCS#8 import rejects named-curve mismatch (#1005)',
+  async () => {
+    const p256Pkcs8 = base64ToArrayBuffer(
+      'MIGHAgEAMBMGByqGSM49AgEGCCqGSM49AwEHBG0wawIBAQQgDxBsPQPIgMuMyQbxzbb9toew6Ev6e9O6ZhpxLNgmAEqhRANCAARfSYxhH+6V5lIg+M3O0iQBLf+53kuE2luIgWnp81/Ya1Gybj8tl4tJVu1GEwcTyt8hoA7vRACmCHnI5B1+bNpS',
+    );
+    await assertThrowsAsync(
+      () =>
+        subtle.importKey(
+          'pkcs8',
+          p256Pkcs8,
+          { name: 'ECDSA', namedCurve: 'P-384' },
+          true,
+          ['sign'],
+        ),
+      'DataError',
+    );
+  },
+);
+
 // #1005 D.3 — SPKI export must always emit uncompressed point form, even when
 // the key was imported in compressed form.
 test(SUITE, 'EC SPKI export forces uncompressed point (#1005)', async () => {

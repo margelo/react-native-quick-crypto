@@ -169,8 +169,6 @@ function aliasKeyFormat(format: ImportFormat): ImportFormat {
   return format;
 }
 
-// SPKI byte length when the EC public point is encoded uncompressed.
-// Difference from ASN.1 OID/length encoding; mirrors Node's ecExportKey.
 const kUncompressedSpkiLength: Record<string, number> = {
   'P-256': 91,
   'P-384': 120,
@@ -198,31 +196,31 @@ function ecExportKey(key: CryptoKey, format: KWebCryptoKeyFormat): ArrayBuffer {
         : kUncompressedSpkiLength[namedCurve];
     if (expected !== undefined && exported.byteLength !== expected) {
       const jwk = keyObject.handle.exportJwk({}, false);
-      if (jwk.x && jwk.y) {
-        const x = Buffer.from(jwk.x, 'base64url');
-        const y = Buffer.from(jwk.y, 'base64url');
-        const raw = new Uint8Array(1 + x.length + y.length);
-        raw[0] = 0x04;
-        raw.set(x, 1);
-        raw.set(y, 1 + x.length);
-        const tmp =
-          NitroModules.createHybridObject<KeyObjectHandle>('KeyObjectHandle');
-        const curveAlias =
-          kNamedCurveAliases[namedCurve as keyof typeof kNamedCurveAliases];
-        if (
-          tmp.initECRaw(
-            curveAlias,
-            raw.buffer.slice(
-              raw.byteOffset,
-              raw.byteOffset + raw.byteLength,
-            ) as ArrayBuffer,
-          )
-        ) {
-          return bufferLikeToArrayBuffer(
-            tmp.exportKey(KFormatType.DER, KeyEncoding.SPKI),
-          );
-        }
+      if (!jwk.x || !jwk.y) {
+        throw lazyDOMException(
+          'Failed to re-export EC public key as uncompressed SPKI',
+          'OperationError',
+        );
       }
+      const x = Buffer.from(jwk.x, 'base64url');
+      const y = Buffer.from(jwk.y, 'base64url');
+      const raw = new Uint8Array(1 + x.length + y.length);
+      raw[0] = 0x04;
+      raw.set(x, 1);
+      raw.set(y, 1 + x.length);
+      const tmp =
+        NitroModules.createHybridObject<KeyObjectHandle>('KeyObjectHandle');
+      const curveAlias =
+        kNamedCurveAliases[namedCurve as keyof typeof kNamedCurveAliases];
+      if (!tmp.initECRaw(curveAlias, raw.buffer as ArrayBuffer)) {
+        throw lazyDOMException(
+          'Failed to re-export EC public key as uncompressed SPKI',
+          'OperationError',
+        );
+      }
+      return bufferLikeToArrayBuffer(
+        tmp.exportKey(KFormatType.DER, KeyEncoding.SPKI),
+      );
     }
     return exported;
   } else if (format === KWebCryptoKeyFormat.kWebCryptoKeyFormatPKCS8) {
