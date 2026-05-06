@@ -2245,17 +2245,16 @@ const signVerify = (
   );
 };
 
+// Algorithm-mismatch and usage checks live at the public-method call sites
+// (encrypt / decrypt / wrapKey / unwrapKey) so spec-mandated message and
+// ordering — algorithm-mismatch first, then usage — is preserved
+// (Node webcrypto.js, commit 4cb1f284136).
 const cipherOrWrap = async (
   mode: CipherOrWrapMode,
   algorithm: EncryptDecryptParams,
   key: CryptoKey,
   data: ArrayBuffer,
-  _op: Operation,
 ): Promise<ArrayBuffer> => {
-  // Algorithm-mismatch and usage checks live at the public-method call sites
-  // (encrypt / decrypt / wrapKey / unwrapKey) so spec-mandated message and
-  // ordering — algorithm-mismatch first, then usage — is preserved
-  // (Node webcrypto.js, commit 4cb1f284136).
   validateMaxBufferLength(data, 'data');
 
   switch (algorithm.name) {
@@ -2540,7 +2539,6 @@ export class Subtle {
       normalizedAlgorithm,
       key,
       bufferLikeToArrayBuffer(data),
-      'decrypt',
     );
   }
 
@@ -2568,7 +2566,7 @@ export class Subtle {
     // previous `deriveBits || deriveKey` accept-either branch silently
     // promoted deriveKey-only keys into deriveBits use, contradicting the
     // spec usage gate.
-    if (!baseKey.keyUsages.includes('deriveBits')) {
+    if (!baseKey.usages.includes('deriveBits')) {
       throw lazyDOMException(
         'baseKey does not have deriveBits usage',
         'InvalidAccessError',
@@ -2722,7 +2720,6 @@ export class Subtle {
       normalizedAlgorithm,
       key,
       bufferLikeToArrayBuffer(data),
-      'encrypt',
     );
   }
 
@@ -2779,19 +2776,10 @@ export class Subtle {
     wrapAlgorithm: EncryptDecryptParams,
   ): Promise<ArrayBuffer> {
     requireArgs(arguments.length, 4, 'wrapKey');
-    // Node tries 'wrapKey' op first, falling back to 'encrypt' for AES-KW etc.
-    let normalizedWrapAlgorithm: EncryptDecryptParams;
-    try {
-      normalizedWrapAlgorithm = normalizeAlgorithm(
-        wrapAlgorithm,
-        'wrapKey',
-      ) as EncryptDecryptParams;
-    } catch {
-      normalizedWrapAlgorithm = normalizeAlgorithm(
-        wrapAlgorithm,
-        'encrypt',
-      ) as EncryptDecryptParams;
-    }
+    const normalizedWrapAlgorithm = normalizeAlgorithm(
+      wrapAlgorithm,
+      'wrapKey',
+    ) as EncryptDecryptParams;
 
     if (normalizedWrapAlgorithm.name !== wrappingKey.algorithm.name) {
       throw lazyDOMException('Key algorithm mismatch', 'InvalidAccessError');
@@ -2835,7 +2823,6 @@ export class Subtle {
       normalizedWrapAlgorithm,
       wrappingKey,
       keyData,
-      'wrapKey',
     );
   }
 
@@ -2849,19 +2836,10 @@ export class Subtle {
     keyUsages: KeyUsage[],
   ): Promise<CryptoKey> {
     requireArgs(arguments.length, 7, 'unwrapKey');
-    // Node tries 'unwrapKey' op first, falling back to 'decrypt'.
-    let normalizedUnwrapAlgorithm: EncryptDecryptParams;
-    try {
-      normalizedUnwrapAlgorithm = normalizeAlgorithm(
-        unwrapAlgorithm,
-        'unwrapKey',
-      ) as EncryptDecryptParams;
-    } catch {
-      normalizedUnwrapAlgorithm = normalizeAlgorithm(
-        unwrapAlgorithm,
-        'decrypt',
-      ) as EncryptDecryptParams;
-    }
+    const normalizedUnwrapAlgorithm = normalizeAlgorithm(
+      unwrapAlgorithm,
+      'unwrapKey',
+    ) as EncryptDecryptParams;
 
     if (normalizedUnwrapAlgorithm.name !== unwrappingKey.algorithm.name) {
       throw lazyDOMException('Key algorithm mismatch', 'InvalidAccessError');
@@ -2879,7 +2857,6 @@ export class Subtle {
       normalizedUnwrapAlgorithm,
       unwrappingKey,
       bufferLikeToArrayBuffer(wrappedKey),
-      'unwrapKey',
     );
 
     // Step 2: Convert to appropriate format
