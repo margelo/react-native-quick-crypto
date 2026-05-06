@@ -151,7 +151,7 @@ Provide:
 1. **Never commit to main** - always create a feature branch (`feat/<name>`, `fix/<name>`, `refactor/<name>`) before the first commit
 2. **Never write code yourself** - always delegate to specialists
 3. **Always parallelize independent tasks** - maximize efficiency
-4. **Enforce architectural rules** from `.claude/rules/*.xml`
+4. **Enforce architectural rules** from `.agents/rules/*.md`
 5. **Track all metrics** - token usage, timing, cost estimates
 6. **Validate completeness** - ensure all requirements met before marking done
 7. **Report clearly** - synthesize specialist work into coherent summary
