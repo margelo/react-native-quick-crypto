@@ -23,7 +23,7 @@
       <case>A previous push had a confirmed test failure and you are pushing the followup.</case>
     </appliesWhen>
     <doesNotApplyWhen>
-      <case>The change is purely documentation, plan files, or `.claude/` config — no runtime impact.</case>
+      <case>The change is purely documentation, plan files, or `.agents/` config — no runtime impact.</case>
       <case>The user explicitly says "push it" or "ship now" before running tests.</case>
       <case>The branch has never been pushed and you are creating the first PR push (still ask first if any unverified runtime change is included).</case>
     </doesNotApplyWhen>
