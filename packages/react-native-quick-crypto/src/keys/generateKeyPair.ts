@@ -1,4 +1,5 @@
 import { ed_generateKeyPair } from '../ed';
+import { Buffer } from '@craftzdog/react-native-buffer';
 import { rsa_generateKeyPairNode, rsa_generateKeyPairNodeSync } from '../rsa';
 import { ec_generateKeyPairNode, ec_generateKeyPairNodeSync } from '../ec';
 import { dsa_generateKeyPairNode, dsa_generateKeyPairNodeSync } from '../dsa';
@@ -50,12 +51,15 @@ function isSlhDsaType(type: string): type is SlhDsaKeyPairType {
   return type in SLH_DSA_TYPE_TO_VARIANT;
 }
 
-function slhDsaGenerateKeyPairNodeSync(type: SlhDsaKeyPairType): {
-  publicKey: PublicKeyObject;
-  privateKey: PrivateKeyObject;
+function slhDsaFormatKeyPairOutput(
+  slhdsa: SlhDsa,
+  encoding: KeyPairGenConfig,
+): {
+  publicKey: PublicKeyObject | string | ArrayBuffer;
+  privateKey: PrivateKeyObject | string | ArrayBuffer;
 } {
-  const slhdsa = new SlhDsa(SLH_DSA_TYPE_TO_VARIANT[type]);
-  slhdsa.generateKeyPairSync();
+  const { publicFormat, privateFormat, cipher, passphrase } = encoding;
+
   const publicKey = KeyObject.createKeyObject(
     'public',
     slhdsa.getPublicKey(),
@@ -68,27 +72,68 @@ function slhDsaGenerateKeyPairNodeSync(type: SlhDsaKeyPairType): {
     KFormatType.DER,
     KeyEncoding.PKCS8,
   ) as PrivateKeyObject;
-  return { publicKey, privateKey };
+
+  let publicKeyOutput: PublicKeyObject | string | ArrayBuffer;
+  let privateKeyOutput: PrivateKeyObject | string | ArrayBuffer;
+
+  if (publicFormat === -1) {
+    publicKeyOutput = publicKey;
+  } else {
+    const format =
+      publicFormat === KFormatType.PEM ? KFormatType.PEM : KFormatType.DER;
+    const exported = publicKey.handle.exportKey(format, KeyEncoding.SPKI);
+    if (format === KFormatType.PEM) {
+      publicKeyOutput = Buffer.from(new Uint8Array(exported)).toString('utf-8');
+    } else {
+      publicKeyOutput = exported;
+    }
+  }
+
+  if (privateFormat === -1) {
+    privateKeyOutput = privateKey;
+  } else {
+    const format =
+      privateFormat === KFormatType.PEM ? KFormatType.PEM : KFormatType.DER;
+    const exported = privateKey.handle.exportKey(
+      format,
+      KeyEncoding.PKCS8,
+      cipher,
+      passphrase,
+    );
+    if (format === KFormatType.PEM) {
+      privateKeyOutput = Buffer.from(new Uint8Array(exported)).toString(
+        'utf-8',
+      );
+    } else {
+      privateKeyOutput = exported;
+    }
+  }
+
+  return { publicKey: publicKeyOutput, privateKey: privateKeyOutput };
+}
+
+function slhDsaGenerateKeyPairNodeSync(
+  type: SlhDsaKeyPairType,
+  encoding: KeyPairGenConfig,
+): {
+  publicKey: PublicKeyObject | string | ArrayBuffer;
+  privateKey: PrivateKeyObject | string | ArrayBuffer;
+} {
+  const slhdsa = new SlhDsa(SLH_DSA_TYPE_TO_VARIANT[type]);
+  slhdsa.generateKeyPairSync();
+  return slhDsaFormatKeyPairOutput(slhdsa, encoding);
 }
 
 async function slhDsaGenerateKeyPairNode(
   type: SlhDsaKeyPairType,
-): Promise<{ publicKey: PublicKeyObject; privateKey: PrivateKeyObject }> {
+  encoding: KeyPairGenConfig,
+): Promise<{
+  publicKey: PublicKeyObject | string | ArrayBuffer;
+  privateKey: PrivateKeyObject | string | ArrayBuffer;
+}> {
   const slhdsa = new SlhDsa(SLH_DSA_TYPE_TO_VARIANT[type]);
   await slhdsa.generateKeyPair();
-  const publicKey = KeyObject.createKeyObject(
-    'public',
-    slhdsa.getPublicKey(),
-    KFormatType.DER,
-    KeyEncoding.SPKI,
-  ) as PublicKeyObject;
-  const privateKey = KeyObject.createKeyObject(
-    'private',
-    slhdsa.getPrivateKey(),
-    KFormatType.DER,
-    KeyEncoding.PKCS8,
-  ) as PrivateKeyObject;
-  return { publicKey, privateKey };
+  return slhDsaFormatKeyPairOutput(slhdsa, encoding);
 }
 
 export const generateKeyPair = (
@@ -243,7 +288,7 @@ function internalGenerateKeyPair(
         } else if (type === 'dh') {
           result = await dh_generateKeyPairNode(options, encoding);
         } else if (isSlhDsaType(type)) {
-          result = await slhDsaGenerateKeyPairNode(type);
+          result = await slhDsaGenerateKeyPairNode(type, encoding);
         } else {
           throw new Error(`Unsupported key type: ${type}`);
         }
@@ -275,7 +320,7 @@ function internalGenerateKeyPair(
     } else if (type === 'dh') {
       result = dh_generateKeyPairNodeSync(options, encoding);
     } else if (isSlhDsaType(type)) {
-      result = slhDsaGenerateKeyPairNodeSync(type);
+      result = slhDsaGenerateKeyPairNodeSync(type, encoding);
     } else {
       throw new Error(`Unsupported key type: ${type}`);
     }
