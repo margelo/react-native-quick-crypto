@@ -1,5 +1,5 @@
 import { expect } from 'chai';
-import { Subtle, subtle } from 'react-native-quick-crypto';
+import { Subtle } from 'react-native-quick-crypto';
 import { test } from '../util';
 
 const SUITE = 'subtle.supports';
@@ -223,12 +223,6 @@ test(SUITE, 'deriveBits: Argon2id length below 32 rejected', () => {
 
 test(SUITE, 'deriveBits: Argon2id length 32 supported', () => {
   expect(Subtle.supports('deriveBits', 'Argon2id', 32)).to.equal(true);
-});
-
-// --- Instance access ---
-test(SUITE, 'subtle.supports() instance method works', () => {
-  expect(subtle.supports('encrypt', 'AES-GCM')).to.equal(true);
-  expect(subtle.supports('encrypt', 'HMAC')).to.equal(false);
 });
 
 // --- Invalid operation ---

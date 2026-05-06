@@ -2589,7 +2589,7 @@ function supportsImpl(
         | AnyAlgorithm;
       if (!supportsCheck('importKey', additional)) return false;
       try {
-        length = getKeyLength(normalizeAlgorithm(additional, 'importKey'));
+        length = getKeyLength(normalizeAlgorithm(additional, 'get key length'));
       } catch {
         return false;
       }
@@ -2692,16 +2692,7 @@ export class Subtle {
   //     encapsulateKey, decapsulateKey, getPublicKey)
   //   • per-algorithm length validators for deriveBits (HKDF/PBKDF2/Argon2)
   //   • HMAC + SHA3 generateKey with no length → false
-  // Defined as a regular method (instance-callable via `subtle.supports(...)`)
-  // and re-aliased to the static side so `Subtle.supports(...)` still works.
-  supports(
-    operation: string,
-    algorithm: SubtleAlgorithm | AnyAlgorithm,
-    lengthOrAdditionalAlgorithm: unknown = null,
-  ): boolean {
-    return supportsImpl(operation, algorithm, lengthOrAdditionalAlgorithm);
-  }
-
+  // Static-only per the WICG spec.
   static supports(
     operation: string,
     algorithm: SubtleAlgorithm | AnyAlgorithm,

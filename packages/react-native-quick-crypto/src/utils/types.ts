@@ -533,7 +533,8 @@ export type Operation =
   | 'encapsulateBits'
   | 'decapsulateBits'
   | 'encapsulateKey'
-  | 'decapsulateKey';
+  | 'decapsulateKey'
+  | 'get key length';
 
 export interface KeyPairOptions {
   namedCurve: string;
