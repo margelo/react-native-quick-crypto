@@ -6,7 +6,7 @@ This project uses the **4-Layer Orchestra Architecture** for efficient multi-age
 
 - **Simple tasks (1-2 files)**: Work directly, no orchestration needed
 - **Complex tasks (3+ files)**: Use the orchestrator agent
-- **Rules**: See `.agents/rules/*.xml` for architectural constraints
+- **Rules**: See `.agents/rules/*.md` for architectural constraints
 - **Agents**: See `.agents/agents/*.md` for specialist definitions
 - **Commands**: Load `.agents/commands/*.md` before handling command-style requests
 
@@ -59,9 +59,9 @@ When implementing features, favor in this order:
 
 ## Rules Summary
 
-For full details, see `.agents/rules/*.xml`:
+For full details, see `.agents/rules/*.md`:
 
-### architecture.xml
+### architecture.md
 
 - Project context and goals
 - API priority order (WebCrypto → Node.js → ncrypto)
@@ -70,7 +70,7 @@ For full details, see `.agents/rules/*.xml`:
 - Testing context (RN environment)
 - Local codebase references
 
-### code-typescript.xml
+### code-typescript.md
 
 - No `any` or `unknown` casts
 - Interfaces over types
@@ -80,7 +80,7 @@ For full details, see `.agents/rules/*.xml`:
 - Minimal, self-documenting code
 - React best practices (minimal useEffect)
 
-### code-cpp.xml
+### code-cpp.md
 
 - C++20 minimum with modern features
 - Smart pointers for all ownership
@@ -89,7 +89,7 @@ For full details, see `.agents/rules/*.xml`:
 - Proper error handling (ERR_get_error)
 - Memory safety (no leaks, no raw ownership)
 
-### crypto-security.xml
+### crypto-security.md
 
 - Cryptographic correctness (match specs)
 - No timing attacks (CRYPTO_memcmp)
@@ -99,7 +99,7 @@ For full details, see `.agents/rules/*.xml`:
 - Minimum key sizes
 - No key material in errors
 
-### ci-caching.xml
+### ci-caching.md
 
 - iOS Pods/DerivedData cache consistency (exact-match Pods, no restore-keys)
 - Cache key design (no version suffixes, use hashFiles)
@@ -175,4 +175,4 @@ Before committing:
 
 ---
 
-**For specialist details and orchestration patterns, see `.agents/agents/*.md` and `.agents/rules/*.xml`**
+**For specialist details and orchestration patterns, see `.agents/agents/*.md` and `.agents/rules/*.md`**
