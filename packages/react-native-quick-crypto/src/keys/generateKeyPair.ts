@@ -6,6 +6,7 @@ import {
   dh_generateKeyPairNode,
   dh_generateKeyPairNodeSync,
 } from '../dhKeyPair';
+import { SlhDsa, type SlhDsaVariant } from '../slhdsa';
 import {
   kEmptyObject,
   validateFunction,
@@ -17,8 +18,78 @@ import {
   type KeyPairGenConfig,
   type KeyPairKey,
   type KeyPairType,
+  type SlhDsaKeyPairType,
+  KFormatType,
+  KeyEncoding,
 } from '../utils';
+import {
+  KeyObject,
+  type PublicKeyObject,
+  type PrivateKeyObject,
+} from './classes';
 import { parsePrivateKeyEncoding, parsePublicKeyEncoding } from './utils';
+
+const SLH_DSA_TYPE_TO_VARIANT: Readonly<
+  Record<SlhDsaKeyPairType, SlhDsaVariant>
+> = {
+  'slh-dsa-sha2-128s': 'SLH-DSA-SHA2-128s',
+  'slh-dsa-sha2-128f': 'SLH-DSA-SHA2-128f',
+  'slh-dsa-sha2-192s': 'SLH-DSA-SHA2-192s',
+  'slh-dsa-sha2-192f': 'SLH-DSA-SHA2-192f',
+  'slh-dsa-sha2-256s': 'SLH-DSA-SHA2-256s',
+  'slh-dsa-sha2-256f': 'SLH-DSA-SHA2-256f',
+  'slh-dsa-shake-128s': 'SLH-DSA-SHAKE-128s',
+  'slh-dsa-shake-128f': 'SLH-DSA-SHAKE-128f',
+  'slh-dsa-shake-192s': 'SLH-DSA-SHAKE-192s',
+  'slh-dsa-shake-192f': 'SLH-DSA-SHAKE-192f',
+  'slh-dsa-shake-256s': 'SLH-DSA-SHAKE-256s',
+  'slh-dsa-shake-256f': 'SLH-DSA-SHAKE-256f',
+};
+
+function isSlhDsaType(type: string): type is SlhDsaKeyPairType {
+  return type in SLH_DSA_TYPE_TO_VARIANT;
+}
+
+function slhDsaGenerateKeyPairNodeSync(type: SlhDsaKeyPairType): {
+  publicKey: PublicKeyObject;
+  privateKey: PrivateKeyObject;
+} {
+  const slhdsa = new SlhDsa(SLH_DSA_TYPE_TO_VARIANT[type]);
+  slhdsa.generateKeyPairSync();
+  const publicKey = KeyObject.createKeyObject(
+    'public',
+    slhdsa.getPublicKey(),
+    KFormatType.DER,
+    KeyEncoding.SPKI,
+  ) as PublicKeyObject;
+  const privateKey = KeyObject.createKeyObject(
+    'private',
+    slhdsa.getPrivateKey(),
+    KFormatType.DER,
+    KeyEncoding.PKCS8,
+  ) as PrivateKeyObject;
+  return { publicKey, privateKey };
+}
+
+async function slhDsaGenerateKeyPairNode(
+  type: SlhDsaKeyPairType,
+): Promise<{ publicKey: PublicKeyObject; privateKey: PrivateKeyObject }> {
+  const slhdsa = new SlhDsa(SLH_DSA_TYPE_TO_VARIANT[type]);
+  await slhdsa.generateKeyPair();
+  const publicKey = KeyObject.createKeyObject(
+    'public',
+    slhdsa.getPublicKey(),
+    KFormatType.DER,
+    KeyEncoding.SPKI,
+  ) as PublicKeyObject;
+  const privateKey = KeyObject.createKeyObject(
+    'private',
+    slhdsa.getPrivateKey(),
+    KFormatType.DER,
+    KeyEncoding.PKCS8,
+  ) as PrivateKeyObject;
+  return { publicKey, privateKey };
+}
 
 export const generateKeyPair = (
   type: KeyPairType,
@@ -147,6 +218,9 @@ function internalGenerateKeyPair(
     case 'dh':
       break;
     default: {
+      if (isSlhDsaType(type)) {
+        break;
+      }
       const err = new Error(`
         Invalid Argument options: '${type}' scheme not supported for
         generateKeyPair(). Currently not all encryption methods are supported in
@@ -168,6 +242,8 @@ function internalGenerateKeyPair(
           result = await dsa_generateKeyPairNode(options, encoding);
         } else if (type === 'dh') {
           result = await dh_generateKeyPairNode(options, encoding);
+        } else if (isSlhDsaType(type)) {
+          result = await slhDsaGenerateKeyPairNode(type);
         } else {
           throw new Error(`Unsupported key type: ${type}`);
         }
@@ -198,6 +274,8 @@ function internalGenerateKeyPair(
       result = dsa_generateKeyPairNodeSync(options, encoding);
     } else if (type === 'dh') {
       result = dh_generateKeyPairNodeSync(options, encoding);
+    } else if (isSlhDsaType(type)) {
+      result = slhDsaGenerateKeyPairNodeSync(type);
     } else {
       throw new Error(`Unsupported key type: ${type}`);
     }

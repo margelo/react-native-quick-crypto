@@ -30,6 +30,7 @@ static void configurePqcOutputFormats() {
         [](OSSL_PROVIDER* provider, void*) -> int {
           OSSL_PROVIDER_add_conf_parameter(provider, "ml-kem.output_formats", "seed-only,priv-only");
           OSSL_PROVIDER_add_conf_parameter(provider, "ml-dsa.output_formats", "seed-only,priv-only");
+          OSSL_PROVIDER_add_conf_parameter(provider, "slh-dsa.output_formats", "seed-only,priv-only");
           return 1;
         },
         nullptr);
@@ -174,7 +175,7 @@ std::shared_ptr<ArrayBuffer> HybridKeyObjectHandle::exportKey(std::optional<KFor
       const char* typeName = EVP_PKEY_get0_type_name(pkey.get());
       if (typeName != nullptr) {
         std::string name(typeName);
-        bool isPqcKey = (name.starts_with("ML-KEM-") || name.starts_with("ML-DSA-"));
+        bool isPqcKey = (name.starts_with("ML-KEM-") || name.starts_with("ML-DSA-") || name.starts_with("SLH-DSA-"));
         if (isPqcKey) {
           if (keyType == KeyType::PUBLIC) {
             auto rawData = pkey.rawPublicKey();
@@ -402,7 +403,7 @@ JWK HybridKeyObjectHandle::exportJwk(const JWK& key, bool handleRsaPss) {
     const char* typeName = EVP_PKEY_get0_type_name(pkey.get());
     if (typeName != nullptr) {
       std::string name(typeName);
-      bool isPqcKey = (name.starts_with("ML-DSA-") || name.starts_with("ML-KEM-"));
+      bool isPqcKey = (name.starts_with("ML-DSA-") || name.starts_with("ML-KEM-") || name.starts_with("SLH-DSA-"));
       if (isPqcKey) {
         result.kty = JWKkty::AKP;
         result.alg = name;
@@ -470,7 +471,7 @@ AsymmetricKeyType HybridKeyObjectHandle::getAsymmetricKeyType() {
   }
 
 #if OPENSSL_VERSION_NUMBER >= 0x30500000L
-  // EVP_PKEY_id returns -1 for provider-only key types (e.g. ML-KEM)
+  // EVP_PKEY_id returns -1 for provider-only key types (e.g. ML-KEM, SLH-DSA)
   // Fall back to string-based type name comparison
   const char* typeName = EVP_PKEY_get0_type_name(pkey.get());
   if (typeName != nullptr) {
@@ -481,6 +482,30 @@ AsymmetricKeyType HybridKeyObjectHandle::getAsymmetricKeyType() {
       return AsymmetricKeyType::ML_KEM_768;
     if (name == "ML-KEM-1024")
       return AsymmetricKeyType::ML_KEM_1024;
+    if (name == "SLH-DSA-SHA2-128s")
+      return AsymmetricKeyType::SLH_DSA_SHA2_128S;
+    if (name == "SLH-DSA-SHA2-128f")
+      return AsymmetricKeyType::SLH_DSA_SHA2_128F;
+    if (name == "SLH-DSA-SHA2-192s")
+      return AsymmetricKeyType::SLH_DSA_SHA2_192S;
+    if (name == "SLH-DSA-SHA2-192f")
+      return AsymmetricKeyType::SLH_DSA_SHA2_192F;
+    if (name == "SLH-DSA-SHA2-256s")
+      return AsymmetricKeyType::SLH_DSA_SHA2_256S;
+    if (name == "SLH-DSA-SHA2-256f")
+      return AsymmetricKeyType::SLH_DSA_SHA2_256F;
+    if (name == "SLH-DSA-SHAKE-128s")
+      return AsymmetricKeyType::SLH_DSA_SHAKE_128S;
+    if (name == "SLH-DSA-SHAKE-128f")
+      return AsymmetricKeyType::SLH_DSA_SHAKE_128F;
+    if (name == "SLH-DSA-SHAKE-192s")
+      return AsymmetricKeyType::SLH_DSA_SHAKE_192S;
+    if (name == "SLH-DSA-SHAKE-192f")
+      return AsymmetricKeyType::SLH_DSA_SHAKE_192F;
+    if (name == "SLH-DSA-SHAKE-256s")
+      return AsymmetricKeyType::SLH_DSA_SHAKE_256S;
+    if (name == "SLH-DSA-SHAKE-256f")
+      return AsymmetricKeyType::SLH_DSA_SHAKE_256F;
   }
 #endif
 
@@ -790,6 +815,30 @@ std::optional<KeyType> HybridKeyObjectHandle::initJwk(const JWK& keyData, std::o
       nid = EVP_PKEY_ML_KEM_768;
     else if (alg == "ML-KEM-1024")
       nid = EVP_PKEY_ML_KEM_1024;
+    else if (alg == "SLH-DSA-SHA2-128s")
+      nid = EVP_PKEY_SLH_DSA_SHA2_128S;
+    else if (alg == "SLH-DSA-SHA2-128f")
+      nid = EVP_PKEY_SLH_DSA_SHA2_128F;
+    else if (alg == "SLH-DSA-SHA2-192s")
+      nid = EVP_PKEY_SLH_DSA_SHA2_192S;
+    else if (alg == "SLH-DSA-SHA2-192f")
+      nid = EVP_PKEY_SLH_DSA_SHA2_192F;
+    else if (alg == "SLH-DSA-SHA2-256s")
+      nid = EVP_PKEY_SLH_DSA_SHA2_256S;
+    else if (alg == "SLH-DSA-SHA2-256f")
+      nid = EVP_PKEY_SLH_DSA_SHA2_256F;
+    else if (alg == "SLH-DSA-SHAKE-128s")
+      nid = EVP_PKEY_SLH_DSA_SHAKE_128S;
+    else if (alg == "SLH-DSA-SHAKE-128f")
+      nid = EVP_PKEY_SLH_DSA_SHAKE_128F;
+    else if (alg == "SLH-DSA-SHAKE-192s")
+      nid = EVP_PKEY_SLH_DSA_SHAKE_192S;
+    else if (alg == "SLH-DSA-SHAKE-192f")
+      nid = EVP_PKEY_SLH_DSA_SHAKE_192F;
+    else if (alg == "SLH-DSA-SHAKE-256s")
+      nid = EVP_PKEY_SLH_DSA_SHAKE_256S;
+    else if (alg == "SLH-DSA-SHAKE-256f")
+      nid = EVP_PKEY_SLH_DSA_SHAKE_256F;
     else
       throw std::runtime_error("Unsupported JWK AKP \"alg\": " + alg);
 
@@ -964,6 +1013,30 @@ bool HybridKeyObjectHandle::initPqcRaw(const std::string& algorithmName, const s
     nid = EVP_PKEY_ML_DSA_65;
   else if (algorithmName == "ML-DSA-87")
     nid = EVP_PKEY_ML_DSA_87;
+  else if (algorithmName == "SLH-DSA-SHA2-128s")
+    nid = EVP_PKEY_SLH_DSA_SHA2_128S;
+  else if (algorithmName == "SLH-DSA-SHA2-128f")
+    nid = EVP_PKEY_SLH_DSA_SHA2_128F;
+  else if (algorithmName == "SLH-DSA-SHA2-192s")
+    nid = EVP_PKEY_SLH_DSA_SHA2_192S;
+  else if (algorithmName == "SLH-DSA-SHA2-192f")
+    nid = EVP_PKEY_SLH_DSA_SHA2_192F;
+  else if (algorithmName == "SLH-DSA-SHA2-256s")
+    nid = EVP_PKEY_SLH_DSA_SHA2_256S;
+  else if (algorithmName == "SLH-DSA-SHA2-256f")
+    nid = EVP_PKEY_SLH_DSA_SHA2_256F;
+  else if (algorithmName == "SLH-DSA-SHAKE-128s")
+    nid = EVP_PKEY_SLH_DSA_SHAKE_128S;
+  else if (algorithmName == "SLH-DSA-SHAKE-128f")
+    nid = EVP_PKEY_SLH_DSA_SHAKE_128F;
+  else if (algorithmName == "SLH-DSA-SHAKE-192s")
+    nid = EVP_PKEY_SLH_DSA_SHAKE_192S;
+  else if (algorithmName == "SLH-DSA-SHAKE-192f")
+    nid = EVP_PKEY_SLH_DSA_SHAKE_192F;
+  else if (algorithmName == "SLH-DSA-SHAKE-256s")
+    nid = EVP_PKEY_SLH_DSA_SHAKE_256S;
+  else if (algorithmName == "SLH-DSA-SHAKE-256f")
+    nid = EVP_PKEY_SLH_DSA_SHAKE_256F;
   else
     throw std::runtime_error("Unknown PQC algorithm: " + algorithmName);
 

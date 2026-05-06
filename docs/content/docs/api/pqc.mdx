@@ -1,6 +1,6 @@
 ---
 title: Post-Quantum Cryptography
-description: Quantum-resistant algorithms (ML-DSA, ML-KEM)
+description: Quantum-resistant algorithms (ML-DSA, ML-KEM, SLH-DSA)
 ---
 
 import { Callout } from 'fumadocs-ui/components/callout';
@@ -9,7 +9,9 @@ import { TypeTable } from 'fumadocs-ui/components/type-table';
 **Post-Quantum Cryptography (PQC)** provides cryptographic algorithms that are secure against both classical and quantum computers. RNQC implements the NIST standardized lattice-based algorithms via OpenSSL 3.6+.
 
 <Callout type="info" title="Why Post-Quantum?">
-  Quantum computers threaten RSA, ECDSA, and ECDH. The PQC algorithms below are NIST-standardized replacements designed to resist quantum attacks while running efficiently on classical hardware.
+  Quantum computers threaten RSA, ECDSA, and ECDH. The PQC algorithms below are
+  NIST-standardized replacements designed to resist quantum attacks while
+  running efficiently on classical hardware.
 </Callout>
 
 ## Table of Contents
@@ -17,6 +19,7 @@ import { TypeTable } from 'fumadocs-ui/components/type-table';
 - [Algorithms](#algorithms)
 - [ML-DSA (Digital Signatures)](#ml-dsa-digital-signatures)
 - [ML-KEM (Key Encapsulation)](#ml-kem-key-encapsulation)
+- [SLH-DSA (Hash-Based Digital Signatures)](#slh-dsa-hash-based-digital-signatures)
 - [WebCrypto API](#webcrypto-api)
 - [Real-World Examples](#real-world-examples)
 
@@ -26,21 +29,41 @@ import { TypeTable } from 'fumadocs-ui/components/type-table';
 
 Module Lattice Digital Signature Algorithm. Replacement for RSA and ECDSA signatures.
 
-| Parameter Set | Security Level | Public Key | Signature | Use Case |
-|:-------------|:--------------|:-----------|:----------|:---------|
-| `ML-DSA-44` | NIST Level 2 | 1,312 B | 2,420 B | General purpose |
-| `ML-DSA-65` | NIST Level 3 | 1,952 B | 3,309 B | Recommended |
-| `ML-DSA-87` | NIST Level 5 | 2,592 B | 4,627 B | Maximum security |
+| Parameter Set | Security Level | Public Key | Signature | Use Case         |
+| :------------ | :------------- | :--------- | :-------- | :--------------- |
+| `ML-DSA-44`   | NIST Level 2   | 1,312 B    | 2,420 B   | General purpose  |
+| `ML-DSA-65`   | NIST Level 3   | 1,952 B    | 3,309 B   | Recommended      |
+| `ML-DSA-87`   | NIST Level 5   | 2,592 B    | 4,627 B   | Maximum security |
 
 ### ML-KEM (FIPS 203)
 
 Module Lattice Key Encapsulation Mechanism. Replacement for ECDH key exchange.
 
 | Parameter Set | Security Level | Public Key | Ciphertext | Shared Secret |
-|:-------------|:--------------|:-----------|:-----------|:-------------|
-| `ML-KEM-512` | NIST Level 1 | 800 B | 768 B | 32 B |
-| `ML-KEM-768` | NIST Level 3 | 1,184 B | 1,088 B | 32 B |
-| `ML-KEM-1024` | NIST Level 5 | 1,568 B | 1,568 B | 32 B |
+| :------------ | :------------- | :--------- | :--------- | :------------ |
+| `ML-KEM-512`  | NIST Level 1   | 800 B      | 768 B      | 32 B          |
+| `ML-KEM-768`  | NIST Level 3   | 1,184 B    | 1,088 B    | 32 B          |
+| `ML-KEM-1024` | NIST Level 5   | 1,568 B    | 1,568 B    | 32 B          |
+
+### SLH-DSA (FIPS 205)
+
+Stateless Hash-Based Digital Signature Algorithm (formerly SPHINCS+). A hash-based alternative to ML-DSA — security relies only on the underlying hash function, making it a conservative choice when lattice assumptions are a concern. Each parameter set comes in `s` (small signature, slow) and `f` (fast, larger signature) variants.
+
+| Parameter Set                              | Security Level | Public Key | Signature | Notes     |
+| :----------------------------------------- | :------------- | :--------- | :-------- | :-------- |
+| `SLH-DSA-SHA2-128s` / `SLH-DSA-SHAKE-128s` | NIST Level 1   | 32 B       | 7,856 B   | Small sig |
+| `SLH-DSA-SHA2-128f` / `SLH-DSA-SHAKE-128f` | NIST Level 1   | 32 B       | 17,088 B  | Fast sign |
+| `SLH-DSA-SHA2-192s` / `SLH-DSA-SHAKE-192s` | NIST Level 3   | 48 B       | 16,224 B  | Small sig |
+| `SLH-DSA-SHA2-192f` / `SLH-DSA-SHAKE-192f` | NIST Level 3   | 48 B       | 35,664 B  | Fast sign |
+| `SLH-DSA-SHA2-256s` / `SLH-DSA-SHAKE-256s` | NIST Level 5   | 64 B       | 29,792 B  | Small sig |
+| `SLH-DSA-SHA2-256f` / `SLH-DSA-SHAKE-256f` | NIST Level 5   | 64 B       | 49,856 B  | Fast sign |
+
+<Callout type="warn" title="Performance Tradeoff">
+  The `s` variants produce smaller signatures but signing is markedly slower
+  than ML-DSA. The `f` variants sign faster but emit signatures 4–6× larger. For
+  most applications ML-DSA is preferable; reach for SLH-DSA when a hash-only
+  security assumption is required.
+</Callout>
 
 ---
 
@@ -51,11 +74,7 @@ Module Lattice Key Encapsulation Mechanism. Replacement for ECDH key exchange.
 Generate ML-DSA key pairs and sign/verify using the standard `crypto` API:
 
 ```ts
-import {
-  generateKeyPairSync,
-  sign,
-  verify
-} from 'react-native-quick-crypto';
+import { generateKeyPairSync, sign, verify } from 'react-native-quick-crypto';
 
 // Generate ML-DSA-65 key pair
 const { publicKey, privateKey } = generateKeyPairSync('ml-dsa-65');
@@ -87,7 +106,7 @@ import { createPublicKey, createPrivateKey } from 'react-native-quick-crypto';
 const imported = createPublicKey({
   key: pubDer,
   format: 'der',
-  type: 'spki'
+  type: 'spki',
 });
 ```
 
@@ -103,7 +122,7 @@ ML-KEM uses **encapsulation** rather than key exchange. One party encapsulates a
 import {
   generateKeyPairSync,
   encapsulate,
-  decapsulate
+  decapsulate,
 } from 'react-native-quick-crypto';
 
 // Generate ML-KEM-768 key pair
@@ -120,6 +139,29 @@ console.log(sharedSecret.equals(recovered)); // true
 
 ---
 
+## SLH-DSA (Hash-Based Digital Signatures)
+
+### Node.js API
+
+Generate SLH-DSA key pairs and sign/verify using the standard `crypto` API. Twelve parameter sets are available: `slh-dsa-{sha2,shake}-{128,192,256}{s,f}`.
+
+```ts
+import { generateKeyPairSync, sign, verify } from 'react-native-quick-crypto';
+
+// Generate SLH-DSA-SHA2-128f key pair (fast variant)
+const { publicKey, privateKey } = generateKeyPairSync('slh-dsa-sha2-128f');
+
+// Sign
+const message = Buffer.from('hash-based, quantum-safe message');
+const signature = sign(null, message, privateKey);
+
+// Verify
+const isValid = verify(null, message, publicKey, signature);
+console.log('Valid:', isValid); // true
+```
+
+---
+
 ## WebCrypto API
 
 PQC algorithms are fully supported through the SubtleCrypto interface.
@@ -130,18 +172,17 @@ PQC algorithms are fully supported through the SubtleCrypto interface.
 import { subtle } from 'react-native-quick-crypto';
 
 // Generate key pair
-const keyPair = await subtle.generateKey(
-  { name: 'ML-DSA-65' },
-  true,
-  ['sign', 'verify']
-);
+const keyPair = await subtle.generateKey({ name: 'ML-DSA-65' }, true, [
+  'sign',
+  'verify',
+]);
 
 // Sign
 const data = new TextEncoder().encode('quantum-safe data');
 const signature = await subtle.sign(
   { name: 'ML-DSA-65' },
   keyPair.privateKey,
-  data
+  data,
 );
 
 // Verify
@@ -149,7 +190,7 @@ const isValid = await subtle.verify(
   { name: 'ML-DSA-65' },
   keyPair.publicKey,
   signature,
-  data
+  data,
 );
 ```
 
@@ -159,23 +200,22 @@ const isValid = await subtle.verify(
 import { subtle } from 'react-native-quick-crypto';
 
 // Generate encapsulation key pair
-const keyPair = await subtle.generateKey(
-  { name: 'ML-KEM-768' },
-  true,
-  ['deriveBits', 'deriveKey']
-);
+const keyPair = await subtle.generateKey({ name: 'ML-KEM-768' }, true, [
+  'deriveBits',
+  'deriveKey',
+]);
 
 // Encapsulate: get shared secret bits + ciphertext
 const { sharedSecret, ciphertext } = await subtle.encapsulateBits(
   { name: 'ML-KEM-768' },
-  keyPair.publicKey
+  keyPair.publicKey,
 );
 
 // Decapsulate: recover shared secret
 const recovered = await subtle.decapsulateBits(
   { name: 'ML-KEM-768' },
   keyPair.privateKey,
-  ciphertext
+  ciphertext,
 );
 
 // Or derive a key directly from encapsulation
@@ -184,7 +224,7 @@ const { key: aesKey, ciphertext: ct } = await subtle.encapsulateKey(
   keyPair.publicKey,
   { name: 'AES-GCM', length: 256 },
   true,
-  ['encrypt', 'decrypt']
+  ['encrypt', 'decrypt'],
 );
 
 // Decapsulate to get the same AES key
@@ -194,16 +234,43 @@ const recoveredKey = await subtle.decapsulateKey(
   ct,
   { name: 'AES-GCM', length: 256 },
   true,
-  ['encrypt', 'decrypt']
+  ['encrypt', 'decrypt'],
+);
+```
+
+### SLH-DSA via SubtleCrypto
+
+```ts
+import { subtle } from 'react-native-quick-crypto';
+
+// Generate key pair (use the canonical FIPS 205 name)
+const keyPair = await subtle.generateKey({ name: 'SLH-DSA-SHA2-128f' }, true, [
+  'sign',
+  'verify',
+]);
+
+const data = new TextEncoder().encode('signed with hash-based PQC');
+const signature = await subtle.sign(
+  { name: 'SLH-DSA-SHA2-128f' },
+  keyPair.privateKey,
+  data,
+);
+
+const isValid = await subtle.verify(
+  { name: 'SLH-DSA-SHA2-128f' },
+  keyPair.publicKey,
+  signature,
+  data,
 );
 ```
 
 ### Key Export Formats
 
-| Algorithm | `spki` | `pkcs8` | `jwk` | `raw-public` | `raw-seed` |
-|:----------|:------:|:-------:|:-----:|:------------:|:----------:|
-| ML-DSA-44/65/87 | ✅ | ✅ | ✅ | ✅ | ✅ |
-| ML-KEM-512/768/1024 | ✅ | ✅ | ✅ | ✅ | ✅ |
+| Algorithm                               | `spki` | `pkcs8` | `jwk` | `raw-public` | `raw-seed` |
+| :-------------------------------------- | :----: | :-----: | :---: | :----------: | :--------: |
+| ML-DSA-44/65/87                         |   ✅   |   ✅    |  ✅   |      ✅      |     ✅     |
+| ML-KEM-512/768/1024                     |   ✅   |   ✅    |  ✅   |      ✅      |     ✅     |
+| SLH-DSA-{SHA2,SHAKE}-{128,192,256}{s,f} |   ✅   |   ✅    |  ✅   |      ✅      |     ✅     |
 
 ```ts
 // Export ML-DSA public key as JWK
@@ -221,7 +288,7 @@ const imported = await subtle.importKey(
   rawPub,
   { name: 'ML-DSA-65' },
   true,
-  ['verify']
+  ['verify'],
 );
 ```
 
@@ -234,11 +301,7 @@ const imported = await subtle.importKey(
 Combine Ed25519 with ML-DSA for defense-in-depth during the quantum transition:
 
 ```ts
-import {
-  generateKeyPairSync,
-  sign,
-  verify
-} from 'react-native-quick-crypto';
+import { generateKeyPairSync, sign, verify } from 'react-native-quick-crypto';
 
 function hybridSign(message: Buffer) {
   const ed = generateKeyPairSync('ed25519');
@@ -250,18 +313,22 @@ function hybridSign(message: Buffer) {
   return {
     message,
     signatures: { ed25519: edSig, mlDsa65: pqcSig },
-    publicKeys: { ed25519: ed.publicKey, mlDsa65: pqc.publicKey }
+    publicKeys: { ed25519: ed.publicKey, mlDsa65: pqc.publicKey },
   };
 }
 
 function hybridVerify(signed: ReturnType<typeof hybridSign>): boolean {
   const edValid = verify(
-    null, signed.message,
-    signed.publicKeys.ed25519, signed.signatures.ed25519
+    null,
+    signed.message,
+    signed.publicKeys.ed25519,
+    signed.signatures.ed25519,
   );
   const pqcValid = verify(
-    null, signed.message,
-    signed.publicKeys.mlDsa65, signed.signatures.mlDsa65
+    null,
+    signed.message,
+    signed.publicKeys.mlDsa65,
+    signed.signatures.mlDsa65,
   );
 
   // Both must pass
@@ -281,7 +348,7 @@ import {
   createCipheriv,
   createDecipheriv,
   createHash,
-  randomBytes
+  randomBytes,
 } from 'react-native-quick-crypto';
 
 // Server publishes its ML-KEM public key

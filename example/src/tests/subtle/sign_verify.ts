@@ -942,6 +942,199 @@ test(SUITE, 'ML-DSA cross-variant: 44 sig under 65 pub rejected', async () => {
   }
 });
 
+// --- SLH-DSA Tests (FIPS 205) ---
+//
+// SLH-DSA signature sizes (bytes), per FIPS 205 §11:
+//   128s: 7856   128f: 17088
+//   192s: 16224  192f: 35664
+//   256s: 29792  256f: 49856
+
+type SlhDsaVariant =
+  | 'SLH-DSA-SHA2-128s'
+  | 'SLH-DSA-SHA2-128f'
+  | 'SLH-DSA-SHA2-192s'
+  | 'SLH-DSA-SHA2-192f'
+  | 'SLH-DSA-SHA2-256s'
+  | 'SLH-DSA-SHA2-256f'
+  | 'SLH-DSA-SHAKE-128s'
+  | 'SLH-DSA-SHAKE-128f'
+  | 'SLH-DSA-SHAKE-192s'
+  | 'SLH-DSA-SHAKE-192f'
+  | 'SLH-DSA-SHAKE-256s'
+  | 'SLH-DSA-SHAKE-256f';
+
+const SLHDSA_SIGNATURE_SIZES: Record<SlhDsaVariant, number> = {
+  'SLH-DSA-SHA2-128s': 7856,
+  'SLH-DSA-SHA2-128f': 17088,
+  'SLH-DSA-SHA2-192s': 16224,
+  'SLH-DSA-SHA2-192f': 35664,
+  'SLH-DSA-SHA2-256s': 29792,
+  'SLH-DSA-SHA2-256f': 49856,
+  'SLH-DSA-SHAKE-128s': 7856,
+  'SLH-DSA-SHAKE-128f': 17088,
+  'SLH-DSA-SHAKE-192s': 16224,
+  'SLH-DSA-SHAKE-192f': 35664,
+  'SLH-DSA-SHAKE-256s': 29792,
+  'SLH-DSA-SHAKE-256f': 49856,
+};
+
+// SLH-DSA keygen for the larger parameter sets is fast, but signing —
+// especially the `s` (small-signature) variants — is significantly slower
+// than ML-DSA. Tests are intentionally minimal per variant: one round-trip
+// each, plus a single tampered-signature check on the smallest variant to
+// guard the negative path.
+const SLHDSA_VARIANTS: SlhDsaVariant[] = [
+  'SLH-DSA-SHA2-128s',
+  'SLH-DSA-SHA2-128f',
+  'SLH-DSA-SHA2-192s',
+  'SLH-DSA-SHA2-192f',
+  'SLH-DSA-SHA2-256s',
+  'SLH-DSA-SHA2-256f',
+  'SLH-DSA-SHAKE-128s',
+  'SLH-DSA-SHAKE-128f',
+  'SLH-DSA-SHAKE-192s',
+  'SLH-DSA-SHAKE-192f',
+  'SLH-DSA-SHAKE-256s',
+  'SLH-DSA-SHAKE-256f',
+];
+
+for (const variant of SLHDSA_VARIANTS) {
+  test(SUITE, `${variant} sign/verify`, async () => {
+    const keyPair = await generateKeyPairChecked({ name: variant }, true, [
+      'sign',
+      'verify',
+    ]);
+
+    const signature = await subtle.sign(
+      { name: variant },
+      keyPair.privateKey,
+      testData,
+    );
+
+    expect(signature.byteLength).to.equal(SLHDSA_SIGNATURE_SIZES[variant]);
+
+    const isValid = await subtle.verify(
+      { name: variant },
+      keyPair.publicKey,
+      signature,
+      testData,
+    );
+
+    expect(isValid).to.equal(true);
+  });
+
+  test(SUITE, `${variant} export → import → sign+verify`, async () => {
+    const original = await generateKeyPairChecked({ name: variant }, true, [
+      'sign',
+      'verify',
+    ]);
+
+    const pkcs8 = (await subtle.exportKey(
+      'pkcs8',
+      original.privateKey,
+    )) as ArrayBuffer;
+    const spki = (await subtle.exportKey(
+      'spki',
+      original.publicKey,
+    )) as ArrayBuffer;
+
+    const importedPriv = await subtle.importKey(
+      'pkcs8',
+      pkcs8,
+      { name: variant },
+      true,
+      ['sign'],
+    );
+    const importedPub = await subtle.importKey(
+      'spki',
+      spki,
+      { name: variant },
+      true,
+      ['verify'],
+    );
+
+    const sig = await subtle.sign({ name: variant }, importedPriv, testData);
+    expect(sig.byteLength).to.equal(SLHDSA_SIGNATURE_SIZES[variant]);
+
+    const ok = await subtle.verify(
+      { name: variant },
+      importedPub,
+      sig,
+      testData,
+    );
+    expect(ok).to.equal(true);
+  });
+}
+
+test(SUITE, 'SLH-DSA-SHA2-128f verify rejects tampered signature', async () => {
+  const variant: SlhDsaVariant = 'SLH-DSA-SHA2-128f';
+  const keyPair = await generateKeyPairChecked({ name: variant }, true, [
+    'sign',
+    'verify',
+  ]);
+
+  const signature = await subtle.sign(
+    { name: variant },
+    keyPair.privateKey,
+    testData,
+  );
+
+  const tampered = new Uint8Array(signature);
+  tampered[0] = (tampered[0] ?? 0) ^ 0xff;
+
+  const ok = await subtle.verify(
+    { name: variant },
+    keyPair.publicKey,
+    tampered,
+    testData,
+  );
+  expect(ok).to.equal(false);
+});
+
+// Cross-variant: an SLH-DSA-SHA2-128f signature must not verify under an
+// SLH-DSA-SHAKE-128f public key — the parameter sets share signature length
+// but use different hash families and unrelated keys.
+test(
+  SUITE,
+  'SLH-DSA cross-variant: sha2-128f sig under shake-128f pub rejected',
+  async () => {
+    const kpSha2 = await generateKeyPairChecked(
+      { name: 'SLH-DSA-SHA2-128f' },
+      true,
+      ['sign', 'verify'],
+    );
+    const kpShake = await generateKeyPairChecked(
+      { name: 'SLH-DSA-SHAKE-128f' },
+      true,
+      ['sign', 'verify'],
+    );
+
+    const sig = await subtle.sign(
+      { name: 'SLH-DSA-SHA2-128f' },
+      kpSha2.privateKey,
+      testData,
+    );
+
+    let result: boolean | Error;
+    try {
+      result = await subtle.verify(
+        { name: 'SLH-DSA-SHAKE-128f' },
+        kpShake.publicKey,
+        sig,
+        testData,
+      );
+    } catch (e) {
+      result = e as Error;
+    }
+
+    if (typeof result === 'boolean') {
+      expect(result).to.equal(false);
+    } else {
+      expect(result).to.be.instanceOf(Error);
+    }
+  },
+);
+
 // --- Key Import/Export and Sign/Verify ---
 
 test(SUITE, 'Sign with imported Ed25519 key', async () => {

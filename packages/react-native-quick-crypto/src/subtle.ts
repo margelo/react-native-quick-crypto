@@ -63,6 +63,11 @@ import {
 } from './ed';
 import { mldsa_generateKeyPairWebCrypto, type MlDsaVariant } from './mldsa';
 import {
+  slhdsa_generateKeyPairWebCrypto,
+  SLH_DSA_VARIANTS,
+  type SlhDsaVariant,
+} from './slhdsa';
+import {
   mlkem_generateKeyPairWebCrypto,
   type MlKemVariant,
   MlKem,
@@ -1435,13 +1440,25 @@ export const PQC_SEEDLESS_PKCS8_LENGTHS: Readonly<Record<string, number>> = {
 
 // Map from PQC algorithm name to display family. Used to render the
 // import-rejection error message in the same form Node emits.
-const PQC_FAMILY: Readonly<Record<string, 'ML-DSA' | 'ML-KEM'>> = {
+const PQC_FAMILY: Readonly<Record<string, 'ML-DSA' | 'ML-KEM' | 'SLH-DSA'>> = {
   'ML-DSA-44': 'ML-DSA',
   'ML-DSA-65': 'ML-DSA',
   'ML-DSA-87': 'ML-DSA',
   'ML-KEM-512': 'ML-KEM',
   'ML-KEM-768': 'ML-KEM',
   'ML-KEM-1024': 'ML-KEM',
+  'SLH-DSA-SHA2-128s': 'SLH-DSA',
+  'SLH-DSA-SHA2-128f': 'SLH-DSA',
+  'SLH-DSA-SHA2-192s': 'SLH-DSA',
+  'SLH-DSA-SHA2-192f': 'SLH-DSA',
+  'SLH-DSA-SHA2-256s': 'SLH-DSA',
+  'SLH-DSA-SHA2-256f': 'SLH-DSA',
+  'SLH-DSA-SHAKE-128s': 'SLH-DSA',
+  'SLH-DSA-SHAKE-128f': 'SLH-DSA',
+  'SLH-DSA-SHAKE-192s': 'SLH-DSA',
+  'SLH-DSA-SHAKE-192f': 'SLH-DSA',
+  'SLH-DSA-SHAKE-256s': 'SLH-DSA',
+  'SLH-DSA-SHAKE-256f': 'SLH-DSA',
 };
 
 function pqcImportKeyObject(
@@ -1620,6 +1637,16 @@ function mldsaImportKey(
   return new CryptoKey(keyObject, { name }, keyUsages, extractable);
 }
 
+function slhdsaImportKey(
+  format: ImportFormat,
+  data: BufferLike | JWK,
+  algorithm: SubtleAlgorithm,
+  extractable: boolean,
+  keyUsages: KeyUsage[],
+): CryptoKey {
+  return mldsaImportKey(format, data, algorithm, extractable, keyUsages);
+}
+
 function mlkemImportKey(
   format: ImportFormat,
   data: BufferLike | JWK,
@@ -1685,8 +1712,21 @@ const exportKeySpki = async (
     case 'ML-DSA-65':
     // Fall through
     case 'ML-DSA-87':
+    // Fall through
+    case 'SLH-DSA-SHA2-128s':
+    case 'SLH-DSA-SHA2-128f':
+    case 'SLH-DSA-SHA2-192s':
+    case 'SLH-DSA-SHA2-192f':
+    case 'SLH-DSA-SHA2-256s':
+    case 'SLH-DSA-SHA2-256f':
+    case 'SLH-DSA-SHAKE-128s':
+    case 'SLH-DSA-SHAKE-128f':
+    case 'SLH-DSA-SHAKE-192s':
+    case 'SLH-DSA-SHAKE-192f':
+    case 'SLH-DSA-SHAKE-256s':
+    case 'SLH-DSA-SHAKE-256f':
       if (key.type === 'public') {
-        // Export ML-DSA key in SPKI DER format
+        // Export ML-DSA / SLH-DSA key in SPKI DER format
         return bufferLikeToArrayBuffer(
           key.keyObject.handle.exportKey(KFormatType.DER, KeyEncoding.SPKI),
         );
@@ -1771,6 +1811,24 @@ const exportKeyPkcs8 = async (
         return ab;
       }
       break;
+    case 'SLH-DSA-SHA2-128s':
+    case 'SLH-DSA-SHA2-128f':
+    case 'SLH-DSA-SHA2-192s':
+    case 'SLH-DSA-SHA2-192f':
+    case 'SLH-DSA-SHA2-256s':
+    case 'SLH-DSA-SHA2-256f':
+    case 'SLH-DSA-SHAKE-128s':
+    case 'SLH-DSA-SHAKE-128f':
+    case 'SLH-DSA-SHAKE-192s':
+    case 'SLH-DSA-SHAKE-192f':
+    case 'SLH-DSA-SHAKE-256s':
+    case 'SLH-DSA-SHAKE-256f':
+      if (key.type === 'private') {
+        return bufferLikeToArrayBuffer(
+          key.keyObject.handle.exportKey(KFormatType.DER, KeyEncoding.PKCS8),
+        );
+      }
+      break;
   }
 
   throw new Error(
@@ -1847,8 +1905,20 @@ const exportKeyRaw = (
     case 'ML-KEM-512':
     case 'ML-KEM-768':
     case 'ML-KEM-1024':
-      // ML-DSA / ML-KEM keys do not recognize plain 'raw' (Node webcrypto.js
-      // lines 488-510).
+    case 'SLH-DSA-SHA2-128s':
+    case 'SLH-DSA-SHA2-128f':
+    case 'SLH-DSA-SHA2-192s':
+    case 'SLH-DSA-SHA2-192f':
+    case 'SLH-DSA-SHA2-256s':
+    case 'SLH-DSA-SHA2-256f':
+    case 'SLH-DSA-SHAKE-128s':
+    case 'SLH-DSA-SHAKE-128f':
+    case 'SLH-DSA-SHAKE-192s':
+    case 'SLH-DSA-SHAKE-192f':
+    case 'SLH-DSA-SHAKE-256s':
+    case 'SLH-DSA-SHAKE-256f':
+      // ML-DSA / ML-KEM / SLH-DSA keys do not recognize plain 'raw' (Node
+      // webcrypto.js lines 488-510).
       if (!isPublic) return fail();
       if (format === 'raw-public') return exportRawPublic();
       return fail();
@@ -1908,6 +1978,19 @@ const exportKeyJWK = (key: CryptoKey): ArrayBuffer | unknown => {
     case 'ML-KEM-768':
     // Fall through
     case 'ML-KEM-1024':
+    // Fall through
+    case 'SLH-DSA-SHA2-128s':
+    case 'SLH-DSA-SHA2-128f':
+    case 'SLH-DSA-SHA2-192s':
+    case 'SLH-DSA-SHA2-192f':
+    case 'SLH-DSA-SHA2-256s':
+    case 'SLH-DSA-SHA2-256f':
+    case 'SLH-DSA-SHAKE-128s':
+    case 'SLH-DSA-SHAKE-128f':
+    case 'SLH-DSA-SHAKE-192s':
+    case 'SLH-DSA-SHAKE-192f':
+    case 'SLH-DSA-SHAKE-256s':
+    case 'SLH-DSA-SHAKE-256f':
       return jwk;
     case 'AES-CTR':
     // Fall through
@@ -2289,6 +2372,18 @@ const signVerify = (
     case 'ML-DSA-44':
     case 'ML-DSA-65':
     case 'ML-DSA-87':
+    case 'SLH-DSA-SHA2-128s':
+    case 'SLH-DSA-SHA2-128f':
+    case 'SLH-DSA-SHA2-192s':
+    case 'SLH-DSA-SHA2-192f':
+    case 'SLH-DSA-SHA2-256s':
+    case 'SLH-DSA-SHA2-256f':
+    case 'SLH-DSA-SHAKE-128s':
+    case 'SLH-DSA-SHAKE-128f':
+    case 'SLH-DSA-SHAKE-192s':
+    case 'SLH-DSA-SHAKE-192f':
+    case 'SLH-DSA-SHAKE-256s':
+    case 'SLH-DSA-SHAKE-256f':
       return mldsaSignVerify(key, data, signature);
     case 'KMAC128':
     case 'KMAC256':
@@ -2364,6 +2459,7 @@ const SUPPORTED_ALGORITHMS: Record<string, Set<string>> = {
     'ML-DSA-44',
     'ML-DSA-65',
     'ML-DSA-87',
+    ...SLH_DSA_VARIANTS,
   ]),
   verify: new Set([
     'RSASSA-PKCS1-v1_5',
@@ -2377,6 +2473,7 @@ const SUPPORTED_ALGORITHMS: Record<string, Set<string>> = {
     'ML-DSA-44',
     'ML-DSA-65',
     'ML-DSA-87',
+    ...SLH_DSA_VARIANTS,
   ]),
   digest: new Set([
     'SHA-1',
@@ -2414,6 +2511,7 @@ const SUPPORTED_ALGORITHMS: Record<string, Set<string>> = {
     'ML-KEM-512',
     'ML-KEM-768',
     'ML-KEM-1024',
+    ...SLH_DSA_VARIANTS,
   ]),
   importKey: new Set([
     'RSASSA-PKCS1-v1_5',
@@ -2445,6 +2543,7 @@ const SUPPORTED_ALGORITHMS: Record<string, Set<string>> = {
     'ML-KEM-512',
     'ML-KEM-768',
     'ML-KEM-1024',
+    ...SLH_DSA_VARIANTS,
   ]),
   exportKey: new Set([
     'RSASSA-PKCS1-v1_5',
@@ -2471,6 +2570,7 @@ const SUPPORTED_ALGORITHMS: Record<string, Set<string>> = {
     'ML-KEM-512',
     'ML-KEM-768',
     'ML-KEM-1024',
+    ...SLH_DSA_VARIANTS,
   ]),
   deriveBits: new Set([
     'PBKDF2',
@@ -2506,7 +2606,7 @@ const SUPPORTED_ALGORITHMS: Record<string, Set<string>> = {
   decapsulateKey: new Set(['ML-KEM-512', 'ML-KEM-768', 'ML-KEM-1024']),
 };
 
-const ASYMMETRIC_ALGORITHMS = new Set([
+const ASYMMETRIC_ALGORITHMS = new Set<string>([
   'RSASSA-PKCS1-v1_5',
   'RSA-PSS',
   'RSA-OAEP',
@@ -2522,6 +2622,7 @@ const ASYMMETRIC_ALGORITHMS = new Set([
   'ML-KEM-512',
   'ML-KEM-768',
   'ML-KEM-1024',
+  ...SLH_DSA_VARIANTS,
 ]);
 
 // Per-algorithm validators for deriveBits (mirrors Node's hkdf.js:141-149,
@@ -2964,13 +3065,14 @@ export class Subtle {
       throw lazyDOMException('key is not extractable', 'InvalidAccessError');
 
     if (format === 'raw-seed') {
-      const pqcAlgos = [
+      const pqcAlgos: string[] = [
         'ML-KEM-512',
         'ML-KEM-768',
         'ML-KEM-1024',
         'ML-DSA-44',
         'ML-DSA-65',
         'ML-DSA-87',
+        ...SLH_DSA_VARIANTS,
       ];
       if (!pqcAlgos.includes(key.algorithm.name)) {
         throw lazyDOMException(
@@ -3216,6 +3318,25 @@ export class Subtle {
         );
         checkCryptoKeyPairUsages(result as CryptoKeyPair);
         break;
+      case 'SLH-DSA-SHA2-128s':
+      case 'SLH-DSA-SHA2-128f':
+      case 'SLH-DSA-SHA2-192s':
+      case 'SLH-DSA-SHA2-192f':
+      case 'SLH-DSA-SHA2-256s':
+      case 'SLH-DSA-SHA2-256f':
+      case 'SLH-DSA-SHAKE-128s':
+      case 'SLH-DSA-SHAKE-128f':
+      case 'SLH-DSA-SHAKE-192s':
+      case 'SLH-DSA-SHAKE-192f':
+      case 'SLH-DSA-SHAKE-256s':
+      case 'SLH-DSA-SHAKE-256f':
+        result = await slhdsa_generateKeyPairWebCrypto(
+          algorithm.name as SlhDsaVariant,
+          extractable,
+          keyUsages,
+        );
+        checkCryptoKeyPairUsages(result as CryptoKeyPair);
+        break;
       case 'X25519':
       // Fall through
       case 'X448':
@@ -3383,6 +3504,26 @@ export class Subtle {
       case 'Ed448':
         result = edImportKey(
           aliasKeyFormat(format),
+          data as BufferLike | JWK,
+          normalizedAlgorithm,
+          extractable,
+          keyUsages,
+        );
+        break;
+      case 'SLH-DSA-SHA2-128s':
+      case 'SLH-DSA-SHA2-128f':
+      case 'SLH-DSA-SHA2-192s':
+      case 'SLH-DSA-SHA2-192f':
+      case 'SLH-DSA-SHA2-256s':
+      case 'SLH-DSA-SHA2-256f':
+      case 'SLH-DSA-SHAKE-128s':
+      case 'SLH-DSA-SHAKE-128f':
+      case 'SLH-DSA-SHAKE-192s':
+      case 'SLH-DSA-SHAKE-192f':
+      case 'SLH-DSA-SHAKE-256s':
+      case 'SLH-DSA-SHAKE-256f':
+        result = slhdsaImportKey(
+          format,
           data as BufferLike | JWK,
           normalizedAlgorithm,
           extractable,

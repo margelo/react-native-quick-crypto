@@ -35,9 +35,12 @@ Encrypts data.
 
 <TypeTable
   type={{
-    algorithm: { description: 'Params (e.g. { name: "AES-GCM", iv: ... }).', type: 'Object' },
+    algorithm: {
+      description: 'Params (e.g. { name: "AES-GCM", iv: ... }).',
+      type: 'Object',
+    },
     key: { description: 'The CryptoKey.', type: 'CryptoKey' },
-    data: { description: 'Data to encrypt.', type: 'BufferSource' }
+    data: { description: 'Data to encrypt.', type: 'BufferSource' },
   }}
 />
 
@@ -51,7 +54,7 @@ Decrypts data. Supports the same algorithms as `encrypt`.
 
 Generates a digital signature.
 
-**Supported algorithms:** `ECDSA`, `Ed25519`, `Ed448`, `HMAC`, `KMAC128`, `KMAC256`, `ML-DSA-44`, `ML-DSA-65`, `ML-DSA-87`, `RSA-PSS`, `RSASSA-PKCS1-v1_5`
+**Supported algorithms:** `ECDSA`, `Ed25519`, `Ed448`, `HMAC`, `KMAC128`, `KMAC256`, `ML-DSA-44`, `ML-DSA-65`, `ML-DSA-87`, `RSA-PSS`, `RSASSA-PKCS1-v1_5`, `SLH-DSA-SHA2-{128,192,256}{s,f}`, `SLH-DSA-SHAKE-{128,192,256}{s,f}`
 
 ### verify(algorithm, key, signature, data)
 
@@ -64,7 +67,9 @@ Generates a hash digest.
 **Supported algorithms:** `SHA-1`, `SHA-256`, `SHA-384`, `SHA-512`, `SHA3-256`, `SHA3-384`, `SHA3-512`, `cSHAKE128`, `cSHAKE256`
 
 <Callout type="info">
-  `cSHAKE128` and `cSHAKE256` provide SHAKE XOF (Extendable Output Function) support. The `length` parameter (in bytes) is required to specify the output length.
+  `cSHAKE128` and `cSHAKE256` provide SHAKE XOF (Extendable Output Function)
+  support. The `length` parameter (in bytes) is required to specify the output
+  length.
 </Callout>
 
 ```ts
@@ -72,10 +77,7 @@ Generates a hash digest.
 const hash = await subtle.digest('SHA3-256', data);
 
 // cSHAKE256 with custom output length
-const xof = await subtle.digest(
-  { name: 'cSHAKE256', length: 64 },
-  data
-);
+const xof = await subtle.digest({ name: 'cSHAKE256', length: 64 }, data);
 ```
 
 ### generateKey(algorithm, extractable, keyUsages)
@@ -87,13 +89,13 @@ Generates a new key or key pair.
 ```ts
 const keyPair = await subtle.generateKey(
   {
-    name: "RSA-OAEP",
+    name: 'RSA-OAEP',
     modulusLength: 4096,
     publicExponent: new Uint8Array([1, 0, 1]),
-    hash: "SHA-256"
+    hash: 'SHA-256',
   },
   true,
-  ["encrypt", "decrypt"]
+  ['encrypt', 'decrypt'],
 );
 ```
 
@@ -113,9 +115,15 @@ Derives raw bits from a key using a key derivation algorithm.
 
 <TypeTable
   type={{
-    algorithm: { description: 'Derivation params (name, salt, iterations, etc.).', type: 'Object' },
-    baseKey: { description: 'The base CryptoKey for derivation.', type: 'CryptoKey' },
-    length: { description: 'Number of bits to derive.', type: 'number' }
+    algorithm: {
+      description: 'Derivation params (name, salt, iterations, etc.).',
+      type: 'Object',
+    },
+    baseKey: {
+      description: 'The base CryptoKey for derivation.',
+      type: 'CryptoKey',
+    },
+    length: { description: 'Number of bits to derive.', type: 'number' },
   }}
 />
 
@@ -128,7 +136,7 @@ const passwordKey = await subtle.importKey(
   new TextEncoder().encode('password'),
   'PBKDF2',
   false,
-  ['deriveBits']
+  ['deriveBits'],
 );
 
 const bits = await subtle.deriveBits(
@@ -136,47 +144,41 @@ const bits = await subtle.deriveBits(
     name: 'PBKDF2',
     salt: crypto.getRandomValues(new Uint8Array(16)),
     iterations: 600000,
-    hash: 'SHA-256'
+    hash: 'SHA-256',
   },
   passwordKey,
-  256
+  256,
 );
 ```
 
 ```ts
 // HKDF
-const ikmKey = await subtle.importKey(
-  'raw',
-  masterSecret,
-  'HKDF',
-  false,
-  ['deriveBits']
-);
+const ikmKey = await subtle.importKey('raw', masterSecret, 'HKDF', false, [
+  'deriveBits',
+]);
 
 const derived = await subtle.deriveBits(
   {
     name: 'HKDF',
     hash: 'SHA-256',
     salt: new Uint8Array(32),
-    info: new TextEncoder().encode('session-key')
+    info: new TextEncoder().encode('session-key'),
   },
   ikmKey,
-  256
+  256,
 );
 ```
 
 ```ts
 // X25519 ECDH
-const aliceKey = await subtle.generateKey(
-  { name: 'X25519' },
-  true,
-  ['deriveBits']
-);
+const aliceKey = await subtle.generateKey({ name: 'X25519' }, true, [
+  'deriveBits',
+]);
 
 const sharedBits = await subtle.deriveBits(
   { name: 'X25519', public: bobPublicKey },
   aliceKey.privateKey,
-  256
+  256,
 );
 ```
 
@@ -191,12 +193,12 @@ const aesKey = await subtle.deriveKey(
     name: 'PBKDF2',
     salt: crypto.getRandomValues(new Uint8Array(16)),
     iterations: 600000,
-    hash: 'SHA-256'
+    hash: 'SHA-256',
   },
   passwordKey,
   { name: 'AES-GCM', length: 256 },
   true,
-  ['encrypt', 'decrypt']
+  ['encrypt', 'decrypt'],
 );
 ```
 
@@ -208,10 +210,16 @@ Exports a key and encrypts (wraps) it for safe transport.
 
 <TypeTable
   type={{
-    format: { description: 'Export format for the key being wrapped.', type: '"raw" | "pkcs8" | "spki" | "jwk"' },
+    format: {
+      description: 'Export format for the key being wrapped.',
+      type: '"raw" | "pkcs8" | "spki" | "jwk"',
+    },
     key: { description: 'The key to wrap.', type: 'CryptoKey' },
-    wrappingKey: { description: 'Key used for wrapping (encryption).', type: 'CryptoKey' },
-    wrapAlgo: { description: 'Wrapping algorithm params.', type: 'Object' }
+    wrappingKey: {
+      description: 'Key used for wrapping (encryption).',
+      type: 'CryptoKey',
+    },
+    wrapAlgo: { description: 'Wrapping algorithm params.', type: 'Object' },
   }}
 />
 
@@ -222,21 +230,18 @@ Exports a key and encrypts (wraps) it for safe transport.
 const wrappingKey = await subtle.generateKey(
   { name: 'AES-KW', length: 256 },
   true,
-  ['wrapKey', 'unwrapKey']
+  ['wrapKey', 'unwrapKey'],
 );
 
 const keyToWrap = await subtle.generateKey(
   { name: 'AES-GCM', length: 256 },
   true,
-  ['encrypt', 'decrypt']
+  ['encrypt', 'decrypt'],
 );
 
-const wrapped = await subtle.wrapKey(
-  'raw',
-  keyToWrap,
-  wrappingKey,
-  { name: 'AES-KW' }
-);
+const wrapped = await subtle.wrapKey('raw', keyToWrap, wrappingKey, {
+  name: 'AES-KW',
+});
 ```
 
 ### unwrapKey(format, wrappedKey, unwrappingKey, unwrapAlgo, unwrappedKeyAlgo, extractable, keyUsages)
@@ -251,7 +256,7 @@ const unwrapped = await subtle.unwrapKey(
   { name: 'AES-KW' },
   { name: 'AES-GCM', length: 256 },
   true,
-  ['encrypt', 'decrypt']
+  ['encrypt', 'decrypt'],
 );
 ```
 
@@ -263,13 +268,10 @@ Extracts the public key from a private `CryptoKey`.
 const keyPair = await subtle.generateKey(
   { name: 'ECDSA', namedCurve: 'P-256' },
   true,
-  ['sign', 'verify']
+  ['sign', 'verify'],
 );
 
-const publicOnly = await subtle.getPublicKey(
-  keyPair.privateKey,
-  ['verify']
-);
+const publicOnly = await subtle.getPublicKey(keyPair.privateKey, ['verify']);
 ```
 
 ### SubtleCrypto.supports(operation, algorithm[, lengthOrAdditionalAlgorithm])
@@ -296,48 +298,49 @@ Post-quantum key encapsulation methods for ML-KEM. See the [PQC page](/docs/api/
 
 ### Encryption/Decryption
 
-| Algorithm | Type | Notes |
-|:----------|:-----|:------|
-| `AES-CBC` | Symmetric | Block cipher, requires padding |
-| `AES-CTR` | Symmetric | Stream-like, counter mode |
-| `AES-GCM` | Symmetric | **Recommended** — authenticated encryption |
-| `AES-OCB` | Symmetric | Authenticated, faster than GCM |
-| `ChaCha20-Poly1305` | Symmetric | Authenticated, fast on mobile |
-| `RSA-OAEP` | Asymmetric | For small payloads or key wrapping |
+| Algorithm           | Type       | Notes                                      |
+| :------------------ | :--------- | :----------------------------------------- |
+| `AES-CBC`           | Symmetric  | Block cipher, requires padding             |
+| `AES-CTR`           | Symmetric  | Stream-like, counter mode                  |
+| `AES-GCM`           | Symmetric  | **Recommended** — authenticated encryption |
+| `AES-OCB`           | Symmetric  | Authenticated, faster than GCM             |
+| `ChaCha20-Poly1305` | Symmetric  | Authenticated, fast on mobile              |
+| `RSA-OAEP`          | Asymmetric | For small payloads or key wrapping         |
 
 ### Signing/Verification
 
-| Algorithm | Type | Notes |
-|:----------|:-----|:------|
-| `ECDSA` | Asymmetric | P-256, P-384, P-521, secp256k1 |
-| `Ed25519` | Asymmetric | Fast, deterministic |
-| `Ed448` | Asymmetric | Higher security Ed curve |
-| `HMAC` | Symmetric | Message authentication |
-| `KMAC128` / `KMAC256` | Symmetric | Keccak-based MAC |
-| `ML-DSA-44/65/87` | Post-Quantum | FIPS 204 lattice signatures |
-| `RSA-PSS` | Asymmetric | Probabilistic RSA signatures |
-| `RSASSA-PKCS1-v1_5` | Asymmetric | Legacy RSA signatures |
+| Algorithm                                 | Type         | Notes                                        |
+| :---------------------------------------- | :----------- | :------------------------------------------- |
+| `ECDSA`                                   | Asymmetric   | P-256, P-384, P-521, secp256k1               |
+| `Ed25519`                                 | Asymmetric   | Fast, deterministic                          |
+| `Ed448`                                   | Asymmetric   | Higher security Ed curve                     |
+| `HMAC`                                    | Symmetric    | Message authentication                       |
+| `KMAC128` / `KMAC256`                     | Symmetric    | Keccak-based MAC                             |
+| `ML-DSA-44/65/87`                         | Post-Quantum | FIPS 204 lattice signatures                  |
+| `RSA-PSS`                                 | Asymmetric   | Probabilistic RSA signatures                 |
+| `RSASSA-PKCS1-v1_5`                       | Asymmetric   | Legacy RSA signatures                        |
+| `SLH-DSA-{SHA2,SHAKE}-{128,192,256}{s,f}` | Post-Quantum | FIPS 205 hash-based signatures (12 variants) |
 
 ### Key Derivation
 
-| Algorithm | Input | Notes |
-|:----------|:------|:------|
-| `PBKDF2` | Password | Iterations-based, widely supported |
-| `HKDF` | Key material | Extract-and-Expand (RFC 5869) |
-| `Argon2d/i/id` | Password | Memory-hard, PHC winner |
-| `ECDH` | Key pair | P-256, P-384, P-521, secp256k1 |
-| `X25519` | Key pair | Modern ECDH |
-| `X448` | Key pair | Higher security ECDH |
+| Algorithm      | Input        | Notes                              |
+| :------------- | :----------- | :--------------------------------- |
+| `PBKDF2`       | Password     | Iterations-based, widely supported |
+| `HKDF`         | Key material | Extract-and-Expand (RFC 5869)      |
+| `Argon2d/i/id` | Password     | Memory-hard, PHC winner            |
+| `ECDH`         | Key pair     | P-256, P-384, P-521, secp256k1     |
+| `X25519`       | Key pair     | Modern ECDH                        |
+| `X448`         | Key pair     | Higher security ECDH               |
 
 ### Key Wrapping
 
-| Algorithm | Notes |
-|:----------|:------|
-| `AES-KW` | RFC 3394, purpose-built key wrapping |
-| `AES-GCM` | Authenticated wrapping |
-| `AES-CBC` / `AES-CTR` / `AES-OCB` | Alternative wrapping |
-| `ChaCha20-Poly1305` | Authenticated wrapping |
-| `RSA-OAEP` | Asymmetric wrapping |
+| Algorithm                         | Notes                                |
+| :-------------------------------- | :----------------------------------- |
+| `AES-KW`                          | RFC 3394, purpose-built key wrapping |
+| `AES-GCM`                         | Authenticated wrapping               |
+| `AES-CBC` / `AES-CTR` / `AES-OCB` | Alternative wrapping                 |
+| `ChaCha20-Poly1305`               | Authenticated wrapping               |
+| `RSA-OAEP`                        | Asymmetric wrapping                  |
 
 ---
 
@@ -351,24 +354,23 @@ Symmetric encryption with a random key.
 import { subtle } from 'react-native-quick-crypto';
 
 async function secureMessage(msg: string) {
-    // Generate Key
-    const key = await subtle.generateKey(
-        { name: "AES-GCM", length: 256 },
-        true,
-        ["encrypt", "decrypt"]
-    );
+  // Generate Key
+  const key = await subtle.generateKey({ name: 'AES-GCM', length: 256 }, true, [
+    'encrypt',
+    'decrypt',
+  ]);
 
-    // Encrypt
-    const iv = QuickCrypto.getRandomValues(new Uint8Array(12));
-    const encoded = new TextEncoder().encode(msg);
+  // Encrypt
+  const iv = QuickCrypto.getRandomValues(new Uint8Array(12));
+  const encoded = new TextEncoder().encode(msg);
 
-    const ciphertext = await subtle.encrypt(
-        { name: "AES-GCM", iv: iv },
-        key,
-        encoded
-    );
+  const ciphertext = await subtle.encrypt(
+    { name: 'AES-GCM', iv: iv },
+    key,
+    encoded,
+  );
 
-    return { key, iv, ciphertext };
+  return { key, iv, ciphertext };
 }
 ```
 
@@ -378,24 +380,24 @@ Importing a public key from a JWK to verify a token.
 
 ```ts
 async function verifyToken(token: string, jwk: any) {
-    const pubKey = await subtle.importKey(
-        "jwk",
-        jwk,
-        { name: "ECDSA", namedCurve: "P-256" },
-        false,
-        ["verify"]
-    );
+  const pubKey = await subtle.importKey(
+    'jwk',
+    jwk,
+    { name: 'ECDSA', namedCurve: 'P-256' },
+    false,
+    ['verify'],
+  );
 
-    const [header, payload, sigBase64] = token.split('.');
-    const data = new TextEncoder().encode(`${header}.${payload}`);
-    const signature = Buffer.from(sigBase64, 'base64');
+  const [header, payload, sigBase64] = token.split('.');
+  const data = new TextEncoder().encode(`${header}.${payload}`);
+  const signature = Buffer.from(sigBase64, 'base64');
 
-    return await subtle.verify(
-        { name: "ECDSA", hash: "SHA-256" },
-        pubKey,
-        signature,
-        data
-    );
+  return await subtle.verify(
+    { name: 'ECDSA', hash: 'SHA-256' },
+    pubKey,
+    signature,
+    data,
+  );
 }
 ```
 
@@ -413,7 +415,7 @@ async function encryptWithPassword(plaintext: string, password: string) {
     new TextEncoder().encode(password),
     'PBKDF2',
     false,
-    ['deriveKey']
+    ['deriveKey'],
   );
 
   const aesKey = await subtle.deriveKey(
@@ -421,13 +423,13 @@ async function encryptWithPassword(plaintext: string, password: string) {
     passwordKey,
     { name: 'AES-GCM', length: 256 },
     false,
-    ['encrypt', 'decrypt']
+    ['encrypt', 'decrypt'],
   );
 
   const ciphertext = await subtle.encrypt(
     { name: 'AES-GCM', iv },
     aesKey,
-    new TextEncoder().encode(plaintext)
+    new TextEncoder().encode(plaintext),
   );
 
   return { ciphertext, salt, iv };

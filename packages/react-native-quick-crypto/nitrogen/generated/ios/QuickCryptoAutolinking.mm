@@ -28,6 +28,7 @@
 #include "HybridKeyObjectHandle.hpp"
 #include "HybridMlDsaKeyPair.hpp"
 #include "HybridMlKemKeyPair.hpp"
+#include "HybridSlhDsaKeyPair.hpp"
 #include "HybridPbkdf2.hpp"
 #include "HybridPrime.hpp"
 #include "HybridRandom.hpp"
@@ -208,6 +209,15 @@
                     "The HybridObject \"HybridMlKemKeyPair\" is not default-constructible! "
                     "Create a public constructor that takes zero arguments to be able to autolink this HybridObject.");
       return std::make_shared<HybridMlKemKeyPair>();
+    }
+  );
+  HybridObjectRegistry::registerHybridObjectConstructor(
+    "SlhDsaKeyPair",
+    []() -> std::shared_ptr<HybridObject> {
+      static_assert(std::is_default_constructible_v<HybridSlhDsaKeyPair>,
+                    "The HybridObject \"HybridSlhDsaKeyPair\" is not default-constructible! "
+                    "Create a public constructor that takes zero arguments to be able to autolink this HybridObject.");
+      return std::make_shared<HybridSlhDsaKeyPair>();
     }
   );
   HybridObjectRegistry::registerHybridObjectConstructor(
