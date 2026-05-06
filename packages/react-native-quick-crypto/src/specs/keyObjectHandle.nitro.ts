@@ -36,4 +36,5 @@ export interface KeyObjectHandle
   keyDetail(): KeyDetail;
   keyEquals(other: KeyObjectHandle): boolean;
   getSymmetricKeySize(): number;
+  checkEcKeyData(): boolean;
 }

@@ -1016,4 +1016,16 @@ double HybridKeyObjectHandle::getSymmetricKeySize() {
   return static_cast<double>(data_.GetSymmetricKeySize());
 }
 
+bool HybridKeyObjectHandle::checkEcKeyData() {
+  const auto& pkey = data_.GetAsymmetricKey();
+  if (!pkey || EVP_PKEY_id(pkey.get()) != EVP_PKEY_EC) {
+    return false;
+  }
+  auto ctx = pkey.newCtx();
+  if (!ctx) {
+    return false;
+  }
+  return data_.GetKeyType() == KeyType::PRIVATE ? ctx.privateCheck() : ctx.publicCheck();
+}
+
 } // namespace margelo::nitro::crypto

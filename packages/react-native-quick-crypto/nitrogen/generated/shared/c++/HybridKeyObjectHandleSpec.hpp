@@ -85,6 +85,7 @@ namespace margelo::nitro::crypto {
       virtual KeyDetail keyDetail() = 0;
       virtual bool keyEquals(const std::shared_ptr<HybridKeyObjectHandleSpec>& other) = 0;
       virtual double getSymmetricKeySize() = 0;
+      virtual bool checkEcKeyData() = 0;
 
     protected:
       // Hybrid Setup

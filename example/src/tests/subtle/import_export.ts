@@ -383,6 +383,108 @@ test(SUITE, 'EC import raw / export spki (osp)', async () => {
   );
 });
 
+// #1005 D.1 — SPKI/PKCS#8 import must reject named-curve mismatch.
+test(SUITE, 'EC SPKI import rejects named-curve mismatch (#1005)', async () => {
+  const p256Spki = base64ToArrayBuffer(
+    'MFkwEwYHKoZIzj0CAQYIKoZIzj0DAQcDQgAENlFpbMBNfCY6Lhj9A/clefyxJVIXGJ0y6CcZ/cbbyyebvN6T0aNPvpQyFdUwRtYvFHlYbqIZOM8AoqdPcnSMIA==',
+  );
+  await assertThrowsAsync(
+    () =>
+      subtle.importKey(
+        'spki',
+        p256Spki,
+        { name: 'ECDSA', namedCurve: 'P-384' },
+        true,
+        ['verify'],
+      ),
+    'DataError',
+  );
+});
+
+test(
+  SUITE,
+  'EC PKCS#8 import rejects named-curve mismatch (#1005)',
+  async () => {
+    const p256Pkcs8 = base64ToArrayBuffer(
+      'MIGHAgEAMBMGByqGSM49AgEGCCqGSM49AwEHBG0wawIBAQQgDxBsPQPIgMuMyQbxzbb9toew6Ev6e9O6ZhpxLNgmAEqhRANCAARfSYxhH+6V5lIg+M3O0iQBLf+53kuE2luIgWnp81/Ya1Gybj8tl4tJVu1GEwcTyt8hoA7vRACmCHnI5B1+bNpS',
+    );
+    await assertThrowsAsync(
+      () =>
+        subtle.importKey(
+          'pkcs8',
+          p256Pkcs8,
+          { name: 'ECDSA', namedCurve: 'P-384' },
+          true,
+          ['sign'],
+        ),
+      'DataError',
+    );
+  },
+);
+
+// #1005 D.3 — SPKI export must always emit uncompressed point form, even when
+// the key was imported in compressed form.
+test(SUITE, 'EC SPKI export forces uncompressed point (#1005)', async () => {
+  // Reuse the P-256 raw point used above.
+  const raw = new Uint8Array(
+    base64ToArrayBuffer(
+      'BDZRaWzATXwmOi4Y/QP3JXn8sSVSFxidMugnGf3G28snm7zek9GjT76UMhXVMEbWLxR5WG6iGTjPAKKnT3J0jCA=',
+    ),
+  );
+  const x = raw.slice(1, 33);
+  const y = raw.slice(33);
+  const compressedPrefix = (y[31]! & 1) === 1 ? 0x03 : 0x02;
+
+  // Hand-rolled compressed P-256 SPKI: 26-byte ASN.1 wrapper + 33-byte point.
+  const compressedSpki = new Uint8Array([
+    0x30,
+    0x39,
+    0x30,
+    0x13,
+    0x06,
+    0x07,
+    0x2a,
+    0x86,
+    0x48,
+    0xce,
+    0x3d,
+    0x02,
+    0x01,
+    0x06,
+    0x08,
+    0x2a,
+    0x86,
+    0x48,
+    0xce,
+    0x3d,
+    0x03,
+    0x01,
+    0x07,
+    0x03,
+    0x22,
+    0x00,
+    compressedPrefix,
+    ...x,
+  ]);
+  expect(compressedSpki.length).to.equal(59);
+
+  const key = await subtle.importKey(
+    'spki',
+    compressedSpki.buffer.slice(
+      compressedSpki.byteOffset,
+      compressedSpki.byteOffset + compressedSpki.byteLength,
+    ),
+    { name: 'ECDSA', namedCurve: 'P-256' },
+    true,
+    ['verify'],
+  );
+
+  const exported = (await subtle.exportKey('spki', key)) as ArrayBuffer;
+  expect(exported.byteLength).to.equal(91);
+  // Uncompressed-point prefix lives at offset 26 in P-256 SPKI.
+  expect(new Uint8Array(exported)[26]).to.equal(0x04);
+});
+
 // // TODO: enable when generateKey() is implemented
 // // from Node.js https://github.com/nodejs/node/blob/main/test/parallel/test-webcrypto-export-import.js#L217-L273
 // test(SUITE, 'EC import / export key pairs (node)', async () => {
