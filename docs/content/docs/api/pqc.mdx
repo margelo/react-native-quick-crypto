@@ -266,11 +266,11 @@ const isValid = await subtle.verify(
 
 ### Key Export Formats
 
-| Algorithm                               | `spki` | `pkcs8` | `jwk` | `raw-public` | `raw-seed` |
-| :-------------------------------------- | :----: | :-----: | :---: | :----------: | :--------: |
-| ML-DSA-44/65/87                         |   ✅   |   ✅    |  ✅   |      ✅      |     ✅     |
-| ML-KEM-512/768/1024                     |   ✅   |   ✅    |  ✅   |      ✅      |     ✅     |
-| SLH-DSA-{SHA2,SHAKE}-{128,192,256}{s,f} |   ✅   |   ✅    |  ✅   |      ✅      |     ✅     |
+| Algorithm                                 | `spki` | `pkcs8` | `jwk` | `raw-public` | `raw-seed` |
+| :---------------------------------------- | :----: | :-----: | :---: | :----------: | :--------: |
+| ML-DSA-44/65/87                           |   ✅   |   ✅    |  ✅   |      ✅      |     ✅     |
+| ML-KEM-512/768/1024                       |   ✅   |   ✅    |  ✅   |      ✅      |     ✅     |
+| `SLH-DSA-{SHA2,SHAKE}-{128,192,256}{s,f}` |   ✅   |   ✅    |  ✅   |      ✅      |     ✅     |
 
 ```ts
 // Export ML-DSA public key as JWK
