@@ -234,44 +234,56 @@ bool HybridUtils::timingSafeEqual(const std::shared_ptr<ArrayBuffer>& a, const s
 facebook::jsi::Value HybridUtils::bufferToJsiString(facebook::jsi::Runtime& runtime, const facebook::jsi::Value&,
                                                     const facebook::jsi::Value* args, size_t argCount) {
   // Runtime argument check from react-native-nitro-modules/cpp/core/HybridFunction.hpp
-  if (argCount != 2) [[unlikely]] {
+  if (argCount != 4) [[unlikely]] {
     throw facebook::jsi::JSError(runtime,
-                                 "`Utils.bufferToString(...)` expected 2 arguments, but received " + std::to_string(argCount) + "!");
+                                 "`Utils.bufferToString(...)` expected 4 arguments, but received " + std::to_string(argCount) + "!");
   }
 
   // Exception wrapper from react-native-nitro-modules/cpp/core/HybridFunction.hpp
   try {
-    // bufferToString(buffer: ArrayBuffer, encoding: string): string; Defined in utils/conversion.ts
+    // bufferToString(buffer: ArrayBuffer, encoding: string, start: number, end: number): string;
+    // Defined in utils/conversion.ts
     auto buffer = JSIConverter<std::shared_ptr<ArrayBuffer>>::fromJSI(runtime, args[0]);
     std::string encoding = JSIConverter<std::string>::fromJSI(runtime, args[1]);
+    const size_t bufferSize = buffer->size();
+    // `start` and `end` are normalized in the TS code
+    // so it's safe to use `static_cast<size_t>` here
+    const size_t start = static_cast<size_t>(JSIConverter<double>::fromJSI(runtime, args[2]));
+    const size_t end = static_cast<size_t>(JSIConverter<double>::fromJSI(runtime, args[3]));
+    if (start > end || end > bufferSize) {
+      // This should never happen if called from the TS wrapper
+      // Add this check to avoid out of bounds access
+      throw std::runtime_error("Invalid start/end value");
+    }
+    const size_t offset = start;
+    const size_t length = end - start;
 
-    const auto* data = reinterpret_cast<const uint8_t*>(buffer->data());
-    size_t len = buffer->size();
+    const auto* data = reinterpret_cast<const uint8_t*>(buffer->data() + offset);
 
     if (encoding == "hex") {
-      return facebook::jsi::String::createFromUtf8(runtime, encodeHex(data, len));
+      return facebook::jsi::String::createFromUtf8(runtime, encodeHex(data, length));
     }
     if (encoding == "base64") {
-      return facebook::jsi::String::createFromUtf8(runtime, encodeBase64(data, len));
+      return facebook::jsi::String::createFromUtf8(runtime, encodeBase64(data, length));
     }
     if (encoding == "base64url") {
-      return facebook::jsi::String::createFromUtf8(runtime, encodeBase64Url(data, len));
+      return facebook::jsi::String::createFromUtf8(runtime, encodeBase64Url(data, length));
     }
     if (encoding == "utf8" || encoding == "utf-8") {
-      return facebook::jsi::String::createFromUtf8(runtime, data, len);
+      return facebook::jsi::String::createFromUtf8(runtime, data, length);
     }
     if (encoding == "latin1" || encoding == "binary") {
-      return facebook::jsi::String::createFromUtf8(runtime, encodeLatin1(data, len));
+      return facebook::jsi::String::createFromUtf8(runtime, encodeLatin1(data, length));
     }
     if (encoding == "ascii") {
-      std::string result(reinterpret_cast<const char*>(data), len);
+      std::string result(reinterpret_cast<const char*>(data), length);
       for (auto& c : result) {
         c &= 0x7F;
       }
       return facebook::jsi::String::createFromUtf8(runtime, result);
     }
     if (encoding == "utf16le") {
-      return createUtf16LeString(runtime, data, len);
+      return createUtf16LeString(runtime, data, length);
     }
     throw std::runtime_error("Unsupported encoding: " + encoding);
   } catch (const std::exception& exception) {
@@ -329,7 +341,7 @@ facebook::jsi::Value HybridUtils::jsiStringToBuffer(facebook::jsi::Runtime& runt
 void HybridUtils::loadHybridMethods() {
   HybridUtilsSpec::loadHybridMethods();
   registerHybrids(this, [](Prototype& prototype) {
-    prototype.registerRawHybridMethod("bufferToString", 2, &HybridUtils::bufferToJsiString);
+    prototype.registerRawHybridMethod("bufferToString", 4, &HybridUtils::bufferToJsiString);
     prototype.registerRawHybridMethod("stringToBuffer", 2, &HybridUtils::jsiStringToBuffer);
   });
 }

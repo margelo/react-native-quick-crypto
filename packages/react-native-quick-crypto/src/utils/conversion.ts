@@ -6,7 +6,12 @@ import type { ABV, BinaryLikeNode, BufferLike } from './types';
 import { Platform } from 'react-native';
 
 type UtilsWithStringConverter = Utils & {
-  bufferToString(buffer: ArrayBuffer, encoding: string): string;
+  bufferToString(
+    buffer: ArrayBuffer,
+    encoding: string,
+    start?: number,
+    end?: number,
+  ): string;
   stringToBuffer(str: string, encoding: string): ArrayBuffer;
 };
 
@@ -223,19 +228,46 @@ export function binaryLikeToArrayBuffer(
   );
 }
 
-export function ab2str(buf: ArrayBuffer, encoding: string = 'hex'): string {
+export function ab2str(
+  buf: ArrayBuffer,
+  encoding: string = 'hex',
+  start?: number,
+  end?: number,
+): string {
   if (nativeBufferToStringEncodings.has(encoding)) {
-    return utils.bufferToString(buf, encoding);
+    return bufferToString(buf, encoding, start, end);
   }
-  return CraftzdogBuffer.from(buf).toString(encoding);
+
+  return CraftzdogBuffer.from(buf).toString(encoding, start, end);
 }
 
-/** Native C++ buffer-to-string — exposed for benchmarking */
+/** Native C++ buffer-to-string with arguments normalization*/
 export function bufferToString(
   buf: ArrayBuffer,
   encoding: string = 'hex',
+  start?: number,
+  end?: number,
 ): string {
-  return utils.bufferToString(buf, encoding);
+  // https://github.com/nodejs/node/blob/v24.15.0/lib/buffer.js#L915-L928
+  if (start === undefined || start < 0) {
+    start = 0;
+  } else if (start >= buf.byteLength) {
+    return '';
+  } else {
+    start = Math.trunc(start) || 0;
+  }
+
+  if (end === undefined || end > buf.byteLength) {
+    end = buf.byteLength;
+  } else {
+    end = Math.trunc(end) || 0;
+  }
+
+  if (end <= start) {
+    return '';
+  }
+
+  return utils.bufferToString(buf, encoding, start, end);
 }
 
 /** Native C++ string-to-buffer — exposed for benchmarking */

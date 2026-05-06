@@ -8,6 +8,226 @@ const SUITE = 'utils';
 
 const toU8 = (ab: ArrayBuffer): Uint8Array => new Uint8Array(ab);
 
+// --- Range arguments ---
+
+test(
+  SUITE,
+  "[Node.js] bufferToString: Return empty string if start >= buffer's length.",
+  () => {
+    const ab = stringToBuffer('abc', 'ascii');
+    expect(bufferToString(ab, 'ascii', 3)).to.equal('');
+    expect(bufferToString(ab, 'ascii', Number.POSITIVE_INFINITY)).to.equal('');
+    expect(bufferToString(ab, 'ascii', 3.14, 3)).to.equal('');
+    expect(
+      bufferToString(ab, 'ascii', 'Infinity' as unknown as number, 3),
+    ).to.equal('');
+  },
+);
+
+test(SUITE, '[Node.js] bufferToString: Return empty string if end <= 0', () => {
+  const ab = stringToBuffer('abc', 'ascii');
+  expect(bufferToString(ab, 'ascii', 1, 0)).to.equal('');
+  expect(bufferToString(ab, 'ascii', 1, -1.2)).to.equal('');
+  expect(bufferToString(ab, 'ascii', 1, -100)).to.equal('');
+  expect(bufferToString(ab, 'ascii', 1, Number.NEGATIVE_INFINITY)).to.equal('');
+});
+
+test(
+  SUITE,
+  '[Node.js] bufferToString: If start < 0, start will be taken as zero.',
+  () => {
+    const ab = stringToBuffer('abc', 'ascii');
+    const starts = [
+      -1,
+      -1.99,
+      Number.NEGATIVE_INFINITY,
+      '-1',
+      '-1.99',
+      '-Infinity',
+    ] as const;
+
+    for (const start of starts) {
+      expect(
+        bufferToString(ab, 'ascii', start as unknown as number, 3),
+      ).to.equal('abc');
+    }
+  },
+);
+
+test(
+  SUITE,
+  '[Node.js] bufferToString: If start is an invalid integer, start will be taken as zero.',
+  () => {
+    const ab = stringToBuffer('abc', 'ascii');
+    const starts = ['node.js', {}, [], NaN, null, undefined, false, ''];
+
+    for (const start of starts) {
+      expect(
+        bufferToString(ab, 'ascii', start as unknown as number, 3),
+      ).to.equal('abc');
+    }
+  },
+);
+
+test(
+  SUITE,
+  '[Node.js] bufferToString: Use start values that coerce to integers',
+  () => {
+    const ab = stringToBuffer('abc', 'ascii');
+    const cases: Array<[unknown, string]> = [
+      ['-1', 'abc'],
+      ['1', 'bc'],
+      ['-Infinity', 'abc'],
+      ['3', ''],
+      [Number(3), ''],
+      ['3.14', ''],
+      ['1.99', 'bc'],
+      ['-1.99', 'abc'],
+      [1.99, 'bc'],
+      [true, 'bc'],
+    ];
+
+    for (const [start, expected] of cases) {
+      expect(
+        bufferToString(ab, 'ascii', start as unknown as number, 3),
+      ).to.equal(expected);
+    }
+  },
+);
+
+test(
+  SUITE,
+  "[Node.js] bufferToString: If end > buffer's length, end will be taken as buffer's length.",
+  () => {
+    const ab = stringToBuffer('abc', 'ascii');
+    const ends = [5, 6.99, Number.POSITIVE_INFINITY, '5', '6.99', 'Infinity'];
+
+    for (const end of ends) {
+      expect(bufferToString(ab, 'ascii', 0, end as unknown as number)).to.equal(
+        'abc',
+      );
+    }
+  },
+);
+
+test(
+  SUITE,
+  '[Node.js] bufferToString: Handle invalid end values according to Buffer.prototype.toString() coercion rules.',
+  () => {
+    const ab = stringToBuffer('abc', 'ascii');
+    const cases: Array<[unknown, string]> = [
+      ['node.js', ''],
+      [{}, ''],
+      [NaN, ''],
+      [undefined, 'abc'],
+      [null, ''],
+      [[], ''],
+      [false, ''],
+      ['', ''],
+    ];
+
+    for (const [end, expected] of cases) {
+      expect(bufferToString(ab, 'ascii', 0, end as unknown as number)).to.equal(
+        expected,
+      );
+    }
+    expect(bufferToString(ab, 'ascii', 0)).to.equal('abc');
+  },
+);
+
+test(
+  SUITE,
+  '[Node.js] bufferToString: Use end values that coerce to integers',
+  () => {
+    const ab = stringToBuffer('abc', 'ascii');
+    const cases: Array<[unknown, string]> = [
+      ['-1', ''],
+      ['1', 'a'],
+      ['-Infinity', ''],
+      ['3', 'abc'],
+      [Number(3), 'abc'],
+      ['3.14', 'abc'],
+      ['1.99', 'a'],
+      ['-1.99', ''],
+      [1.99, 'a'],
+      [true, 'a'],
+    ];
+
+    for (const [end, expected] of cases) {
+      expect(bufferToString(ab, 'ascii', 0, end as unknown as number)).to.equal(
+        expected,
+      );
+    }
+  },
+);
+
+test(
+  SUITE,
+  '[Node.js] bufferToString: Test hex/base64/base64url partial range encoding',
+  () => {
+    const hex = new Uint8Array([0xde, 0xad, 0xbe, 0xef, 0xca, 0xfe])
+      .buffer as ArrayBuffer;
+    expect(bufferToString(hex, 'hex')).to.equal('deadbeefcafe');
+    expect(bufferToString(hex, 'hex', 0, 3)).to.equal('deadbe');
+    expect(bufferToString(hex, 'hex', 2, 5)).to.equal('beefca');
+    expect(bufferToString(hex, 'hex', 4)).to.equal('cafe');
+    expect(bufferToString(hex, 'hex', 6)).to.equal('');
+    expect(bufferToString(hex, 'hex', 0, 0)).to.equal('');
+
+    const hello = stringToBuffer('Hello, World!', 'utf8');
+    expect(bufferToString(hello, 'base64')).to.equal('SGVsbG8sIFdvcmxkIQ==');
+    expect(bufferToString(hello, 'base64', 0, 5)).to.equal('SGVsbG8=');
+    expect(bufferToString(hello, 'base64', 7)).to.equal('V29ybGQh');
+    expect(bufferToString(hello, 'base64', 0, 0)).to.equal('');
+
+    expect(bufferToString(hello, 'base64url')).to.equal('SGVsbG8sIFdvcmxkIQ');
+    expect(bufferToString(hello, 'base64url', 0, 5)).to.equal('SGVsbG8');
+    expect(bufferToString(hello, 'base64url', 7)).to.equal('V29ybGQh');
+    expect(bufferToString(hello, 'base64url', 0, 0)).to.equal('');
+  },
+);
+
+test(
+  SUITE,
+  '[Node.js] bufferToString: Test with pool-allocated buffer (has non-zero byteOffset)',
+  () => {
+    const data = toU8(stringToBuffer('test data for hex encoding', 'utf8'));
+    const backing = new Uint8Array(data.length + 8);
+    backing.set(data, 4);
+
+    const poolBuf = backing.subarray(4, 4 + data.length);
+    const exactHex = bufferToString(data.buffer as ArrayBuffer, 'hex');
+    const dataHex = bufferToString(stringToBuffer('data', 'utf8'), 'hex');
+
+    expect(
+      bufferToString(
+        poolBuf.buffer as ArrayBuffer,
+        'hex',
+        poolBuf.byteOffset,
+        poolBuf.byteOffset + poolBuf.byteLength,
+      ),
+    ).to.equal(exactHex);
+    expect(
+      bufferToString(
+        poolBuf.buffer as ArrayBuffer,
+        'hex',
+        poolBuf.byteOffset + 5,
+        poolBuf.byteOffset + 9,
+      ),
+    ).to.equal(dataHex);
+  },
+);
+
+test(SUITE, '[Node.js] bufferToString: Test an invalid slice end.', () => {
+  const ab = new Uint8Array([1, 2, 3, 4, 5]).buffer as ArrayBuffer;
+  const b2 = bufferToString(ab, 'hex', 1, 10000);
+  const b3 = bufferToString(ab, 'hex', 1, 5);
+  const b4 = bufferToString(ab, 'hex', 1);
+
+  expect(b2).to.equal(b3);
+  expect(b2).to.equal(b4);
+});
+
 // --- Hex ---
 
 test(SUITE, 'hex encode empty buffer', () => {
@@ -642,6 +862,19 @@ test(SUITE, '[Node.js] Decodes UTF-16LE bytes back to Japanese text.', () => {
     'あいうえお',
   );
 });
+
+test(
+  SUITE,
+  '[Node.js] Decode UTF-16LE bytes back to Japanese text from byte offset 1.',
+  () => {
+    const bytes = new Uint8Array([
+      0xff, 0x42, 0x30, 0x44, 0x30, 0x46, 0x30, 0x48, 0x30, 0x4a, 0x30,
+    ]);
+    expect(bufferToString(bytes.buffer as ArrayBuffer, 'utf16le', 1)).to.equal(
+      'あいうえお',
+    );
+  },
+);
 
 // --- Latin1 / Binary ---
 
