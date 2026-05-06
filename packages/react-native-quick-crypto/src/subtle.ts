@@ -18,7 +18,8 @@ import type {
   RsaOaepParams,
   ChaCha20Poly1305Params,
 } from './utils';
-import { KFormatType, KeyEncoding, KeyType } from './utils';
+import { KFormatType, KeyEncoding, KeyType, kNamedCurveAliases } from './utils';
+import { Buffer } from '@craftzdog/react-native-buffer';
 import {
   CryptoKey,
   KeyObject,
@@ -168,15 +169,62 @@ function aliasKeyFormat(format: ImportFormat): ImportFormat {
   return format;
 }
 
-// Placeholder implementations for missing functions
+// SPKI byte length when the EC public point is encoded uncompressed.
+// Difference from ASN.1 OID/length encoding; mirrors Node's ecExportKey.
+const kUncompressedSpkiLength: Record<string, number> = {
+  'P-256': 91,
+  'P-384': 120,
+  'P-521': 158,
+};
+
 function ecExportKey(key: CryptoKey, format: KWebCryptoKeyFormat): ArrayBuffer {
   const keyObject = key.keyObject;
 
   if (format === KWebCryptoKeyFormat.kWebCryptoKeyFormatRaw) {
     return bufferLikeToArrayBuffer(keyObject.handle.exportKey());
   } else if (format === KWebCryptoKeyFormat.kWebCryptoKeyFormatSPKI) {
-    const exported = keyObject.export({ format: 'der', type: 'spki' });
-    return bufferLikeToArrayBuffer(exported);
+    const exported = bufferLikeToArrayBuffer(
+      keyObject.export({ format: 'der', type: 'spki' }),
+    );
+
+    // WebCrypto requires uncompressed point format for SPKI exports.
+    // If the key was imported in compressed form, re-export as uncompressed
+    // by reconstructing the point from the JWK x,y coordinates and
+    // round-tripping through initECRaw.
+    const namedCurve = key.algorithm.namedCurve;
+    const expected =
+      namedCurve === undefined
+        ? undefined
+        : kUncompressedSpkiLength[namedCurve];
+    if (expected !== undefined && exported.byteLength !== expected) {
+      const jwk = keyObject.handle.exportJwk({}, false);
+      if (jwk.x && jwk.y) {
+        const x = Buffer.from(jwk.x, 'base64url');
+        const y = Buffer.from(jwk.y, 'base64url');
+        const raw = new Uint8Array(1 + x.length + y.length);
+        raw[0] = 0x04;
+        raw.set(x, 1);
+        raw.set(y, 1 + x.length);
+        const tmp =
+          NitroModules.createHybridObject<KeyObjectHandle>('KeyObjectHandle');
+        const curveAlias =
+          kNamedCurveAliases[namedCurve as keyof typeof kNamedCurveAliases];
+        if (
+          tmp.initECRaw(
+            curveAlias,
+            raw.buffer.slice(
+              raw.byteOffset,
+              raw.byteOffset + raw.byteLength,
+            ) as ArrayBuffer,
+          )
+        ) {
+          return bufferLikeToArrayBuffer(
+            tmp.exportKey(KFormatType.DER, KeyEncoding.SPKI),
+          );
+        }
+      }
+    }
+    return exported;
   } else if (format === KWebCryptoKeyFormat.kWebCryptoKeyFormatPKCS8) {
     const exported = keyObject.export({ format: 'der', type: 'pkcs8' });
     return bufferLikeToArrayBuffer(exported);

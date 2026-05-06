@@ -230,6 +230,18 @@ export function ecImportKey(
       KFormatType.DER,
       format === 'spki' ? KeyEncoding.SPKI : KeyEncoding.PKCS8,
     );
+
+    // Validate the imported curve matches the requested algorithm.namedCurve.
+    const expectedAlias =
+      kNamedCurveAliases[namedCurve as keyof typeof kNamedCurveAliases];
+    if (keyObject.handle.keyDetail().namedCurve !== expectedAlias) {
+      throw lazyDOMException('Named curve mismatch', 'DataError');
+    }
+  }
+
+  // Verify the public/private point lies on the named curve.
+  if (!keyObject.handle.checkEcKeyData()) {
+    throw lazyDOMException('Invalid keyData', 'DataError');
   }
 
   return new CryptoKey(keyObject, algorithm, keyUsages, extractable);

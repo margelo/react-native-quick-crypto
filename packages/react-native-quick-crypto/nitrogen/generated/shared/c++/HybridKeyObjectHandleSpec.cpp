@@ -24,6 +24,7 @@ namespace margelo::nitro::crypto {
       prototype.registerHybridMethod("keyDetail", &HybridKeyObjectHandleSpec::keyDetail);
       prototype.registerHybridMethod("keyEquals", &HybridKeyObjectHandleSpec::keyEquals);
       prototype.registerHybridMethod("getSymmetricKeySize", &HybridKeyObjectHandleSpec::getSymmetricKeySize);
+      prototype.registerHybridMethod("checkEcKeyData", &HybridKeyObjectHandleSpec::checkEcKeyData);
     });
   }
 

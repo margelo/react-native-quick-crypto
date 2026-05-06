@@ -41,6 +41,8 @@ class HybridKeyObjectHandle : public HybridKeyObjectHandleSpec {
 
   double getSymmetricKeySize() override;
 
+  bool checkEcKeyData() override;
+
   const KeyObjectData& getKeyObjectData() const {
     return data_;
   }
