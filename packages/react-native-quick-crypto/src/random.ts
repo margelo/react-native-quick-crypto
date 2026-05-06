@@ -350,15 +350,28 @@ for (let i = 0; i < 256; ++i) {
   byteToHex.push((i + 0x100).toString(16).slice(1));
 }
 
-// Based on https://github.com/uuidjs/uuid/blob/main/src/v4.js
-export function randomUUID() {
-  const size = 16;
-  const buffer = new Buffer(size);
-  randomFillSync(buffer, 0, size);
+export interface RandomUUIDOptions {
+  // Accepted for Node.js parity. RNQC does not buffer entropy, so this is a
+  // no-op: every UUID already pulls fresh bytes from the OS CSPRNG.
+  disableEntropyCache?: boolean;
+}
 
-  // Per 4.4, set bits for version and `clock_seq_hi_and_reserved`
-  buffer[6] = (buffer[6]! & 0x0f) | 0x40;
-  buffer[8] = (buffer[8]! & 0x3f) | 0x80;
+function validateRandomUUIDOptions(options?: RandomUUIDOptions) {
+  if (options === undefined) return;
+  if (typeof options !== 'object' || options === null) {
+    throw new TypeError('options must be an object');
+  }
+  if (
+    options.disableEntropyCache !== undefined &&
+    typeof options.disableEntropyCache !== 'boolean'
+  ) {
+    throw new TypeError('options.disableEntropyCache must be a boolean');
+  }
+}
+
+function serializeUUID(buffer: Buffer, version: number, variant: number) {
+  buffer[6] = (buffer[6]! & 0x0f) | version;
+  buffer[8] = (buffer[8]! & 0x3f) | variant;
 
   return (
     byteToHex[buffer[0]!]! +
@@ -382,4 +395,32 @@ export function randomUUID() {
     byteToHex[buffer[14]!] +
     byteToHex[buffer[15]!]
   ).toLowerCase();
+}
+
+// RFC 9562 §4.4 — random UUID (v4).
+export function randomUUID(options?: RandomUUIDOptions) {
+  validateRandomUUIDOptions(options);
+  const buffer = new Buffer(16);
+  randomFillSync(buffer, 0, 16);
+  return serializeUUID(buffer, 0x40, 0x80);
+}
+
+// RFC 9562 §5.7 — Unix-ms timestamped UUID (v7).
+// Layout: 48-bit big-endian Unix-ms timestamp | 4-bit version (7) |
+// 12 bits random | 2-bit variant (10) | 62 bits random.
+export function randomUUIDv7(options?: RandomUUIDOptions) {
+  validateRandomUUIDOptions(options);
+  const buffer = new Buffer(16);
+  randomFillSync(buffer, 6, 10);
+
+  const now = Date.now();
+  const msb = Math.floor(now / 0x100000000);
+  buffer[0] = (msb >>> 8) & 0xff;
+  buffer[1] = msb & 0xff;
+  buffer[2] = (now >>> 24) & 0xff;
+  buffer[3] = (now >>> 16) & 0xff;
+  buffer[4] = (now >>> 8) & 0xff;
+  buffer[5] = now & 0xff;
+
+  return serializeUUID(buffer, 0x70, 0x80);
 }

@@ -156,6 +156,7 @@ These algorithms provide quantum-resistant cryptography.
   - ✅ `crypto.randomFillSync(buffer[, offset][, size])`
   - ✅ `crypto.randomInt([min, ]max[, callback])`
   - ✅ `crypto.randomUUID([options])`
+  - ✅ `crypto.randomUUIDv7([options])`
   - ✅ `crypto.scrypt(password, salt, keylen[, options], callback)`
   - ✅ `crypto.scryptSync(password, salt, keylen[, options])`
   - `-` `crypto.secureHeapUsed()` not applicable to RN
@@ -306,6 +307,7 @@ These ciphers are **not available in Node.js** but are provided by RNQC via libs
   - ✅ `crypto.subtle`
   - ✅ `crypto.getRandomValues(typedArray)`
   - ✅ `crypto.randomUUID()`
+  - ✅ `crypto.randomUUIDv7()`
 - ✅ Class: `CryptoKey`
   - ✅ `cryptoKey.algorithm`
   - ✅ `cryptoKey.extractable`
@@ -378,19 +380,25 @@ These ciphers are **not available in Node.js** but are provided by RNQC via libs
 
 ## `subtle.digest`
 
-| Algorithm   | Status |
-| ----------- | :----: |
-| `cSHAKE128` |   ✅   |
-| `cSHAKE256` |   ✅   |
-| `SHA-1`     |   ✅   |
-| `SHA-256`   |   ✅   |
-| `SHA-384`   |   ✅   |
-| `SHA-512`   |   ✅   |
-| `SHA3-256`  |   ✅   |
-| `SHA3-384`  |   ✅   |
-| `SHA3-512`  |   ✅   |
+| Algorithm        | Status |
+| ---------------- | :----: |
+| `cSHAKE128`      |   ✅   |
+| `cSHAKE256`      |   ✅   |
+| `KT128`          |   ✅   |
+| `KT256`          |   ✅   |
+| `SHA-1`          |   ✅   |
+| `SHA-256`        |   ✅   |
+| `SHA-384`        |   ✅   |
+| `SHA-512`        |   ✅   |
+| `SHA3-256`       |   ✅   |
+| `SHA3-384`       |   ✅   |
+| `SHA3-512`       |   ✅   |
+| `TurboSHAKE128`  |   ✅   |
+| `TurboSHAKE256`  |   ✅   |
 
-> **Note:** `cSHAKE128` and `cSHAKE256` provide SHAKE128/SHAKE256 (XOF) functionality with empty customization, matching Node.js behavior. The `length` parameter (in bytes, must be a multiple of 8) is required to specify the output length.
+> **Note:** `cSHAKE128` and `cSHAKE256` provide SHAKE128/SHAKE256 (XOF) functionality with empty customization, matching Node.js behavior. The `outputLength` parameter (in bytes, must be a multiple of 8) is required to specify the output length.
+>
+> **TurboSHAKE128/256** (RFC 9861) and **KangarooTwelve** (`KT128`, `KT256`) are extendable-output functions (XOFs) requiring an `outputLength` parameter. TurboSHAKE additionally accepts a `domainSeparation` byte; KangarooTwelve accepts a `customization` byte string.
 
 ## `subtle.encrypt`
 

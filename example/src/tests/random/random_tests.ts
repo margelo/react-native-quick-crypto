@@ -788,3 +788,77 @@ test(
     });
   },
 );
+
+// --- randomUUID (RFC 9562 §4.4 — v4) ---
+
+const UUID_V4_RE =
+  /^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/;
+
+test(SUITE, 'randomUUID returns RFC 9562 v4 string', () => {
+  const id = crypto.randomUUID();
+  expect(id).to.match(UUID_V4_RE);
+});
+
+test(SUITE, 'randomUUID accepts disableEntropyCache option', () => {
+  const id = crypto.randomUUID({ disableEntropyCache: true });
+  expect(id).to.match(UUID_V4_RE);
+});
+
+test(SUITE, 'randomUUID values are unique', () => {
+  const ids = new Set<string>();
+  for (let i = 0; i < 100; i++) ids.add(crypto.randomUUID());
+  expect(ids.size).to.equal(100);
+});
+
+// --- randomUUIDv7 (RFC 9562 §5.7) ---
+
+const UUID_V7_RE =
+  /^[0-9a-f]{8}-[0-9a-f]{4}-7[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/;
+
+function uuidV7Timestamp(id: string): number {
+  // First 12 hex chars = 48-bit ms timestamp.
+  return parseInt(id.replace(/-/g, '').slice(0, 12), 16);
+}
+
+test(SUITE, 'randomUUIDv7 returns RFC 9562 v7 string', () => {
+  const id = crypto.randomUUIDv7();
+  expect(id).to.match(UUID_V7_RE);
+});
+
+test(SUITE, 'randomUUIDv7 version=7 and variant=10', () => {
+  const id = crypto.randomUUIDv7();
+  const hex = id.replace(/-/g, '');
+  expect(parseInt(hex[12]!, 16)).to.equal(7);
+  // variant nibble: top 2 bits must be 10xx, i.e. 8/9/a/b
+  const v = parseInt(hex[16]!, 16);
+  expect(v >= 0x8 && v <= 0xb).to.equal(true);
+});
+
+test(SUITE, 'randomUUIDv7 timestamp matches Date.now()', () => {
+  const before = Date.now();
+  const id = crypto.randomUUIDv7();
+  const after = Date.now();
+  const ts = uuidV7Timestamp(id);
+  expect(ts >= before && ts <= after).to.equal(true);
+});
+
+test(SUITE, 'randomUUIDv7 timestamps are monotonic', () => {
+  const ids: string[] = [];
+  for (let i = 0; i < 50; i++) ids.push(crypto.randomUUIDv7());
+  for (let i = 1; i < ids.length; i++) {
+    expect(uuidV7Timestamp(ids[i]!) >= uuidV7Timestamp(ids[i - 1]!)).to.equal(
+      true,
+    );
+  }
+});
+
+test(SUITE, 'randomUUIDv7 accepts disableEntropyCache option', () => {
+  const id = crypto.randomUUIDv7({ disableEntropyCache: true });
+  expect(id).to.match(UUID_V7_RE);
+});
+
+test(SUITE, 'randomUUIDv7 values are unique', () => {
+  const ids = new Set<string>();
+  for (let i = 0; i < 100; i++) ids.add(crypto.randomUUIDv7());
+  expect(ids.size).to.equal(100);
+});
