@@ -3542,14 +3542,18 @@ for (const algorithm of ['KMAC128', 'KMAC256'] as const) {
     );
 
     const data = new TextEncoder().encode('jwk round-trip test');
-    const length = algorithm === 'KMAC128' ? 256 : 512;
+    const outputLength = algorithm === 'KMAC128' ? 256 : 512;
 
     const sig1 = await subtle.sign(
-      { name: algorithm, length },
+      { name: algorithm, outputLength },
       key as CryptoKey,
       data,
     );
-    const sig2 = await subtle.sign({ name: algorithm, length }, imported, data);
+    const sig2 = await subtle.sign(
+      { name: algorithm, outputLength },
+      imported,
+      data,
+    );
     expect(ab2str(sig1, 'hex')).to.equal(ab2str(sig2, 'hex'));
   });
 }

@@ -805,13 +805,22 @@ function kmacSignVerify(
 ): ArrayBuffer | boolean {
   const { name } = algorithm;
 
-  const defaultLength = name === 'KMAC128' ? 256 : 512;
-  const outputLengthBits = algorithm.length ?? defaultLength;
+  // KmacParams.outputLength is required per
+  // https://wicg.github.io/webcrypto-modern-algos/#KmacParams-dictionary
+  // and the rename from `length` (commit ab8dc2b84c2). Mirror Node's
+  // mac.js:213-223 by reading `outputLength` (in bits).
+  if (typeof algorithm.outputLength !== 'number') {
+    throw lazyDOMException(
+      `${name}Params.outputLength is required`,
+      'OperationError',
+    );
+  }
+  const outputLengthBits = algorithm.outputLength;
 
   if (outputLengthBits % 8 !== 0) {
     throw lazyDOMException(
-      'KMAC output length must be a multiple of 8',
-      'OperationError',
+      `Unsupported ${name}Params outputLength`,
+      'NotSupportedError',
     );
   }
 
@@ -2469,50 +2478,227 @@ const ASYMMETRIC_ALGORITHMS = new Set([
   'ML-KEM-1024',
 ]);
 
-export class Subtle {
-  static supports(
-    operation: string,
-    algorithm: SubtleAlgorithm | AnyAlgorithm,
-    _lengthOrAdditionalAlgorithm?: unknown,
-  ): boolean {
-    let normalizedAlgorithm: SubtleAlgorithm;
+// Per-algorithm validators for deriveBits (mirrors Node's hkdf.js:141-149,
+// pbkdf2.js:96-105, argon2.js:194-209). Used by Subtle.supports to reject
+// length values that the actual deriveBits implementation would reject.
+function validateKdfDeriveBitsLength(
+  length: number | null | undefined,
+  algName: string,
+): void {
+  if (length === null || length === undefined) {
+    throw lazyDOMException('length cannot be null', 'OperationError');
+  }
+  if (length % 8) {
+    throw lazyDOMException('length must be a multiple of 8', 'OperationError');
+  }
+  if (algName.startsWith('Argon2') && length < 32) {
+    throw lazyDOMException('length must be >= 32', 'OperationError');
+  }
+}
+
+// Mirrors Node's webcrypto.js:1652-1731 `check`. Normalizes the algorithm,
+// looks it up in SUPPORTED_ALGORITHMS, and runs per-algorithm validation
+// (deriveBits length validators, HMAC+SHA3 generateKey rejection).
+// `op` is the operation key in SUPPORTED_ALGORITHMS — wrapKey/unwrapKey fall
+// back to encrypt/decrypt to mirror Node's normalize fallback.
+function supportsCheck(
+  op: string,
+  alg: SubtleAlgorithm | AnyAlgorithm,
+  length?: number | null,
+): boolean {
+  let normalizedAlgorithm: SubtleAlgorithm;
+  try {
+    normalizedAlgorithm = normalizeAlgorithm(alg, op as Operation);
+  } catch {
+    if (op === 'wrapKey') return supportsCheck('encrypt', alg);
+    if (op === 'unwrapKey') return supportsCheck('decrypt', alg);
+    return false;
+  }
+
+  const supported = SUPPORTED_ALGORITHMS[op];
+  if (!supported || !supported.has(normalizedAlgorithm.name)) {
+    if (op === 'wrapKey') return supportsCheck('encrypt', alg);
+    if (op === 'unwrapKey') return supportsCheck('decrypt', alg);
+    return false;
+  }
+
+  if (op === 'deriveBits') {
+    const name = normalizedAlgorithm.name;
+    if (name === 'HKDF' || name === 'PBKDF2' || name.startsWith('Argon2')) {
+      try {
+        validateKdfDeriveBitsLength(length, name);
+      } catch {
+        return false;
+      }
+    }
+  }
+
+  if (op === 'generateKey' && normalizedAlgorithm.name === 'HMAC') {
+    const hashName =
+      typeof normalizedAlgorithm.hash === 'string'
+        ? normalizedAlgorithm.hash
+        : (normalizedAlgorithm.hash as { name?: string } | undefined)?.name;
+    if (
+      normalizedAlgorithm.length === undefined &&
+      typeof hashName === 'string' &&
+      hashName.startsWith('SHA3-')
+    ) {
+      return false;
+    }
+  }
+
+  return true;
+}
+
+function supportsImpl(
+  operation: string,
+  algorithm: SubtleAlgorithm | AnyAlgorithm,
+  lengthOrAdditionalAlgorithm: unknown,
+): boolean {
+  switch (operation) {
+    case 'decapsulateBits':
+    case 'decapsulateKey':
+    case 'decrypt':
+    case 'deriveBits':
+    case 'deriveKey':
+    case 'digest':
+    case 'encapsulateBits':
+    case 'encapsulateKey':
+    case 'encrypt':
+    case 'exportKey':
+    case 'generateKey':
+    case 'getPublicKey':
+    case 'importKey':
+    case 'sign':
+    case 'unwrapKey':
+    case 'verify':
+    case 'wrapKey':
+      break;
+    default:
+      return false;
+  }
+
+  let length: number | null | undefined;
+
+  if (operation === 'deriveKey') {
+    // deriveKey decomposes to importKey of derived alg + deriveBits with that
+    // alg's key length. Node webcrypto.js:1547-1563.
+    if (lengthOrAdditionalAlgorithm != null) {
+      const additional = lengthOrAdditionalAlgorithm as
+        | SubtleAlgorithm
+        | AnyAlgorithm;
+      if (!supportsCheck('importKey', additional)) return false;
+      try {
+        length = getKeyLength(normalizeAlgorithm(additional, 'get key length'));
+      } catch {
+        return false;
+      }
+      return supportsCheck('deriveBits', algorithm, length);
+    }
+    // No additional algorithm given — only check the deriveBits side.
+    return supportsCheck('deriveBits', algorithm);
+  }
+
+  if (operation === 'wrapKey') {
+    // wrapKey decomposes to encrypt of wrapping alg + exportKey of wrapped alg.
+    // Node webcrypto.js:1564-1572.
+    if (lengthOrAdditionalAlgorithm != null) {
+      const additional = lengthOrAdditionalAlgorithm as
+        | SubtleAlgorithm
+        | AnyAlgorithm;
+      if (!supportsCheck('exportKey', additional)) return false;
+    }
+    return supportsCheck('wrapKey', algorithm);
+  }
+
+  if (operation === 'unwrapKey') {
+    // unwrapKey decomposes to decrypt of wrapping alg + importKey of wrapped
+    // alg. Node webcrypto.js:1573-1581.
+    if (lengthOrAdditionalAlgorithm != null) {
+      const additional = lengthOrAdditionalAlgorithm as
+        | SubtleAlgorithm
+        | AnyAlgorithm;
+      if (!supportsCheck('importKey', additional)) return false;
+    }
+    return supportsCheck('unwrapKey', algorithm);
+  }
+
+  if (operation === 'deriveBits') {
+    if (lengthOrAdditionalAlgorithm == null) {
+      length = null;
+    } else if (typeof lengthOrAdditionalAlgorithm === 'number') {
+      length = lengthOrAdditionalAlgorithm;
+    } else {
+      return false;
+    }
+    return supportsCheck('deriveBits', algorithm, length);
+  }
+
+  if (operation === 'getPublicKey') {
+    let normalized: SubtleAlgorithm;
     try {
-      normalizedAlgorithm = normalizeAlgorithm(
-        algorithm,
-        (operation === 'getPublicKey' ? 'exportKey' : operation) as Operation,
-      );
+      normalized = normalizeAlgorithm(algorithm, 'exportKey');
     } catch {
       return false;
     }
+    return ASYMMETRIC_ALGORITHMS.has(normalized.name);
+  }
 
-    const name = normalizedAlgorithm.name;
-
-    if (operation === 'getPublicKey') {
-      return ASYMMETRIC_ALGORITHMS.has(name);
+  if (operation === 'encapsulateKey' || operation === 'decapsulateKey') {
+    // sharedKeyAlgorithm must support importKey, with HMAC/KMAC limited to
+    // length === undefined or 256 (Node webcrypto.js:1610-1645).
+    const additional = lengthOrAdditionalAlgorithm as
+      | SubtleAlgorithm
+      | AnyAlgorithm;
+    let normalizedAdd: SubtleAlgorithm;
+    try {
+      normalizedAdd = normalizeAlgorithm(additional, 'importKey');
+    } catch {
+      return false;
     }
-
-    if (operation === 'deriveKey') {
-      // deriveKey decomposes to deriveBits + importKey of additional algorithm
-      if (!SUPPORTED_ALGORITHMS.deriveBits?.has(name)) return false;
-      if (_lengthOrAdditionalAlgorithm != null) {
-        try {
-          const additionalAlg = normalizeAlgorithm(
-            _lengthOrAdditionalAlgorithm as SubtleAlgorithm | AnyAlgorithm,
-            'importKey',
-          );
-          return (
-            SUPPORTED_ALGORITHMS.importKey?.has(additionalAlg.name) ?? false
-          );
-        } catch {
-          return false;
-        }
+    switch (normalizedAdd.name) {
+      case 'AES-OCB':
+      case 'AES-KW':
+      case 'AES-GCM':
+      case 'AES-CTR':
+      case 'AES-CBC':
+      case 'ChaCha20-Poly1305':
+      case 'HKDF':
+      case 'PBKDF2':
+      case 'Argon2i':
+      case 'Argon2d':
+      case 'Argon2id':
+        break;
+      case 'HMAC':
+      case 'KMAC128':
+      case 'KMAC256': {
+        const addLen = normalizedAdd.length;
+        if (addLen !== undefined && addLen !== 256) return false;
+        break;
       }
-      return true;
+      default:
+        return false;
     }
+    return supportsCheck(operation, algorithm);
+  }
 
-    const supported = SUPPORTED_ALGORITHMS[operation];
-    if (!supported) return false;
-    return supported.has(name);
+  return supportsCheck(operation, algorithm);
+}
+
+export class Subtle {
+  // Spec-compliant capability detector. Mirrors Node's webcrypto.js:1506-1649
+  // `SubtleCrypto.supports`, including:
+  //   • composed-operation decomposition (deriveKey, wrapKey, unwrapKey,
+  //     encapsulateKey, decapsulateKey, getPublicKey)
+  //   • per-algorithm length validators for deriveBits (HKDF/PBKDF2/Argon2)
+  //   • HMAC + SHA3 generateKey with no length → false
+  // Static-only per the WICG spec.
+  static supports(
+    operation: string,
+    algorithm: SubtleAlgorithm | AnyAlgorithm,
+    lengthOrAdditionalAlgorithm: unknown = null,
+  ): boolean {
+    return supportsImpl(operation, algorithm, lengthOrAdditionalAlgorithm);
   }
 
   async decrypt(
