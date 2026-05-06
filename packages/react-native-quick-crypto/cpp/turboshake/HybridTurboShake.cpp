@@ -120,6 +120,7 @@ namespace {
     }
 
     size_t remaining = input_len - offset;
+    // Sized for the larger TurboSHAKE128 rate (168); also fits the 136-byte TurboSHAKE256 rate.
     uint8_t pad[kTurboSHAKE128Rate] = {};
     if (remaining > 0) {
       memcpy(pad, input + offset, remaining);
@@ -286,8 +287,8 @@ namespace {
   }
 
   uint8_t parseDomainSeparation(double value) {
-    if (!(value >= 0x01 && value <= 0x7F)) {
-      throw std::runtime_error("TurboSHAKE domainSeparation must be in 0x01..0x7F");
+    if (!(value >= 0x01 && value <= 0x7F) || value != static_cast<double>(static_cast<uint8_t>(value))) {
+      throw std::runtime_error("TurboSHAKE domainSeparation must be an integer in 0x01..0x7F");
     }
     return static_cast<uint8_t>(value);
   }
@@ -301,25 +302,21 @@ namespace {
     if (value > kMaxOutputBytes) {
       throw std::runtime_error("outputLength exceeds maximum allowed size");
     }
+    if (value != static_cast<double>(static_cast<uint32_t>(value))) {
+      throw std::runtime_error("outputLength must be an integer");
+    }
     return static_cast<uint32_t>(value);
   }
 
 } // namespace
 
-std::shared_ptr<Promise<std::shared_ptr<ArrayBuffer>>> HybridTurboShake::turboShake(const std::string& variant, double domainSeparation,
+std::shared_ptr<Promise<std::shared_ptr<ArrayBuffer>>> HybridTurboShake::turboShake(TurboShakeVariant variant, double domainSeparation,
                                                                                     double outputLength,
                                                                                     const std::shared_ptr<ArrayBuffer>& data) {
   uint8_t ds = parseDomainSeparation(domainSeparation);
   uint32_t outLen = parseOutputLength(outputLength);
 
-  bool is128;
-  if (variant == "TurboSHAKE128") {
-    is128 = true;
-  } else if (variant == "TurboSHAKE256") {
-    is128 = false;
-  } else {
-    throw std::runtime_error("Unknown TurboSHAKE variant: " + variant);
-  }
+  bool is128 = variant == TurboShakeVariant::TURBOSHAKE128;
 
   auto nativeData = ToNativeArrayBuffer(data);
 
@@ -338,18 +335,11 @@ std::shared_ptr<Promise<std::shared_ptr<ArrayBuffer>>> HybridTurboShake::turboSh
 }
 
 std::shared_ptr<Promise<std::shared_ptr<ArrayBuffer>>>
-HybridTurboShake::kangarooTwelve(const std::string& variant, double outputLength, const std::shared_ptr<ArrayBuffer>& data,
+HybridTurboShake::kangarooTwelve(KangarooTwelveVariant variant, double outputLength, const std::shared_ptr<ArrayBuffer>& data,
                                  const std::optional<std::shared_ptr<ArrayBuffer>>& customization) {
   uint32_t outLen = parseOutputLength(outputLength);
 
-  bool is128;
-  if (variant == "KT128") {
-    is128 = true;
-  } else if (variant == "KT256") {
-    is128 = false;
-  } else {
-    throw std::runtime_error("Unknown KangarooTwelve variant: " + variant);
-  }
+  bool is128 = variant == KangarooTwelveVariant::KT128;
 
   auto nativeData = ToNativeArrayBuffer(data);
   std::optional<std::shared_ptr<ArrayBuffer>> nativeCustom;

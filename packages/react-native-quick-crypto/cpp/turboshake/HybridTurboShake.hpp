@@ -17,11 +17,11 @@ class HybridTurboShake : public HybridTurboShakeSpec {
   HybridTurboShake() : HybridObject(TAG) {}
 
  public:
-  std::shared_ptr<Promise<std::shared_ptr<ArrayBuffer>>> turboShake(const std::string& variant, double domainSeparation,
-                                                                    double outputLength, const std::shared_ptr<ArrayBuffer>& data) override;
+  std::shared_ptr<Promise<std::shared_ptr<ArrayBuffer>>> turboShake(TurboShakeVariant variant, double domainSeparation, double outputLength,
+                                                                    const std::shared_ptr<ArrayBuffer>& data) override;
 
   std::shared_ptr<Promise<std::shared_ptr<ArrayBuffer>>>
-  kangarooTwelve(const std::string& variant, double outputLength, const std::shared_ptr<ArrayBuffer>& data,
+  kangarooTwelve(KangarooTwelveVariant variant, double outputLength, const std::shared_ptr<ArrayBuffer>& data,
                  const std::optional<std::shared_ptr<ArrayBuffer>>& customization) override;
 };
 

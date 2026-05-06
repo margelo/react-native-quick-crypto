@@ -13,11 +13,15 @@
 #error NitroModules cannot be found! Are you sure you installed NitroModules properly?
 #endif
 
-
+// Forward declaration of `TurboShakeVariant` to properly resolve imports.
+namespace margelo::nitro::crypto { enum class TurboShakeVariant; }
+// Forward declaration of `KangarooTwelveVariant` to properly resolve imports.
+namespace margelo::nitro::crypto { enum class KangarooTwelveVariant; }
 
 #include <NitroModules/ArrayBuffer.hpp>
 #include <NitroModules/Promise.hpp>
-#include <string>
+#include "TurboShakeVariant.hpp"
+#include "KangarooTwelveVariant.hpp"
 #include <optional>
 
 namespace margelo::nitro::crypto {
@@ -51,8 +55,8 @@ namespace margelo::nitro::crypto {
 
     public:
       // Methods
-      virtual std::shared_ptr<Promise<std::shared_ptr<ArrayBuffer>>> turboShake(const std::string& variant, double domainSeparation, double outputLength, const std::shared_ptr<ArrayBuffer>& data) = 0;
-      virtual std::shared_ptr<Promise<std::shared_ptr<ArrayBuffer>>> kangarooTwelve(const std::string& variant, double outputLength, const std::shared_ptr<ArrayBuffer>& data, const std::optional<std::shared_ptr<ArrayBuffer>>& customization) = 0;
+      virtual std::shared_ptr<Promise<std::shared_ptr<ArrayBuffer>>> turboShake(TurboShakeVariant variant, double domainSeparation, double outputLength, const std::shared_ptr<ArrayBuffer>& data) = 0;
+      virtual std::shared_ptr<Promise<std::shared_ptr<ArrayBuffer>>> kangarooTwelve(KangarooTwelveVariant variant, double outputLength, const std::shared_ptr<ArrayBuffer>& data, const std::optional<std::shared_ptr<ArrayBuffer>>& customization) = 0;
 
     protected:
       // Hybrid Setup
