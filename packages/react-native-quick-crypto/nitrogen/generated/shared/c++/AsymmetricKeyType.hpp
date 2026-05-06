@@ -44,6 +44,18 @@ namespace margelo::nitro::crypto {
     ML_KEM_512      SWIFT_NAME(mlKem512) = 12,
     ML_KEM_768      SWIFT_NAME(mlKem768) = 13,
     ML_KEM_1024      SWIFT_NAME(mlKem1024) = 14,
+    SLH_DSA_SHA2_128S      SWIFT_NAME(slhDsaSha2128s) = 15,
+    SLH_DSA_SHA2_128F      SWIFT_NAME(slhDsaSha2128f) = 16,
+    SLH_DSA_SHA2_192S      SWIFT_NAME(slhDsaSha2192s) = 17,
+    SLH_DSA_SHA2_192F      SWIFT_NAME(slhDsaSha2192f) = 18,
+    SLH_DSA_SHA2_256S      SWIFT_NAME(slhDsaSha2256s) = 19,
+    SLH_DSA_SHA2_256F      SWIFT_NAME(slhDsaSha2256f) = 20,
+    SLH_DSA_SHAKE_128S      SWIFT_NAME(slhDsaShake128s) = 21,
+    SLH_DSA_SHAKE_128F      SWIFT_NAME(slhDsaShake128f) = 22,
+    SLH_DSA_SHAKE_192S      SWIFT_NAME(slhDsaShake192s) = 23,
+    SLH_DSA_SHAKE_192F      SWIFT_NAME(slhDsaShake192f) = 24,
+    SLH_DSA_SHAKE_256S      SWIFT_NAME(slhDsaShake256s) = 25,
+    SLH_DSA_SHAKE_256F      SWIFT_NAME(slhDsaShake256f) = 26,
   } CLOSED_ENUM;
 
 } // namespace margelo::nitro::crypto
@@ -71,6 +83,18 @@ namespace margelo::nitro {
         case hashString("ml-kem-512"): return margelo::nitro::crypto::AsymmetricKeyType::ML_KEM_512;
         case hashString("ml-kem-768"): return margelo::nitro::crypto::AsymmetricKeyType::ML_KEM_768;
         case hashString("ml-kem-1024"): return margelo::nitro::crypto::AsymmetricKeyType::ML_KEM_1024;
+        case hashString("slh-dsa-sha2-128s"): return margelo::nitro::crypto::AsymmetricKeyType::SLH_DSA_SHA2_128S;
+        case hashString("slh-dsa-sha2-128f"): return margelo::nitro::crypto::AsymmetricKeyType::SLH_DSA_SHA2_128F;
+        case hashString("slh-dsa-sha2-192s"): return margelo::nitro::crypto::AsymmetricKeyType::SLH_DSA_SHA2_192S;
+        case hashString("slh-dsa-sha2-192f"): return margelo::nitro::crypto::AsymmetricKeyType::SLH_DSA_SHA2_192F;
+        case hashString("slh-dsa-sha2-256s"): return margelo::nitro::crypto::AsymmetricKeyType::SLH_DSA_SHA2_256S;
+        case hashString("slh-dsa-sha2-256f"): return margelo::nitro::crypto::AsymmetricKeyType::SLH_DSA_SHA2_256F;
+        case hashString("slh-dsa-shake-128s"): return margelo::nitro::crypto::AsymmetricKeyType::SLH_DSA_SHAKE_128S;
+        case hashString("slh-dsa-shake-128f"): return margelo::nitro::crypto::AsymmetricKeyType::SLH_DSA_SHAKE_128F;
+        case hashString("slh-dsa-shake-192s"): return margelo::nitro::crypto::AsymmetricKeyType::SLH_DSA_SHAKE_192S;
+        case hashString("slh-dsa-shake-192f"): return margelo::nitro::crypto::AsymmetricKeyType::SLH_DSA_SHAKE_192F;
+        case hashString("slh-dsa-shake-256s"): return margelo::nitro::crypto::AsymmetricKeyType::SLH_DSA_SHAKE_256S;
+        case hashString("slh-dsa-shake-256f"): return margelo::nitro::crypto::AsymmetricKeyType::SLH_DSA_SHAKE_256F;
         default: [[unlikely]]
           throw std::invalid_argument("Cannot convert \"" + unionValue + "\" to enum AsymmetricKeyType - invalid value!");
       }
@@ -92,6 +116,18 @@ namespace margelo::nitro {
         case margelo::nitro::crypto::AsymmetricKeyType::ML_KEM_512: return JSIConverter<std::string>::toJSI(runtime, "ml-kem-512");
         case margelo::nitro::crypto::AsymmetricKeyType::ML_KEM_768: return JSIConverter<std::string>::toJSI(runtime, "ml-kem-768");
         case margelo::nitro::crypto::AsymmetricKeyType::ML_KEM_1024: return JSIConverter<std::string>::toJSI(runtime, "ml-kem-1024");
+        case margelo::nitro::crypto::AsymmetricKeyType::SLH_DSA_SHA2_128S: return JSIConverter<std::string>::toJSI(runtime, "slh-dsa-sha2-128s");
+        case margelo::nitro::crypto::AsymmetricKeyType::SLH_DSA_SHA2_128F: return JSIConverter<std::string>::toJSI(runtime, "slh-dsa-sha2-128f");
+        case margelo::nitro::crypto::AsymmetricKeyType::SLH_DSA_SHA2_192S: return JSIConverter<std::string>::toJSI(runtime, "slh-dsa-sha2-192s");
+        case margelo::nitro::crypto::AsymmetricKeyType::SLH_DSA_SHA2_192F: return JSIConverter<std::string>::toJSI(runtime, "slh-dsa-sha2-192f");
+        case margelo::nitro::crypto::AsymmetricKeyType::SLH_DSA_SHA2_256S: return JSIConverter<std::string>::toJSI(runtime, "slh-dsa-sha2-256s");
+        case margelo::nitro::crypto::AsymmetricKeyType::SLH_DSA_SHA2_256F: return JSIConverter<std::string>::toJSI(runtime, "slh-dsa-sha2-256f");
+        case margelo::nitro::crypto::AsymmetricKeyType::SLH_DSA_SHAKE_128S: return JSIConverter<std::string>::toJSI(runtime, "slh-dsa-shake-128s");
+        case margelo::nitro::crypto::AsymmetricKeyType::SLH_DSA_SHAKE_128F: return JSIConverter<std::string>::toJSI(runtime, "slh-dsa-shake-128f");
+        case margelo::nitro::crypto::AsymmetricKeyType::SLH_DSA_SHAKE_192S: return JSIConverter<std::string>::toJSI(runtime, "slh-dsa-shake-192s");
+        case margelo::nitro::crypto::AsymmetricKeyType::SLH_DSA_SHAKE_192F: return JSIConverter<std::string>::toJSI(runtime, "slh-dsa-shake-192f");
+        case margelo::nitro::crypto::AsymmetricKeyType::SLH_DSA_SHAKE_256S: return JSIConverter<std::string>::toJSI(runtime, "slh-dsa-shake-256s");
+        case margelo::nitro::crypto::AsymmetricKeyType::SLH_DSA_SHAKE_256F: return JSIConverter<std::string>::toJSI(runtime, "slh-dsa-shake-256f");
         default: [[unlikely]]
           throw std::invalid_argument("Cannot convert AsymmetricKeyType to JS - invalid value: "
                                     + std::to_string(static_cast<int>(arg)) + "!");
@@ -118,6 +154,18 @@ namespace margelo::nitro {
         case hashString("ml-kem-512"):
         case hashString("ml-kem-768"):
         case hashString("ml-kem-1024"):
+        case hashString("slh-dsa-sha2-128s"):
+        case hashString("slh-dsa-sha2-128f"):
+        case hashString("slh-dsa-sha2-192s"):
+        case hashString("slh-dsa-sha2-192f"):
+        case hashString("slh-dsa-sha2-256s"):
+        case hashString("slh-dsa-sha2-256f"):
+        case hashString("slh-dsa-shake-128s"):
+        case hashString("slh-dsa-shake-128f"):
+        case hashString("slh-dsa-shake-192s"):
+        case hashString("slh-dsa-shake-192f"):
+        case hashString("slh-dsa-shake-256s"):
+        case hashString("slh-dsa-shake-256f"):
           return true;
         default:
           return false;

@@ -73,12 +73,32 @@ void HybridVerifyHandle::update(const std::shared_ptr<ArrayBuffer>& data) {
   }
 }
 
-// Check if key type requires one-shot verification (Ed25519, Ed448, ML-DSA)
+// Check if key type requires one-shot verification (Ed25519, Ed448, ML-DSA, SLH-DSA)
 static bool isOneShotVariant(EVP_PKEY* pkey) {
   int type = EVP_PKEY_id(pkey);
 #if RNQC_HAS_ML_DSA
-  return type == EVP_PKEY_ED25519 || type == EVP_PKEY_ED448 || type == EVP_PKEY_ML_DSA_44 || type == EVP_PKEY_ML_DSA_65 ||
-         type == EVP_PKEY_ML_DSA_87;
+  switch (type) {
+    case EVP_PKEY_ED25519:
+    case EVP_PKEY_ED448:
+    case EVP_PKEY_ML_DSA_44:
+    case EVP_PKEY_ML_DSA_65:
+    case EVP_PKEY_ML_DSA_87:
+    case EVP_PKEY_SLH_DSA_SHA2_128S:
+    case EVP_PKEY_SLH_DSA_SHA2_128F:
+    case EVP_PKEY_SLH_DSA_SHA2_192S:
+    case EVP_PKEY_SLH_DSA_SHA2_192F:
+    case EVP_PKEY_SLH_DSA_SHA2_256S:
+    case EVP_PKEY_SLH_DSA_SHA2_256F:
+    case EVP_PKEY_SLH_DSA_SHAKE_128S:
+    case EVP_PKEY_SLH_DSA_SHAKE_128F:
+    case EVP_PKEY_SLH_DSA_SHAKE_192S:
+    case EVP_PKEY_SLH_DSA_SHAKE_192F:
+    case EVP_PKEY_SLH_DSA_SHAKE_256S:
+    case EVP_PKEY_SLH_DSA_SHAKE_256F:
+      return true;
+    default:
+      return false;
+  }
 #else
   return type == EVP_PKEY_ED25519 || type == EVP_PKEY_ED448;
 #endif

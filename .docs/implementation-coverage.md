@@ -14,6 +14,7 @@ This document attempts to describe the implementation status of Crypto APIs/Inte
 
 - **ML-DSA** (Module Lattice Digital Signature Algorithm, FIPS 204) - ML-DSA-44, ML-DSA-65, ML-DSA-87
 - **ML-KEM** (Module Lattice Key Encapsulation Mechanism, FIPS 203) - ML-KEM-512, ML-KEM-768, ML-KEM-1024
+- **SLH-DSA** (Stateless Hash-Based Digital Signature, FIPS 205) - SLH-DSA-SHA2-{128,192,256}{s,f}, SLH-DSA-SHAKE-{128,192,256}{s,f}
 
 These algorithms provide quantum-resistant cryptography.
 
@@ -184,31 +185,55 @@ These algorithms provide quantum-resistant cryptography.
 
 ## `crypto.generateKeyPair`
 
-| type      | Status |
-| --------- | :----: |
-| `rsa`     |   ✅   |
-| `rsa-pss` |   ✅   |
-| `dsa`     |   ✅   |
-| `ec`      |   ✅   |
-| `ed25519` |   ✅   |
-| `ed448`   |   ✅   |
-| `x25519`  |   ✅   |
-| `x448`    |   ✅   |
-| `dh`      |   ✅   |
+| type                 | Status |
+| -------------------- | :----: |
+| `rsa`                |   ✅   |
+| `rsa-pss`            |   ✅   |
+| `dsa`                |   ✅   |
+| `ec`                 |   ✅   |
+| `ed25519`            |   ✅   |
+| `ed448`              |   ✅   |
+| `x25519`             |   ✅   |
+| `x448`               |   ✅   |
+| `dh`                 |   ✅   |
+| `slh-dsa-sha2-128s`  |   ✅   |
+| `slh-dsa-sha2-128f`  |   ✅   |
+| `slh-dsa-sha2-192s`  |   ✅   |
+| `slh-dsa-sha2-192f`  |   ✅   |
+| `slh-dsa-sha2-256s`  |   ✅   |
+| `slh-dsa-sha2-256f`  |   ✅   |
+| `slh-dsa-shake-128s` |   ✅   |
+| `slh-dsa-shake-128f` |   ✅   |
+| `slh-dsa-shake-192s` |   ✅   |
+| `slh-dsa-shake-192f` |   ✅   |
+| `slh-dsa-shake-256s` |   ✅   |
+| `slh-dsa-shake-256f` |   ✅   |
 
 ## `crypto.generateKeyPairSync`
 
-| type      | Status |
-| --------- | :----: |
-| `rsa`     |   ✅   |
-| `rsa-pss` |   ✅   |
-| `dsa`     |   ✅   |
-| `ec`      |   ✅   |
-| `ed25519` |   ✅   |
-| `ed448`   |   ✅   |
-| `x25519`  |   ✅   |
-| `x448`    |   ✅   |
-| `dh`      |   ✅   |
+| type                 | Status |
+| -------------------- | :----: |
+| `rsa`                |   ✅   |
+| `rsa-pss`            |   ✅   |
+| `dsa`                |   ✅   |
+| `ec`                 |   ✅   |
+| `ed25519`            |   ✅   |
+| `ed448`              |   ✅   |
+| `x25519`             |   ✅   |
+| `x448`               |   ✅   |
+| `dh`                 |   ✅   |
+| `slh-dsa-sha2-128s`  |   ✅   |
+| `slh-dsa-sha2-128f`  |   ✅   |
+| `slh-dsa-sha2-192s`  |   ✅   |
+| `slh-dsa-sha2-192f`  |   ✅   |
+| `slh-dsa-sha2-256s`  |   ✅   |
+| `slh-dsa-sha2-256f`  |   ✅   |
+| `slh-dsa-shake-128s` |   ✅   |
+| `slh-dsa-shake-128f` |   ✅   |
+| `slh-dsa-shake-192s` |   ✅   |
+| `slh-dsa-shake-192f` |   ✅   |
+| `slh-dsa-shake-256s` |   ✅   |
+| `slh-dsa-shake-256f` |   ✅   |
 
 ## `crypto.generateKeySync`
 
@@ -219,25 +244,49 @@ These algorithms provide quantum-resistant cryptography.
 
 ## `crypto.sign`
 
-| Algorithm           | Status |
-| ------------------- | :----: |
-| `RSASSA-PKCS1-v1_5` |   ✅   |
-| `RSA-PSS`           |   ✅   |
-| `ECDSA`             |   ✅   |
-| `Ed25519`           |   ✅   |
-| `Ed448`             |   ✅   |
-| `HMAC`              |   ✅   |
+| Algorithm            | Status |
+| -------------------- | :----: |
+| `RSASSA-PKCS1-v1_5`  |   ✅   |
+| `RSA-PSS`            |   ✅   |
+| `ECDSA`              |   ✅   |
+| `Ed25519`            |   ✅   |
+| `Ed448`              |   ✅   |
+| `HMAC`               |   ✅   |
+| `SLH-DSA-SHA2-128s`  |   ✅   |
+| `SLH-DSA-SHA2-128f`  |   ✅   |
+| `SLH-DSA-SHA2-192s`  |   ✅   |
+| `SLH-DSA-SHA2-192f`  |   ✅   |
+| `SLH-DSA-SHA2-256s`  |   ✅   |
+| `SLH-DSA-SHA2-256f`  |   ✅   |
+| `SLH-DSA-SHAKE-128s` |   ✅   |
+| `SLH-DSA-SHAKE-128f` |   ✅   |
+| `SLH-DSA-SHAKE-192s` |   ✅   |
+| `SLH-DSA-SHAKE-192f` |   ✅   |
+| `SLH-DSA-SHAKE-256s` |   ✅   |
+| `SLH-DSA-SHAKE-256f` |   ✅   |
 
 ## `crypto.verify`
 
-| Algorithm           | Status |
-| ------------------- | :----: |
-| `RSASSA-PKCS1-v1_5` |   ✅   |
-| `RSA-PSS`           |   ✅   |
-| `ECDSA`             |   ✅   |
-| `Ed25519`           |   ✅   |
-| `Ed448`             |   ✅   |
-| `HMAC`              |   ✅   |
+| Algorithm            | Status |
+| -------------------- | :----: |
+| `RSASSA-PKCS1-v1_5`  |   ✅   |
+| `RSA-PSS`            |   ✅   |
+| `ECDSA`              |   ✅   |
+| `Ed25519`            |   ✅   |
+| `Ed448`              |   ✅   |
+| `HMAC`               |   ✅   |
+| `SLH-DSA-SHA2-128s`  |   ✅   |
+| `SLH-DSA-SHA2-128f`  |   ✅   |
+| `SLH-DSA-SHA2-192s`  |   ✅   |
+| `SLH-DSA-SHA2-192f`  |   ✅   |
+| `SLH-DSA-SHA2-256s`  |   ✅   |
+| `SLH-DSA-SHA2-256f`  |   ✅   |
+| `SLH-DSA-SHAKE-128s` |   ✅   |
+| `SLH-DSA-SHAKE-128f` |   ✅   |
+| `SLH-DSA-SHAKE-192s` |   ✅   |
+| `SLH-DSA-SHAKE-192f` |   ✅   |
+| `SLH-DSA-SHAKE-256s` |   ✅   |
+| `SLH-DSA-SHAKE-256f` |   ✅   |
 
 ## Extended Ciphers (Beyond Node.js API)
 
@@ -356,30 +405,42 @@ These ciphers are **not available in Node.js** but are provided by RNQC via libs
 
 ## `subtle.exportKey`
 
-| Key Type            | `spki` | `pkcs8` | `jwk` | `raw` | `raw-secret` | `raw-public` | `raw-seed` |
-| ------------------- | :----: | :-----: | :---: | :---: | :----------: | :----------: | :--------: |
-| `AES-CBC`           |        |         |  ✅   |  ✅   |      ✅      |              |            |
-| `AES-CTR`           |        |         |  ✅   |  ✅   |      ✅      |              |            |
-| `AES-GCM`           |        |         |  ✅   |  ✅   |      ✅      |              |            |
-| `AES-KW`            |        |         |  ✅   |  ✅   |      ✅      |              |            |
-| `AES-OCB`           |        |         |  ✅   |  ✅   |      ✅      |              |            |
-| `ChaCha20-Poly1305` |        |         |  ✅   |       |      ✅      |              |            |
-| `ECDH`              |   ✅   |   ✅    |  ✅   |  ✅   |              |      ✅      |            |
-| `ECDSA`             |   ✅   |   ✅    |  ✅   |  ✅   |              |      ✅      |            |
-| `Ed25519`           |   ✅   |   ✅    |  ✅   |  ✅   |              |      ✅      |            |
-| `Ed448`             |   ✅   |   ✅    |  ✅   |  ✅   |              |      ✅      |            |
-| `HMAC`              |        |         |  ✅   |  ✅   |      ✅      |              |            |
-| `KMAC128`           |        |         |  ✅   |  ✅   |      ✅      |              |            |
-| `KMAC256`           |        |         |  ✅   |  ✅   |      ✅      |              |            |
-| `ML-DSA-44`         |   ✅   |   ✅    |  ❌   |       |              |      ✅      |     ✅     |
-| `ML-DSA-65`         |   ✅   |   ✅    |  ❌   |       |              |      ✅      |     ✅     |
-| `ML-DSA-87`         |   ✅   |   ✅    |  ❌   |       |              |      ✅      |     ✅     |
-| `ML-KEM-512`        |   ✅   |   ✅    |  ❌   |       |              |      ✅      |     ✅     |
-| `ML-KEM-768`        |   ✅   |   ✅    |  ❌   |       |              |      ✅      |     ✅     |
-| `ML-KEM-1024`       |   ✅   |   ✅    |  ❌   |       |              |      ✅      |     ✅     |
-| `RSA-OAEP`          |   ✅   |   ✅    |  ✅   |       |              |              |            |
-| `RSA-PSS`           |   ✅   |   ✅    |  ✅   |       |              |              |            |
-| `RSASSA-PKCS1-v1_5` |   ✅   |   ✅    |  ✅   |       |              |              |            |
+| Key Type             | `spki` | `pkcs8` | `jwk` | `raw` | `raw-secret` | `raw-public` | `raw-seed` |
+| -------------------- | :----: | :-----: | :---: | :---: | :----------: | :----------: | :--------: |
+| `AES-CBC`            |        |         |  ✅   |  ✅   |      ✅      |              |            |
+| `AES-CTR`            |        |         |  ✅   |  ✅   |      ✅      |              |            |
+| `AES-GCM`            |        |         |  ✅   |  ✅   |      ✅      |              |            |
+| `AES-KW`             |        |         |  ✅   |  ✅   |      ✅      |              |            |
+| `AES-OCB`            |        |         |  ✅   |  ✅   |      ✅      |              |            |
+| `ChaCha20-Poly1305`  |        |         |  ✅   |       |      ✅      |              |            |
+| `ECDH`               |   ✅   |   ✅    |  ✅   |  ✅   |              |      ✅      |            |
+| `ECDSA`              |   ✅   |   ✅    |  ✅   |  ✅   |              |      ✅      |            |
+| `Ed25519`            |   ✅   |   ✅    |  ✅   |  ✅   |              |      ✅      |            |
+| `Ed448`              |   ✅   |   ✅    |  ✅   |  ✅   |              |      ✅      |            |
+| `HMAC`               |        |         |  ✅   |  ✅   |      ✅      |              |            |
+| `KMAC128`            |        |         |  ✅   |  ✅   |      ✅      |              |            |
+| `KMAC256`            |        |         |  ✅   |  ✅   |      ✅      |              |            |
+| `ML-DSA-44`          |   ✅   |   ✅    |  ❌   |       |              |      ✅      |     ✅     |
+| `ML-DSA-65`          |   ✅   |   ✅    |  ❌   |       |              |      ✅      |     ✅     |
+| `ML-DSA-87`          |   ✅   |   ✅    |  ❌   |       |              |      ✅      |     ✅     |
+| `ML-KEM-512`         |   ✅   |   ✅    |  ❌   |       |              |      ✅      |     ✅     |
+| `ML-KEM-768`         |   ✅   |   ✅    |  ❌   |       |              |      ✅      |     ✅     |
+| `ML-KEM-1024`        |   ✅   |   ✅    |  ❌   |       |              |      ✅      |     ✅     |
+| `RSA-OAEP`           |   ✅   |   ✅    |  ✅   |       |              |              |            |
+| `RSA-PSS`            |   ✅   |   ✅    |  ✅   |       |              |              |            |
+| `RSASSA-PKCS1-v1_5`  |   ✅   |   ✅    |  ✅   |       |              |              |            |
+| `SLH-DSA-SHA2-128s`  |   ✅   |   ✅    |  ❌   |       |              |      ✅      |     ✅     |
+| `SLH-DSA-SHA2-128f`  |   ✅   |   ✅    |  ❌   |       |              |      ✅      |     ✅     |
+| `SLH-DSA-SHA2-192s`  |   ✅   |   ✅    |  ❌   |       |              |      ✅      |     ✅     |
+| `SLH-DSA-SHA2-192f`  |   ✅   |   ✅    |  ❌   |       |              |      ✅      |     ✅     |
+| `SLH-DSA-SHA2-256s`  |   ✅   |   ✅    |  ❌   |       |              |      ✅      |     ✅     |
+| `SLH-DSA-SHA2-256f`  |   ✅   |   ✅    |  ❌   |       |              |      ✅      |     ✅     |
+| `SLH-DSA-SHAKE-128s` |   ✅   |   ✅    |  ❌   |       |              |      ✅      |     ✅     |
+| `SLH-DSA-SHAKE-128f` |   ✅   |   ✅    |  ❌   |       |              |      ✅      |     ✅     |
+| `SLH-DSA-SHAKE-192s` |   ✅   |   ✅    |  ❌   |       |              |      ✅      |     ✅     |
+| `SLH-DSA-SHAKE-192f` |   ✅   |   ✅    |  ❌   |       |              |      ✅      |     ✅     |
+| `SLH-DSA-SHAKE-256s` |   ✅   |   ✅    |  ❌   |       |              |      ✅      |     ✅     |
+| `SLH-DSA-SHAKE-256f` |   ✅   |   ✅    |  ❌   |       |              |      ✅      |     ✅     |
 
 - ` ` - not implemented in Node
 - ❌ - implemented in Node, not RNQC
@@ -389,23 +450,35 @@ These ciphers are **not available in Node.js** but are provided by RNQC via libs
 
 ### `CryptoKeyPair` algorithms
 
-| Algorithm           | Status |
-| ------------------- | :----: |
-| `ECDH`              |   ✅   |
-| `ECDSA`             |   ✅   |
-| `Ed25519`           |   ✅   |
-| `Ed448`             |   ✅   |
-| `ML-DSA-44`         |   ✅   |
-| `ML-DSA-65`         |   ✅   |
-| `ML-DSA-87`         |   ✅   |
-| `ML-KEM-512`        |   ✅   |
-| `ML-KEM-768`        |   ✅   |
-| `ML-KEM-1024`       |   ✅   |
-| `RSA-OAEP`          |   ✅   |
-| `RSA-PSS`           |   ✅   |
-| `RSASSA-PKCS1-v1_5` |   ✅   |
-| `X25519`            |   ✅   |
-| `X448`              |   ✅   |
+| Algorithm            | Status |
+| -------------------- | :----: |
+| `ECDH`               |   ✅   |
+| `ECDSA`              |   ✅   |
+| `Ed25519`            |   ✅   |
+| `Ed448`              |   ✅   |
+| `ML-DSA-44`          |   ✅   |
+| `ML-DSA-65`          |   ✅   |
+| `ML-DSA-87`          |   ✅   |
+| `ML-KEM-512`         |   ✅   |
+| `ML-KEM-768`         |   ✅   |
+| `ML-KEM-1024`        |   ✅   |
+| `RSA-OAEP`           |   ✅   |
+| `RSA-PSS`            |   ✅   |
+| `RSASSA-PKCS1-v1_5`  |   ✅   |
+| `SLH-DSA-SHA2-128s`  |   ✅   |
+| `SLH-DSA-SHA2-128f`  |   ✅   |
+| `SLH-DSA-SHA2-192s`  |   ✅   |
+| `SLH-DSA-SHA2-192f`  |   ✅   |
+| `SLH-DSA-SHA2-256s`  |   ✅   |
+| `SLH-DSA-SHA2-256f`  |   ✅   |
+| `SLH-DSA-SHAKE-128s` |   ✅   |
+| `SLH-DSA-SHAKE-128f` |   ✅   |
+| `SLH-DSA-SHAKE-192s` |   ✅   |
+| `SLH-DSA-SHAKE-192f` |   ✅   |
+| `SLH-DSA-SHAKE-256s` |   ✅   |
+| `SLH-DSA-SHAKE-256f` |   ✅   |
+| `X25519`             |   ✅   |
+| `X448`               |   ✅   |
 
 ### `CryptoKey` algorithms
 
@@ -423,53 +496,77 @@ These ciphers are **not available in Node.js** but are provided by RNQC via libs
 
 ## `subtle.importKey`
 
-| Key Type            | `spki` | `pkcs8` | `jwk` | `raw` | `raw-secret` | `raw-public` | `raw-seed` |
-| ------------------- | :----: | :-----: | :---: | :---: | :----------: | :----------: | :--------: |
-| `Argon2d`           |        |         |       |       |      ✅      |              |            |
-| `Argon2i`           |        |         |       |       |      ✅      |              |            |
-| `Argon2id`          |        |         |       |       |      ✅      |              |            |
-| `AES-CBC`           |        |         |  ✅   |  ✅   |      ✅      |              |            |
-| `AES-CTR`           |        |         |  ✅   |  ✅   |      ✅      |              |            |
-| `AES-GCM`           |        |         |  ✅   |  ✅   |      ✅      |              |            |
-| `AES-KW`            |        |         |  ✅   |  ✅   |      ✅      |              |            |
-| `AES-OCB`           |        |         |  ✅   |  ✅   |      ✅      |              |            |
-| `ChaCha20-Poly1305` |        |         |  ✅   |       |      ✅      |              |            |
-| `ECDH`              |   ✅   |   ✅    |  ✅   |  ✅   |              |      ✅      |            |
-| `ECDSA`             |   ✅   |   ✅    |  ✅   |  ✅   |              |      ✅      |            |
-| `Ed25519`           |   ✅   |   ✅    |  ✅   |  ✅   |              |      ✅      |            |
-| `Ed448`             |   ✅   |   ✅    |  ✅   |  ✅   |              |      ✅      |            |
-| `HKDF`              |        |         |       |  ✅   |      ✅      |              |            |
-| `HMAC`              |        |         |  ✅   |  ✅   |      ✅      |              |            |
-| `KMAC128`           |        |         |  ✅   |  ✅   |      ✅      |              |            |
-| `KMAC256`           |        |         |  ✅   |  ✅   |      ✅      |              |            |
-| `ML-DSA-44`         |   ✅   |   ✅    |  ❌   |       |              |      ✅      |     ✅     |
-| `ML-DSA-65`         |   ✅   |   ✅    |  ❌   |       |              |      ✅      |     ✅     |
-| `ML-DSA-87`         |   ✅   |   ✅    |  ❌   |       |              |      ✅      |     ✅     |
-| `ML-KEM-512`        |   ✅   |   ✅    |  ❌   |       |              |      ✅      |     ✅     |
-| `ML-KEM-768`        |   ✅   |   ✅    |  ❌   |       |              |      ✅      |     ✅     |
-| `ML-KEM-1024`       |   ✅   |   ✅    |  ❌   |       |              |      ✅      |     ✅     |
-| `PBKDF2`            |        |         |       |  ✅   |      ✅      |              |            |
-| `RSA-OAEP`          |   ✅   |   ✅    |  ✅   |       |              |              |            |
-| `RSA-PSS`           |   ✅   |   ✅    |  ✅   |       |              |              |            |
-| `RSASSA-PKCS1-v1_5` |   ✅   |   ✅    |  ✅   |       |              |              |            |
-| `X25519`            |   ✅   |   ✅    |  ✅   |  ✅   |              |      ✅      |            |
-| `X448`              |   ✅   |   ✅    |  ✅   |  ✅   |              |      ✅      |            |
+| Key Type             | `spki` | `pkcs8` | `jwk` | `raw` | `raw-secret` | `raw-public` | `raw-seed` |
+| -------------------- | :----: | :-----: | :---: | :---: | :----------: | :----------: | :--------: |
+| `Argon2d`            |        |         |       |       |      ✅      |              |            |
+| `Argon2i`            |        |         |       |       |      ✅      |              |            |
+| `Argon2id`           |        |         |       |       |      ✅      |              |            |
+| `AES-CBC`            |        |         |  ✅   |  ✅   |      ✅      |              |            |
+| `AES-CTR`            |        |         |  ✅   |  ✅   |      ✅      |              |            |
+| `AES-GCM`            |        |         |  ✅   |  ✅   |      ✅      |              |            |
+| `AES-KW`             |        |         |  ✅   |  ✅   |      ✅      |              |            |
+| `AES-OCB`            |        |         |  ✅   |  ✅   |      ✅      |              |            |
+| `ChaCha20-Poly1305`  |        |         |  ✅   |       |      ✅      |              |            |
+| `ECDH`               |   ✅   |   ✅    |  ✅   |  ✅   |              |      ✅      |            |
+| `ECDSA`              |   ✅   |   ✅    |  ✅   |  ✅   |              |      ✅      |            |
+| `Ed25519`            |   ✅   |   ✅    |  ✅   |  ✅   |              |      ✅      |            |
+| `Ed448`              |   ✅   |   ✅    |  ✅   |  ✅   |              |      ✅      |            |
+| `HKDF`               |        |         |       |  ✅   |      ✅      |              |            |
+| `HMAC`               |        |         |  ✅   |  ✅   |      ✅      |              |            |
+| `KMAC128`            |        |         |  ✅   |  ✅   |      ✅      |              |            |
+| `KMAC256`            |        |         |  ✅   |  ✅   |      ✅      |              |            |
+| `ML-DSA-44`          |   ✅   |   ✅    |  ❌   |       |              |      ✅      |     ✅     |
+| `ML-DSA-65`          |   ✅   |   ✅    |  ❌   |       |              |      ✅      |     ✅     |
+| `ML-DSA-87`          |   ✅   |   ✅    |  ❌   |       |              |      ✅      |     ✅     |
+| `ML-KEM-512`         |   ✅   |   ✅    |  ❌   |       |              |      ✅      |     ✅     |
+| `ML-KEM-768`         |   ✅   |   ✅    |  ❌   |       |              |      ✅      |     ✅     |
+| `ML-KEM-1024`        |   ✅   |   ✅    |  ❌   |       |              |      ✅      |     ✅     |
+| `PBKDF2`             |        |         |       |  ✅   |      ✅      |              |            |
+| `RSA-OAEP`           |   ✅   |   ✅    |  ✅   |       |              |              |            |
+| `RSA-PSS`            |   ✅   |   ✅    |  ✅   |       |              |              |            |
+| `RSASSA-PKCS1-v1_5`  |   ✅   |   ✅    |  ✅   |       |              |              |            |
+| `SLH-DSA-SHA2-128s`  |   ✅   |   ✅    |  ❌   |       |              |      ✅      |     ✅     |
+| `SLH-DSA-SHA2-128f`  |   ✅   |   ✅    |  ❌   |       |              |      ✅      |     ✅     |
+| `SLH-DSA-SHA2-192s`  |   ✅   |   ✅    |  ❌   |       |              |      ✅      |     ✅     |
+| `SLH-DSA-SHA2-192f`  |   ✅   |   ✅    |  ❌   |       |              |      ✅      |     ✅     |
+| `SLH-DSA-SHA2-256s`  |   ✅   |   ✅    |  ❌   |       |              |      ✅      |     ✅     |
+| `SLH-DSA-SHA2-256f`  |   ✅   |   ✅    |  ❌   |       |              |      ✅      |     ✅     |
+| `SLH-DSA-SHAKE-128s` |   ✅   |   ✅    |  ❌   |       |              |      ✅      |     ✅     |
+| `SLH-DSA-SHAKE-128f` |   ✅   |   ✅    |  ❌   |       |              |      ✅      |     ✅     |
+| `SLH-DSA-SHAKE-192s` |   ✅   |   ✅    |  ❌   |       |              |      ✅      |     ✅     |
+| `SLH-DSA-SHAKE-192f` |   ✅   |   ✅    |  ❌   |       |              |      ✅      |     ✅     |
+| `SLH-DSA-SHAKE-256s` |   ✅   |   ✅    |  ❌   |       |              |      ✅      |     ✅     |
+| `SLH-DSA-SHAKE-256f` |   ✅   |   ✅    |  ❌   |       |              |      ✅      |     ✅     |
+| `X25519`             |   ✅   |   ✅    |  ✅   |  ✅   |              |      ✅      |            |
+| `X448`               |   ✅   |   ✅    |  ✅   |  ✅   |              |      ✅      |            |
 
 ## `subtle.sign`
 
-| Algorithm           | Status |
-| ------------------- | :----: |
-| `ECDSA`             |   ✅   |
-| `Ed25519`           |   ✅   |
-| `Ed448`             |   ✅   |
-| `HMAC`              |   ✅   |
-| `KMAC128`           |   ✅   |
-| `KMAC256`           |   ✅   |
-| `ML-DSA-44`         |   ✅   |
-| `ML-DSA-65`         |   ✅   |
-| `ML-DSA-87`         |   ✅   |
-| `RSA-PSS`           |   ✅   |
-| `RSASSA-PKCS1-v1_5` |   ✅   |
+| Algorithm            | Status |
+| -------------------- | :----: |
+| `ECDSA`              |   ✅   |
+| `Ed25519`            |   ✅   |
+| `Ed448`              |   ✅   |
+| `HMAC`               |   ✅   |
+| `KMAC128`            |   ✅   |
+| `KMAC256`            |   ✅   |
+| `ML-DSA-44`          |   ✅   |
+| `ML-DSA-65`          |   ✅   |
+| `ML-DSA-87`          |   ✅   |
+| `RSA-PSS`            |   ✅   |
+| `RSASSA-PKCS1-v1_5`  |   ✅   |
+| `SLH-DSA-SHA2-128s`  |   ✅   |
+| `SLH-DSA-SHA2-128f`  |   ✅   |
+| `SLH-DSA-SHA2-192s`  |   ✅   |
+| `SLH-DSA-SHA2-192f`  |   ✅   |
+| `SLH-DSA-SHA2-256s`  |   ✅   |
+| `SLH-DSA-SHA2-256f`  |   ✅   |
+| `SLH-DSA-SHAKE-128s` |   ✅   |
+| `SLH-DSA-SHAKE-128f` |   ✅   |
+| `SLH-DSA-SHAKE-192s` |   ✅   |
+| `SLH-DSA-SHAKE-192f` |   ✅   |
+| `SLH-DSA-SHAKE-256s` |   ✅   |
+| `SLH-DSA-SHAKE-256f` |   ✅   |
 
 ## `subtle.unwrapKey`
 
@@ -487,46 +584,70 @@ These ciphers are **not available in Node.js** but are provided by RNQC via libs
 
 ### unwrapped key algorithms
 
-| Algorithm           | Status |
-| ------------------- | :----: |
-| `AES-CBC`           |   ✅   |
-| `AES-CTR`           |   ✅   |
-| `AES-GCM`           |   ✅   |
-| `AES-KW`            |   ✅   |
-| `AES-OCB`           |   ✅   |
-| `ChaCha20-Poly1305` |   ✅   |
-| `ECDH`              |   ✅   |
-| `ECDSA`             |   ✅   |
-| `Ed25519`           |   ✅   |
-| `Ed448`             |   ✅   |
-| `HMAC`              |   ✅   |
-| `ML-DSA-44`         |   ✅   |
-| `ML-DSA-65`         |   ✅   |
-| `ML-DSA-87`         |   ✅   |
-| `ML-KEM-512`        |   ✅   |
-| `ML-KEM-768`        |   ✅   |
-| `ML-KEM-1024`       |   ✅   |
-| `RSA-OAEP`          |   ✅   |
-| `RSA-PSS`           |   ✅   |
-| `RSASSA-PKCS1-v1_5` |   ✅   |
-| `X25519`            |   ✅   |
-| `X448`              |   ✅   |
+| Algorithm            | Status |
+| -------------------- | :----: |
+| `AES-CBC`            |   ✅   |
+| `AES-CTR`            |   ✅   |
+| `AES-GCM`            |   ✅   |
+| `AES-KW`             |   ✅   |
+| `AES-OCB`            |   ✅   |
+| `ChaCha20-Poly1305`  |   ✅   |
+| `ECDH`               |   ✅   |
+| `ECDSA`              |   ✅   |
+| `Ed25519`            |   ✅   |
+| `Ed448`              |   ✅   |
+| `HMAC`               |   ✅   |
+| `ML-DSA-44`          |   ✅   |
+| `ML-DSA-65`          |   ✅   |
+| `ML-DSA-87`          |   ✅   |
+| `ML-KEM-512`         |   ✅   |
+| `ML-KEM-768`         |   ✅   |
+| `ML-KEM-1024`        |   ✅   |
+| `RSA-OAEP`           |   ✅   |
+| `RSA-PSS`            |   ✅   |
+| `RSASSA-PKCS1-v1_5`  |   ✅   |
+| `SLH-DSA-SHA2-128s`  |   ✅   |
+| `SLH-DSA-SHA2-128f`  |   ✅   |
+| `SLH-DSA-SHA2-192s`  |   ✅   |
+| `SLH-DSA-SHA2-192f`  |   ✅   |
+| `SLH-DSA-SHA2-256s`  |   ✅   |
+| `SLH-DSA-SHA2-256f`  |   ✅   |
+| `SLH-DSA-SHAKE-128s` |   ✅   |
+| `SLH-DSA-SHAKE-128f` |   ✅   |
+| `SLH-DSA-SHAKE-192s` |   ✅   |
+| `SLH-DSA-SHAKE-192f` |   ✅   |
+| `SLH-DSA-SHAKE-256s` |   ✅   |
+| `SLH-DSA-SHAKE-256f` |   ✅   |
+| `X25519`             |   ✅   |
+| `X448`               |   ✅   |
 
 ## `subtle.verify`
 
-| Algorithm           | Status |
-| ------------------- | :----: |
-| `ECDSA`             |   ✅   |
-| `Ed25519`           |   ✅   |
-| `Ed448`             |   ✅   |
-| `HMAC`              |   ✅   |
-| `KMAC128`           |   ✅   |
-| `KMAC256`           |   ✅   |
-| `ML-DSA-44`         |   ✅   |
-| `ML-DSA-65`         |   ✅   |
-| `ML-DSA-87`         |   ✅   |
-| `RSA-PSS`           |   ✅   |
-| `RSASSA-PKCS1-v1_5` |   ✅   |
+| Algorithm            | Status |
+| -------------------- | :----: |
+| `ECDSA`              |   ✅   |
+| `Ed25519`            |   ✅   |
+| `Ed448`              |   ✅   |
+| `HMAC`               |   ✅   |
+| `KMAC128`            |   ✅   |
+| `KMAC256`            |   ✅   |
+| `ML-DSA-44`          |   ✅   |
+| `ML-DSA-65`          |   ✅   |
+| `ML-DSA-87`          |   ✅   |
+| `RSA-PSS`            |   ✅   |
+| `RSASSA-PKCS1-v1_5`  |   ✅   |
+| `SLH-DSA-SHA2-128s`  |   ✅   |
+| `SLH-DSA-SHA2-128f`  |   ✅   |
+| `SLH-DSA-SHA2-192s`  |   ✅   |
+| `SLH-DSA-SHA2-192f`  |   ✅   |
+| `SLH-DSA-SHA2-256s`  |   ✅   |
+| `SLH-DSA-SHA2-256f`  |   ✅   |
+| `SLH-DSA-SHAKE-128s` |   ✅   |
+| `SLH-DSA-SHAKE-128f` |   ✅   |
+| `SLH-DSA-SHAKE-192s` |   ✅   |
+| `SLH-DSA-SHAKE-192f` |   ✅   |
+| `SLH-DSA-SHAKE-256s` |   ✅   |
+| `SLH-DSA-SHAKE-256f` |   ✅   |
 
 ## `subtle.wrapKey`
 
