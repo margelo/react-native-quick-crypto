@@ -279,7 +279,7 @@ async function testRSAEncryptionWrongKey({
   return assertThrowsAsync(
     async () =>
       await subtle.encrypt(algorithm, privateKey as CryptoKey, plaintext),
-    'The requested operation is not valid for the provided key',
+    'InvalidAccessError',
   );
 }
 
@@ -301,7 +301,7 @@ async function testRSAEncryptionBadUsage({
   return assertThrowsAsync(
     async () =>
       await subtle.encrypt(algorithm, publicKey as CryptoKey, plaintext),
-    'The requested operation is not valid',
+    'InvalidAccessError',
   );
 }
 
@@ -328,7 +328,7 @@ async function testRSADecryptionWrongKey({
   return assertThrowsAsync(
     async () =>
       await subtle.decrypt(algorithm, publicKey as CryptoKey, ciphertext),
-    'The requested operation is not valid',
+    'InvalidAccessError',
   );
 }
 
@@ -355,7 +355,7 @@ async function testRSADecryptionBadUsage({
   return assertThrowsAsync(
     async () =>
       await subtle.decrypt(algorithm, publicKey as CryptoKey, ciphertext),
-    'The requested operation is not valid',
+    'InvalidAccessError',
   );
 }
 
@@ -647,7 +647,7 @@ test(SUITE, 'ChaCha20-Poly1305 wrong key usage encrypt', async () => {
         key as CryptoKey,
         getRandomValues(new Uint8Array(32)),
       ),
-    'The requested operation is not valid for the provided key',
+    'InvalidAccessError',
   );
 });
 
@@ -674,7 +674,7 @@ test(SUITE, 'ChaCha20-Poly1305 wrong key usage decrypt', async () => {
         key as CryptoKey,
         ciphertext,
       ),
-    'The requested operation is not valid for the provided key',
+    'InvalidAccessError',
   );
 });
 
@@ -936,7 +936,7 @@ async function testAESEncryptNoEncrypt({
 
   await assertThrowsAsync(
     async () => await subtle.encrypt(algorithm, key, plaintext),
-    'The requested operation is not valid for the provided key',
+    'InvalidAccessError',
   );
 }
 
@@ -962,7 +962,7 @@ async function testAESEncryptNoDecrypt({
 
   await assertThrowsAsync(
     async () => await subtle.decrypt(algorithm, key, output),
-    'The requested operation is not valid for the provided key',
+    'InvalidAccessError',
   );
 }
 
@@ -982,7 +982,7 @@ async function testAESEncryptWrongAlg(
 
   await assertThrowsAsync(
     async () => await subtle.encrypt(algorithm, key, plaintext),
-    'The requested operation is not valid for the provided key',
+    'InvalidAccessError',
   );
 }
 
