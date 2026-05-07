@@ -24,6 +24,16 @@ class HybridKeyObjectHandle : public HybridKeyObjectHandleSpec {
 
   JWK exportJwk(const JWK& key, bool handleRsaPss) override;
 
+  std::shared_ptr<ArrayBuffer> exportRawPublic() override;
+
+  std::shared_ptr<ArrayBuffer> exportRawPrivate() override;
+
+  std::shared_ptr<ArrayBuffer> exportRawSeed() override;
+
+  std::shared_ptr<ArrayBuffer> exportECPublicRaw(bool compressed) override;
+
+  std::shared_ptr<ArrayBuffer> exportECPrivateRaw() override;
+
   AsymmetricKeyType getAsymmetricKeyType() override;
 
   bool init(KeyType keyType, const std::variant<std::shared_ptr<ArrayBuffer>, std::string>& key, std::optional<KFormatType> format,
@@ -32,6 +42,14 @@ class HybridKeyObjectHandle : public HybridKeyObjectHandleSpec {
   bool initECRaw(const std::string& namedCurve, const std::shared_ptr<ArrayBuffer>& keyData) override;
 
   bool initPqcRaw(const std::string& algorithmName, const std::shared_ptr<ArrayBuffer>& keyData, bool isPublic) override;
+
+  bool initRawPublic(const std::string& asymmetricKeyType, const std::shared_ptr<ArrayBuffer>& keyData,
+                     const std::optional<std::string>& namedCurve) override;
+
+  bool initRawPrivate(const std::string& asymmetricKeyType, const std::shared_ptr<ArrayBuffer>& keyData,
+                      const std::optional<std::string>& namedCurve) override;
+
+  bool initRawSeed(const std::string& asymmetricKeyType, const std::shared_ptr<ArrayBuffer>& keyData) override;
 
   std::optional<KeyType> initJwk(const JWK& keyData, std::optional<NamedCurve> namedCurve) override;
 

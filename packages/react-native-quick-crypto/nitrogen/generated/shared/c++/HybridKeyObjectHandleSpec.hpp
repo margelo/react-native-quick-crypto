@@ -77,10 +77,18 @@ namespace margelo::nitro::crypto {
       // Methods
       virtual std::shared_ptr<ArrayBuffer> exportKey(std::optional<KFormatType> format, std::optional<KeyEncoding> type, const std::optional<std::string>& cipher, const std::optional<std::shared_ptr<ArrayBuffer>>& passphrase) = 0;
       virtual JWK exportJwk(const JWK& key, bool handleRsaPss) = 0;
+      virtual std::shared_ptr<ArrayBuffer> exportRawPublic() = 0;
+      virtual std::shared_ptr<ArrayBuffer> exportRawPrivate() = 0;
+      virtual std::shared_ptr<ArrayBuffer> exportRawSeed() = 0;
+      virtual std::shared_ptr<ArrayBuffer> exportECPublicRaw(bool compressed) = 0;
+      virtual std::shared_ptr<ArrayBuffer> exportECPrivateRaw() = 0;
       virtual AsymmetricKeyType getAsymmetricKeyType() = 0;
       virtual bool init(KeyType keyType, const std::variant<std::shared_ptr<ArrayBuffer>, std::string>& key, std::optional<KFormatType> format, std::optional<KeyEncoding> type, const std::optional<std::shared_ptr<ArrayBuffer>>& passphrase) = 0;
       virtual bool initECRaw(const std::string& namedCurve, const std::shared_ptr<ArrayBuffer>& keyData) = 0;
       virtual bool initPqcRaw(const std::string& algorithmName, const std::shared_ptr<ArrayBuffer>& keyData, bool isPublic) = 0;
+      virtual bool initRawPublic(const std::string& asymmetricKeyType, const std::shared_ptr<ArrayBuffer>& keyData, const std::optional<std::string>& namedCurve) = 0;
+      virtual bool initRawPrivate(const std::string& asymmetricKeyType, const std::shared_ptr<ArrayBuffer>& keyData, const std::optional<std::string>& namedCurve) = 0;
+      virtual bool initRawSeed(const std::string& asymmetricKeyType, const std::shared_ptr<ArrayBuffer>& keyData) = 0;
       virtual std::optional<KeyType> initJwk(const JWK& keyData, std::optional<NamedCurve> namedCurve) = 0;
       virtual KeyDetail keyDetail() = 0;
       virtual bool keyEquals(const std::shared_ptr<HybridKeyObjectHandleSpec>& other) = 0;

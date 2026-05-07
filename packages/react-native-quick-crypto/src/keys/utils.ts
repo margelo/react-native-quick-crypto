@@ -5,12 +5,35 @@ import {
   KFormatType,
 } from '../utils';
 import type { CryptoKeyPair, EncodingOptions } from '../utils';
-import type { CryptoKey } from './classes';
+import type { CryptoKey, PublicKeyObject, PrivateKeyObject } from './classes';
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 export const isCryptoKey = (obj: any): boolean => {
   return obj !== null && obj?.keyObject !== undefined;
 };
+
+export function exportPublicKeyRaw(
+  pub: PublicKeyObject,
+  pointType: 'compressed' | 'uncompressed' | undefined,
+): ArrayBuffer {
+  if (pub.asymmetricKeyType === 'ec') {
+    return pub.handle.exportECPublicRaw(pointType === 'compressed');
+  }
+  return pub.handle.exportRawPublic();
+}
+
+export function exportPrivateKeyRaw(
+  priv: PrivateKeyObject,
+  format: 'raw-private' | 'raw-seed',
+): ArrayBuffer {
+  if (format === 'raw-seed') {
+    return priv.handle.exportRawSeed();
+  }
+  if (priv.asymmetricKeyType === 'ec') {
+    return priv.handle.exportECPrivateRaw();
+  }
+  return priv.handle.exportRawPrivate();
+}
 
 export function getCryptoKeyPair(
   key: CryptoKey | CryptoKeyPair,
@@ -62,6 +85,19 @@ export function parseKeyEncoding(
     objName,
   );
 
+  if (
+    format === 'raw-public' ||
+    format === 'raw-private' ||
+    format === 'raw-seed'
+  ) {
+    if (enc.cipher != null || enc.passphrase !== undefined) {
+      throw new Error(
+        `Incompatible key options: ${format} does not support encryption`,
+      );
+    }
+    return { format, type, cipher: undefined, passphrase: undefined };
+  }
+
   let cipher, passphrase, encoding;
   if (isPublic !== true) {
     ({ cipher, passphrase, encoding } = enc);
@@ -77,7 +113,7 @@ export function parseKeyEncoding(
           (type === KeyEncoding.PKCS1 || type === KeyEncoding.SEC1)
         ) {
           throw new Error(
-            `Incompatible key options ${encodingNames[type]} does not support encryption`,
+            `Incompatible key options ${encodingNames[type as KeyEncoding]} does not support encryption`,
           );
         }
       } else if (passphrase !== undefined) {
@@ -120,12 +156,15 @@ function parseKeyFormat(
   formatStr?: string,
   defaultFormat?: KFormatType,
   optionName?: string,
-) {
+): KFormatType | 'raw-public' | 'raw-private' | 'raw-seed' {
   if (formatStr === undefined && defaultFormat !== undefined)
     return defaultFormat;
   else if (formatStr === 'pem') return KFormatType.PEM;
   else if (formatStr === 'der') return KFormatType.DER;
   else if (formatStr === 'jwk') return KFormatType.JWK;
+  else if (formatStr === 'raw-public') return 'raw-public';
+  else if (formatStr === 'raw-private') return 'raw-private';
+  else if (formatStr === 'raw-seed') return 'raw-seed';
   throw new Error(`Invalid key format str: ${optionName}`);
 }
 
@@ -166,7 +205,10 @@ function parseKeyFormatAndType(
   keyType?: string,
   isPublic?: boolean,
   objName?: string,
-) {
+): {
+  format: KFormatType | 'raw-public' | 'raw-private' | 'raw-seed';
+  type: KeyEncoding | 'compressed' | 'uncompressed' | undefined;
+} {
   const { format: formatStr, type: typeStr } = enc;
 
   const isInput = keyType === undefined;
@@ -176,11 +218,42 @@ function parseKeyFormatAndType(
     option('format', objName),
   );
 
+  if (format === 'raw-public') {
+    if (isPublic === false) {
+      throw new Error(
+        `Invalid format 'raw-public' for ${option('format', objName)}`,
+      );
+    }
+    if (typeStr === undefined || typeStr === 'uncompressed') {
+      return { format, type: 'uncompressed' };
+    }
+    if (typeStr === 'compressed') {
+      return { format, type: 'compressed' };
+    }
+    throw new Error(
+      `Invalid ${option('type', objName)} for raw-public: ${typeStr}`,
+    );
+  }
+
+  if (format === 'raw-private' || format === 'raw-seed') {
+    if (isPublic === true) {
+      throw new Error(
+        `Invalid format '${format}' for ${option('format', objName)}`,
+      );
+    }
+    if (typeStr !== undefined) {
+      throw new Error(
+        `Invalid ${option('type', objName)} for ${format}: ${typeStr}`,
+      );
+    }
+    return { format, type: undefined };
+  }
+
   const isRequired =
     (!isInput || format === KFormatType.DER) && format !== KFormatType.JWK;
 
   const type = parseKeyType(
-    typeStr,
+    typeStr as string | undefined,
     isRequired,
     keyType,
     isPublic,

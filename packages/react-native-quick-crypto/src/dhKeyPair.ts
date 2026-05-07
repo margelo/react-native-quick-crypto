@@ -97,6 +97,14 @@ function dh_formatKeyPairOutput(
   let publicKey: PublicKeyObject | Buffer | string | ArrayBuffer;
   let privateKey: PrivateKeyObject | Buffer | string | ArrayBuffer;
 
+  if (
+    publicFormat === 'raw-public' ||
+    privateFormat === 'raw-private' ||
+    privateFormat === 'raw-seed'
+  ) {
+    throw new Error('Raw key formats are not supported for DH keys');
+  }
+
   if (publicFormat === -1) {
     publicKey = pub;
   } else {

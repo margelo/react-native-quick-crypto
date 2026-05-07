@@ -18,6 +18,11 @@ export interface KeyObjectHandle
     passphrase?: ArrayBuffer,
   ): ArrayBuffer;
   exportJwk(key: JWK, handleRsaPss: boolean): JWK;
+  exportRawPublic(): ArrayBuffer;
+  exportRawPrivate(): ArrayBuffer;
+  exportRawSeed(): ArrayBuffer;
+  exportECPublicRaw(compressed: boolean): ArrayBuffer;
+  exportECPrivateRaw(): ArrayBuffer;
   getAsymmetricKeyType(): AsymmetricKeyType;
   init(
     keyType: KeyType,
@@ -32,6 +37,17 @@ export interface KeyObjectHandle
     keyData: ArrayBuffer,
     isPublic: boolean,
   ): boolean;
+  initRawPublic(
+    asymmetricKeyType: string,
+    keyData: ArrayBuffer,
+    namedCurve?: string,
+  ): boolean;
+  initRawPrivate(
+    asymmetricKeyType: string,
+    keyData: ArrayBuffer,
+    namedCurve?: string,
+  ): boolean;
+  initRawSeed(asymmetricKeyType: string, keyData: ArrayBuffer): boolean;
   initJwk(keyData: JWK, namedCurve?: NamedCurve): KeyType | undefined;
   keyDetail(): KeyDetail;
   keyEquals(other: KeyObjectHandle): boolean;

@@ -16,10 +16,18 @@ namespace margelo::nitro::crypto {
     registerHybrids(this, [](Prototype& prototype) {
       prototype.registerHybridMethod("exportKey", &HybridKeyObjectHandleSpec::exportKey);
       prototype.registerHybridMethod("exportJwk", &HybridKeyObjectHandleSpec::exportJwk);
+      prototype.registerHybridMethod("exportRawPublic", &HybridKeyObjectHandleSpec::exportRawPublic);
+      prototype.registerHybridMethod("exportRawPrivate", &HybridKeyObjectHandleSpec::exportRawPrivate);
+      prototype.registerHybridMethod("exportRawSeed", &HybridKeyObjectHandleSpec::exportRawSeed);
+      prototype.registerHybridMethod("exportECPublicRaw", &HybridKeyObjectHandleSpec::exportECPublicRaw);
+      prototype.registerHybridMethod("exportECPrivateRaw", &HybridKeyObjectHandleSpec::exportECPrivateRaw);
       prototype.registerHybridMethod("getAsymmetricKeyType", &HybridKeyObjectHandleSpec::getAsymmetricKeyType);
       prototype.registerHybridMethod("init", &HybridKeyObjectHandleSpec::init);
       prototype.registerHybridMethod("initECRaw", &HybridKeyObjectHandleSpec::initECRaw);
       prototype.registerHybridMethod("initPqcRaw", &HybridKeyObjectHandleSpec::initPqcRaw);
+      prototype.registerHybridMethod("initRawPublic", &HybridKeyObjectHandleSpec::initRawPublic);
+      prototype.registerHybridMethod("initRawPrivate", &HybridKeyObjectHandleSpec::initRawPrivate);
+      prototype.registerHybridMethod("initRawSeed", &HybridKeyObjectHandleSpec::initRawSeed);
       prototype.registerHybridMethod("initJwk", &HybridKeyObjectHandleSpec::initJwk);
       prototype.registerHybridMethod("keyDetail", &HybridKeyObjectHandleSpec::keyDetail);
       prototype.registerHybridMethod("keyEquals", &HybridKeyObjectHandleSpec::keyEquals);
