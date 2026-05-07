@@ -451,7 +451,9 @@ function ec_formatKeyPairOutput(
   if (publicFormat === -1) {
     publicKey = pub;
   } else if (publicFormat === 'raw-public') {
-    publicKey = pub.handle.exportECPublicRaw(publicType === 'compressed');
+    publicKey = Buffer.from(
+      pub.handle.exportECPublicRaw(publicType === 'compressed'),
+    );
   } else {
     const format =
       publicFormat === KFormatType.PEM ? KFormatType.PEM : KFormatType.DER;
@@ -468,7 +470,7 @@ function ec_formatKeyPairOutput(
   if (privateFormat === -1) {
     privateKey = priv;
   } else if (privateFormat === 'raw-private') {
-    privateKey = priv.handle.exportECPrivateRaw();
+    privateKey = Buffer.from(priv.handle.exportECPrivateRaw());
   } else {
     const format =
       privateFormat === KFormatType.PEM ? KFormatType.PEM : KFormatType.DER;

@@ -1,4 +1,4 @@
-import { Buffer } from 'buffer';
+import { Buffer } from '@craftzdog/react-native-buffer';
 import { NitroModules } from 'react-native-nitro-modules';
 import type {
   AsymmetricKeyType,

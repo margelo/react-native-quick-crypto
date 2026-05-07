@@ -463,6 +463,7 @@ export type GenerateKeyPairOptions = {
 export type KeyPairKey =
   | ArrayBuffer
   | Buffer
+  | CraftzdogBuffer
   | string
   | KeyObject
   | KeyObjectHandle

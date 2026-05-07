@@ -55,8 +55,8 @@ function slhDsaFormatKeyPairOutput(
   slhdsa: SlhDsa,
   encoding: KeyPairGenConfig,
 ): {
-  publicKey: PublicKeyObject | string | ArrayBuffer;
-  privateKey: PrivateKeyObject | string | ArrayBuffer;
+  publicKey: PublicKeyObject | string | ArrayBuffer | Buffer;
+  privateKey: PrivateKeyObject | string | ArrayBuffer | Buffer;
 } {
   const { publicFormat, privateFormat, cipher, passphrase } = encoding;
 
@@ -73,13 +73,13 @@ function slhDsaFormatKeyPairOutput(
     KeyEncoding.PKCS8,
   ) as PrivateKeyObject;
 
-  let publicKeyOutput: PublicKeyObject | string | ArrayBuffer;
-  let privateKeyOutput: PrivateKeyObject | string | ArrayBuffer;
+  let publicKeyOutput: PublicKeyObject | string | ArrayBuffer | Buffer;
+  let privateKeyOutput: PrivateKeyObject | string | ArrayBuffer | Buffer;
 
   if (publicFormat === -1) {
     publicKeyOutput = publicKey;
   } else if (publicFormat === 'raw-public') {
-    publicKeyOutput = publicKey.handle.exportRawPublic();
+    publicKeyOutput = Buffer.from(publicKey.handle.exportRawPublic());
   } else {
     const format =
       publicFormat === KFormatType.PEM ? KFormatType.PEM : KFormatType.DER;
@@ -94,9 +94,9 @@ function slhDsaFormatKeyPairOutput(
   if (privateFormat === -1) {
     privateKeyOutput = privateKey;
   } else if (privateFormat === 'raw-private') {
-    privateKeyOutput = privateKey.handle.exportRawPrivate();
+    privateKeyOutput = Buffer.from(privateKey.handle.exportRawPrivate());
   } else if (privateFormat === 'raw-seed') {
-    privateKeyOutput = privateKey.handle.exportRawSeed();
+    privateKeyOutput = Buffer.from(privateKey.handle.exportRawSeed());
   } else {
     const format =
       privateFormat === KFormatType.PEM ? KFormatType.PEM : KFormatType.DER;
@@ -122,8 +122,8 @@ function slhDsaGenerateKeyPairNodeSync(
   type: SlhDsaKeyPairType,
   encoding: KeyPairGenConfig,
 ): {
-  publicKey: PublicKeyObject | string | ArrayBuffer;
-  privateKey: PrivateKeyObject | string | ArrayBuffer;
+  publicKey: PublicKeyObject | string | ArrayBuffer | Buffer;
+  privateKey: PrivateKeyObject | string | ArrayBuffer | Buffer;
 } {
   const slhdsa = new SlhDsa(SLH_DSA_TYPE_TO_VARIANT[type]);
   slhdsa.generateKeyPairSync();
@@ -134,8 +134,8 @@ async function slhDsaGenerateKeyPairNode(
   type: SlhDsaKeyPairType,
   encoding: KeyPairGenConfig,
 ): Promise<{
-  publicKey: PublicKeyObject | string | ArrayBuffer;
-  privateKey: PrivateKeyObject | string | ArrayBuffer;
+  publicKey: PublicKeyObject | string | ArrayBuffer | Buffer;
+  privateKey: PrivateKeyObject | string | ArrayBuffer | Buffer;
 }> {
   const slhdsa = new SlhDsa(SLH_DSA_TYPE_TO_VARIANT[type]);
   await slhdsa.generateKeyPair();

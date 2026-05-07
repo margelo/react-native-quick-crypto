@@ -283,19 +283,19 @@ function ed_formatKeyPairOutput(
   ed: Ed,
   encoding: KeyPairGenConfig,
 ): {
-  publicKey: PublicKeyObject | string | ArrayBuffer;
-  privateKey: PrivateKeyObjectClass | string | ArrayBuffer;
+  publicKey: PublicKeyObject | string | ArrayBuffer | Buffer;
+  privateKey: PrivateKeyObjectClass | string | ArrayBuffer | Buffer;
 } {
   const { publicFormat, privateFormat, cipher, passphrase } = encoding;
   const { pub, priv } = ed_createKeyObjects(ed);
 
-  let publicKey: PublicKeyObject | string | ArrayBuffer;
-  let privateKey: PrivateKeyObjectClass | string | ArrayBuffer;
+  let publicKey: PublicKeyObject | string | ArrayBuffer | Buffer;
+  let privateKey: PrivateKeyObjectClass | string | ArrayBuffer | Buffer;
 
   if (publicFormat == null || publicFormat === -1) {
     publicKey = pub;
   } else if (publicFormat === 'raw-public') {
-    publicKey = pub.handle.exportRawPublic();
+    publicKey = Buffer.from(pub.handle.exportRawPublic());
   } else {
     const format =
       publicFormat === KFormatType.PEM ? KFormatType.PEM : KFormatType.DER;
@@ -310,9 +310,9 @@ function ed_formatKeyPairOutput(
   if (privateFormat == null || privateFormat === -1) {
     privateKey = priv;
   } else if (privateFormat === 'raw-private') {
-    privateKey = priv.handle.exportRawPrivate();
+    privateKey = Buffer.from(priv.handle.exportRawPrivate());
   } else if (privateFormat === 'raw-seed') {
-    privateKey = priv.handle.exportRawSeed();
+    privateKey = Buffer.from(priv.handle.exportRawSeed());
   } else {
     const format =
       privateFormat === KFormatType.PEM ? KFormatType.PEM : KFormatType.DER;
