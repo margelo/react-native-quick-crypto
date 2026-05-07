@@ -475,7 +475,6 @@ static bool supportsRawPrivate(int keyId, const char* typeName) {
 // Returns true if the EVP_PKEY type supports raw seed export
 // (PQC keys: ML-DSA, ML-KEM, SLH-DSA).
 static bool supportsRawSeed(int keyId, const char* typeName) {
-  (void)keyId;
 #if OPENSSL_VERSION_NUMBER >= 0x30500000L
   if (keyId == EVP_PKEY_ML_DSA_44 || keyId == EVP_PKEY_ML_DSA_65 || keyId == EVP_PKEY_ML_DSA_87) {
     return true;
@@ -487,6 +486,7 @@ static bool supportsRawSeed(int keyId, const char* typeName) {
     }
   }
 #else
+  (void)keyId;
   (void)typeName;
 #endif
   return false;
@@ -514,7 +514,7 @@ std::shared_ptr<ArrayBuffer> HybridKeyObjectHandle::exportRawPublic() {
   if (!rawData) {
     throw std::runtime_error("Failed to get raw public key");
   }
-  return ToNativeArrayBuffer(std::string(reinterpret_cast<const char*>(rawData.get()), rawData.size()));
+  return ToNativeArrayBuffer(reinterpret_cast<const uint8_t*>(rawData.get()), rawData.size());
 }
 
 std::shared_ptr<ArrayBuffer> HybridKeyObjectHandle::exportRawPrivate() {
@@ -539,7 +539,7 @@ std::shared_ptr<ArrayBuffer> HybridKeyObjectHandle::exportRawPrivate() {
   if (!rawData) {
     throw std::runtime_error("Failed to get raw private key");
   }
-  return ToNativeArrayBuffer(std::string(reinterpret_cast<const char*>(rawData.get()), rawData.size()));
+  return ToNativeArrayBuffer(reinterpret_cast<const uint8_t*>(rawData.get()), rawData.size());
 }
 
 std::shared_ptr<ArrayBuffer> HybridKeyObjectHandle::exportRawSeed() {
@@ -565,7 +565,7 @@ std::shared_ptr<ArrayBuffer> HybridKeyObjectHandle::exportRawSeed() {
   if (!rawData) {
     throw std::runtime_error("Key does not have an available seed");
   }
-  return ToNativeArrayBuffer(std::string(reinterpret_cast<const char*>(rawData.get()), rawData.size()));
+  return ToNativeArrayBuffer(reinterpret_cast<const uint8_t*>(rawData.get()), rawData.size());
 #else
   throw std::runtime_error("Raw seed export requires OpenSSL 3.5+");
 #endif
@@ -1340,11 +1340,6 @@ static int evpNidForAsymmetricKeyType(const std::string& asymmetricKeyType) {
   return 0;
 }
 
-static bool isEcCurveName(const std::string& namedCurve) {
-  return namedCurve == "prime256v1" || namedCurve == "P-256" || namedCurve == "secp384r1" || namedCurve == "P-384" ||
-         namedCurve == "secp521r1" || namedCurve == "P-521" || namedCurve == "secp256k1" || OBJ_txt2nid(namedCurve.c_str()) != 0;
-}
-
 bool HybridKeyObjectHandle::initRawPublic(const std::string& asymmetricKeyType, const std::shared_ptr<ArrayBuffer>& keyData,
                                           const std::optional<std::string>& namedCurve) {
   data_ = KeyObjectData();
@@ -1377,9 +1372,6 @@ bool HybridKeyObjectHandle::initRawPrivate(const std::string& asymmetricKeyType,
   if (asymmetricKeyType == "ec") {
     if (!namedCurve.has_value()) {
       throw std::runtime_error("namedCurve is required for EC raw private key import");
-    }
-    if (!isEcCurveName(namedCurve.value())) {
-      throw std::runtime_error("Unknown curve: " + namedCurve.value());
     }
 
     int nid = 0;

@@ -169,7 +169,24 @@ export const generateKeyPairPromise = (
 };
 
 // generateKeyPairSync
-export function generateKeyPairSync(type: KeyPairType): CryptoKeyPair;
+export type KeyObjectKeyPair = {
+  publicKey: PublicKeyObject;
+  privateKey: PrivateKeyObject;
+};
+
+type KeyObjectGenerateKeyPairOptions = Omit<
+  GenerateKeyPairOptions,
+  'publicKeyEncoding' | 'privateKeyEncoding'
+> & {
+  publicKeyEncoding?: undefined;
+  privateKeyEncoding?: undefined;
+};
+
+export function generateKeyPairSync(type: KeyPairType): KeyObjectKeyPair;
+export function generateKeyPairSync(
+  type: KeyPairType,
+  options: KeyObjectGenerateKeyPairOptions,
+): KeyObjectKeyPair;
 export function generateKeyPairSync(
   type: KeyPairType,
   options: GenerateKeyPairOptions,

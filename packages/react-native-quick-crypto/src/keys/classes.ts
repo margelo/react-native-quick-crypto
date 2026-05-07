@@ -310,9 +310,12 @@ export class PublicKeyObject extends AsymmetricKeyObject {
       options,
       this.asymmetricKeyType,
     );
+    if (typeof format !== 'number') {
+      throw new Error(`Unexpected format ${format} after raw-format dispatch`);
+    }
     const key = this.handle.exportKey(
-      format as KFormatType,
-      type as KeyEncoding | undefined,
+      format,
+      typeof type === 'string' ? undefined : type,
     );
     const buffer = Buffer.from(key);
     if (options?.format === 'pem') {
@@ -352,9 +355,12 @@ export class PrivateKeyObject extends AsymmetricKeyObject {
       options,
       this.asymmetricKeyType,
     );
+    if (typeof format !== 'number') {
+      throw new Error(`Unexpected format ${format} after raw-format dispatch`);
+    }
     const key = this.handle.exportKey(
-      format as KFormatType,
-      type as KeyEncoding | undefined,
+      format,
+      typeof type === 'string' ? undefined : type,
       cipher,
       passphrase,
     );

@@ -5,7 +5,6 @@ import {
   generateKeyPair,
   generateKeyPairSync,
   PrivateKeyObject,
-  PublicKeyObject,
 } from 'react-native-quick-crypto';
 import { expect } from 'chai';
 import { test } from '../util';
@@ -37,10 +36,8 @@ function generateKeyPairAsync(
 
 test(SUITE, 'PublicKeyObject.export raw-public for X25519', async () => {
   const { publicKey, privateKey } = generateKeyPairSync('x25519');
-  const pub = publicKey as unknown as PublicKeyObject;
-  const priv = privateKey as unknown as PrivateKeyObject;
-  const rawPub = pub.export({ format: 'raw-public' });
-  const rawPriv = priv.export({ format: 'raw-private' });
+  const rawPub = publicKey.export({ format: 'raw-public' });
+  const rawPriv = privateKey.export({ format: 'raw-private' });
   expect(rawPub).to.be.instanceOf(Buffer);
   expect(rawPriv).to.be.instanceOf(Buffer);
   expect(rawPub.length).to.equal(32);
@@ -49,10 +46,8 @@ test(SUITE, 'PublicKeyObject.export raw-public for X25519', async () => {
 
 test(SUITE, 'PublicKeyObject.export raw-public for Ed25519', async () => {
   const { publicKey, privateKey } = generateKeyPairSync('ed25519');
-  const pub = publicKey as unknown as PublicKeyObject;
-  const priv = privateKey as unknown as PrivateKeyObject;
-  const rawPub = pub.export({ format: 'raw-public' });
-  const rawPriv = priv.export({ format: 'raw-private' });
+  const rawPub = publicKey.export({ format: 'raw-public' });
+  const rawPriv = privateKey.export({ format: 'raw-private' });
   expect(rawPub.length).to.equal(32);
   expect(rawPriv.length).to.equal(32);
 });
@@ -61,30 +56,31 @@ test(SUITE, 'PublicKeyObject.export raw-public for EC P-256', async () => {
   const { publicKey, privateKey } = generateKeyPairSync('ec', {
     namedCurve: 'P-256',
   });
-  const pub = publicKey as unknown as PublicKeyObject;
-  const priv = privateKey as unknown as PrivateKeyObject;
-  const uncompressed = pub.export({ format: 'raw-public' });
+  const uncompressed = publicKey.export({ format: 'raw-public' });
   expect(uncompressed.length).to.equal(65);
   expect(uncompressed[0]).to.equal(0x04);
 
-  const compressed = pub.export({ format: 'raw-public', type: 'compressed' });
+  const compressed = publicKey.export({
+    format: 'raw-public',
+    type: 'compressed',
+  });
   expect(compressed.length).to.equal(33);
   expect(compressed[0] === 0x02 || compressed[0] === 0x03).to.equal(true);
 
-  const rawPriv = priv.export({ format: 'raw-private' });
+  const rawPriv = privateKey.export({ format: 'raw-private' });
   expect(rawPriv.length).to.equal(32);
 });
 
 test(SUITE, 'PrivateKeyObject.export raw-seed for ML-DSA-44', async () => {
   // ML-DSA may not be supported on all OpenSSL builds — guard.
-  let result: { publicKey: unknown; privateKey: unknown };
+  let privateKey: PrivateKeyObject;
   try {
-    result = generateKeyPairSync('ml-dsa-44' as 'ec');
+    ({ privateKey } = generateKeyPairSync('ml-dsa-44'));
   } catch {
     return; // skip if not supported
   }
-  const priv = result.privateKey as unknown as PrivateKeyObject;
-  const seed = priv.export({ format: 'raw-seed' });
+  if (!(privateKey instanceof PrivateKeyObject)) return;
+  const seed = privateKey.export({ format: 'raw-seed' });
   expect(seed).to.be.instanceOf(Buffer);
   expect(seed.length).to.be.greaterThan(0);
 });

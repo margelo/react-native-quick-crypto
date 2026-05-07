@@ -295,7 +295,7 @@ export type KeyPairType =
   | ECKeyPairType
   | DSAKeyPairType
   | DHKeyPairType
-  | SlhDsaKeyPairType;
+  | PQCKeyPairType;
 
 export type KeyUsage =
   | 'encrypt'

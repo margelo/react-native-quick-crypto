@@ -32,11 +32,7 @@ import {
 } from './utils';
 import { ECDH } from './ecdh';
 
-function numericFormat(value: unknown): number {
-  return typeof value === 'number' ? value : -1;
-}
-
-function numericType(value: unknown): number {
+function coerceToNumeric(value: unknown): number {
   return typeof value === 'number' ? value : -1;
 }
 
@@ -95,10 +91,10 @@ export class Ed {
 
   async generateKeyPair(): Promise<void> {
     await this.native.generateKeyPair(
-      numericFormat(this.config.publicFormat),
-      numericType(this.config.publicType),
-      numericFormat(this.config.privateFormat),
-      numericType(this.config.privateType),
+      coerceToNumeric(this.config.publicFormat),
+      coerceToNumeric(this.config.publicType),
+      coerceToNumeric(this.config.privateFormat),
+      coerceToNumeric(this.config.privateType),
       this.config.cipher,
       this.config.passphrase as ArrayBuffer,
     );
@@ -106,10 +102,10 @@ export class Ed {
 
   generateKeyPairSync(): void {
     this.native.generateKeyPairSync(
-      numericFormat(this.config.publicFormat),
-      numericType(this.config.publicType),
-      numericFormat(this.config.privateFormat),
-      numericType(this.config.privateType),
+      coerceToNumeric(this.config.publicFormat),
+      coerceToNumeric(this.config.publicType),
+      coerceToNumeric(this.config.privateFormat),
+      coerceToNumeric(this.config.privateType),
       this.config.cipher,
       this.config.passphrase as ArrayBuffer,
     );
