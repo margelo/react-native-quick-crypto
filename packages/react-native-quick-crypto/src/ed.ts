@@ -8,6 +8,7 @@ import {
   PrivateKeyObject as PrivateKeyObjectClass,
 } from './keys/classes';
 import type { EdKeyPair } from './specs/edKeyPair.nitro';
+import type { KeyObjectHandle as KeyObjectHandleSpec } from './specs/keyObjectHandle.nitro';
 import type {
   BinaryLike,
   CFRGKeyPairType,
@@ -30,6 +31,14 @@ import {
   KeyEncoding,
 } from './utils';
 import { ECDH } from './ecdh';
+
+function numericFormat(value: unknown): number {
+  return typeof value === 'number' ? value : -1;
+}
+
+function numericType(value: unknown): number {
+  return typeof value === 'number' ? value : -1;
+}
 
 export class Ed {
   type: CFRGKeyPairType;
@@ -86,10 +95,10 @@ export class Ed {
 
   async generateKeyPair(): Promise<void> {
     await this.native.generateKeyPair(
-      this.config.publicFormat ?? -1,
-      this.config.publicType ?? -1,
-      this.config.privateFormat ?? -1,
-      this.config.privateType ?? -1,
+      numericFormat(this.config.publicFormat),
+      numericType(this.config.publicType),
+      numericFormat(this.config.privateFormat),
+      numericType(this.config.privateType),
       this.config.cipher,
       this.config.passphrase as ArrayBuffer,
     );
@@ -97,10 +106,10 @@ export class Ed {
 
   generateKeyPairSync(): void {
     this.native.generateKeyPairSync(
-      this.config.publicFormat ?? -1,
-      this.config.publicType ?? -1,
-      this.config.privateFormat ?? -1,
-      this.config.privateType ?? -1,
+      numericFormat(this.config.publicFormat),
+      numericType(this.config.publicType),
+      numericFormat(this.config.privateFormat),
+      numericType(this.config.privateType),
       this.config.cipher,
       this.config.passphrase as ArrayBuffer,
     );
@@ -166,18 +175,86 @@ export function diffieHellman(
   options: DiffieHellmanOptions,
   callback?: DiffieHellmanCallback,
 ): Buffer | void {
-  checkDiffieHellmanOptions(options);
+  if (!options || typeof options !== 'object') {
+    throw new TypeError('options must be an object');
+  }
+  if (callback !== undefined && typeof callback !== 'function') {
+    throw new TypeError('callback must be a function');
+  }
 
-  const privateKey = options.privateKey as PrivateKeyObject;
+  const resolvedOptions: DiffieHellmanOptions = {
+    publicKey: resolveDhKeyInput(options.publicKey, 'publicKey'),
+    privateKey: resolveDhKeyInput(options.privateKey, 'privateKey'),
+  };
+  checkDiffieHellmanOptions(resolvedOptions);
+
+  const privateKey = resolvedOptions.privateKey as PrivateKeyObject;
   const keyType = privateKey.asymmetricKeyType;
 
   if (keyType === 'ec') {
-    return ecDiffieHellman(options, callback);
+    return ecDiffieHellman(resolvedOptions, callback);
+  }
+
+  if (keyType === 'dh') {
+    throw new Error(
+      'crypto.diffieHellman with DH KeyObjects is not supported yet — use the DiffieHellman class for now',
+    );
   }
 
   const type = keyType as CFRGKeyPairType;
   const ed = new Ed(type, {});
-  return ed.diffieHellman(options, callback);
+  return ed.diffieHellman(resolvedOptions, callback);
+}
+
+function isRawKeyInput(value: unknown): value is {
+  key: ArrayBuffer | ArrayBufferView | string;
+  format: 'raw-public' | 'raw-private' | 'raw-seed';
+  asymmetricKeyType: string;
+  namedCurve?: string;
+} {
+  if (!value || typeof value !== 'object') return false;
+  const obj = value as { format?: string };
+  return (
+    obj.format === 'raw-public' ||
+    obj.format === 'raw-private' ||
+    obj.format === 'raw-seed'
+  );
+}
+
+function resolveDhKeyInput(
+  input: DiffieHellmanOptions['publicKey'],
+  name: 'publicKey' | 'privateKey',
+): AsymmetricKeyObject {
+  if (isRawKeyInput(input)) {
+    const expectedKeyType = name === 'publicKey' ? 'public' : 'private';
+    if (input.format === 'raw-public' && expectedKeyType !== 'public') {
+      throw new Error(`Invalid format 'raw-public' for ${name}`);
+    }
+    if (
+      (input.format === 'raw-private' || input.format === 'raw-seed') &&
+      expectedKeyType !== 'private'
+    ) {
+      throw new Error(`Invalid format '${input.format}' for ${name}`);
+    }
+    if (input.asymmetricKeyType === 'ec' && !input.namedCurve) {
+      throw new Error(`namedCurve is required for EC raw key in ${name}`);
+    }
+
+    const handle =
+      NitroModules.createHybridObject<KeyObjectHandleSpec>('KeyObjectHandle');
+    const keyData = toAB(input.key as BinaryLike);
+    if (input.format === 'raw-public') {
+      handle.initRawPublic(input.asymmetricKeyType, keyData, input.namedCurve);
+      return new PublicKeyObject(handle);
+    }
+    if (input.format === 'raw-seed') {
+      handle.initRawSeed(input.asymmetricKeyType, keyData);
+      return new PrivateKeyObjectClass(handle);
+    }
+    handle.initRawPrivate(input.asymmetricKeyType, keyData, input.namedCurve);
+    return new PrivateKeyObjectClass(handle);
+  }
+  return input as AsymmetricKeyObject;
 }
 
 function ed_createKeyObjects(ed: Ed): {
@@ -217,6 +294,8 @@ function ed_formatKeyPairOutput(
 
   if (publicFormat == null || publicFormat === -1) {
     publicKey = pub;
+  } else if (publicFormat === 'raw-public') {
+    publicKey = pub.handle.exportRawPublic();
   } else {
     const format =
       publicFormat === KFormatType.PEM ? KFormatType.PEM : KFormatType.DER;
@@ -230,6 +309,10 @@ function ed_formatKeyPairOutput(
 
   if (privateFormat == null || privateFormat === -1) {
     privateKey = priv;
+  } else if (privateFormat === 'raw-private') {
+    privateKey = priv.handle.exportRawPrivate();
+  } else if (privateFormat === 'raw-seed') {
+    privateKey = priv.handle.exportRawSeed();
   } else {
     const format =
       privateFormat === KFormatType.PEM ? KFormatType.PEM : KFormatType.DER;

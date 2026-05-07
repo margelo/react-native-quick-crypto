@@ -78,6 +78,8 @@ function slhDsaFormatKeyPairOutput(
 
   if (publicFormat === -1) {
     publicKeyOutput = publicKey;
+  } else if (publicFormat === 'raw-public') {
+    publicKeyOutput = publicKey.handle.exportRawPublic();
   } else {
     const format =
       publicFormat === KFormatType.PEM ? KFormatType.PEM : KFormatType.DER;
@@ -91,6 +93,10 @@ function slhDsaFormatKeyPairOutput(
 
   if (privateFormat === -1) {
     privateKeyOutput = privateKey;
+  } else if (privateFormat === 'raw-private') {
+    privateKeyOutput = privateKey.handle.exportRawPrivate();
+  } else if (privateFormat === 'raw-seed') {
+    privateKeyOutput = privateKey.handle.exportRawSeed();
   } else {
     const format =
       privateFormat === KFormatType.PEM ? KFormatType.PEM : KFormatType.DER;
@@ -233,10 +239,10 @@ function parseKeyPairEncoding(
   }
 
   return {
-    publicFormat,
-    publicType,
-    privateFormat,
-    privateType,
+    publicFormat: publicFormat as KeyPairGenConfig['publicFormat'],
+    publicType: publicType as KeyPairGenConfig['publicType'],
+    privateFormat: privateFormat as KeyPairGenConfig['privateFormat'],
+    privateType: privateType as KeyPairGenConfig['privateType'],
     cipher,
     passphrase,
   };

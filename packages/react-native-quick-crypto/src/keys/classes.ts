@@ -287,15 +287,33 @@ export class PublicKeyObject extends AsymmetricKeyObject {
   export(options: { format: 'pem' } & EncodingOptions): string;
   export(options: { format: 'der' } & EncodingOptions): Buffer;
   export(options: { format: 'jwk' } & EncodingOptions): JWK;
+  export(options: { format: 'raw-public' } & EncodingOptions): Buffer;
   export(options: EncodingOptions): string | Buffer | JWK {
     if (options?.format === 'jwk') {
       return this.handle.exportJwk({}, false);
+    }
+    if (options?.format === 'raw-public') {
+      if (this.asymmetricKeyType === 'ec') {
+        const pointType = options.type ?? 'uncompressed';
+        if (pointType !== 'compressed' && pointType !== 'uncompressed') {
+          throw new Error(
+            `Invalid options.type for raw-public EC export: ${pointType}`,
+          );
+        }
+        return Buffer.from(
+          this.handle.exportECPublicRaw(pointType === 'compressed'),
+        );
+      }
+      return Buffer.from(this.handle.exportRawPublic());
     }
     const { format, type } = parsePublicKeyEncoding(
       options,
       this.asymmetricKeyType,
     );
-    const key = this.handle.exportKey(format, type);
+    const key = this.handle.exportKey(
+      format as KFormatType,
+      type as KeyEncoding | undefined,
+    );
     const buffer = Buffer.from(key);
     if (options?.format === 'pem') {
       return buffer.toString('utf-8');
@@ -312,6 +330,8 @@ export class PrivateKeyObject extends AsymmetricKeyObject {
   export(options: { format: 'pem' } & EncodingOptions): string;
   export(options: { format: 'der' } & EncodingOptions): Buffer;
   export(options: { format: 'jwk' } & EncodingOptions): JWK;
+  export(options: { format: 'raw-private' } & EncodingOptions): Buffer;
+  export(options: { format: 'raw-seed' } & EncodingOptions): Buffer;
   export(options: EncodingOptions): string | Buffer | JWK {
     if (options?.format === 'jwk') {
       if (options.passphrase !== undefined) {
@@ -319,11 +339,25 @@ export class PrivateKeyObject extends AsymmetricKeyObject {
       }
       return this.handle.exportJwk({}, false);
     }
+    if (options?.format === 'raw-private') {
+      if (this.asymmetricKeyType === 'ec') {
+        return Buffer.from(this.handle.exportECPrivateRaw());
+      }
+      return Buffer.from(this.handle.exportRawPrivate());
+    }
+    if (options?.format === 'raw-seed') {
+      return Buffer.from(this.handle.exportRawSeed());
+    }
     const { format, type, cipher, passphrase } = parsePrivateKeyEncoding(
       options,
       this.asymmetricKeyType,
     );
-    const key = this.handle.exportKey(format, type, cipher, passphrase);
+    const key = this.handle.exportKey(
+      format as KFormatType,
+      type as KeyEncoding | undefined,
+      cipher,
+      passphrase,
+    );
     const buffer = Buffer.from(key);
     if (options?.format === 'pem') {
       return buffer.toString('utf-8');

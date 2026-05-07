@@ -431,6 +431,233 @@ JWK HybridKeyObjectHandle::exportJwk(const JWK& key, bool handleRsaPss) {
   throw std::runtime_error("Unsupported key type for JWK export");
 }
 
+// Returns true if the EVP_PKEY type supports raw public key export
+// (CFRG keys: Ed25519, Ed448, X25519, X448; PQC keys: ML-DSA, ML-KEM, SLH-DSA).
+static bool supportsRawPublic(int keyId, const char* typeName) {
+  if (keyId == EVP_PKEY_ED25519 || keyId == EVP_PKEY_ED448 || keyId == EVP_PKEY_X25519 || keyId == EVP_PKEY_X448) {
+    return true;
+  }
+#if OPENSSL_VERSION_NUMBER >= 0x30500000L
+  if (keyId == EVP_PKEY_ML_DSA_44 || keyId == EVP_PKEY_ML_DSA_65 || keyId == EVP_PKEY_ML_DSA_87) {
+    return true;
+  }
+  if (typeName != nullptr) {
+    std::string name(typeName);
+    if (name.starts_with("ML-KEM-") || name.starts_with("ML-DSA-") || name.starts_with("SLH-DSA-")) {
+      return true;
+    }
+  }
+#else
+  (void)typeName;
+#endif
+  return false;
+}
+
+// Returns true if the EVP_PKEY type supports raw private key export
+// (CFRG keys: Ed25519, Ed448, X25519, X448; SLH-DSA private keys).
+static bool supportsRawPrivate(int keyId, const char* typeName) {
+  if (keyId == EVP_PKEY_ED25519 || keyId == EVP_PKEY_ED448 || keyId == EVP_PKEY_X25519 || keyId == EVP_PKEY_X448) {
+    return true;
+  }
+#if OPENSSL_VERSION_NUMBER >= 0x30500000L
+  if (typeName != nullptr) {
+    std::string name(typeName);
+    if (name.starts_with("SLH-DSA-")) {
+      return true;
+    }
+  }
+#else
+  (void)typeName;
+#endif
+  return false;
+}
+
+// Returns true if the EVP_PKEY type supports raw seed export
+// (PQC keys: ML-DSA, ML-KEM, SLH-DSA).
+static bool supportsRawSeed(int keyId, const char* typeName) {
+  (void)keyId;
+#if OPENSSL_VERSION_NUMBER >= 0x30500000L
+  if (keyId == EVP_PKEY_ML_DSA_44 || keyId == EVP_PKEY_ML_DSA_65 || keyId == EVP_PKEY_ML_DSA_87) {
+    return true;
+  }
+  if (typeName != nullptr) {
+    std::string name(typeName);
+    if (name.starts_with("ML-KEM-") || name.starts_with("ML-DSA-") || name.starts_with("SLH-DSA-")) {
+      return true;
+    }
+  }
+#else
+  (void)typeName;
+#endif
+  return false;
+}
+
+std::shared_ptr<ArrayBuffer> HybridKeyObjectHandle::exportRawPublic() {
+  auto keyType = data_.GetKeyType();
+  if (keyType == KeyType::SECRET) {
+    throw std::runtime_error("Raw public key export is not supported for secret keys");
+  }
+
+  const auto& pkey = data_.GetAsymmetricKey();
+  if (!pkey) {
+    throw std::runtime_error("Invalid asymmetric key");
+  }
+
+  int keyId = EVP_PKEY_id(pkey.get());
+  const char* typeName = EVP_PKEY_get0_type_name(pkey.get());
+
+  if (!supportsRawPublic(keyId, typeName)) {
+    throw std::runtime_error("The key type does not support raw public key export");
+  }
+
+  auto rawData = pkey.rawPublicKey();
+  if (!rawData) {
+    throw std::runtime_error("Failed to get raw public key");
+  }
+  return ToNativeArrayBuffer(std::string(reinterpret_cast<const char*>(rawData.get()), rawData.size()));
+}
+
+std::shared_ptr<ArrayBuffer> HybridKeyObjectHandle::exportRawPrivate() {
+  auto keyType = data_.GetKeyType();
+  if (keyType != KeyType::PRIVATE) {
+    throw std::runtime_error("Raw private key export requires a private key");
+  }
+
+  const auto& pkey = data_.GetAsymmetricKey();
+  if (!pkey) {
+    throw std::runtime_error("Invalid asymmetric key");
+  }
+
+  int keyId = EVP_PKEY_id(pkey.get());
+  const char* typeName = EVP_PKEY_get0_type_name(pkey.get());
+
+  if (!supportsRawPrivate(keyId, typeName)) {
+    throw std::runtime_error("The key type does not support raw private key export");
+  }
+
+  auto rawData = pkey.rawPrivateKey();
+  if (!rawData) {
+    throw std::runtime_error("Failed to get raw private key");
+  }
+  return ToNativeArrayBuffer(std::string(reinterpret_cast<const char*>(rawData.get()), rawData.size()));
+}
+
+std::shared_ptr<ArrayBuffer> HybridKeyObjectHandle::exportRawSeed() {
+#if OPENSSL_VERSION_NUMBER >= 0x30500000L
+  auto keyType = data_.GetKeyType();
+  if (keyType != KeyType::PRIVATE) {
+    throw std::runtime_error("Raw seed export requires a private key");
+  }
+
+  const auto& pkey = data_.GetAsymmetricKey();
+  if (!pkey) {
+    throw std::runtime_error("Invalid asymmetric key");
+  }
+
+  int keyId = EVP_PKEY_id(pkey.get());
+  const char* typeName = EVP_PKEY_get0_type_name(pkey.get());
+
+  if (!supportsRawSeed(keyId, typeName)) {
+    throw std::runtime_error("The key type does not support raw seed export");
+  }
+
+  auto rawData = pkey.rawSeed();
+  if (!rawData) {
+    throw std::runtime_error("Key does not have an available seed");
+  }
+  return ToNativeArrayBuffer(std::string(reinterpret_cast<const char*>(rawData.get()), rawData.size()));
+#else
+  throw std::runtime_error("Raw seed export requires OpenSSL 3.5+");
+#endif
+}
+
+std::shared_ptr<ArrayBuffer> HybridKeyObjectHandle::exportECPublicRaw(bool compressed) {
+  auto keyType = data_.GetKeyType();
+  if (keyType == KeyType::SECRET) {
+    throw std::runtime_error("EC raw public key export is not supported for secret keys");
+  }
+
+  const auto& pkey = data_.GetAsymmetricKey();
+  if (!pkey) {
+    throw std::runtime_error("Invalid asymmetric key");
+  }
+
+  if (EVP_PKEY_id(pkey.get()) != EVP_PKEY_EC) {
+    throw std::runtime_error("Key is not an EC key");
+  }
+
+  const EC_KEY* ec_key = EVP_PKEY_get0_EC_KEY(pkey.get());
+  if (!ec_key) {
+    throw std::runtime_error("Failed to get EC key");
+  }
+
+  const EC_GROUP* group = EC_KEY_get0_group(ec_key);
+  const EC_POINT* point = EC_KEY_get0_public_key(ec_key);
+  if (!group || !point) {
+    throw std::runtime_error("Failed to get EC public key point");
+  }
+
+  point_conversion_form_t form = compressed ? POINT_CONVERSION_COMPRESSED : POINT_CONVERSION_UNCOMPRESSED;
+
+  size_t len = EC_POINT_point2oct(group, point, form, nullptr, 0, nullptr);
+  if (len == 0) {
+    throw std::runtime_error("Failed to compute EC point size");
+  }
+  std::vector<uint8_t> buf(len);
+  if (EC_POINT_point2oct(group, point, form, buf.data(), buf.size(), nullptr) != len) {
+    throw std::runtime_error("Failed to encode EC public key point");
+  }
+  return ToNativeArrayBuffer(buf.data(), buf.size());
+}
+
+std::shared_ptr<ArrayBuffer> HybridKeyObjectHandle::exportECPrivateRaw() {
+  auto keyType = data_.GetKeyType();
+  if (keyType != KeyType::PRIVATE) {
+    throw std::runtime_error("EC raw private key export requires a private key");
+  }
+
+  const auto& pkey = data_.GetAsymmetricKey();
+  if (!pkey) {
+    throw std::runtime_error("Invalid asymmetric key");
+  }
+
+  if (EVP_PKEY_id(pkey.get()) != EVP_PKEY_EC) {
+    throw std::runtime_error("Key is not an EC key");
+  }
+
+  const EC_KEY* ec_key = EVP_PKEY_get0_EC_KEY(pkey.get());
+  if (!ec_key) {
+    throw std::runtime_error("Failed to get EC key");
+  }
+
+  const BIGNUM* priv_bn = EC_KEY_get0_private_key(ec_key);
+  if (!priv_bn) {
+    throw std::runtime_error("EC key has no private component");
+  }
+
+  const EC_GROUP* group = EC_KEY_get0_group(ec_key);
+  if (!group) {
+    throw std::runtime_error("Failed to get EC group");
+  }
+
+  BIGNUM* order = BN_new();
+  if (!order) {
+    throw std::runtime_error("Failed to allocate BIGNUM");
+  }
+  if (EC_GROUP_get_order(group, order, nullptr) != 1) {
+    BN_free(order);
+    throw std::runtime_error("Failed to get EC group order");
+  }
+  size_t order_size = (BN_num_bits(order) + 7) / 8;
+  BN_free(order);
+
+  std::vector<uint8_t> buf(order_size, 0);
+  if (BN_bn2binpad(priv_bn, buf.data(), static_cast<int>(order_size)) < 0) {
+    throw std::runtime_error("Failed to encode EC private key");
+  }
+  return ToNativeArrayBuffer(buf.data(), buf.size());
+}
+
 AsymmetricKeyType HybridKeyObjectHandle::getAsymmetricKeyType() {
   const auto& pkey = data_.GetAsymmetricKey();
   if (!pkey) {
@@ -1058,6 +1285,201 @@ bool HybridKeyObjectHandle::initPqcRaw(const std::string& algorithmName, const s
   return true;
 #else
   throw std::runtime_error("PQC raw key import requires OpenSSL 3.5+");
+#endif
+}
+
+// Map a string asymmetricKeyType to an EVP_PKEY NID for OKP/PQC keys.
+// Returns 0 if the type is not a known OKP or PQC type.
+static int evpNidForAsymmetricKeyType(const std::string& asymmetricKeyType) {
+  if (asymmetricKeyType == "ed25519")
+    return EVP_PKEY_ED25519;
+  if (asymmetricKeyType == "ed448")
+    return EVP_PKEY_ED448;
+  if (asymmetricKeyType == "x25519")
+    return EVP_PKEY_X25519;
+  if (asymmetricKeyType == "x448")
+    return EVP_PKEY_X448;
+#if OPENSSL_VERSION_NUMBER >= 0x30500000L
+  if (asymmetricKeyType == "ml-dsa-44")
+    return EVP_PKEY_ML_DSA_44;
+  if (asymmetricKeyType == "ml-dsa-65")
+    return EVP_PKEY_ML_DSA_65;
+  if (asymmetricKeyType == "ml-dsa-87")
+    return EVP_PKEY_ML_DSA_87;
+  if (asymmetricKeyType == "ml-kem-512")
+    return EVP_PKEY_ML_KEM_512;
+  if (asymmetricKeyType == "ml-kem-768")
+    return EVP_PKEY_ML_KEM_768;
+  if (asymmetricKeyType == "ml-kem-1024")
+    return EVP_PKEY_ML_KEM_1024;
+  if (asymmetricKeyType == "slh-dsa-sha2-128s")
+    return EVP_PKEY_SLH_DSA_SHA2_128S;
+  if (asymmetricKeyType == "slh-dsa-sha2-128f")
+    return EVP_PKEY_SLH_DSA_SHA2_128F;
+  if (asymmetricKeyType == "slh-dsa-sha2-192s")
+    return EVP_PKEY_SLH_DSA_SHA2_192S;
+  if (asymmetricKeyType == "slh-dsa-sha2-192f")
+    return EVP_PKEY_SLH_DSA_SHA2_192F;
+  if (asymmetricKeyType == "slh-dsa-sha2-256s")
+    return EVP_PKEY_SLH_DSA_SHA2_256S;
+  if (asymmetricKeyType == "slh-dsa-sha2-256f")
+    return EVP_PKEY_SLH_DSA_SHA2_256F;
+  if (asymmetricKeyType == "slh-dsa-shake-128s")
+    return EVP_PKEY_SLH_DSA_SHAKE_128S;
+  if (asymmetricKeyType == "slh-dsa-shake-128f")
+    return EVP_PKEY_SLH_DSA_SHAKE_128F;
+  if (asymmetricKeyType == "slh-dsa-shake-192s")
+    return EVP_PKEY_SLH_DSA_SHAKE_192S;
+  if (asymmetricKeyType == "slh-dsa-shake-192f")
+    return EVP_PKEY_SLH_DSA_SHAKE_192F;
+  if (asymmetricKeyType == "slh-dsa-shake-256s")
+    return EVP_PKEY_SLH_DSA_SHAKE_256S;
+  if (asymmetricKeyType == "slh-dsa-shake-256f")
+    return EVP_PKEY_SLH_DSA_SHAKE_256F;
+#endif
+  return 0;
+}
+
+static bool isEcCurveName(const std::string& namedCurve) {
+  return namedCurve == "prime256v1" || namedCurve == "P-256" || namedCurve == "secp384r1" || namedCurve == "P-384" ||
+         namedCurve == "secp521r1" || namedCurve == "P-521" || namedCurve == "secp256k1" || OBJ_txt2nid(namedCurve.c_str()) != 0;
+}
+
+bool HybridKeyObjectHandle::initRawPublic(const std::string& asymmetricKeyType, const std::shared_ptr<ArrayBuffer>& keyData,
+                                          const std::optional<std::string>& namedCurve) {
+  data_ = KeyObjectData();
+
+  if (asymmetricKeyType == "ec") {
+    if (!namedCurve.has_value()) {
+      throw std::runtime_error("namedCurve is required for EC raw public key import");
+    }
+    return initECRaw(namedCurve.value(), keyData);
+  }
+
+  int nid = evpNidForAsymmetricKeyType(asymmetricKeyType);
+  if (nid == 0) {
+    throw std::runtime_error("Invalid asymmetricKeyType for raw public key import: " + asymmetricKeyType);
+  }
+
+  ncrypto::Buffer<const unsigned char> buffer{.data = reinterpret_cast<const unsigned char*>(keyData->data()), .len = keyData->size()};
+  auto pkey = ncrypto::EVPKeyPointer::NewRawPublic(nid, buffer);
+  if (!pkey) {
+    throw std::runtime_error("Failed to create raw public key");
+  }
+  this->data_ = KeyObjectData::CreateAsymmetric(KeyType::PUBLIC, std::move(pkey));
+  return true;
+}
+
+bool HybridKeyObjectHandle::initRawPrivate(const std::string& asymmetricKeyType, const std::shared_ptr<ArrayBuffer>& keyData,
+                                           const std::optional<std::string>& namedCurve) {
+  data_ = KeyObjectData();
+
+  if (asymmetricKeyType == "ec") {
+    if (!namedCurve.has_value()) {
+      throw std::runtime_error("namedCurve is required for EC raw private key import");
+    }
+    if (!isEcCurveName(namedCurve.value())) {
+      throw std::runtime_error("Unknown curve: " + namedCurve.value());
+    }
+
+    int nid = 0;
+    const std::string& curve = namedCurve.value();
+    if (curve == "prime256v1" || curve == "P-256")
+      nid = NID_X9_62_prime256v1;
+    else if (curve == "secp384r1" || curve == "P-384")
+      nid = NID_secp384r1;
+    else if (curve == "secp521r1" || curve == "P-521")
+      nid = NID_secp521r1;
+    else if (curve == "secp256k1")
+      nid = NID_secp256k1;
+    else
+      nid = OBJ_txt2nid(curve.c_str());
+
+    if (nid == 0) {
+      throw std::runtime_error("Unknown curve: " + curve);
+    }
+
+    auto ec_key = std::unique_ptr<EC_KEY, decltype(&EC_KEY_free)>(EC_KEY_new_by_curve_name(nid), EC_KEY_free);
+    if (!ec_key) {
+      throw std::runtime_error("Failed to create EC_KEY");
+    }
+    const EC_GROUP* group = EC_KEY_get0_group(ec_key.get());
+
+    BIGNUM* order = BN_new();
+    if (!order || EC_GROUP_get_order(group, order, nullptr) != 1) {
+      if (order)
+        BN_free(order);
+      throw std::runtime_error("Failed to get EC group order");
+    }
+    size_t order_size = (BN_num_bits(order) + 7) / 8;
+    BN_free(order);
+
+    if (keyData->size() != order_size) {
+      throw std::runtime_error("Invalid EC private key length");
+    }
+
+    BIGNUM* priv_bn = BN_bin2bn(reinterpret_cast<const unsigned char*>(keyData->data()), static_cast<int>(keyData->size()), nullptr);
+    if (!priv_bn) {
+      throw std::runtime_error("Failed to decode EC private key");
+    }
+
+    if (EC_KEY_set_private_key(ec_key.get(), priv_bn) != 1) {
+      BN_free(priv_bn);
+      throw std::runtime_error("Failed to set EC private key");
+    }
+
+    auto pub_point = std::unique_ptr<EC_POINT, decltype(&EC_POINT_free)>(EC_POINT_new(group), EC_POINT_free);
+    if (!pub_point || EC_POINT_mul(group, pub_point.get(), priv_bn, nullptr, nullptr, nullptr) != 1 ||
+        EC_KEY_set_public_key(ec_key.get(), pub_point.get()) != 1) {
+      BN_free(priv_bn);
+      throw std::runtime_error("Failed to derive EC public key");
+    }
+    BN_free(priv_bn);
+
+    EVP_PKEY* pkey = EVP_PKEY_new();
+    if (!pkey || EVP_PKEY_assign_EC_KEY(pkey, ec_key.get()) != 1) {
+      if (pkey)
+        EVP_PKEY_free(pkey);
+      throw std::runtime_error("Failed to create EVP_PKEY from EC_KEY");
+    }
+    ec_key.release();
+
+    this->data_ = KeyObjectData::CreateAsymmetric(KeyType::PRIVATE, ncrypto::EVPKeyPointer(pkey));
+    return true;
+  }
+
+  int nid = evpNidForAsymmetricKeyType(asymmetricKeyType);
+  if (nid == 0) {
+    throw std::runtime_error("Invalid asymmetricKeyType for raw private key import: " + asymmetricKeyType);
+  }
+
+  ncrypto::Buffer<const unsigned char> buffer{.data = reinterpret_cast<const unsigned char*>(keyData->data()), .len = keyData->size()};
+  auto pkey = ncrypto::EVPKeyPointer::NewRawPrivate(nid, buffer);
+  if (!pkey) {
+    throw std::runtime_error("Failed to create raw private key");
+  }
+  this->data_ = KeyObjectData::CreateAsymmetric(KeyType::PRIVATE, std::move(pkey));
+  return true;
+}
+
+bool HybridKeyObjectHandle::initRawSeed(const std::string& asymmetricKeyType, const std::shared_ptr<ArrayBuffer>& keyData) {
+#if OPENSSL_VERSION_NUMBER >= 0x30500000L
+  data_ = KeyObjectData();
+
+  int nid = evpNidForAsymmetricKeyType(asymmetricKeyType);
+  if (nid == 0) {
+    throw std::runtime_error("Invalid asymmetricKeyType for raw seed import: " + asymmetricKeyType);
+  }
+
+  ncrypto::Buffer<const unsigned char> buffer{.data = reinterpret_cast<const unsigned char*>(keyData->data()), .len = keyData->size()};
+  auto pkey = ncrypto::EVPKeyPointer::NewRawSeed(nid, buffer);
+  if (!pkey) {
+    throw std::runtime_error("Failed to create key from raw seed");
+  }
+  this->data_ = KeyObjectData::CreateAsymmetric(KeyType::PRIVATE, std::move(pkey));
+  return true;
+#else
+  throw std::runtime_error("Raw seed import requires OpenSSL 3.5+");
 #endif
 }
 

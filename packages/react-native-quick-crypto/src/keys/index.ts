@@ -40,13 +40,67 @@ import { randomBytes } from '../random';
 
 interface KeyInputObject {
   key: BinaryLike | KeyObject | CryptoKey | JWK;
-  format?: 'pem' | 'der' | 'jwk';
+  format?: 'pem' | 'der' | 'jwk' | 'raw-public' | 'raw-private' | 'raw-seed';
   type?: 'pkcs1' | 'pkcs8' | 'spki' | 'sec1';
   passphrase?: BinaryLike;
   encoding?: BufferEncoding;
+  asymmetricKeyType?: string;
+  namedCurve?: string;
 }
 
 type KeyInput = BinaryLike | KeyInputObject | KeyObject | CryptoKey;
+
+function isRawFormat(
+  format: string | undefined,
+): format is 'raw-public' | 'raw-private' | 'raw-seed' {
+  return (
+    format === 'raw-public' || format === 'raw-private' || format === 'raw-seed'
+  );
+}
+
+function createPublicKeyFromRaw(input: KeyInputObject): PublicKeyObject {
+  if (input.format !== 'raw-public') {
+    throw new Error('Invalid format for createPublicKey raw import');
+  }
+  if (typeof input.asymmetricKeyType !== 'string') {
+    throw new Error('options.asymmetricKeyType is required for raw key import');
+  }
+  if (input.asymmetricKeyType === 'ec' && !input.namedCurve) {
+    throw new Error('options.namedCurve is required for EC raw key import');
+  }
+  const handle =
+    NitroModules.createHybridObject<KeyObjectHandle>('KeyObjectHandle');
+  handle.initRawPublic(
+    input.asymmetricKeyType,
+    toAB(input.key as BinaryLike),
+    input.namedCurve,
+  );
+  return new PublicKeyObject(handle);
+}
+
+function createPrivateKeyFromRaw(input: KeyInputObject): PrivateKeyObject {
+  if (input.format !== 'raw-private' && input.format !== 'raw-seed') {
+    throw new Error('Invalid format for createPrivateKey raw import');
+  }
+  if (typeof input.asymmetricKeyType !== 'string') {
+    throw new Error('options.asymmetricKeyType is required for raw key import');
+  }
+  if (input.asymmetricKeyType === 'ec' && !input.namedCurve) {
+    throw new Error('options.namedCurve is required for EC raw key import');
+  }
+  const handle =
+    NitroModules.createHybridObject<KeyObjectHandle>('KeyObjectHandle');
+  if (input.format === 'raw-seed') {
+    handle.initRawSeed(input.asymmetricKeyType, toAB(input.key as BinaryLike));
+  } else {
+    handle.initRawPrivate(
+      input.asymmetricKeyType,
+      toAB(input.key as BinaryLike),
+      input.namedCurve,
+    );
+  }
+  return new PrivateKeyObject(handle);
+}
 
 function createSecretKey(key: BinaryLike): SecretKeyObject {
   const keyBuffer = toAB(key);
@@ -116,8 +170,10 @@ function prepareAsymmetricKey(
       return { data: toAB(data), format: 'pem', type };
     }
 
-    // Filter out 'jwk' format - only 'pem' and 'der' are supported here
-    const filteredFormat = format === 'jwk' ? undefined : format;
+    // Filter to only 'pem' or 'der' — JWK and raw formats are handled
+    // separately via dedicated paths.
+    const filteredFormat: 'pem' | 'der' | undefined =
+      format === 'pem' || format === 'der' ? format : undefined;
     return { data: toAB(data), format: filteredFormat, type };
   }
 
@@ -125,6 +181,14 @@ function prepareAsymmetricKey(
 }
 
 function createPublicKey(key: KeyInput): PublicKeyObject {
+  if (typeof key === 'object' && 'key' in key && isRawFormat(key.format)) {
+    if (key.format !== 'raw-public') {
+      throw new Error(
+        `Invalid format ${key.format} for createPublicKey — only 'raw-public' is allowed`,
+      );
+    }
+    return createPublicKeyFromRaw(key as KeyInputObject);
+  }
   if (typeof key === 'object' && 'key' in key && key.format === 'jwk') {
     const handle =
       NitroModules.createHybridObject<KeyObjectHandle>('KeyObjectHandle');
@@ -169,6 +233,12 @@ function createPublicKey(key: KeyInput): PublicKeyObject {
 }
 
 function createPrivateKey(key: KeyInput): PrivateKeyObject {
+  if (typeof key === 'object' && 'key' in key && isRawFormat(key.format)) {
+    if (key.format === 'raw-public') {
+      throw new Error("Invalid format 'raw-public' for createPrivateKey");
+    }
+    return createPrivateKeyFromRaw(key as KeyInputObject);
+  }
   if (typeof key === 'object' && 'key' in key && key.format === 'jwk') {
     const handle =
       NitroModules.createHybridObject<KeyObjectHandle>('KeyObjectHandle');

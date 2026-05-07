@@ -347,10 +347,13 @@ export const kNamedCurveAliases = {
 } as const;
 // end TODO
 
+export type RawPublicFormat = 'raw-public';
+export type RawPrivateFormat = 'raw-private' | 'raw-seed';
+
 export type KeyPairGenConfig = {
-  publicFormat?: KFormatType | -1;
-  publicType?: KeyEncoding;
-  privateFormat?: KFormatType | -1;
+  publicFormat?: KFormatType | RawPublicFormat | -1;
+  publicType?: KeyEncoding | RawECPointType;
+  privateFormat?: KFormatType | RawPrivateFormat | -1;
   privateType?: KeyEncoding;
   cipher?: string;
   passphrase?: ArrayBuffer;
@@ -399,14 +402,22 @@ export type KTypePrivate = 'pkcs1' | 'pkcs8' | 'sec1';
 export type KTypePublic = 'pkcs1' | 'spki';
 export type KType = KTypePrivate | KTypePublic;
 
-export type KFormat = 'der' | 'pem' | 'jwk';
+export type KFormat =
+  | 'der'
+  | 'pem'
+  | 'jwk'
+  | 'raw-public'
+  | 'raw-private'
+  | 'raw-seed';
 
 export type DSAEncoding = 'der' | 'ieee-p1363';
+
+export type RawECPointType = 'compressed' | 'uncompressed';
 
 export type EncodingOptions = {
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   key?: any;
-  type?: KType;
+  type?: KType | RawECPointType;
   encoding?: string;
   dsaEncoding?: DSAEncoding;
   format?: KFormat;
@@ -416,6 +427,8 @@ export type EncodingOptions = {
   saltLength?: number;
   oaepHash?: string;
   oaepLabel?: BinaryLike;
+  asymmetricKeyType?: string;
+  namedCurve?: string;
 };
 
 export interface KeyDetail {
@@ -537,9 +550,16 @@ export type CipherOFBType = 'aes-128-ofb' | 'aes-192-ofb' | 'aes-256-ofb';
 
 export type KeyObjectHandle = KeyObjectHandleType;
 
+export type RawDiffieHellmanKeyInput = {
+  key: ArrayBuffer | ArrayBufferView | string;
+  format: 'raw-public' | 'raw-private' | 'raw-seed';
+  asymmetricKeyType: string;
+  namedCurve?: string;
+};
+
 export type DiffieHellmanOptions = {
-  privateKey: KeyObject;
-  publicKey: KeyObject;
+  privateKey: KeyObject | RawDiffieHellmanKeyInput;
+  publicKey: KeyObject | RawDiffieHellmanKeyInput;
 };
 
 export type DiffieHellmanCallback = (
