@@ -22,8 +22,9 @@ Standard random number generators (like `Math.random()`) are **Pseudo-Random Num
 Cryptographically secure systems require **CSPRNGs (Cryptographically Strong PRNGs)**. These are designed to be unpredictable even if an attacker knows the algorithm.
 
 RNQC delegates randomness to the underlying Operating System's entropy pool:
-*   **iOS/macOS**: `SecRandomCopyBytes`
-*   **Android**: `SecureRandom`
+
+- **iOS/macOS**: `SecRandomCopyBytes`
+- **Android**: `SecureRandom`
 
 This ensures that generated keys, salts, and nonces are secure.
 
@@ -40,7 +41,10 @@ Generates cryptographically strong pseudo-random data.
 <TypeTable
   type={{
     size: { description: 'The number of bytes to generate.', type: 'number' },
-    callback: { description: 'Optional. If provided, generation is async.', type: 'Function' }
+    callback: {
+      description: 'Optional. If provided, generation is async.',
+      type: 'Function',
+    },
   }}
 />
 
@@ -66,17 +70,27 @@ randomBytes(256, (err, buf) => {
 ---
 
 ### randomFill(buffer[, offset][, size], callback)
+
 ### randomFillSync(buffer[, offset][, size])
 
-Populates an *existing* buffer with random data. Works correctly with TypedArray views over larger ArrayBuffers — `offset` and `size` are relative to the view, not the underlying buffer.
+Populates an _existing_ buffer with random data. Works correctly with TypedArray views over larger ArrayBuffers — `offset` and `size` are relative to the view, not the underlying buffer.
 
 **Parameters:**
 
 <TypeTable
   type={{
-    buffer: { description: 'Buffer or TypedArray view to fill.', type: 'Buffer | TypedArray' },
-    offset: { description: 'Start position within the view. Default: 0', type: 'number' },
-    size: { description: 'Bytes to fill. Default: buffer.byteLength - offset', type: 'number' }
+    buffer: {
+      description: 'Buffer or TypedArray view to fill.',
+      type: 'Buffer | TypedArray',
+    },
+    offset: {
+      description: 'Start position within the view. Default: 0',
+      type: 'number',
+    },
+    size: {
+      description: 'Bytes to fill. Default: buffer.byteLength - offset',
+      type: 'number',
+    },
   }}
 />
 
@@ -90,9 +104,12 @@ Returns a random integer `n` such that `min <= n < max`. The implementation avoi
 
 <TypeTable
   type={{
-    min: { description: 'Lower bound (inclusive). Default: 0.', type: 'number' },
+    min: {
+      description: 'Lower bound (inclusive). Default: 0.',
+      type: 'number',
+    },
     max: { description: 'Upper bound (exclusive).', type: 'number' },
-    callback: { description: 'Optional callback.', type: 'Function' }
+    callback: { description: 'Optional callback.', type: 'Function' },
   }}
 />
 
@@ -114,18 +131,55 @@ const m = randomInt(10, 50);
 
 ### randomUUID([options])
 
-Generates a random RFC 4122 Version 4 UUID.
+Generates a random RFC 9562 Version 4 UUID.
 
 **Parameters:**
 
 <TypeTable
   type={{
     options: { description: 'Configuration.', type: 'Object' },
-    'options.disableEntropyCache': { description: 'Disable internal buffering.', type: 'boolean' }
+    'options.disableEntropyCache': {
+      description:
+        'Accepted for Node.js parity. RNQC pulls fresh OS entropy on every call, so this is a no-op.',
+      type: 'boolean',
+    },
   }}
 />
 
 **Returns:** `string` e.g. `'f47ac10b-58cc-4372-a567-0e02b2c3d479'`
+
+---
+
+### randomUUIDv7([options])
+
+Generates a random RFC 9562 §5.7 Version 7 UUID. Layout: 48-bit big-endian Unix-ms timestamp prefix, 4-bit version (`7`), 2-bit variant (`10`), and 74 bits of CSPRNG output.
+
+The timestamp prefix makes v7 UUIDs **lexicographically sortable by creation time**, which makes them well-suited as primary keys, idempotency tokens, and ordered identifiers.
+
+**Parameters:**
+
+<TypeTable
+  type={{
+    options: { description: 'Configuration.', type: 'Object' },
+    'options.disableEntropyCache': {
+      description:
+        'Accepted for Node.js parity. RNQC pulls fresh OS entropy on every call, so this is a no-op.',
+      type: 'boolean',
+    },
+  }}
+/>
+
+**Returns:** `string` e.g. `'017f22e2-79b0-7cc3-98c4-dc0c0c07398f'`
+
+**Example:**
+
+```ts twoslash
+// @noErrors
+import { randomUUIDv7 } from 'react-native-quick-crypto';
+
+const id = randomUUIDv7();
+// '0193b6f6-a8d0-7abc-8def-0123456789ab'
+```
 
 ---
 
@@ -139,11 +193,12 @@ Generating a URL-safe random string.
 import { randomBytes } from 'react-native-quick-crypto';
 
 function generateApiKey(lengthBytes = 32): string {
-    const buffer = randomBytes(lengthBytes);
-    return buffer.toString('base64')
-        .replace(/\+/g, '-')
-        .replace(/\//g, '_')
-        .replace(/=/g, '');
+  const buffer = randomBytes(lengthBytes);
+  return buffer
+    .toString('base64')
+    .replace(/\+/g, '-')
+    .replace(/\//g, '_')
+    .replace(/=/g, '');
 }
 ```
 
@@ -157,7 +212,7 @@ import { randomBytes } from 'react-native-quick-crypto';
 const NONCE_SIZE = 12;
 
 function generateNonce(): Buffer {
-    return randomBytes(NONCE_SIZE);
+  return randomBytes(NONCE_SIZE);
 }
 ```
 
@@ -169,14 +224,14 @@ Shuffling an array using the Fisher-Yates algorithm with CSPRNG.
 import { randomInt } from 'react-native-quick-crypto';
 
 async function secureShuffle<T>(array: T[]): Promise<T[]> {
-    const arr = [...array];
-    for (let i = arr.length - 1; i > 0; i--) {
-        const j = await new Promise<number>((resolve, reject) => {
-            randomInt(0, i + 1, (err, n) => err ? reject(err) : resolve(n));
-        });
-        [arr[i], arr[j]] = [arr[j], arr[i]];
-    }
-    return arr;
+  const arr = [...array];
+  for (let i = arr.length - 1; i > 0; i--) {
+    const j = await new Promise<number>((resolve, reject) => {
+      randomInt(0, i + 1, (err, n) => (err ? reject(err) : resolve(n)));
+    });
+    [arr[i], arr[j]] = [arr[j], arr[i]];
+  }
+  return arr;
 }
 ```
 
@@ -185,4 +240,5 @@ async function secureShuffle<T>(array: T[]): Promise<T[]> {
 ## Security Considerations
 
 ### Blocking the Event Loop
+
 `randomBytes` (synchronous) taps into system sources. While generally fast, requesting large amounts of entropy on a constrained device could potentially block the Main/UI thread. For generating 4KB or less (keys, nonces), sync is fine. For larger buffers, use the asynchronous version or `randomUUID`.
