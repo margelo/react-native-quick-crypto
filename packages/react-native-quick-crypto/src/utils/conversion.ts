@@ -93,7 +93,7 @@ export function rejectSharedArrayBuffer(buf: unknown): void {
  * Only use this when the caller separately tracks `byteOffset`/`byteLength`
  * and the native receiver needs to write back into the original memory
  * (e.g. `randomFill`). For data that will be read by native crypto, use
- * `binaryLikeToArrayBuffer`/`toArrayBuffer` instead — those slice to the
+ * `binaryLikeToArrayBuffer`/`toArrayBuffer` instead — those return only the
  * view's region and won't leak unrelated bytes from the backing buffer.
  */
 export const abvToArrayBuffer = (buf: ABV) => {
@@ -109,7 +109,7 @@ export const abvToArrayBuffer = (buf: ABV) => {
 
 /**
  * Converts supplied argument to an ArrayBuffer.  Note this copies data if the
- * supplied buffer has the .slice() method, so can be a bit slow.
+ * supplied buffer represents a subrange of the internal buffer
  * @param buf
  * @returns ArrayBuffer
  */
@@ -117,13 +117,13 @@ export function toArrayBuffer(
   buf: CraftzdogBuffer | SafeBuffer | ArrayBufferView,
 ): ArrayBuffer {
   if (CraftzdogBuffer.isBuffer(buf) || ArrayBuffer.isView(buf)) {
-    if (buf?.buffer?.slice) {
+    if (buf.byteOffset === 0 && buf.byteLength === buf.buffer.byteLength) {
+      return buf.buffer as ArrayBuffer;
+    } else {
       return buf.buffer.slice(
         buf.byteOffset,
         buf.byteOffset + buf.byteLength,
       ) as ArrayBuffer;
-    } else {
-      return buf.buffer as ArrayBuffer;
     }
   }
   const ab = new ArrayBuffer(buf.length);
