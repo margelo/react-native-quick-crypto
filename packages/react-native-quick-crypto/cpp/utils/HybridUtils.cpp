@@ -175,7 +175,7 @@ namespace {
     throw std::runtime_error("Unsupported encoding: utf16le");
   }
 
-  std::vector<uint8_t> decodeLatin1(const std::string& str) {
+  std::vector<uint8_t> decodeLatin1FromUtf8(const std::string& str) {
     std::vector<uint8_t> result;
     result.reserve(str.size());
     size_t i = 0;
@@ -202,6 +202,41 @@ namespace {
       result.push_back(static_cast<uint8_t>(cp & 0xFF));
     }
     return result;
+  }
+
+  template <typename JSIString = facebook::jsi::String>
+  std::vector<uint8_t> decodeLatin1(facebook::jsi::Runtime& runtime, bool isHermes, const JSIString& str) {
+    if constexpr (HasStringGetStringData<JSIString>) {
+      if (isHermes) {
+        std::vector<uint8_t> result;
+        auto chunkCallback = [&result](bool isAscii, const void* data, size_t num) {
+          if (num == 0) {
+            return;
+          }
+
+          size_t offset = result.size();
+          result.resize(offset + num);
+
+          auto* dst = result.data() + offset;
+          if (isAscii) {
+            // Fast&direct copy path
+            std::memcpy(dst, data, num);
+            return;
+          }
+
+          const auto* utf16Src = reinterpret_cast<const char16_t*>(data);
+          for (size_t i = 0; i < num; i++) {
+            // Node.js-like behavior
+            dst[i] = static_cast<uint8_t>(utf16Src[i] & 0xFFu);
+          }
+        };
+
+        str.getStringData(runtime, chunkCallback);
+        return result;
+      }
+    }
+    // Slow path for non-Hermes runtime/old RN versions
+    return decodeLatin1FromUtf8(str.utf8(runtime));
   }
 
   std::string encodeLatin1(const uint8_t* data, size_t len) {
@@ -330,7 +365,7 @@ facebook::jsi::Value HybridUtils::jsiStringToBuffer(facebook::jsi::Runtime& runt
           runtime, ArrayBuffer::copy(reinterpret_cast<const uint8_t*>(utf8Str.data()), utf8Str.size()));
     }
     if (encoding == "latin1" || encoding == "binary" || encoding == "ascii") {
-      auto decoded = decodeLatin1(str.utf8(runtime));
+      auto decoded = decodeLatin1(runtime, isHermesRuntime(runtime), str);
       return JSIConverter<std::shared_ptr<ArrayBuffer>>::toJSI(runtime, ArrayBuffer::move(std::move(decoded)));
     }
     if (encoding == "utf16le") {
