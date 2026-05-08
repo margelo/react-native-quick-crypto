@@ -767,12 +767,6 @@ test(SUITE, 'utf8 encode/decode multibyte', () => {
   expect(bufferToString(ab, 'utf-8')).to.equal(str);
 });
 
-test(SUITE, 'utf8 alias "utf8" works', () => {
-  const str = 'test';
-  const ab = stringToBuffer(str, 'utf8');
-  expect(bufferToString(ab, 'utf8')).to.equal(str);
-});
-
 test(SUITE, '[Node.js] Test for proper UTF-8 Encoding', () => {
   expect(toU8(stringToBuffer('\u00fcber', 'utf8'))).to.deep.equal(
     new Uint8Array([195, 188, 98, 101, 114]),
@@ -799,12 +793,6 @@ test(
 );
 
 // --- UTF-16LE ---
-
-test(SUITE, '[Node.js] Roundtrips ASCII text through utf16le encoding.', () => {
-  const str = 'foo';
-  const ab = stringToBuffer(str, 'utf16le');
-  expect(bufferToString(ab, 'utf16le')).to.equal(str);
-});
 
 test(
   SUITE,
@@ -876,6 +864,44 @@ test(
   },
 );
 
+// --- General ---
+
+test(
+  SUITE,
+  '[Node.js] Try to create 0-length buffers. Should not throw.',
+  () => {
+    const encodings = [
+      'utf8',
+      'utf16le',
+      'ascii',
+      'latin1',
+      'binary',
+      'base64',
+      'base64url',
+      'hex',
+    ] as const;
+
+    for (const encoding of encodings) {
+      const ab = stringToBuffer('', encoding);
+      expect(ab.byteLength).to.equal(0);
+      expect(bufferToString(ab, encoding)).to.equal('');
+    }
+  },
+);
+
+test(
+  SUITE,
+  "[Node.js] Buffer.from('foo', encoding).toString(encoding) returns 'foo'.",
+  () => {
+    const encodings = ['utf8', 'utf16le', 'ascii', 'latin1', 'binary'] as const;
+
+    for (const encoding of encodings) {
+      const ab = stringToBuffer('foo', encoding);
+      expect(bufferToString(ab, encoding)).to.equal('foo');
+    }
+  },
+);
+
 // --- Latin1 / Binary ---
 
 test(
@@ -896,6 +922,42 @@ test(
     const str = '\u00e9\u00fc\u00f1'; // é, ü, ñ
     const ab = stringToBuffer(str, 'latin1');
     expect(toU8(ab)).to.deep.equal(new Uint8Array([0xe9, 0xfc, 0xf1]));
+  },
+);
+
+test(SUITE, '[Node.js] Data "Hello, ÆÊÎÖÿ".', () => {
+  const str = 'Hello, ÆÊÎÖÿ';
+  const expected = new Uint8Array([
+    ...Array.from('Hello, ', c => c.charCodeAt(0)),
+    0xc6,
+    0xca,
+    0xce,
+    0xd6,
+    0xff,
+  ]);
+  const ab = stringToBuffer(str, 'latin1');
+
+  expect(toU8(ab)).to.deep.equal(expected);
+  expect(bufferToString(expected.buffer as ArrayBuffer, 'latin1')).to.equal(
+    str,
+  );
+});
+
+test(
+  SUITE,
+  '[Node.js] Verify that StringBytes::Write converts two-byte characters to one-byte characters, even if there is no valid one-byte representation.',
+  () => {
+    const expected = new Uint8Array([
+      ...Array.from('Hello, ', c => c.charCodeAt(0)),
+      0x16,
+      0x4c,
+    ]);
+    const ab = stringToBuffer('Hello, 世界', 'latin1');
+
+    expect(toU8(ab)).to.deep.equal(expected);
+    expect(bufferToString(ab, 'latin1')).to.equal(
+      String.fromCharCode(...expected),
+    );
   },
 );
 
@@ -947,7 +1009,61 @@ test(
   },
 );
 
+test(
+  SUITE,
+  '[Node.js] Manually controlled string for checking binary output',
+  () => {
+    const ucs2Control = 'a\u0000';
+    const writeStr = 'a';
+    const bytes = toU8(stringToBuffer(writeStr, 'utf16le'));
+
+    expect(bytes[0]).to.equal(0x61);
+    expect(bytes[1]).to.equal(0);
+    expect(bufferToString(bytes.buffer as ArrayBuffer, 'latin1')).to.equal(
+      ucs2Control,
+    );
+    expect(bufferToString(bytes.buffer as ArrayBuffer, 'binary')).to.equal(
+      ucs2Control,
+    );
+  },
+);
+
 // --- ASCII ---
+
+test(SUITE, '[Node.js] ASCII slice test', () => {
+  {
+    const asciiString = 'hello world';
+    const bytes = new Uint8Array(128);
+
+    for (let i = 0; i < asciiString.length; i++) {
+      bytes[i] = asciiString.charCodeAt(i);
+    }
+    const asciiSlice = bufferToString(
+      bytes.buffer as ArrayBuffer,
+      'ascii',
+      0,
+      asciiString.length,
+    );
+
+    expect(asciiSlice).to.equal(asciiString);
+  }
+
+  {
+    const asciiString = 'hello world';
+    const offset = 100;
+    const bytes = new Uint8Array(128);
+
+    bytes.set(toU8(stringToBuffer(asciiString, 'ascii')), offset);
+    const asciiSlice = bufferToString(
+      bytes.buffer as ArrayBuffer,
+      'ascii',
+      offset,
+      offset + asciiString.length,
+    );
+
+    expect(asciiSlice).to.equal(asciiString);
+  }
+});
 
 test(SUITE, 'ascii roundtrip printable ASCII', () => {
   const str = 'Hello, World! 123';
