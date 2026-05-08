@@ -231,6 +231,14 @@ bool HybridUtils::timingSafeEqual(const std::shared_ptr<ArrayBuffer>& a, const s
   return CRYPTO_memcmp(a->data(), b->data(), aLen) == 0;
 }
 
+bool HybridUtils::isHermesRuntime(facebook::jsi::Runtime& runtime) {
+  if (this->cachedRuntime_ != &runtime) [[unlikely]] {
+    this->cachedRuntime_ = &runtime;
+    this->cachedIsHermesRuntime = runtime.global().hasProperty(runtime, "HermesInternal");
+  }
+  return this->cachedIsHermesRuntime;
+}
+
 facebook::jsi::Value HybridUtils::bufferToJsiString(facebook::jsi::Runtime& runtime, const facebook::jsi::Value&,
                                                     const facebook::jsi::Value* args, size_t argCount) {
   // Runtime argument check from react-native-nitro-modules/cpp/core/HybridFunction.hpp
