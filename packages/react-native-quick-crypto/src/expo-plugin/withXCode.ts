@@ -12,8 +12,8 @@ import path from 'path';
  */
 export const withXCode: ConfigPlugin<ConfigProps> = config => {
   // Use expo-build-properties to bump iOS deployment target
-  config = withBuildProperties(config, { ios: { deploymentTarget: '16.1' } });
-  // Patch the generated Podfile fallback to ensure platform is always 16.1
+  config = withBuildProperties(config, { ios: { deploymentTarget: '16.4' } });
+  // Patch the generated Podfile fallback to ensure platform is always 16.4
   config = withDangerousMod(config, [
     'ios',
     modConfig => {
@@ -40,7 +40,7 @@ export const withXCode: ConfigPlugin<ConfigProps> = config => {
     # https://github.com/mrousavy/nitro/issues/422#issuecomment-2545988256
     installer.pods_project.targets.each do |target|
       target.build_configurations.each do |config|
-        config.build_settings['IPHONEOS_DEPLOYMENT_TARGET'] = '16.1'
+        config.build_settings['IPHONEOS_DEPLOYMENT_TARGET'] = '16.4'
       end
     end
 $2`,
