@@ -108,8 +108,10 @@ export const abvToArrayBuffer = (buf: ABV) => {
 };
 
 /**
- * Converts supplied argument to an ArrayBuffer.  Note this copies data if the
- * supplied buffer represents a subrange of the internal buffer
+ * Converts supplied argument to an ArrayBuffer. Note this copies data
+ * only when the supplied view represents a subrange of the underlying
+ * ArrayBuffer; otherwise the backing buffer is returned directly
+ * (aliased — do not mutate after passing).
  * @param buf
  * @returns ArrayBuffer
  */
