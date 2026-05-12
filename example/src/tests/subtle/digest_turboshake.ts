@@ -353,11 +353,12 @@ test(SUITE, 'KangarooTwelve rejects missing outputLength', async () => {
   let threw = false;
   try {
     // outputLength deliberately omitted — required by WICG WebCrypto Modern
-    // Algos draft and Node webidl.js:880-897.
+    // Algos draft. Caught by strict WebIDL normalization (#1025) as
+    // TypeError before reaching the runtime length validator.
     await subtle.digest({ name: 'KT128' }, new Uint8Array(0));
   } catch (err) {
     threw = true;
-    expect((err as Error).name).to.equal('OperationError');
+    expect((err as Error).name).to.equal('TypeError');
   }
   expect(threw).to.equal(true);
 });

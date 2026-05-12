@@ -130,19 +130,368 @@ function getCanonicalAlgorithmNames(): Map<string, AnyAlgorithm> {
   return _canonicalAlgorithmNames;
 }
 
+// Per-algorithm WebIDL converter table. Mirrors Node's kAlgorithmDefinitions
+// (lib/internal/crypto/util.js): each (algorithm, operation) pair maps to a
+// dictionary converter name, or null when only the `name` member is required.
+// Operation keys are missing when an algorithm cannot perform that operation,
+// causing `normalizeAlgorithm` to reject the call.
+const kAlgorithmDefinitions: Record<string, Record<string, string | null>> = {
+  'AES-CBC': {
+    generateKey: 'AesKeyGenParams',
+    exportKey: null,
+    importKey: null,
+    encrypt: 'AesCbcParams',
+    decrypt: 'AesCbcParams',
+    'get key length': 'AesDerivedKeyParams',
+  },
+  'AES-CTR': {
+    generateKey: 'AesKeyGenParams',
+    exportKey: null,
+    importKey: null,
+    encrypt: 'AesCtrParams',
+    decrypt: 'AesCtrParams',
+    'get key length': 'AesDerivedKeyParams',
+  },
+  'AES-GCM': {
+    generateKey: 'AesKeyGenParams',
+    exportKey: null,
+    importKey: null,
+    encrypt: 'AeadParams',
+    decrypt: 'AeadParams',
+    'get key length': 'AesDerivedKeyParams',
+  },
+  'AES-KW': {
+    generateKey: 'AesKeyGenParams',
+    exportKey: null,
+    importKey: null,
+    'get key length': 'AesDerivedKeyParams',
+    wrapKey: null,
+    unwrapKey: null,
+  },
+  'AES-OCB': {
+    generateKey: 'AesKeyGenParams',
+    exportKey: null,
+    importKey: null,
+    encrypt: 'AeadParams',
+    decrypt: 'AeadParams',
+    'get key length': 'AesDerivedKeyParams',
+  },
+  Argon2d: {
+    deriveBits: 'Argon2Params',
+    'get key length': null,
+    importKey: null,
+  },
+  Argon2i: {
+    deriveBits: 'Argon2Params',
+    'get key length': null,
+    importKey: null,
+  },
+  Argon2id: {
+    deriveBits: 'Argon2Params',
+    'get key length': null,
+    importKey: null,
+  },
+  'ChaCha20-Poly1305': {
+    generateKey: null,
+    exportKey: null,
+    importKey: null,
+    encrypt: 'AeadParams',
+    decrypt: 'AeadParams',
+    'get key length': null,
+  },
+  ECDH: {
+    generateKey: 'EcKeyGenParams',
+    exportKey: null,
+    importKey: 'EcKeyImportParams',
+    deriveBits: 'EcdhKeyDeriveParams',
+  },
+  ECDSA: {
+    generateKey: 'EcKeyGenParams',
+    exportKey: null,
+    importKey: 'EcKeyImportParams',
+    sign: 'EcdsaParams',
+    verify: 'EcdsaParams',
+  },
+  Ed25519: {
+    generateKey: null,
+    exportKey: null,
+    importKey: null,
+    sign: null,
+    verify: null,
+  },
+  Ed448: {
+    generateKey: null,
+    exportKey: null,
+    importKey: null,
+    sign: 'ContextParams',
+    verify: 'ContextParams',
+  },
+  HKDF: {
+    importKey: null,
+    deriveBits: 'HkdfParams',
+    'get key length': null,
+  },
+  HMAC: {
+    generateKey: 'HmacKeyGenParams',
+    exportKey: null,
+    importKey: 'HmacImportParams',
+    sign: null,
+    verify: null,
+    'get key length': 'HmacImportParams',
+  },
+  KMAC128: {
+    generateKey: 'KmacKeyGenParams',
+    exportKey: null,
+    importKey: 'KmacImportParams',
+    sign: 'KmacParams',
+    verify: 'KmacParams',
+    'get key length': 'KmacImportParams',
+  },
+  KMAC256: {
+    generateKey: 'KmacKeyGenParams',
+    exportKey: null,
+    importKey: 'KmacImportParams',
+    sign: 'KmacParams',
+    verify: 'KmacParams',
+    'get key length': 'KmacImportParams',
+  },
+  'ML-DSA-44': {
+    generateKey: null,
+    exportKey: null,
+    importKey: null,
+    sign: 'ContextParams',
+    verify: 'ContextParams',
+  },
+  'ML-DSA-65': {
+    generateKey: null,
+    exportKey: null,
+    importKey: null,
+    sign: 'ContextParams',
+    verify: 'ContextParams',
+  },
+  'ML-DSA-87': {
+    generateKey: null,
+    exportKey: null,
+    importKey: null,
+    sign: 'ContextParams',
+    verify: 'ContextParams',
+  },
+  'ML-KEM-512': {
+    generateKey: null,
+    exportKey: null,
+    importKey: null,
+    encapsulateBits: null,
+    decapsulateBits: null,
+    encapsulateKey: null,
+    decapsulateKey: null,
+  },
+  'ML-KEM-768': {
+    generateKey: null,
+    exportKey: null,
+    importKey: null,
+    encapsulateBits: null,
+    decapsulateBits: null,
+    encapsulateKey: null,
+    decapsulateKey: null,
+  },
+  'ML-KEM-1024': {
+    generateKey: null,
+    exportKey: null,
+    importKey: null,
+    encapsulateBits: null,
+    decapsulateBits: null,
+    encapsulateKey: null,
+    decapsulateKey: null,
+  },
+  PBKDF2: {
+    importKey: null,
+    deriveBits: 'Pbkdf2Params',
+    'get key length': null,
+  },
+  'RSA-OAEP': {
+    generateKey: 'RsaHashedKeyGenParams',
+    exportKey: null,
+    importKey: 'RsaHashedImportParams',
+    encrypt: 'RsaOaepParams',
+    decrypt: 'RsaOaepParams',
+  },
+  'RSA-PSS': {
+    generateKey: 'RsaHashedKeyGenParams',
+    exportKey: null,
+    importKey: 'RsaHashedImportParams',
+    sign: 'RsaPssParams',
+    verify: 'RsaPssParams',
+  },
+  'RSASSA-PKCS1-v1_5': {
+    generateKey: 'RsaHashedKeyGenParams',
+    exportKey: null,
+    importKey: 'RsaHashedImportParams',
+    sign: null,
+    verify: null,
+  },
+  'SHA-1': { digest: null },
+  'SHA-256': { digest: null },
+  'SHA-384': { digest: null },
+  'SHA-512': { digest: null },
+  'SHA3-256': { digest: null },
+  'SHA3-384': { digest: null },
+  'SHA3-512': { digest: null },
+  cSHAKE128: { digest: 'CShakeParams' },
+  cSHAKE256: { digest: 'CShakeParams' },
+  KT128: { digest: 'KangarooTwelveParams' },
+  KT256: { digest: 'KangarooTwelveParams' },
+  TurboSHAKE128: { digest: 'TurboShakeParams' },
+  TurboSHAKE256: { digest: 'TurboShakeParams' },
+  X25519: {
+    generateKey: null,
+    exportKey: null,
+    importKey: null,
+    deriveBits: 'EcdhKeyDeriveParams',
+  },
+  X448: {
+    generateKey: null,
+    exportKey: null,
+    importKey: null,
+    deriveBits: 'EcdhKeyDeriveParams',
+  },
+};
+
+for (const v of SLH_DSA_VARIANTS) {
+  kAlgorithmDefinitions[v] = {
+    generateKey: null,
+    exportKey: null,
+    importKey: null,
+    sign: null,
+    verify: null,
+  };
+}
+
+// WebIDL dictionary member specs. Mirrors Node's per-converter
+// `createDictionaryConverter` definitions in lib/internal/crypto/webidl.js.
+// `required: true` causes `normalizeAlgorithm` to throw a TypeError when the
+// member is missing — matching the spec'd WebCrypto behavior that
+// `SubtleCrypto.supports` relies on via try/catch.
+interface IdlField {
+  key: string;
+  required?: boolean;
+}
+
+const kRequiredFields: Record<string, IdlField[]> = {
+  AesKeyGenParams: [{ key: 'length', required: true }],
+  AesDerivedKeyParams: [{ key: 'length', required: true }],
+  AesCbcParams: [{ key: 'iv', required: true }],
+  AesCtrParams: [
+    { key: 'counter', required: true },
+    { key: 'length', required: true },
+  ],
+  AeadParams: [
+    { key: 'iv', required: true },
+    { key: 'tagLength' },
+    { key: 'additionalData' },
+  ],
+  EcKeyGenParams: [{ key: 'namedCurve', required: true }],
+  EcKeyImportParams: [{ key: 'namedCurve', required: true }],
+  EcdsaParams: [{ key: 'hash', required: true }],
+  EcdhKeyDeriveParams: [{ key: 'public', required: true }],
+  HmacKeyGenParams: [{ key: 'hash', required: true }, { key: 'length' }],
+  HmacImportParams: [{ key: 'hash', required: true }, { key: 'length' }],
+  HkdfParams: [
+    { key: 'hash', required: true },
+    { key: 'salt', required: true },
+    { key: 'info', required: true },
+  ],
+  Pbkdf2Params: [
+    { key: 'hash', required: true },
+    { key: 'iterations', required: true },
+    { key: 'salt', required: true },
+  ],
+  RsaHashedKeyGenParams: [
+    { key: 'modulusLength', required: true },
+    { key: 'publicExponent', required: true },
+    { key: 'hash', required: true },
+  ],
+  RsaHashedImportParams: [{ key: 'hash', required: true }],
+  RsaOaepParams: [{ key: 'label' }],
+  RsaPssParams: [{ key: 'saltLength', required: true }],
+  ContextParams: [{ key: 'context' }],
+  Argon2Params: [
+    { key: 'nonce', required: true },
+    { key: 'parallelism', required: true },
+    { key: 'memory', required: true },
+    { key: 'passes', required: true },
+    { key: 'version' },
+    { key: 'secretValue' },
+    { key: 'associatedData' },
+  ],
+  KmacKeyGenParams: [{ key: 'length' }],
+  KmacImportParams: [{ key: 'length' }],
+  KmacParams: [
+    { key: 'outputLength', required: true },
+    { key: 'customization' },
+  ],
+  CShakeParams: [
+    { key: 'outputLength', required: true },
+    { key: 'functionName' },
+    { key: 'customization' },
+  ],
+  KangarooTwelveParams: [
+    { key: 'outputLength', required: true },
+    { key: 'customization' },
+  ],
+  TurboShakeParams: [
+    { key: 'outputLength', required: true },
+    { key: 'domainSeparation' },
+  ],
+};
+
+// WebCrypto §18.4.4 algorithm normalization. Mirrors Node's normalizeAlgorithm
+// in lib/internal/crypto/util.js: canonicalizes `name`, looks up the
+// (name, op) → converter mapping, and rejects inputs that omit required
+// dictionary members. Callers in Subtle.supports rely on this throwing for
+// invalid params — without it, supports() over-reports capability (#1025).
 function normalizeAlgorithm(
   algorithm: SubtleAlgorithm | AnyAlgorithm,
-  _operation: Operation,
+  operation: Operation | string,
 ): SubtleAlgorithm {
-  const map = getCanonicalAlgorithmNames();
   if (typeof algorithm === 'string') {
-    return { name: map.get(algorithm.toLowerCase()) ?? algorithm };
+    return normalizeAlgorithm({ name: algorithm }, operation);
   }
-  if (typeof algorithm.name === 'string') {
-    const canonical = map.get(algorithm.name.toLowerCase()) ?? algorithm.name;
+  const name = (algorithm as { name?: unknown }).name;
+  if (typeof name !== 'string') {
+    throw new TypeError("Algorithm: 'name' is required");
+  }
+  const map = getCanonicalAlgorithmNames();
+  const canonical = map.get(name.toLowerCase());
+  if (canonical === undefined) {
+    throw lazyDOMException('Unrecognized algorithm name', 'NotSupportedError');
+  }
+  const opMap = kAlgorithmDefinitions[canonical];
+  if (!opMap || !(operation in opMap)) {
+    throw lazyDOMException('Unrecognized algorithm name', 'NotSupportedError');
+  }
+  const converterName = opMap[operation];
+  if (converterName == null) {
+    return { name: canonical };
+  }
+  const fields = kRequiredFields[converterName];
+  if (!fields) {
     return { ...algorithm, name: canonical };
   }
-  return algorithm as SubtleAlgorithm;
+  const out = { name: canonical } as SubtleAlgorithm;
+  const src = algorithm as Record<string, unknown>;
+  for (const field of fields) {
+    const value = src[field.key];
+    if (value === undefined) {
+      if (field.required) {
+        throw new TypeError(
+          `Failed to normalize algorithm: '${field.key}' is required in '${converterName}'`,
+        );
+      }
+      continue;
+    }
+    (out as Record<string, unknown>)[field.key] = value;
+  }
+  return out;
 }
 
 function getAlgorithmName(name: string, length: number): string {
@@ -2884,10 +3233,7 @@ export class Subtle {
     data: BufferLike,
   ): Promise<ArrayBuffer> {
     requireArgs(arguments.length, 2, 'digest');
-    const normalizedAlgorithm = normalizeAlgorithm(
-      algorithm,
-      'digest' as Operation,
-    );
+    const normalizedAlgorithm = normalizeAlgorithm(algorithm, 'digest');
     return asyncDigest(normalizedAlgorithm, data);
   }
 
@@ -2956,10 +3302,9 @@ export class Subtle {
   ): Promise<CryptoKey> {
     requireArgs(arguments.length, 5, 'deriveKey');
     const normalizedAlgorithm = normalizeAlgorithm(algorithm, 'deriveBits');
-    const normalizedDerivedKeyAlgorithm = normalizeAlgorithm(
-      derivedKeyAlgorithm,
-      'importKey',
-    );
+    // Validate the derived-key algorithm up front (mirrors Node webcrypto.js:341).
+    // The normalized form is unused — `this.importKey` re-normalizes below.
+    normalizeAlgorithm(derivedKeyAlgorithm, 'importKey');
 
     // Validate baseKey usage
     if (!baseKey.usages.includes('deriveKey')) {
@@ -2974,7 +3319,12 @@ export class Subtle {
     }
 
     // Calculate required key length (may be null for KDF-derived material).
-    const length = getKeyLength(normalizedDerivedKeyAlgorithm);
+    // Mirrors Node webcrypto.js:350 — uses the raw derivedKeyAlgorithm with
+    // op='get key length' so AES `length` survives normalization (the
+    // 'importKey' converter for AES is null and strips dictionary members).
+    const length = getKeyLength(
+      normalizeAlgorithm(derivedKeyAlgorithm, 'get key length'),
+    );
 
     // Step 1: Derive bits
     let derivedBits: ArrayBuffer;
@@ -3114,10 +3464,21 @@ export class Subtle {
     wrapAlgorithm: EncryptDecryptParams,
   ): Promise<ArrayBuffer> {
     requireArgs(arguments.length, 4, 'wrapKey');
-    const normalizedWrapAlgorithm = normalizeAlgorithm(
-      wrapAlgorithm,
-      'wrapKey',
-    ) as EncryptDecryptParams;
+    // Mirrors Node webcrypto.js:923-927: prefer the 'wrapKey' op (only
+    // AES-KW defines it) and fall back to 'encrypt' for cipher-based wrap
+    // algorithms like AES-GCM and RSA-OAEP.
+    let normalizedWrapAlgorithm: EncryptDecryptParams;
+    try {
+      normalizedWrapAlgorithm = normalizeAlgorithm(
+        wrapAlgorithm,
+        'wrapKey',
+      ) as EncryptDecryptParams;
+    } catch {
+      normalizedWrapAlgorithm = normalizeAlgorithm(
+        wrapAlgorithm,
+        'encrypt',
+      ) as EncryptDecryptParams;
+    }
 
     if (normalizedWrapAlgorithm.name !== wrappingKey.algorithm.name) {
       throw lazyDOMException('Key algorithm mismatch', 'InvalidAccessError');
@@ -3174,10 +3535,20 @@ export class Subtle {
     keyUsages: KeyUsage[],
   ): Promise<CryptoKey> {
     requireArgs(arguments.length, 7, 'unwrapKey');
-    const normalizedUnwrapAlgorithm = normalizeAlgorithm(
-      unwrapAlgorithm,
-      'unwrapKey',
-    ) as EncryptDecryptParams;
+    // Mirrors Node webcrypto.js:1006-1010: prefer 'unwrapKey', fall back to
+    // 'decrypt' for cipher-based unwrap algorithms.
+    let normalizedUnwrapAlgorithm: EncryptDecryptParams;
+    try {
+      normalizedUnwrapAlgorithm = normalizeAlgorithm(
+        unwrapAlgorithm,
+        'unwrapKey',
+      ) as EncryptDecryptParams;
+    } catch {
+      normalizedUnwrapAlgorithm = normalizeAlgorithm(
+        unwrapAlgorithm,
+        'decrypt',
+      ) as EncryptDecryptParams;
+    }
 
     if (normalizedUnwrapAlgorithm.name !== unwrappingKey.algorithm.name) {
       throw lazyDOMException('Key algorithm mismatch', 'InvalidAccessError');

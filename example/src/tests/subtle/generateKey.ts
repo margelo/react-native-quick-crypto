@@ -288,6 +288,9 @@ async function testECKeyGen(
           'NotSupportedError',
         );
       });
+      // Strict WebIDL normalization (#1025): an explicit `undefined` is
+      // indistinguishable from omission, so EcKeyGenParams.namedCurve is
+      // reported as missing rather than as an unrecognized curve.
       await assertThrowsAsync(
         async () =>
           subtle.generateKey(
@@ -295,7 +298,7 @@ async function testECKeyGen(
             true,
             privateUsages,
           ),
-        "Unrecognized namedCurve 'undefined'",
+        "'namedCurve' is required",
       );
     },
   );
