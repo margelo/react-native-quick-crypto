@@ -1,6 +1,6 @@
 import rnqc from 'react-native-quick-crypto';
-import * as noble from '@noble/hashes/pbkdf2';
-import { sha256 } from '@noble/hashes/sha2';
+import * as noble from '@noble/hashes/pbkdf2.js';
+import { sha256 } from '@noble/hashes/sha2.js';
 // @ts-expect-error - crypto-browserify is not typed
 import browserify from 'crypto-browserify';
 import type { BenchFn } from '../../types/benchmarks';

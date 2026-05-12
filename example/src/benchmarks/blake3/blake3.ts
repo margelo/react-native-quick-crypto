@@ -1,5 +1,5 @@
 import rnqc from 'react-native-quick-crypto';
-import { blake3 as nobleBlake3 } from '@noble/hashes/blake3';
+import { blake3 as nobleBlake3 } from '@noble/hashes/blake3.js';
 import type { BenchFn } from '../../types/benchmarks';
 import { Bench } from 'tinybench';
 
