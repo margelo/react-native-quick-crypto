@@ -16,7 +16,7 @@ class HybridUtils : public HybridUtilsSpec {
 
  private:
   facebook::jsi::Runtime* cachedRuntime_ = nullptr;
-  bool cachedIsHermesRuntime = false;
+  bool cachedIsHermesRuntime_ = false;
 
   bool isHermesRuntime(facebook::jsi::Runtime& runtime);
   facebook::jsi::Value bufferToJsiString(facebook::jsi::Runtime& runtime, const facebook::jsi::Value& thisArg,

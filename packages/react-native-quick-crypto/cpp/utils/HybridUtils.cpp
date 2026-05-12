@@ -269,11 +269,12 @@ bool HybridUtils::timingSafeEqual(const std::shared_ptr<ArrayBuffer>& a, const s
 }
 
 bool HybridUtils::isHermesRuntime(facebook::jsi::Runtime& runtime) {
-  if (this->cachedRuntime_ != &runtime) [[unlikely]] {
-    this->cachedRuntime_ = &runtime;
-    this->cachedIsHermesRuntime = runtime.global().hasProperty(runtime, "HermesInternal");
+  // Cache assumes runtimes are long-lived and calls happen on the JS thread.
+  if (cachedRuntime_ != &runtime) [[unlikely]] {
+    cachedRuntime_ = &runtime;
+    cachedIsHermesRuntime_ = runtime.global().hasProperty(runtime, "HermesInternal");
   }
-  return this->cachedIsHermesRuntime;
+  return cachedIsHermesRuntime_;
 }
 
 facebook::jsi::Value HybridUtils::bufferToJsiString(facebook::jsi::Runtime& runtime, const facebook::jsi::Value&,
