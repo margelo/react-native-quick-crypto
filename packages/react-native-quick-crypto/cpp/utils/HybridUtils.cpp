@@ -304,13 +304,13 @@ facebook::jsi::Value HybridUtils::bufferToJsiString(facebook::jsi::Runtime& runt
     const auto* data = reinterpret_cast<const uint8_t*>(buffer->data() + offset);
 
     if (encoding == "hex") {
-      return facebook::jsi::String::createFromUtf8(runtime, encodeHex(data, length));
+      return facebook::jsi::String::createFromAscii(runtime, encodeHex(data, length));
     }
     if (encoding == "base64") {
-      return facebook::jsi::String::createFromUtf8(runtime, encodeBase64(data, length));
+      return facebook::jsi::String::createFromAscii(runtime, encodeBase64(data, length));
     }
     if (encoding == "base64url") {
-      return facebook::jsi::String::createFromUtf8(runtime, encodeBase64Url(data, length));
+      return facebook::jsi::String::createFromAscii(runtime, encodeBase64Url(data, length));
     }
     if (encoding == "utf8" || encoding == "utf-8") {
       return facebook::jsi::String::createFromUtf8(runtime, data, length);
@@ -323,7 +323,7 @@ facebook::jsi::Value HybridUtils::bufferToJsiString(facebook::jsi::Runtime& runt
       for (auto& c : result) {
         c &= 0x7F;
       }
-      return facebook::jsi::String::createFromUtf8(runtime, result);
+      return facebook::jsi::String::createFromAscii(runtime, result);
     }
     if (encoding == "utf16le") {
       return createUtf16LeString(runtime, data, length);
