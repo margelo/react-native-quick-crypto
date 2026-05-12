@@ -21,6 +21,25 @@ test(SUITE, 'encrypt: AES-GCM without iv is not supported', () => {
   expect(Subtle.supports('encrypt', 'AES-GCM')).to.equal(false);
 });
 
+test(SUITE, 'encrypt: AES-CBC with invalid iv length is not supported', () => {
+  expect(
+    Subtle.supports('encrypt', {
+      name: 'AES-CBC',
+      iv: new Uint8Array(12),
+    }),
+  ).to.equal(false);
+});
+
+test(SUITE, 'encrypt: AES-GCM with invalid tagLength is not supported', () => {
+  expect(
+    Subtle.supports('encrypt', {
+      name: 'AES-GCM',
+      iv: new Uint8Array(12),
+      tagLength: 24,
+    }),
+  ).to.equal(false);
+});
+
 test(SUITE, 'encrypt: RSA-OAEP is supported', () => {
   expect(Subtle.supports('encrypt', 'RSA-OAEP')).to.equal(true);
 });
@@ -58,6 +77,12 @@ test(SUITE, 'sign: ECDSA without hash is not supported', () => {
   expect(Subtle.supports('sign', 'ECDSA')).to.equal(false);
 });
 
+test(SUITE, 'sign: ECDSA with non-SHA hash is not supported', () => {
+  expect(Subtle.supports('sign', { name: 'ECDSA', hash: 'MD5' })).to.equal(
+    false,
+  );
+});
+
 test(SUITE, 'sign: HMAC is supported', () => {
   expect(Subtle.supports('sign', 'HMAC')).to.equal(true);
 });
@@ -78,6 +103,33 @@ test(SUITE, 'digest: SHA-256 is supported', () => {
 test(SUITE, 'digest: SHA-512 is supported', () => {
   expect(Subtle.supports('digest', 'SHA-512')).to.equal(true);
 });
+
+test(
+  SUITE,
+  'digest: TurboSHAKE128 invalid outputLength is not supported',
+  () => {
+    expect(
+      Subtle.supports('digest', {
+        name: 'TurboSHAKE128',
+        outputLength: 0,
+      }),
+    ).to.equal(false);
+  },
+);
+
+test(
+  SUITE,
+  'digest: TurboSHAKE128 invalid domainSeparation is not supported',
+  () => {
+    expect(
+      Subtle.supports('digest', {
+        name: 'TurboSHAKE128',
+        outputLength: 256,
+        domainSeparation: 0x80,
+      }),
+    ).to.equal(false);
+  },
+);
 
 // --- GenerateKey ---
 test(SUITE, 'generateKey: Ed25519 is supported', () => {
@@ -114,6 +166,19 @@ test(SUITE, 'deriveBits: HKDF with full params + length is supported', () => {
 
 test(SUITE, 'deriveBits: PBKDF2 with full params + length is supported', () => {
   expect(Subtle.supports('deriveBits', PBKDF2_FULL, 256)).to.equal(true);
+});
+
+test(SUITE, 'deriveBits: PBKDF2 with zero iterations is not supported', () => {
+  expect(
+    Subtle.supports(
+      'deriveBits',
+      {
+        ...PBKDF2_FULL,
+        iterations: 0,
+      },
+      256,
+    ),
+  ).to.equal(false);
 });
 
 test(SUITE, 'deriveBits: HKDF missing salt/info is not supported', () => {
