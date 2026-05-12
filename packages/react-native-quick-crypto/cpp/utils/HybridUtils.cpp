@@ -144,10 +144,10 @@ namespace {
         size_t offset = result.size();
         result.reserve(offset + (num * 2)); // Allocate buffer conservatively
 
-        auto* dst = result.data() + offset;
         if (isAscii) {
           // Widen ASCII characters from char into char16_t
           result.resize(offset + (num * 2)); // This fills the buffer with '\0'
+          auto* dst = result.data() + offset;
           const auto* asciiSrc = reinterpret_cast<const char*>(data);
           for (size_t i = 0; i < num; i++, dst += 2) {
             *dst = asciiSrc[i];
@@ -165,6 +165,7 @@ namespace {
         // Slow path for unexpected endianness/char16_t size
         result.resize(offset + (num * 2));
         const auto* utf16Src = reinterpret_cast<const char16_t*>(data);
+        auto* dst = result.data() + offset;
         for (size_t i = 0; i < num; i++) {
           const uint16_t codeUnit = static_cast<uint16_t>(utf16Src[i]);
           dst[i * 2 + 0] = static_cast<uint8_t>(codeUnit & 0xFFu);
