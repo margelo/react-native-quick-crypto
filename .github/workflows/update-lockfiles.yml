@@ -40,6 +40,9 @@ jobs:
           bundler-cache: true
           working-directory: example/ios
 
+      - name: Install clang-format (required by pre-commit hook)
+        run: brew install clang-format
+
       - run: |
           bun install
 
