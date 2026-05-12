@@ -215,16 +215,18 @@ namespace {
           }
 
           size_t offset = result.size();
-          result.resize(offset + num);
+          result.reserve(offset + num); // Allocate buffer conservatively
 
-          auto* dst = result.data() + offset;
           if (isAscii) {
             // Fast&direct copy path
-            std::memcpy(dst, data, num);
+            const auto* asciiSrc = reinterpret_cast<const uint8_t*>(data);
+            result.insert(result.end(), asciiSrc, asciiSrc + num);
             return;
           }
 
+          result.resize(offset + num);
           const auto* utf16Src = reinterpret_cast<const char16_t*>(data);
+          auto* dst = result.data() + offset;
           for (size_t i = 0; i < num; i++) {
             // Node.js-like behavior
             dst[i] = static_cast<uint8_t>(utf16Src[i] & 0xFFu);
