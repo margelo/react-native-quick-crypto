@@ -1,5 +1,6 @@
 import rnqc from 'react-native-quick-crypto';
-import { sha256 } from '@noble/hashes/sha2';
+import { sha256 } from '@noble/hashes/sha2.js';
+import { utf8ToBytes } from '@noble/hashes/utils.js';
 // @ts-expect-error - crypto-browserify is not typed
 import browserify from 'crypto-browserify';
 import type { BenchFn } from '../../types/benchmarks';
@@ -21,7 +22,7 @@ const hash_sha256_8mb_string: BenchFn = () => {
       hash.digest('hex');
     })
     .add('@noble/hashes/sha256', () => {
-      sha256(text8MB);
+      sha256(utf8ToBytes(text8MB));
     })
     .add('browserify', () => {
       const hash = browserify.createHash('sha256');
@@ -47,7 +48,7 @@ const hash_sha256_1mb_string: BenchFn = () => {
       hash.digest('hex');
     })
     .add('@noble/hashes/sha256', () => {
-      sha256(text1MB);
+      sha256(utf8ToBytes(text1MB));
     })
     .add('browserify', () => {
       const hash = browserify.createHash('sha256');

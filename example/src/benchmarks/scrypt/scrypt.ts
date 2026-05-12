@@ -1,5 +1,5 @@
 import rnqc from 'react-native-quick-crypto';
-import * as noble from '@noble/hashes/scrypt';
+import * as noble from '@noble/hashes/scrypt.js';
 import type { BenchFn } from '../../types/benchmarks';
 import { Bench } from 'tinybench';
 
