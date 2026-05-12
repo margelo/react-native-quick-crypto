@@ -31,7 +31,7 @@
     ]
   },
   "devDependencies": {
-    "@eslint/compat": "1.2.8",
+    "@eslint/compat": "2.1.0",
     "@eslint/js": "9.24.0",
     "@release-it/bumper": "7.0.5",
     "@release-it/conventional-changelog": "10.0.1",
