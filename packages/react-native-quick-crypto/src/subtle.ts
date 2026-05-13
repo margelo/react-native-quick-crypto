@@ -1,4 +1,3 @@
-/* eslint-disable @typescript-eslint/no-unused-vars */
 import { Buffer as SBuffer } from 'safe-buffer';
 import type {
   SubtleAlgorithm,
@@ -28,7 +27,10 @@ import {
   SecretKeyObject,
 } from './keys';
 import type { CryptoKeyPair } from './utils/types';
-import { bufferLikeToArrayBuffer } from './utils/conversion';
+import {
+  binaryLikeToArrayBuffer,
+  bufferLikeToArrayBuffer,
+} from './utils/conversion';
 import { argon2Sync } from './argon2';
 import { lazyDOMException } from './utils/errors';
 import { normalizeHashName, HashContext } from './utils/hashnames';
@@ -130,19 +132,705 @@ function getCanonicalAlgorithmNames(): Map<string, AnyAlgorithm> {
   return _canonicalAlgorithmNames;
 }
 
+// Per-algorithm WebIDL converter table. Mirrors Node's kAlgorithmDefinitions
+// (lib/internal/crypto/util.js): each (algorithm, operation) pair maps to a
+// dictionary converter name, or null when only the `name` member is required.
+// Operation keys are missing when an algorithm cannot perform that operation,
+// causing `normalizeAlgorithm` to reject the call.
+const kAlgorithmDefinitions: Record<string, Record<string, string | null>> = {
+  'AES-CBC': {
+    generateKey: 'AesKeyGenParams',
+    exportKey: null,
+    importKey: null,
+    encrypt: 'AesCbcParams',
+    decrypt: 'AesCbcParams',
+    'get key length': 'AesDerivedKeyParams',
+  },
+  'AES-CTR': {
+    generateKey: 'AesKeyGenParams',
+    exportKey: null,
+    importKey: null,
+    encrypt: 'AesCtrParams',
+    decrypt: 'AesCtrParams',
+    'get key length': 'AesDerivedKeyParams',
+  },
+  'AES-GCM': {
+    generateKey: 'AesKeyGenParams',
+    exportKey: null,
+    importKey: null,
+    encrypt: 'AeadParams',
+    decrypt: 'AeadParams',
+    'get key length': 'AesDerivedKeyParams',
+  },
+  'AES-KW': {
+    generateKey: 'AesKeyGenParams',
+    exportKey: null,
+    importKey: null,
+    'get key length': 'AesDerivedKeyParams',
+    wrapKey: null,
+    unwrapKey: null,
+  },
+  'AES-OCB': {
+    generateKey: 'AesKeyGenParams',
+    exportKey: null,
+    importKey: null,
+    encrypt: 'AeadParams',
+    decrypt: 'AeadParams',
+    'get key length': 'AesDerivedKeyParams',
+  },
+  Argon2d: {
+    deriveBits: 'Argon2Params',
+    'get key length': null,
+    importKey: null,
+  },
+  Argon2i: {
+    deriveBits: 'Argon2Params',
+    'get key length': null,
+    importKey: null,
+  },
+  Argon2id: {
+    deriveBits: 'Argon2Params',
+    'get key length': null,
+    importKey: null,
+  },
+  'ChaCha20-Poly1305': {
+    generateKey: null,
+    exportKey: null,
+    importKey: null,
+    encrypt: 'AeadParams',
+    decrypt: 'AeadParams',
+    'get key length': null,
+  },
+  ECDH: {
+    generateKey: 'EcKeyGenParams',
+    exportKey: null,
+    importKey: 'EcKeyImportParams',
+    deriveBits: 'EcdhKeyDeriveParams',
+  },
+  ECDSA: {
+    generateKey: 'EcKeyGenParams',
+    exportKey: null,
+    importKey: 'EcKeyImportParams',
+    sign: 'EcdsaParams',
+    verify: 'EcdsaParams',
+  },
+  Ed25519: {
+    generateKey: null,
+    exportKey: null,
+    importKey: null,
+    sign: null,
+    verify: null,
+  },
+  Ed448: {
+    generateKey: null,
+    exportKey: null,
+    importKey: null,
+    sign: 'ContextParams',
+    verify: 'ContextParams',
+  },
+  HKDF: {
+    importKey: null,
+    deriveBits: 'HkdfParams',
+    'get key length': null,
+  },
+  HMAC: {
+    generateKey: 'HmacKeyGenParams',
+    exportKey: null,
+    importKey: 'HmacImportParams',
+    sign: null,
+    verify: null,
+    'get key length': 'HmacImportParams',
+  },
+  KMAC128: {
+    generateKey: 'KmacKeyGenParams',
+    exportKey: null,
+    importKey: 'KmacImportParams',
+    sign: 'KmacParams',
+    verify: 'KmacParams',
+    'get key length': 'KmacImportParams',
+  },
+  KMAC256: {
+    generateKey: 'KmacKeyGenParams',
+    exportKey: null,
+    importKey: 'KmacImportParams',
+    sign: 'KmacParams',
+    verify: 'KmacParams',
+    'get key length': 'KmacImportParams',
+  },
+  'ML-DSA-44': {
+    generateKey: null,
+    exportKey: null,
+    importKey: null,
+    sign: 'ContextParams',
+    verify: 'ContextParams',
+  },
+  'ML-DSA-65': {
+    generateKey: null,
+    exportKey: null,
+    importKey: null,
+    sign: 'ContextParams',
+    verify: 'ContextParams',
+  },
+  'ML-DSA-87': {
+    generateKey: null,
+    exportKey: null,
+    importKey: null,
+    sign: 'ContextParams',
+    verify: 'ContextParams',
+  },
+  'ML-KEM-512': {
+    generateKey: null,
+    exportKey: null,
+    importKey: null,
+    encapsulateBits: null,
+    decapsulateBits: null,
+    encapsulateKey: null,
+    decapsulateKey: null,
+  },
+  'ML-KEM-768': {
+    generateKey: null,
+    exportKey: null,
+    importKey: null,
+    encapsulateBits: null,
+    decapsulateBits: null,
+    encapsulateKey: null,
+    decapsulateKey: null,
+  },
+  'ML-KEM-1024': {
+    generateKey: null,
+    exportKey: null,
+    importKey: null,
+    encapsulateBits: null,
+    decapsulateBits: null,
+    encapsulateKey: null,
+    decapsulateKey: null,
+  },
+  PBKDF2: {
+    importKey: null,
+    deriveBits: 'Pbkdf2Params',
+    'get key length': null,
+  },
+  'RSA-OAEP': {
+    generateKey: 'RsaHashedKeyGenParams',
+    exportKey: null,
+    importKey: 'RsaHashedImportParams',
+    encrypt: 'RsaOaepParams',
+    decrypt: 'RsaOaepParams',
+  },
+  'RSA-PSS': {
+    generateKey: 'RsaHashedKeyGenParams',
+    exportKey: null,
+    importKey: 'RsaHashedImportParams',
+    sign: 'RsaPssParams',
+    verify: 'RsaPssParams',
+  },
+  'RSASSA-PKCS1-v1_5': {
+    generateKey: 'RsaHashedKeyGenParams',
+    exportKey: null,
+    importKey: 'RsaHashedImportParams',
+    sign: null,
+    verify: null,
+  },
+  'SHA-1': { digest: null },
+  'SHA-256': { digest: null },
+  'SHA-384': { digest: null },
+  'SHA-512': { digest: null },
+  'SHA3-256': { digest: null },
+  'SHA3-384': { digest: null },
+  'SHA3-512': { digest: null },
+  cSHAKE128: { digest: 'CShakeParams' },
+  cSHAKE256: { digest: 'CShakeParams' },
+  KT128: { digest: 'KangarooTwelveParams' },
+  KT256: { digest: 'KangarooTwelveParams' },
+  TurboSHAKE128: { digest: 'TurboShakeParams' },
+  TurboSHAKE256: { digest: 'TurboShakeParams' },
+  X25519: {
+    generateKey: null,
+    exportKey: null,
+    importKey: null,
+    deriveBits: 'EcdhKeyDeriveParams',
+  },
+  X448: {
+    generateKey: null,
+    exportKey: null,
+    importKey: null,
+    deriveBits: 'EcdhKeyDeriveParams',
+  },
+};
+
+for (const v of SLH_DSA_VARIANTS) {
+  kAlgorithmDefinitions[v] = {
+    generateKey: null,
+    exportKey: null,
+    importKey: null,
+    sign: null,
+    verify: null,
+  };
+}
+
+// WebIDL dictionary member specs. Mirrors Node's per-converter
+// `createDictionaryConverter` definitions in lib/internal/crypto/webidl.js.
+// `required: true` causes `normalizeAlgorithm` to throw a TypeError when the
+// member is missing — matching the spec'd WebCrypto behavior that
+// `SubtleCrypto.supports` relies on via try/catch.
+interface IdlField {
+  key: string;
+  required?: boolean;
+}
+
+type NormalizedAlgorithmRecord = SubtleAlgorithm & Record<string, unknown>;
+
+const kRequiredFields: Record<string, IdlField[]> = {
+  AesKeyGenParams: [{ key: 'length', required: true }],
+  AesDerivedKeyParams: [{ key: 'length', required: true }],
+  AesCbcParams: [{ key: 'iv', required: true }],
+  AesCtrParams: [
+    { key: 'counter', required: true },
+    { key: 'length', required: true },
+  ],
+  AeadParams: [
+    { key: 'iv', required: true },
+    { key: 'tagLength' },
+    { key: 'additionalData' },
+  ],
+  EcKeyGenParams: [{ key: 'namedCurve', required: true }],
+  EcKeyImportParams: [{ key: 'namedCurve', required: true }],
+  EcdsaParams: [{ key: 'hash', required: true }],
+  EcdhKeyDeriveParams: [{ key: 'public', required: true }],
+  HmacKeyGenParams: [{ key: 'hash', required: true }, { key: 'length' }],
+  HmacImportParams: [{ key: 'hash', required: true }, { key: 'length' }],
+  HkdfParams: [
+    { key: 'hash', required: true },
+    { key: 'salt', required: true },
+    { key: 'info', required: true },
+  ],
+  Pbkdf2Params: [
+    { key: 'hash', required: true },
+    { key: 'iterations', required: true },
+    { key: 'salt', required: true },
+  ],
+  RsaHashedKeyGenParams: [
+    { key: 'modulusLength', required: true },
+    { key: 'publicExponent', required: true },
+    { key: 'hash', required: true },
+  ],
+  RsaHashedImportParams: [{ key: 'hash', required: true }],
+  RsaOaepParams: [{ key: 'label' }],
+  RsaPssParams: [{ key: 'saltLength', required: true }],
+  ContextParams: [{ key: 'context' }],
+  Argon2Params: [
+    { key: 'nonce', required: true },
+    { key: 'parallelism', required: true },
+    { key: 'memory', required: true },
+    { key: 'passes', required: true },
+    { key: 'version' },
+    { key: 'secretValue' },
+    { key: 'associatedData' },
+  ],
+  KmacKeyGenParams: [{ key: 'length' }],
+  KmacImportParams: [{ key: 'length' }],
+  KmacParams: [
+    { key: 'outputLength', required: true },
+    { key: 'customization' },
+  ],
+  CShakeParams: [
+    { key: 'outputLength', required: true },
+    { key: 'functionName' },
+    { key: 'customization' },
+  ],
+  KangarooTwelveParams: [
+    { key: 'outputLength', required: true },
+    { key: 'customization' },
+  ],
+  TurboShakeParams: [
+    { key: 'outputLength', required: true },
+    { key: 'domainSeparation' },
+  ],
+};
+
+function isBufferSource(value: unknown): value is BufferLike {
+  return value instanceof ArrayBuffer || ArrayBuffer.isView(value);
+}
+
+function validateBufferSource(
+  algorithm: NormalizedAlgorithmRecord,
+  key: string,
+): ArrayBuffer | undefined {
+  const value = algorithm[key];
+  if (value === undefined) return undefined;
+  if (!isBufferSource(value)) {
+    throw new TypeError(
+      `Failed to normalize algorithm: '${key}' must be a BufferSource`,
+    );
+  }
+  return bufferLikeToArrayBuffer(value);
+}
+
+function validateBinaryLike(
+  algorithm: NormalizedAlgorithmRecord,
+  key: string,
+): ArrayBuffer | undefined {
+  const value = algorithm[key];
+  if (value === undefined) return undefined;
+  try {
+    return binaryLikeToArrayBuffer(value as BinaryLike);
+  } catch {
+    throw new TypeError(
+      `Failed to normalize algorithm: '${key}' must be a BufferSource`,
+    );
+  }
+}
+
+function validateByteLength(
+  buffer: ArrayBuffer | undefined,
+  key: string,
+  length: number,
+  message?: string,
+): void {
+  if (buffer !== undefined && buffer.byteLength !== length) {
+    throw lazyDOMException(
+      message ?? `${key} must be ${length} bytes`,
+      'OperationError',
+    );
+  }
+}
+
+function validateUnsignedInteger(
+  algorithm: NormalizedAlgorithmRecord,
+  key: string,
+): number | undefined {
+  const value = algorithm[key];
+  if (value === undefined) return undefined;
+  const numberValue = Number(value);
+  if (
+    !Number.isFinite(numberValue) ||
+    !Number.isInteger(numberValue) ||
+    numberValue < 0
+  ) {
+    throw new TypeError(
+      `Failed to normalize algorithm: '${key}' must be an unsigned integer`,
+    );
+  }
+  algorithm[key] = numberValue;
+  return numberValue;
+}
+
+function validateHashAlgorithm(
+  algorithm: NormalizedAlgorithmRecord,
+  converterName: string,
+): void {
+  const hash = algorithm.hash as string | { name: string } | undefined;
+  if (hash === undefined) return;
+  const normalizedHash = normalizeHashName(hash, HashContext.WebCrypto);
+  if (
+    ![
+      'SHA-1',
+      'SHA-256',
+      'SHA-384',
+      'SHA-512',
+      'SHA3-256',
+      'SHA3-384',
+      'SHA3-512',
+    ].includes(normalizedHash)
+  ) {
+    throw lazyDOMException(
+      `Unsupported ${converterName}.hash`,
+      'NotSupportedError',
+    );
+  }
+  algorithm.hash = { name: normalizedHash };
+}
+
+function validateAesLength(length: number | undefined): void {
+  if (
+    length !== undefined &&
+    length !== 128 &&
+    length !== 192 &&
+    length !== 256
+  ) {
+    throw lazyDOMException('Invalid key length', 'OperationError');
+  }
+}
+
+function validateMacLength(
+  algorithm: NormalizedAlgorithmRecord,
+  key: string,
+  zeroError: 'DataError' | 'OperationError',
+): void {
+  const length = validateUnsignedInteger(algorithm, key);
+  if (length === undefined) return;
+  if (length === 0) {
+    throw lazyDOMException(`${key} cannot be 0`, zeroError);
+  }
+  if (length % 8) {
+    throw lazyDOMException(`Unsupported ${key}`, 'NotSupportedError');
+  }
+}
+
+function validateAeadParams(algorithm: NormalizedAlgorithmRecord): void {
+  const iv = validateBufferSource(algorithm, 'iv');
+  const tagLength = validateUnsignedInteger(algorithm, 'tagLength');
+  validateBufferSource(algorithm, 'additionalData');
+
+  switch (algorithm.name) {
+    case 'AES-GCM':
+      if (
+        tagLength !== undefined &&
+        ![32, 64, 96, 104, 112, 120, 128].includes(tagLength)
+      ) {
+        throw lazyDOMException(
+          `${tagLength} is not a valid AES-GCM tag length`,
+          'OperationError',
+        );
+      }
+      break;
+    case 'AES-OCB':
+      if (iv !== undefined && (iv.byteLength < 1 || iv.byteLength > 15)) {
+        throw lazyDOMException(
+          'AES-OCB algorithm.iv must be between 1 and 15 bytes',
+          'OperationError',
+        );
+      }
+      if (tagLength !== undefined && ![64, 96, 128].includes(tagLength)) {
+        throw lazyDOMException(
+          `${tagLength} is not a valid AES-OCB tag length`,
+          'OperationError',
+        );
+      }
+      break;
+    case 'ChaCha20-Poly1305':
+      validateByteLength(
+        iv,
+        'algorithm.iv',
+        12,
+        'ChaCha20-Poly1305 IV must be exactly 12 bytes',
+      );
+      if (tagLength !== undefined && tagLength !== 128) {
+        throw lazyDOMException(
+          `${tagLength} is not a valid ChaCha20-Poly1305 tag length`,
+          'OperationError',
+        );
+      }
+      break;
+  }
+}
+
+function validateNormalizedAlgorithm(
+  converterName: string,
+  algorithm: NormalizedAlgorithmRecord,
+): void {
+  switch (converterName) {
+    case 'AesKeyGenParams':
+    case 'AesDerivedKeyParams':
+      validateAesLength(validateUnsignedInteger(algorithm, 'length'));
+      break;
+    case 'AesCbcParams':
+      validateByteLength(
+        validateBufferSource(algorithm, 'iv'),
+        'algorithm.iv',
+        16,
+        'algorithm.iv must contain exactly 16 bytes',
+      );
+      break;
+    case 'AesCtrParams': {
+      validateByteLength(
+        validateBufferSource(algorithm, 'counter'),
+        'algorithm.counter',
+        16,
+      );
+      const length = validateUnsignedInteger(algorithm, 'length');
+      if (length !== undefined && (length === 0 || length > 128)) {
+        throw lazyDOMException(
+          'AES-CTR algorithm.length must be between 1 and 128',
+          'OperationError',
+        );
+      }
+      break;
+    }
+    case 'AeadParams':
+      validateAeadParams(algorithm);
+      break;
+    case 'EcdsaParams':
+    case 'HmacKeyGenParams':
+    case 'HmacImportParams':
+    case 'HkdfParams':
+    case 'Pbkdf2Params':
+    case 'RsaHashedKeyGenParams':
+    case 'RsaHashedImportParams':
+      validateHashAlgorithm(algorithm, converterName);
+      if (converterName === 'HmacKeyGenParams') {
+        validateMacLength(algorithm, 'length', 'OperationError');
+      }
+      if (converterName === 'HkdfParams') {
+        validateBinaryLike(algorithm, 'salt');
+        validateBinaryLike(algorithm, 'info');
+      } else if (converterName === 'Pbkdf2Params') {
+        const iterations = validateUnsignedInteger(algorithm, 'iterations');
+        if (iterations === 0) {
+          throw lazyDOMException('iterations cannot be zero', 'OperationError');
+        }
+        validateBinaryLike(algorithm, 'salt');
+      } else if (converterName === 'RsaHashedKeyGenParams') {
+        validateUnsignedInteger(algorithm, 'modulusLength');
+        validateBufferSource(algorithm, 'publicExponent');
+      }
+      break;
+    case 'RsaPssParams':
+      validateUnsignedInteger(algorithm, 'saltLength');
+      break;
+    case 'RsaOaepParams':
+      validateBufferSource(algorithm, 'label');
+      break;
+    case 'ContextParams':
+      validateBufferSource(algorithm, 'context');
+      break;
+    case 'EcdhKeyDeriveParams':
+      if (!(algorithm.public instanceof CryptoKey)) {
+        throw lazyDOMException(
+          'algorithm.public must be a public key',
+          'InvalidAccessError',
+        );
+      }
+      break;
+    case 'Argon2Params': {
+      validateBufferSource(algorithm, 'nonce');
+      const parallelism = validateUnsignedInteger(algorithm, 'parallelism');
+      const memory = validateUnsignedInteger(algorithm, 'memory');
+      validateUnsignedInteger(algorithm, 'passes');
+      const version = validateUnsignedInteger(algorithm, 'version');
+      validateBufferSource(algorithm, 'secretValue');
+      validateBufferSource(algorithm, 'associatedData');
+      if (
+        parallelism !== undefined &&
+        (parallelism === 0 || parallelism > 2 ** 24 - 1)
+      ) {
+        throw lazyDOMException(
+          'parallelism must be > 0 and < 16777215',
+          'OperationError',
+        );
+      }
+      if (
+        memory !== undefined &&
+        parallelism !== undefined &&
+        memory < 8 * parallelism
+      ) {
+        throw lazyDOMException(
+          'memory must be at least 8 times the degree of parallelism',
+          'OperationError',
+        );
+      }
+      if (version !== undefined && version !== 0x13) {
+        throw lazyDOMException(
+          `${version} is not a valid Argon2 version`,
+          'OperationError',
+        );
+      }
+      break;
+    }
+    case 'KmacKeyGenParams':
+      validateMacLength(algorithm, 'length', 'OperationError');
+      break;
+    case 'KmacImportParams':
+      validateMacLength(algorithm, 'length', 'DataError');
+      break;
+    case 'KmacParams':
+      validateMacLength(algorithm, 'outputLength', 'OperationError');
+      validateBufferSource(algorithm, 'customization');
+      break;
+    case 'CShakeParams':
+    case 'KangarooTwelveParams': {
+      const outputLength = validateUnsignedInteger(algorithm, 'outputLength');
+      if (
+        outputLength !== undefined &&
+        (outputLength === 0 || outputLength % 8)
+      ) {
+        throw lazyDOMException(
+          `Invalid ${converterName} outputLength`,
+          'OperationError',
+        );
+      }
+      validateBufferSource(algorithm, 'functionName');
+      validateBufferSource(algorithm, 'customization');
+      break;
+    }
+    case 'TurboShakeParams': {
+      const outputLength = validateUnsignedInteger(algorithm, 'outputLength');
+      const domainSeparation = validateUnsignedInteger(
+        algorithm,
+        'domainSeparation',
+      );
+      if (
+        outputLength !== undefined &&
+        (outputLength === 0 || outputLength % 8)
+      ) {
+        throw lazyDOMException(
+          'Invalid TurboShakeParams outputLength',
+          'OperationError',
+        );
+      }
+      if (
+        domainSeparation !== undefined &&
+        (domainSeparation < 0x01 || domainSeparation > 0x7f)
+      ) {
+        throw lazyDOMException(
+          'TurboShakeParams.domainSeparation must be in range 0x01-0x7f',
+          'OperationError',
+        );
+      }
+      break;
+    }
+  }
+}
+
+// WebCrypto §18.4.4 algorithm normalization. Mirrors Node's normalizeAlgorithm
+// in lib/internal/crypto/util.js: canonicalizes `name`, looks up the
+// (name, op) → converter mapping, and rejects inputs that omit required
+// dictionary members. Callers in Subtle.supports rely on this throwing for
+// invalid params — without it, supports() over-reports capability (#1025).
 function normalizeAlgorithm(
   algorithm: SubtleAlgorithm | AnyAlgorithm,
-  _operation: Operation,
+  operation: Operation | string,
 ): SubtleAlgorithm {
-  const map = getCanonicalAlgorithmNames();
   if (typeof algorithm === 'string') {
-    return { name: map.get(algorithm.toLowerCase()) ?? algorithm };
+    return normalizeAlgorithm({ name: algorithm }, operation);
   }
-  if (typeof algorithm.name === 'string') {
-    const canonical = map.get(algorithm.name.toLowerCase()) ?? algorithm.name;
+  const name = (algorithm as { name?: unknown }).name;
+  if (typeof name !== 'string') {
+    throw new TypeError("Algorithm: 'name' is required");
+  }
+  const map = getCanonicalAlgorithmNames();
+  const canonical = map.get(name.toLowerCase());
+  if (canonical === undefined) {
+    throw lazyDOMException('Unrecognized algorithm name', 'NotSupportedError');
+  }
+  const opMap = kAlgorithmDefinitions[canonical];
+  if (!opMap || !(operation in opMap)) {
+    throw lazyDOMException('Unrecognized algorithm name', 'NotSupportedError');
+  }
+  const converterName = opMap[operation];
+  if (converterName == null) {
+    return { name: canonical };
+  }
+  const fields = kRequiredFields[converterName];
+  if (!fields) {
     return { ...algorithm, name: canonical };
   }
-  return algorithm as SubtleAlgorithm;
+  const out = { name: canonical } as NormalizedAlgorithmRecord;
+  const src = algorithm as Record<string, unknown>;
+  for (const field of fields) {
+    const value = src[field.key];
+    if (value === undefined) {
+      if (field.required) {
+        throw new TypeError(
+          `Failed to normalize algorithm: '${field.key}' is required in '${converterName}'`,
+        );
+      }
+      continue;
+    }
+    (out as Record<string, unknown>)[field.key] = value;
+  }
+  validateNormalizedAlgorithm(converterName, out);
+  return out;
 }
 
 function getAlgorithmName(name: string, length: number): string {
@@ -2884,10 +3572,7 @@ export class Subtle {
     data: BufferLike,
   ): Promise<ArrayBuffer> {
     requireArgs(arguments.length, 2, 'digest');
-    const normalizedAlgorithm = normalizeAlgorithm(
-      algorithm,
-      'digest' as Operation,
-    );
+    const normalizedAlgorithm = normalizeAlgorithm(algorithm, 'digest');
     return asyncDigest(normalizedAlgorithm, data);
   }
 
@@ -2897,7 +3582,6 @@ export class Subtle {
     length: number | null = null,
   ): Promise<ArrayBuffer> {
     requireArgs(arguments.length, 2, 'deriveBits');
-    const normalizedAlgorithm = normalizeAlgorithm(algorithm, 'deriveBits');
     // WebCrypto §SubtleCrypto.deriveBits step 11: throw InvalidAccessError
     // unless `baseKey.[[usages]]` contains "deriveBits" specifically. The
     // previous `deriveBits || deriveKey` accept-either branch silently
@@ -2909,6 +3593,7 @@ export class Subtle {
         'InvalidAccessError',
       );
     }
+    const normalizedAlgorithm = normalizeAlgorithm(algorithm, 'deriveBits');
     if (baseKey.algorithm.name !== normalizedAlgorithm.name) {
       throw lazyDOMException('Key algorithm mismatch', 'InvalidAccessError');
     }
@@ -2956,10 +3641,9 @@ export class Subtle {
   ): Promise<CryptoKey> {
     requireArgs(arguments.length, 5, 'deriveKey');
     const normalizedAlgorithm = normalizeAlgorithm(algorithm, 'deriveBits');
-    const normalizedDerivedKeyAlgorithm = normalizeAlgorithm(
-      derivedKeyAlgorithm,
-      'importKey',
-    );
+    // Validate the derived-key algorithm up front (mirrors Node webcrypto.js:341).
+    // The normalized form is unused — `this.importKey` re-normalizes below.
+    normalizeAlgorithm(derivedKeyAlgorithm, 'importKey');
 
     // Validate baseKey usage
     if (!baseKey.usages.includes('deriveKey')) {
@@ -2974,7 +3658,12 @@ export class Subtle {
     }
 
     // Calculate required key length (may be null for KDF-derived material).
-    const length = getKeyLength(normalizedDerivedKeyAlgorithm);
+    // Mirrors Node webcrypto.js:350 — uses the raw derivedKeyAlgorithm with
+    // op='get key length' so AES `length` survives normalization (the
+    // 'importKey' converter for AES is null and strips dictionary members).
+    const length = getKeyLength(
+      normalizeAlgorithm(derivedKeyAlgorithm, 'get key length'),
+    );
 
     // Step 1: Derive bits
     let derivedBits: ArrayBuffer;
@@ -3114,10 +3803,21 @@ export class Subtle {
     wrapAlgorithm: EncryptDecryptParams,
   ): Promise<ArrayBuffer> {
     requireArgs(arguments.length, 4, 'wrapKey');
-    const normalizedWrapAlgorithm = normalizeAlgorithm(
-      wrapAlgorithm,
-      'wrapKey',
-    ) as EncryptDecryptParams;
+    // Mirrors Node webcrypto.js:923-927: prefer the 'wrapKey' op (only
+    // AES-KW defines it) and fall back to 'encrypt' for cipher-based wrap
+    // algorithms like AES-GCM and RSA-OAEP.
+    let normalizedWrapAlgorithm: EncryptDecryptParams;
+    try {
+      normalizedWrapAlgorithm = normalizeAlgorithm(
+        wrapAlgorithm,
+        'wrapKey',
+      ) as EncryptDecryptParams;
+    } catch {
+      normalizedWrapAlgorithm = normalizeAlgorithm(
+        wrapAlgorithm,
+        'encrypt',
+      ) as EncryptDecryptParams;
+    }
 
     if (normalizedWrapAlgorithm.name !== wrappingKey.algorithm.name) {
       throw lazyDOMException('Key algorithm mismatch', 'InvalidAccessError');
@@ -3174,10 +3874,20 @@ export class Subtle {
     keyUsages: KeyUsage[],
   ): Promise<CryptoKey> {
     requireArgs(arguments.length, 7, 'unwrapKey');
-    const normalizedUnwrapAlgorithm = normalizeAlgorithm(
-      unwrapAlgorithm,
-      'unwrapKey',
-    ) as EncryptDecryptParams;
+    // Mirrors Node webcrypto.js:1006-1010: prefer 'unwrapKey', fall back to
+    // 'decrypt' for cipher-based unwrap algorithms.
+    let normalizedUnwrapAlgorithm: EncryptDecryptParams;
+    try {
+      normalizedUnwrapAlgorithm = normalizeAlgorithm(
+        unwrapAlgorithm,
+        'unwrapKey',
+      ) as EncryptDecryptParams;
+    } catch {
+      normalizedUnwrapAlgorithm = normalizeAlgorithm(
+        unwrapAlgorithm,
+        'decrypt',
+      ) as EncryptDecryptParams;
+    }
 
     if (normalizedUnwrapAlgorithm.name !== unwrappingKey.algorithm.name) {
       throw lazyDOMException('Key algorithm mismatch', 'InvalidAccessError');

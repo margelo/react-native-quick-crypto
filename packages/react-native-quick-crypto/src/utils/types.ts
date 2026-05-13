@@ -271,6 +271,10 @@ export type SubtleAlgorithm = {
   saltLength?: number;
   public?: CryptoKey;
   info?: BufferLike;
+  // AEAD / AES-CBC / AES-CTR parameters surfaced here so callers (e.g.
+  // Subtle.supports) can pass a single union without per-algorithm casts.
+  iv?: BufferLike;
+  counter?: BufferLike;
   // Argon2 parameters
   nonce?: BufferLike;
   parallelism?: number;
@@ -595,6 +599,7 @@ export type Operation =
   | 'decapsulateBits'
   | 'encapsulateKey'
   | 'decapsulateKey'
+  | 'digest'
   | 'get key length';
 
 export interface KeyPairOptions {
