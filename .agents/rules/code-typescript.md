@@ -17,6 +17,7 @@ Applies to `*.ts` and `*.tsx`.
 - Write explicit return types.
 - Keep functions minimal and modular.
 - Use Bun for package management; do not use npm/yarn/pnpm.
+- Pin dependency versions exactly in `package.json`. No caret (`^`) or tilde (`~`) ranges. Applies to `dependencies`, `devDependencies`, and `peerDependencies`. Use the version `bun.lock` resolved.
 - For React, minimize `useEffect`; use named effect functions if unavoidable.
 
 ## Formatting

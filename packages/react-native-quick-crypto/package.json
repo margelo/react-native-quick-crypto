@@ -106,7 +106,7 @@
     "registry": "https://registry.npmjs.org/"
   },
   "dependencies": {
-    "@craftzdog/react-native-buffer": "6.1.0",
+    "@craftzdog/react-native-buffer": "6.1.2",
     "events": "3.3.0",
     "readable-stream": "4.7.0",
     "safe-buffer": "^5.2.1",
@@ -131,7 +131,7 @@
     "react": "*",
     "react-native": "*",
     "react-native-nitro-modules": ">=0.31.2",
-    "react-native-quick-base64": ">=2.1.0",
+    "react-native-quick-base64": "3.0.0",
     "expo": ">=48.0.0",
     "expo-build-properties": "*"
   },

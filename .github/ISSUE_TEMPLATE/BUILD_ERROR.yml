@@ -41,7 +41,7 @@ body:
           "react-native": "^0.74.3",
           "react-native-quick-crypto": "^0.7.1",
           "@craftzdog/react-native-buffer": "^6.0.5",
-          "react-native-quick-base64": "^2.1.2",
+          "react-native-quick-base64": "3.0.0",
           ...
         },
     validations:
