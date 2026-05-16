@@ -25,7 +25,7 @@ Pod::Spec.new do |s|
   # Ensure libsodium source is present during podspec evaluation when enabled.
   # This is necessary because prepare_command is skipped for :path pods.
   if sodium_enabled
-    sodium_version = "1.0.20"
+    sodium_version = "1.0.22"
     sodium_dir = File.join(__dir__, "ios", "libsodium-stable")
     sodium_header = File.join(sodium_dir, "src", "libsodium", "include", "sodium.h")
     unless File.exist?(sodium_header)
@@ -52,7 +52,7 @@ Pod::Spec.new do |s|
       rm -f OpenSSL.xcframework.zip
       # Build libsodium
       mkdir -p ios
-      curl -L -o ios/libsodium.tar.gz https://download.libsodium.org/libsodium/releases/libsodium-1.0.20-stable.tar.gz
+      curl -L -o ios/libsodium.tar.gz https://download.libsodium.org/libsodium/releases/libsodium-1.0.22-stable.tar.gz
       tar -xzf ios/libsodium.tar.gz -C ios
       cd ios/libsodium-stable
       ./configure --disable-shared --enable-static
