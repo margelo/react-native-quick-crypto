@@ -1,5 +1,16 @@
 // polyfill imports
 import { Buffer } from '@craftzdog/react-native-buffer';
+import { toByteArray, fromByteArray } from 'react-native-quick-base64';
+
+declare global {
+  // eslint-disable-next-line no-var
+  var base64ToArrayBuffer: (
+    s: string,
+    removeLinebreaks?: boolean,
+  ) => ArrayBuffer;
+  // eslint-disable-next-line no-var
+  var base64FromArrayBuffer: (b: ArrayBuffer, urlSafe?: boolean) => string;
+}
 
 // API imports
 import * as argon2Module from './argon2';
@@ -66,9 +77,11 @@ export const install = () => {
   // @ts-expect-error subtle isn't fully implemented and Cryptokey is missing
   global.crypto = QuickCrypto;
 
-  // Install base64 globals (base64ToArrayBuffer, base64FromArrayBuffer)
-  // eslint-disable-next-line @typescript-eslint/no-require-imports
-  require('react-native-quick-base64');
+  // react-native-quick-base64 v3 no longer installs these globals on import.
+  global.base64ToArrayBuffer = (s, removeLinebreaks) =>
+    toByteArray(s, removeLinebreaks).buffer as ArrayBuffer;
+  global.base64FromArrayBuffer = (b, urlSafe) =>
+    fromByteArray(new Uint8Array(b), urlSafe);
 };
 
 // random, cipher, hash use nextTick
