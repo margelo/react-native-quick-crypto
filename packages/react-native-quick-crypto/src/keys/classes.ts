@@ -150,6 +150,7 @@ export class KeyObject {
     key: ArrayBuffer,
     format?: KFormatType,
     encoding?: KeyEncoding,
+    passphrase?: ArrayBuffer,
   ): KeyObject {
     if (type !== 'secret' && type !== 'public' && type !== 'private')
       throw new Error(`invalid KeyObject type: ${type}`);
@@ -172,12 +173,7 @@ export class KeyObject {
         throw new Error('invalid key type');
     }
 
-    // If format is provided, use it (encoding is optional)
-    if (format !== undefined) {
-      handle.init(keyType, key, format, encoding);
-    } else {
-      handle.init(keyType, key);
-    }
+    handle.init(keyType, key, format, encoding, passphrase);
 
     // For asymmetric keys, return the appropriate subclass
     if (type === 'public' || type === 'private') {

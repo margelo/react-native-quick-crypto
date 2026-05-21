@@ -8,7 +8,7 @@ import {
   sign,
   verify,
 } from 'react-native-quick-crypto';
-import type { JWK } from 'react-native-quick-crypto';
+import type { JWK, KeyObject } from 'react-native-quick-crypto';
 import { expect } from 'chai';
 import { test, assertThrowsAsync, decodeHex } from '../util';
 import { rsaPrivateKeyPem, rsaPublicKeyPem } from './fixtures';
@@ -337,6 +337,179 @@ test(SUITE, 'createPrivateKey Ed25519', async () => {
   expect(key.type).to.equal('private');
   expect(key.asymmetricKeyType).to.equal('ed25519');
 });
+
+// --- Encrypted Private Key (passphrase) Tests ---
+
+async function generateRsaKeyPair(): Promise<{
+  privateKey: KeyObject;
+  publicKey: KeyObject;
+}> {
+  return new Promise((resolve, reject) => {
+    generateKeyPair('rsa', { modulusLength: 2048 }, (err, pubKey, privKey) => {
+      if (err) {
+        reject(err);
+        return;
+      }
+      resolve({
+        privateKey: privKey as KeyObject,
+        publicKey: pubKey as KeyObject,
+      });
+    });
+  });
+}
+
+test(SUITE, 'createPrivateKey with passphrase (PEM, PKCS8)', async () => {
+  const { privateKey, publicKey } = await generateRsaKeyPair();
+  const passphrase = 'user-test';
+  const exported = privateKey.export({
+    format: 'pem',
+    passphrase,
+    cipher: 'aes-256-cbc',
+    type: 'pkcs8',
+  }) as string;
+
+  const imported = createPrivateKey({ key: exported, passphrase });
+
+  expect(imported.type).to.equal('private');
+  expect(imported.asymmetricKeyType).to.equal('rsa');
+  expect(imported.equals(privateKey)).to.equal(true);
+  expect(createPublicKey(imported).equals(publicKey)).to.equal(true);
+});
+
+test(SUITE, 'createPrivateKey with passphrase (DER, PKCS8)', async () => {
+  const { privateKey, publicKey } = await generateRsaKeyPair();
+  const passphrase = 'user-test';
+  const exported = privateKey.export({
+    format: 'der',
+    passphrase,
+    cipher: 'aes-256-cbc',
+    type: 'pkcs8',
+  }) as Buffer;
+
+  const imported = createPrivateKey({
+    key: exported,
+    format: 'der',
+    type: 'pkcs8',
+    passphrase,
+  });
+
+  expect(imported.type).to.equal('private');
+  expect(imported.asymmetricKeyType).to.equal('rsa');
+  expect(imported.equals(privateKey)).to.equal(true);
+  expect(createPublicKey(imported).equals(publicKey)).to.equal(true);
+});
+
+test(SUITE, 'createPrivateKey passphrase as Buffer (PEM)', async () => {
+  const { privateKey } = await generateRsaKeyPair();
+  const passphrase = Buffer.from('hunter2', 'utf-8');
+  const exported = privateKey.export({
+    format: 'pem',
+    passphrase,
+    cipher: 'aes-256-cbc',
+    type: 'pkcs8',
+  }) as string;
+
+  const imported = createPrivateKey({ key: exported, passphrase });
+
+  expect(imported.equals(privateKey)).to.equal(true);
+});
+
+test(
+  SUITE,
+  'createPrivateKey on encrypted PEM without passphrase throws Passphrase required',
+  async () => {
+    const { privateKey } = await generateRsaKeyPair();
+    const exported = privateKey.export({
+      format: 'pem',
+      passphrase: 'user-test',
+      cipher: 'aes-256-cbc',
+      type: 'pkcs8',
+    }) as string;
+
+    await assertThrowsAsync(async () => {
+      createPrivateKey(exported);
+    }, 'Passphrase required');
+  },
+);
+
+test(
+  SUITE,
+  'createPrivateKey on encrypted DER without passphrase throws Passphrase required',
+  async () => {
+    const { privateKey } = await generateRsaKeyPair();
+    const exported = privateKey.export({
+      format: 'der',
+      passphrase: 'user-test',
+      cipher: 'aes-256-cbc',
+      type: 'pkcs8',
+    }) as Buffer;
+
+    await assertThrowsAsync(async () => {
+      createPrivateKey({ key: exported, format: 'der', type: 'pkcs8' });
+    }, 'Passphrase required');
+  },
+);
+
+test(SUITE, 'createPrivateKey with wrong passphrase throws', async () => {
+  const { privateKey } = await generateRsaKeyPair();
+  const exported = privateKey.export({
+    format: 'pem',
+    passphrase: 'correct',
+    cipher: 'aes-256-cbc',
+    type: 'pkcs8',
+  }) as string;
+
+  await assertThrowsAsync(async () => {
+    createPrivateKey({ key: exported, passphrase: 'wrong' });
+  }, 'Failed to read');
+});
+
+test(
+  SUITE,
+  'createPublicKey extracts public from passphrase-encrypted private key (PEM)',
+  async () => {
+    const { privateKey, publicKey } = await generateRsaKeyPair();
+    const passphrase = 'user-test';
+    const exported = privateKey.export({
+      format: 'pem',
+      passphrase,
+      cipher: 'aes-256-cbc',
+      type: 'pkcs8',
+    }) as string;
+
+    const pub = createPublicKey({ key: exported, passphrase });
+
+    expect(pub.type).to.equal('public');
+    expect(pub.asymmetricKeyType).to.equal('rsa');
+    expect(pub.equals(publicKey)).to.equal(true);
+  },
+);
+
+test(
+  SUITE,
+  'createPublicKey extracts public from passphrase-encrypted private key (DER)',
+  async () => {
+    const { privateKey, publicKey } = await generateRsaKeyPair();
+    const passphrase = 'user-test';
+    const exported = privateKey.export({
+      format: 'der',
+      passphrase,
+      cipher: 'aes-256-cbc',
+      type: 'pkcs8',
+    }) as Buffer;
+
+    const pub = createPublicKey({
+      key: exported,
+      format: 'der',
+      type: 'pkcs8',
+      passphrase,
+    });
+
+    expect(pub.type).to.equal('public');
+    expect(pub.asymmetricKeyType).to.equal('rsa');
+    expect(pub.equals(publicKey)).to.equal(true);
+  },
+);
 
 // --- Round-Trip Tests ---
 

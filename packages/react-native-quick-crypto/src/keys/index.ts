@@ -114,6 +114,7 @@ function prepareAsymmetricKey(
   data: ArrayBuffer;
   format?: 'pem' | 'der';
   type?: 'pkcs1' | 'pkcs8' | 'spki' | 'sec1';
+  passphrase?: ArrayBuffer;
 } {
   if (key instanceof KeyObject) {
     if (isPublic) {
@@ -147,7 +148,9 @@ function prepareAsymmetricKey(
 
   if (typeof key === 'object' && 'key' in key) {
     const keyObj = key as KeyInputObject;
-    const { key: data, format, type } = keyObj;
+    const { key: data, format, type, passphrase } = keyObj;
+    const passphraseAB =
+      passphrase !== undefined ? toAB(passphrase) : undefined;
 
     if (data instanceof KeyObject) {
       return prepareAsymmetricKey(data, isPublic);
@@ -167,14 +170,24 @@ function prepareAsymmetricKey(
         (typeof data === 'string' && data.includes('-----BEGIN'))) &&
       typeof data === 'string'
     ) {
-      return { data: toAB(data), format: 'pem', type };
+      return {
+        data: toAB(data),
+        format: 'pem',
+        type,
+        passphrase: passphraseAB,
+      };
     }
 
     // Filter to only 'pem' or 'der' — JWK and raw formats are handled
     // separately via dedicated paths.
     const filteredFormat: 'pem' | 'der' | undefined =
       format === 'pem' || format === 'der' ? format : undefined;
-    return { data: toAB(data), format: filteredFormat, type };
+    return {
+      data: toAB(data),
+      format: filteredFormat,
+      type,
+      passphrase: passphraseAB,
+    };
   }
 
   throw new Error('Invalid key input');
@@ -212,7 +225,7 @@ function createPublicKey(key: KeyInput): PublicKeyObject {
     return new PublicKeyObject(handle);
   }
 
-  const { data, format, type } = prepareAsymmetricKey(key, true);
+  const { data, format, type, passphrase } = prepareAsymmetricKey(key, true);
 
   // Map format string to KFormatType enum
   let kFormat: KFormatType | undefined;
@@ -229,6 +242,7 @@ function createPublicKey(key: KeyInput): PublicKeyObject {
     data,
     kFormat,
     kType,
+    passphrase,
   ) as PublicKeyObject;
 }
 
@@ -249,7 +263,7 @@ function createPrivateKey(key: KeyInput): PrivateKeyObject {
     return new PrivateKeyObject(handle);
   }
 
-  const { data, format, type } = prepareAsymmetricKey(key, false);
+  const { data, format, type, passphrase } = prepareAsymmetricKey(key, false);
 
   // Map format string to KFormatType enum
   let kFormat: KFormatType | undefined;
@@ -267,6 +281,7 @@ function createPrivateKey(key: KeyInput): PrivateKeyObject {
     data,
     kFormat,
     kType,
+    passphrase,
   ) as PrivateKeyObject;
 }
 
