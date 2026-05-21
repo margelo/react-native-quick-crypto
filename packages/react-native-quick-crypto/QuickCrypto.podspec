@@ -184,7 +184,7 @@ Pod::Spec.new do |s|
   load "nitrogen/generated/ios/QuickCrypto+autolinking.rb"
   add_nitrogen_files(s)
 
-  s.dependency "OpenSSL-Universal", "~> 3.6"
+  s.dependency "OpenSSL-Universal", "~> 3.6.2000"
   s.dependency "React-jsi"
   s.dependency "React-callinvoker"
 
