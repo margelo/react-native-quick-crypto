@@ -346,12 +346,14 @@ async function generateRsaKeyPair(): Promise<{
 }> {
   return new Promise((resolve, reject) => {
     generateKeyPair('rsa', { modulusLength: 2048 }, (err, pubKey, privKey) => {
-      if (err) reject(err);
-      else
-        resolve({
-          privateKey: privKey as KeyObject,
-          publicKey: pubKey as KeyObject,
-        });
+      if (err) {
+        reject(err);
+        return;
+      }
+      resolve({
+        privateKey: privKey as KeyObject,
+        publicKey: pubKey as KeyObject,
+      });
     });
   });
 }
@@ -414,7 +416,7 @@ test(SUITE, 'createPrivateKey passphrase as Buffer (PEM)', async () => {
 
 test(
   SUITE,
-  'createPrivateKey on encrypted PEM without passphrase throws',
+  'createPrivateKey on encrypted PEM without passphrase throws Passphrase required',
   async () => {
     const { privateKey } = await generateRsaKeyPair();
     const exported = privateKey.export({
@@ -426,7 +428,7 @@ test(
 
     await assertThrowsAsync(async () => {
       createPrivateKey(exported);
-    }, '');
+    }, 'Passphrase required');
   },
 );
 
@@ -459,7 +461,7 @@ test(SUITE, 'createPrivateKey with wrong passphrase throws', async () => {
 
   await assertThrowsAsync(async () => {
     createPrivateKey({ key: exported, passphrase: 'wrong' });
-  }, '');
+  }, 'Failed to read');
 });
 
 test(
@@ -476,6 +478,32 @@ test(
     }) as string;
 
     const pub = createPublicKey({ key: exported, passphrase });
+
+    expect(pub.type).to.equal('public');
+    expect(pub.asymmetricKeyType).to.equal('rsa');
+    expect(pub.equals(publicKey)).to.equal(true);
+  },
+);
+
+test(
+  SUITE,
+  'createPublicKey extracts public from passphrase-encrypted private key (DER)',
+  async () => {
+    const { privateKey, publicKey } = await generateRsaKeyPair();
+    const passphrase = 'user-test';
+    const exported = privateKey.export({
+      format: 'der',
+      passphrase,
+      cipher: 'aes-256-cbc',
+      type: 'pkcs8',
+    }) as Buffer;
+
+    const pub = createPublicKey({
+      key: exported,
+      format: 'der',
+      type: 'pkcs8',
+      passphrase,
+    });
 
     expect(pub.type).to.equal('public');
     expect(pub.asymmetricKeyType).to.equal('rsa');

@@ -231,7 +231,8 @@ std::shared_ptr<ArrayBuffer> HybridKeyObjectHandle::exportKey(std::optional<KFor
 
       if (passphrase.has_value()) {
         auto& passphrase_ptr = passphrase.value();
-        config.passphrase = std::make_optional(ncrypto::DataPointer(passphrase_ptr->data(), passphrase_ptr->size()));
+        config.passphrase =
+            std::make_optional(ncrypto::DataPointer::Copy(ncrypto::Buffer<const void>{passphrase_ptr->data(), passphrase_ptr->size()}));
       }
 
       auto result = pkey.writePrivateKey(config);
