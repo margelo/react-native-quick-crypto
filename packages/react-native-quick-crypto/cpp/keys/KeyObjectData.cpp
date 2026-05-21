@@ -242,6 +242,7 @@ KeyObjectData KeyObjectData::GetPrivateKey(std::shared_ptr<ArrayBuffer> key, std
       if (res) {
         return CreateAsymmetric(KeyType::PRIVATE, std::move(res.value));
       }
+      bool needsPassphrase = res.error.has_value() && res.error.value() == ncrypto::EVPKeyPointer::PKParseError::NEED_PASSPHRASE;
 
       // If no specific encoding was provided, try other encodings as fallback
       if (!type.has_value()) {
@@ -256,7 +257,14 @@ KeyObjectData KeyObjectData::GetPrivateKey(std::shared_ptr<ArrayBuffer> key, std
           if (fallback_res) {
             return CreateAsymmetric(KeyType::PRIVATE, std::move(fallback_res.value));
           }
+          if (fallback_res.error.has_value() && fallback_res.error.value() == ncrypto::EVPKeyPointer::PKParseError::NEED_PASSPHRASE) {
+            needsPassphrase = true;
+          }
         }
+      }
+
+      if (needsPassphrase) {
+        throw std::runtime_error("Passphrase required for encrypted key");
       }
       throw std::runtime_error("Failed to read DER private key");
     }
