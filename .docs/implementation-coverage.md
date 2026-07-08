@@ -146,8 +146,10 @@ These algorithms provide quantum-resistant cryptography.
   - ✅ `crypto.hash(algorithm, data[, outputEncoding])`
   - ✅ `crypto.hkdf(digest, ikm, salt, info, keylen, callback)`
   - ✅ `crypto.hkdfSync(digest, ikm, salt, info, keylen)`
-  - ✨ `crypto.hkdfExtract(digest, ikm[, salt])` (RFC 5869 Extract-only)
-  - ✨ `crypto.hkdfExpand(digest, prk, info, keylen)` (RFC 5869 Expand-only)
+  - ✨ `crypto.hkdfExtract(digest, ikm, salt, callback)` (RFC 5869 Extract-only)
+  - ✨ `crypto.hkdfExtractSync(digest, ikm[, salt])` (RFC 5869 Extract-only)
+  - ✨ `crypto.hkdfExpand(digest, prk, info, keylen, callback)` (RFC 5869 Expand-only)
+  - ✨ `crypto.hkdfExpandSync(digest, prk, info, keylen)` (RFC 5869 Expand-only)
   - ✅ `crypto.pbkdf2(password, salt, iterations, keylen, digest, callback)`
   - ✅ `crypto.pbkdf2Sync(password, salt, iterations, keylen, digest)`
   - ✅ `crypto.privateDecrypt(privateKey, buffer)`

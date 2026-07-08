@@ -62,6 +62,14 @@ const HKDF_HASH_BYTES: Readonly<Record<string, number>> = {
   ripemd160: 20,
 };
 
+function hkdfHashLen(digest: string): number {
+  const hashLen = HKDF_HASH_BYTES[digest.toLowerCase()];
+  if (hashLen === undefined) {
+    throw new TypeError(`Unsupported HKDF digest: ${digest}`);
+  }
+  return hashLen;
+}
+
 function validateHkdfKeylen(digest: string, keylen: number): void {
   if (
     typeof keylen !== 'number' ||
@@ -153,18 +161,15 @@ export function hkdfSync(
   return Buffer.from(result);
 }
 
-// RFC 5869 §2.2 HKDF-Extract: PRK = HMAC(salt, IKM). Salt defaults to a
-// string of HashLen zeros when omitted. Returns a PRK of HashLen bytes.
-export function hkdfExtract(
+// RFC 5869 §2.2 HKDF-Extract (sync): PRK = HMAC(salt, IKM). Salt defaults to
+// a string of HashLen zeros when omitted. Returns a PRK of HashLen bytes.
+export function hkdfExtractSync(
   digest: string,
   ikm: KeyMaterial,
   salt: Salt = new Uint8Array(0),
 ): Buffer {
   const normalizedDigest = normalizeHashName(digest);
-  const hashLen = HKDF_HASH_BYTES[normalizedDigest.toLowerCase()];
-  if (hashLen === undefined) {
-    throw new TypeError(`Unsupported HKDF digest: ${digest}`);
-  }
+  const hashLen = hkdfHashLen(normalizedDigest);
   const sanitizedIkm = sanitizeInput(ikm, 'IKM');
   const sanitizedSalt = sanitizeInput(salt, 'Salt');
 
@@ -180,16 +185,56 @@ export function hkdfExtract(
   return Buffer.from(result);
 }
 
-// RFC 5869 §2.3 HKDF-Expand: OKM = expand(PRK, info, L). `prk` must be at
-// least HashLen bytes (a pseudorandom key, e.g. from hkdfExtract).
-export function hkdfExpand(
+// Async HKDF-Extract, mirroring `hkdf`. Unlike the sync form, `salt` is
+// required here because the callback occupies the trailing argument.
+export function hkdfExtract(
+  digest: string,
+  ikm: KeyMaterial,
+  salt: Salt,
+  callback: HkdfCallback,
+): void {
+  validateCallback(callback);
+
+  try {
+    const normalizedDigest = normalizeHashName(digest);
+    const hashLen = hkdfHashLen(normalizedDigest);
+    const sanitizedIkm = sanitizeInput(ikm, 'IKM');
+    const sanitizedSalt = sanitizeInput(salt, 'Salt');
+
+    getNative()
+      .deriveKey(
+        normalizedDigest,
+        sanitizedIkm,
+        sanitizedSalt,
+        new ArrayBuffer(0),
+        hashLen,
+        'extract',
+      )
+      .then(
+        res => callback(null, Buffer.from(res)),
+        err => callback(err),
+      );
+  } catch (err) {
+    callback(err as Error);
+  }
+}
+
+// RFC 5869 §2.3 HKDF-Expand (sync): OKM = expand(PRK, info, L). `prk` must be
+// at least HashLen bytes (a pseudorandom key, e.g. from hkdfExtract).
+export function hkdfExpandSync(
   digest: string,
   prk: KeyMaterial,
   info: Info,
   keylen: number,
 ): Buffer {
   const normalizedDigest = normalizeHashName(digest);
+  const hashLen = hkdfHashLen(normalizedDigest);
   const sanitizedPrk = sanitizeInput(prk, 'PRK');
+  if (sanitizedPrk.byteLength < hashLen) {
+    throw new RangeError(
+      `HKDF-Expand PRK must be at least HashLen (${hashLen}) bytes for ${digest}`,
+    );
+  }
   const sanitizedInfo = sanitizeInput(info, 'Info');
 
   validateHkdfKeylen(normalizedDigest, keylen);
@@ -204,6 +249,47 @@ export function hkdfExpand(
   );
 
   return Buffer.from(result);
+}
+
+// Async HKDF-Expand, mirroring `hkdf`.
+export function hkdfExpand(
+  digest: string,
+  prk: KeyMaterial,
+  info: Info,
+  keylen: number,
+  callback: HkdfCallback,
+): void {
+  validateCallback(callback);
+
+  try {
+    const normalizedDigest = normalizeHashName(digest);
+    const hashLen = hkdfHashLen(normalizedDigest);
+    const sanitizedPrk = sanitizeInput(prk, 'PRK');
+    if (sanitizedPrk.byteLength < hashLen) {
+      throw new RangeError(
+        `HKDF-Expand PRK must be at least HashLen (${hashLen}) bytes for ${digest}`,
+      );
+    }
+    const sanitizedInfo = sanitizeInput(info, 'Info');
+
+    validateHkdfKeylen(normalizedDigest, keylen);
+
+    getNative()
+      .deriveKey(
+        normalizedDigest,
+        sanitizedPrk,
+        new ArrayBuffer(0),
+        sanitizedInfo,
+        keylen,
+        'expand',
+      )
+      .then(
+        res => callback(null, Buffer.from(res)),
+        err => callback(err),
+      );
+  } catch (err) {
+    callback(err as Error);
+  }
 }
 
 export function hkdfDeriveBits(

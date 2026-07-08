@@ -3,7 +3,9 @@ import crypto, {
   hkdf,
   hkdfSync,
   hkdfExtract,
+  hkdfExtractSync,
   hkdfExpand,
+  hkdfExpandSync,
 } from 'react-native-quick-crypto';
 import { expect } from 'chai';
 import { test } from '../util';
@@ -327,43 +329,87 @@ test(SUITE, 'WebCrypto HKDF deriveKey (AES-GCM)', async () => {
 for (let i = 0; i < testVectors.length; i++) {
   const vec = testVectors[i]!;
 
-  test(SUITE, `hkdfExtract (RFC 5869 Case ${i + 1})`, () => {
+  test(SUITE, `hkdfExtractSync (RFC 5869 Case ${i + 1})`, () => {
     const ikm = Buffer.from(vec.ikm, 'hex');
     const salt = Buffer.from(vec.salt, 'hex');
-    const prk = hkdfExtract(vec.algo, ikm, salt);
+    const prk = hkdfExtractSync(vec.algo, ikm, salt);
     expect(prk.toString('hex')).to.equal(vec.prk);
   });
 
-  test(SUITE, `hkdfExpand (RFC 5869 Case ${i + 1})`, () => {
+  test(SUITE, `hkdfExpandSync (RFC 5869 Case ${i + 1})`, () => {
     const prk = Buffer.from(vec.prk, 'hex');
     const info = Buffer.from(vec.info, 'hex');
-    const okm = hkdfExpand(vec.algo, prk, info, vec.len);
+    const okm = hkdfExpandSync(vec.algo, prk, info, vec.len);
     expect(okm.toString('hex')).to.equal(vec.okm);
   });
 
-  test(SUITE, `hkdfExtract→hkdfExpand recomposes OKM (Case ${i + 1})`, () => {
+  test(
+    SUITE,
+    `hkdfExtractSync→hkdfExpandSync recomposes OKM (Case ${i + 1})`,
+    () => {
+      const ikm = Buffer.from(vec.ikm, 'hex');
+      const salt = Buffer.from(vec.salt, 'hex');
+      const info = Buffer.from(vec.info, 'hex');
+      const prk = hkdfExtractSync(vec.algo, ikm, salt);
+      const okm = hkdfExpandSync(vec.algo, prk, info, vec.len);
+      expect(okm.toString('hex')).to.equal(vec.okm);
+    },
+  );
+
+  test(SUITE, `hkdfExtract async (RFC 5869 Case ${i + 1})`, async () => {
     const ikm = Buffer.from(vec.ikm, 'hex');
     const salt = Buffer.from(vec.salt, 'hex');
+    return new Promise<void>((resolve, reject) => {
+      hkdfExtract(vec.algo, ikm, salt, (err, prk) => {
+        try {
+          expect(err).to.equal(null);
+          expect(prk?.toString('hex')).to.equal(vec.prk);
+          resolve();
+        } catch (e) {
+          reject(e);
+        }
+      });
+    });
+  });
+
+  test(SUITE, `hkdfExpand async (RFC 5869 Case ${i + 1})`, async () => {
+    const prk = Buffer.from(vec.prk, 'hex');
     const info = Buffer.from(vec.info, 'hex');
-    const prk = hkdfExtract(vec.algo, ikm, salt);
-    const okm = hkdfExpand(vec.algo, prk, info, vec.len);
-    expect(okm.toString('hex')).to.equal(vec.okm);
+    return new Promise<void>((resolve, reject) => {
+      hkdfExpand(vec.algo, prk, info, vec.len, (err, okm) => {
+        try {
+          expect(err).to.equal(null);
+          expect(okm?.toString('hex')).to.equal(vec.okm);
+          resolve();
+        } catch (e) {
+          reject(e);
+        }
+      });
+    });
   });
 }
 
 // Extract with omitted salt defaults to HashLen zero bytes (RFC 5869 §2.2).
 // Case 3 uses an all-zero salt path, so an empty explicit salt must match.
-test(SUITE, 'hkdfExtract: omitted salt defaults to HashLen zeros', () => {
+test(SUITE, 'hkdfExtractSync: omitted salt defaults to HashLen zeros', () => {
   const vec = testVectors[2]!; // Case 3, sha256, empty salt
   const ikm = Buffer.from(vec.ikm, 'hex');
-  const prk = hkdfExtract(vec.algo, ikm);
+  const prk = hkdfExtractSync(vec.algo, ikm);
   expect(prk.toString('hex')).to.equal(vec.prk);
 });
 
 // Expand inherits the RFC 5869 keylen ceiling (255 * HashLen).
-test(SUITE, 'hkdfExpand: rejects keylen > 255 * HashLen', () => {
+test(SUITE, 'hkdfExpandSync: rejects keylen > 255 * HashLen', () => {
   const prk = Buffer.from('00'.repeat(32), 'hex');
   expect(() => {
-    hkdfExpand('sha256', prk, Buffer.alloc(0), 8161);
+    hkdfExpandSync('sha256', prk, Buffer.alloc(0), 8161);
   }).to.throw(RangeError, /exceeds RFC 5869 ceiling/);
+});
+
+// Expand requires PRK >= HashLen (RFC 5869 §2.3).
+test(SUITE, 'hkdfExpandSync: rejects PRK shorter than HashLen', () => {
+  const shortPrk = Buffer.from('00'.repeat(16), 'hex'); // 16 < sha256 HashLen 32
+  expect(() => {
+    hkdfExpandSync('sha256', shortPrk, Buffer.alloc(0), 32);
+  }).to.throw(RangeError, /at least HashLen/);
 });

@@ -13,10 +13,12 @@
 #error NitroModules cannot be found! Are you sure you installed NitroModules properly?
 #endif
 
-
+// Forward declaration of `HkdfMode` to properly resolve imports.
+namespace margelo::nitro::crypto { enum class HkdfMode; }
 
 #include <NitroModules/ArrayBuffer.hpp>
 #include <string>
+#include "HkdfMode.hpp"
 #include <NitroModules/Promise.hpp>
 
 namespace margelo::nitro::crypto {
@@ -50,8 +52,8 @@ namespace margelo::nitro::crypto {
 
     public:
       // Methods
-      virtual std::shared_ptr<ArrayBuffer> deriveKeySync(const std::string& algorithm, const std::shared_ptr<ArrayBuffer>& key, const std::shared_ptr<ArrayBuffer>& salt, const std::shared_ptr<ArrayBuffer>& info, double length, const std::string& mode) = 0;
-      virtual std::shared_ptr<Promise<std::shared_ptr<ArrayBuffer>>> deriveKey(const std::string& algorithm, const std::shared_ptr<ArrayBuffer>& key, const std::shared_ptr<ArrayBuffer>& salt, const std::shared_ptr<ArrayBuffer>& info, double length, const std::string& mode) = 0;
+      virtual std::shared_ptr<ArrayBuffer> deriveKeySync(const std::string& algorithm, const std::shared_ptr<ArrayBuffer>& key, const std::shared_ptr<ArrayBuffer>& salt, const std::shared_ptr<ArrayBuffer>& info, double length, HkdfMode mode) = 0;
+      virtual std::shared_ptr<Promise<std::shared_ptr<ArrayBuffer>>> deriveKey(const std::string& algorithm, const std::shared_ptr<ArrayBuffer>& key, const std::shared_ptr<ArrayBuffer>& salt, const std::shared_ptr<ArrayBuffer>& info, double length, HkdfMode mode) = 0;
 
     protected:
       // Hybrid Setup

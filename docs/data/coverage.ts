@@ -276,12 +276,12 @@ export const COVERAGE_DATA: CoverageCategory[] = [
       { name: 'hash', status: 'implemented' },
       { name: 'hkdf', status: 'implemented' },
       {
-        name: 'hkdfExpand',
+        name: 'hkdfExpand / hkdfExpandSync',
         status: 'not-in-node',
         note: 'RNQC extension: RFC 5869 Expand-only',
       },
       {
-        name: 'hkdfExtract',
+        name: 'hkdfExtract / hkdfExtractSync',
         status: 'not-in-node',
         note: 'RNQC extension: RFC 5869 Extract-only',
       },

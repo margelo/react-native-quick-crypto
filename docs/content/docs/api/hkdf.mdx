@@ -74,27 +74,36 @@ const derived = QuickCrypto.hkdfSync(
   }}
 />
 
-### hkdfExtract(digest, ikm, salt?)
+### hkdfExtractSync(digest, ikm, salt?) / hkdfExtract(digest, ikm, salt, callback)
 
 Runs only the **Extract** step of RFC 5869, returning the pseudorandom key
 ($PRK$) as a `Buffer` of `HashLen` bytes. Use this when a protocol performs
 Extract and Expand at different stages (TLS 1.3, Noise, Signal, MLS). `salt`
-defaults to a string of `HashLen` zero bytes when omitted.
+defaults to a string of `HashLen` zero bytes when omitted from the sync form;
+the async form requires `salt` (the callback takes the trailing argument).
 
 ```ts
 import QuickCrypto from 'react-native-quick-crypto';
 
-const prk = QuickCrypto.hkdfExtract('sha256', 'ikm-secret', 'salt');
+const prk = QuickCrypto.hkdfExtractSync('sha256', 'ikm-secret', 'salt');
+
+QuickCrypto.hkdfExtract('sha256', 'ikm-secret', 'salt', (err, prk) => {
+  // ...
+});
 ```
 
-### hkdfExpand(digest, prk, info, keylen)
+### hkdfExpandSync(digest, prk, info, keylen) / hkdfExpand(digest, prk, info, keylen, callback)
 
 Runs only the **Expand** step, deriving `keylen` bytes of output keying
-material from an already-derived `prk`. `keylen` must not exceed
-`255 * HashLen` (RFC 5869 §2.3).
+material from an already-derived `prk`. `prk` must be at least `HashLen` bytes,
+and `keylen` must not exceed `255 * HashLen` (RFC 5869 §2.3).
 
 ```ts
 import QuickCrypto from 'react-native-quick-crypto';
 
-const okm = QuickCrypto.hkdfExpand('sha256', prk, 'context-info', 64);
+const okm = QuickCrypto.hkdfExpandSync('sha256', prk, 'context-info', 64);
+
+QuickCrypto.hkdfExpand('sha256', prk, 'context-info', 64, (err, okm) => {
+  // ...
+});
 ```
