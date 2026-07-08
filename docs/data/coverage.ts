@@ -275,6 +275,16 @@ export const COVERAGE_DATA: CoverageCategory[] = [
       { name: 'getRandomValues', status: 'implemented' },
       { name: 'hash', status: 'implemented' },
       { name: 'hkdf', status: 'implemented' },
+      {
+        name: 'hkdfExpand / hkdfExpandSync',
+        status: 'not-in-node',
+        note: 'RNQC extension: RFC 5869 Expand-only',
+      },
+      {
+        name: 'hkdfExtract / hkdfExtractSync',
+        status: 'not-in-node',
+        note: 'RNQC extension: RFC 5869 Extract-only',
+      },
       { name: 'pbkdf2', status: 'implemented' },
       { name: 'privateDecrypt / privateEncrypt', status: 'implemented' },
       { name: 'publicDecrypt / publicEncrypt', status: 'implemented' },

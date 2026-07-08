@@ -1,4 +1,12 @@
-import crypto, { Buffer, hkdf, hkdfSync } from 'react-native-quick-crypto';
+import crypto, {
+  Buffer,
+  hkdf,
+  hkdfSync,
+  hkdfExtract,
+  hkdfExtractSync,
+  hkdfExpand,
+  hkdfExpandSync,
+} from 'react-native-quick-crypto';
 import { expect } from 'chai';
 import { test } from '../util';
 
@@ -17,6 +25,7 @@ const testVectors = [
     info: 'f0f1f2f3f4f5f6f7f8f9',
     len: 42,
     okm: '3cb25f25faacd57a90434f64d0362f2a2d2d0a90cf1a5a4c5db02d56ecc4c5bf34007208d5b887185865',
+    prk: '077709362c2e32df0ddc3f0dc47bba6390b6c73bb50f9c3122ec844ad7c2b3e5',
     algo: 'sha256',
   },
   // A.2 — Test Case 2: Test with SHA-256 and longer inputs/outputs
@@ -26,6 +35,7 @@ const testVectors = [
     info: 'b0b1b2b3b4b5b6b7b8b9babbbcbdbebfc0c1c2c3c4c5c6c7c8c9cacbcccdcecfd0d1d2d3d4d5d6d7d8d9dadbdcdddedfe0e1e2e3e4e5e6e7e8e9eaebecedeeeff0f1f2f3f4f5f6f7f8f9fafbfcfdfeff',
     len: 82,
     okm: 'b11e398dc80327a1c8e7f78c596a49344f012eda2d4efad8a050cc4c19afa97c59045a99cac7827271cb41c65e590e09da3275600c2f09b8367793a9aca3db71cc30c58179ec3e87c14c01d5c1f3434f1d87',
+    prk: '06a6b88c5853361a06104c9ceb35b45cef760014904671014a193f40c15fc244',
     algo: 'sha256',
   },
   // A.3 — Test Case 3: SHA-256 with zero-length salt and zero-length info
@@ -35,6 +45,7 @@ const testVectors = [
     info: '',
     len: 42,
     okm: '8da4e775a563c18f715f802a063c5a31b8a11f5c5ee1879ec3454e5f3c738d2d9d201395faa4b61a96c8',
+    prk: '19ef24a32c717b167f33a91d6f648bdf96596776afdb6377ac434c1c293ccb04',
     algo: 'sha256',
   },
   // A.4 — Test Case 4: Basic test case with SHA-1
@@ -44,6 +55,7 @@ const testVectors = [
     info: 'f0f1f2f3f4f5f6f7f8f9',
     len: 42,
     okm: '085a01ea1b10f36933068b56efa5ad81a4f14b822f5b091568a9cdd4f155fda2c22e422478d305f3f896',
+    prk: '9b6c18c432a7bf8f0e71c8eb88f4b30baa2ba243',
     algo: 'sha1',
   },
   // A.5 — Test Case 5: SHA-1 with longer inputs/outputs
@@ -53,6 +65,7 @@ const testVectors = [
     info: 'b0b1b2b3b4b5b6b7b8b9babbbcbdbebfc0c1c2c3c4c5c6c7c8c9cacbcccdcecfd0d1d2d3d4d5d6d7d8d9dadbdcdddedfe0e1e2e3e4e5e6e7e8e9eaebecedeeeff0f1f2f3f4f5f6f7f8f9fafbfcfdfeff',
     len: 82,
     okm: '0bd770a74d1160f7c9f12cd5912a06ebff6adcae899d92191fe4305673ba2ffe8fa3f1a4e5ad79f3f334b3b202b2173c486ea37ce3d397ed034c7f9dfeb15c5e927336d0441f4c4300e2cff0d0900b52d3b4',
+    prk: '8adae09a2a307059478d309b26c4115a224cfaf6',
     algo: 'sha1',
   },
   // A.6 — Test Case 6: SHA-1 with zero-length salt and zero-length info
@@ -62,6 +75,7 @@ const testVectors = [
     info: '',
     len: 42,
     okm: '0ac1af7002b3d761d1e55298da9d0506b9ae52057220a306e07b6b87e8df21d0ea00033de03984d34918',
+    prk: 'da8c8a73c7fa77288ec6f5e7c297786aa0d32d01',
     algo: 'sha1',
   },
   // A.7 — Test Case 7: SHA-1, salt == NULL (treated as HashLen zeros), zero info
@@ -71,6 +85,7 @@ const testVectors = [
     info: '',
     len: 42,
     okm: '2c91117204d745f3500d636a62f64f0ab3bae548aa53d423b0d1f27ebba6f5e5673a081d70cce7acfc48',
+    prk: '2adccada18779e7c2077ad2eb19d3f3e731385dd',
     algo: 'sha1',
   },
 ];
@@ -305,4 +320,96 @@ test(SUITE, 'WebCrypto HKDF deriveKey (AES-GCM)', async () => {
   )) as ArrayBuffer;
   const expected = vec.okm.slice(0, 64); // 32 bytes * 2 hex chars
   expect(Buffer.from(rawDerived).toString('hex')).to.equal(expected);
+});
+
+// --- HKDF-Extract / HKDF-Expand split (RFC 5869 §2.2–2.3, issue #1060) ---
+//
+// Validates the two steps independently against the published intermediate
+// PRK, and that Extract→Expand recomposes the full-HKDF OKM.
+for (let i = 0; i < testVectors.length; i++) {
+  const vec = testVectors[i]!;
+
+  test(SUITE, `hkdfExtractSync (RFC 5869 Case ${i + 1})`, () => {
+    const ikm = Buffer.from(vec.ikm, 'hex');
+    const salt = Buffer.from(vec.salt, 'hex');
+    const prk = hkdfExtractSync(vec.algo, ikm, salt);
+    expect(prk.toString('hex')).to.equal(vec.prk);
+  });
+
+  test(SUITE, `hkdfExpandSync (RFC 5869 Case ${i + 1})`, () => {
+    const prk = Buffer.from(vec.prk, 'hex');
+    const info = Buffer.from(vec.info, 'hex');
+    const okm = hkdfExpandSync(vec.algo, prk, info, vec.len);
+    expect(okm.toString('hex')).to.equal(vec.okm);
+  });
+
+  test(
+    SUITE,
+    `hkdfExtractSync→hkdfExpandSync recomposes OKM (Case ${i + 1})`,
+    () => {
+      const ikm = Buffer.from(vec.ikm, 'hex');
+      const salt = Buffer.from(vec.salt, 'hex');
+      const info = Buffer.from(vec.info, 'hex');
+      const prk = hkdfExtractSync(vec.algo, ikm, salt);
+      const okm = hkdfExpandSync(vec.algo, prk, info, vec.len);
+      expect(okm.toString('hex')).to.equal(vec.okm);
+    },
+  );
+
+  test(SUITE, `hkdfExtract async (RFC 5869 Case ${i + 1})`, async () => {
+    const ikm = Buffer.from(vec.ikm, 'hex');
+    const salt = Buffer.from(vec.salt, 'hex');
+    return new Promise<void>((resolve, reject) => {
+      hkdfExtract(vec.algo, ikm, salt, (err, prk) => {
+        try {
+          expect(err).to.equal(null);
+          expect(prk?.toString('hex')).to.equal(vec.prk);
+          resolve();
+        } catch (e) {
+          reject(e);
+        }
+      });
+    });
+  });
+
+  test(SUITE, `hkdfExpand async (RFC 5869 Case ${i + 1})`, async () => {
+    const prk = Buffer.from(vec.prk, 'hex');
+    const info = Buffer.from(vec.info, 'hex');
+    return new Promise<void>((resolve, reject) => {
+      hkdfExpand(vec.algo, prk, info, vec.len, (err, okm) => {
+        try {
+          expect(err).to.equal(null);
+          expect(okm?.toString('hex')).to.equal(vec.okm);
+          resolve();
+        } catch (e) {
+          reject(e);
+        }
+      });
+    });
+  });
+}
+
+// Extract with omitted salt defaults to HashLen zero bytes (RFC 5869 §2.2).
+// Case 3 uses an all-zero salt path, so an empty explicit salt must match.
+test(SUITE, 'hkdfExtractSync: omitted salt defaults to HashLen zeros', () => {
+  const vec = testVectors[2]!; // Case 3, sha256, empty salt
+  const ikm = Buffer.from(vec.ikm, 'hex');
+  const prk = hkdfExtractSync(vec.algo, ikm);
+  expect(prk.toString('hex')).to.equal(vec.prk);
+});
+
+// Expand inherits the RFC 5869 keylen ceiling (255 * HashLen).
+test(SUITE, 'hkdfExpandSync: rejects keylen > 255 * HashLen', () => {
+  const prk = Buffer.from('00'.repeat(32), 'hex');
+  expect(() => {
+    hkdfExpandSync('sha256', prk, Buffer.alloc(0), 8161);
+  }).to.throw(RangeError, /exceeds RFC 5869 ceiling/);
+});
+
+// Expand requires PRK >= HashLen (RFC 5869 §2.3).
+test(SUITE, 'hkdfExpandSync: rejects PRK shorter than HashLen', () => {
+  const shortPrk = Buffer.from('00'.repeat(16), 'hex'); // 16 < sha256 HashLen 32
+  expect(() => {
+    hkdfExpandSync('sha256', shortPrk, Buffer.alloc(0), 32);
+  }).to.throw(RangeError, /at least HashLen/);
 });

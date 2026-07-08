@@ -12,23 +12,22 @@
 
 namespace margelo::nitro::crypto {
 
-std::shared_ptr<Promise<std::shared_ptr<ArrayBuffer>>> HybridHkdf::deriveKey(const std::string& algorithm,
-                                                                             const std::shared_ptr<ArrayBuffer>& key,
-                                                                             const std::shared_ptr<ArrayBuffer>& salt,
-                                                                             const std::shared_ptr<ArrayBuffer>& info, double length) {
+std::shared_ptr<Promise<std::shared_ptr<ArrayBuffer>>>
+HybridHkdf::deriveKey(const std::string& algorithm, const std::shared_ptr<ArrayBuffer>& key, const std::shared_ptr<ArrayBuffer>& salt,
+                      const std::shared_ptr<ArrayBuffer>& info, double length, HkdfMode mode) {
   // get owned NativeArrayBuffers before passing to sync function
   auto nativeKey = ToNativeArrayBuffer(key);
   auto nativeSalt = ToNativeArrayBuffer(salt);
   auto nativeInfo = ToNativeArrayBuffer(info);
 
-  return Promise<std::shared_ptr<ArrayBuffer>>::async([this, algorithm, nativeKey, nativeSalt, nativeInfo, length]() {
-    return this->deriveKeySync(algorithm, nativeKey, nativeSalt, nativeInfo, length);
+  return Promise<std::shared_ptr<ArrayBuffer>>::async([this, algorithm, nativeKey, nativeSalt, nativeInfo, length, mode]() {
+    return this->deriveKeySync(algorithm, nativeKey, nativeSalt, nativeInfo, length, mode);
   });
 }
 
 std::shared_ptr<ArrayBuffer> HybridHkdf::deriveKeySync(const std::string& algorithm, const std::shared_ptr<ArrayBuffer>& baseKey,
                                                        const std::shared_ptr<ArrayBuffer>& salt, const std::shared_ptr<ArrayBuffer>& info,
-                                                       double length) {
+                                                       double length, HkdfMode mode) {
   EVP_KDF* kdf = EVP_KDF_fetch(nullptr, "HKDF", nullptr);
   if (kdf == nullptr) {
     throw std::runtime_error("Failed to fetch HKDF implementation: " + std::to_string(ERR_get_error()));
@@ -41,8 +40,26 @@ std::shared_ptr<ArrayBuffer> HybridHkdf::deriveKeySync(const std::string& algori
   }
 
   // Set up parameters
-  OSSL_PARAM params[5];
+  OSSL_PARAM params[6];
   size_t paramIndex = 0;
+
+  // HKDF mode (RFC 5869): full extract+expand, extract-only (PRK), or expand-only.
+  int hkdfMode;
+  switch (mode) {
+    case HkdfMode::EXTRACT:
+      hkdfMode = EVP_KDF_HKDF_MODE_EXTRACT_ONLY;
+      break;
+    case HkdfMode::EXPAND:
+      hkdfMode = EVP_KDF_HKDF_MODE_EXPAND_ONLY;
+      break;
+    case HkdfMode::FULL:
+      hkdfMode = EVP_KDF_HKDF_MODE_EXTRACT_AND_EXPAND;
+      break;
+    default:
+      EVP_KDF_CTX_free(ctx);
+      throw std::runtime_error("Unknown HKDF mode");
+  }
+  params[paramIndex++] = OSSL_PARAM_construct_int(OSSL_KDF_PARAM_MODE, &hkdfMode);
 
   params[paramIndex++] = OSSL_PARAM_construct_utf8_string(OSSL_KDF_PARAM_DIGEST, const_cast<char*>(algorithm.c_str()), 0);
 
