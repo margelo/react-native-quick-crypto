@@ -111,6 +111,7 @@ export function hkdf(
         sanitizedSalt,
         sanitizedInfo,
         keylen,
+        'full',
       )
       .then(
         res => {
@@ -146,6 +147,60 @@ export function hkdfSync(
     sanitizedSalt,
     sanitizedInfo,
     keylen,
+    'full',
+  );
+
+  return Buffer.from(result);
+}
+
+// RFC 5869 §2.2 HKDF-Extract: PRK = HMAC(salt, IKM). Salt defaults to a
+// string of HashLen zeros when omitted. Returns a PRK of HashLen bytes.
+export function hkdfExtract(
+  digest: string,
+  ikm: KeyMaterial,
+  salt: Salt = new Uint8Array(0),
+): Buffer {
+  const normalizedDigest = normalizeHashName(digest);
+  const hashLen = HKDF_HASH_BYTES[normalizedDigest.toLowerCase()];
+  if (hashLen === undefined) {
+    throw new TypeError(`Unsupported HKDF digest: ${digest}`);
+  }
+  const sanitizedIkm = sanitizeInput(ikm, 'IKM');
+  const sanitizedSalt = sanitizeInput(salt, 'Salt');
+
+  const result = getNative().deriveKeySync(
+    normalizedDigest,
+    sanitizedIkm,
+    sanitizedSalt,
+    new ArrayBuffer(0),
+    hashLen,
+    'extract',
+  );
+
+  return Buffer.from(result);
+}
+
+// RFC 5869 §2.3 HKDF-Expand: OKM = expand(PRK, info, L). `prk` must be at
+// least HashLen bytes (a pseudorandom key, e.g. from hkdfExtract).
+export function hkdfExpand(
+  digest: string,
+  prk: KeyMaterial,
+  info: Info,
+  keylen: number,
+): Buffer {
+  const normalizedDigest = normalizeHashName(digest);
+  const sanitizedPrk = sanitizeInput(prk, 'PRK');
+  const sanitizedInfo = sanitizeInput(info, 'Info');
+
+  validateHkdfKeylen(normalizedDigest, keylen);
+
+  const result = getNative().deriveKeySync(
+    normalizedDigest,
+    sanitizedPrk,
+    new ArrayBuffer(0),
+    sanitizedInfo,
+    keylen,
+    'expand',
   );
 
   return Buffer.from(result);
@@ -179,6 +234,7 @@ export function hkdfDeriveBits(
     binaryLikeToArrayBuffer(salt),
     binaryLikeToArrayBuffer(info),
     keylen,
+    'full',
   );
 
   return result;

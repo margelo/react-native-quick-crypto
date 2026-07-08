@@ -19,10 +19,11 @@ class HybridHkdf : public HybridHkdfSpec {
   // Methods
   std::shared_ptr<ArrayBuffer> deriveKeySync(const std::string& algorithm, const std::shared_ptr<ArrayBuffer>& key,
                                              const std::shared_ptr<ArrayBuffer>& salt, const std::shared_ptr<ArrayBuffer>& info,
-                                             double length) override;
+                                             double length, const std::string& mode) override;
   std::shared_ptr<Promise<std::shared_ptr<ArrayBuffer>>> deriveKey(const std::string& algorithm, const std::shared_ptr<ArrayBuffer>& key,
                                                                    const std::shared_ptr<ArrayBuffer>& salt,
-                                                                   const std::shared_ptr<ArrayBuffer>& info, double length) override;
+                                                                   const std::shared_ptr<ArrayBuffer>& info, double length,
+                                                                   const std::string& mode) override;
 };
 
 } // namespace margelo::nitro::crypto
