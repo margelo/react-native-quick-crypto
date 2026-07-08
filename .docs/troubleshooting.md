@@ -10,6 +10,25 @@ Cannot read property 'install' of undefined
 
 Then you need to install `react-native-quick-crypto` as a dependency in your `package.json` file.  Make sure to install pods (ios).
 
+## `QuickBase64` could not be found
+
+If your app crashes on launch with:
+
+```
+Invariant Violation: TurboModuleRegistry.getEnforcing(...): 'QuickBase64' could not be found. Verify that a module by this name is registered in the native binary.
+```
+
+This comes from `react-native-quick-base64`, which is a required dependency of `react-native-quick-crypto`. Since `1.x` of `react-native-quick-crypto` targets the New Architecture, `react-native-quick-base64` `3.0.0`+ is a pure C++ TurboModule that only registers when your app runs with the New Architecture enabled. On the Old Architecture there is no registration for `QuickBase64`, so the lookup fails and takes `react-native-quick-crypto` down with it at startup.
+
+Fix it one of these ways:
+
+- **Enable the New Architecture, then rebuild.**
+  - Bare React Native: set `newArchEnabled=true` in `android/gradle.properties`, then `cd android && ./gradlew clean` and rebuild. (New Architecture is the default on RN `0.76`+ and required on `0.85`+.)
+  - Expo: use SDK 54+, where the New Architecture is on by default, or enable it explicitly on SDK 53.
+- **Stay on the Old Architecture** by pinning `react-native-quick-base64@2.2.2`, whose `2.x` line still ships the legacy Old Architecture module.
+
+> Note: the `ndkVersion` patch that circulates for this error targets the old `react-native-quick-base64` `2.2.2` `android/build.gradle`. Version `3.0.0`+ has no `build.gradle` (it is CMake only), so that patch does not apply.
+
 ## Android build errors
 
 If you get an error similar to this:
