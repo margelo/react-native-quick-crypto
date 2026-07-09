@@ -115,7 +115,7 @@
   },
   "devDependencies": {
     "@types/jest": "29.5.11",
-    "@types/node": "24.3.0",
+    "@types/node": "25.9.1",
     "@types/react": "18.3.3",
     "@types/readable-stream": "4.0.23",
     "del-cli": "7.0.0",
