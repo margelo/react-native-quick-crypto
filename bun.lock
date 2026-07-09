@@ -46,7 +46,7 @@
         "react-native": "0.81.1",
         "react-native-bouncy-checkbox": "2.1.10",
         "react-native-fast-encoder": "0.3.1",
-        "react-native-mmkv": "4.0.1",
+        "react-native-mmkv": "4.3.1",
         "react-native-nitro-modules": "0.33.2",
         "react-native-quick-base64": "3.0.0",
         "react-native-quick-crypto": "workspace:*",
@@ -2095,7 +2095,7 @@
 
     "react-native-fast-encoder": ["react-native-fast-encoder@0.3.1", "", { "dependencies": { "big-integer": "^1.6.51", "flatbuffers": "2.0.6" }, "peerDependencies": { "react": "*", "react-native": "*" } }, "sha512-D5ZEbffxayZImtUUErbNod+7IvJITkxTCPZAQTFg6lrSjl/443Mk5CvT9nKpJC1w4cg2llWk6QP8nczij5ClcQ=="],
 
-    "react-native-mmkv": ["react-native-mmkv@4.0.1", "", { "peerDependencies": { "react": "*", "react-native": "*", "react-native-nitro-modules": "*" } }, "sha512-0JjO0U33b2hngFACsGwxoMCOZlCChP6R42aqvU85kXBaxY/kltSYr0FW9T6lkU3uEkE4IWMV1eLjoJplEY920w=="],
+    "react-native-mmkv": ["react-native-mmkv@4.3.1", "", { "peerDependencies": { "react": "*", "react-native": "*", "react-native-nitro-modules": "*" } }, "sha512-APyGGaaHtayVgT18dBM8QGGZKr9pGfSTiBwbbPNzhGGfJQSU7awLGRGq879OqYl31HmVks9hOBLCs+qfgacRZg=="],
 
     "react-native-monorepo-config": ["react-native-monorepo-config@0.1.10", "", { "dependencies": { "escape-string-regexp": "^5.0.0", "fast-glob": "^3.3.3" } }, "sha512-v0rlaLZiCUg95Mpw6xNRQce5k9yio0qscKjNQaPtFYMNL75YugS2UPUItIPLIRbZubK+s2/LRzBjX+mdyUgh4g=="],
 
