@@ -31,7 +31,7 @@ Pod::Spec.new do |s|
   # Downloaded during podspec evaluation rather than in prepare_command, because
   # prepare_command is skipped for :path pods.
   openssl_version = "3.6.2"
-  openssl_sha256 = "REPLACE_WITH_RELEASE_SHA256"
+  openssl_sha256 = "27c9fe35ed82c67e4e55c222ee6e01a300a5086c0c0e2c544d44de2c73435586"
   openssl_dir = File.join(__dir__, "ios", "openssl")
   openssl_prefix_header = File.join(openssl_dir, "quickcrypto_openssl_prefix.h")
 
@@ -134,8 +134,12 @@ Pod::Spec.new do |s|
   # These use Intel intrinsics that don't compile on ARM
   # Also exclude example files, TBB files, test files, and non-C directories
   s.exclude_files = [
-    # Prebuilt OpenSSL: headers and archives, never compiled as sources
-    "ios/openssl/**/*",
+    # Prebuilt OpenSSL headers — reached through HEADER_SEARCH_PATHS, never
+    # compiled as sources. Must not glob the .xcframework alongside them:
+    # CocoaPods applies exclude_files to vendored_frameworks too, so a broader
+    # pattern here silently unlinks the library.
+    "ios/openssl/include/**/*",
+    "ios/openssl/quickcrypto_openssl_prefix.h",
     "deps/blake3/c/blake3_sse2.c",
     "deps/blake3/c/blake3_sse41.c",
     "deps/blake3/c/blake3_avx2.c",
