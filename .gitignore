@@ -194,3 +194,7 @@ tsconfig.tsbuildinfo
 
 # exclude docs lib
 !docs/lib
+
+# Prebuilt static OpenSSL, downloaded by QuickCrypto.podspec
+packages/react-native-quick-crypto/ios/openssl/
+build/openssl-apple/

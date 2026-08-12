@@ -1,0 +1,45 @@
+name: Build static OpenSSL for Apple platforms
+
+# Produces the prefixed static OpenSSL that QuickCrypto.podspec downloads.
+# Run this when bumping the OpenSSL version, then paste the printed checksum
+# into openssl_sha256 in QuickCrypto.podspec.
+
+on:
+  workflow_dispatch:
+    inputs:
+      opensslVersion:
+        description: "OpenSSL version to build (e.g. 3.6.2)"
+        required: true
+        type: string
+
+jobs:
+  build:
+    runs-on: macOS-26
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@v5
+
+      - name: Build
+        run: ./scripts/build-openssl-apple.sh "${{ inputs.opensslVersion }}"
+
+      - name: Checksum
+        id: checksum
+        run: |
+          ZIP="build/openssl-apple/QuickCryptoOpenSSL-${{ inputs.opensslVersion }}.zip"
+          echo "sha256=$(shasum -a 256 "$ZIP" | cut -d' ' -f1)" >> "$GITHUB_OUTPUT"
+
+      - uses: softprops/action-gh-release@v2
+        with:
+          files: build/openssl-apple/QuickCryptoOpenSSL-${{ inputs.opensslVersion }}.zip
+          tag_name: openssl-apple-${{ inputs.opensslVersion }}
+          name: Static OpenSSL ${{ inputs.opensslVersion }} for Apple platforms
+          body: |
+            Static OpenSSL ${{ inputs.opensslVersion }} with every global symbol
+            renamed to `rnqc_*`, built by `scripts/build-openssl-apple.sh`.
+
+            Set in `QuickCrypto.podspec`:
+
+            ```ruby
+            openssl_sha256 = "${{ steps.checksum.outputs.sha256 }}"
+            ```
