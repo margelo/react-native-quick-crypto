@@ -29,56 +29,63 @@ Fix it one of these ways:
 
 > Note: the `ndkVersion` patch that circulates for this error targets the old `react-native-quick-base64` `2.2.2` `android/build.gradle`. Version `3.0.0`+ has no `build.gradle` (it is CMake only), so that patch does not apply.
 
-## Android build errors
+## `libcrypto.so` / `libssl.so` collision on Android
 
-If you get an error similar to this:
+If a build fails like this:
 
 ```
 Execution failed for task ':app:mergeDebugNativeLibs'.
-> A failure occurred while executing com.android.build.gradle.internal.tasks.MergeNativeLibsTask$MergeNativeLibsTaskWorkAction
-   > 2 files found with path 'lib/arm64-v8a/libcrypto.so' from inputs:
-      - /Users/osp/Developer/mac_test/node_modules/react-native-quick-crypto/android/build/intermediates/library_jni/debug/jni/arm64-v8a/libcrypto.so
-      - /Users/osp/.gradle/caches/transforms-3/e13f88164840fe641a466d05cd8edac7/transformed/jetified-flipper-0.182.0/jni/arm64-v8a/libcrypto.so
+   > 2 files found with path 'lib/arm64-v8a/libcrypto.so'
 ```
 
-It means you have a transitive dependency where two libraries depend on OpenSSL and are generating a `libcrypto.so` file. You can get around this issue by adding the following in your `app/build.gradle`:
+two libraries in your app are each shipping their own OpenSSL. The usual second
+one is `@op-engineering/op-sqlite` with `sqlcipher: true`.
 
-<h4>
-  React Native  <a href="#"><img src="./img/react-native.png" height="15" /></a>
-</h4>
+Since `1.2.0`, `react-native-quick-crypto` links OpenSSL **statically** into
+`libQuickCrypto.so` and keeps its symbols off the global symbol table, so it no
+longer ships `libcrypto.so` or `libssl.so` at all. Upgrading is the fix.
 
-`android/app/build.gradle` file
+### On older versions
+
+Do **not** reach for `pickFirst` on its own:
 
 ```groovy
 packagingOptions {
-  // Should prevent clashes with other libraries that use OpenSSL
-  pickFirst '**/libcrypto.so'
+  pickFirst '**/libcrypto.so'  // builds, then crashes at runtime
 }
 ```
 
-<h4>
-  Expo  <a href="#"><img src="./img/expo.png" height="12" /></a>
-</h4>
+It makes the build succeed by dropping one of the two OpenSSL builds, leaving
+whichever library lost the coin toss bound to a version it was not compiled
+against. Expect corruption or `SIGSEGV` inside OpenSSL rather than a clean
+error.
 
-`app.json` file
+If you cannot upgrade, force both libraries onto a single OpenSSL build first,
+so that whichever copy `pickFirst` keeps is the one both sides compiled against.
+Both `react-native-quick-crypto` and `@op-engineering/op-sqlite` consume the
+same artifact, just at different versions:
 
-```diff
-...
-  plugins: [
-    ...
-+   [
-+     'expo-build-properties',
-+     {
-+       android: {
-+         packagingOptions: {
-+           pickFirst: ['**/libcrypto.so'],
-+         },
-+       },
-+     },
-+   ],
-  ],
+```groovy
+// android/build.gradle
+allprojects {
+  configurations.all {
+    resolutionStrategy.force 'io.github.ronickg:openssl:3.6.2-1'
+  }
+}
 ```
 
-> This caused by flipper which also depends on OpenSSL
+Pick the newest version any of your dependencies asks for — OpenSSL keeps ABI
+compatibility across `3.x`, so the older consumer keeps working against the
+newer build, but not the reverse.
 
-This just tells Gradle to grab whatever OpenSSL version it finds first and link against that, but as you can imagine this is not correct if the packages depend on different OpenSSL versions (quick-crypto depends on `com.android.ndk.thirdparty:openssl:1.1.1q-beta-1`). You should make sure all the OpenSSL versions match and you have no conflicts or errors.
+## `libcrypto` symbol collision on iOS
+
+The same problem has an iOS form: another dependency statically links its own
+OpenSSL into your app binary, `ld` resolves each OpenSSL symbol first-wins, and
+`react-native-quick-crypto` ends up calling into a foreign OpenSSL with
+different struct layouts. It typically surfaces as `EXC_BAD_ACCESS` on the first
+`subtle.*` call.
+
+Since `1.2.0` this cannot happen: the bundled OpenSSL's symbols are renamed to
+`rnqc_*` and the original names are local to the archive, so neither copy can
+see the other. Upgrade to fix it.
