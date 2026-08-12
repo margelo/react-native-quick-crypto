@@ -58,6 +58,7 @@
     "git": {
       "commitMessage": "chore: release ${version}",
       "tagName": "v${version}",
+      "tagMatch": "v*",
       "requireCleanWorkingDir": false
     },
     "github": {
