@@ -31,7 +31,7 @@ Pod::Spec.new do |s|
   # Downloaded during podspec evaluation rather than in prepare_command, because
   # prepare_command is skipped for :path pods.
   openssl_version = "3.6.2"
-  openssl_sha256 = "27c9fe35ed82c67e4e55c222ee6e01a300a5086c0c0e2c544d44de2c73435586"
+  openssl_sha256 = "a50e3c8473b0526b159ad8d105e97a90d1153a4a230388cc731ee23a7d0ad3a4"
   openssl_dir = File.join(__dir__, "ios", "openssl")
   openssl_prefix_header = File.join(openssl_dir, "quickcrypto_openssl_prefix.h")
 
