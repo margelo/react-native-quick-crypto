@@ -114,15 +114,15 @@ include_directories(
 # Third party libraries (Prefabs)
 find_library(LOG_LIB log)
 
-find_package(openssl-static REQUIRED CONFIG)
+find_package(opensslstatic REQUIRED CONFIG)
 
 # Link all libraries together
 target_link_libraries(
   ${PACKAGE_NAME}
   ${LOG_LIB}                               # <-- Logcat logger
   android                                  # <-- Android core
-  openssl-static::ssl                      # <-- OpenSSL   (SSL)
-  openssl-static::crypto                   # <-- OpenSSL   (Crypto)
+  opensslstatic::ssl                       # <-- OpenSSL   (SSL)
+  opensslstatic::crypto                    # <-- OpenSSL   (Crypto)
 )
 
 # Keep every symbol we pull in from a static archive — i.e. all of OpenSSL — out

@@ -152,7 +152,7 @@ dependencies {
   // Static OpenSSL: linked into libQuickCrypto.so with its symbols localized, so we
   // neither ship a libcrypto.so that collides with another library's nor export
   // OpenSSL symbols that could interpose. See CMakeLists.txt and issue #1059.
-  implementation 'io.github.ronickg:openssl-static:3.6.2-1'
+  implementation 'io.github.ronickg:openssl-static:3.6.2-2'
 
   if (sodiumEnabled) {
     // Add a dependency on libsodium
