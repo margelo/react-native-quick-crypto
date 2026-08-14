@@ -89,6 +89,14 @@ jobs:
       # workspace's dev/peer tooling. Workspace-level `bun audit` walks through optional
       # peers (expo, react-native, etc.) which surface ~70 advisories that never reach a
       # consumer's runtime bundle. Phase 5.1 baseline: zero advisories in the runtime tree.
+      #
+      # `bun audit` resolves peers from the registry regardless of what is installed, so
+      # neither `--omit=peer` nor `[install] peer = false` keeps react-native's own tree
+      # out of the graph — only `--ignore` does. These two are metro (react-native's
+      # bundler, dev-time only) reached via the react-native peer of
+      # react-native-quick-base64; they are not in a consumer's runtime bundle. Ignores
+      # are per-advisory, so anything new still fails this job. Drop them once
+      # react-native ships a metro with image-size >= 2.0.3.
       - name: Audit runtime dependencies
         run: |
           mkdir -p /tmp/rnqc-runtime-audit
@@ -96,7 +104,9 @@ jobs:
           bun -e "const pkg=require('$GITHUB_WORKSPACE/packages/react-native-quick-crypto/package.json'); require('fs').writeFileSync('package.json', JSON.stringify({name:'rnqc-runtime-audit',version:'0.0.0',dependencies:pkg.dependencies},null,2));"
           cat package.json
           bun install --no-summary
-          bun audit --audit-level=high
+          bun audit --audit-level=high \
+            --ignore=GHSA-w3rx-r6r6-pgpr \
+            --ignore=GHSA-5p2g-fcmc-qvqq
 
   lint_js:
     name: JS Lint (eslint, prettier)
