@@ -41,7 +41,7 @@ Execution failed for task ':app:mergeDebugNativeLibs'.
 two libraries in your app are each shipping their own OpenSSL. The usual second
 one is `@op-engineering/op-sqlite` with `sqlcipher: true`.
 
-Since `1.2.0`, `react-native-quick-crypto` links OpenSSL **statically** into
+Since `1.1.7`, `react-native-quick-crypto` links OpenSSL **statically** into
 `libQuickCrypto.so` and keeps its symbols off the global symbol table, so it no
 longer ships `libcrypto.so` or `libssl.so` at all. Upgrading is the fix.
 
@@ -86,6 +86,6 @@ OpenSSL into your app binary, `ld` resolves each OpenSSL symbol first-wins, and
 different struct layouts. It typically surfaces as `EXC_BAD_ACCESS` on the first
 `subtle.*` call.
 
-Since `1.2.0` this cannot happen: the bundled OpenSSL's symbols are renamed to
+Since `1.1.7` this cannot happen: the bundled OpenSSL's symbols are renamed to
 `rnqc_*` and the original names are local to the archive, so neither copy can
 see the other. Upgrade to fix it.
