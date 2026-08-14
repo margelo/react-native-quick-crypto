@@ -46,7 +46,7 @@ Pod::Spec.new do |s|
     Pod::UI.puts "[QuickCrypto] ⬇️  Downloading static OpenSSL #{openssl_version}..."
     FileUtils.mkdir_p(File.join(__dir__, "ios"))
     FileUtils.rm_rf(openssl_dir)
-    system("curl -sSfL --connect-timeout 30 --max-time 600 -o #{archive.shellescape} #{url.shellescape}") || raise("[QuickCrypto] Failed to download static OpenSSL")
+    system("curl -sSfL --retry 3 --retry-all-errors --connect-timeout 30 --max-time 600 -o #{archive.shellescape} #{url.shellescape}") || raise("[QuickCrypto] Failed to download static OpenSSL")
 
     actual = Digest::SHA256.file(archive).hexdigest
     unless actual == openssl_sha256
@@ -66,19 +66,33 @@ Pod::Spec.new do |s|
   # This is necessary because prepare_command is skipped for :path pods.
   if sodium_enabled
     sodium_version = "1.0.22"
+    # The GitHub release asset, not download.libsodium.org's -stable tarball: the
+    # latter is regenerated from the stable branch, so no hash can be pinned to it.
+    sodium_sha256 = "adbdd8f16149e81ac6078a03aca6fc03b592b89ef7b5ed83841c086191be3349"
+    sodium_url = "https://github.com/jedisct1/libsodium/releases/download/#{sodium_version}-RELEASE/libsodium-#{sodium_version}.tar.gz"
     sodium_dir = File.join(__dir__, "ios", "libsodium-stable")
     sodium_header = File.join(sodium_dir, "src", "libsodium", "include", "sodium.h")
     unless File.exist?(sodium_header)
-      FileUtils.mkdir_p(File.join(__dir__, "ios"))
-      FileUtils.rm_rf(sodium_dir) if File.directory?(sodium_dir)
+      ios_dir = File.join(__dir__, "ios")
+      archive = File.join(ios_dir, "libsodium.tar.gz")
+      extracted = File.join(ios_dir, "libsodium-#{sodium_version}")
 
-      Pod::UI.puts "[QuickCrypto] ⬇️  Downloading libsodium source..."
-      Dir.chdir(__dir__) do
-        system("curl -sSfL --connect-timeout 30 --max-time 300 -o ios/libsodium.tar.gz https://download.libsodium.org/libsodium/releases/libsodium-#{sodium_version}-stable.tar.gz") || raise("Failed to download libsodium")
-        system("tar -xzf ios/libsodium.tar.gz -C ios") || raise("Failed to extract libsodium")
-        File.delete("ios/libsodium.tar.gz") if File.exist?("ios/libsodium.tar.gz")
+      FileUtils.mkdir_p(ios_dir)
+      FileUtils.rm_rf([sodium_dir, extracted])
+
+      Pod::UI.puts "[QuickCrypto] ⬇️  Downloading libsodium #{sodium_version} source..."
+      system("curl -sSfL --retry 3 --retry-all-errors --connect-timeout 30 --max-time 300 -o #{archive.shellescape} #{sodium_url.shellescape}") || raise("[QuickCrypto] Failed to download libsodium")
+
+      actual = Digest::SHA256.file(archive).hexdigest
+      unless actual == sodium_sha256
+        File.delete(archive)
+        raise "[QuickCrypto] libsodium checksum mismatch: expected #{sodium_sha256}, got #{actual}"
       end
-      Pod::UI.puts "[QuickCrypto] ✅ libsodium source downloaded successfully"
+
+      system("tar -xzf #{archive.shellescape} -C #{ios_dir.shellescape}") || raise("[QuickCrypto] Failed to extract libsodium")
+      File.rename(extracted, sodium_dir)
+      File.delete(archive)
+      Pod::UI.puts "[QuickCrypto] ✅ libsodium source ready"
     end
   end
 
@@ -90,15 +104,10 @@ Pod::Spec.new do |s|
       # Clean up vendored OpenSSL.xcframework from pre-1.0.20 installs
       rm -rf OpenSSL.xcframework
       rm -f OpenSSL.xcframework.zip
-      # Build libsodium
-      mkdir -p ios
-      curl -L -o ios/libsodium.tar.gz https://download.libsodium.org/libsodium/releases/libsodium-1.0.22-stable.tar.gz
-      tar -xzf ios/libsodium.tar.gz -C ios
+      # Build the libsodium source the podspec already downloaded and verified.
       cd ios/libsodium-stable
       ./configure --disable-shared --enable-static
       make -j$(sysctl -n hw.ncpu)
-      cd ../../
-      rm -f ios/libsodium.tar.gz
     CMD
   else
     s.prepare_command = <<-CMD
