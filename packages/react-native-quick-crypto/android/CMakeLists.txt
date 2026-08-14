@@ -114,16 +114,23 @@ include_directories(
 # Third party libraries (Prefabs)
 find_library(LOG_LIB log)
 
-find_package(openssl REQUIRED CONFIG)
+find_package(opensslstatic REQUIRED CONFIG)
 
 # Link all libraries together
 target_link_libraries(
   ${PACKAGE_NAME}
   ${LOG_LIB}                               # <-- Logcat logger
   android                                  # <-- Android core
-  openssl::crypto                          # <-- OpenSSL   (Crypto)
-  openssl::ssl                             # <-- OpenSSL   (SSL)
+  opensslstatic::ssl                       # <-- OpenSSL   (SSL)
+  opensslstatic::crypto                    # <-- OpenSSL   (Crypto)
 )
+
+# Keep every symbol we pull in from a static archive — i.e. all of OpenSSL — out
+# of this .so's dynamic symbol table, so our OpenSSL and another library's
+# OpenSSL cannot interpose on each other at runtime. Symbols from our own
+# sources are unaffected, so the Nitro/JNI entry points stay exported.
+# See issue #1059.
+target_link_options(${PACKAGE_NAME} PRIVATE "-Wl,--exclude-libs,ALL")
 
 if(SODIUM_ENABLED)
   add_definitions(-DBLSALLOC_SODIUM)

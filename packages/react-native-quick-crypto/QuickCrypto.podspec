@@ -1,4 +1,6 @@
 require "json"
+require "digest"
+require "shellwords"
 
 package = JSON.parse(File.read(File.join(__dir__, "package.json")))
 
@@ -18,6 +20,44 @@ Pod::Spec.new do |s|
   s.tvos.deployment_target = 13.4
 
   s.source = { :git => "https://github.com/margelo/react-native-quick-crypto.git", :tag => "#{s.version}" }
+
+  # Prebuilt static OpenSSL whose every global symbol is renamed to rnqc_*, with
+  # the original names demoted to non-external. QuickCrypto is source-built, so
+  # its OpenSSL references are resolved when the *app* links; without the rename,
+  # any other library that statically embeds OpenSSL wins the first-come symbol
+  # resolution and QuickCrypto silently runs on a foreign OpenSSL. See
+  # scripts/build-openssl-apple.sh and issue #1059.
+  #
+  # Downloaded during podspec evaluation rather than in prepare_command, because
+  # prepare_command is skipped for :path pods.
+  openssl_version = "3.6.2"
+  openssl_sha256 = "a50e3c8473b0526b159ad8d105e97a90d1153a4a230388cc731ee23a7d0ad3a4"
+  openssl_dir = File.join(__dir__, "ios", "openssl")
+  openssl_prefix_header = File.join(openssl_dir, "quickcrypto_openssl_prefix.h")
+
+  unless File.exist?(openssl_prefix_header)
+    if openssl_sha256 == "REPLACE_WITH_RELEASE_SHA256"
+      raise "[QuickCrypto] openssl_sha256 is unset — publish the openssl-apple-#{openssl_version} release and paste its checksum into QuickCrypto.podspec"
+    end
+
+    archive = File.join(__dir__, "ios", "QuickCryptoOpenSSL.zip")
+    url = "https://github.com/margelo/react-native-quick-crypto/releases/download/openssl-apple-#{openssl_version}/QuickCryptoOpenSSL-#{openssl_version}.zip"
+
+    Pod::UI.puts "[QuickCrypto] ⬇️  Downloading static OpenSSL #{openssl_version}..."
+    FileUtils.mkdir_p(File.join(__dir__, "ios"))
+    FileUtils.rm_rf(openssl_dir)
+    system("curl -sSfL --connect-timeout 30 --max-time 600 -o #{archive.shellescape} #{url.shellescape}") || raise("[QuickCrypto] Failed to download static OpenSSL")
+
+    actual = Digest::SHA256.file(archive).hexdigest
+    unless actual == openssl_sha256
+      File.delete(archive)
+      raise "[QuickCrypto] Static OpenSSL checksum mismatch: expected #{openssl_sha256}, got #{actual}"
+    end
+
+    system("unzip -q #{archive.shellescape} -d #{openssl_dir.shellescape}") || raise("[QuickCrypto] Failed to extract static OpenSSL")
+    File.delete(archive)
+    Pod::UI.puts "[QuickCrypto] ✅ Static OpenSSL ready"
+  end
 
   sodium_enabled = ENV['SODIUM_ENABLED'] == '1'
   Pod::UI.puts("[QuickCrypto]  🧂 has libsodium #{sodium_enabled ? "enabled" : "disabled"}!")
@@ -94,6 +134,12 @@ Pod::Spec.new do |s|
   # These use Intel intrinsics that don't compile on ARM
   # Also exclude example files, TBB files, test files, and non-C directories
   s.exclude_files = [
+    # Prebuilt OpenSSL headers — reached through HEADER_SEARCH_PATHS, never
+    # compiled as sources. Must not glob the .xcframework alongside them:
+    # CocoaPods applies exclude_files to vendored_frameworks too, so a broader
+    # pattern here silently unlinks the library.
+    "ios/openssl/include/**/*",
+    "ios/openssl/quickcrypto_openssl_prefix.h",
     "deps/blake3/c/blake3_sse2.c",
     "deps/blake3/c/blake3_sse41.c",
     "deps/blake3/c/blake3_avx2.c",
@@ -146,8 +192,19 @@ Pod::Spec.new do |s|
     "GCC_PREPROCESSOR_DEFINITIONS[sdk=iphonesimulator*][arch=x86_64]" => "$(inherited) BLAKE3_NO_AVX512 BLAKE3_NO_AVX2 BLAKE3_NO_SSE41 BLAKE3_NO_SSE2"
   }
 
+  # Every translation unit calls the renamed OpenSSL symbols. Missing a rename
+  # is a link error, never a silent bind to a foreign OpenSSL.
+  openssl_include = File.join(openssl_dir, "include")
+  force_include = "-include \"#{openssl_prefix_header}\""
+  xcconfig["OTHER_CFLAGS"] = "$(inherited) #{force_include}"
+  xcconfig["OTHER_CPLUSPLUSFLAGS"] = "$(inherited) #{force_include}"
+
   # Add cpp subdirectories to header search paths
   cpp_headers = [
+    # Absolute path as well as the pod-relative one: in monorepos the podspec is
+    # reached through a symlink but sources resolve to their real paths.
+    "\"$(PODS_TARGET_SRCROOT)/ios/openssl/include\"",
+    "\"#{openssl_include}\"",
     "\"$(PODS_TARGET_SRCROOT)/cpp/utils\"",
     "\"$(PODS_TARGET_SRCROOT)/cpp/hkdf\"",
     "\"$(PODS_TARGET_SRCROOT)/cpp/dh\"",
@@ -184,7 +241,8 @@ Pod::Spec.new do |s|
   load "nitrogen/generated/ios/QuickCrypto+autolinking.rb"
   add_nitrogen_files(s)
 
-  s.dependency "OpenSSL-Universal", "~> 3.6.2000"
+  s.vendored_frameworks = "ios/openssl/QuickCryptoOpenSSL.xcframework"
+
   s.dependency "React-jsi"
   s.dependency "React-callinvoker"
 
