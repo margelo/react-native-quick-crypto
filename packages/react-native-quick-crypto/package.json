@@ -114,6 +114,7 @@
     "util": "0.12.5"
   },
   "devDependencies": {
+    "@babel/runtime": "7.28.4",
     "@types/jest": "29.5.11",
     "@types/node": "24.3.0",
     "@types/react": "18.3.3",
