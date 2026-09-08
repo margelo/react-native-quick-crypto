@@ -44,7 +44,7 @@
     "eslint-plugin-react-native": "5.0.0",
     "husky": "9.1.7",
     "lint-staged": "16.1.6",
-    "nitrogen": "0.33.2",
+    "nitrogen": "0.35.9",
     "prettier": "3.5.3",
     "release-it": "20.0.1",
     "typescript": "5.8.3",
