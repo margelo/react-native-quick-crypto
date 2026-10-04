@@ -18,7 +18,10 @@ export default [
     languageOptions: {
       parser: typescriptEslint.parser,
       parserOptions: {
-        projectService: true,
+        projectService: {
+          // The Jest mock is plain CommonJS shipped as-is, outside tsconfig.
+          allowDefaultProject: ['jest/*.js'],
+        },
       },
     },
     plugins: {
@@ -47,6 +50,17 @@ export default [
       ...eslintReactNative.configs.all.rules,
       'react-native/sort-styles': 'off',
       'react-native/no-inline-styles': 'warn',
+    },
+  },
+  // Jest mock: CommonJS that runs in Node
+  {
+    files: ['jest/*.js'],
+    languageOptions: {
+      sourceType: 'commonjs',
+      globals: { require: 'readonly', module: 'writable' },
+    },
+    rules: {
+      '@typescript-eslint/no-require-imports': 'off',
     },
   },
   // Ignore patterns
