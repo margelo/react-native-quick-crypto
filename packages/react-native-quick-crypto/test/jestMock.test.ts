@@ -1,6 +1,6 @@
 // `virtual` because the package can't resolve its own name inside this repo;
 // apps use the same call without it.
-jest.mock('react-native-quick-crypto', () => require('../jest'), {
+jest.mock('react-native-quick-crypto', () => jest.requireActual('../jest'), {
   virtual: true,
 });
 
