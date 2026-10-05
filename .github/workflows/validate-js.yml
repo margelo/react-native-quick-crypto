@@ -38,7 +38,8 @@ env:
   # https://github.blog/changelog/2025-09-19-deprecation-of-node-20-on-github-actions-runners/
   FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: 'true'
 
-# Minimum scopes — reviewdog posts tsc errors as review comments on PRs.
+# Minimum scopes — reviewdog posts tsc errors as review comments on PRs and as
+# check annotations on main, where github-pr-review has no PR to report against.
 permissions:
   contents: read
   checks: write
@@ -63,7 +64,7 @@ jobs:
       - name: Run TypeScript # Reviewdog tsc errorformat: %f:%l:%c - error TS%n: %m
         run: |
           set -o pipefail
-          bun tsc 2>&1 | sed 's/^[^ ]* typescript: //' | reviewdog -name="tsc" -efm="%f(%l,%c): error TS%n: %m" -reporter="github-pr-review" -filter-mode="nofilter" -fail-on-error -tee
+          bun tsc 2>&1 | sed 's/^[^ ]* typescript: //' | reviewdog -name="tsc" -efm="%f(%l,%c): error TS%n: %m" -reporter="${{ github.event_name == 'pull_request' && 'github-pr-review' || 'github-check' }}" -filter-mode="nofilter" -fail-on-error -tee
         env:
           REVIEWDOG_GITHUB_API_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
