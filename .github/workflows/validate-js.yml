@@ -38,7 +38,8 @@ env:
   # https://github.blog/changelog/2025-09-19-deprecation-of-node-20-on-github-actions-runners/
   FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: 'true'
 
-# Minimum scopes — reviewdog posts tsc errors as review comments on PRs.
+# Minimum scopes — reviewdog posts tsc errors as review comments on PRs and as
+# check annotations on main, where github-pr-review has no PR to report against.
 permissions:
   contents: read
   checks: write
@@ -63,7 +64,7 @@ jobs:
       - name: Run TypeScript # Reviewdog tsc errorformat: %f:%l:%c - error TS%n: %m
         run: |
           set -o pipefail
-          bun tsc 2>&1 | sed 's/^[^ ]* typescript: //' | reviewdog -name="tsc" -efm="%f(%l,%c): error TS%n: %m" -reporter="github-pr-review" -filter-mode="nofilter" -fail-on-error -tee
+          bun tsc 2>&1 | sed 's/^[^ ]* typescript: //' | reviewdog -name="tsc" -efm="%f(%l,%c): error TS%n: %m" -reporter="${{ github.event_name == 'pull_request' && 'github-pr-review' || 'github-check' }}" -filter-mode="nofilter" -fail-on-error -tee
         env:
           REVIEWDOG_GITHUB_API_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
@@ -92,11 +93,12 @@ jobs:
       #
       # `bun audit` resolves peers from the registry regardless of what is installed, so
       # neither `--omit=peer` nor `[install] peer = false` keeps react-native's own tree
-      # out of the graph — only `--ignore` does. These two are metro (react-native's
+      # out of the graph — only `--ignore` does. These are metro (react-native's
       # bundler, dev-time only) reached via the react-native peer of
       # react-native-quick-base64; they are not in a consumer's runtime bundle. Ignores
       # are per-advisory, so anything new still fails this job. Drop them once
-      # react-native ships a metro with image-size >= 2.0.3.
+      # react-native ships a metro with image-size >= 2.0.3 and a patched braces
+      # (GHSA-vfj7-8cjw-p6xm, via micromatch; no fixed release yet).
       - name: Audit runtime dependencies
         run: |
           mkdir -p /tmp/rnqc-runtime-audit
@@ -106,7 +108,8 @@ jobs:
           bun install --no-summary
           bun audit --audit-level=high \
             --ignore=GHSA-w3rx-r6r6-pgpr \
-            --ignore=GHSA-5p2g-fcmc-qvqq
+            --ignore=GHSA-5p2g-fcmc-qvqq \
+            --ignore=GHSA-vfj7-8cjw-p6xm
 
   lint_js:
     name: JS Lint (eslint, prettier)

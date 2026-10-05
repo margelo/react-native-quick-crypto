@@ -3541,7 +3541,7 @@ export class Subtle {
   }
 
   async decrypt(
-    algorithm: EncryptDecryptParams,
+    algorithm: EncryptDecryptParams | AnyAlgorithm,
     key: CryptoKey,
     data: BufferLike,
   ): Promise<ArrayBuffer> {
@@ -3577,7 +3577,7 @@ export class Subtle {
   }
 
   async deriveBits(
-    algorithm: SubtleAlgorithm,
+    algorithm: SubtleAlgorithm | AnyAlgorithm,
     baseKey: CryptoKey,
     length: number | null = null,
   ): Promise<ArrayBuffer> {
@@ -3633,9 +3633,9 @@ export class Subtle {
   }
 
   async deriveKey(
-    algorithm: SubtleAlgorithm,
+    algorithm: SubtleAlgorithm | AnyAlgorithm,
     baseKey: CryptoKey,
-    derivedKeyAlgorithm: SubtleAlgorithm,
+    derivedKeyAlgorithm: SubtleAlgorithm | AnyAlgorithm,
     extractable: boolean,
     keyUsages: KeyUsage[],
   ): Promise<CryptoKey> {
@@ -3723,7 +3723,7 @@ export class Subtle {
   }
 
   async encrypt(
-    algorithm: EncryptDecryptParams,
+    algorithm: EncryptDecryptParams | AnyAlgorithm,
     key: CryptoKey,
     data: BufferLike,
   ): Promise<ArrayBuffer> {
@@ -3800,7 +3800,7 @@ export class Subtle {
     format: ImportFormat,
     key: CryptoKey,
     wrappingKey: CryptoKey,
-    wrapAlgorithm: EncryptDecryptParams,
+    wrapAlgorithm: EncryptDecryptParams | AnyAlgorithm,
   ): Promise<ArrayBuffer> {
     requireArgs(arguments.length, 4, 'wrapKey');
     // Mirrors Node webcrypto.js:923-927: prefer the 'wrapKey' op (only
@@ -3868,7 +3868,7 @@ export class Subtle {
     format: ImportFormat,
     wrappedKey: BufferLike,
     unwrappingKey: CryptoKey,
-    unwrapAlgorithm: EncryptDecryptParams,
+    unwrapAlgorithm: EncryptDecryptParams | AnyAlgorithm,
     unwrappedKeyAlgorithm: SubtleAlgorithm | AnyAlgorithm,
     extractable: boolean,
     keyUsages: KeyUsage[],
@@ -3941,7 +3941,7 @@ export class Subtle {
   }
 
   async generateKey(
-    algorithm: SubtleAlgorithm,
+    algorithm: SubtleAlgorithm | AnyAlgorithm,
     extractable: boolean,
     keyUsages: KeyUsage[],
   ): Promise<CryptoKey | CryptoKeyPair> {
@@ -4289,7 +4289,7 @@ export class Subtle {
   }
 
   async sign(
-    algorithm: SubtleAlgorithm,
+    algorithm: SubtleAlgorithm | AnyAlgorithm,
     key: CryptoKey,
     data: BufferLike,
   ): Promise<ArrayBuffer> {
@@ -4302,7 +4302,7 @@ export class Subtle {
   }
 
   async verify(
-    algorithm: SubtleAlgorithm,
+    algorithm: SubtleAlgorithm | AnyAlgorithm,
     key: CryptoKey,
     signature: BufferLike,
     data: BufferLike,
@@ -4317,7 +4317,7 @@ export class Subtle {
   }
 
   private _encapsulateCore(
-    algorithm: SubtleAlgorithm,
+    algorithm: SubtleAlgorithm | AnyAlgorithm,
     key: CryptoKey,
   ): EncapsulateResult {
     const normalizedAlgorithm = normalizeAlgorithm(
@@ -4346,7 +4346,7 @@ export class Subtle {
   }
 
   private _decapsulateCore(
-    algorithm: SubtleAlgorithm,
+    algorithm: SubtleAlgorithm | AnyAlgorithm,
     key: CryptoKey,
     ciphertext: BufferLike,
   ): ArrayBuffer {
@@ -4376,7 +4376,7 @@ export class Subtle {
   }
 
   async encapsulateBits(
-    algorithm: SubtleAlgorithm,
+    algorithm: SubtleAlgorithm | AnyAlgorithm,
     key: CryptoKey,
   ): Promise<EncapsulateResult> {
     requireArgs(arguments.length, 2, 'encapsulateBits');
@@ -4391,7 +4391,7 @@ export class Subtle {
   }
 
   async encapsulateKey(
-    algorithm: SubtleAlgorithm,
+    algorithm: SubtleAlgorithm | AnyAlgorithm,
     key: CryptoKey,
     sharedKeyAlgorithm: SubtleAlgorithm | AnyAlgorithm,
     extractable: boolean,
@@ -4420,7 +4420,7 @@ export class Subtle {
   }
 
   async decapsulateBits(
-    algorithm: SubtleAlgorithm,
+    algorithm: SubtleAlgorithm | AnyAlgorithm,
     key: CryptoKey,
     ciphertext: BufferLike,
   ): Promise<ArrayBuffer> {
@@ -4436,7 +4436,7 @@ export class Subtle {
   }
 
   async decapsulateKey(
-    algorithm: SubtleAlgorithm,
+    algorithm: SubtleAlgorithm | AnyAlgorithm,
     key: CryptoKey,
     ciphertext: BufferLike,
     sharedKeyAlgorithm: SubtleAlgorithm | AnyAlgorithm,
