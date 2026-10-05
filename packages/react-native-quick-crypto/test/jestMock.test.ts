@@ -5,6 +5,7 @@ jest.mock('react-native-quick-crypto', () => require('../jest'), {
 });
 
 import QuickCrypto, {
+  CryptoKey,
   createCipheriv,
   createDecipheriv,
   createHash,
@@ -48,6 +49,7 @@ test('jest mock subtle.verify resolves to a boolean', async () => {
     false,
     ['sign', 'verify'],
   );
+  expect(key).toBeInstanceOf(CryptoKey);
   const data = new TextEncoder().encode('hello');
   const signature = await QuickCrypto.subtle.sign('HMAC', key, data);
   await expect(

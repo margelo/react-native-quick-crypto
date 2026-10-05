@@ -56,7 +56,7 @@ test('verifies an HMAC with subtle', async () => {
 `install()` is a no-op in the mock, because Node already provides `globalThis.crypto` and `Buffer`.
 
 <Callout title="APIs Node doesn't have" type="warn">
-  The mock only covers what `node:crypto` provides. Library-specific APIs such as BLAKE3 or ML-KEM are `undefined`, and `argon2` needs Node 24.7 or newer. If your code uses them, extend the mock:
+  The mock only covers what `node:crypto` provides. Library-specific APIs such as `blake3`, ML-KEM, `xsalsa20`, `randomUUIDv7`, and the `hkdfExtract`/`hkdfExpand` helpers are `undefined`, and `argon2` needs Node 24.7 or newer. If your code uses them, extend the mock:
 
   ```js
   jest.mock('react-native-quick-crypto', () => ({
