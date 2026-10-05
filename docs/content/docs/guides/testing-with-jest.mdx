@@ -1,0 +1,67 @@
+---
+title: Testing with Jest
+description: Run code that uses react-native-quick-crypto in Jest
+---
+
+import { Callout } from 'fumadocs-ui/components/callout';
+
+Jest runs your tests in Node, where the native module behind `react-native-quick-crypto` doesn't exist, so importing it throws. The package ships a mock for this.
+
+Node already implements the same `crypto` API that this library brings to React Native, so the mock forwards to `node:crypto` instead of stubbing each function. Hashes, ciphertexts and signatures in your tests are real, and your code runs unchanged.
+
+## Setup
+
+Register the mock once in a [Jest setup file](https://jestjs.io/docs/configuration#setupfilesafterenv-array):
+
+```js title="jest.setup.js"
+jest.mock('react-native-quick-crypto', () =>
+  require('react-native-quick-crypto/jest'),
+);
+```
+
+```js title="jest.config.js"
+module.exports = {
+  preset: 'react-native', // or 'jest-expo'
+  setupFilesAfterEnv: ['<rootDir>/jest.setup.js'],
+};
+```
+
+Or call `jest.mock(...)` at the top of an individual test file.
+
+## Usage
+
+Default and named imports both work:
+
+```ts
+import QuickCrypto, { createHash, randomBytes } from 'react-native-quick-crypto';
+
+test('hashes a password', () => {
+  const salt = randomBytes(16);
+  const hash = createHash('sha256').update(salt).update('hunter2').digest('hex');
+  expect(hash).toHaveLength(64);
+});
+
+test('verifies an HMAC with subtle', async () => {
+  const key = await QuickCrypto.subtle.generateKey(
+    { name: 'HMAC', hash: 'SHA-256' },
+    false,
+    ['sign', 'verify'],
+  );
+  const data = new TextEncoder().encode('hello');
+  const signature = await QuickCrypto.subtle.sign('HMAC', key, data);
+  expect(await QuickCrypto.subtle.verify('HMAC', key, signature, data)).toBe(true);
+});
+```
+
+`install()` is a no-op in the mock, because Node already provides `globalThis.crypto` and `Buffer`.
+
+<Callout title="APIs Node doesn't have" type="warn">
+  The mock only covers what `node:crypto` provides. Library-specific APIs such as `blake3`, ML-KEM, `xsalsa20`, `randomUUIDv7`, and the `hkdfExtract`/`hkdfExpand` helpers are `undefined`, and `argon2` needs Node 24.7 or newer. If your code uses them, extend the mock:
+
+  ```js
+  jest.mock('react-native-quick-crypto', () => ({
+    ...require('react-native-quick-crypto/jest'),
+    blake3: jest.fn(),
+  }));
+  ```
+</Callout>

@@ -8,6 +8,7 @@
         "large-files",
         "secure-storage",
         "crypto-wallet",
+        "testing-with-jest",
         "migration",
         "nitro-integration"
     ]
