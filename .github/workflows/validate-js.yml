@@ -92,11 +92,12 @@ jobs:
       #
       # `bun audit` resolves peers from the registry regardless of what is installed, so
       # neither `--omit=peer` nor `[install] peer = false` keeps react-native's own tree
-      # out of the graph — only `--ignore` does. These two are metro (react-native's
+      # out of the graph — only `--ignore` does. These are metro (react-native's
       # bundler, dev-time only) reached via the react-native peer of
       # react-native-quick-base64; they are not in a consumer's runtime bundle. Ignores
       # are per-advisory, so anything new still fails this job. Drop them once
-      # react-native ships a metro with image-size >= 2.0.3.
+      # react-native ships a metro with image-size >= 2.0.3 and a patched braces
+      # (GHSA-vfj7-8cjw-p6xm, via micromatch; no fixed release yet).
       - name: Audit runtime dependencies
         run: |
           mkdir -p /tmp/rnqc-runtime-audit
@@ -106,7 +107,8 @@ jobs:
           bun install --no-summary
           bun audit --audit-level=high \
             --ignore=GHSA-w3rx-r6r6-pgpr \
-            --ignore=GHSA-5p2g-fcmc-qvqq
+            --ignore=GHSA-5p2g-fcmc-qvqq \
+            --ignore=GHSA-vfj7-8cjw-p6xm
 
   lint_js:
     name: JS Lint (eslint, prettier)
