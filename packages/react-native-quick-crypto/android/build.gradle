@@ -163,7 +163,7 @@ dependencies {
 
   if (sodiumEnabled) {
     // Add a dependency on libsodium
-    implementation 'io.github.ronickg:sodium:1.0.22-1'
+    implementation 'io.github.ronickg:sodium:1.0.22-2'
   }
 }
 
