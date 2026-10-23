@@ -63,15 +63,14 @@ std::shared_ptr<ArrayBuffer> HybridHkdf::deriveKeySync(const std::string& algori
 
   params[paramIndex++] = OSSL_PARAM_construct_utf8_string(OSSL_KDF_PARAM_DIGEST, const_cast<char*>(algorithm.c_str()), 0);
 
-  // Key (Input Keying Material)
+  // Key (input keying material). RFC 5869 allows a zero-length IKM. OpenSSL rejects a null data
+  // pointer even when the length is 0 ("passed a null parameter"), so pass a non-null empty
+  // buffer. It must stay alive through EVP_KDF_derive, which copies the parameter.
+  unsigned char emptyKey = 0;
   if (baseKey && baseKey->size() > 0) {
     params[paramIndex++] = OSSL_PARAM_construct_octet_string(OSSL_KDF_PARAM_KEY, baseKey->data(), baseKey->size());
   } else {
-    // Empty key is allowed in HKDF (defaults to zero string of hashLen) but explicit param usually expected if not null
-    // If we want empty, we can pass generic empty buffer or handle it.
-    // Node.js crypto allows buffer.
-    // Assuming key is effectively required or can be empty.
-    params[paramIndex++] = OSSL_PARAM_construct_octet_string(OSSL_KDF_PARAM_KEY, nullptr, 0);
+    params[paramIndex++] = OSSL_PARAM_construct_octet_string(OSSL_KDF_PARAM_KEY, &emptyKey, 0);
   }
 
   // Salt

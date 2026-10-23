@@ -413,3 +413,58 @@ test(SUITE, 'hkdfExpandSync: rejects PRK shorter than HashLen', () => {
     hkdfExpandSync('sha256', shortPrk, Buffer.alloc(0), 32);
   }).to.throw(RangeError, /at least HashLen/);
 });
+
+// RFC 5869 §2.2 allows a zero-length IKM. A null key pointer makes OpenSSL
+// reject the derivation ("passed a null parameter"), so these vectors lock
+// the empty-buffer path. Output matches Node.js crypto.hkdfSync.
+test(SUITE, 'hkdfSync: zero-length IKM and empty salt', () => {
+  const key = hkdfSync(
+    'sha256',
+    Buffer.alloc(0),
+    Buffer.alloc(0),
+    Buffer.alloc(0),
+    32,
+  );
+  expect(key.toString('hex')).to.equal(
+    'eb70f01dede9afafa449eee1b1286504e1f62388b3f7dd4f956697b0e828fe18',
+  );
+});
+
+test(SUITE, 'hkdfSync: zero-length IKM with salt', () => {
+  const key = hkdfSync(
+    'sha256',
+    Buffer.alloc(0),
+    Buffer.alloc(32, 1),
+    Buffer.alloc(0),
+    32,
+  );
+  expect(key.toString('hex')).to.equal(
+    'b5a5789af1d00c74773ef327dc63f0f11c7041252d4916c43a252b92e3358ad2',
+  );
+});
+
+test(SUITE, 'WebCrypto HKDF deriveBits: zero-length IKM', async () => {
+  const key = await crypto.subtle.importKey(
+    'raw',
+    Buffer.alloc(0),
+    { name: 'HKDF' },
+    false,
+    ['deriveBits'],
+  );
+
+  const bits = await crypto.subtle.deriveBits(
+    {
+      name: 'HKDF',
+      hash: 'SHA-256',
+      salt: Buffer.alloc(32, 1),
+      info: Buffer.alloc(0),
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    } as any,
+    key,
+    32 * 8,
+  );
+
+  expect(Buffer.from(bits).toString('hex')).to.equal(
+    'b5a5789af1d00c74773ef327dc63f0f11c7041252d4916c43a252b92e3358ad2',
+  );
+});
