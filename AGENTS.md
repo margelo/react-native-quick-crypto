@@ -52,6 +52,7 @@ Always inspect Node.js `deps/ncrypto` before implementing new crypto behavior, t
 - Never use `--no-verify` for commits or pushes.
 - Preserve unrelated working-tree changes and stage task files explicitly.
 - All changes land through pull requests.
+- Prefer linear history. Rebase feature branches and use squash or fast-forward integration; do not create merge commits unless explicitly requested. If rewriting a dependency commit changes its SHA, update its downstream pins.
 - `/implement` is explicitly authorized to push a qualified branch and create or update its PR. `/pr` is explicitly authorized to make the qualified push needed to create or update the PR. Standalone `/commit` never pushes implicitly.
 
 ## Plans
