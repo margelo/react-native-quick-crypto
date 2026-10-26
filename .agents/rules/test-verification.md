@@ -1,24 +1,41 @@
 # Test Verification Rules
 
-## Strict
+## Evidence standard
 
-Tests run only in the example React Native app. For runtime changes the assistant cannot fully validate, commit locally and wait for the user to run `bun ios` or `bun android` and exercise the relevant suite before pushing.
+Select verification from the actual diff, changed behavior, and affected dependencies. Record reusable evidence with:
 
-## Applies When
+- Commit SHA.
+- Exact command, tool, test, or driven flow.
+- Result.
+- Platform, simulator, or device when native behavior is involved.
 
-- C++ changes need the example app.
-- Behavior changes are covered by example-app tests.
-- New example-app tests were added and not run.
-- A previous pushed fix failed user validation.
+Evidence remains current until a relevant edit or failure invalidates it. Reuse it across phases, review, commit, and PR preparation instead of repeating broad checks.
 
-## Do Not Push Until
+## Targeted checks
 
-- User explicitly confirms tests pass, all green, ship it, or equivalent.
-- If tests fail, add follow-up commits locally and keep waiting.
-- Once confirmed, push all validated commits together.
+- TypeScript changes: relevant `bun tsc`, lint, and formatting checks.
+- C++ changes: formatting plus affected compile, OpenSSL, native build, and runtime checks.
+- ncrypto/OpenSSL compatibility: `scripts/check-ncrypto-openssl-deprecations.sh` when in scope.
+- Actual Node-side implementation or test changes: `cd packages/react-native-quick-crypto && bun run test`. Bare `bun test` is Bun's runner and does not execute the package's Jest script.
+- Native behavior: build, install, and exercise the affected example-app path on iOS or Android.
+- Pure documentation, plans, and `.agents/` configuration: validate links, file paths, commands, and repository claims; no runtime retest.
 
-## Exceptions
+Do not routinely run every test suite after each phase, commit, review, or documentation edit. A full foundational shared-crypto suite is appropriate only for a cross-cutting crypto/harness change or a concrete unexplained failure. State the reason before running it, assign one owner, and reuse the result while it remains current.
 
-- Pure docs, plans, or `.agents/` config changes.
-- User explicitly says to push/ship now.
-- First PR push from an unpushed branch; still ask first if unverified runtime changes are included.
+## Native app authority
+
+Agents may run native builds, simulators or devices, app tests, and driven verification. A genuinely current successful result qualifies without a separate user passphrase or approval round.
+
+Attach to an existing RNQC app and Metro first. Do not restart or kill another project's process and do not take over its port. If a native change requires rebuilding, use the example app's real scripts, such as `cd example && bun ios`, `bun android`, `bun run build:ios`, or `bun run build:android`, then run the relevant app flow. Full Maestro runners are `example/test/e2e/run-ios.sh` and `example/test/e2e/run-android.sh` when full-app coverage is justified.
+
+RNQC Metro client logs are tee'd to `/tmp/rnqc-metro.log`. Diagnose failures with:
+
+```bash
+grep -E "FAIL|❌|failed" /tmp/rnqc-metro.log | tail -20
+```
+
+## Delivery boundary
+
+Unverified runtime behavior blocks push or PR delivery when failure could require changing the diff. Missing credentials, unavailable hardware, or irreversible external actions qualify only when they affect that decision.
+
+The user may explicitly direct shipment despite a gap. In that case, disclose the exact unverified behavior, affected platform, and residual risk in the handoff and PR. Do not describe it as passing.

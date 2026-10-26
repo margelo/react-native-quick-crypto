@@ -1,59 +1,81 @@
-# /review - Code Review Branch Commits
+# /review - Review Branch Changes
 
-Review all commits on the current branch since diverging from main.
+Review every branch change since the merge base with current `origin/main`, including uncommitted work.
 
-## Prerequisites
+## Independence
 
-**IMPORTANT**: A reviewer should not be the same "person" who wrote the code. Before starting, check if this is a fresh context/session:
+The reviewer must not be the agent that wrote the changes. If this session implemented or materially shaped the diff, use one fresh reviewer: Sol at high reasoning for general work or Astra for a focused difficult crypto-correctness review. Give it the actual changed-file list, applicable rules, and current verification evidence. Do not create extra reviewers unless the diff has genuinely independent domains that one reviewer cannot cover well.
 
-- **If there is prior conversation history in this session** (e.g., you helped write the code being reviewed), do NOT review it yourself — your context is biased. Instead, spawn a fresh reviewer:
-  - Launch a subagent (synchronously — `run_in_background: false`) with a prompt telling it to perform the full review defined in the **Instructions** section below on the current branch, and to return its findings as: a summary, positives, and a severity-ranked list of issues (each with `file:line`, description, and a proposed action). Paste the Instructions criteria into the prompt so the subagent doesn't need to re-read this file.
-  - Pick the subagent type by what the diff actually touches: `crypto-specialist` for crypto/algorithm changes, `cpp-specialist` for `cpp/`, `typescript-specialist` for TS-only changes, `general-purpose` otherwise. Spawn more than one in parallel when the diff spans domains.
-  - **Scope the prompt to THIS branch's actual changes, not the generic template.** Before spawning, run `git diff --stat origin/main...HEAD` (three dots — see step 3) and put the concrete context into the prompt: what the branch does, which subsystem it touches (this repo spans C++/OpenSSL under `packages/react-native-quick-crypto/cpp`, the TypeScript package under `src/`, the Expo config plugin, the `example/` RN app and its test suites, `docs/`, and CI workflows — name the ones actually changed), and the list of changed files. Tell the subagent to open and review **every** changed file, including non-C++ ones (`.ts`, `.tsx`, podspec, Gradle, `.github/workflows`, `.agents/`), and to validate **each** changed toolchain rather than assuming one check covers the diff.
-  - The subagent starts with a clean context and did NOT write the code, so its review is unbiased.
-  - When it returns, relay its review to the user verbatim, then run the **Follow-up** fix-plan step yourself (the subagent can't interact with the user).
-- **If this is a fresh context** (no prior history — you did not write this code), perform the review directly.
+Local review is required and is not contingent on CodeRabbit or any other bot existing or finishing.
 
 ## Instructions
 
-When activated, perform a full code review of the commits since branching from main:
+### 1. Establish accurate scope
 
-1. **Sync the base**: Run `git fetch origin` first. Local `main` is often stale (a PR merged upstream but not pulled locally), which silently drags already-merged commits into the review scope and balloons the diff. Use `origin/main` as the base for everything below.
-2. **Get the commits**: Run `git log origin/main..HEAD --oneline` to see all commits on this branch
-3. **Get the full diff**: Run `git diff origin/main...HEAD` to see all changes. **Three dots.** For `diff`, two dots compares the two endpoints, so anything merged into `origin/main` since the branch point shows up as an inverse diff — as if this branch deleted it. Three dots diffs against the merge-base, which is what you want. Note that step 2's `git log` takes **two** dots: the same syntax means different things for `log` and `diff`.
-4. **Also check the working tree**: run `git status --short` and `git diff`. Uncommitted changes are in scope — review them alongside the commits, and say which findings apply to uncommitted work.
-5. **For each file changed**, read enough context to understand the changes
-6. **Review for**:
-   - Correctness and logic errors
-   - Consistency with existing patterns in the codebase
-   - TypeScript best practices
-   - C++ best practices (if touching native code)
-   - Cryptographic correctness (if touching crypto code)
-   - Potential bugs or edge cases
-   - Missing error handling
-   - Code clarity and maintainability
-7. **Provide a structured review** with:
-   - Summary of what the branch does
-   - Positives (what's done well)
-   - Issues & suggestions (ranked by severity)
-   - Recommended actions (if any)
+```bash
+git fetch origin
+git log origin/main..HEAD --oneline
+git diff --stat origin/main...HEAD
+git diff --name-only origin/main...HEAD
+git diff origin/main...HEAD
+git status --short
+git diff
+git diff --staged
+```
 
-Verify the toolchains the diff actually touches: `bun tsc` for TypeScript, `bun run test` (in `packages/react-native-quick-crypto` — `run` matters, bare `bun test` is Bun's own runner, not the package's jest) if node-side code changed, `clang-format --dry-run --Werror` for C++. C++ runtime behavior and example-app test suites can only be validated by the user running `bun ios` / `bun android` — flag that rather than claiming it passes.
+Use two dots for the commit list and three dots for the branch diff. Treat uncommitted and staged changes as part of the review and label findings that apply to them.
 
-## Follow-up
+### 2. Read every changed file
 
-After presenting the review, present a **fix plan table** for the user to approve before making any changes:
+Open every changed file with enough surrounding context to understand the behavior. Include TypeScript, C++, Nitro specifications/generated bindings, package metadata, podspec/Gradle/CMake, example-app tests, scripts, CI, documentation, and `.agents/` files when present.
 
-| #   | Severity | File:Line          | Issue             | Proposed Action  |
-| --- | -------- | ------------------ | ----------------- | ---------------- |
-| 1   | Medium   | path/to/file.ts:42 | Brief description | Fix / Skip / Ask |
+Review for:
 
-- **Fix**: Will apply the change
-- **Skip**: Not worth changing (explain why)
-- **Ask**: Ambiguous, needs user input on approach
+- Correctness, edge cases, and error handling.
+- Consistency with existing repository patterns.
+- WebCrypto and Node.js compatibility.
+- Nitro boundary and generated-code consistency.
+- TypeScript strictness and public API shape.
+- C++20 ownership, RAII, and memory safety.
+- OpenSSL 3.6+ EVP/provider usage and checked return values.
+- Cryptographic correctness, constant-time behavior, secret handling, nonce discipline, and authoritative vectors.
+- Build, packaging, and platform-specific delivery impact.
+- Test adequacy and whether evidence covers the current SHA.
 
-**Wait for the user to approve the plan** (they may want to skip or modify items). They may reply with "approve" / "approve all" to accept everything, override individual rows ("skip #3", "fix #5 differently"), or ask clarifying questions.
+### 3. Verify each changed toolchain
 
-Once approved, apply only the approved fixes, then re-run the same toolchain checks to verify everything is clean.
+Reuse evidence only when it names the commit SHA, exact tool or test, result, and platform, and no relevant later edit invalidated it. Request or run missing scoped checks.
 
-Then commit the approved fixes (via `/commit`) — don't leave review changes sitting in the working tree. Commit only; pushing and opening PRs still need explicit permission.
+- TypeScript: relevant `bun tsc`, lint, and formatting checks.
+- C++: `clang-format --dry-run --Werror` over the changed native scope plus relevant compile or OpenSSL checks.
+- ncrypto/OpenSSL: `scripts/check-ncrypto-openssl-deprecations.sh` when applicable.
+- Node-side code: `cd packages/react-native-quick-crypto && bun run test`. Run this only for actual Node-side changes; never use bare `bun test` as a substitute.
+- Native runtime: build, install, and exercise the affected example-app behavior on the relevant iOS or Android platform when feasible. Attach to an existing RNQC app and Metro first and use `/tmp/rnqc-metro.log`.
+- Docs-only: validate links, paths, command names, and repository claims; do not rerun runtime suites.
+
+Do not repeat a broad suite merely because review started. A full foundational shared-crypto suite needs a stated cross-cutting reason or concrete unexplained failure, one owner, and a reusable result.
+
+### 4. Report findings
+
+Return:
+
+1. Summary of the branch.
+2. Positives.
+3. Severity-ranked findings with `file:line`, impact, evidence, and proposed action.
+4. Verification coverage and explicit gaps.
+
+Then print the decision table before editing:
+
+| # | Severity | File:Line | Finding | Decision | Rationale |
+|---|---|---|---|---|---|
+| 1 | Medium | `path/file.ts:42` | Brief finding | Fix / Skip / Ask | Why |
+
+- **Fix:** A validated issue with a clear repository-consistent correction.
+- **Skip:** Not valid, stale, already covered, or not worth changing; explain why.
+- **Ask:** Two defensible choices lead to materially different behavior or blast radius and the repository cannot decide.
+
+Apply every clear Fix immediately after printing the table. Do not wait for approval when there are no Ask items. If Ask items exist, apply independent Fix items and run their checks before asking only the genuine choices. Never turn naming, factoring, or a discoverable convention into an Ask.
+
+When `/review` is called from `/implement`, `/implement` owns the follow-through and no additional approval round is added.
+
+After fixes, rerun only invalidated scoped checks and commit them through `/commit`. Never push unless the user invoked a workflow that authorizes it.
