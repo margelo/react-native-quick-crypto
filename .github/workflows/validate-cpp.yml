@@ -6,16 +6,20 @@ on:
       - main
     paths:
       - '.github/workflows/validate-cpp.yml'
+      - '.gitmodules'
       - 'packages/react-native-quick-crypto/android/src/main/cpp/**'
       - 'packages/react-native-quick-crypto/cpp/**'
+      - 'packages/react-native-quick-crypto/deps/ncrypto'
       - 'packages/react-native-quick-crypto/deps/ncrypto/**'
       - 'packages/react-native-quick-crypto/nitrogen/generated/shared/**'
       - 'scripts/check-ncrypto-openssl-deprecations.sh'
   pull_request:
     paths:
       - '.github/workflows/validate-cpp.yml'
+      - '.gitmodules'
       - 'packages/react-native-quick-crypto/android/src/main/cpp/**'
       - 'packages/react-native-quick-crypto/cpp/**'
+      - 'packages/react-native-quick-crypto/deps/ncrypto'
       - 'packages/react-native-quick-crypto/deps/ncrypto/**'
       - 'packages/react-native-quick-crypto/nitrogen/generated/shared/**'
       - 'scripts/check-ncrypto-openssl-deprecations.sh'
@@ -38,6 +42,8 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v5
+      - name: Initialize ncrypto submodule
+        run: git submodule update --init --depth 1 packages/react-native-quick-crypto/deps/ncrypto
       - name: Set up native validation
         run: sudo apt-get install -y build-essential clang-format perl pkg-config
       - name: Build OpenSSL 3.6.2

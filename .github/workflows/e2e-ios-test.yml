@@ -99,8 +99,15 @@ jobs:
             ~/.cocoapods/repos
             ~/Library/Caches/CocoaPods
             packages/react-native-quick-crypto/ios/libsodium-stable
-            packages/react-native-quick-crypto/deps
           key: ${{ runner.os }}-pods-${{ hashFiles('example/ios/Podfile.lock', 'example/Gemfile.lock') }}
+
+      - name: Boot iOS Simulator (background)
+        run: |
+          xcrun simctl boot "${{ env.DEVICE_NAME }}" &
+
+      - name: Install CocoaPods
+        working-directory: ./example
+        run: RCT_USE_RN_DEP=1 RCT_USE_PREBUILT_RNCORE=1 bundle exec pod install --project-directory=ios
 
       - name: Restore DerivedData cache
         id: dd-cache
@@ -110,14 +117,6 @@ jobs:
           key: ${{ runner.os }}-dd-${{ hashFiles('example/ios/Podfile.lock', 'example/Gemfile.lock', 'bun.lock') }}-xcode26.2
           restore-keys: |
             ${{ runner.os }}-dd-
-
-      - name: Boot iOS Simulator (background)
-        run: |
-          xcrun simctl boot "${{ env.DEVICE_NAME }}" &
-
-      - name: Install CocoaPods
-        working-directory: ./example
-        run: RCT_USE_RN_DEP=1 RCT_USE_PREBUILT_RNCORE=1 bundle exec pod install --project-directory=ios
 
       - name: Build iOS App
         working-directory: ./example
