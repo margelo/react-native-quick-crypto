@@ -10,6 +10,7 @@ import {
 } from 'react-native-quick-crypto';
 import type { JWK, KeyObject } from 'react-native-quick-crypto';
 import { expect } from 'chai';
+import { explicitOakleySpkiFixtures } from '../../fixtures/keys/ec_explicit_oakley';
 import { test, assertThrowsAsync, decodeHex } from '../util';
 import {
   rsaPrivateKeyPem,
@@ -206,6 +207,22 @@ test(SUITE, 'createPublicKey EC P-256', async () => {
 
   expect(key.type).to.equal('public');
   expect(key.asymmetricKeyType).to.equal('ec');
+});
+
+test(SUITE, 'exports explicit EC parameters without a curve OID', () => {
+  for (const {
+    namedCurve,
+    spkiHex,
+    spkiLength,
+  } of explicitOakleySpkiFixtures) {
+    const fixture = Buffer.from(spkiHex, 'hex');
+    const key = createPublicKey({ key: fixture, format: 'der', type: 'spki' });
+    const exported = key.export({ format: 'der', type: 'spki' }) as Buffer;
+
+    expect(key.asymmetricKeyType, namedCurve).to.equal('ec');
+    expect(exported.length, namedCurve).to.equal(spkiLength);
+    expect(Buffer.compare(exported, fixture), namedCurve).to.equal(0);
+  }
 });
 
 test(SUITE, 'createPublicKey Ed25519', async () => {

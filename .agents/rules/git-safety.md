@@ -7,6 +7,7 @@
 - If hooks fail, fix the underlying issue.
 - Use a 120000ms timeout for `git commit`; hooks run lint-staged, clang-format, tsc, and bob build.
 - Never commit on `main`.
+- Prefer linear history: rebase feature branches and use squash or fast-forward integration. Do not create merge commits unless the user explicitly requests them.
 - Before committing, check the current branch.
 - If on `main`, create `feat/`, `fix/`, or `refactor/` branch first.
 
