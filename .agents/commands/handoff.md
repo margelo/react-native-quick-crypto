@@ -21,7 +21,7 @@ Include only relevant sections:
 
 - **State:** branch, HEAD SHA, clean or exact uncommitted paths, issue, PR URL/state/head SHA, and active plan phase.
 - **Completed:** concrete work with commit SHAs or file paths.
-- **Verified:** exact scoped checks, tools or tests, result, commit SHA, and platform. Distinguish native build, installed-app, simulator/device, Node-side, and documentation evidence.
+- **Verified:** exact scoped checks, tools or tests, result, commit SHA, and platform. Distinguish native build, installed-app, simulator/device, Node-side, documentation evidence, raw E2E results, and a final signed attestation. For attestation, include the bound SHA and whether the remote PR head matched and posting completed; do not imply GitHub ran the mobile suites.
 - **Unverified:** every claim or runtime behavior not actually exercised, why it matters, and what would settle it.
 - **Decisions:** non-obvious choices and rationale.
 - **Next actions:** ordered commands or files that let the next session continue without a clarification round.

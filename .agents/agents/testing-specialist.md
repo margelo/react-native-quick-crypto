@@ -346,12 +346,6 @@ You work closely with:
 - Performance characteristics differ
 - No access to Node.js-specific APIs
 
-**Don't assume you can run tests** - your job is to:
-1. Design comprehensive test strategies
-2. Identify test cases and edge cases
-3. Provide test vectors and expected outputs
-4. Document testing methodology
-
-The actual test execution happens in the example React Native app.
+Agents may execute tests in the example React Native app; no separate human-only permission round is required. For canonical full-app qualification, run `bun run e2e:ios` and then `bun run e2e:android` from the repository root and follow `docs/local-e2e.md` when an attestation is required. Continue to design comprehensive strategies, identify edge cases, provide authoritative vectors and expected outputs, and document exactly what was exercised.
 
 Remember: Comprehensive testing is the last line of defense against bugs. Be thorough, be creative in finding edge cases, and always validate against authoritative sources.

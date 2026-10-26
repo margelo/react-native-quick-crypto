@@ -26,6 +26,7 @@ Review current evidence for the actual HEAD and every changed toolchain. A quali
 - Native behavior built and exercised on the relevant platform when the diff requires it.
 - No unverified runtime behavior that could change the diff, unless the user explicitly directed shipment and the PR discloses the gap and risk.
 - An independent local review completed without waiting for a bot.
+- When the native merge gate applies, final attestation is still pending until it binds the final committed HEAD; earlier raw E2E evidence may support review but does not replace that receipt.
 
 Do not rerun still-current broad evidence merely to open the PR.
 
@@ -88,6 +89,16 @@ gh pr create --title "<title>" --body-file <body-file> --base main --assignee @m
 
 Use a conventional-commit-style title unless the user supplied one.
 
-### 7. Register and report
+### 7. Complete attested native qualification when required
 
-Immediately register the full PR URL with the host thread when a PR-link tool is available. Report the URL, pushed SHA, qualification evidence, and any disclosed unverified behavior.
+Follow `docs/local-e2e.md` rather than duplicating its commands. Use the trusted recipe, policy, and registry from `main` with the documented pinned, patched AgentSCM producer on reviewed code only. The checkout must be clean and the attestation must bind the exact final committed HEAD after the plan move, documentation commits, and all fixes. Keep the private key and state owner-private outside the checkout and never read or print secrets.
+
+Before signing or publishing screenshot evidence, fetch `origin/main` and run `git diff --exit-code origin/main -- .github/local-validation/recipe.json .github/local-validation/policy.json .github/local-validation/registry.json`. Stop if any differ: checkout-relative inputs are trusted only after this check. A PR changing the trust inputs must first get those changes reviewed and landed through the trusted default-branch process.
+
+The qualified push may happen before or after the local run, but before posting verify that local HEAD, the remote branch, and the pull request head all equal the signed SHA. Use the documented `local-validation post` command when this workflow or the user authorizes posting; never fabricate a receipt from logs or raw test results and never post the status manually. Screenshot posting is a separate, explicit action and is required only when authorized and material.
+
+Do not run a duplicate broad suite immediately before the producer: its trusted recipe already owns the serial `bun run e2e:ios` then `bun run e2e:android` run. A valid receipt remains usable across an unrelated base fast-forward when its bound merge-base and other context are unchanged. Describe `agentscm/local-validation` as worker-asserted coverage with the limitations in `docs/local-e2e.md`, not as GitHub-run mobile testing or a currently enforced required check unless the live ruleset was verified.
+
+### 8. Register and report
+
+Immediately register the full PR URL with the host thread when a PR-link tool is available. Report the URL, pushed SHA, qualification evidence, signed SHA and posting result when applicable, and any disclosed unverified behavior.

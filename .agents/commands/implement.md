@@ -103,6 +103,7 @@ Select checks from the actual diff and reuse valid phase evidence keyed by SHA, 
 - Build and install the example app when a native change requires a rebuild. Drive the affected tests or flow when feasible and record the platform.
 - Do not rerun broad suites per phase. A full foundational shared-crypto suite requires a stated cross-cutting reason or unexplained failure, one owner, and one reusable result.
 - Documentation-only changes need link and consistency checks, not a runtime retest.
+- When full native qualification is required, preserve still-current targeted evidence but leave the canonical serial iOS-then-Android run to the attestation producer described in `docs/local-e2e.md`; do not run a duplicate broad suite immediately before it.
 
 A missing credential, unavailable platform, or unverified behavior blocks delivery only when a failure could require changing the diff. Stop and state the exact check needed. If the user explicitly directs shipment, disclose the unverified behavior and residual risk in the PR.
 
@@ -128,9 +129,11 @@ rm -f .agents/progress/claude-progress.md
 
 Carry any genuinely outstanding verification item with an owner and disclosure. Commit the plan move before opening the PR. If more than one plan could match, move none and stop for disambiguation. Work that is not implemented remains in `plans/todo/`.
 
+Finish this lifecycle before signing native qualification evidence. After the plan move and every documentation or review-fix commit, confirm the final SHA and clean tree, complete static review, then use `/pr` for push, final attestation, and posting. Do not discard a valid receipt merely because `main` fast-forwarded when its bound merge-base and other context are unchanged.
+
 ## 9. Finish with /pr
 
-Read and execute `.agents/commands/pr.md` completely. Recompute scope, verification, and delivery from the actual diff rather than recon. Use `Closes #<N>`, push the qualified commits, reuse an existing PR for the branch when present, and create one otherwise.
+Read and execute `.agents/commands/pr.md` completely. Recompute scope, verification, and delivery from the actual diff rather than recon. Use `Closes #<N>`, push the qualified commits, reuse an existing PR for the branch when present, and create one otherwise. When the native gate applies, the final signed evidence must bind the exact delivered HEAD and be posted only after the remote PR head matches that SHA.
 
 If the host exposes a PR-link registration tool, register the full PR URL with the current thread immediately after creating or taking ownership of the PR.
 

@@ -5,43 +5,44 @@
 ## Responsibilities
 
 ### Test & Debug Workflow
-- Run Maestro tests and capture iOS simulator logs
+- Run the repository's app tests and capture simulator or emulator logs
 - Parse and analyze console output for specific issues
 - Set up automated logging with react-native-logs
-- Manage Metro bundler lifecycle (start, restart, monitor)
+- Respect the distinction between targeted interactive debugging and the self-contained canonical E2E runner
 - Coordinate test runs with log capture
 
 ### Log Management
 - Capture iOS simulator logs: `xcrun simctl spawn booted log stream --predicate 'processImagePath endswith "QuickCryptoExample"' --level debug`
 - Filter logs for relevant patterns
 - Save logs to `/tmp/rnqc-session.log` for analysis
-- Monitor Metro bundler output at `/tmp/metro.log`
+- Monitor interactive Metro client output at `/tmp/rnqc-metro.log`
 
 ### Iteration Speed Tools
-- Keep Metro running in background (PID in `/tmp/metro.pid`)
-- Reload app without full rebuild when possible
-- Use Maestro for automated UI testing
-- Chain commands efficiently (rebuild TS → rebuild iOS → run test → capture logs)
+- Attach to an existing RNQC Metro process for targeted debugging without restarting another project or taking over its port
+- Reload the app without a full rebuild when possible
+- Use the canonical runner for full-app automated qualification
+- Chain targeted commands efficiently without overlapping runner-owned app, device, or Metro resources
 
 ## Key Scripts
 
-### Debug Test Runner
+### Canonical E2E Runner
 ```bash
-./scripts/debug-test.sh [test-flow] [--rebuild-ts]
+bun run e2e:ios
+bun run e2e:android
 ```
+
+Run these serially from the repository root. The workspace wrappers invoke `example/test/e2e/runner.mjs`, which selects the configured platform target and owns its RNQC app, simulator or emulator, isolated Metro port, artifacts, and cleanup. Follow `docs/local-e2e.md` when signed qualification is required.
 
 ### Manual Workflow
 ```bash
-# 1. Ensure Metro is running
-bun start > /tmp/metro.log 2>&1 & echo $! > /tmp/metro.pid
+# 1. Attach to the existing RNQC app and Metro; do not restart another project's process
 
 # 2. Capture logs
 xcrun simctl spawn booted log stream \
   --predicate 'processImagePath endswith "QuickCryptoExample"' \
   --level debug > /tmp/rnqc-session.log 2>&1 & LOG_PID=$!
 
-# 3. Run test
-cd example && maestro test test/e2e/import-export-local.yml
+# 3. Drive the relevant flow in the RNQC example app
 
 # 4. Stop log capture and view
 kill $LOG_PID
@@ -53,20 +54,18 @@ grep -E "pattern" /tmp/rnqc-session.log
 ### Rebuild & Test Cycle
 ```bash
 # Full rebuild (TypeScript + iOS)
-cd packages/react-native-quick-crypto && npm run prepare
+cd packages/react-native-quick-crypto && bun run prepare
 cd ../../example && bun ios
 
-# Then run debug test
-./scripts/debug-test.sh
+# Then drive the affected RNQC example-app flow
 ```
 
 ### TypeScript-only Changes
 ```bash
 # Rebuild TypeScript
-cd packages/react-native-quick-crypto && npm run prepare
+cd packages/react-native-quick-crypto && bun run prepare
 
-# Metro will auto-reload, or manually restart it
-pkill -P $(cat /tmp/metro.pid) && bun start & echo $! > /tmp/metro.pid
+# The existing RNQC Metro process should reload the bundle; do not take over its port
 ```
 
 ### C++ Changes
@@ -92,53 +91,33 @@ grep -E "asymmetricKeyDetails|keyDetail|rsaImportKey" /tmp/rnqc-session.log
 tail -f /tmp/rnqc-session.log
 ```
 
-## Metro Management
+## Metro Diagnostics
 
-### Check if Running
+For interactive debugging, attach to the existing RNQC process. Never kill or restart another project's Metro or claim its port. The canonical E2E runner starts and cleans up its own isolated Metro process.
+
+### View RNQC Metro Logs
 ```bash
-[ -f /tmp/metro.pid ] && ps -p $(cat /tmp/metro.pid) && echo "Running" || echo "Not running"
+tail -f /tmp/rnqc-metro.log
 ```
 
-### Start Metro
-```bash
-cd example && bun start > /tmp/metro.log 2>&1 & echo $! > /tmp/metro.pid
-```
+## Full-App Tests
 
-### Stop Metro
-```bash
-kill $(cat /tmp/metro.pid) 2>/dev/null && rm /tmp/metro.pid
-```
-
-### View Metro Logs
-```bash
-tail -f /tmp/metro.log
-```
-
-## Maestro Tests
-
-### Available Flows
-- `test/e2e/import-export-local.yml` - Just the importKey/exportKey suite
-- `test/e2e/test-suites-flow.yml` - Full test suite
-
-### Run Specific Test
-```bash
-cd example && maestro test test/e2e/import-export-local.yml
-```
+Use `bun run e2e:ios` followed by `bun run e2e:android` from the repository root. Do not substitute removed Maestro flows. For narrower debugging, drive the relevant existing example-app test path and record exactly what was exercised.
 
 ## Debugging Tips
 
-1. **Always keep Metro running** - Don't kill it between test runs
-2. **TypeScript changes** - Require Metro reload, not full rebuild
-3. **C++ changes** - Require full iOS rebuild
-4. **Log capture timing** - Start before test, stop 3-5s after test completes
-5. **Check PID files** - Metro and log capture PIDs in `/tmp/`
+1. **Respect process ownership** - Attach for interactive work; let the canonical runner own and clean up its resources
+2. **TypeScript changes** - Usually require Metro reload, not a full native rebuild
+3. **C++ changes** - Require a native rebuild
+4. **Log capture timing** - Start before the targeted flow and stop after the relevant output is complete
+5. **Platform target** - Verify the runner or interactive session is using the intended RNQC simulator or emulator
 
 ## Files to Monitor
 
 - `/tmp/rnqc-session.log` - iOS simulator logs
-- `/tmp/metro.log` - Metro bundler output
-- `/tmp/metro.pid` - Metro process ID
-- `example/test/e2e/*.yml` - Maestro test flows
+- `/tmp/rnqc-metro.log` - Interactive RNQC Metro client output
+- `example/build/e2e/<platform>/<run-id>/` - Canonical runner results, screenshots, and logs
+- `example/test/e2e/runner.mjs` - Canonical full-app runner
 
 ## Integration with Main Workflow
 

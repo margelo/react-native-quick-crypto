@@ -26,7 +26,9 @@ Do not routinely run every test suite after each phase, commit, review, or docum
 
 Agents may run native builds, simulators or devices, app tests, and driven verification. A genuinely current successful result qualifies without a separate user passphrase or approval round.
 
-Attach to an existing RNQC app and Metro first. Do not restart or kill another project's process and do not take over its port. If a native change requires rebuilding, use the example app's real scripts, such as `cd example && bun ios`, `bun android`, `bun run build:ios`, or `bun run build:android`, then run the relevant app flow. Full Maestro runners are `example/test/e2e/run-ios.sh` and `example/test/e2e/run-android.sh` when full-app coverage is justified.
+For targeted interactive work, attach to an existing RNQC app and Metro first. Do not restart or kill another project's process and do not take over its port. If a native change requires rebuilding, use the example app's real scripts, such as `cd example && bun ios`, `bun android`, `bun run build:ios`, or `bun run build:android`, then run the relevant app flow.
+
+For canonical full-app qualification, run `bun run e2e:ios` and then `bun run e2e:android` from the repository root. The wrappers invoke `example/test/e2e/runner.mjs`, which selects the configured platform target, creates and owns its RNQC simulator or emulator, uses an isolated Metro port, writes per-run evidence, and cleans up its resources. Do not point it at another project's app, reuse an overlapping server, or substitute a Maestro flow.
 
 RNQC Metro client logs are tee'd to `/tmp/rnqc-metro.log`. Diagnose failures with:
 
@@ -39,3 +41,13 @@ grep -E "FAIL|❌|failed" /tmp/rnqc-metro.log | tail -20
 Unverified runtime behavior blocks push or PR delivery when failure could require changing the diff. Missing credentials, unavailable hardware, or irreversible external actions qualify only when they affect that decision.
 
 The user may explicitly direct shipment despite a gap. In that case, disclose the exact unverified behavior, affected platform, and residual risk in the handoff and PR. Do not describe it as passing.
+
+## Attested native qualification
+
+When the native merge gate applies, `docs/local-e2e.md` is canonical. Produce the final attestation with the trusted recipe, policy, and registry from `main` and the documented pinned, patched AgentSCM build, not an arbitrary release binary. The signing key and state stay owner-private and outside the checkout; never read or print secrets.
+
+Raw platform evidence may remain useful through review while no relevant edit invalidates it, but it is not the delivery attestation. The final attestation must cover the exact clean committed HEAD after every plan move, documentation commit, and fix, binding its tree, base ref, and merge-base. A later base fast-forward alone does not invalidate a receipt when the bound merge-base and other context remain unchanged.
+
+The producer owns one serial iOS-then-Android recipe run; do not add a duplicate broad suite immediately beforehand. Never create an attestation from logs or raw test output, never post a status manually, and post the actual attestation only through the documented CLI when the active workflow or user authorizes posting. Before posting, verify the pull request remote head equals the signed SHA. Screenshot publication is separate and requires explicit authorization when it is material.
+
+`agentscm/local-validation` represents a signed AgentSCM `worker_asserted` record with the coverage and limitations documented in `docs/local-e2e.md`; it does not mean GitHub ran the mobile suites. Do not claim the context is enforced by branch protection unless the live ruleset has been verified; the documented rollout says it is not yet required.

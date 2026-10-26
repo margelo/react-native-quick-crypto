@@ -33,7 +33,7 @@ Always on.
 - `$REPOS/node`: Node.js crypto/subtle reference.
 - `$REPOS/ncrypto`: OpenSSL abstraction and Node-derived crypto utilities.
 - `$REPOS/nitro`: Nitro bridging examples and iOS CI caching.
-- `$REPOS/spicy`: Android E2E and Maestro workflow examples.
+- `$REPOS/spicy`: shared agent-workflow and Android E2E patterns only; RNQC's canonical runner remains the repository-local flow documented in `docs/local-e2e.md`.
 - Use local Nitro llms docs when available.
 
 ## Output

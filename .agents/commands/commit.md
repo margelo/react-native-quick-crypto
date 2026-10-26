@@ -37,7 +37,7 @@ Format and verify what the commit changes:
 - TypeScript API or implementation: run the relevant `bun tsc`.
 - Node-side behavior: run `cd packages/react-native-quick-crypto && bun run test` only when actual Node-side code changed.
 - ncrypto/OpenSSL changes: run `scripts/check-ncrypto-openssl-deprecations.sh` and other affected native checks.
-- Documentation-only changes: run link/path/command consistency checks and `git diff --check`; no runtime test is required.
+- Documentation-only changes: run link/path/command consistency checks and `git diff --check`; no runtime test is required. If this commit follows a native attestation, note that delivery needs a new receipt for the new final HEAD rather than treating the prior receipt as current.
 
 Reuse current evidence when it covers the staged diff. Do not run a broad suite by default.
 

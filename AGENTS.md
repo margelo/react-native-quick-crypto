@@ -80,7 +80,10 @@ Before opening a PR for completed planned work, move the one exact matching plan
 - Run the package Jest suite only for actual Node-side code changes: `cd packages/react-native-quick-crypto && bun run test`. Bare `bun test` invokes Bun's test runner and is not this package's Jest script.
 - C++ changes use formatting plus the relevant native/compiler checks, including `scripts/check-ncrypto-openssl-deprecations.sh` when ncrypto/OpenSSL compatibility is in scope.
 - Native runtime behavior is tested in the example React Native app. Agents may build, install, drive, and test the app; user confirmation is not inherently required when current successful evidence is available.
-- Attach to the existing RNQC app and Metro process first. Do not restart another project's process or take over its port. Metro client logs belong at `/tmp/rnqc-metro.log`; inspect them with `grep -E "FAIL|❌|failed" /tmp/rnqc-metro.log | tail -20` when diagnosing failures.
+- For targeted interactive debugging, attach to the existing RNQC app and Metro process first. Do not restart another project's process or take over its port. Metro client logs belong at `/tmp/rnqc-metro.log`; inspect them with `grep -E "FAIL|❌|failed" /tmp/rnqc-metro.log | tail -20` when diagnosing failures.
+- For canonical full-app qualification, run `bun run e2e:ios` and then `bun run e2e:android` from the repository root. The runner owns its RNQC app, simulator or emulator, isolated Metro port, artifacts, and cleanup; do not substitute another project's app or an overlapping manually managed server.
+- When the native merge gate applies, follow `docs/local-e2e.md`: use the trusted recipe, policy, and registry from `main` with the pinned patched AgentSCM producer; sign the exact clean committed HEAD, tree, base ref, and merge-base with owner-private key and state outside the checkout. Never fabricate an attestation from logs or raw test results and never post the status manually.
+- Reuse still-current raw evidence during implementation and review, but the final delivery attestation must bind the final committed HEAD after plan moves, documentation commits, review fixes, and other changes. Its `agentscm/local-validation` context is worker-asserted evidence, not a claim that GitHub ran the mobile suites, and it is not currently a required branch-protection check unless live settings are separately verified.
 - Pure documentation, plan, and `.agents/` changes do not require runtime retesting.
 - Unverified runtime behavior that could change the diff blocks push/PR delivery unless the user explicitly directs shipment; disclose the unverified behavior and residual risk when they do.
 
@@ -94,7 +97,7 @@ Useful scripts and flows include:
 - Node-side Jest: `cd packages/react-native-quick-crypto && bun run test`.
 - Example app: `cd example && bun ios` or `bun android`.
 - Explicit native builds: `cd example && bun run build:ios` or `bun run build:android`.
-- Full app E2E when justified: `example/test/e2e/run-ios.sh`, `example/test/e2e/run-android.sh`, or the CI Maestro flow in `example/test/e2e/test-suites-flow.yml`.
+- Full app E2E when justified: from the repository root run `bun run e2e:ios` and then `bun run e2e:android`; the workspace wrappers invoke the Node runner. See `docs/local-e2e.md` for attested qualification and its coverage limits.
 
 ## Local references
 

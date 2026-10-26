@@ -50,10 +50,12 @@ Reuse evidence only when it names the commit SHA, exact tool or test, result, an
 - C++: `clang-format --dry-run --Werror` over the changed native scope plus relevant compile or OpenSSL checks.
 - ncrypto/OpenSSL: `scripts/check-ncrypto-openssl-deprecations.sh` when applicable.
 - Node-side code: `cd packages/react-native-quick-crypto && bun run test`. Run this only for actual Node-side changes; never use bare `bun test` as a substitute.
-- Native runtime: build, install, and exercise the affected example-app behavior on the relevant iOS or Android platform when feasible. Attach to an existing RNQC app and Metro first and use `/tmp/rnqc-metro.log`.
+- Native runtime: build, install, and exercise the affected example-app behavior on the relevant iOS or Android platform when feasible. For targeted debugging, attach to an existing RNQC app and Metro first and use `/tmp/rnqc-metro.log`. For canonical full-app coverage, use the root `bun run e2e:ios` then `bun run e2e:android` flow documented in `docs/local-e2e.md`; its runner owns the app, device, isolated Metro port, and cleanup.
 - Docs-only: validate links, paths, command names, and repository claims; do not rerun runtime suites.
 
 Do not repeat a broad suite merely because review started. A full foundational shared-crypto suite needs a stated cross-cutting reason or concrete unexplained failure, one owner, and a reusable result.
+
+Review may reuse current raw E2E evidence even before final attestation. Do not treat logs or raw results as a signed merge-gate receipt. After all review fixes and documentation or plan commits, delivery must attest the exact final clean committed HEAD with the trusted inputs and pinned patched producer described in `docs/local-e2e.md`. Do not claim GitHub ran the device suites or that the status context is currently required unless live ruleset verification proves it.
 
 ### 4. Report findings
 

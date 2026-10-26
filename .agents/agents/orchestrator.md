@@ -56,11 +56,13 @@ Run the package Jest script only for actual Node-side changes: `cd packages/reac
 
 Documentation-only work needs path, link, command, and consistency validation rather than runtime tests.
 
+When the native merge gate applies, use the canonical root `bun run e2e:ios` then `bun run e2e:android` recipe and attestation workflow in `docs/local-e2e.md`. The producer owns that serial run, so do not schedule a needless duplicate suite immediately beforehand. Raw evidence can support review, but final delivery requires the trusted pinned patched producer to sign the exact clean committed HEAD after plan completion and all fixes; posting waits until the remote PR head matches. Keep AgentSCM coordination availability distinct from the local attestation producer.
+
 ## Review and delivery
 
 Use a fresh independent reviewer for the complete `origin/main...HEAD` diff and uncommitted work. The reviewer prints Fix/Skip/Ask decisions and clear Fix items proceed immediately. Local review never waits for a bot.
 
-Before PR delivery, verify commits, clean status, scoped evidence, and any diff-changing runtime behavior. Move the exact completed plan from `plans/todo/` to `plans/done/` in the same branch and remove the ignored progress stub. Then use `/pr` to push and create or update the PR.
+Before PR delivery, verify commits, clean status, scoped evidence, and any diff-changing runtime behavior. Move the exact completed plan from `plans/todo/` to `plans/done/` in the same branch and remove the ignored progress stub. Commit and complete static review before final native attestation. Then use `/pr` to push, create or update the PR, and post authorized attestation evidence for the matching remote SHA.
 
 ## Final report
 
