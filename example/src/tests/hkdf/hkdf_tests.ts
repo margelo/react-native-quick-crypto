@@ -6,6 +6,7 @@ import crypto, {
   hkdfExtractSync,
   hkdfExpand,
   hkdfExpandSync,
+  type HkdfAlgorithm,
 } from 'react-native-quick-crypto';
 import { expect } from 'chai';
 import { test } from '../util';
@@ -452,17 +453,13 @@ test(SUITE, 'WebCrypto HKDF deriveBits: zero-length IKM', async () => {
     ['deriveBits'],
   );
 
-  const bits = await crypto.subtle.deriveBits(
-    {
-      name: 'HKDF',
-      hash: 'SHA-256',
-      salt: Buffer.alloc(32, 1),
-      info: Buffer.alloc(0),
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    } as any,
-    key,
-    32 * 8,
-  );
+  const algorithm = {
+    name: 'HKDF' as const,
+    hash: 'SHA-256',
+    salt: Buffer.alloc(32, 1),
+    info: Buffer.alloc(0),
+  } satisfies HkdfAlgorithm;
+  const bits = await crypto.subtle.deriveBits(algorithm, key, 32 * 8);
 
   expect(Buffer.from(bits).toString('hex')).to.equal(
     'b5a5789af1d00c74773ef327dc63f0f11c7041252d4916c43a252b92e3358ad2',
