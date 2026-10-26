@@ -130,7 +130,8 @@ Pod::Spec.new do |s|
     "cpp/**/*.{hpp,cpp}",
     # dependencies (C++) - ncrypto
     "deps/ncrypto/include/**/*.{h}",
-    "deps/ncrypto/src/*.{cpp}",
+    "deps/ncrypto/src/aead.cpp",
+    "deps/ncrypto/src/ncrypto.cpp",
     # dependencies (C++) - simdutf
     "deps/simdutf/include/**/*.{h}",
     "deps/simdutf/src/simdutf.cpp",

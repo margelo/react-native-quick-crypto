@@ -11,7 +11,11 @@ import {
 import type { JWK, KeyObject } from 'react-native-quick-crypto';
 import { expect } from 'chai';
 import { test, assertThrowsAsync, decodeHex } from '../util';
-import { rsaPrivateKeyPem, rsaPublicKeyPem } from './fixtures';
+import {
+  rsaPrivateKeyPem,
+  rsaPssPrivateKeyPem,
+  rsaPublicKeyPem,
+} from './fixtures';
 
 const SUITE = 'keys.createKey';
 
@@ -358,6 +362,24 @@ async function generateRsaKeyPair(): Promise<{
   });
 }
 
+async function generateEcKeyPair(): Promise<{
+  privateKey: KeyObject;
+  publicKey: KeyObject;
+}> {
+  return new Promise((resolve, reject) => {
+    generateKeyPair('ec', { namedCurve: 'P-256' }, (err, pubKey, privKey) => {
+      if (err) {
+        reject(err);
+        return;
+      }
+      resolve({
+        privateKey: privKey as KeyObject,
+        publicKey: pubKey as KeyObject,
+      });
+    });
+  });
+}
+
 test(SUITE, 'createPrivateKey with passphrase (PEM, PKCS8)', async () => {
   const { privateKey, publicKey } = await generateRsaKeyPair();
   const passphrase = 'user-test';
@@ -412,6 +434,160 @@ test(SUITE, 'createPrivateKey passphrase as Buffer (PEM)', async () => {
   const imported = createPrivateKey({ key: exported, passphrase });
 
   expect(imported.equals(privateKey)).to.equal(true);
+});
+
+test(SUITE, 'RSA PKCS1 private key PEM and DER round-trip', () => {
+  const privateKey = createPrivateKey(rsaPrivateKeyPem);
+  const publicKey = createPublicKey(privateKey);
+  const pem = privateKey.export({ format: 'pem', type: 'pkcs1' }) as string;
+  const der = privateKey.export({ format: 'der', type: 'pkcs1' }) as Buffer;
+
+  expect(pem).to.match(/^-----BEGIN RSA PRIVATE KEY-----/);
+  expect(createPrivateKey(pem).equals(privateKey)).to.equal(true);
+  expect(
+    createPrivateKey({ key: der, format: 'der', type: 'pkcs1' }).equals(
+      privateKey,
+    ),
+  ).to.equal(true);
+  expect(() =>
+    createPublicKey({
+      key: Buffer.from([0x30, 0x00]),
+      format: 'der',
+      type: 'pkcs1',
+    }),
+  ).to.throw();
+  expect(
+    createPublicKey({ key: der, format: 'der', type: 'pkcs1' }).equals(
+      publicKey,
+    ),
+  ).to.equal(true);
+});
+
+test(SUITE, 'RSA PKCS1 public-only key PEM and DER round-trip', () => {
+  const publicKey = createPublicKey(rsaPublicKeyPem);
+  const pem = publicKey.export({ format: 'pem', type: 'pkcs1' }) as string;
+  const der = publicKey.export({ format: 'der', type: 'pkcs1' }) as Buffer;
+
+  expect(pem).to.match(/^-----BEGIN RSA PUBLIC KEY-----/);
+  expect(createPublicKey(pem).equals(publicKey)).to.equal(true);
+  expect(
+    createPublicKey({ key: der, format: 'der', type: 'pkcs1' }).equals(
+      publicKey,
+    ),
+  ).to.equal(true);
+});
+
+test(
+  SUITE,
+  'RSA PKCS1 encrypted PEM accepts binary and empty passphrases',
+  () => {
+    const privateKey = createPrivateKey(rsaPrivateKeyPem);
+    const passphrases = [
+      Buffer.from([0x61, 0x00, 0xff, 0x62]),
+      Buffer.alloc(0),
+    ];
+
+    for (const passphrase of passphrases) {
+      const pem = privateKey.export({
+        format: 'pem',
+        type: 'pkcs1',
+        cipher: 'aes-256-cbc',
+        passphrase,
+      }) as string;
+
+      expect(pem).to.include('Proc-Type: 4,ENCRYPTED');
+      expect(
+        createPrivateKey({ key: pem, passphrase }).equals(privateKey),
+      ).to.equal(true);
+
+      if (passphrase.length > 0) {
+        expect(() => createPrivateKey(pem)).to.throw('Passphrase required');
+        expect(() =>
+          createPrivateKey({ key: pem, passphrase: 'wrong' }),
+        ).to.throw('Failed to read');
+      }
+    }
+  },
+);
+
+test(SUITE, 'EC SEC1 private key PEM and DER round-trip', async () => {
+  const { privateKey, publicKey } = await generateEcKeyPair();
+  const pem = privateKey.export({ format: 'pem', type: 'sec1' }) as string;
+  const der = privateKey.export({ format: 'der', type: 'sec1' }) as Buffer;
+  const reimported = createPrivateKey({
+    key: der,
+    format: 'der',
+    type: 'sec1',
+  });
+
+  expect(pem).to.match(/^-----BEGIN EC PRIVATE KEY-----/);
+  expect(createPrivateKey(pem).equals(privateKey)).to.equal(true);
+  expect(reimported.equals(privateKey)).to.equal(true);
+  expect(() =>
+    createPublicKey({
+      key: Buffer.from([0x30, 0x00]),
+      format: 'der',
+      type: 'sec1',
+    }),
+  ).to.throw();
+  const reimportedPublic = createPublicKey({
+    key: der,
+    format: 'der',
+    type: 'sec1',
+  });
+
+  for (const type of ['compressed', 'uncompressed'] as const) {
+    const originalPoint = publicKey.export({
+      format: 'raw-public',
+      type,
+    }) as Buffer;
+    const reimportedPoint = reimportedPublic.export({
+      format: 'raw-public',
+      type,
+    });
+    expect(Buffer.compare(reimportedPoint, originalPoint)).to.equal(0);
+  }
+});
+
+test(
+  SUITE,
+  'EC SEC1 encrypted PEM accepts binary and empty passphrases',
+  async () => {
+    const { privateKey } = await generateEcKeyPair();
+    const passphrases = [
+      Buffer.from([0x61, 0x00, 0xff, 0x62]),
+      Buffer.alloc(0),
+    ];
+
+    for (const passphrase of passphrases) {
+      const pem = privateKey.export({
+        format: 'pem',
+        type: 'sec1',
+        cipher: 'aes-256-cbc',
+        passphrase,
+      }) as string;
+
+      expect(pem).to.include('Proc-Type: 4,ENCRYPTED');
+      expect(
+        createPrivateKey({ key: pem, passphrase }).equals(privateKey),
+      ).to.equal(true);
+    }
+  },
+);
+
+test(SUITE, 'RSA-PSS rejects traditional PKCS1 export', () => {
+  const privateKey = createPrivateKey(rsaPssPrivateKeyPem);
+  const publicKey = createPublicKey(privateKey);
+
+  expect(privateKey.asymmetricKeyType).to.equal('rsa-pss');
+  expect(publicKey.asymmetricKeyType).to.equal('rsa-pss');
+
+  expect(() => privateKey.export({ format: 'pem', type: 'pkcs1' })).to.throw(
+    'pkcs1 can only be used for RSA keys',
+  );
+  expect(() => publicKey.export({ format: 'pem', type: 'pkcs1' })).to.throw(
+    'pkcs1 can only be used for RSA keys',
+  );
 });
 
 test(

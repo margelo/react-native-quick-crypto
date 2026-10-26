@@ -181,20 +181,28 @@ KeyObjectData KeyObjectData::GetPublicOrPrivateKey(std::shared_ptr<ArrayBuffer> 
       ERR_error_string_n(err, err_buf, sizeof(err_buf));
       throw std::runtime_error("Failed to read PEM asymmetric key: " + std::string(err_buf));
     } else if (actualFormat == KFormatType::DER) {
-      // For DER, try parsing as public key first
-      if (type.has_value() && type.value() == KeyEncoding::SPKI) {
+      // PKCS#1 DER can contain either an RSA public or private key.
+      if (type.has_value() && type.value() == KeyEncoding::PKCS1 && !ncrypto::EVPKeyPointer::IsRSAPrivateKey(buffer)) {
         auto public_config = GetPublicKeyEncodingConfig(actualFormat, type.value());
         auto res = ncrypto::EVPKeyPointer::TryParsePublicKey(public_config, buffer);
         if (res) {
           return CreateAsymmetric(KeyType::PUBLIC, std::move(res.value));
         }
-      } else if (type.has_value() && type.value() == KeyEncoding::PKCS8) {
+      } else if (type.has_value() && type.value() == KeyEncoding::SPKI) {
+        auto public_config = GetPublicKeyEncodingConfig(actualFormat, type.value());
+        auto res = ncrypto::EVPKeyPointer::TryParsePublicKey(public_config, buffer);
+        if (res) {
+          return CreateAsymmetric(KeyType::PUBLIC, std::move(res.value));
+        }
+      } else if (type.has_value() &&
+                 (type.value() == KeyEncoding::PKCS1 || type.value() == KeyEncoding::PKCS8 || type.value() == KeyEncoding::SEC1)) {
         auto private_config = GetPrivateKeyEncodingConfig(actualFormat, type.value());
         if (passphrase.has_value()) {
           auto& passphrase_ptr = passphrase.value();
           private_config.passphrase =
               std::make_optional(ncrypto::DataPointer::Copy(ncrypto::Buffer<const void>{passphrase_ptr->data(), passphrase_ptr->size()}));
         }
+        ERR_clear_error();
         auto res = ncrypto::EVPKeyPointer::TryParsePrivateKey(private_config, buffer);
         if (res) {
           return CreateAsymmetric(KeyType::PRIVATE, std::move(res.value));
