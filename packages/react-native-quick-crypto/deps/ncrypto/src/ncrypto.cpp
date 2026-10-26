@@ -1362,7 +1362,8 @@ Result<X509Pointer, int> X509Pointer::Parse(Buffer<const unsigned char> buffer) 
   X509Pointer pem(PEM_read_bio_X509_AUX(bio.get(), nullptr, NoPasswordCallback, nullptr));
   if (pem)
     return Result<X509Pointer, int>(std::move(pem));
-  BIO_reset(bio.get());
+  if (!bio.resetBio())
+    return Result<X509Pointer, int>(ERR_get_error());
 
   X509Pointer der(d2i_X509_bio(bio.get(), nullptr));
   if (der)
