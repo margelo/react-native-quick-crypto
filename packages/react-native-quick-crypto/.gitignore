@@ -1,5 +1,6 @@
 # will be copied from root README.md
 README.md
+!deps/ncrypto/README.md
 
 ios/**
 

@@ -67,7 +67,6 @@ add_library(
   ${BLAKE3_SOURCES}
   ../deps/fastpbkdf2/fastpbkdf2.c
   ../deps/ncrypto/src/aead.cpp
-  ../deps/ncrypto/src/engine.cpp
   ../deps/ncrypto/src/ncrypto.cpp
   ../deps/simdutf/src/simdutf.cpp
 )

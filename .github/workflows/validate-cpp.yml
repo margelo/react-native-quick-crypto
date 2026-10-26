@@ -8,13 +8,17 @@ on:
       - '.github/workflows/validate-cpp.yml'
       - 'packages/react-native-quick-crypto/android/src/main/cpp/**'
       - 'packages/react-native-quick-crypto/cpp/**'
+      - 'packages/react-native-quick-crypto/deps/ncrypto/**'
       - 'packages/react-native-quick-crypto/nitrogen/generated/shared/**'
+      - 'scripts/check-ncrypto-openssl-deprecations.sh'
   pull_request:
     paths:
       - '.github/workflows/validate-cpp.yml'
       - 'packages/react-native-quick-crypto/android/src/main/cpp/**'
       - 'packages/react-native-quick-crypto/cpp/**'
+      - 'packages/react-native-quick-crypto/deps/ncrypto/**'
       - 'packages/react-native-quick-crypto/nitrogen/generated/shared/**'
+      - 'scripts/check-ncrypto-openssl-deprecations.sh'
 
 env:
   # Opt actions still on Node 20 (e.g. reviewdog/action-cpplint) into the runner's Node 24.
@@ -34,13 +38,39 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v5
-      - name: Set up clang-format
-        run: sudo apt-get install -y clang-format
+      - name: Set up native validation
+        run: sudo apt-get install -y build-essential clang-format perl pkg-config
+      - name: Build OpenSSL 3.6.2
+        env:
+          OPENSSL_VERSION: 3.6.2
+          OPENSSL_SHA256: aaf51a1fe064384f811daeaeb4ec4dce7340ec8bd893027eee676af31e83a04f
+        run: |
+          openssl_archive="openssl-${OPENSSL_VERSION}.tar.gz"
+          curl --fail --location --silent --show-error \
+            --output "$RUNNER_TEMP/$openssl_archive" \
+            "https://github.com/openssl/openssl/releases/download/openssl-${OPENSSL_VERSION}/$openssl_archive"
+          echo "$OPENSSL_SHA256  $RUNNER_TEMP/$openssl_archive" | sha256sum --check
+          tar --extract --gzip --file "$RUNNER_TEMP/$openssl_archive" --directory "$RUNNER_TEMP"
+          cd "$RUNNER_TEMP/openssl-${OPENSSL_VERSION}"
+          ./Configure \
+            --prefix="$RUNNER_TEMP/openssl" \
+            --openssldir="$RUNNER_TEMP/openssl/ssl" \
+            --libdir=lib \
+            no-shared \
+            no-tests
+          make --jobs="$(nproc)"
+          make install_sw
+          echo "OPENSSL_ROOT_DIR=$RUNNER_TEMP/openssl" >> "$GITHUB_ENV"
       - name: Run clang-format check
         run: |
-          find packages/react-native-quick-crypto/cpp packages/react-native-quick-crypto/android/src/main/cpp \
+          find packages/react-native-quick-crypto/cpp \
+          packages/react-native-quick-crypto/android/src/main/cpp \
+          packages/react-native-quick-crypto/deps/ncrypto/include \
+          packages/react-native-quick-crypto/deps/ncrypto/src \
           -regex '.*\.\(cpp\|hpp\|cc\|cxx\|h\)' \
           -exec clang-format --style=file --dry-run --Werror {} +
+      - name: Reject ncrypto OpenSSL deprecations
+        run: scripts/check-ncrypto-openssl-deprecations.sh
       - uses: reviewdog/action-cpplint@9552c62f4bd516c1e3a6f84eae56bd864cc304c6 # v1.11.0
         with:
           github_token: ${{ secrets.github_token }}
