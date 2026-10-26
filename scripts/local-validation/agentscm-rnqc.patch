@@ -1,0 +1,245 @@
+diff --git a/src/local_validation/run.rs b/src/local_validation/run.rs
+index 5aad697..97a69f3 100644
+--- a/src/local_validation/run.rs
++++ b/src/local_validation/run.rs
+@@ -233,8 +233,8 @@ pub fn produce(
+         return Err(Error::Invalid("working tree is not clean".into()));
+     }
+     let state = observe(repo, "HEAD", base_rev)?;
+-    let cargo_lock_sha256 = file_digest(repo, &state.commit, "Cargo.lock")?;
+-    let toolchain_file_sha256 = file_digest(repo, &state.commit, "rust-toolchain.toml")?;
++    let cargo_lock_sha256 = file_digest(repo, &state.commit, "bun.lock")?;
++    let toolchain_file_sha256 = file_digest(repo, &state.commit, "package.json")?;
+     let (mut results, mut outputs) = (Vec::new(), Vec::new());
+     for c in &recipe.commands {
+         let (result, output) = run_command(repo, &c.id, &c.argv, c.timeout_secs, cancel);
+@@ -246,10 +246,9 @@ pub fn produce(
+         }
+     }
+     let toolchain = [
+-        &["rustc", "-V"][..],
+-        &["cargo", "-V"],
+-        &["cargo", "nextest", "--version"],
+-        &["git", "--version"],
++        &["bun", "--version"][..],
++        &["node", "--version"],
++        &["git", "--version"],
+     ]
+     .iter()
+     .map(|argv| probe(repo, argv))
+diff --git a/src/local_validation/mod.rs b/src/local_validation/mod.rs
+index 2c48308..24c31c8 100644
+--- a/src/local_validation/mod.rs
++++ b/src/local_validation/mod.rs
+@@ -400,12 +400,8 @@ pub fn evidence_payload(
+     issuance: &Issuance<'_>,
+ ) -> Result<(EvidencePayload, Vec<u8>)> {
+     let record_bytes = record.to_bytes()?;
+     let record_sha256 = format!("{:x}", Sha256::digest(&record_bytes));
+-    let all_services = Services {
+-        postgres: true,
+-        s3: true,
+-    };
+-    let pass = record.shortfall(all_services).is_none()
++    let pass = record.shortfall(policy.required_services).is_none()
+         && recipe.first_departure(&record.results).is_none();
+     let mut omissions: Vec<String> = FIXED_OMISSIONS.iter().map(|s| (*s).to_owned()).collect();
+     omissions.extend(
+@@ -479,8 +475,8 @@ pub fn evidence_payload(
+             inventory_complete: false,
+             omissions,
+         },
+         dependencies: vec![
+-            dependency("Cargo.lock", issuance.cargo_lock_sha256),
+-            dependency("rust-toolchain.toml", issuance.toolchain_file_sha256),
++            dependency("bun.lock", issuance.cargo_lock_sha256),
++            dependency("package.json", issuance.toolchain_file_sha256),
+         ],
+         artifacts: vec![ArtifactRecord {
+             artifact_id: "record".into(),
+diff --git a/tests/local_validation.rs b/tests/local_validation.rs
+index 417f861..b265b11 100644
+--- a/tests/local_validation.rs
++++ b/tests/local_validation.rs
+@@ -382,13 +382,44 @@ fn signed_pass_for_failed_record_is_rejected() {
+ }
+ 
+ #[test]
+-fn producer_marks_missing_service_run_as_not_pass() {
++fn producer_allows_services_the_policy_does_not_require() {
+     let mut c = Case::new();
+     c.record.services.s3 = false;
+     c.policy.required_services.s3 = false;
+-    // The producer marks the run failed without all services, so the signed
+-    // outcome is not pass even though the policy tolerates the absence.
+-    fails(c, "outcome not pass");
++    expect(c.run(), VerdictState::Success, "validated");
++}
++
++#[test]
++fn producer_fails_when_a_required_service_is_missing() {
++    let mut c = Case::new();
++    c.record.services.s3 = false;
++    fails(c, "required service missing");
++}
++
++#[test]
++fn rnqc_dependency_claims_use_javascript_inputs() {
++    let record = record();
++    let recipe = recipe();
++    let policy = policy();
++    let registry = registry();
++    let key_id = registry.issuers[0].keys[0].key_id.clone();
++    let issuance = Issuance {
++        issuer_id: "maintainer",
++        key_id: &key_id,
++        attempt_id: "attempt-1",
++        run_generation: 1,
++        issued_at_ms: ISSUED,
++        expires_at_ms: ISSUED + 86_400_000,
++        issuer_registry_sha256: &registry.digest().unwrap(),
++        cargo_lock_sha256: &hex(8),
++        toolchain_file_sha256: &hex(9),
++    };
++    let (payload, _) = evidence_payload(&record, &recipe, &policy, &issuance).unwrap();
++    let value = serde_json::to_value(payload).unwrap();
++    assert_eq!(value["dependencies"][0]["identity"], "bun.lock");
++    assert_eq!(value["dependencies"][0]["state"]["revision"], hex(8));
++    assert_eq!(value["dependencies"][1]["identity"], "package.json");
++    assert_eq!(value["dependencies"][1]["state"]["revision"], hex(9));
+ }
+ 
+ const OLD: &str = "5555555555555555555555555555555555555555";
+diff --git a/tests/local_validation_cli.rs b/tests/local_validation_cli.rs
+index 9293aa2..47b46d5 100644
+--- a/tests/local_validation_cli.rs
++++ b/tests/local_validation_cli.rs
+@@ -52,8 +52,8 @@ impl Fixture {
+         fs::create_dir(&repo).unwrap();
+         git(&repo, &["init", "-q", "-b", "main"]);
+         fs::write(repo.join("a.txt"), "a").unwrap();
+-        fs::write(repo.join("Cargo.lock"), "# synthetic lock\n").unwrap();
+-        fs::write(repo.join("rust-toolchain.toml"), "[toolchain]\n").unwrap();
++        fs::write(repo.join("bun.lock"), "# synthetic bun lock\n").unwrap();
++        fs::write(repo.join("package.json"), "{\"private\":true}\n").unwrap();
+         git(&repo, &["add", "."]);
+         git(&repo, &["commit", "-q", "-m", "base"]);
+         git(&repo, &["update-ref", "refs/remotes/origin/main", "HEAD"]);
+@@ -140,14 +140,6 @@ impl Fixture {
+             .arg("local-validation")
+             .args(args)
+             .env("GH_TOKEN", "synthetic-secret")
+-            .env(
+-                "AGENTSCM_TEST_DATABASE_URL",
+-                "postgres://synthetic.invalid/x",
+-            )
+-            .env("AGENTSCM_TEST_S3_ENDPOINT", "http://synthetic.invalid")
+-            .env("AGENTSCM_TEST_S3_BUCKET", "b")
+-            .env("AGENTSCM_TEST_S3_ACCESS_KEY_ID", "k")
+-            .env("AGENTSCM_TEST_S3_SECRET_ACCESS_KEY", "s")
+             .output()
+             .unwrap()
+     }
+@@ -242,7 +234,7 @@ impl Fixture {
+ fn ok_fixture() -> Fixture {
+     Fixture::new(vec![command(
+         "gate",
+-        r#"test -z "$GH_TOKEN" && test -n "$AGENTSCM_TEST_DATABASE_URL""#,
++        r#"test -z "$GH_TOKEN" && test -z "${AGENTSCM_TEST_DATABASE_URL:-}""#,
+         30,
+     )])
+ }
+@@ -264,6 +256,10 @@ fn success_flow_then_stale_after_new_commit() {
+         "{verdict}"
+     );
+     assert_eq!(verdict["envelope_sha256"], sha.as_str());
++    assert_eq!(
++        f.record(&sha)["services"],
++        serde_json::json!({"postgres": false, "s3": false})
++    );
+ 
+     fs::write(f.repo().join("c.txt"), "c").unwrap();
+     git(&f.repo(), &["add", "."]);
+@@ -306,16 +302,79 @@ fn wrong_repository_tampering_and_marker_mismatch_fail() {
+ }
+ 
+ #[test]
+-fn missing_lockfile_is_an_error_not_an_empty_digest() {
++fn missing_bun_lockfile_is_an_error_not_an_empty_digest() {
+     let f = ok_fixture();
+-    git(&f.repo(), &["rm", "-q", "Cargo.lock"]);
++    git(&f.repo(), &["rm", "-q", "bun.lock"]);
+     git(&f.repo(), &["commit", "-q", "-m", "drop lock"]);
+     let out = f.run();
+     assert!(!out.status.success());
+-    assert!(String::from_utf8_lossy(&out.stderr).contains("Cargo.lock"));
++    assert!(String::from_utf8_lossy(&out.stderr).contains("bun.lock"));
++    assert!(!f.state().exists() || fs::read_dir(f.state()).unwrap().next().is_none());
++}
++
++#[test]
++fn missing_package_manifest_is_an_error_not_an_empty_digest() {
++    let f = ok_fixture();
++    git(&f.repo(), &["rm", "-q", "package.json"]);
++    git(&f.repo(), &["commit", "-q", "-m", "drop package"]);
++    let out = f.run();
++    assert!(!out.status.success());
++    assert!(String::from_utf8_lossy(&out.stderr).contains("package.json"));
+     assert!(!f.state().exists() || fs::read_dir(f.state()).unwrap().next().is_none());
+ }
+ 
++#[test]
++fn envelope_binds_bun_lock_and_package_manifest_digests() {
++    use sha2::{Digest, Sha256};
++
++    let f = ok_fixture();
++    let (sha, code) = f.attest();
++    assert_eq!(code, 0);
++    let envelope: Value =
++        serde_json::from_slice(&fs::read(f.state().join(format!("{sha}.envelope.json"))).unwrap())
++            .unwrap();
++    let digest = |name: &str| {
++        format!(
++            "{:x}",
++            Sha256::digest(fs::read(f.repo().join(name)).unwrap())
++        )
++    };
++    assert_eq!(
++        envelope["payload"]["dependencies"][0]["identity"],
++        "bun.lock"
++    );
++    assert_eq!(
++        envelope["payload"]["dependencies"][0]["state"]["revision"],
++        digest("bun.lock")
++    );
++    assert_eq!(
++        envelope["payload"]["dependencies"][1]["identity"],
++        "package.json"
++    );
++    assert_eq!(
++        envelope["payload"]["dependencies"][1]["state"]["revision"],
++        digest("package.json")
++    );
++}
++
++#[test]
++fn missing_required_service_produces_a_signed_failure() {
++    let f = ok_fixture();
++    let policy_path = f.root().join("policy.json");
++    let mut policy: Value = serde_json::from_slice(&fs::read(&policy_path).unwrap()).unwrap();
++    policy["required_services"]["postgres"] = true.into();
++    fs::write(&policy_path, serde_json::to_vec(&policy).unwrap()).unwrap();
++    let (sha, code) = f.attest();
++    assert_eq!(code, 1);
++    let body = f.show_to_file(&sha, "missing-service.md");
++    let (code, verdict) = f.verify(&body, "repo-1");
++    assert_eq!(
++        (code, verdict["reason"].as_str()),
++        (1, Some("required service missing")),
++        "{verdict}"
++    );
++}
++
+ #[test]
+ fn verify_selects_the_newest_attestation_for_the_head() {
+     let f = Fixture::new(vec![command("gate", "test -f marker", 30)]);

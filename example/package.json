@@ -19,7 +19,10 @@
     "dev": "sh -c 'react-native start --client-logs \"$@\" 2>&1 | tee /tmp/rnqc-metro.log' --",
     "pods": "RCT_USE_RN_DEP=1 RCT_USE_PREBUILT_RNCORE=1 bundle install && bundle exec pod install --project-directory=ios",
     "build:android": "cd android && ./gradlew assembleDebug --no-daemon --console=plain -PreactNativeArchitectures=arm64-v8a",
-    "build:ios": "cd ios && xcodebuild -workspace QuickCryptoExample.xcworkspace -scheme QuickCryptoExample -configuration Debug -sdk iphonesimulator CC=clang CPLUSPLUS=clang++ LD=clang LDPLUSPLUS=clang++ GCC_OPTIMIZATION_LEVEL=0 GCC_PRECOMPILE_PREFIX_HEADER=YES ASSETCATALOG_COMPILER_OPTIMIZATION=time DEBUG_INFORMATION_FORMAT=dwarf COMPILER_INDEX_STORE_ENABLE=NO"
+    "build:ios": "cd ios && xcodebuild -workspace QuickCryptoExample.xcworkspace -scheme QuickCryptoExample -configuration Debug -sdk iphonesimulator CC=clang CPLUSPLUS=clang++ LD=clang LDPLUSPLUS=clang++ GCC_OPTIMIZATION_LEVEL=0 GCC_PRECOMPILE_PREFIX_HEADER=YES ASSETCATALOG_COMPILER_OPTIMIZATION=time DEBUG_INFORMATION_FORMAT=dwarf COMPILER_INDEX_STORE_ENABLE=NO",
+    "e2e": "node test/e2e/runner.mjs",
+    "e2e:android": "bun run e2e --platform android",
+    "e2e:ios": "bun run e2e --platform ios"
   },
   "dependencies": {
     "@noble/ciphers": "2.0.1",
@@ -68,6 +71,7 @@
     "@types/react": "19.1.0",
     "@types/react-native-vector-icons": "6.4.18",
     "@types/react-test-renderer": "19.1.0",
+    "agent-device": "0.21.0",
     "babel-jest": "29.7.0",
     "babel-plugin-module-resolver": "5.0.2",
     "jose": "6.1.3",

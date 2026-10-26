@@ -24,6 +24,7 @@ export type Stats = {
   passes: number;
   pending: number;
   failures: number;
+  failedSuites: number;
 };
 
 export interface RouteParams {

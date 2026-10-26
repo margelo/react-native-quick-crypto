@@ -1,16 +1,16 @@
 import React, { useMemo } from 'react';
-import { View, FlatList, StyleSheet } from 'react-native';
+import { View, FlatList, StyleSheet, Text } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Button } from '../../components/Button';
 import { TestItem } from '../../components/TestItem';
-import { useTestsList } from '../../hooks/useTestsList';
+import { selectAllSuites, useTestsList } from '../../hooks/useTestsList';
 import { useTestsRun } from '../../hooks/useTestsRun';
 import type { SuiteEntry } from '../../types/tests';
 import { colors } from '../../styles/colors';
 
-export const TestSuitesScreen = () => {
+export const TestSuitesScreen = (): React.JSX.Element => {
   const [suites, toggle, clearAll, checkAll] = useTestsList();
-  const [results, runTests, stats] = useTestsRun();
+  const [results, runTests, stats, running] = useTestsRun();
 
   const suiteEntries = useMemo(() => {
     return Object.entries(suites).map(([name, suite]) => ({
@@ -62,24 +62,36 @@ export const TestSuitesScreen = () => {
           0,
         )}
       />
+      {stats ? (
+        <Text testID="e2e-completion-summary" style={styles.summary}>
+          {`E2E_RESULT status=${stats.failures === 0 ? 'passed' : 'failed'} suites=${stats.suites} failed_suites=${stats.failedSuites} tests=${stats.tests} failures=${stats.failures} duration_ms=${stats.duration}`}
+        </Text>
+      ) : null}
       <View style={styles.menu}>
         <Button
-          title="Check All"
-          onPress={checkAll}
-          testID="check-all-button"
-        />
-        <Button
-          title="Clear All"
+          title="Clear"
           onPress={clearAll}
           testID="clear-all-button"
+          disabled={running}
         />
         <Button
-          title="Run"
+          title={running ? 'Running…' : 'Run Selected'}
           onPress={() => {
-            runTests(suites);
+            void runTests(suites);
           }}
           color="green"
           testID="run-tests-button"
+          disabled={running}
+        />
+        <Button
+          title={running ? 'Running…' : 'Run All'}
+          onPress={() => {
+            checkAll();
+            void runTests(selectAllSuites(suites));
+          }}
+          color="green"
+          testID="run-all-tests-button"
+          disabled={running}
         />
       </View>
     </SafeAreaView>
@@ -103,5 +115,10 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'space-around',
     marginVertical: -5,
+  },
+  summary: {
+    fontSize: 10,
+    paddingHorizontal: 10,
+    paddingVertical: 2,
   },
 });

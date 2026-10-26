@@ -1,6 +1,14 @@
 import { useState, useCallback } from 'react';
 import type { TestSuites } from '../types/tests';
 
+export const selectAllSuites = (suites: TestSuites): TestSuites =>
+  Object.fromEntries(
+    Object.entries(suites).map(([key, suite]) => [
+      key,
+      { ...suite, value: true },
+    ]),
+  ) as TestSuites;
+
 export const useSuiteList = (
   initialContext: TestSuites,
 ): [TestSuites, (description: string) => void, () => void, () => void] => {
@@ -32,15 +40,7 @@ export const useSuiteList = (
   }, []);
 
   const checkAll = useCallback(() => {
-    setSuites(
-      prevSuites =>
-        Object.fromEntries(
-          Object.entries(prevSuites).map(([key, suite]) => [
-            key,
-            { ...suite, value: true },
-          ]),
-        ) as TestSuites,
-    );
+    setSuites(selectAllSuites);
   }, []);
 
   return [suites, toggle, clearAll, checkAll];
