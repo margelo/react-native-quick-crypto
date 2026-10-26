@@ -39,6 +39,7 @@
     "deps/fastpbkdf2",
     "deps/ncrypto/include",
     "deps/ncrypto/src/aead.cpp",
+    "deps/ncrypto/src/engine.cpp",
     "deps/ncrypto/src/ncrypto.cpp",
     "deps/ncrypto/LICENSE",
     "deps/ncrypto/README.md",

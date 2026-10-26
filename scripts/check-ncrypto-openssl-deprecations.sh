@@ -37,6 +37,7 @@ cat >"$work_dir/header-consumer.cpp" <<'EOF'
 #include <ncrypto/aead.h>
 
 static_assert(OPENSSL_VERSION_NUMBER >= 0x30600000L);
+static_assert(NCRYPTO_EVP_ONLY == 1);
 EOF
 
 cat >"$work_dir/prime-check-regression.cpp" <<'EOF'
@@ -71,12 +72,14 @@ warning_flags=(
   -Wextra
   -Werror
   -Wdeprecated-declarations
+  -DNCRYPTO_EVP_ONLY=1
   "-I$ncrypto_dir/include"
   "${openssl_cflags[@]}"
 )
 
 "$compiler" "${warning_flags[@]}" -fsyntax-only "$ncrypto_dir/src/ncrypto.cpp"
 "$compiler" "${warning_flags[@]}" -fsyntax-only "$ncrypto_dir/src/aead.cpp"
+"$compiler" "${warning_flags[@]}" -fsyntax-only "$ncrypto_dir/src/engine.cpp"
 "$compiler" "${warning_flags[@]}" -fsyntax-only "$work_dir/header-consumer.cpp"
 "$compiler" "${warning_flags[@]}" \
   "$ncrypto_dir/src/ncrypto.cpp" \
