@@ -7,6 +7,7 @@ type ButtonProps = {
   onPress: () => void;
   color?: string;
   testID?: string;
+  disabled?: boolean;
 };
 
 export const Button: React.FC<ButtonProps> = ({
@@ -14,13 +15,19 @@ export const Button: React.FC<ButtonProps> = ({
   onPress,
   color = 'blue',
   testID,
+  disabled = false,
 }: ButtonProps) => {
   return (
     <View>
       <TouchableOpacity
-        style={[styles.container, { backgroundColor: colors[color] }]}
+        style={[
+          styles.container,
+          { backgroundColor: colors[color] },
+          disabled && styles.disabled,
+        ]}
         onPress={onPress}
         testID={testID}
+        disabled={disabled}
       >
         <Text style={styles.label}>{title}</Text>
       </TouchableOpacity>
@@ -39,5 +46,8 @@ const styles = StyleSheet.create({
   label: {
     color: colors.white,
     alignSelf: 'center',
+  },
+  disabled: {
+    opacity: 0.5,
   },
 });

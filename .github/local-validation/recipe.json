@@ -1,0 +1,15 @@
+{
+  "recipe_id": "rnqc-local-e2e-v1",
+  "commands": [
+    {
+      "id": "ios-e2e",
+      "argv": ["bun", "run", "e2e:ios"],
+      "timeout_secs": 7200
+    },
+    {
+      "id": "android-e2e",
+      "argv": ["bun", "run", "e2e:android"],
+      "timeout_secs": 7200
+    }
+  ]
+}

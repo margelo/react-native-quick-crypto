@@ -1,6 +1,8 @@
 import type { TestSuites } from '../types/tests';
 import { TestsContext } from '../tests/util';
-import { useSuiteList } from './useSuiteList';
+import { selectAllSuites, useSuiteList } from './useSuiteList';
+
+export { selectAllSuites };
 
 import '../tests/argon2/argon2_tests';
 import '../tests/blake3/blake3_tests';

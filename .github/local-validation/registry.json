@@ -1,0 +1,23 @@
+{
+  "version": 1,
+  "repository": "github.com/margelo/react-native-quick-crypto",
+  "epoch": 1,
+  "issuers": [
+    {
+      "issuer_id": "boorad",
+      "trust_domain": "maintainer-local",
+      "common_control": {
+        "state": "unknown"
+      },
+      "allowed_check_kinds": ["command/v1"],
+      "keys": [
+        {
+          "key_id": "6c1c81698208e6c2848d7a10ac2ec850468a65c36d1aab53540d8f8c86ca25b8",
+          "public_key_hex": "f1af50baaf94c581e7204881da7fb16dff93d4a167b67c3693caf587238aab72",
+          "not_before_ms": 1792751920000,
+          "not_after_ms": 1824291520000
+        }
+      ]
+    }
+  ]
+}
