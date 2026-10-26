@@ -145,4 +145,6 @@ After this change is on `main`, complete all of these steps before making the st
 9. Edit ruleset `657234` and add one required status check with the exact context `agentscm/local-validation`, sourced from GitHub Actions when GitHub offers an app selector. Enable the option requiring branches to be up to date before merging. Do not add the deleted hosted E2E job names as required checks.
 10. Confirm an unattested PR is blocked and a freshly attested, unambiguous PR is mergeable. Preserve the no-bypass posture unless maintainers deliberately approve and document an emergency path.
 
+Release exception: ruleset `657234` has one `DeployKey` bypass actor. The `Release` workflow checks out with the write deploy key stored in `RELEASE_DEPLOY_KEY`, so release-it can push the version-bump commit and tag straight to `main`. GitHub does not allow the GitHub Actions app (`GITHUB_TOKEN`) as a repository ruleset bypass actor. Do not add other deploy keys with write access; each one would also bypass the required check.
+
 The migration PR itself cannot be gated by a verifier that is not yet on `main`; enabling the required context before merge would deadlock rollout. If qualification exposes a verifier bug, keep the ruleset unchanged, fix and requalify from the new default-branch revision, then repeat the rollout.
