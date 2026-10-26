@@ -189,7 +189,7 @@ Pod::Spec.new do |s|
 
   xcconfig = {
     # C++ compiler flags, mainly for folly.
-    "GCC_PREPROCESSOR_DEFINITIONS" => "$(inherited) FOLLY_NO_CONFIG FOLLY_CFG_NO_COROUTINES",
+    "GCC_PREPROCESSOR_DEFINITIONS" => "$(inherited) FOLLY_NO_CONFIG FOLLY_CFG_NO_COROUTINES NCRYPTO_EVP_ONLY=1",
     # Set C++ standard to C++20
     "CLANG_CXX_LANGUAGE_STANDARD" => "c++20",
     "CLANG_ALLOW_NON_MODULAR_INCLUDES_IN_FRAMEWORK_MODULES" => "YES",
@@ -198,7 +198,7 @@ Pod::Spec.new do |s|
     # Disable x86 SIMD intrinsics on iOS simulator — the .c implementation files are already
     # excluded above, but blake3_dispatch.c still references the symbols unless these macros
     # are defined. Mirrors the Android CMakeLists.txt approach (line 18-22).
-    "GCC_PREPROCESSOR_DEFINITIONS[sdk=iphonesimulator*][arch=x86_64]" => "$(inherited) BLAKE3_NO_AVX512 BLAKE3_NO_AVX2 BLAKE3_NO_SSE41 BLAKE3_NO_SSE2"
+    "GCC_PREPROCESSOR_DEFINITIONS[sdk=iphonesimulator*][arch=x86_64]" => "$(inherited) BLAKE3_NO_AVX512 BLAKE3_NO_AVX2 BLAKE3_NO_SSE41 BLAKE3_NO_SSE2 NCRYPTO_EVP_ONLY=1"
   }
 
   # Every translation unit calls the renamed OpenSSL symbols. Missing a rename
@@ -239,7 +239,7 @@ Pod::Spec.new do |s|
       "\"#{real_sodium_include}/sodium\""
     ]
     xcconfig["HEADER_SEARCH_PATHS"] = (cpp_headers + sodium_headers).join(' ')
-    xcconfig["GCC_PREPROCESSOR_DEFINITIONS"] = "$(inherited) FOLLY_NO_CONFIG FOLLY_CFG_NO_COROUTINES BLSALLOC_SODIUM=1"
+    xcconfig["GCC_PREPROCESSOR_DEFINITIONS"] = "$(inherited) FOLLY_NO_CONFIG FOLLY_CFG_NO_COROUTINES BLSALLOC_SODIUM=1 NCRYPTO_EVP_ONLY=1"
   else
     xcconfig["HEADER_SEARCH_PATHS"] = cpp_headers.join(' ')
   end

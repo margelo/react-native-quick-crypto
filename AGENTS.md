@@ -1,178 +1,115 @@
 # React Native Quick Crypto - Agent Configuration
 
-This project uses the **4-Layer Orchestra Architecture** for efficient multi-agent development.
+This project uses agent workflows for repository work. `AGENTS.md` and `.agents/` are canonical; `CLAUDE.md` and `.claude` are symlink aliases for tools that expect Claude-style paths.
 
-## Quick Reference
+## Slash command dispatch
 
-- **Simple tasks (1-2 files)**: Work directly, no orchestration needed
-- **Complex tasks (3+ files)**: Use the orchestrator agent
-- **Rules**: See `.agents/rules/*.md` for architectural constraints
-- **Agents**: See `.agents/agents/*.md` for specialist definitions
-- **Commands**: Load `.agents/commands/*.md` before handling command-style requests
+When a user prompt begins with `/name`, read `.agents/commands/name.md` completely before planning or taking any task action, then follow it as the authoritative end-to-end workflow. The `.claude/commands/` path resolves to the same files through the `.claude` symlink.
 
-## Command Instructions
+If that exact command file is missing, search `.agents/commands/` for a documented alias and any known canonical source before acting. If none exists, flag the absence; do not silently invent a partial workflow from memory.
 
-Agents must read the relevant command definition in `.agents/commands/` before executing any slash-command style request. At minimum, load all files in `.agents/commands/` early in the session so commands such as `/commit`, `/pr`, `/review`, and `/address-pr-feedback` follow the repo-specific workflow.
+Load the repository rules relevant to the requested area. For command-style work, inventory `.agents/commands/` early so aliases and related workflows are not missed.
 
-## Critical Principles
+## Repository priorities
 
-### 1. API Priority Order (NON-NEGOTIABLE)
+### API priority order (non-negotiable)
 
-When implementing features, favor in this order:
+When implementing features, favor these sources in order:
 
-1. **WebCrypto API** - Modern standard, best for `subtle.*` methods
-2. **Node.js Implementation** - Use `$REPOS/node/deps/ncrypto` as reference
-3. **ncrypto** - submodule code reference at `$REPOS/ncrypto` (do work w/ OpenSSL)
+1. WebCrypto API for modern `subtle.*` methods.
+2. Node.js `$REPOS/node/deps/ncrypto` for `crypto.*` compatibility and implementation patterns.
+3. `$REPOS/ncrypto` as the standalone ncrypto and OpenSSL reference.
 
-**Always check Node.js `deps/ncrypto` before implementing new features.**
+Always inspect Node.js `deps/ncrypto` before implementing new crypto behavior, then adapt it to OpenSSL 3.6+ requirements.
 
-### 2. Modern Stack Required
+### Required stack
 
-- **React Native** - Mobile framework
-- **TypeScript** - Type system (strict mode, no `any`)
-- **Nitro Modules** - Native bridging
-- **C++20 or higher** - Modern C++ (smart pointers, RAII)
-- **OpenSSL 3.6+** - Cryptographic library (EVP APIs only)
-- **Bun 1.3+** - TypeScript package manager
+- React Native.
+- TypeScript in strict mode with no `any`.
+- Nitro Modules for native bridging.
+- C++20 or newer with smart pointers and RAII.
+- OpenSSL 3.6+ EVP/provider APIs only.
+- Bun 1.3+ for package management and scripts.
 
-### 3. Code Philosophy
+### Code philosophy
 
-- Minimize code rather than add more
-- Prefer iteration and modularization over duplication
-- No comments unless code is sufficiently complex
-- Code should be self-documenting
+- Minimize code and avoid duplication.
+- Prefer small, independently verifiable changes.
+- Keep code self-documenting; comment only when the behavior is complex enough to require it.
+- Preserve the existing crypto, Nitro, TypeScript, and C++ rules in `.agents/rules/`.
 
-### 4. Never Commit to Main
+### Security
 
-- **ALWAYS** create a feature branch before the first commit
-- Branch naming: `feat/<name>`, `fix/<name>`, `refactor/<name>`
-- All changes go through PRs — never push directly to main
-- If you find yourself on main, create a branch before committing
+- Use constant-time comparisons such as `CRYPTO_memcmp()` for authentication material.
+- Use `RAND_bytes()` and check its return value.
+- Prefer authenticated encryption such as AES-GCM.
+- Never expose key material in errors or logs.
+- Validate against authoritative WebCrypto, Node.js, NIST, or RFC vectors as applicable.
 
-### 5. Security is Critical
+## Branch and delivery safety
 
-- Constant-time comparisons for authentication tags
-- Cryptographically secure randomness (RAND_bytes)
-- AEAD modes preferred (AES-GCM)
-- No key material in errors/logs
-- Validate against test vectors (NIST, RFC, Node.js)
+- Never commit on `main`; create a `feat/`, `fix/`, or `refactor/` branch first.
+- Never use `--no-verify` for commits or pushes.
+- Preserve unrelated working-tree changes and stage task files explicitly.
+- All changes land through pull requests.
+- Prefer linear history. Rebase feature branches and use squash or fast-forward integration; do not create merge commits unless explicitly requested. If rewriting a dependency commit changes its SHA, update its downstream pins.
+- `/implement` is explicitly authorized to push a qualified branch and create or update its PR. `/pr` is explicitly authorized to make the qualified push needed to create or update the PR. Standalone `/commit` never pushes implicitly.
 
-## Rules Summary
+## Plans
 
-For full details, see `.agents/rules/*.md`:
+New `/implement` work uses `plans/todo/<N>-<slug>.md` as the live tracker, including phases, decisions, assumptions, and verification evidence. Do not create a retroactive plan merely to make an already-running branch look as though it followed the workflow.
 
-### architecture.md
+Before opening a PR for completed planned work, move the one exact matching plan to `plans/done/` in the same branch and PR. Carry genuinely outstanding verification items with an owner. Never fuzzy-match plan names. Remove the ignored `.agents/progress/claude-progress.md` stub when its plan moves so later sessions do not inherit stale state.
 
-- Project context and goals
-- API priority order (WebCrypto → Node.js → ncrypto)
-- Tech stack requirements
-- Code philosophy
-- Testing context (RN environment)
-- Local codebase references
+## Agent and model routing
 
-### code-typescript.md
+- Bounded implementation and routine verification: Sol at its default reasoning effort.
+- General independent review and an implementation retry: Sol at high reasoning effort.
+- Initial `/implement` recon, difficult design, and focused crypto correctness review: Astra.
+- Explicit user model choices and live provider capabilities override these defaults.
+- Documentation selects models for delegated work; it does not switch the active thread's model.
+- Do not silently invoke separately billed tools. Use no more agents than the work requires, avoid duplicate research, and keep handoffs concise.
+- Use early parallel work only for genuinely independent structural discovery. Implementation phases that share files or assumptions run sequentially with fresh context and bounded retries.
 
-- No `any` or `unknown` casts
-- Interfaces over types
-- Named exports only (no default)
-- No enums (use union types)
-- Explicit return types
-- Minimal, self-documenting code
-- React best practices (minimal useEffect)
+## Verification agreements
 
-### code-cpp.md
+- Select checks from the actual diff, changed behavior, and affected dependencies. Record reusable evidence with the commit SHA, exact tool or test, result, and platform.
+- Reuse still-current evidence across phases, review, and PR preparation. Do not repeat a broad suite after every phase, review, documentation edit, or commit.
+- A full foundational shared-crypto suite is justified only by a cross-cutting crypto/harness change or concrete unexplained failure. State the reason first, assign one owner, and reuse its result until relevant edits invalidate it.
+- TypeScript changes use the relevant `bun tsc`, lint, and formatting scripts.
+- Run the package Jest suite only for actual Node-side code changes: `cd packages/react-native-quick-crypto && bun run test`. Bare `bun test` invokes Bun's test runner and is not this package's Jest script.
+- C++ changes use formatting plus the relevant native/compiler checks, including `scripts/check-ncrypto-openssl-deprecations.sh` when ncrypto/OpenSSL compatibility is in scope.
+- Native runtime behavior is tested in the example React Native app. Agents may build, install, drive, and test the app; user confirmation is not inherently required when current successful evidence is available.
+- For targeted interactive debugging, attach to the existing RNQC app and Metro process first. Do not restart another project's process or take over its port. Metro client logs belong at `/tmp/rnqc-metro.log`; inspect them with `grep -E "FAIL|❌|failed" /tmp/rnqc-metro.log | tail -20` when diagnosing failures.
+- For canonical full-app qualification, run `bun run e2e:ios` and then `bun run e2e:android` from the repository root. The runner owns its RNQC app, simulator or emulator, isolated Metro port, artifacts, and cleanup; do not substitute another project's app or an overlapping manually managed server.
+- When the native merge gate applies, follow `docs/local-e2e.md`: use the trusted recipe, policy, and registry from `main` with the pinned patched AgentSCM producer; sign the exact clean committed HEAD, tree, base ref, and merge-base with owner-private key and state outside the checkout. Never fabricate an attestation from logs or raw test results and never post the status manually.
+- Reuse still-current raw evidence during implementation and review, but the final delivery attestation must bind the final committed HEAD after plan moves, documentation commits, review fixes, and other changes. Its `agentscm/local-validation` context is worker-asserted evidence, not a claim that GitHub ran the mobile suites, and it is not currently a required branch-protection check unless live settings are separately verified.
+- Pure documentation, plan, and `.agents/` changes do not require runtime retesting.
+- Unverified runtime behavior that could change the diff blocks push/PR delivery unless the user explicitly directs shipment; disclose the unverified behavior and residual risk when they do.
 
-- C++20 minimum with modern features
-- Smart pointers for all ownership
-- OpenSSL 3.6+ EVP APIs only (no deprecated)
-- RAII for all resources
-- Proper error handling (ERR_get_error)
-- Memory safety (no leaks, no raw ownership)
+## Real hooks and scripts
 
-### crypto-security.md
+The tracked pre-commit hook runs `bun lint-staged`, a C++ `clang-format --dry-run --Werror` scan, `bun tsc`, and `bun --filter="react-native-quick-crypto" prepare`. Allow at least 120 seconds for `git commit` and fix hook failures rather than bypassing them.
 
-- Cryptographic correctness (match specs)
-- No timing attacks (CRYPTO_memcmp)
-- Secure RNG (RAND_bytes)
-- Authenticated encryption (AEAD)
-- Proper IV/nonce handling (never reuse)
-- Minimum key sizes
-- No key material in errors
+Useful scripts and flows include:
 
-### ci-caching.md
+- Root checks: `bun tsc`, `bun lint`, `bun format`.
+- Node-side Jest: `cd packages/react-native-quick-crypto && bun run test`.
+- Example app: `cd example && bun ios` or `bun android`.
+- Explicit native builds: `cd example && bun run build:ios` or `bun run build:android`.
+- Full app E2E when justified: from the repository root run `bun run e2e:ios` and then `bun run e2e:android`; the workspace wrappers invoke the Node runner. See `docs/local-e2e.md` for attested qualification and its coverage limits.
 
-- iOS Pods/DerivedData cache consistency (exact-match Pods, no restore-keys)
-- Cache key design (no version suffixes, use hashFiles)
-- Android Maestro patterns (don't launch app before Maestro)
-- Reference implementations (Nitro for iOS, Spicy for Android)
+## Local references
 
-## When to Use Orchestration
+- `$REPOS/node`: Node.js crypto and ncrypto reference.
+- `$REPOS/ncrypto`: standalone OpenSSL abstraction and Node-derived utilities.
+- `$REPOS/nitro`: Nitro bridging examples and iOS CI caching patterns.
+- `$REPOS/spicy`: shared agent-workflow and Android E2E patterns only; do not import Spicy services, Jazz assumptions, golf domain rules, or scripts into RNQC.
 
-### Use Orchestrator For:
+## Quality checklist
 
-- ✅ Tasks touching 3+ files
-- ✅ Cross-language changes (TypeScript + C++)
-- ✅ New crypto features (API + implementation)
-- ✅ Complex refactoring
-
-### Work Directly For:
-
-- ✅ Single file changes
-- ✅ Simple bug fixes
-- ✅ Type updates
-- ✅ Documentation
-
-## Available Specialists
-
-- **orchestrator**: Decomposes complex tasks, coordinates specialists
-- **typescript-specialist**: TypeScript API, types, Nitro bindings
-- **cpp-specialist**: C++ implementation, OpenSSL integration
-- **crypto-specialist**: Algorithm correctness, security review
-- **testing-specialist**: Test strategy, test vectors, validation
-
-## Local Codebase References
-
-Use these instead of web searches:
-
-- **Node.js**: `$REPOS/node`
-
-  - `deps/ncrypto` - Use as bible for crypto operations
-  - May need updating to OpenSSL 3.6+ patterns
-
-- **ncrypto**: `$REPOS/ncrypto`
-
-  - separate crypto lib broken out from Node.js
-  - Patterns and tools to access OpenSSL
-
-- **Nitro**: `$REPOS/nitro`
-
-  - iOS CI caching patterns (super-fast builds)
-  - Nitro Modules bridging examples
-
-- **Spicy**: `$REPOS/spicy`
-  - Android E2E patterns with Maestro
-  - Separate build/test workflow
-
-## Testing
-
-Tests run in the React Native example app environment, not standard Node.js test runners.
-
-Don't ask to run tests - they must be executed in the example React Native application.
-
-### Metro Logs
-
-Metro output is tee'd to `/tmp/rnqc-metro.log`. When debugging test failures, read this file to see console output including test pass/fail results. Use `grep -E "FAIL|❌|failed" /tmp/rnqc-metro.log | tail -20` to quickly find failures.
-
-## Quality Checks
-
-Before committing:
-
-- [ ] Type safety (no `any`, proper interfaces)
-- [ ] Memory safety (smart pointers, RAII)
-- [ ] Cryptographic correctness (test vectors)
-- [ ] Security properties (constant-time, secure RNG)
-- [ ] Code quality (minimal, modular, self-documenting)
-
----
-
-**For specialist details and orchestration patterns, see `.agents/agents/*.md` and `.agents/rules/*.md`**
+- Type safety: no `any`; validate dynamic shapes.
+- Memory safety: RAII, smart-pointer ownership, no leaks or invalid access.
+- Cryptographic correctness: spec behavior, edge cases, and authoritative vectors.
+- Security properties: constant-time comparisons, secure randomness, nonce discipline, and no secret leakage.
+- Delivery evidence: checks match the actual diff and all claimed runtime behavior is verified or explicitly disclosed.

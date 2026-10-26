@@ -42,6 +42,7 @@
     "deps/ncrypto/src/engine.cpp",
     "deps/ncrypto/src/ncrypto.cpp",
     "deps/ncrypto/LICENSE",
+    "deps/ncrypto/README.md",
     "deps/simdutf/include",
     "deps/simdutf/src",
     "deps/simdutf/LICENSE-MIT",

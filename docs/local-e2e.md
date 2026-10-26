@@ -73,6 +73,7 @@ Run only reviewed code on the signing host. The private key and state directory 
 ```bash
 git fetch origin main
 git status --short
+git diff --exit-code origin/main -- .github/local-validation/recipe.json .github/local-validation/policy.json .github/local-validation/registry.json
 mkdir -m 700 /absolute/private/path/rnqc-attestations
 
 /tmp/rnqc-agentscm-24b70c0 local-validation run \
@@ -87,7 +88,7 @@ mkdir -m 700 /absolute/private/path/rnqc-attestations
   --base-rev origin/main
 ```
 
-`git status --short` must print nothing before `run`. Save the `envelope_sha256` from its JSON output as `ATTESTATION`. AgentSCM retains the signed envelope, record and two commands' stdout/stderr under the state directory. A successful run contains both results; a failed iOS command intentionally omits Android and verifies as failure.
+`git status --short` must print nothing before `run`, and the trust-input comparison must exit successfully. Checkout-relative recipe, policy, and registry paths are safe here only because they exactly match fetched `origin/main`. If the PR changes those inputs, stop; their trusted default-branch update must be reviewed and landed first. Save the `envelope_sha256` from its JSON output as `ATTESTATION`. AgentSCM retains the signed envelope, record and two commands' stdout/stderr under the state directory. A successful run contains both results; a failed iOS command intentionally omits Android and verifies as failure.
 
 Create an owner-private, single-line GitHub token file with permission to read the pull request and write its comments, then explicitly post the attestation:
 
@@ -106,7 +107,7 @@ Create an owner-private, single-line GitHub token file with permission to read t
 
 Screenshot posting is separate because AgentSCM `local-validation post` carries only the signed envelope and record. The helper uploads to ImgBB using the same 30-day expiry as the removed hosted-E2E action and creates or updates one PR comment bound to the PR head and attestation digest. It does nothing without the explicit `--post` flag.
 
-Use the two run directories printed by the E2E runner:
+Before uploading, repeat the fetch and trust-input comparison above; stop on any mismatch. The helper reads checkout-relative trust inputs, so this check is required even when reusing an existing attestation. Use the two run directories printed by the E2E runner:
 
 ```bash
 ./scripts/local-validation/post-screenshots.sh \

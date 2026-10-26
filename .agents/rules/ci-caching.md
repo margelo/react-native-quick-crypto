@@ -5,7 +5,7 @@ Use when editing GitHub Actions or CI caching.
 ## References
 
 - `$REPOS/nitro`: fast iOS build caching, especially `.github/workflows/build-ios.yml`.
-- `$REPOS/spicy`: Android E2E and Maestro patterns.
+- `$REPOS/spicy`: historical Android E2E and caching patterns only; do not replace RNQC's repository-local runner or import Spicy services and scripts.
 
 ## Blocking
 
@@ -29,11 +29,6 @@ Example:
 Pods: runner.os-pods-${{ hashFiles('example/ios/Podfile.lock', 'example/Gemfile.lock') }}
 DD:   runner.os-dd-${{ hashFiles('...lockfiles...') }}-xcode26.2
 ```
-
-## Android Maestro
-
-- Do not launch the app with `adb` before Maestro.
-- Install the APK, then let Maestro run `launchApp`.
 
 ## Debugging
 

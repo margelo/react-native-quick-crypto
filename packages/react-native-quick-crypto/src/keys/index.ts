@@ -236,6 +236,8 @@ function createPublicKey(key: KeyInput): PublicKeyObject {
   let kType: KeyEncoding | undefined;
   if (type === 'spki') kType = KeyEncoding.SPKI;
   else if (type === 'pkcs1') kType = KeyEncoding.PKCS1;
+  else if (type === 'pkcs8') kType = KeyEncoding.PKCS8;
+  else if (type === 'sec1') kType = KeyEncoding.SEC1;
 
   return KeyObject.createKeyObject(
     'public',

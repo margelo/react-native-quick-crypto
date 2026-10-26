@@ -72,6 +72,8 @@ add_library(
   ../deps/simdutf/src/simdutf.cpp
 )
 
+target_compile_definitions(${PACKAGE_NAME} PRIVATE NCRYPTO_EVP_ONLY=1)
+
 # add Nitrogen specs
 include(${CMAKE_SOURCE_DIR}/../nitrogen/generated/android/QuickCrypto+autolinking.cmake)
 
