@@ -2,7 +2,7 @@
 
 RNQC runs its expensive iOS and Android device suites on a maintainer workstation and uses a signed AgentSCM attestation as the merge signal. For this local-E2E gate, GitHub runs only the small verifier in `.github/workflows/local-validation.yml`; that verifier never checks out, builds or executes pull request code. Unrelated static and validation workflows may still execute pull request code.
 
-The required status context is `agentscm/local-validation`. It is not a claim that GitHub ran the mobile suites. It means an enrolled key signed an AgentSCM `worker_asserted` record for the exact repository, head commit, tree, base ref, merge-base, recipe, policy and registry that the default-branch verifier observed.
+The required status context is `agentscm/local-validation`. It is not a claim that GitHub ran the mobile suites. A `success` means one of two things. Either an enrolled key signed an AgentSCM `worker_asserted` record for the exact repository, head commit, tree, base ref, merge-base, recipe, policy and registry that the default-branch verifier observed, or every changed path is exempt and the description says `not required: only exempt paths changed`. In the second case nothing was run or signed.
 
 ## Gate definition
 
