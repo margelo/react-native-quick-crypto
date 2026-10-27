@@ -44,7 +44,7 @@ The user may explicitly direct shipment despite a gap. In that case, disclose th
 
 ## Attested native qualification
 
-When the native merge gate applies, `docs/local-e2e.md` is canonical. Produce the final attestation with the trusted recipe, policy, and registry from `main` and the documented pinned, patched AgentSCM build, not an arbitrary release binary. The signing key and state stay owner-private and outside the checkout; never read or print secrets.
+When the native merge gate applies, `docs/local-e2e.md` is canonical. Produce the final attestation with the trusted recipe, policy, and registry from `main` and the documented pinned AgentSCM build. The signing key and state stay owner-private and outside the checkout; never read or print secrets.
 
 Raw platform evidence may remain useful through review while no relevant edit invalidates it, but it is not the delivery attestation. The final attestation must cover the exact clean committed HEAD after every plan move, documentation commit, and fix, binding its tree, base ref, and merge-base. A later base fast-forward alone does not invalidate a receipt when the bound merge-base and other context remain unchanged.
 

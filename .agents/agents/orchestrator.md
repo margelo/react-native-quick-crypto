@@ -56,7 +56,7 @@ Run the package Jest script only for actual Node-side changes: `cd packages/reac
 
 Documentation-only work needs path, link, command, and consistency validation rather than runtime tests.
 
-When the native merge gate applies, use the canonical root `bun run e2e:ios` then `bun run e2e:android` recipe and attestation workflow in `docs/local-e2e.md`. The producer owns that serial run, so do not schedule a needless duplicate suite immediately beforehand. Raw evidence can support review, but final delivery requires the trusted pinned patched producer to sign the exact clean committed HEAD after plan completion and all fixes; posting waits until the remote PR head matches. Keep AgentSCM coordination availability distinct from the local attestation producer.
+When the native merge gate applies, use the canonical root `bun run e2e:ios` then `bun run e2e:android` recipe and attestation workflow in `docs/local-e2e.md`. The producer owns that serial run, so do not schedule a needless duplicate suite immediately beforehand. Raw evidence can support review, but final delivery requires the trusted pinned AgentSCM producer to sign the exact clean committed HEAD after plan completion and all fixes; posting waits until the remote PR head matches. Keep AgentSCM coordination availability distinct from the local attestation producer.
 
 ## Review and delivery
 
