@@ -1,10 +1,18 @@
 {
   "repository": "github.com/margelo/react-native-quick-crypto",
-  "recipe_sha256": "2ae7a72c1ca39a9e3ccc298bb42ff79fee1eedc1c32436e2471c47ab97887eef",
+  "recipe_sha256": "26f049bbae90a3ed7a8e13367d20d3e65c5135c06c707f85a5c103d3d80352dd",
   "required_services": {
     "postgres": false,
     "s3": false
   },
   "max_age_seconds": 2592000,
-  "epoch": 1
+  "epoch": 1,
+  "exempt_paths": [
+    "*.md",
+    "docs/**",
+    "plans/**",
+    ".agents/**",
+    ".claude/**",
+    ".github/**"
+  ]
 }

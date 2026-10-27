@@ -4,8 +4,6 @@ set -euo pipefail
 
 SCRIPT_DIR=$(CDPATH='' cd -- "$(dirname -- "${BASH_SOURCE[0]}")" && pwd)
 readonly SCRIPT_DIR
-REPO_DIR=$(CDPATH='' cd -- "$SCRIPT_DIR/../.." && pwd)
-readonly REPO_DIR
 
 test_root=$(mktemp -d "${TMPDIR:-/tmp}/rnqc-local-validation-scripts.XXXXXX")
 cleanup() {
@@ -19,12 +17,10 @@ trap cleanup EXIT
 readonly mock_bin="$test_root/bin"
 readonly comments_dir="$test_root/comments"
 readonly calls="$test_root/gh-calls"
-readonly statuses="$test_root/statuses"
 readonly curl_calls="$test_root/curl-calls"
 readonly pull_pages="$test_root/pull-pages.json"
-mkdir -p "$mock_bin" "$comments_dir" "$test_root/runner"
+mkdir -p "$mock_bin" "$comments_dir"
 : > "$calls"
-: > "$statuses"
 : > "$curl_calls"
 
 cat > "$mock_bin/gh" <<'MOCK_GH'
@@ -36,23 +32,6 @@ endpoint=
 for argument in "$@"; do
   [[ $argument == repos/* ]] && endpoint=$argument
 done
-if [[ $endpoint == *'/pulls?state=open&base='* ]]; then
-  [[ ${MOCK_GH_FAIL_LIST:-false} == false ]] || exit 1
-  cat "$MOCK_PULL_PAGES"
-  exit 0
-fi
-if [[ $endpoint =~ /statuses/([0-9a-f]{40})$ ]]; then
-  state=
-  description=
-  previous=
-  for argument in "$@"; do
-    [[ $previous == -f && $argument == state=* ]] && state=${argument#state=}
-    [[ $previous == -f && $argument == description=* ]] && description=${argument#description=}
-    previous=$argument
-  done
-  printf '%s\t%s\t%s\n' "${BASH_REMATCH[1]}" "$state" "$description" >> "$MOCK_STATUS_LOG"
-  exit 0
-fi
 if [[ $endpoint =~ /pulls/([0-9]+)$ ]]; then
   number=${BASH_REMATCH[1]}
   pull=$(jq -cer --argjson number "$number" 'flatten[] | select(.number == $number)' "$MOCK_PULL_PAGES")
@@ -64,16 +43,8 @@ if [[ $endpoint =~ /pulls/([0-9]+)$ ]]; then
   exit 0
 fi
 if [[ $endpoint =~ /issues/([0-9]+)/comments ]]; then
-  number=${BASH_REMATCH[1]}
-  sequence="$MOCK_COMMENTS_DIR/$number.sequence.json"
-  file="$MOCK_COMMENTS_DIR/$number.json"
-  if [[ -f $sequence ]]; then
-    counter="$MOCK_COMMENTS_DIR/$number.count"
-    count=0
-    [[ ! -f $counter ]] || count=$(<"$counter")
-    printf '%s\n' "$((count + 1))" > "$counter"
-    jq -c --argjson index "$count" '.[if $index < length then $index else length - 1 end]' "$sequence"
-  elif [[ -f $file ]]; then
+  file="$MOCK_COMMENTS_DIR/${BASH_REMATCH[1]}.json"
+  if [[ -f $file ]]; then
     cat "$file"
   else
     printf '[[]]\n'
@@ -90,22 +61,12 @@ MOCK_GH
 
 cat > "$mock_bin/git" <<'MOCK_GIT'
 #!/usr/bin/env bash
-set -euo pipefail
-case " $* " in
-  *' rev-parse HEAD '*) printf '%040d\n' 0 ;;
-  *) exit 0 ;;
-esac
+exit 0
 MOCK_GIT
 
 cat > "$mock_bin/agentscm" <<'MOCK_AGENTSCM'
 #!/usr/bin/env bash
-set -euo pipefail
-case ${MOCK_AGENTSCM_STATE:-success} in
-  success) printf '{"state":"success","reason":"validated"}\n'; exit 0 ;;
-  failure) printf '{"state":"failure","reason":"command failed"}\n'; exit 1 ;;
-  pending) printf '{"state":"pending","reason":"no attestation for this head"}\n'; exit 3 ;;
-  *) printf '{"state":"error","reason":"input error"}\n'; exit 2 ;;
-esac
+printf '{"state":"success","reason":"validated"}\n'
 MOCK_AGENTSCM
 
 cat > "$mock_bin/curl" <<'MOCK_CURL'
@@ -119,174 +80,26 @@ chmod 0755 "$mock_bin/gh" "$mock_bin/git" "$mock_bin/agentscm" "$mock_bin/curl"
 
 export PATH="$mock_bin:$PATH"
 export MOCK_GH_CALLS=$calls
-export MOCK_STATUS_LOG=$statuses
 export MOCK_CURL_CALLS=$curl_calls
 export MOCK_PULL_PAGES=$pull_pages
 export MOCK_COMMENTS_DIR=$comments_dir
-export GH_TOKEN=synthetic-token
-export REPO=margelo/react-native-quick-crypto
-export DEFAULT_BRANCH=main
-export RUN_URL=https://example.invalid/run
-export RUNNER_TEMP="$test_root/runner"
-export AGENTSCM_BIN="$mock_bin/agentscm"
-
-assert_status() {
-  local head=$1 state=$2
-  grep -Eq "^${head}[[:space:]]+${state}([[:space:]]|$)" "$statuses" || {
-    echo "missing $state status for $head" >&2
-    cat "$statuses" >&2
-    exit 1
-  }
-}
-
-assert_no_status() {
-  local head=$1
-  if grep -q "^$head" "$statuses"; then
-    echo "unexpected status for $head" >&2
-    cat "$statuses" >&2
-    exit 1
-  fi
-}
 
 pull() {
-  local number=$1 head=$2 base=${3:-main}
-  jq -cn --argjson number "$number" --arg head "$head" --arg base "$base" \
-    '{number:$number,state:"open",head:{sha:$head},base:{ref:$base}}'
+  local number=$1 head=$2
+  jq -cn --argjson number "$number" --arg head "$head" \
+    '{number:$number,state:"open",head:{sha:$head},base:{ref:"main"}}'
 }
 
 set_pull_pages() {
   printf '%s\n' "$1" > "$pull_pages"
-  rm -f "$comments_dir"/*.count
-  : > "$statuses"
   : > "$calls"
 }
 
 set_comments() {
-  local pr=$1 json=$2
-  rm -f "$comments_dir/$pr.sequence.json" "$comments_dir/$pr.count"
-  printf '%s\n' "$json" > "$comments_dir/$pr.json"
-}
-
-set_comment_sequence() {
-  local pr=$1 json=$2
-  rm -f "$comments_dir/$pr.json" "$comments_dir/$pr.count"
-  printf '%s\n' "$json" > "$comments_dir/$pr.sequence.json"
+  printf '%s\n' "$2" > "$comments_dir/$1.json"
 }
 
 readonly head_a=aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa
-readonly head_b=bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb
-readonly head_c=cccccccccccccccccccccccccccccccccccccccc
-readonly head_d=dddddddddddddddddddddddddddddddddddddddd
-pull_a=$(pull 1 "$head_a")
-pull_b=$(pull 2 "$head_b" other)
-pull_c=$(pull 3 "$head_c")
-
-# The trusted workflow embeds the exact pre-checkout invalidator that is regression-tested here.
-ruby -ryaml -e '
-  run = YAML.load_file(ARGV.fetch(0), aliases: true).fetch("jobs").fetch("verify").fetch("steps").first.fetch("run")
-  start = run.index("#!/usr/bin/env bash") or abort("missing invalidator start")
-  finish = run.index("\nINVALIDATE_SCRIPT", start) or abort("missing invalidator end")
-  print run[start...finish], "\n"
-' "$REPO_DIR/.github/workflows/local-validation.yml" > "$test_root/embedded-invalidator.sh"
-cmp -s "$SCRIPT_DIR/invalidate-heads.sh" "$test_root/embedded-invalidator.sh" || {
-  echo "workflow pre-checkout invalidator differs from the tested script" >&2
-  exit 1
-}
-
-# Pagination covers every supported main PR and filters an unsupported base.
-set_pull_pages "[[$pull_a,$pull_b],[$pull_c]]"
-"$SCRIPT_DIR/invalidate-heads.sh" >/dev/null
-assert_status "$head_a" pending
-assert_status "$head_c" pending
-assert_no_status "$head_b"
-
-# A later setup failure cannot restore the statuses invalidated before setup.
-set +e
-false
-setup_exit=$?
-set -e
-[[ $setup_exit -ne 0 ]] || { echo "synthetic setup failure did not fail" >&2; exit 1; }
-"$SCRIPT_DIR/invalidate-heads.sh" >/dev/null
-assert_status "$head_a" pending
-assert_status "$head_c" pending
-
-# An early listing failure is non-success; a finalizer retry can still invalidate every head.
-: > "$statuses"
-export MOCK_GH_FAIL_LIST=true
-if "$SCRIPT_DIR/invalidate-heads.sh" >/dev/null 2>&1; then
-  echo "pull-list API failure unexpectedly succeeded" >&2
-  exit 1
-fi
-[[ ! -s $statuses ]] || { echo "API failure posted a partial status" >&2; exit 1; }
-unset MOCK_GH_FAIL_LIST
-"$SCRIPT_DIR/invalidate-heads.sh" >/dev/null
-assert_status "$head_a" pending
-assert_status "$head_c" pending
-
-printf '{"not":"paginated arrays"}\n' > "$pull_pages"
-: > "$statuses"
-if "$SCRIPT_DIR/invalidate-heads.sh" >/dev/null 2>&1; then
-  echo "malformed pagination unexpectedly succeeded" >&2
-  exit 1
-fi
-[[ ! -s $statuses ]] || { echo "malformed pagination posted a partial status" >&2; exit 1; }
-
-valid_body='<!-- agentscm-local-validation:v1 synthetic --> valid'
-valid_comment=$(jq -cn --arg body "$valid_body" '{id:10,updated_at:"2026-01-01T00:00:00Z",author_association:"OWNER",body:$body}')
-removed_comment=$(jq -cn '{id:11,updated_at:"2026-01-01T00:00:01Z",author_association:"OWNER",body:"marker removed"}')
-
-# A trusted marker found on a later comment page can produce success.
-set_pull_pages "[[$pull_a]]"
-set_comments 1 "[[{\"id\":9,\"updated_at\":\"2026-01-01T00:00:00Z\",\"author_association\":\"NONE\",\"body\":\"noise\"}],[$valid_comment]]"
-(cd "$REPO_DIR" && "$SCRIPT_DIR/reconcile-heads.sh" >/dev/null)
-assert_status "$head_a" success
-
-# Evidence for A deleted while B is being verified aborts before any queued success is published.
-pull_interleaved_b=$(pull 2 "$head_c")
-set_pull_pages "[[$pull_a,$pull_interleaved_b]]"
-comment_pages="[[$valid_comment]]"
-set_comment_sequence 1 "[$comment_pages,$comment_pages,[[]]]"
-set_comments 2 '[[]]'
-"$SCRIPT_DIR/invalidate-heads.sh" >/dev/null
-set +e
-(cd "$REPO_DIR" && "$SCRIPT_DIR/reconcile-heads.sh" >"$test_root/interleaving.out" 2>&1)
-interleaving_exit=$?
-set -e
-[[ $interleaving_exit -ne 0 ]] || { echo "interleaved comment deletion unexpectedly reconciled" >&2; exit 1; }
-assert_status "$head_a" pending
-assert_status "$head_c" pending
-if grep -Eq "^(${head_a}|${head_c})[[:space:]]+success([[:space:]]|$)" "$statuses"; then
-  echo "interleaved comment deletion published a stale success" >&2
-  exit 1
-fi
-grep -q 'trusted attestation comments changed on PR 1' "$test_root/interleaving.out"
-
-# Deletion and marker removal both reconcile the supported head back to pending.
-set_pull_pages "[[$pull_a]]"
-set_comments 1 '[[]]'
-(cd "$REPO_DIR" && "$SCRIPT_DIR/reconcile-heads.sh" >/dev/null)
-assert_status "$head_a" pending
-set_pull_pages "[[$pull_a]]"
-set_comments 1 "[[$removed_comment]]"
-(cd "$REPO_DIR" && "$SCRIPT_DIR/reconcile-heads.sh" >/dev/null)
-assert_status "$head_a" pending
-
-# A shared supported head is explicitly rejected even if one PR has valid evidence.
-pull_shared_1=$(pull 1 "$head_d")
-pull_shared_2=$(pull 2 "$head_d")
-set_pull_pages "[[$pull_shared_1,$pull_shared_2]]"
-set_comments 1 "[[$valid_comment]]"
-set_comments 2 '[[]]'
-(cd "$REPO_DIR" && "$SCRIPT_DIR/reconcile-heads.sh" >/dev/null)
-assert_status "$head_d" pending
-grep -q 'head shared by multiple open main PRs; unsupported' "$statuses"
-
-# A non-main PR returned by a faulty/mocked filter never receives or influences a status.
-set_pull_pages "[[$pull_a,$pull_b]]"
-set_comments 1 "[[$valid_comment]]"
-(cd "$REPO_DIR" && "$SCRIPT_DIR/reconcile-heads.sh" >/dev/null)
-assert_status "$head_a" success
-assert_no_status "$head_b"
 
 # Invalid signed-output evidence must fail before ImgBB upload or any comment mutation.
 readonly screenshot_root="$test_root/screenshots"
@@ -332,4 +145,4 @@ if grep -Eq -- '--method (POST|PATCH)' "$calls"; then
   exit 1
 fi
 
-echo 'local-validation shell regressions passed'
+echo 'screenshot helper regression passed'

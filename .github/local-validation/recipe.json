@@ -1,5 +1,10 @@
 {
   "recipe_id": "rnqc-local-e2e-v1",
+  "dependency_files": ["bun.lock", "package.json"],
+  "toolchain_probes": [
+    ["bun", "--version"],
+    ["node", "--version"]
+  ],
   "commands": [
     {
       "id": "ios-e2e",

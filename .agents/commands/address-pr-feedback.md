@@ -115,7 +115,7 @@ test "$LOCAL_SHA" = "$REMOTE_SHA"
 test "$LOCAL_SHA" = "$PR_SHA"
 ```
 
-If the native merge gate applies and feedback changed HEAD, the old receipt is not current. After every fix and documentation or plan commit is final, follow `docs/local-e2e.md` to attest the exact clean committed HEAD with the trusted inputs and pinned patched producer, verify the remote PR head equals the signed SHA, and post through the documented CLI. Do not fabricate evidence from earlier logs or manually post the status. Reuse a still-valid receipt after an unrelated base fast-forward only when its bound merge-base and other context are unchanged.
+If the native merge gate applies and feedback changed HEAD, the old receipt is not current. After every fix and documentation or plan commit is final, follow `docs/local-e2e.md` to attest the exact clean committed HEAD with the trusted inputs and pinned AgentSCM producer, verify the remote PR head equals the signed SHA, and post through the documented CLI. Do not fabricate evidence from earlier logs or manually post the status. Reuse a still-valid receipt after an unrelated base fast-forward only when its bound merge-base and other context are unchanged.
 
 If no code or documentation changed because every item is Dismiss or Stale, skip commit and push, use the current PR head SHA, and proceed to replies.
 

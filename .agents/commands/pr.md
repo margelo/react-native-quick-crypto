@@ -91,7 +91,7 @@ Use a conventional-commit-style title unless the user supplied one.
 
 ### 7. Complete attested native qualification when required
 
-Follow `docs/local-e2e.md` rather than duplicating its commands. Use the trusted recipe, policy, and registry from `main` with the documented pinned, patched AgentSCM producer on reviewed code only. The checkout must be clean and the attestation must bind the exact final committed HEAD after the plan move, documentation commits, and all fixes. Keep the private key and state owner-private outside the checkout and never read or print secrets.
+Follow `docs/local-e2e.md` rather than duplicating its commands. Use the trusted recipe, policy, and registry from `main` with the documented pinned AgentSCM producer on reviewed code only. The checkout must be clean and the attestation must bind the exact final committed HEAD after the plan move, documentation commits, and all fixes. Keep the private key and state owner-private outside the checkout and never read or print secrets.
 
 Before signing or publishing screenshot evidence, fetch `origin/main` and run `git diff --exit-code origin/main -- .github/local-validation/recipe.json .github/local-validation/policy.json .github/local-validation/registry.json`. Stop if any differ: checkout-relative inputs are trusted only after this check. A PR changing the trust inputs must first get those changes reviewed and landed through the trusted default-branch process.
 
