@@ -8,15 +8,15 @@ PODS:
   - hermes-engine (0.81.1):
     - hermes-engine/Pre-built (= 0.81.1)
   - hermes-engine/Pre-built (0.81.1)
-  - MMKVCore (2.2.4)
-  - NitroMmkv (4.0.1):
+  - MMKVCore (2.4.0)
+  - NitroMmkv (4.3.1):
     - boost
     - DoubleConversion
     - fast_float
     - fmt
     - glog
     - hermes-engine
-    - MMKVCore (= 2.2.4)
+    - MMKVCore (= 2.4.0)
     - NitroModules
     - RCT-Folly
     - RCT-Folly/Fabric
@@ -40,7 +40,7 @@ PODS:
     - ReactCommon/turbomodule/core
     - SocketRocket
     - Yoga
-  - NitroModules (0.33.2):
+  - NitroModules (0.35.0):
     - boost
     - DoubleConversion
     - fast_float
@@ -2834,10 +2834,10 @@ SPEC CHECKSUMS:
   fmt: a40bb5bd0294ea969aaaba240a927bd33d878cdd
   glog: 5683914934d5b6e4240e497e0f4a3b42d1854183
   hermes-engine: 4f8246b1f6d79f625e0d99472d1f3a71da4d28ca
-  MMKVCore: f2dd4c9befea04277a55e84e7812f930537993df
-  NitroMmkv: afbc5b2fbf963be567c6c545aa1efcf6a9cec68e
-  NitroModules: 11bba9d065af151eae51e38a6425e04c3b223ff3
-  QuickCrypto: 547afc7bd316c004c4f599adeea29cc838a5f3f7
+  MMKVCore: 3d16ce9f7d411e135020915fde98a056859a1efa
+  NitroMmkv: c68bb2c29c154913707bc6e66791b2b30dd723c1
+  NitroModules: 1dc73273d6e3aee937eec41ef3ed9470804b9884
+  QuickCrypto: a720b137bf86089e3ef05abc6184f298fbc2c914
   RCT-Folly: 846fda9475e61ec7bcbf8a3fe81edfcaeb090669
   RCTDeprecation: c4b9e2fd0ab200e3af72b013ed6113187c607077
   RCTRequired: e97dd5dafc1db8094e63bc5031e0371f092ae92a
