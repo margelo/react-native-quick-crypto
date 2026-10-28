@@ -1,6 +1,6 @@
 # /pr - Create or Update a Pull Request
 
-Create or update the PR for the current branch. Invoking `/pr` authorizes the qualified push required for this workflow.
+Create or update the PR for the current branch. Invoking `/pr` authorizes the qualified push, attestation comment, and screenshot publication required for this workflow.
 
 ## Instructions
 
@@ -95,10 +95,12 @@ Follow `docs/local-e2e.md` rather than duplicating its commands. Use the trusted
 
 Before signing or publishing screenshot evidence, fetch `origin/main` and run `git diff --exit-code origin/main -- .github/local-validation/recipe.json .github/local-validation/policy.json .github/local-validation/registry.json`. Stop if any differ: checkout-relative inputs are trusted only after this check. A PR changing the trust inputs must first get those changes reviewed and landed through the trusted default-branch process.
 
-The qualified push may happen before or after the local run, but before posting verify that local HEAD, the remote branch, and the pull request head all equal the signed SHA. Use the documented `local-validation post` command when this workflow or the user authorizes posting; never fabricate a receipt from logs or raw test results and never post the status manually. Screenshot posting is a separate, explicit action and is required only when authorized and material.
+The qualified push may happen before or after the local run, but before posting verify that local HEAD, the remote branch, and the pull request head all equal the signed SHA. Use the documented `local-validation post` command when this workflow or the user authorizes posting; never fabricate a receipt from logs or raw test results and never post the status manually. After posting a successful mobile E2E attestation, publish both final-run screenshots with `scripts/local-validation/post-screenshots.sh --post` using the same attestation digest, retained state directory, pinned AgentSCM binary, and iOS/Android artifact directories. Follow the exact invocation in `docs/local-e2e.md`. This is required for every PR with mobile E2E evidence, including CI migrations; `/pr` authorizes the upload and PR comment without another confirmation. Verify that the comment contains both images and binds the current PR head and attestation. A new attested head requires matching screenshots; never reuse screenshots from another run or commit.
+
+Screenshot publication is part of completing PR delivery, not an optional follow-up. If credentials, artifacts, or upload services are unavailable, report the blocker and leave screenshot delivery outstanding; do not call the PR fully qualified or ready to merge. Do not rerun passing suites just to republish retained valid artifacts. For policy-exempt PRs without a mobile run, state that screenshots are not applicable rather than inventing evidence or running unnecessary mobile suites.
 
 Do not run a duplicate broad suite immediately before the producer: its trusted recipe already owns the serial `bun run e2e:ios` then `bun run e2e:android` run. A valid receipt remains usable across an unrelated base fast-forward when its bound merge-base and other context are unchanged. Describe `agentscm/local-validation` as worker-asserted coverage with the limitations in `docs/local-e2e.md`, not as GitHub-run mobile testing or a currently enforced required check unless the live ruleset was verified.
 
 ### 8. Register and report
 
-Immediately register the full PR URL with the host thread when a PR-link tool is available. Report the URL, pushed SHA, qualification evidence, signed SHA and posting result when applicable, and any disclosed unverified behavior.
+Immediately register the full PR URL with the host thread when a PR-link tool is available. Report the URL, pushed SHA, qualification evidence, signed SHA, attestation and screenshot-comment URLs when applicable (or the explicit screenshot blocker/not-applicable reason), and any disclosed unverified behavior.
