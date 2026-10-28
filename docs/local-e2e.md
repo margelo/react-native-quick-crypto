@@ -100,7 +100,19 @@ Create an owner-private, single-line GitHub token file with permission to read t
 
 ## Post screenshot evidence
 
-Screenshot posting is separate because AgentSCM `local-validation post` carries only the signed envelope and record. The helper uploads to ImgBB using the same 30-day expiry as the removed hosted-E2E action and creates or updates one PR comment bound to the PR head and attestation digest. It does nothing without the explicit `--post` flag.
+Screenshot posting is a separate required delivery step for every PR with mobile E2E evidence because AgentSCM `local-validation post` carries only the signed envelope and record. `/pr` authorizes publishing both final-run screenshots without another confirmation. A missing credential, artifact, or failed upload remains an explicit delivery blocker; policy-exempt PRs without mobile runs report screenshots as not applicable. The helper uploads to ImgBB using the same 30-day expiry as the removed hosted-E2E action and creates or updates one PR comment bound to the PR head and attestation digest. It does nothing without the explicit `--post` flag.
+
+Store the local ImgBB API key outside the checkout at `~/.config/rnqc/imgbb-api-key`, as one non-empty line. Create an owner-private file and enter the key in your editor so it does not enter shell history:
+
+```bash
+mkdir -p "$HOME/.config/rnqc"
+chmod 700 "$HOME/.config/rnqc"
+touch "$HOME/.config/rnqc/imgbb-api-key"
+chmod 600 "$HOME/.config/rnqc/imgbb-api-key"
+nano "$HOME/.config/rnqc/imgbb-api-key"
+```
+
+This is the repository's documented local credential location, not an automatically discovered default: pass `--imgbb-api-key-file "$HOME/.config/rnqc/imgbb-api-key"` explicitly. Never commit the file or paste its contents into PRs, logs, or chat. A GitHub Actions secret is not automatically available to the local publisher.
 
 Before uploading, repeat the fetch and trust-input comparison above; stop on any mismatch. The helper reads checkout-relative trust inputs, so this check is required even when reusing an existing attestation. Use the two run directories printed by the E2E runner:
 
@@ -114,7 +126,7 @@ Before uploading, repeat the fetch and trust-input comparison above; stop on any
   --ios-artifacts example/build/e2e/ios/<run-id> \
   --android-artifacts example/build/e2e/android/<run-id> \
   --github-token-file /absolute/private/path/github-token \
-  --imgbb-api-key-file /absolute/private/path/imgbb-api-key
+  --imgbb-api-key-file "$HOME/.config/rnqc/imgbb-api-key"
 ```
 
 The helper also accepts `GH_TOKEN` and `IMGBB_API_KEY` instead of files. It never prints either secret or the ImgBB deletion URLs. It refuses stale heads, non-`main` targets, invalid or unsuccessful attestations, missing trusted attestation comments, incomplete artifacts, result/head mismatches and hashes absent from signed stdout.
