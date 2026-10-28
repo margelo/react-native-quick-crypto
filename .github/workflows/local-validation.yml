@@ -1,13 +1,13 @@
 name: Local E2E attestation verifier
 
-# Builds AgentSCM at a pinned commit and runs `local-validation reconcile` from trusted default-branch
-# code. Pull request heads are fetched as Git data only; they are never checked out, built or run.
+# The pinned upstream workflow installs the verified release and reads trusted default-branch
+# configuration. Pull request heads are fetched as Git data only; they are never executed.
 on:
   issue_comment: # zizmor: ignore[dangerous-triggers] default-branch code only; PR code is never executed
     types: [created, edited, deleted]
   pull_request_target: # zizmor: ignore[dangerous-triggers] default-branch code only; PR code is never executed
     branches: [main]
-    types: [opened, synchronize, reopened, edited] # edited runs only for a base change, see the job `if:`
+    types: [opened, synchronize, reopened, edited] # upstream filters edited events to base changes
   push:
     branches: [main]
     paths:
@@ -18,63 +18,12 @@ on:
 
 permissions: {}
 
-env:
-  AGENTSCM_REVISION: 8942cb07b65dde557fb7da08b30c98f90e87fbeb
-  CARGO_TERM_COLOR: always
-
 jobs:
   reconcile:
-    # Job-level so ignored comments never enter the group and cannot displace a queued run.
-    concurrency:
-      group: local-validation
-      cancel-in-progress: false
-    if: ${{ (github.event_name != 'pull_request_target' || github.event.action != 'edited' || github.event.changes.base) && (github.event_name != 'issue_comment' || (github.event.issue.pull_request && (startsWith(github.event.comment.body, '<!-- agentscm-local-validation:v1 ') || (github.event.action == 'edited' && startsWith(github.event.changes.body.from, '<!-- agentscm-local-validation:v1 '))) && contains(fromJSON('["OWNER","MEMBER","COLLABORATOR"]'), github.event.comment.author_association))) }}
-    runs-on: ubuntu-latest
-    timeout-minutes: 30
     permissions:
       contents: read
       pull-requests: read
       statuses: write
-    steps:
-      - name: Check out trusted RNQC verifier
-        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
-        with:
-          ref: ${{ github.event.repository.default_branch }}
-          fetch-depth: 0
-          persist-credentials: false
-          path: repository
-
-      - name: Check out pinned AgentSCM
-        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
-        with:
-          repository: counterbranch/agentscm
-          ref: ${{ env.AGENTSCM_REVISION }}
-          fetch-depth: 1
-          persist-credentials: false
-          path: agentscm
-
-      - name: Install pinned Rust toolchain
-        working-directory: agentscm
-        run: rustup toolchain install
-
-      - name: Restore AgentSCM build cache
-        uses: Swatinem/rust-cache@6323deb102c322ba6fcbdcafc7e3dddab59af2b6 # v2.9.2
-        with:
-          workspaces: agentscm
-          cache-on-failure: true
-
-      - name: Build pinned AgentSCM
-        working-directory: agentscm
-        run: cargo build --locked --release --bin agentscm
-
-      - name: Reconcile every open PR on main
-        working-directory: repository
-        env:
-          GH_TOKEN: ${{ github.token }}
-          REPO: ${{ github.repository }}
-          BASE: ${{ github.event.repository.default_branch }}
-          RUN_URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
-        run: |
-          # Every run sweeps all open PRs, so the latest queued run is enough.
-          ../agentscm/target/release/agentscm local-validation reconcile \
-            --github-repo "$REPO" --base "$BASE" --target-url "$RUN_URL"
+    uses: counterbranch/agentscm/.github/workflows/local-validation-reconcile.yml@efcac5a9ddb146bdb360af1cb3c463f001d9982e # v0.1.0-alpha.8
+    with:
+      release-version: 0.1.0-alpha.8

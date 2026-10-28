@@ -14,7 +14,7 @@ The trusted files are read from `main`:
 - `.github/local-validation/recipe.json` also declares `bun.lock` and `package.json` as `dependency_files` and Bun and Node version `toolchain_probes`, so the signed evidence binds RNQC's JavaScript inputs instead of AgentSCM's Rust defaults.
 - `policy.json` declares `exempt_paths`. A pull request whose every changed path matches one of them gets `success` with `not required: only exempt paths changed`, without an attestation. This means it was exempted, not tested on devices. Changes to `.github/local-validation/**` or `.github/workflows/local-validation.yml` are never exempt.
 
-RNQC uses unpatched AgentSCM built from source at the commit pinned as `AGENTSCM_REVISION` in `.github/workflows/local-validation.yml`. No published AgentSCM release contains `local-validation reconcile`, recipe dependency files or `exempt_paths` yet. The producer and the verifier must be built from the same commit.
+RNQC uses published AgentSCM `0.1.0-alpha.8` for both the producer and verifier. `.github/workflows/local-validation.yml` pins the upstream reusable workflow to the release commit `efcac5a9ddb146bdb360af1cb3c463f001d9982e` and its `release-version` input to the exact npm version. The upstream workflow owns installation, provenance verification, event filtering, concurrency and reconciliation; RNQC keeps only the triggers and permissions. Its default configuration directory and verifier path match RNQC. No Rust build or repository package dependency is needed.
 
 ## Trust and coverage limits
 
@@ -45,17 +45,19 @@ The result line ends in `/result.json`; the screenshot line ends in `/ios-test-r
 
 The runner must write and close `result.json` and the PNG before hashing them. A successful result has `schemaVersion: 1`, `status: "passed"`, the matching `platform`, and `revision.commit` equal to the attested head. `example/build/` is ignored, so these outputs do not dirty the Git tree.
 
-## Build AgentSCM
+## Install AgentSCM
 
-Use a clean AgentSCM checkout at the pinned commit and place the binary outside RNQC:
+Install the same exact release as the verifier, outside RNQC. Node.js and the GitHub CLI (`gh`, signed in to github.com for provenance verification) must be available:
 
 ```bash
-REV=$(sed -n 's/^  AGENTSCM_REVISION: //p' .github/workflows/local-validation.yml)
-git -C /Users/brad/dev/cb/agentscm fetch origin
-git -C /Users/brad/dev/cb/agentscm worktree add --detach /tmp/agentscm-rnqc "$REV"
-(cd /tmp/agentscm-rnqc && cargo build --locked --release --bin agentscm)
-install -m 0755 /tmp/agentscm-rnqc/target/release/agentscm /tmp/rnqc-agentscm
+AGENTSCM_TELEMETRY=off AGENTSCM_REQUIRE_PROVENANCE=1 \
+  npx --yes --ignore-scripts --registry=https://registry.npmjs.org \
+  agentscm@0.1.0-alpha.8 local-validation reconcile --help
+AGENTSCM_BIN="$HOME/.agentscm/bin/agentscm-0.1.0-alpha.8"
+"$AGENTSCM_BIN" --version
 ```
+
+The command downloads and verifies the release binary without npm lifecycle scripts. `local-validation reconcile --help` exercises the binary installer without writing GitHub statuses; top-level `npx agentscm --version` only prints the npm wrapper's version. The binary must report `agentscm 0.1.0-alpha.8`. Use this versioned binary for the commands below so another global installation cannot silently select a different release.
 
 AgentSCM's own test suite covers producing, verifying and reconciling attestations, path-scoped commands and exempt paths. `./scripts/local-validation/test-scripts.sh` covers RNQC's screenshot helper with mocked GitHub and ImgBB commands, including refusal to upload invalid screenshot evidence. These tests never read the enrolled `boorad` private key, post a pull request comment or change a GitHub ruleset.
 
@@ -69,7 +71,7 @@ git status --short
 git diff --exit-code origin/main -- .github/local-validation/recipe.json .github/local-validation/policy.json .github/local-validation/registry.json
 mkdir -m 700 /absolute/private/path/rnqc-attestations
 
-/tmp/rnqc-agentscm local-validation run \
+"$AGENTSCM_BIN" local-validation run \
   --repo . \
   --recipe .github/local-validation/recipe.json \
   --policy .github/local-validation/policy.json \
@@ -86,7 +88,7 @@ mkdir -m 700 /absolute/private/path/rnqc-attestations
 Create an owner-private, single-line GitHub token file with permission to read the pull request and write its comments, then explicitly post the attestation:
 
 ```bash
-/tmp/rnqc-agentscm local-validation post \
+"$AGENTSCM_BIN" local-validation post \
   --state-dir /absolute/private/path/rnqc-attestations \
   --attestation "$ATTESTATION" \
   --github-repo margelo/react-native-quick-crypto \
@@ -108,7 +110,7 @@ Before uploading, repeat the fetch and trust-input comparison above; stop on any
   --pr 123 \
   --attestation "$ATTESTATION" \
   --state-dir /absolute/private/path/rnqc-attestations \
-  --agentscm-bin /tmp/rnqc-agentscm \
+  --agentscm-bin "$AGENTSCM_BIN" \
   --ios-artifacts example/build/e2e/ios/<run-id> \
   --android-artifacts example/build/e2e/android/<run-id> \
   --github-token-file /absolute/private/path/github-token \
@@ -119,14 +121,14 @@ The helper also accepts `GH_TOKEN` and `IMGBB_API_KEY` instead of files. It neve
 
 ## Verifier behavior
 
-The verifier workflow builds the pinned AgentSCM commit and runs `agentscm local-validation reconcile` from a checkout of `main`. It runs on:
+The verifier workflow installs the pinned, provenance-verified AgentSCM release and runs `agentscm local-validation reconcile` from a checkout of `main`. It runs on:
 
 - creation, editing or deletion of a trusted attestation comment;
 - pull request open, synchronize or reopen events, and base changes, for pull requests targeting `main`;
 - changes on `main` to the policy, recipe, registry or the verifier workflow;
 - a daily schedule, which expires old successes and repairs missed events.
 
-Every run sweeps all open pull requests on `main`, so one repository-wide job-level concurrency group is enough; ignored comments never enter it. `reconcile` sets `pending` on every opted-in head first, verifies trusted attestation comments, and re-reads pull request state and comments immediately before each status write. Comment deletions and edits that remove the marker produce `pending`. A head shared by several open pull requests gets `pending` as unsupported. Pull request heads are fetched from `origin` as Git data only and are never checked out, built or run. There is intentionally no `workflow_dispatch`, because the verifier has `statuses: write`. Known gap: heads are reset to `pending` only inside `reconcile`, after checkout and the AgentSCM build. If setup fails, existing statuses, including a `success` whose attestation was since deleted, aged out or revoked, stay until the next successful run. AgentSCM's `docs/advanced/local-validation.md` documents `reconcile`'s full behavior and limits.
+Every run sweeps all open pull requests on `main`, so one repository-wide job-level concurrency group is enough; ignored comments never enter it. `reconcile` sets `pending` on every opted-in head first, verifies trusted attestation comments, and re-reads pull request state and comments immediately before each status write. Comment deletions and edits that remove the marker produce `pending`. A head shared by several open pull requests gets `pending` as unsupported. Pull request heads are fetched from `origin` as Git data only and are never checked out, built or run. There is intentionally no `workflow_dispatch`, because the verifier has `statuses: write`. Known gap: heads are reset to `pending` only inside `reconcile`, after checkout and the AgentSCM installation. If setup fails, existing statuses, including a `success` whose attestation was since deleted, aged out or revoked, stay until the next successful run. AgentSCM's `docs/advanced/local-validation.md` documents `reconcile`'s full behavior and limits.
 
 ## Required-check rollout
 
@@ -134,7 +136,7 @@ Status: the rollout below was completed on 2026-10-26. Ruleset `657234` (`main`)
 
 After this change is on `main`, complete all of these steps before making the status required:
 
-1. Confirm the default-branch verifier builds the pinned AgentSCM source and posts `pending` to an open PR with no attestation.
+1. Confirm the default-branch verifier installs the pinned AgentSCM release and posts `pending` to an open PR with no attestation.
 2. From a clean checkout of that PR head, run both local device suites, post the signed attestation and screenshots, and confirm `agentscm/local-validation` becomes `success` on that exact SHA.
 3. Edit the attestation comment to remove its marker and confirm the same SHA becomes `pending`; restore or repost the valid body and confirm `success` returns.
 4. Delete the attestation comment and confirm the same SHA remains `pending`. Push a new head and confirm it is `pending` until separately attested.
