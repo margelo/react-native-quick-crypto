@@ -378,3 +378,20 @@ let decrypted = decipher.update(encrypted, 'base64', 'utf8');
 decrypted += decipher.final('utf8');
 console.log(decrypted); // "secret message"
 ```
+
+## Validate a complete SLH-DSA private key
+
+`validateRawPrivateKey()` on a `SlhDsa` instance checks a complete raw private key against the selected SLH-DSA variant and returns its public key. The provider performs the consistency check on a worker thread. The method copies the supplied `ArrayBuffer` before returning, so the caller may erase its own buffer immediately afterward. It preserves the instance's generated key pair.
+
+```ts
+import { SlhDsa } from 'react-native-quick-crypto';
+
+const slh = new SlhDsa('SLH-DSA-SHAKE-128s');
+const validation = slh.validateRawPrivateKey(rawPrivateKey);
+new Uint8Array(rawPrivateKey).fill(0);
+const publicKey = await validation;
+```
+
+The private input contains four `n`-byte fields and must be exactly 64, 96 or 128 bytes for the selected variant. The returned public key contains two `n`-byte fields. An inconsistent key, unsupported provider or concurrent raw-key validation rejects with a generic error. Await the current validation before starting another. OpenSSL 3.6 or newer is required.
+
+The public native method uses explicit JavaScript input and Promise-admission checks because generated Nitro conversion does not enforce the required release-mode checks before scheduling this operation. The worker retains its owned input until validation ends and erases it before settling the Promise.

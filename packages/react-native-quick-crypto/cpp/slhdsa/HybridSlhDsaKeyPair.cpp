@@ -1,13 +1,18 @@
 #include "HybridSlhDsaKeyPair.hpp"
 
 #include <NitroModules/ArrayBuffer.hpp>
+#include <NitroModules/Dispatcher.hpp>
+#include <NitroModules/JSIConverter.hpp>
+#include <NitroModules/ThreadPool.hpp>
 #include <openssl/bio.h>
 #include <openssl/err.h>
 #include <openssl/pem.h>
 
 #include <array>
+#include <stdexcept>
 
 #include "QuickCryptoUtils.hpp"
+#include "SlhDsaRawPrivateKeyValidation.hpp"
 
 #if OPENSSL_VERSION_NUMBER >= 0x30500000L
 #define RNQC_HAS_SLH_DSA 1
@@ -21,20 +26,103 @@ using EVP_MD_CTX_ptr = std::unique_ptr<EVP_MD_CTX, decltype(&EVP_MD_CTX_free)>;
 using EVP_PKEY_CTX_ptr = std::unique_ptr<EVP_PKEY_CTX, decltype(&EVP_PKEY_CTX_free)>;
 
 #if RNQC_HAS_SLH_DSA
-static constexpr std::array<const char*, 12> kSlhDsaVariants{
-    "SLH-DSA-SHA2-128s",  "SLH-DSA-SHA2-128f",  "SLH-DSA-SHA2-192s",  "SLH-DSA-SHA2-192f",  "SLH-DSA-SHA2-256s",  "SLH-DSA-SHA2-256f",
-    "SLH-DSA-SHAKE-128s", "SLH-DSA-SHAKE-128f", "SLH-DSA-SHAKE-192s", "SLH-DSA-SHAKE-192f", "SLH-DSA-SHAKE-256s", "SLH-DSA-SHAKE-256f",
-};
-
 static bool isValidSlhDsaVariant(const std::string& variant) {
-  for (const char* v : kSlhDsaVariants) {
-    if (variant == v) {
-      return true;
-    }
-  }
-  return false;
+  return slhDsaRawPrivateKeySize(variant) != 0;
 }
 #endif
+
+facebook::jsi::Value HybridSlhDsaKeyPair::validateRawPrivateKey(facebook::jsi::Runtime& runtime, const facebook::jsi::Value&,
+                                                                const facebook::jsi::Value* args, size_t argCount) {
+  constexpr const char* error = "SLH-DSA raw private key validation failed";
+  if (argCount != 1 || !args[0].isObject()) {
+    throw facebook::jsi::JSError(runtime, error);
+  }
+
+  try {
+    auto object = args[0].getObject(runtime);
+    // The typed Nitro converter checks the ArrayBuffer brand only in debug builds.
+    if (!object.isArrayBuffer(runtime)) {
+      throw std::invalid_argument(error);
+    }
+    auto buffer = std::move(object).getArrayBuffer(runtime);
+    const auto size = buffer.size(runtime);
+    const auto variant = variant_;
+    const auto expectedSize = slhDsaRawPrivateKeySize(variant);
+    if (expectedSize == 0 || size != expectedSize) {
+      throw std::invalid_argument(error);
+    }
+
+    // Fail before copying if this runtime cannot dispatch Promise callbacks.
+    Dispatcher::getRuntimeGlobalDispatcher(runtime);
+    auto validation = std::make_shared<SlhDsaRawPrivateKeyValidation>(variant, buffer.data(runtime), size);
+    using Result = std::shared_ptr<ArrayBuffer>;
+    using ValidationPromise = Promise<Result>;
+    using Resolve = JSIConverter<std::function<void(Result)>>;
+    using Reject = JSIConverter<std::function<void(std::exception_ptr)>>;
+    enum class Attachment { pending, failed, ready };
+    auto attachment = std::make_shared<Attachment>(Attachment::pending);
+    auto promise = ValidationPromise::create();
+    auto jsPromise = CommonGlobals::Promise::callConstructor(
+        runtime, [promise, attachment, error](facebook::jsi::Runtime& js, const facebook::jsi::Value&,
+                                              const facebook::jsi::Value* callbacks, size_t count) {
+          const bool first = *attachment == Attachment::pending;
+          *attachment = Attachment::failed;
+          if (!first || count != 2 || !Resolve::canConvert(js, callbacks[0]) || !Reject::canConvert(js, callbacks[1])) {
+            throw facebook::jsi::JSError(js, error);
+          }
+          auto resolve = Resolve::fromJSI(js, callbacks[0]);
+          auto reject = Reject::fromJSI(js, callbacks[1]);
+          promise->addOnResolvedListener(std::move(resolve));
+          promise->addOnRejectedListener(std::move(reject));
+          *attachment = Attachment::ready;
+          return facebook::jsi::Value::undefined();
+        });
+    // The JS constructor catches executor errors. A returned Promise by
+    // itself does not establish that a resolver and rejecter were attached.
+    if (*attachment != Attachment::ready) {
+      if (*attachment == Attachment::failed)
+        return jsPromise;
+      throw std::runtime_error(error);
+    }
+
+    try {
+      ThreadPool::shared().run([validation = std::move(validation), promise]() mutable {
+        Result output;
+        try {
+          // The worker owns a synchronous copy, never a JS-backed buffer.
+          auto active = std::move(validation);
+          const auto publicKey = active->validate();
+          output = ArrayBuffer::copy(publicKey.data(), publicKey.size());
+        } catch (...) {
+          // The owned input has unwound before either callback can run.
+          promise->reject(std::current_exception());
+          return;
+        }
+        promise->resolve(std::move(output));
+      });
+    } catch (...) {
+      validation.reset();
+      try {
+        throw std::runtime_error(error);
+      } catch (...) {
+        promise->reject(std::current_exception());
+      }
+    }
+    return jsPromise;
+  } catch (...) {
+    throw facebook::jsi::JSError(runtime, error);
+  }
+}
+
+// Generated conversion omits release-mode ArrayBuffer brand checks and converts
+// the returned Promise after entering native code. Admit work only after both
+// the input and the JavaScript Promise callbacks have been checked.
+void HybridSlhDsaKeyPair::loadHybridMethods() {
+  HybridSlhDsaKeyPairSpec::loadHybridMethods();
+  registerHybrids(this, [](Prototype& prototype) {
+    prototype.registerRawHybridMethod("validateRawPrivateKey", 1, &HybridSlhDsaKeyPair::validateRawPrivateKey);
+  });
+}
 
 void HybridSlhDsaKeyPair::setVariant(const std::string& variant) {
 #if !RNQC_HAS_SLH_DSA

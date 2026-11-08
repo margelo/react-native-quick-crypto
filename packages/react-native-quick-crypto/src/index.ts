@@ -28,6 +28,7 @@ import * as random from './random';
 import * as ecdh from './ecdh';
 import * as dh from './diffie-hellman';
 import * as mlkem from './mlkem';
+import { SlhDsa } from './slhdsa';
 import { Certificate } from './certificate';
 import { X509Certificate } from './x509certificate';
 import { getCurves } from './ec';
@@ -42,6 +43,7 @@ import * as subtle from './subtle';
  * See `docs/implementation-coverage.md` for status.
  */
 const QuickCrypto = {
+  SlhDsa,
   ...argon2Module,
   ...keys,
   ...blake3,
@@ -114,6 +116,8 @@ export * from './ecdh';
 export { getCurves } from './ec';
 export * from './diffie-hellman';
 export * from './mlkem';
+export { SlhDsa } from './slhdsa';
+export type { SlhDsaVariant } from './slhdsa';
 export * from './utils';
 export * from './subtle';
 export { subtle, isCryptoKeyPair } from './subtle';
