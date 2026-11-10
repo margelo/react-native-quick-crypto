@@ -12,11 +12,12 @@ Outcome: fork carries one compat commit with both fixes and gtest coverage; RNQC
 ## Live tracker
 
 - [x] Phase 1 — ncrypto compat commit: `isPrime` inter-round cancel, `selection` param, `tests/basic.cpp` cases (2^127-1 @ 65, 311 @ INT_MAX, explicit-curve SEC1 empty passphrase)
-- [ ] Phase 2 — fork publish: backup ref `backup/ef5d829`, new `rnqc/evp-only` branch, reset fork `main` to `c954a1a`
+- [x] Phase 2 — fork publish: backup ref `backup/ef5d829`, new `rnqc/evp-only` branch, reset fork `main` to `c954a1a`
 - [x] Phase 3 — RNQC submodule bump + example test (SEC1 empty/NUL passphrase round-trip, wrong and missing passphrase rejection)
-- [ ] Qualification — clang-format, deprecation script, gtest, native builds, example-app keys/prime suites
-- [ ] Independent local review
-- [ ] Plan move + `/pr`
+- [x] Qualification (static/host) — clang-format, deprecation script, gtest; native iOS/Android runtime owned by the `/pr` attestation producer run
+- [x] Independent local review (Opus): no correctness defects; fixed missing evidence SHA; fork publish done as Phase 2; two Info items skipped (explicit-curve test passes pre-fix — recorded; no PEM header assertion — low value)
+- [x] Plan move
+- [ ] `/pr` with signed iOS+Android attestation and screenshots — owner: orchestrator (this session)
 
 ## Decisions
 
@@ -35,12 +36,16 @@ Outcome: fork carries one compat commit with both fixes and gtest coverage; RNQC
 
 _(SHA — tool/test — result — platform)_
 
+- fork boorad/ncrypto — git ls-remote + gh compare nodejs/ncrypto main...boorad:main — main=c954a1a identical; rnqc/evp-only=14d6023; backup/ef5d829 kept
+- 15a3fc91 — reviewer rerun of basic gtest filter BignumPointer.*:EVPKeyPointer.explicitEcSec1* — 7/7 pass, cancel tests 0 ms — macOS host
+
 - submodule 14d6023 — cmake (NCRYPTO_SHARED_LIBS=ON, NCRYPTO_EVP_ONLY=ON, openssl@3 3.6.2, googletest 1.18.0) + ctest — 37/37 pass; pre-fix both new prime-cancel tests fail — macOS host
 - submodule 14d6023 — clang-format --style=file --dry-run --Werror src/ncrypto.cpp tests/basic.cpp include/ncrypto.h — pass
 - submodule 14d6023 — OPENSSL_ROOT_DIR=/opt/homebrew/opt/openssl@3 scripts/check-ncrypto-openssl-deprecations.sh — pass (default invocation picks Homebrew openssl@4 4.1.0 via pkg-config and fails on pre-existing deprecations unrelated to this diff)
-- HEAD of phase 3 commit — prettier --check create_keys.ts, bun tsc, bun lint (repo root) — pass — macOS host
+- 15a3fc91 — prettier --check create_keys.ts, bun tsc, bun lint (repo root) — pass — macOS host
 
 ## Unverified
+
 
 - Native runtime on iOS/Android — settled by example-app keys + prime suites after the bump.
 - Deprecation script default OpenSSL discovery picks openssl@4 — pre-existing, out of scope.
