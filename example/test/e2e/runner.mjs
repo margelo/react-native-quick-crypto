@@ -694,9 +694,28 @@ async function runSuite(device, metroPort) {
     owned.session,
     ...selector,
   ]);
+  // iOS 27 reports a non-interactive full-screen toolbar above the content, so
+  // agent-device refuses the semantic press; a real tap at the frame works.
+  const runAll = (
+    await agent([
+      'get',
+      'attrs',
+      'id="run-all-tests-button"',
+      '--session',
+      owned.session,
+      ...selector,
+    ])
+  ).data?.node;
+  const pressTarget =
+    runAll?.interactionBlocked === 'covered' && runAll.rect
+      ? [
+          String(Math.round(runAll.rect.x + runAll.rect.width / 2)),
+          String(Math.round(runAll.rect.y + runAll.rect.height / 2)),
+        ]
+      : ['id="run-all-tests-button"'];
   await agent([
     'press',
-    'id="run-all-tests-button"',
+    ...pressTarget,
     '--settle',
     '--timeout',
     '10000',
