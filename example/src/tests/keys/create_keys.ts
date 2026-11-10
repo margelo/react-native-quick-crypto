@@ -588,6 +588,13 @@ test(
       expect(
         createPrivateKey({ key: pem, passphrase }).equals(privateKey),
       ).to.equal(true);
+
+      if (passphrase.length > 0) {
+        expect(() => createPrivateKey(pem)).to.throw('Passphrase required');
+        expect(() =>
+          createPrivateKey({ key: pem, passphrase: 'wrong' }),
+        ).to.throw('Failed to read');
+      }
     }
   },
 );
