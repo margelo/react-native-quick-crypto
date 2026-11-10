@@ -59,5 +59,13 @@ target 'QuickCryptoExample' do
       end
     end
 
+    # fmt 11.0.2 (bundled by React Native 0.81) fails under Xcode 27's clang
+    # consteval checks; C++17 compiles it without consteval.
+    installer.pods_project.targets.select { |t| t.name == 'fmt' }.each do |target|
+      target.build_configurations.each do |config|
+        config.build_settings['CLANG_CXX_LANGUAGE_STANDARD'] = 'c++17'
+      end
+    end
+
   end
 end
