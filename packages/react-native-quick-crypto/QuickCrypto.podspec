@@ -239,7 +239,7 @@ Pod::Spec.new do |s|
   ]
 
   if sodium_enabled
-    # Use absolute path from __dir__ which resolves symlinks correctly.
+    # Use the real path from __dir__, which resolves symlinks correctly.
     # This is necessary in monorepo setups where the podspec is accessed via symlink
     # but the source files are resolved to their real paths during compilation.
     real_sodium_include = pods_relative.call(File.join(__dir__, "ios", "libsodium-stable", "src", "libsodium", "include"))
