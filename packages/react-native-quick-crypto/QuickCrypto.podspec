@@ -1,6 +1,7 @@
 require "json"
 require "digest"
 require "shellwords"
+require "pathname"
 
 package = JSON.parse(File.read(File.join(__dir__, "package.json")))
 
@@ -203,8 +204,18 @@ Pod::Spec.new do |s|
 
   # Every translation unit calls the renamed OpenSSL symbols. Missing a rename
   # is a link error, never a silent bind to a foreign OpenSSL.
-  openssl_include = File.join(openssl_dir, "include")
-  force_include = "-include \"#{openssl_prefix_header}\""
+  # Real paths expressed relative to the Pods sandbox keep the evaluated spec (and
+  # so the Podfile.lock checksum) identical across checkout locations.
+  pods_relative = lambda do |path|
+    sandbox = defined?(Pod::Config) && Pod::Config.instance.sandbox_root
+    next path unless sandbox
+    sandbox_dir = Pathname.new(sandbox.to_s)
+    real_sandbox = File.realpath(sandbox_dir.dirname).then { |parent| Pathname.new(parent).join(sandbox_dir.basename) }
+    "$(PODS_ROOT)/" + Pathname.new(File.realpath(path)).relative_path_from(real_sandbox).to_s
+  end
+
+  openssl_include = pods_relative.call(File.join(openssl_dir, "include"))
+  force_include = "-include \"#{pods_relative.call(openssl_prefix_header)}\""
   xcconfig["OTHER_CFLAGS"] = "$(inherited) #{force_include}"
   xcconfig["OTHER_CPLUSPLUSFLAGS"] = "$(inherited) #{force_include}"
 
@@ -231,7 +242,7 @@ Pod::Spec.new do |s|
     # Use absolute path from __dir__ which resolves symlinks correctly.
     # This is necessary in monorepo setups where the podspec is accessed via symlink
     # but the source files are resolved to their real paths during compilation.
-    real_sodium_include = File.join(__dir__, "ios", "libsodium-stable", "src", "libsodium", "include")
+    real_sodium_include = pods_relative.call(File.join(__dir__, "ios", "libsodium-stable", "src", "libsodium", "include"))
     sodium_headers = [
       "\"$(PODS_TARGET_SRCROOT)/ios/libsodium-stable/src/libsodium/include\"",
       "\"$(PODS_TARGET_SRCROOT)/ios/libsodium-stable/src/libsodium/include/sodium\"",
