@@ -210,7 +210,7 @@ Pod::Spec.new do |s|
     sandbox = defined?(Pod::Config) && Pod::Config.instance.sandbox_root
     next path unless sandbox
     sandbox_dir = Pathname.new(sandbox.to_s)
-    real_sandbox = File.realpath(sandbox_dir.dirname).then { |parent| Pathname.new(parent).join(sandbox_dir.basename) }
+    real_sandbox = sandbox_dir.exist? ? sandbox_dir.realpath : Pathname.new(File.realpath(sandbox_dir.dirname)).join(sandbox_dir.basename)
     "$(PODS_ROOT)/" + Pathname.new(File.realpath(path)).relative_path_from(real_sandbox).to_s
   end
 
@@ -221,7 +221,7 @@ Pod::Spec.new do |s|
 
   # Add cpp subdirectories to header search paths
   cpp_headers = [
-    # Absolute path as well as the pod-relative one: in monorepos the podspec is
+    # Real path (relative to $(PODS_ROOT)) as well as the pod-relative one: in monorepos the podspec is
     # reached through a symlink but sources resolve to their real paths.
     "\"$(PODS_TARGET_SRCROOT)/ios/openssl/include\"",
     "\"#{openssl_include}\"",
