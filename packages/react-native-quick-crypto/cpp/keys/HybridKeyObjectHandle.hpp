@@ -16,6 +16,7 @@ namespace margelo::nitro::crypto {
 class HybridKeyObjectHandle : public HybridKeyObjectHandleSpec {
  public:
   HybridKeyObjectHandle();
+  void dispose() override;
 
  public:
   std::shared_ptr<ArrayBuffer> exportKey(std::optional<KFormatType> format, std::optional<KeyEncoding> type,
@@ -69,7 +70,12 @@ class HybridKeyObjectHandle : public HybridKeyObjectHandleSpec {
     data_ = std::move(data);
   }
 
+ protected:
+  void loadHybridMethods() override;
+
  private:
+  facebook::jsi::Value importSlhDsaRawPrivateKey(facebook::jsi::Runtime& runtime, const facebook::jsi::Value& thisArg,
+                                                 const facebook::jsi::Value* args, size_t argCount);
   KeyObjectData data_;
 
   bool initRawKey(KeyType keyType, std::shared_ptr<ArrayBuffer> keyData);

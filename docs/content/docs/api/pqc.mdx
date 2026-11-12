@@ -378,3 +378,33 @@ let decrypted = decipher.update(encrypted, 'base64', 'utf8');
 decrypted += decipher.final('utf8');
 console.log(decrypted); // "secret message"
 ```
+
+## Import a complete SLH-DSA private key
+
+`createPrivateKeyAsync()` is an RNQC extension for importing a complete raw SLH-DSA private key. Unlike Node's synchronous `createPrivateKey()`, it performs provider pairwise validation on a worker thread and returns a `PrivateKeyObject` containing the same validated native key. Synchronous SLH-DSA `raw-private` imports reject with an instruction to use this method. Other synchronous key imports are unchanged.
+
+```ts
+import { createPrivateKeyAsync, createPublicKey } from 'react-native-quick-crypto';
+
+const pending = createPrivateKeyAsync({
+  key: rawPrivateKey, // ArrayBuffer only
+  format: 'raw-private',
+  asymmetricKeyType: 'slh-dsa-shake-128s',
+});
+new Uint8Array(rawPrivateKey).fill(0);
+const privateKey = await pending;
+let publicKey;
+try {
+  publicKey = createPublicKey(privateKey);
+  const rawPublicKey = publicKey.export({ format: 'raw-public' });
+} finally {
+  publicKey?.handle.dispose();
+  privateKey.handle.dispose();
+}
+```
+
+All twelve SLH-DSA variants are supported, using lowercase `SlhDsaKeyPairType` names. The private input contains four `n`-byte fields (`SK.seed`, `SK.prf`, `PK.seed`, `PK.root`) and must be exactly 64, 96 or 128 bytes for the selected variant. Inconsistent `SK.seed`, `PK.seed` or `PK.root` reject with `SLH-DSA raw private key validation failed`. `SK.prf` is independent randomness: changing only that field remains valid and preserves the public key, as specified in FIPS 205 Algorithms 18–20. Validation does not authenticate a key's provenance.
+
+One raw-key import may be queued or running process-wide. An overlapping call rejects with `SLH-DSA raw private key import busy`; await the current import before retrying. OpenSSL 3.6 or newer is required.
+
+The raw native method checks the ArrayBuffer brand, variant and length, synchronously copies at most 128 bytes, and attaches Promise callbacks before queuing work. It erases the owned input and releases admission before settling. The native key is moved into a fresh handle; the factory retains no key. Call `handle.dispose()` when a key is no longer needed, including after cancellation that occurs while awaiting an import. This drops that handle's reference immediately even when a resolved native Promise retains the handle; independent native owners keep their own references.

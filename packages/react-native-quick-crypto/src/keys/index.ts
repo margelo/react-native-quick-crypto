@@ -37,6 +37,11 @@ import {
   KeyType,
 } from '../utils';
 import { randomBytes } from '../random';
+import type {
+  SlhDsaKeyPairType,
+  SlhDsaPrivateKeyFactoryHandle,
+} from '../utils';
+import { SLH_DSA_VARIANTS } from '../slhdsa';
 
 interface KeyInputObject {
   key: BinaryLike | KeyObject | CryptoKey | JWK;
@@ -78,12 +83,64 @@ function createPublicKeyFromRaw(input: KeyInputObject): PublicKeyObject {
   return new PublicKeyObject(handle);
 }
 
+/** RNQC extension: validates and imports a complete SLH-DSA key off-thread.
+ * The native call snapshots the ArrayBuffer before this function returns.
+ */
+export async function createPrivateKeyAsync(input: {
+  key: ArrayBuffer;
+  format: 'raw-private';
+  asymmetricKeyType: SlhDsaKeyPairType;
+}): Promise<PrivateKeyObject> {
+  const error = 'SLH-DSA raw private key validation failed';
+  if (
+    !input ||
+    input.format !== 'raw-private' ||
+    typeof input.asymmetricKeyType !== 'string'
+  ) {
+    throw new Error(error);
+  }
+  const variant = SLH_DSA_VARIANTS.find(
+    v => v.toLowerCase() === input.asymmetricKeyType,
+  );
+  if (!variant) throw new Error(error);
+  const byteLength = Object.getOwnPropertyDescriptor(
+    ArrayBuffer.prototype,
+    'byteLength',
+  )!.get!;
+  try {
+    Reflect.apply(byteLength, input.key, []);
+  } catch {
+    throw new Error(error);
+  }
+  const factory =
+    NitroModules.createHybridObject<SlhDsaPrivateKeyFactoryHandle>(
+      'KeyObjectHandle',
+    );
+  try {
+    const handle = await factory.importSlhDsaRawPrivateKey(variant, input.key);
+    try {
+      return new PrivateKeyObject(handle);
+    } catch (err) {
+      handle.dispose();
+      throw err;
+    }
+  } finally {
+    factory.dispose();
+  }
+}
+
 function createPrivateKeyFromRaw(input: KeyInputObject): PrivateKeyObject {
   if (input.format !== 'raw-private' && input.format !== 'raw-seed') {
     throw new Error('Invalid format for createPrivateKey raw import');
   }
   if (typeof input.asymmetricKeyType !== 'string') {
     throw new Error('options.asymmetricKeyType is required for raw key import');
+  }
+  if (
+    input.format === 'raw-private' &&
+    input.asymmetricKeyType.toLowerCase().startsWith('slh-dsa-')
+  ) {
+    throw new Error('SLH-DSA raw private keys require createPrivateKeyAsync()');
   }
   if (input.asymmetricKeyType === 'ec' && !input.namedCurve) {
     throw new Error('options.namedCurve is required for EC raw key import');

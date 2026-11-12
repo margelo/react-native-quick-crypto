@@ -6,8 +6,10 @@
 #include <openssl/pem.h>
 
 #include <array>
+#include <stdexcept>
 
 #include "QuickCryptoUtils.hpp"
+#include "SlhDsaRawPrivateKeyValidation.hpp"
 
 #if OPENSSL_VERSION_NUMBER >= 0x30500000L
 #define RNQC_HAS_SLH_DSA 1
@@ -21,18 +23,8 @@ using EVP_MD_CTX_ptr = std::unique_ptr<EVP_MD_CTX, decltype(&EVP_MD_CTX_free)>;
 using EVP_PKEY_CTX_ptr = std::unique_ptr<EVP_PKEY_CTX, decltype(&EVP_PKEY_CTX_free)>;
 
 #if RNQC_HAS_SLH_DSA
-static constexpr std::array<const char*, 12> kSlhDsaVariants{
-    "SLH-DSA-SHA2-128s",  "SLH-DSA-SHA2-128f",  "SLH-DSA-SHA2-192s",  "SLH-DSA-SHA2-192f",  "SLH-DSA-SHA2-256s",  "SLH-DSA-SHA2-256f",
-    "SLH-DSA-SHAKE-128s", "SLH-DSA-SHAKE-128f", "SLH-DSA-SHAKE-192s", "SLH-DSA-SHAKE-192f", "SLH-DSA-SHAKE-256s", "SLH-DSA-SHAKE-256f",
-};
-
 static bool isValidSlhDsaVariant(const std::string& variant) {
-  for (const char* v : kSlhDsaVariants) {
-    if (variant == v) {
-      return true;
-    }
-  }
-  return false;
+  return slhDsaRawPrivateKeySize(variant) != 0;
 }
 #endif
 
