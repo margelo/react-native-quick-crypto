@@ -379,19 +379,32 @@ decrypted += decipher.final('utf8');
 console.log(decrypted); // "secret message"
 ```
 
-## Validate a complete SLH-DSA private key
+## Import a complete SLH-DSA private key
 
-`validateRawPrivateKey()` on a `SlhDsa` instance checks a complete raw private key against the selected SLH-DSA variant and returns its public key. The provider performs the consistency check on a worker thread. The method copies the supplied `ArrayBuffer` before returning, so the caller may erase its own buffer immediately afterward. It preserves the instance's generated key pair.
+`createPrivateKeyAsync()` is an RNQC extension for importing a complete raw SLH-DSA private key. Unlike Node's synchronous `createPrivateKey()`, it performs provider pairwise validation on a worker thread and returns a `PrivateKeyObject` containing the same validated native key. Synchronous SLH-DSA `raw-private` imports reject with an instruction to use this method. Other synchronous key imports are unchanged.
 
 ```ts
-import { SlhDsa } from 'react-native-quick-crypto';
+import { createPrivateKeyAsync, createPublicKey } from 'react-native-quick-crypto';
 
-const slh = new SlhDsa('SLH-DSA-SHAKE-128s');
-const validation = slh.validateRawPrivateKey(rawPrivateKey);
+const pending = createPrivateKeyAsync({
+  key: rawPrivateKey, // ArrayBuffer only
+  format: 'raw-private',
+  asymmetricKeyType: 'slh-dsa-shake-128s',
+});
 new Uint8Array(rawPrivateKey).fill(0);
-const publicKey = await validation;
+const privateKey = await pending;
+let publicKey;
+try {
+  publicKey = createPublicKey(privateKey);
+  const rawPublicKey = publicKey.export({ format: 'raw-public' });
+} finally {
+  publicKey?.handle.dispose();
+  privateKey.handle.dispose();
+}
 ```
 
-The private input contains four `n`-byte fields and must be exactly 64, 96 or 128 bytes for the selected variant. The returned public key contains two `n`-byte fields. An inconsistent key, unsupported provider or concurrent raw-key validation rejects with a generic error. Await the current validation before starting another. OpenSSL 3.6 or newer is required.
+All twelve SLH-DSA variants are supported, using lowercase `SlhDsaKeyPairType` names. The private input contains four `n`-byte fields (`SK.seed`, `SK.prf`, `PK.seed`, `PK.root`) and must be exactly 64, 96 or 128 bytes for the selected variant. Inconsistent `SK.seed`, `PK.seed` or `PK.root` reject with `SLH-DSA raw private key validation failed`. `SK.prf` is independent randomness: changing only that field remains valid and preserves the public key, as specified in FIPS 205 Algorithms 18–20. Validation does not authenticate a key's provenance.
 
-The public native method uses explicit JavaScript input and Promise-admission checks because generated Nitro conversion does not enforce the required release-mode checks before scheduling this operation. The worker retains its owned input until validation ends and erases it before settling the Promise.
+One raw-key import may be queued or running process-wide. An overlapping call rejects with `SLH-DSA raw private key import busy`; await the current import before retrying. OpenSSL 3.6 or newer is required.
+
+The raw native method checks the ArrayBuffer brand, variant and length, synchronously copies at most 128 bytes, and attaches Promise callbacks before queuing work. It erases the owned input and releases admission before settling. The native key is moved into a fresh handle; the factory retains no key. Call `handle.dispose()` when a key is no longer needed, including after cancellation that occurs while awaiting an import. This drops that handle's reference immediately even when a resolved native Promise retains the handle; independent native owners keep their own references.

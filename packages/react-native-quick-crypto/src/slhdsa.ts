@@ -1,5 +1,5 @@
 import { NitroModules } from 'react-native-nitro-modules';
-import type { SlhDsaKeyPair as GeneratedSlhDsaKeyPair } from './specs/slhDsaKeyPair.nitro';
+import type { SlhDsaKeyPair } from './specs/slhDsaKeyPair.nitro';
 import {
   CryptoKey,
   KeyObject,
@@ -21,11 +21,6 @@ import {
 } from './utils';
 
 export type SlhDsaVariant = SlhDsaAlgorithm;
-
-/** Public native method with release-mode shape checks before job admission. */
-export interface SlhDsaKeyPair extends GeneratedSlhDsaKeyPair {
-  validateRawPrivateKey(privateKey: ArrayBuffer): Promise<ArrayBuffer>;
-}
 
 export const SLH_DSA_VARIANTS: readonly SlhDsaVariant[] = [
   'SLH-DSA-SHA2-128s',
@@ -51,21 +46,6 @@ export class SlhDsa {
     this.native =
       NitroModules.createHybridObject<SlhDsaKeyPair>('SlhDsaKeyPair');
     this.native.setVariant(variant);
-  }
-
-  /** Validate a complete raw private key and return its public key off-thread. */
-  async validateRawPrivateKey(privateKey: ArrayBuffer): Promise<ArrayBuffer> {
-    const byteLength = Object.getOwnPropertyDescriptor(
-      ArrayBuffer.prototype,
-      'byteLength',
-    )!.get!;
-    try {
-      Reflect.apply(byteLength, privateKey, []);
-    } catch {
-      throw new Error('SLH-DSA raw private key validation failed');
-    }
-    // The native method captures the selected variant and copies before returning.
-    return this.native.validateRawPrivateKey(privateKey);
   }
 
   async generateKeyPair(): Promise<void> {

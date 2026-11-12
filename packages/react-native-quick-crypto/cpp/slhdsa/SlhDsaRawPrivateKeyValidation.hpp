@@ -39,13 +39,20 @@ inline std::size_t slhDsaRawPrivateKeySize(std::string_view variant) {
   return 0;
 }
 
+class SlhDsaRawPrivateKeyBusy final : public std::runtime_error {
+ public:
+  SlhDsaRawPrivateKeyBusy() : std::runtime_error("SLH-DSA raw private key import busy") {}
+};
+
 // One bounded owned secret and one queued/running validation across runtimes.
 class SlhDsaRawPrivateKeyValidation final {
  public:
   SlhDsaRawPrivateKeyValidation(std::string variant, const uint8_t* input, std::size_t size)
       : variant_(std::move(variant)), size_(slhDsaRawPrivateKeySize(variant_)) {
-    if (input == nullptr || size_ == 0 || size != size_ || inFlight_.test_and_set(std::memory_order_acquire))
+    if (input == nullptr || size_ == 0 || size != size_)
       fail();
+    if (inFlight_.test_and_set(std::memory_order_acquire))
+      throw SlhDsaRawPrivateKeyBusy();
     std::copy_n(input, size_, secret_.begin());
   }
 
@@ -57,7 +64,9 @@ class SlhDsaRawPrivateKeyValidation final {
   SlhDsaRawPrivateKeyValidation(const SlhDsaRawPrivateKeyValidation&) = delete;
   SlhDsaRawPrivateKeyValidation& operator=(const SlhDsaRawPrivateKeyValidation&) = delete;
 
-  std::vector<uint8_t> validate() const {
+  using Key = std::unique_ptr<EVP_PKEY, decltype(&EVP_PKEY_free)>;
+
+  Key validate() const {
 #if OPENSSL_VERSION_NUMBER >= 0x30600000L
     struct ErrorScope {
       ErrorScope() {
@@ -67,9 +76,8 @@ class SlhDsaRawPrivateKeyValidation final {
         ERR_clear_error();
       }
     } errors;
-    using Key = std::unique_ptr<EVP_PKEY, decltype(&EVP_PKEY_free)>;
     using Context = std::unique_ptr<EVP_PKEY_CTX, decltype(&EVP_PKEY_CTX_free)>;
-    const Key key(EVP_PKEY_new_raw_private_key_ex(nullptr, variant_.c_str(), nullptr, secret_.data(), size_), EVP_PKEY_free);
+    Key key(EVP_PKEY_new_raw_private_key_ex(nullptr, variant_.c_str(), nullptr, secret_.data(), size_), EVP_PKEY_free);
     if (!key || EVP_PKEY_is_a(key.get(), variant_.c_str()) != 1)
       fail();
     const Context context(EVP_PKEY_CTX_new_from_pkey(nullptr, key.get(), nullptr), EVP_PKEY_CTX_free);
@@ -81,7 +89,7 @@ class SlhDsaRawPrivateKeyValidation final {
     if (EVP_PKEY_get_raw_public_key(key.get(), publicKey.data(), &size) != 1 || size != publicKey.size() ||
         CRYPTO_memcmp(publicKey.data(), secret_.data() + size_ - publicKey.size(), publicKey.size()) != 0)
       fail();
-    return publicKey;
+    return key;
 #else
     fail();
 #endif

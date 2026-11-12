@@ -31,13 +31,7 @@ class HybridSlhDsaKeyPair : public HybridSlhDsaKeyPairSpec {
 
   void setVariant(const std::string& variant) override;
 
- protected:
-  void loadHybridMethods() override;
-
  private:
-  facebook::jsi::Value validateRawPrivateKey(facebook::jsi::Runtime& runtime, const facebook::jsi::Value& thisArg,
-                                             const facebook::jsi::Value* args, size_t argCount);
-
   using EVP_PKEY_ptr = std::unique_ptr<EVP_PKEY, decltype(&EVP_PKEY_free)>;
 
   std::string variant_;

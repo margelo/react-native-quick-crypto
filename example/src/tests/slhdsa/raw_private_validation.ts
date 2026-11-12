@@ -1,4 +1,15 @@
-import { Buffer, SlhDsa } from 'react-native-quick-crypto';
+import {
+  Buffer,
+  createPrivateKey,
+  createPrivateKeyAsync,
+  createPublicKey,
+  sign,
+  verify,
+  type SlhDsaKeyPairType,
+  type KeyObjectHandle,
+  type SlhDsaPrivateKeyFactoryHandle,
+} from 'react-native-quick-crypto';
+import { NitroModules } from 'react-native-nitro-modules';
 import { expect } from 'chai';
 import { assertThrowsAsync, test } from '../util';
 
@@ -112,102 +123,143 @@ function fixture(privateKey: string = reference.privateKey): ArrayBuffer {
   return Uint8Array.from(Buffer.from(privateKey, 'hex')).buffer;
 }
 
-// The example runner starts registered tests concurrently. Keep this process-wide
-// admission contract in one test and drain every admitted job even after failure.
-test(
-  SUITE,
-  'validates all variants and preserves bounded admission',
-  async () => {
-    const admitted: Promise<unknown>[] = [];
-    const track = <T>(pending: Promise<T>): Promise<T> => {
-      admitted.push(pending);
-      return pending;
-    };
+function importKey(raw: ArrayBuffer, variant: string = reference.variant) {
+  return createPrivateKeyAsync({
+    key: raw,
+    format: 'raw-private',
+    asymmetricKeyType: variant.toLowerCase() as SlhDsaKeyPairType,
+  });
+}
 
+// Keep process-wide admission tests sequential even with the concurrent runner.
+test(SUITE, 'imports validated handles with bounded admission', async () => {
+  for (const vector of vectors) {
+    const raw = fixture(vector.privateKey);
+    const pending = importKey(raw, vector.variant);
+    new Uint8Array(raw).fill(0);
+    const key = await pending;
     try {
-      for (const vector of vectors) {
-        const slh = new SlhDsa(vector.variant);
-        const raw = fixture(vector.privateKey);
-        const pending = track(slh.validateRawPrivateKey(raw));
-        new Uint8Array(raw).fill(0);
+      const publicKey = createPublicKey(key);
+      try {
         expect(
-          Buffer.from(await pending).toString('hex'),
+          publicKey.export({ format: 'raw-public' }).toString('hex'),
           `${vector.variant} NIST case ${vector.testCase}`,
         ).to.equal(vector.publicKey);
+      } finally {
+        publicKey.handle.dispose();
       }
-
-      const slh = new SlhDsa(reference.variant);
-      const raw = fixture();
-      const bytes = new Uint8Array(raw);
-      bytes[63] = bytes[63]! ^ 1;
-      await assertThrowsAsync(
-        () => track(slh.validateRawPrivateKey(raw)),
-        error,
-      );
-      expect(
-        Buffer.from(await track(slh.validateRawPrivateKey(fixture()))).toString(
-          'hex',
-        ),
-      ).to.equal(reference.publicKey);
-
-      // Capture the Promise outside the assertion to detect synchronous throws.
-      const invalidSize = track(slh.validateRawPrivateKey(new ArrayBuffer(63)));
-      expect(invalidSize).to.be.instanceOf(Promise);
-      await assertThrowsAsync(() => invalidSize, error);
-
-      for (const value of [null, 1, {}, new Uint8Array(64)]) {
-        await assertThrowsAsync(
-          async () =>
-            track(slh.native.validateRawPrivateKey(value as ArrayBuffer)),
-          error,
-        );
-      }
-      for (const size of [0, 63, 65, 129]) {
-        const pending = track(slh.validateRawPrivateKey(new ArrayBuffer(size)));
-        await assertThrowsAsync(() => pending, error);
-      }
-
-      const captured = track(slh.validateRawPrivateKey(fixture()));
-      slh.native.setVariant('SLH-DSA-SHA2-256s');
-      expect(Buffer.from(await captured).toString('hex')).to.equal(
-        reference.publicKey,
-      );
-      await assertThrowsAsync(
-        () => track(slh.validateRawPrivateKey(fixture())),
-        error,
-      );
-      slh.native.setVariant(reference.variant);
-      expect(
-        Buffer.from(await track(slh.validateRawPrivateKey(fixture()))).toString(
-          'hex',
-        ),
-      ).to.equal(reference.publicKey);
-
-      const second = new SlhDsa(reference.variant);
-      const pending = track(slh.validateRawPrivateKey(fixture()));
-      const overlapping = track(second.validateRawPrivateKey(fixture()));
-      expect(overlapping).to.be.instanceOf(Promise);
-      // The worker may finish before the next native call. Check either valid
-      // outcome without relying on JS settlement timing to prove mutual exclusion.
-      const [overlapResult] = await Promise.allSettled([overlapping] as const);
-      if (overlapResult.status === 'fulfilled') {
-        expect(Buffer.from(overlapResult.value).toString('hex')).to.equal(
-          reference.publicKey,
-        );
-      } else {
-        expect(overlapResult.reason).to.be.instanceOf(Error);
-        expect((overlapResult.reason as Error).message).to.equal(error);
-      }
-      expect(Buffer.from(await pending).toString('hex')).to.equal(
-        reference.publicKey,
-      );
-      expect(
-        Buffer.from(
-          await track(second.validateRawPrivateKey(fixture())),
-        ).toString('hex'),
-      ).to.equal(reference.publicKey);
     } finally {
-      await Promise.allSettled(admitted);
+      key.handle.dispose();
     }
-  },
-);
+  }
+  const n = fixture().byteLength / 4;
+  // SK.prf is independent randomness, not a function of the public key (FIPS 205).
+  const changedPrf = fixture();
+  const changedPrfBytes = new Uint8Array(changedPrf);
+  changedPrfBytes[n] = changedPrfBytes[n]! ^ 1;
+  const key = await importKey(changedPrf);
+  try {
+    const pub = createPublicKey(key);
+    try {
+      expect(pub.export({ format: 'raw-public' }).toString('hex')).to.equal(
+        reference.publicKey,
+      );
+      const message = Buffer.from('SLH-DSA independent SK.prf');
+      expect(verify(null, message, pub, sign(null, message, key))).to.equal(
+        true,
+      );
+    } finally {
+      pub.handle.dispose();
+    }
+  } finally {
+    key.handle.dispose();
+  }
+
+  for (const offset of [0, 2 * n, 3 * n]) {
+    const raw = fixture();
+    const bytes = new Uint8Array(raw);
+    bytes[offset] = bytes[offset]! ^ 1;
+    await assertThrowsAsync(() => importKey(raw), error);
+  }
+  for (const value of [null, 1, {}, new Uint8Array(64)]) {
+    await assertThrowsAsync(() => importKey(value as ArrayBuffer), error);
+  }
+  for (const size of [0, 63, 65, 129]) {
+    await assertThrowsAsync(() => importKey(new ArrayBuffer(size)), error);
+  }
+  await assertThrowsAsync(() => importKey(fixture(), 'unknown'), error);
+  await assertThrowsAsync(
+    async () =>
+      createPrivateKey({
+        key: fixture(),
+        format: 'raw-private',
+        asymmetricKeyType: reference.variant.toLowerCase(),
+      }),
+    'SLH-DSA raw private keys require createPrivateKeyAsync()',
+  );
+
+  const factory =
+    NitroModules.createHybridObject<SlhDsaPrivateKeyFactoryHandle>(
+      'KeyObjectHandle',
+    );
+  try {
+    for (const value of [null, 1, {}, new Uint8Array(64)]) {
+      await assertThrowsAsync(
+        async () =>
+          factory.importSlhDsaRawPrivateKey(
+            reference.variant,
+            value as ArrayBuffer,
+          ),
+        error,
+      );
+    }
+    await assertThrowsAsync(
+      async () => factory.importSlhDsaRawPrivateKey('unknown', fixture()),
+      error,
+    );
+    const pending = factory.importSlhDsaRawPrivateKey(
+      reference.variant,
+      fixture(),
+    );
+    let overlapping: Promise<KeyObjectHandle>;
+    try {
+      overlapping = factory.importSlhDsaRawPrivateKey(
+        reference.variant,
+        fixture(),
+      );
+    } catch (err) {
+      overlapping = Promise.reject(err);
+    }
+    const results = await Promise.allSettled([pending, overlapping]);
+    for (const result of results) {
+      if (result.status === 'fulfilled') {
+        expect(
+          Buffer.from(result.value.exportRawPublic()).toString('hex'),
+        ).to.equal(reference.publicKey);
+        result.value.dispose();
+      } else {
+        expect(result.reason).to.be.instanceOf(Error);
+        expect((result.reason as Error).message).to.equal(
+          'SLH-DSA raw private key import busy',
+        );
+      }
+    }
+    // Worker scheduling can complete between calls; the native helper test
+    // holds admission explicitly to exercise deterministic busy rejection.
+    const reused = await factory.importSlhDsaRawPrivateKey(
+      reference.variant,
+      fixture(),
+    );
+    expect(Buffer.from(reused.exportRawPublic()).toString('hex')).to.equal(
+      reference.publicKey,
+    );
+    reused.dispose();
+    // The factory never receives a copy of the imported secret.
+    await assertThrowsAsync(
+      async () => factory.exportRawPrivate(),
+      'Invalid key object: no key data available',
+    );
+  } finally {
+    factory.dispose();
+  }
+});
