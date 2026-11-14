@@ -14,7 +14,7 @@ The trusted files are read from `main`:
 - `.github/local-validation/recipe.json` also declares `bun.lock` and `package.json` as `dependency_files` and Bun and Node version `toolchain_probes`, so the signed evidence binds RNQC's JavaScript inputs instead of AgentSCM's Rust defaults.
 - `policy.json` declares `exempt_paths`. A pull request whose every changed path matches one of them gets `success` with `not required: only exempt paths changed`, without an attestation. This means it was exempted, not tested on devices. Changes to `.github/local-validation/**` or `.github/workflows/local-validation.yml` are never exempt.
 
-RNQC uses published AgentSCM `0.1.0-alpha.8` for both the producer and verifier. `.github/workflows/local-validation.yml` pins the upstream reusable workflow to the release commit `efcac5a9ddb146bdb360af1cb3c463f001d9982e` and its `release-version` input to the exact npm version. The upstream workflow owns installation, provenance verification, event filtering, concurrency and reconciliation; RNQC keeps only the triggers and permissions. Its default configuration directory and verifier path match RNQC. No Rust build or repository package dependency is needed.
+RNQC uses published AgentSCM `0.5.0` for both the producer and verifier. `.github/workflows/local-validation.yml` pins the upstream reusable workflow to the release commit `7d9929aaa79cf0964170de89d2515fe4908c6b45` and its `release-version` input to the exact npm version. Optional 0.5.0 fields (`constituents`, per-command `test_selection`, and policy `check_id`) are unset, so the recipe digest stays `26f049bbae90a3ed7a8e13367d20d3e65c5135c06c707f85a5c103d3d80352dd`. The upstream workflow owns installation, provenance verification, event filtering, concurrency and reconciliation; RNQC keeps only the triggers and permissions. Its default configuration directory and verifier path match RNQC. No Rust build or repository package dependency is needed.
 
 ## Trust and coverage limits
 
@@ -52,12 +52,12 @@ Install the same exact release as the verifier, outside RNQC. Node.js and the Gi
 ```bash
 AGENTSCM_TELEMETRY=off AGENTSCM_REQUIRE_PROVENANCE=1 \
   npx --yes --ignore-scripts --registry=https://registry.npmjs.org \
-  agentscm@0.1.0-alpha.8 local-validation reconcile --help
-AGENTSCM_BIN="$HOME/.agentscm/bin/agentscm-0.1.0-alpha.8"
+  agentscm@0.5.0 local-validation reconcile --help
+AGENTSCM_BIN="$HOME/.agentscm/bin/agentscm-0.5.0"
 "$AGENTSCM_BIN" --version
 ```
 
-The command downloads and verifies the release binary without npm lifecycle scripts. `local-validation reconcile --help` exercises the binary installer without writing GitHub statuses; top-level `npx agentscm --version` only prints the npm wrapper's version. The binary must report `agentscm 0.1.0-alpha.8`. Use this versioned binary for the commands below so another global installation cannot silently select a different release.
+The command downloads and verifies the release binary without npm lifecycle scripts. `local-validation reconcile --help` exercises the binary installer without writing GitHub statuses; top-level `npx agentscm --version` only prints the npm wrapper's version. The binary must report `agentscm 0.5.0`. Use this versioned binary for the commands below so another global installation cannot silently select a different release.
 
 AgentSCM's own test suite covers producing, verifying and reconciling attestations, path-scoped commands and exempt paths. `./scripts/local-validation/test-scripts.sh` covers RNQC's screenshot helper with mocked GitHub and ImgBB commands, including refusal to upload invalid screenshot evidence. These tests never read the enrolled `boorad` private key, post a pull request comment or change a GitHub ruleset.
 
