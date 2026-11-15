@@ -24,6 +24,6 @@ jobs:
       contents: read
       pull-requests: read
       statuses: write
-    uses: agentscm/agentscm/.github/workflows/local-validation-reconcile.yml@efcac5a9ddb146bdb360af1cb3c463f001d9982e # v0.1.0-alpha.8
+    uses: agentscm/agentscm/.github/workflows/local-validation-reconcile.yml@7d9929aaa79cf0964170de89d2515fe4908c6b45 # v0.5.0
     with:
-      release-version: 0.1.0-alpha.8
+      release-version: 0.5.0

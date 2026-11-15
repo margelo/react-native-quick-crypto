@@ -21,6 +21,7 @@ import path from 'node:path';
 import process from 'node:process';
 import { fileURLToPath } from 'node:url';
 
+import { selectIosSimulator } from './ios-simulator.mjs';
 import {
   ResourceRegistry,
   finalizeRun,
@@ -322,18 +323,7 @@ async function createIosSimulator() {
   const inventory = JSON.parse(
     (await command('xcrun', ['simctl', 'list', 'runtimes', '-j'])).stdout,
   );
-  const runtime = inventory.runtimes
-    .filter(
-      item => item.isAvailable && item.identifier.includes('SimRuntime.iOS'),
-    )
-    .sort((left, right) => compareVersions(right.version, left.version))[0];
-  if (!runtime)
-    throw new Error('No available iOS simulator runtime is installed');
-  const deviceType = runtime.supportedDeviceTypes?.find(
-    item => item.productFamily === 'iPhone',
-  );
-  if (!deviceType)
-    throw new Error(`No iPhone device type supports iOS ${runtime.version}`);
+  const { runtime, deviceType } = selectIosSimulator(inventory.runtimes);
 
   const name = `rnqc-e2e-${runId}`;
   const device = owned.registerDevice({
@@ -1039,10 +1029,6 @@ async function waitForAndroidBoot(serial, emulator) {
     `Android emulator ${serial} did not finish booting`,
     2_000,
   );
-}
-
-function compareVersions(left, right) {
-  return left.localeCompare(right, undefined, { numeric: true });
 }
 
 function childHasExited(child) {
