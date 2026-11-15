@@ -26,6 +26,14 @@ target 'QuickCryptoExample' do
     :app_path => "#{Pod::Config.instance.installation_root}/..",
   )
 
+  # Codegen otherwise embeds Bun's versioned peer-directory in its pod checksum.
+  codegen_path = File.join(__dir__, 'build/generated/ios/ReactCodegen.podspec')
+  codegen = File.read(codegen_path)
+  rn_export = /^export RCT_SCRIPT_RN_DIR="[^"\n]+"$/
+  raise 'Unexpected ReactCodegen script path' unless codegen.scan(rn_export).length == 1
+  File.write(codegen_path, codegen.sub(rn_export,
+    'export RCT_SCRIPT_RN_DIR="$RCT_SCRIPT_POD_INSTALLATION_ROOT/../node_modules/react-native"'))
+
   post_install do |installer|
     # https://github.com/facebook/react-native/blob/main/packages/react-native/scripts/react_native_pods.rb#L197-L202
     react_native_post_install(

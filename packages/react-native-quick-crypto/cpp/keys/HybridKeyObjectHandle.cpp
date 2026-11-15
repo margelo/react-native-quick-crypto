@@ -1,3 +1,7 @@
+#include "../slhdsa/SlhDsaRawPrivateKeyValidation.hpp"
+#include <NitroModules/Dispatcher.hpp>
+#include <NitroModules/JSIConverter.hpp>
+#include <NitroModules/ThreadPool.hpp>
 #include <cstdio>
 #include <mutex>
 #include <stdexcept>
@@ -45,6 +49,110 @@ HybridKeyObjectHandle::HybridKeyObjectHandle() : HybridObject(TAG) {
   // the call_once flag makes subsequent constructions cheap.
   configurePqcOutputFormats();
 #endif
+}
+
+facebook::jsi::Value HybridKeyObjectHandle::importSlhDsaRawPrivateKey(facebook::jsi::Runtime& runtime, const facebook::jsi::Value&,
+                                                                      const facebook::jsi::Value* args, size_t argCount) {
+  constexpr const char* error = "SLH-DSA raw private key validation failed";
+  if (argCount != 2 || !args[0].isString() || !args[1].isObject()) {
+    throw facebook::jsi::JSError(runtime, error);
+  }
+
+  try {
+    auto object = args[1].getObject(runtime);
+    // The typed Nitro converter checks the ArrayBuffer brand only in debug builds.
+    if (!object.isArrayBuffer(runtime)) {
+      throw std::invalid_argument(error);
+    }
+    auto buffer = std::move(object).getArrayBuffer(runtime);
+    const auto size = buffer.size(runtime);
+    const auto variant = args[0].getString(runtime).utf8(runtime);
+    const auto expectedSize = slhDsaRawPrivateKeySize(variant);
+    if (expectedSize == 0 || size != expectedSize) {
+      throw std::invalid_argument(error);
+    }
+
+    // Fail before copying if this runtime cannot dispatch Promise callbacks.
+    Dispatcher::getRuntimeGlobalDispatcher(runtime);
+    auto validation = std::make_shared<SlhDsaRawPrivateKeyValidation>(variant, buffer.data(runtime), size);
+    using Result = std::shared_ptr<HybridKeyObjectHandleSpec>;
+    using ValidationPromise = Promise<Result>;
+    using Resolve = JSIConverter<std::function<void(Result)>>;
+    using Reject = JSIConverter<std::function<void(std::exception_ptr)>>;
+    enum class Attachment { pending, failed, ready };
+    auto attachment = std::make_shared<Attachment>(Attachment::pending);
+    auto promise = ValidationPromise::create();
+    auto jsPromise = CommonGlobals::Promise::callConstructor(
+        runtime, [promise, attachment, error](facebook::jsi::Runtime& js, const facebook::jsi::Value&,
+                                              const facebook::jsi::Value* callbacks, size_t count) {
+          const bool first = *attachment == Attachment::pending;
+          *attachment = Attachment::failed;
+          if (!first || count != 2 || !Resolve::canConvert(js, callbacks[0]) || !Reject::canConvert(js, callbacks[1])) {
+            throw facebook::jsi::JSError(js, error);
+          }
+          auto resolve = Resolve::fromJSI(js, callbacks[0]);
+          auto reject = Reject::fromJSI(js, callbacks[1]);
+          promise->addOnResolvedListener(std::move(resolve));
+          promise->addOnRejectedListener(std::move(reject));
+          *attachment = Attachment::ready;
+          return facebook::jsi::Value::undefined();
+        });
+    // The JS constructor catches executor errors. A returned Promise by
+    // itself does not establish that a resolver and rejecter were attached.
+    if (*attachment != Attachment::ready) {
+      if (*attachment == Attachment::failed)
+        return jsPromise;
+      throw std::runtime_error(error);
+    }
+
+    try {
+      ThreadPool::shared().run([validation = std::move(validation), promise]() mutable {
+        Result output;
+        try {
+          // The worker owns a synchronous copy, never a JS-backed buffer.
+          auto active = std::move(validation);
+          auto key = active->validate();
+          auto handle = std::make_shared<HybridKeyObjectHandle>();
+          handle->setKeyObjectData(KeyObjectData::CreateAsymmetric(KeyType::PRIVATE, ncrypto::EVPKeyPointer(key.release())));
+          output = std::move(handle);
+        } catch (...) {
+          // The owned input has unwound before either callback can run.
+          promise->reject(std::current_exception());
+          return;
+        }
+        promise->resolve(std::move(output));
+      });
+    } catch (...) {
+      validation.reset();
+      try {
+        throw std::runtime_error(error);
+      } catch (...) {
+        promise->reject(std::current_exception());
+      }
+    }
+    return jsPromise;
+  } catch (const SlhDsaRawPrivateKeyBusy& busy) {
+    throw facebook::jsi::JSError(runtime, busy.what());
+  } catch (...) {
+    throw facebook::jsi::JSError(runtime, error);
+  }
+}
+
+// Generated conversion omits release-mode ArrayBuffer brand checks and converts
+// the returned Promise after entering native code. Admit work only after both
+// the input and the JavaScript Promise callbacks have been checked.
+void HybridKeyObjectHandle::loadHybridMethods() {
+  HybridKeyObjectHandleSpec::loadHybridMethods();
+  registerHybrids(this, [](Prototype& prototype) {
+    prototype.registerRawHybridMethod("importSlhDsaRawPrivateKey", 2, &HybridKeyObjectHandle::importSlhDsaRawPrivateKey);
+  });
+}
+
+// All current operations on a key handle run synchronously on the JS thread.
+// EVP contexts and KeyObjectData copies retain their own references; dropping
+// this handle's reference must not invalidate those independent owners.
+void HybridKeyObjectHandle::dispose() {
+  data_ = KeyObjectData();
 }
 
 // Helper functions for base64url encoding/decoding with BIGNUMs
@@ -1274,6 +1382,7 @@ bool HybridKeyObjectHandle::initPqcRaw(const std::string& algorithmName, const s
   if (isPublic) {
     pkey = ncrypto::EVPKeyPointer::NewRawPublic(nid, buffer);
   } else {
+    // This path derives a key from a seed, not a supplied complete private key.
     pkey = ncrypto::EVPKeyPointer::NewRawSeed(nid, buffer);
   }
 
@@ -1368,6 +1477,8 @@ bool HybridKeyObjectHandle::initRawPublic(const std::string& asymmetricKeyType, 
 
 bool HybridKeyObjectHandle::initRawPrivate(const std::string& asymmetricKeyType, const std::shared_ptr<ArrayBuffer>& keyData,
                                            const std::optional<std::string>& namedCurve) {
+  if (asymmetricKeyType.starts_with("slh-dsa-") || asymmetricKeyType.starts_with("SLH-DSA-"))
+    throw std::runtime_error("SLH-DSA raw private keys require createPrivateKeyAsync()");
   data_ = KeyObjectData();
 
   if (asymmetricKeyType == "ec") {

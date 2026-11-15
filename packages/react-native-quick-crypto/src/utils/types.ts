@@ -555,6 +555,14 @@ export type CipherOFBType = 'aes-128-ofb' | 'aes-192-ofb' | 'aes-256-ofb';
 
 export type KeyObjectHandle = KeyObjectHandleType;
 
+// Raw JSI factory method: brand checks and callback attachment precede admission.
+export interface SlhDsaPrivateKeyFactoryHandle extends KeyObjectHandleType {
+  importSlhDsaRawPrivateKey(
+    variant: string,
+    key: ArrayBuffer,
+  ): Promise<KeyObjectHandle>;
+}
+
 export type RawDiffieHellmanKeyInput = {
   key: ArrayBuffer | ArrayBufferView | string;
   format: 'raw-public' | 'raw-private' | 'raw-seed';

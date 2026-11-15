@@ -3,6 +3,9 @@ const path = require('path');
 
 const root = path.resolve(__dirname, '..');
 const packagesDir = path.join(root, 'packages');
+const nitroRoot = path.dirname(
+  require.resolve('react-native-nitro-modules/package.json'),
+);
 
 /**
  * Metro configuration
@@ -14,6 +17,13 @@ const config = {
   watchFolders: [root],
 
   resolver: {
+    // Bun's peer layouts can expose two copies of this native singleton.
+    resolveRequest(context, moduleName, platform) {
+      if (moduleName === 'react-native-nitro-modules') {
+        return context.resolveRequest(context, nitroRoot, platform);
+      }
+      return context.resolveRequest(context, moduleName, platform);
+    },
     nodeModulesPaths: [
       path.join(__dirname, 'node_modules'),
       path.join(root, 'node_modules'),
