@@ -1,0 +1,3 @@
+dependencies {
+  implementation 'io.github.ronickg:openssl-static:3.6.2-3'
+}

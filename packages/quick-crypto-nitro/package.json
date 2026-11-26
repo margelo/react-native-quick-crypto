@@ -1,0 +1,44 @@
+{
+  "name": "quick-crypto-nitro",
+  "version": "0.0.1-alpha.0",
+  "description": "Quick Crypto hashing for standalone Nitro runtimes",
+  "license": "MIT",
+  "type": "module",
+  "exports": {
+    ".": {
+      "types": "./src/index.ts",
+      "default": "./src/index.ts"
+    },
+    "./package.json": "./package.json"
+  },
+  "imports": {
+    "#nitro/*": "./nitrogen/generated/shared/javascript/*.cjs"
+  },
+  "scripts": {
+    "specs": "bun run --bun nitrogen",
+    "typescript": "tsc --noEmit",
+    "prepack": "bash scripts/prepare-sources.sh && bash scripts/prepare-openssl-apple.sh"
+  },
+  "files": [
+    "src",
+    "cpp",
+    "backend",
+    "android",
+    "ios",
+    "scripts",
+    "nitrogen/generated",
+    "Package.swift",
+    "nitro.json"
+  ],
+  "peerDependencies": {
+    "nitro-core": "1.0.0-alpha.nightly.120.g33ef045b96c0"
+  },
+  "devDependencies": {
+    "nitrogen": "1.0.0-alpha.nightly.120.g33ef045b96c0",
+    "nitro-core": "1.0.0-alpha.nightly.120.g33ef045b96c0",
+    "typescript": "5.8.3"
+  },
+  "dependencies": {
+    "buffer": "6.0.3"
+  }
+}

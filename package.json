@@ -101,6 +101,7 @@
   },
   "workspaces": [
     "packages/react-native-quick-crypto",
+    "packages/quick-crypto-nitro",
     "example"
   ],
   "dependencies": {
