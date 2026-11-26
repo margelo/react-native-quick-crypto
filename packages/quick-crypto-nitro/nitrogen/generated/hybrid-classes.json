@@ -1,0 +1,21 @@
+{
+  "version": 2,
+  "classes": {
+    "Hash": {
+      "android": {
+        "implementation": {
+          "className": "HybridHash",
+          "include": "<QuickCryptoNitro/HybridHash.hpp>"
+        },
+        "language": "c++"
+      },
+      "apple": {
+        "implementation": {
+          "className": "HybridHash",
+          "include": "<QuickCryptoNitro/HybridHash.hpp>"
+        },
+        "language": "c++"
+      }
+    }
+  }
+}

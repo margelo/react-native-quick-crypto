@@ -1,0 +1,21 @@
+{
+  "$schema": "https://nitro.margelo.com/nitro.schema.json",
+  "environment": "bare",
+  "cxxNamespace": [
+    "quickcrypto"
+  ],
+  "apple": {
+    "moduleName": "QuickCryptoNitro"
+  },
+  "android": {
+    "namespace": [
+      "quickcrypto"
+    ],
+    "cxxLibName": "QuickCryptoNitro"
+  },
+  "ignorePaths": [
+    "**/node_modules",
+    "**/.build",
+    "**/.swiftpm"
+  ]
+}

@@ -2,70 +2,19 @@
 #include <memory>
 #include <openssl/err.h>
 #include <openssl/evp.h>
+#include <openssl/params.h>
 #include <optional>
 #include <string>
 #include <vector>
 
 #include "HybridHash.hpp"
-#include "QuickCryptoUtils.hpp"
 
 namespace margelo::nitro::crypto {
 
-HybridHash::~HybridHash() {
-  if (ctx) {
-    EVP_MD_CTX_free(ctx);
-    ctx = nullptr;
-  }
-  if (md && md_fetched) {
-    EVP_MD_free(md);
-    md = nullptr;
-  }
-}
-
 void HybridHash::createHash(const std::string& hashAlgorithmArg, const std::optional<double> outputLengthArg) {
-  // Clear any previous OpenSSL errors to prevent pollution
-  clearOpenSSLErrors();
-
-  // Clean up existing resources before creating new ones
-  if (ctx) {
-    EVP_MD_CTX_free(ctx);
-    ctx = nullptr;
-  }
-  if (md && md_fetched) {
-    EVP_MD_free(md);
-    md = nullptr;
-    md_fetched = false;
-  }
-
-  algorithm = hashAlgorithmArg;
+  ctx.reset();
+  ctx = ::margelo::quickcrypto::createDigestContext(hashAlgorithmArg);
   outputLength = outputLengthArg;
-
-  // Create hash context
-  ctx = EVP_MD_CTX_new();
-  if (!ctx) {
-    throw std::runtime_error("Failed to create hash context: " + std::to_string(ERR_get_error()));
-  }
-
-  // Fetch the message digest using modern provider-based API
-  md = EVP_MD_fetch(nullptr, algorithm.c_str(), nullptr);
-  if (!md) {
-    EVP_MD_CTX_free(ctx);
-    ctx = nullptr;
-    throw std::runtime_error("Unknown hash algorithm: " + algorithm);
-  }
-  md_fetched = true;
-
-  // Initialize the digest
-  if (EVP_DigestInit_ex(ctx, md, nullptr) != 1) {
-    EVP_MD_CTX_free(ctx);
-    ctx = nullptr;
-    if (md_fetched) {
-      EVP_MD_free(md);
-      md = nullptr;
-      md_fetched = false;
-    }
-    throw std::runtime_error("Failed to initialize hash digest: " + std::to_string(ERR_get_error()));
-  }
 }
 
 void HybridHash::update(const std::variant<std::shared_ptr<ArrayBuffer>, std::string>& data) {
@@ -75,14 +24,10 @@ void HybridHash::update(const std::variant<std::shared_ptr<ArrayBuffer>, std::st
 
   if (std::holds_alternative<std::string>(data)) {
     const std::string& str = std::get<std::string>(data);
-    if (EVP_DigestUpdate(ctx, reinterpret_cast<const uint8_t*>(str.data()), str.length()) != 1) {
-      throw std::runtime_error("Failed to update hash digest: " + std::to_string(ERR_get_error()));
-    }
+    ::margelo::quickcrypto::updateDigest(ctx.get(), str.data(), str.size());
   } else {
     const std::shared_ptr<ArrayBuffer>& buffer = std::get<std::shared_ptr<ArrayBuffer>>(data);
-    if (EVP_DigestUpdate(ctx, reinterpret_cast<const uint8_t*>(buffer->data()), buffer->size()) != 1) {
-      throw std::runtime_error("Failed to update hash digest: " + std::to_string(ERR_get_error()));
-    }
+    ::margelo::quickcrypto::updateDigest(ctx.get(), buffer->data(), buffer->size());
   }
 }
 
@@ -94,7 +39,7 @@ std::shared_ptr<ArrayBuffer> HybridHash::digest(const std::optional<std::string>
   setParams();
 
   // Get the default digest size
-  const size_t defaultLen = EVP_MD_CTX_size(ctx);
+  const size_t defaultLen = EVP_MD_CTX_size(ctx.get());
   const size_t digestSize = (outputLength.has_value()) ? static_cast<int>(*outputLength) : defaultLen;
 
   if (digestSize < 0) {
@@ -104,14 +49,9 @@ std::shared_ptr<ArrayBuffer> HybridHash::digest(const std::optional<std::string>
   auto hashBuffer = std::make_unique<uint8_t[]>(digestSize);
   size_t hashLength = digestSize;
 
-  int ret;
   if (digestSize == defaultLen) {
-    ret = EVP_DigestFinal_ex(ctx, hashBuffer.get(), reinterpret_cast<unsigned int*>(&hashLength));
-  } else {
-    ret = EVP_DigestFinalXOF(ctx, hashBuffer.get(), hashLength);
-  }
-
-  if (ret != 1) {
+    hashLength = ::margelo::quickcrypto::finishDigest(ctx.get(), hashBuffer.get());
+  } else if (EVP_DigestFinalXOF(ctx.get(), hashBuffer.get(), hashLength) != 1) {
     throw std::runtime_error("Failed to finalize hash digest: " + std::to_string(ERR_get_error()));
   }
 
@@ -125,18 +65,17 @@ std::shared_ptr<margelo::nitro::crypto::HybridHashSpec> HybridHash::copy(const s
   }
 
   // Create a new context
-  EVP_MD_CTX* newCtx = EVP_MD_CTX_new();
+  ::margelo::quickcrypto::DigestContext newCtx(EVP_MD_CTX_new(), EVP_MD_CTX_free);
   if (!newCtx) {
     throw std::runtime_error("Failed to create new hash context: " + std::to_string(ERR_get_error()));
   }
 
   // Copy the existing context to the new one
-  if (EVP_MD_CTX_copy(newCtx, ctx) != 1) {
-    EVP_MD_CTX_free(newCtx);
+  if (EVP_MD_CTX_copy(newCtx.get(), ctx.get()) != 1) {
     throw std::runtime_error("Failed to copy hash context: " + std::to_string(ERR_get_error()));
   }
 
-  return std::make_shared<HybridHash>(newCtx, md, algorithm, outputLengthArg, false);
+  return std::make_shared<HybridHash>(std::move(newCtx), outputLengthArg);
 }
 
 std::vector<std::string> HybridHash::getSupportedHashAlgorithms() {
@@ -170,14 +109,8 @@ void HybridHash::setParams() {
 
     OSSL_PARAM params[] = {OSSL_PARAM_construct_uint("xoflen", &xoflen), OSSL_PARAM_END};
 
-    if (EVP_MD_CTX_set_params(ctx, params) != 1) {
-      EVP_MD_CTX_free(ctx);
-      ctx = nullptr;
-      if (md && md_fetched) {
-        EVP_MD_free(md);
-        md = nullptr;
-        md_fetched = false;
-      }
+    if (EVP_MD_CTX_set_params(ctx.get(), params) != 1) {
+      ctx.reset();
       throw std::runtime_error("Failed to set XOF length (outputLength) parameter: " + std::to_string(ERR_get_error()));
     }
   }

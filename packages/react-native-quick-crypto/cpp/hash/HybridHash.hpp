@@ -1,6 +1,6 @@
+#include "HashContext.hpp"
 #include <NitroModules/ArrayBuffer.hpp>
 #include <memory>
-#include <openssl/evp.h>
 #include <optional>
 #include <string>
 #include <vector>
@@ -14,9 +14,8 @@ using namespace facebook;
 class HybridHash : public HybridHashSpec {
  public:
   HybridHash() : HybridObject(TAG) {}
-  HybridHash(EVP_MD_CTX* ctx, EVP_MD* md, const std::string& algorithm, const std::optional<double> outputLength, bool md_fetched = false)
-      : HybridObject(TAG), ctx(ctx), md(md), md_fetched(md_fetched), algorithm(algorithm), outputLength(outputLength) {}
-  ~HybridHash();
+  HybridHash(::margelo::quickcrypto::DigestContext context, std::optional<double> outputLength)
+      : HybridObject(TAG), ctx(std::move(context)), outputLength(outputLength) {}
 
  public:
   // Methods
@@ -33,10 +32,7 @@ class HybridHash : public HybridHashSpec {
 
  private:
   // Properties
-  EVP_MD_CTX* ctx = nullptr;
-  EVP_MD* md = nullptr;
-  bool md_fetched = false;
-  std::string algorithm = "";
+  ::margelo::quickcrypto::DigestContext ctx{nullptr, EVP_MD_CTX_free};
   std::optional<double> outputLength = std::nullopt;
 };
 
